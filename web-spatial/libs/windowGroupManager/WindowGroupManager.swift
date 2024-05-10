@@ -7,48 +7,42 @@
 
 import Foundation
 
-class WindowGroupContentDictionary : ObservableObject  {
+class WindowGroupContentDictionary: ObservableObject {
     @Published var webViews = [String: WebView]()
     @Published var x = false
     @Published var updateFrame = false
-    @Published var openWindowData:WindowGroupData? = nil
-    init(){
-    }
-
+    @Published var openWindowData: WindowGroupData? = nil
+    init() {}
 }
 
 class WindowGroupManager {
     var windowGroups = [String: WindowGroupContentDictionary]()
     
-    func createWebView(windowGroup: String, windowId: String, url: URL)->WebView{
-        if(windowGroups[windowGroup] == nil){
+    func createWebView(windowGroup: String, windowId: String, url: URL)->WebView {
+        if windowGroups[windowGroup] == nil {
             windowGroups[windowGroup] = WindowGroupContentDictionary()
         }
         
-        if(windowGroups[windowGroup]!.webViews[windowId] == nil){
-            windowGroups[windowGroup]!.webViews[windowId] = WebView(url: url);
+        if windowGroups[windowGroup]!.webViews[windowId] == nil {
+            windowGroups[windowGroup]!.webViews[windowId] = WebView(url: url)
         }
         
-        return windowGroups[windowGroup]!.webViews[windowId]!;
+        return windowGroups[windowGroup]!.webViews[windowId]!
     }
     
-    func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary{
-        if(windowGroups[windowGroup] == nil){
-//            print("creating group")
-//            print(windowGroup)
+    func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
+        if windowGroups[windowGroup] == nil {
             windowGroups[windowGroup] = WindowGroupContentDictionary()
         }
-        return windowGroups[windowGroup]!;
+        return windowGroups[windowGroup]!
     }
     
-    func getWebView(windowGroup: String, windowId: String)->WebView?{
-        if(windowGroups[windowGroup] != nil){
-            if(windowGroups[windowGroup]!.webViews[windowId] != nil){
+    func getWebView(windowGroup: String, windowId: String)->WebView? {
+        if windowGroups[windowGroup] != nil {
+            if windowGroups[windowGroup]!.webViews[windowId] != nil {
                 return windowGroups[windowGroup]!.webViews[windowId]!
             }
         }
-        return nil;
+        return nil
     }
-    
-    
 }

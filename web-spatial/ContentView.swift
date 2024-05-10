@@ -5,12 +5,11 @@
 //  Created by ByteDance on 5/8/24.
 //
 
-import SwiftUI
 import RealityKit
 import RealityKitContent
+import SwiftUI
 
 struct ContentView: View {
-
     @State private var showImmersiveSpace = false
     @State private var immersiveSpaceIsShown = false
 

@@ -7,31 +7,29 @@
 
 import SwiftUI
 
-struct PlainWindowGroupView : View {
+struct PlainWindowGroupView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
-    @ObservedObject var windowGroupContent : WindowGroupContentDictionary
+    @ObservedObject var windowGroupContent: WindowGroupContentDictionary
 
-    
     var body: some View {
-        VStack {}.onAppear().onReceive( windowGroupContent.$x.dropFirst()) { v in
-            if(v){
+        VStack {}.onAppear().onReceive(windowGroupContent.$x.dropFirst()) { v in
+            if v {
                 Task {
                     await openImmersiveSpace(id: "ImmersiveSpace")
                 }
-            }else{
+            } else {
                 Task {
-                   await dismissImmersiveSpace()
+                    await dismissImmersiveSpace()
                 }
             }
-                       
-        }.onReceive( windowGroupContent.$openWindowData.dropFirst()) { wd in
-            print("TREVOR RECEIVEWD")
-            let _ = openWindow(id: wd!.windowStyle, value: wd!);
+
+        }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
+            let _ = openWindow(id: wd!.windowStyle, value: wd!)
         }
-        
-        ForEach(Array(windowGroupContent.webViews.keys), id: \.self){ key in
+
+        ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
             windowGroupContent.webViews[key]?.webView
         }
     }
