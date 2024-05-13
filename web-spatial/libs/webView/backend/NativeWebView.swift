@@ -70,6 +70,9 @@ struct WebViewNative: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let coordinator = makeCoordinator()
         let userContentController = WKUserContentController()
+        
+        let userScript = WKUserScript(source: "window.WebSpatailEnabled = true", injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        userContentController.addUserScript(userScript)
         userContentController.add(coordinator, name: "bridge")
             
         let configuration = WKWebViewConfiguration()
@@ -92,6 +95,7 @@ struct WebViewNative: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         if webViewHolder.needsUpdate {
             let request = URLRequest(url: url)
+            
             webView.load(request)
             webView.isOpaque = false
             webViewHolder.needsUpdate = false
