@@ -20,16 +20,16 @@ class WebView {
         if let command: String = json.getValue(lookup: ["command"]) {
             if command == "createWindowGroup" {
                 if let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"]),
-                   let name: String = json.getValue(lookup: ["data", "name"])
+                   let windowID: String = json.getValue(lookup: ["data", "windowID"])
                 {
-                    let wgd = WindowGroupData(windowStyleIn: windowStyle, windowGroupIn: name, windowIdIn: "B")
+                    let wgd = WindowGroupData(windowStyleIn: windowStyle, windowGroupIn: windowID, windowIDIn: "B")
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
                 }
             } else if command == "createWebPanel" {
                 if let url: String = json.getValue(lookup: ["data", "url"]),
-                   let windowGroupId: String = json.getValue(lookup: ["data", "windowGroupId"]),
-                   let name: String = json.getValue(lookup: ["data", "name"])
+                   let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let windowID: String = json.getValue(lookup: ["data", "windowID"])
                 {
                     var targetUrl = url
                     if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
@@ -41,15 +41,15 @@ class WebView {
                         targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
                     }
 
-                    _ = wgManager.createWebView(windowGroup: windowGroupId, windowId: name, url: URL(string: targetUrl)!)
+                    _ = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
                 }
             } else if command == "updatePanelPose" {
-                if let windowGroupId: String = json.getValue(lookup: ["data", "windowGroupId"]),
-                   let name: String = json.getValue(lookup: ["data", "name"]),
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
                    let x: String = json.getValue(lookup: ["data", "x"])
                 {
-                    let d = wgManager.getWindowGroup(windowGroup: windowGroupId)
-                    d.webViews[name]?.pose.x = (x as NSString).floatValue
+                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    d.webViews[windowID]?.pose.x = (x as NSString).floatValue
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "createMesh" {

@@ -17,11 +17,11 @@ import SwiftUI
 struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowStyle: String
     let windowGroup: String
-    let windowId: String
+    let windowID: String
     
-    init(windowStyleIn: String, windowGroupIn: String, windowIdIn: String) {
+    init(windowStyleIn: String, windowGroupIn: String, windowIDIn: String) {
         windowGroup = windowGroupIn
-        windowId = windowIdIn
+        windowID = windowIDIn
         windowStyle = windowStyleIn
     }
 }
@@ -34,7 +34,7 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
         
-        root = wgManager.createWebView(windowGroup: "root", windowId: "root", url: URL(string: "http://testIP:5173/")!)
+        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://testIP:5173/")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
     }
     
