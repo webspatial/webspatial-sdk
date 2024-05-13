@@ -22,7 +22,7 @@ class WebView {
                 if let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"]),
                    let name: String = json.getValue(lookup: ["data", "name"])
                 {
-                    let wgd = WindowGroupData(windowStyleIn: windowStyle, windowGroupIn: name, windowIdIn: "B", url: URL(string: "http://localhost:5173/index2.html")!)
+                    let wgd = WindowGroupData(windowStyleIn: windowStyle, windowGroupIn: name, windowIdIn: "B")
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
                 }
@@ -31,7 +31,17 @@ class WebView {
                    let windowGroupId: String = json.getValue(lookup: ["data", "windowGroupId"]),
                    let name: String = json.getValue(lookup: ["data", "name"])
                 {
-                    _ = wgManager.createWebView(windowGroup: windowGroupId, windowId: name, url: URL(string: url)!)
+                    var targetUrl = url
+                    if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+                        var port = ""
+                        if let p = webView.url.port {
+                            port = ":"+String(p)
+                        }
+                        let domain = webView.url.scheme!+"://"+webView.url.host()!+port+"/"
+                        targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+                    }
+
+                    _ = wgManager.createWebView(windowGroup: windowGroupId, windowId: name, url: URL(string: targetUrl)!)
                 }
             } else if command == "updatePanelPose" {
                 if let windowGroupId: String = json.getValue(lookup: ["data", "windowGroupId"]),
