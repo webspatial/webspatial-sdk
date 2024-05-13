@@ -18,16 +18,16 @@ class WindowGroupContentDictionary: ObservableObject {
 class WindowGroupManager {
     var windowGroups = [String: WindowGroupContentDictionary]()
     
-    func createWebView(windowGroup: String, windowId: String, url: URL)->WebView {
+    func createWebView(windowGroup: String, windowID: String, url: URL)->WebView {
         if windowGroups[windowGroup] == nil {
             windowGroups[windowGroup] = WindowGroupContentDictionary()
         }
         
-        if windowGroups[windowGroup]!.webViews[windowId] == nil {
-            windowGroups[windowGroup]!.webViews[windowId] = WebView(url: url)
+        if windowGroups[windowGroup]!.webViews[windowID] == nil {
+            windowGroups[windowGroup]!.webViews[windowID] = WebView(url: url)
         }
         
-        return windowGroups[windowGroup]!.webViews[windowId]!
+        return windowGroups[windowGroup]!.webViews[windowID]!
     }
     
     func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
@@ -37,10 +37,10 @@ class WindowGroupManager {
         return windowGroups[windowGroup]!
     }
     
-    func getWebView(windowGroup: String, windowId: String)->WebView? {
+    func getWebView(windowGroup: String, windowID: String)->WebView? {
         if windowGroups[windowGroup] != nil {
-            if windowGroups[windowGroup]!.webViews[windowId] != nil {
-                return windowGroups[windowGroup]!.webViews[windowId]!
+            if windowGroups[windowGroup]!.webViews[windowID] != nil {
+                return windowGroups[windowGroup]!.webViews[windowID]!
             }
         }
         return nil
