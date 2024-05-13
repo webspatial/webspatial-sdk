@@ -20,9 +20,9 @@ class WebView {
         if let command: String = json.getValue(lookup: ["command"]) {
             if command == "createWindowGroup" {
                 if let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"]),
-                   let windowID: String = json.getValue(lookup: ["data", "windowID"])
+                   let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"])
                 {
-                    let wgd = WindowGroupData(windowStyleIn: windowStyle, windowGroupIn: windowID, windowIDIn: "B")
+                    let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: windowGroupID)
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
                 }
