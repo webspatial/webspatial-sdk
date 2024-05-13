@@ -16,42 +16,35 @@ import SwiftUI
 
 struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowStyle: String
-    let windowGroup: String
-    let windowID: String
-    
-    init(windowStyleIn: String, windowGroupIn: String, windowIDIn: String) {
-        windowGroup = windowGroupIn
-        windowID = windowIDIn
-        windowStyle = windowStyleIn
-    }
+    let windowGroupID: String
 }
 
 @main
 struct web_spatialApp: App {
     var root: WebView
     var rootWGD: WindowGroupContentDictionary
-    
+
     init() {
         print("WebSpatial App Started --------")
-        
+
         root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
     }
-    
+
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData == nil {
                 PlainWindowGroupView(windowGroupContent: rootWGD)
             } else {
-                let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroup)
+                let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView(windowGroupContent: wg)
             }
         }
-        
+
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
-            let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroup)
+            let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
             VolumetricWindowGroupView(windowGroupContent: wg)
-            
+
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
