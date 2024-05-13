@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
-import { SpatialWeb } from "../lib/spatialWeb.ts"
+import '../index.css'
+import { SpatialWeb } from "../../lib/spatialWeb.ts"
 import hnLogo from './assets/y18.svg'
 
 import { Provider } from 'react-redux'
@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import store, { increment } from "./store.ts"
 initMessageListener(store);
 
-import WebSpatial from "../lib/webSpatial.ts"
+import WebSpatial from "../../lib/webSpatial.ts"
 
 // function App() {
 //   const [isLoaded, setIsLoaded] = useState(false)
@@ -110,7 +110,7 @@ function App() {
             onClick={async (e) => {
               await WebSpatial.createWindowGroup("myWindow", "Volumetric")
               await new Promise(resolve => setTimeout(resolve, 500));
-              await WebSpatial.createWebPanel("myWindow", "myPanel2", "/index2.html")
+              await WebSpatial.createWebPanel("myWindow", "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
               await WebSpatial.createMesh("myWindow", "myMesh")
             }}>
             Click Me</button>
@@ -126,7 +126,7 @@ function App() {
           <button className="px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               await WebSpatial.createWindowGroup("myWindow2", "Plain")
-              await WebSpatial.createWebPanel("myWindow2", "myPanel", "/index2.html")
+              await WebSpatial.createWebPanel("myWindow2", "myPanel", "/index.html?pageName=helloWorldApp/main2.tsx")
             }}>
             Click Me
           </button>
