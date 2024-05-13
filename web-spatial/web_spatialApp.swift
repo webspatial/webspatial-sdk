@@ -27,7 +27,7 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
 
-        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/")!)
+        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/http://npmURL:5173/?pageName=helloWorldApp/main.tsx")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
     }
 
