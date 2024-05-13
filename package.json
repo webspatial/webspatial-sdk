@@ -10,14 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.2.4",
     "@types/three": "^0.164.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^9.1.2",
+    "redux": "^5.0.1",
+    "redux-state-sync": "^3.1.4",
+    "tailwindcss": "^3.4.3",
     "three": "^0.164.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/redux": "^3.6.0",
+    "@types/redux-state-sync": "^3.1.10",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
