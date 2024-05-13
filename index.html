@@ -8,7 +8,7 @@
   <title>Vite + React + TS</title>
 </head>
 
-<body style="background-color: gray">
+<body>
   <!-- <model src="src/assets/FlightHelmet"></model>
   <model interactive="" width="670" height="1191">
     <source src="src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip">
@@ -18,7 +18,21 @@
     </picture>
   </model> -->
   <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
+  <!-- <script type="module" src="/src/helloWorldApp/main.tsx"></script> -->
+  <script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    console.log(urlParams.get("pageName"))
+
+    let newScriptTag = document.createElement('script');
+    newScriptTag.type = "module"
+    newScriptTag.src = "/src/" + urlParams.get("pageName")
+    document.body.appendChild(newScriptTag)
+
+    if (!window.WebSpatailEnabled) {
+      document.body.style.backgroundColor = "gray"
+    }
+  </script>
 </body>
 
 </html>
