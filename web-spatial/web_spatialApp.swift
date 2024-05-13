@@ -19,7 +19,7 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowGroup: String
     let windowId: String
     
-    init(windowStyleIn: String, windowGroupIn: String, windowIdIn: String, url: URL) {
+    init(windowStyleIn: String, windowGroupIn: String, windowIdIn: String) {
         windowGroup = windowGroupIn
         windowId = windowIdIn
         windowStyle = windowStyleIn
@@ -34,7 +34,7 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
         
-        root = wgManager.createWebView(windowGroup: "root", windowId: "root", url: URL(string: "http://localhost:5173")!)
+        root = wgManager.createWebView(windowGroup: "root", windowId: "root", url: URL(string: "http://10.73.196.42:5173/")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
     }
     
