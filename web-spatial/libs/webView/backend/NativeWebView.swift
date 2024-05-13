@@ -50,7 +50,6 @@ struct WebViewNative: UIViewRepresentable {
             _ userContentController: WKUserContentController,
             didReceive message: WKScriptMessage
         ) {
-            
             let json = JsonParser(str: message.body as? String)
             if let wv = webViewRef {
                 wv.onJSScriptMessage(json: json)
