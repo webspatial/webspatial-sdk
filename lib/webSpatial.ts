@@ -29,10 +29,10 @@ class RemoteCommand {
       await WebSpatial.sendCommand(cmd)
     }
   
-    static async updatePanelPose(windowGroupID: string, windowID: string, x: string) {
+    static async updatePanelPose(windowGroupID: string, windowID: string, position: {x:number,y:number,z:number}) {
       var cmd = new RemoteCommand()
       cmd.command = "updatePanelPose"
-      cmd.data.x = x
+      cmd.data.position = position
       cmd.data.windowGroupID = windowGroupID
       cmd.data.windowID = windowID
   
