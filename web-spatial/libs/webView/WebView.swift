@@ -52,6 +52,29 @@ class WebView {
                     d.webViews[windowID]?.pose.x = (x as NSString).floatValue
                     d.updateFrame = !d.updateFrame
                 }
+            } else if command == "createDOMModel" {
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let _: String = json.getValue(lookup: ["data", "windowID"]),
+                   let modelID: String = json.getValue(lookup: ["data", "modelID"]),
+                   let modelURL: String = json.getValue(lookup: ["data", "modelURL"])
+                {
+                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    d.models[modelID] = ModelViewData(url: URL(string: modelURL)!, position: simd_float3(0, 0, 0))
+                }
+            } else if command == "updateDOMModelPosition" {
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let _: String = json.getValue(lookup: ["data", "windowID"]),
+                   let modelID: String = json.getValue(lookup: ["data", "modelID"]),
+                   let x: Float = json.getValue(lookup: ["data", "modelPosition", "x"]),
+                   let y: Float = json.getValue(lookup: ["data", "modelPosition", "y"]),
+                   let z: Float = json.getValue(lookup: ["data", "modelPosition", "z"])
+                {
+                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    d.models[modelID]!.position.x = x
+                    d.models[modelID]!.position.y = y
+                    d.models[modelID]!.position.z = z
+                }
+
             } else if command == "createMesh" {
             } else if command == "openImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").x = true
