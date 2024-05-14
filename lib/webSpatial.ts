@@ -102,7 +102,7 @@ class RemoteCommand {
       var loop = () => {
         setTimeout(() => {
           loop()
-        }, 1000 / 60);
+        }, 1000 / 90);
         fn(window.performance.now())
       }
       loop()
