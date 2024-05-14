@@ -186,48 +186,23 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 
 var main = async () => {
-
-  const bc = new BroadcastChannel("test_channel");
-  bc.postMessage("This is a test message.");
-
-  bc.onmessage = (event) => {
-    console.log(event);
-    WebSpatial.log("GOT ON MESSAGE")
-  };
-
-
   setTimeout(async () => {
-    WebSpatial.log("TREVOR A")
     var element = document.getElementById("modelHere")!
-
     var rect = element.getBoundingClientRect();
-    WebSpatial.log("TREVOR B")
-    WebSpatial.log(rect.top)
-
-    var bodyRect = document.body.getBoundingClientRect()
-    WebSpatial.log(bodyRect.top)
-
-    var left = (rect.left + ((rect.right - rect.left) / 2)) // / bodyRect.right
-    var top = (rect.bottom + ((rect.top - rect.bottom) / 2))
-    WebSpatial.log(left)
+    var curPosX = (rect.left + ((rect.right - rect.left) / 2))
+    var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
     await WebSpatial.createDOMModel("root", "root", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
-    await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: left, y: top, z: 0 })
-
-
+    await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 })
 
     {
-
-      var curPosY = top
-      var curPosX = left
       WebSpatial.onFrame(async () => {
         var element = document.getElementById("modelHere")!
         var rect = element.getBoundingClientRect();
-        var targetPosX = (rect.left + ((rect.right - rect.left) / 2)) // / bodyRect.right
+        var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
-
         curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.4))
         curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.4))
-        await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 10 });
+        await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 });
       })
     }
 
