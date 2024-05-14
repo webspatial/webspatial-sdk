@@ -49,11 +49,40 @@ class RemoteCommand {
   
       await WebSpatial.sendCommand(cmd)
     }
+
+    static async createDOMModel(windowGroupID: string, windowID: string, modelID: string, modelURL: string) {
+      var cmd = new RemoteCommand()
+      cmd.command = "createDOMModel"
+      cmd.data.windowGroupID = windowGroupID
+      cmd.data.windowID = windowID
+      cmd.data.modelID = modelID
+      cmd.data.modelURL = modelURL
   
-    static async log(log: string) {
+      await WebSpatial.sendCommand(cmd)
+    }
+
+    static async updateDOMModelPosition(windowGroupID: string, windowID: string, modelID: string, position: {x:number,y:number,z:number}) {
+      var cmd = new RemoteCommand()
+      cmd.command = "updateDOMModelPosition"
+      cmd.data.windowGroupID = windowGroupID
+      cmd.data.windowID = windowID
+      cmd.data.modelID = modelID
+      cmd.data.modelPosition = position
+  
+      await WebSpatial.sendCommand(cmd)
+    }
+  
+    static async log(log: any) {
       var cmd = new RemoteCommand()
       cmd.command = "log"
-      cmd.data.logString = log
+      if(log !== null && log !== undefined && log.toString){
+        cmd.data.logString = log.toString()
+      }else if(log !== null && log !== undefined && typeof log === 'object'){
+        cmd.data.logString = JSON.stringify(log)
+      }else{
+        cmd.data.logString = log
+      }
+      
       await WebSpatial.sendCommand(cmd)
     }
   
