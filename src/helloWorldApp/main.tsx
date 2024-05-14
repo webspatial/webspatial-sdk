@@ -116,10 +116,9 @@ function App() {
             Click Me</button>
           <input type="range" step='0.005' className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             onChange={async (e) => {
-              WebSpatial.updatePanelPose("myWindow", "myPanel2", (Number(e.target.value) / 100).toString())
+              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: 0 })
 
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
-              await WebSpatial.log(e.target.value)
             }}></input>
 
         </div>
@@ -200,8 +199,8 @@ var main = async () => {
         var rect = element.getBoundingClientRect();
         var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
-        curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.4))
-        curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.4))
+        curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.3))
+        curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.3))
         await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 });
       })
     }
