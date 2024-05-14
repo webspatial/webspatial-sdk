@@ -46,10 +46,14 @@ class WebView {
             } else if command == "updatePanelPose" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
-                   let x: String = json.getValue(lookup: ["data", "x"])
+                   let x: Double = json.getValue(lookup: ["data", "position", "x"]),
+                   let y: Double = json.getValue(lookup: ["data", "position", "y"]),
+                   let z: Double = json.getValue(lookup: ["data", "position", "z"])
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
-                    d.webViews[windowID]?.pose.x = (x as NSString).floatValue
+                    d.webViews[windowID]?.pose.x = Float(x)
+                    d.webViews[windowID]?.pose.y = Float(y)
+                    d.webViews[windowID]?.pose.z = Float(z)
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "createDOMModel" {
@@ -65,14 +69,14 @@ class WebView {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let _: String = json.getValue(lookup: ["data", "windowID"]),
                    let modelID: String = json.getValue(lookup: ["data", "modelID"]),
-                   let x: Float = json.getValue(lookup: ["data", "modelPosition", "x"]),
-                   let y: Float = json.getValue(lookup: ["data", "modelPosition", "y"]),
-                   let z: Float = json.getValue(lookup: ["data", "modelPosition", "z"])
+                   let x: Double = json.getValue(lookup: ["data", "modelPosition", "x"]),
+                   let y: Double = json.getValue(lookup: ["data", "modelPosition", "y"]),
+                   let z: Double = json.getValue(lookup: ["data", "modelPosition", "z"])
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
-                    d.models[modelID]!.position.x = x
-                    d.models[modelID]!.position.y = y
-                    d.models[modelID]!.position.z = z
+                    d.models[modelID]!.position.x = Float(x)
+                    d.models[modelID]!.position.y = Float(y)
+                    d.models[modelID]!.position.z = Float(z)
                 }
 
             } else if command == "createMesh" {
