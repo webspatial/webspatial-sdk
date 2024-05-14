@@ -117,6 +117,8 @@ function App() {
           <input type="range" step='0.005' className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             onChange={async (e) => {
               WebSpatial.updatePanelPose("myWindow", "myPanel2", (Number(e.target.value) / 100).toString())
+
+              //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
               await WebSpatial.log(e.target.value)
             }}></input>
 
@@ -137,6 +139,34 @@ function App() {
             }}>
             Incremet
           </button>
+        </div>
+        <div className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+          <h1>Model3D</h1>
+          <div id="modelHere" className='w-full h-full bg-white bg-opacity-50'>
+
+          </div>
+        </div>
+      </div>
+
+
+      <div className="flex text-white">
+        <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+          <h1>Hello Web Spatial</h1>
+        </div>
+      </div>
+      <div className="flex text-white">
+        <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+          <h1>Hello Web Spatial</h1>
+        </div>
+      </div>
+      <div className="flex text-white">
+        <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+          <h1>Hello Web Spatial</h1>
+        </div>
+      </div>
+      <div className="flex text-white">
+        <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+          <h1>Hello Web Spatial</h1>
         </div>
       </div>
     </>
@@ -165,91 +195,43 @@ var main = async () => {
     WebSpatial.log("GOT ON MESSAGE")
   };
 
-  // await WebSpatial.createWindowGroup("myWindow2", "Plain")
-  // await WebSpatial.createWebPanel("myWindow2", "myPanel", "http://localhost:5173/index2.html")
+
+  setTimeout(async () => {
+    WebSpatial.log("TREVOR A")
+    var element = document.getElementById("modelHere")!
+
+    var rect = element.getBoundingClientRect();
+    WebSpatial.log("TREVOR B")
+    WebSpatial.log(rect.top)
+
+    var bodyRect = document.body.getBoundingClientRect()
+    WebSpatial.log(bodyRect.top)
+
+    var left = (rect.left + ((rect.right - rect.left) / 2)) // / bodyRect.right
+    var top = (rect.bottom + ((rect.top - rect.bottom) / 2))
+    WebSpatial.log(left)
+    await WebSpatial.createDOMModel("root", "root", "testModel", "http://testIP:5173/src/assets/FlightHelmet.usdz")
+    await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: left, y: top, z: 0 })
 
 
-  // await WebSpatial.createWindowGroup("myWindow", "Volumetric")
 
-  // await new Promise(resolve => setTimeout(resolve, 500));
-  // await WebSpatial.createWebPanel("myWindow", "myPanel2", "http://localhost:5173/index2.html")
+    {
 
-  // await WebSpatial.createMesh("myWindow", "myMesh")
+      var curPosY = top
+      var curPosX = left
+      WebSpatial.onFrame(async () => {
+        var element = document.getElementById("modelHere")!
+        var rect = element.getBoundingClientRect();
+        var targetPosX = (rect.left + ((rect.right - rect.left) / 2)) // / bodyRect.right
+        var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
 
-  // await WebSpatial.log("Webpage loaded")
-  // await WebSpatial.openImmersiveSpace()
+        curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.4))
+        curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.4))
+        await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 10 });
+      })
+    }
 
-  // await new Promise(resolve => setTimeout(resolve, 1000));
-  // await WebSpatial.dismissImmersiveSpace()
-
-
-  // WebSpatial.onFrame((time: number) => {
-  //   var x = Math.sin(time / 1000)
-  //   WebSpatial.updatePanelPose("myWindow", "myPanel2", x.toString())
-  // })
-
-  // setTimeout(() => {
-  //   (window as any).webkit.messageHandlers.bridge.postMessage('{"msg": "hello?","id": ' + Date.now() + '}');
-  //   (window as any).webkit.messageHandlers.bridge.postMessage('{"msg": "hello2?","id": ' + Date.now() + '}');
-  //   //(window as any).webkit.messageHandlers.iosListener.postMessage('click clack!');
-  //   console.log("hit")
-  //   document.body.style.backgroundColor = '#ff634722'
-  // }, 1000);
-  // SpatialWeb.init()
-  // console.log("webpage start")
-  // // Get 3D window reference
-  // var spatialWindow = await SpatialWeb.getCurrentSpatialWindow()
-
-  // // Set resolution
-  // spatialWindow.resolution.x = 1920 / 3
-  // spatialWindow.resolution.y = 1080
-
-  // // Set scale to avoid squishing based on resultion
-  // let scaleFactor = 0.5
-  // spatialWindow.scale.x = (spatialWindow.resolution.x / spatialWindow.resolution.y) * scaleFactor
-  // spatialWindow.scale.y = 1 * scaleFactor
-  // spatialWindow.scale.z = 1 * scaleFactor
-
-  // // Position at the bottom of the volume
-  // spatialWindow.position.x = 0
-  // spatialWindow.position.y = -0.5 + (spatialWindow.scale.y / 2)
-  // spatialWindow.position.z = 0.3 // bring closer to user
-
-  // spatialWindow.updateTransform()
-
-
-  // SpatialWeb.onFrame((curTime: number) => {
-  //   spatialWindow.position.z = Math.sin(curTime / 1000) * 0.5
-  //   spatialWindow.updateTransform()
-  // })
-
-  // var spatialWindow2 = await SpatialWeb.createNewSpatialWindow("/index2.html")
-  // // Set resolution
-  // spatialWindow2.resolution.x = 1920
-  // spatialWindow2.resolution.y = 1080
-
-
-  // // Set scale to avoid squishing based on resultion
-  // scaleFactor = 0.2
-  // spatialWindow2.scale.x = (spatialWindow2.resolution.x / spatialWindow2.resolution.y) * scaleFactor
-  // spatialWindow2.scale.y = 1 * scaleFactor
-  // spatialWindow2.scale.z = 1 * scaleFactor
-
-  // // Position at the bottom of the volume
-  // spatialWindow2.position.x = 0.1
-  // spatialWindow2.position.y = -0.5 + (spatialWindow2.scale.y / 2)
-  // spatialWindow2.position.z = 0.4 // bring closer to user
-  // spatialWindow2.updateTransform()
-  // //setTimeout(() => {
-  // spatialWindow2.openUrl("/index2.html")
-  // //}, 100);
-
-  // SpatialWeb.onFrame((curTime: number) => {
-  //   spatialWindow2.position.y = Math.sin(curTime / 1000) * 0.5
-  //   spatialWindow2.updateTransform()
-  // })
-
-  //document.body.style.backgroundColor = '#ff634722'
+  }, 100);
 
 
 
