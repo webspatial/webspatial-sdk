@@ -5,6 +5,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import typealias RealityKit.Model3D
 import SwiftUI
 
 struct PlainWindowGroupView: View {
@@ -29,8 +30,21 @@ struct PlainWindowGroupView: View {
             let _ = openWindow(id: wd!.windowStyle, value: wd!)
         }
 
-        ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
-            windowGroupContent.webViews[key]?.webView
+        GeometryReader { _ in
+            ZStack {
+                VStack {
+                    ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
+                        windowGroupContent.webViews[key]?.webView
+                    }
+                }
+                ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
+                    Model3D(url: windowGroupContent.models[key]!.url) { model in
+                        model.model?
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000)
+                }
+            }
         }
     }
 }
