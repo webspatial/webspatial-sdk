@@ -23,12 +23,7 @@ struct VolumetricWindowGroupView: View {
     var body: some View {
         VStack {}
         RealityView { content, _ in
-            let sphereResource = MeshResource.generateSphere(radius: 0.1)
-            let myMaterial = SimpleMaterial(color: .blue, roughness: 0, isMetallic: true)
-            let myEntity = ModelEntity(mesh: sphereResource, materials: [myMaterial])
-            myEntity.position = [0, 0, 0.2]
-            content.add(myEntity)
-
+            content.add(windowGroupContent.rootEntity)
         } update: { content, attachments in
             for key in Array(windowGroupContent.webViews.keys) {
                 if let glassCubeAttachment = attachments.entity(for: key) {
