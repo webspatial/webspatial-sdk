@@ -29,6 +29,7 @@ struct web_spatialApp: App {
 
         root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://10.73.196.42:5173/http://10.73.196.42:5173/?pageName=helloWorldApp/main.tsx")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
+        let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
 
     var body: some Scene {
@@ -48,7 +49,8 @@ struct web_spatialApp: App {
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
-            ImmersiveView()
+            let wg = wgManager.getWindowGroup(windowGroup: "Immersive")
+            VolumetricWindowGroupView(windowGroupContent: wg)
         }
     }
 }

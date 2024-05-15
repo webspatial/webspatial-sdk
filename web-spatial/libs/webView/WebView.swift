@@ -6,7 +6,14 @@
 //
 
 import Foundation
+import typealias RealityKit.ModelEntity
 import SwiftUI
+
+func getDocumentsDirectory() -> URL {
+    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    let documentsDirectory = paths[0]
+    return documentsDirectory
+}
 
 class WebView {
     var pose = SIMD3<Float>(0, 0, 0)
@@ -64,7 +71,43 @@ class WebView {
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
                     d.models[modelID] = ModelViewData(url: URL(string: modelURL)!, position: simd_float3(0, 0, 0))
+
+                    let url = URL(string: modelURL)!
+                    let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
+                    let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
+                        print("hit")
+
+                        do {
+                            let fileURL = getDocumentsDirectory().appendingPathComponent("nike3.usdz")
+                            // if FileManager.default.fileExists(atPath: fileURL.path()) {
+                            // print("remove")
+                            // try FileManager.default.removeItem(at: fileURL)
+                            try FileManager.default.copyItem(at: a!, to: fileURL)
+                            print("Downloaded and copied model")
+                            // }
+
+                        } catch {
+                            print("Model already exists")
+                        }
+
+                        Task {
+                            do {
+                                print("model A")
+                                let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent("nike3.usdz"))
+                                print("model B")
+                                d.models[modelID]?.entity.entity = m
+                                print("model C")
+                                await d.rootEntity.addChild(m)
+                                print("model loaded")
+                            } catch {
+                                print("failed to load model: "+error.localizedDescription)
+                            }
+                        }
+
+                    })
+                    downloadTask.resume()
                 }
+
             } else if command == "updateDOMModelPosition" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let _: String = json.getValue(lookup: ["data", "windowID"]),
@@ -77,6 +120,11 @@ class WebView {
                     d.models[modelID]!.position.x = Float(x)
                     d.models[modelID]!.position.y = Float(y)
                     d.models[modelID]!.position.z = Float(z)
+
+                    if let e = d.models[modelID]?.entity.entity {
+                        e.position = d.models[modelID]!.position
+                        d.updateFrame = !d.updateFrame
+                    }
                 }
 
             } else if command == "createMesh" {

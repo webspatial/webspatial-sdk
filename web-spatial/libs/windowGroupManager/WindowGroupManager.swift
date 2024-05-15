@@ -6,10 +6,18 @@
 //
 
 import Foundation
+import typealias RealityKit.Entity
+
+// Use class wrap avoid publishing swiftUI state on a background thread
+class EntityWrap {
+    var entity: Entity?
+}
 
 struct ModelViewData {
     var url: URL
+    var entity: EntityWrap = .init()
     var position: SIMD3<Float>
+    var added = false
 }
 
 class WindowGroupContentDictionary: ObservableObject {
@@ -18,6 +26,7 @@ class WindowGroupContentDictionary: ObservableObject {
     @Published var x = false
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
+    var rootEntity = Entity()
     init() {}
 }
 
