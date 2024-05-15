@@ -81,6 +81,7 @@ function App() {
   const [count, setCount] = useState(0)
   const sharedCount = useSelector((state: any) => state.count.value);
   const dispatch = useDispatch()
+  const [created, setCreated] = useState(false)
 
   return (
     <>
@@ -97,6 +98,13 @@ function App() {
             <input type="checkbox" value="" className="sr-only peer" onChange={async (e) => {
               if (e.target.checked) {
                 await WebSpatial.openImmersiveSpace()
+                if (!created) {
+                  setCreated(true)
+                  await WebSpatial.createDOMModel("Immersive", "x", "testModel", "http://testIP:5173/src/assets/FlightHelmet.usdz")
+                  WebSpatial.onFrame(async (x: number) => {
+                    WebSpatial.updateDOMModelPosition("Immersive", "x", "testModel", { x: Math.sin(x / 1000), y: 1.5, z: -1 })
+                  })
+                }
               } else {
                 await WebSpatial.dismissImmersiveSpace()
               }
@@ -112,12 +120,17 @@ function App() {
               await new Promise(resolve => setTimeout(resolve, 500));
               await WebSpatial.createWebPanel("myWindow", "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
               await WebSpatial.createMesh("myWindow", "myMesh")
+              await WebSpatial.createDOMModel("myWindow", "myPanel2", "testModel", "http://testIP:5173/src/assets/FlightHelmet.usdz")
+              setTimeout(() => {
+                WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: 0, y: -0.5, z: 0 })
+              }, 1000);
+
             }}>
             Click Me</button>
           <input type="range" step='0.005' className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             onChange={async (e) => {
               WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: 0 })
-
+              await WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
             }}></input>
 
