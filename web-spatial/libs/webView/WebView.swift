@@ -16,8 +16,16 @@ func getDocumentsDirectory() -> URL {
 }
 
 class WebView {
+    var scrollOffset = CGPoint()
     var pose = SIMD3<Float>(0, 0, 0)
     var webView: WebViewNative
+
+    var full = true
+    var width: Double = 0
+    var height: Double = 0
+
+    var parent: WindowGroupContentDictionary?
+
     init(url: URL) {
         webView = WebViewNative(url: url)
         webView.webViewRef = self
@@ -36,7 +44,8 @@ class WebView {
             } else if command == "createWebPanel" {
                 if let url: String = json.getValue(lookup: ["data", "url"]),
                    let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let windowID: String = json.getValue(lookup: ["data", "windowID"])
+                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
+                   let rawHTML: String = json.getValue(lookup: ["data", "rawHTML"])
                 {
                     var targetUrl = url
                     if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
@@ -50,17 +59,33 @@ class WebView {
 
                     _ = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
                 }
+            } else if command == "updatePanelContent" {
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
+                   let html: String = json.getValue(lookup: ["data", "html"])
+                {
+                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+
+                    d.webViews[windowID]?.webView.webViewHolder.gWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
+                    d.updateFrame = !d.updateFrame
+                }
             } else if command == "updatePanelPose" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
                    let x: Double = json.getValue(lookup: ["data", "position", "x"]),
                    let y: Double = json.getValue(lookup: ["data", "position", "y"]),
-                   let z: Double = json.getValue(lookup: ["data", "position", "z"])
+                   let z: Double = json.getValue(lookup: ["data", "position", "z"]),
+                   let width: Double = json.getValue(lookup: ["data", "width"]),
+                   let height: Double = json.getValue(lookup: ["data", "height"])
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
                     d.webViews[windowID]?.pose.x = Float(x)
                     d.webViews[windowID]?.pose.y = Float(y)
                     d.webViews[windowID]?.pose.z = Float(z)
+
+                    d.webViews[windowID]?.width = width
+                    d.webViews[windowID]?.height = height
+                    d.webViews[windowID]?.full = false
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "createDOMModel" {

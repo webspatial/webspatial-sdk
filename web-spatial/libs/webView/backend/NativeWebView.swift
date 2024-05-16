@@ -24,7 +24,7 @@ struct WebViewNative: UIViewRepresentable {
     var webViewRef: WebView? = nil
     let url: URL
     var webViewHolder = WebViewHolder()
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate {
         @Environment(\.openWindow) private var openWindow
         @Environment(\.dismissWindow) private var dismissWindow
         @Environment(\.dismiss) private var dismiss
@@ -54,6 +54,11 @@ struct WebViewNative: UIViewRepresentable {
             if let wv = webViewRef {
                 wv.onJSScriptMessage(json: json)
             }
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            webViewRef?.scrollOffset = scrollView.contentOffset
+            webViewRef?.parent?.updateFrame = !(webViewRef!.parent!.updateFrame)
         }
             
         func messageToWebview(msg: String) {
@@ -86,6 +91,7 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.gWebView!.allowsLinkPreview = true
 //                webView.navigationDelegate = self
             webViewHolder.gWebView!.navigationDelegate = coordinator
+            webViewHolder.gWebView!.scrollView.delegate = coordinator
             webViewHolder.needsUpdate = true
         }
             
