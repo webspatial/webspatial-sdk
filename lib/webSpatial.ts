@@ -19,20 +19,33 @@ class RemoteCommand {
       await WebSpatial.sendCommand(cmd)
     }
   
-    static async createWebPanel(windowGroupID: string, windowID: string, url: string) {
+    static async createWebPanel(windowGroupID: string, windowID: string, url: string, rawHTML = "") {
       var cmd = new RemoteCommand()
       cmd.command = "createWebPanel"
       cmd.data.url = url
       cmd.data.windowGroupID = windowGroupID
       cmd.data.windowID = windowID
+      cmd.data.rawHTML = rawHTML
   
       await WebSpatial.sendCommand(cmd)
     }
   
-    static async updatePanelPose(windowGroupID: string, windowID: string, position: {x:number,y:number,z:number}) {
+    static async updatePanelPose(windowGroupID: string, windowID: string, position: {x:number,y:number,z:number}, width:number, height:number) {
       var cmd = new RemoteCommand()
       cmd.command = "updatePanelPose"
       cmd.data.position = position
+      cmd.data.width = width
+      cmd.data.height = height
+      cmd.data.windowGroupID = windowGroupID
+      cmd.data.windowID = windowID
+  
+      await WebSpatial.sendCommand(cmd)
+    }
+
+    static async updatePanelContent(windowGroupID: string, windowID: string, html: string) {
+      var cmd = new RemoteCommand()
+      cmd.command = "updatePanelContent"
+      cmd.data.html = html
       cmd.data.windowGroupID = windowGroupID
       cmd.data.windowID = windowID
   
