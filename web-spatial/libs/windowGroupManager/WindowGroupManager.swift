@@ -40,6 +40,7 @@ class WindowGroupManager {
 
         if windowGroups[windowGroup]!.webViews[windowID] == nil {
             windowGroups[windowGroup]!.webViews[windowID] = WebView(url: url)
+            windowGroups[windowGroup]!.webViews[windowID]?.parent = windowGroups[windowGroup]!
         }
 
         return windowGroups[windowGroup]!.webViews[windowID]!
