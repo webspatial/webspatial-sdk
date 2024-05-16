@@ -129,7 +129,7 @@ function App() {
             Click Me</button>
           <input type="range" step='0.005' className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             onChange={async (e) => {
-              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: 0 })
+              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: 0 }, 1920, 1080)
               await WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
             }}></input>
