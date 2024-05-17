@@ -101,7 +101,6 @@ struct WebViewNative: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         if webViewHolder.needsUpdate {
             let request = URLRequest(url: url)
-            
             webView.load(request)
             webView.isOpaque = false
             webViewHolder.needsUpdate = false

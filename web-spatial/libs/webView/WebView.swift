@@ -100,7 +100,6 @@ class WebView {
                     let url = URL(string: modelURL)!
                     let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
                     let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
-                        print("hit")
 
                         do {
                             let fileURL = getDocumentsDirectory().appendingPathComponent("nike3.usdz")

@@ -32,7 +32,6 @@ struct PlainWindowGroupView: View {
 
         GeometryReader { proxy3D in
             ZStack {
-                // ZStack {
                 let oval = Float(windowGroupContent.webViews["root"]!.scrollOffset.y)
                 ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
                     let view = windowGroupContent.webViews[key]!
@@ -51,7 +50,6 @@ struct PlainWindowGroupView: View {
                         .position(x: x, y: y)
                         .offset(z: z)
                 }
-                // }
                 ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
                     Model3D(url: windowGroupContent.models[key]!.url) { model in
                         model.model?
@@ -59,12 +57,6 @@ struct PlainWindowGroupView: View {
                             .aspectRatio(contentMode: .fit)
                     }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000)
                 }
-
-//                Rectangle().cornerRadius(24)
-//                    .shadow(radius: 20)
-//                    .position(x: 0, y: 0)
-//                    .offset(z: 3)
-//                    .frame(width: 30, height: 30).padding3D(.front, -100000)
             }
         }
     }
