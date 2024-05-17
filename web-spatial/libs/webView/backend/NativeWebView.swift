@@ -35,6 +35,9 @@ struct WebViewNative: UIViewRepresentable {
             
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             self.webView = webView
+            
+            webViewRef?.loadRequestWV?.didLoad(loadRequestID: webViewRef!.loadRequestID)
+            webViewRef?.loadRequestID = -1
         }
         
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {

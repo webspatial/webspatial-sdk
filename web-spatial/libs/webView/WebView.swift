@@ -31,6 +31,15 @@ class WebView {
         webView.webViewRef = self
     }
 
+    // Request information of webview that request this webview to load
+    var loadRequestWV: WebView?
+    var loadRequestID = -1
+    // A load request of a child webview was loaded
+    func didLoad(loadRequestID: Int) {
+        print("did load "+String(loadRequestID))
+        webView.webViewHolder.gWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(loadRequestID)+"})")
+    }
+
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
             if command == "createWindowGroup" {
@@ -45,7 +54,8 @@ class WebView {
                 if let url: String = json.getValue(lookup: ["data", "url"]),
                    let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
-                   let rawHTML: String = json.getValue(lookup: ["data", "rawHTML"])
+                   let _: String = json.getValue(lookup: ["data", "rawHTML"]),
+                   let requestID: Int = json.getValue(lookup: ["requestID"])
                 {
                     var targetUrl = url
                     if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
@@ -57,7 +67,13 @@ class WebView {
                         targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
                     }
 
-                    _ = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
+                    // TODO this needs to be cleaned up
+                    let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
+                    if wv.loadRequestID != -1 {
+                        wv.webView.webViewHolder.gWebView?.load(URLRequest(url: URL(string: targetUrl)!))
+                    }
+                    wv.loadRequestID = requestID
+                    wv.loadRequestWV = self
                 }
             } else if command == "updatePanelContent" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
@@ -141,9 +157,9 @@ class WebView {
                    let z: Double = json.getValue(lookup: ["data", "modelPosition", "z"])
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
-                    d.models[modelID]!.position.x = Float(x)
-                    d.models[modelID]!.position.y = Float(y)
-                    d.models[modelID]!.position.z = Float(z)
+                    d.models[modelID]?.position.x = Float(x)
+                    d.models[modelID]?.position.y = Float(y)
+                    d.models[modelID]?.position.z = Float(z)
 
                     if let e = d.models[modelID]?.entity.entity {
                         e.position = d.models[modelID]!.position
