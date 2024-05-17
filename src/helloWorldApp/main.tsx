@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import '../index.css'
 import { SpatialWeb } from "../../lib/spatialWeb.ts"
 import hnLogo from './assets/y18.svg'
+import { SpatialDiv } from '../../lib/webSpatialComponents'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
@@ -119,17 +120,19 @@ function App() {
               await WebSpatial.createWindowGroup("myWindow", "Volumetric")
               await new Promise(resolve => setTimeout(resolve, 500));
               await WebSpatial.createWebPanel("myWindow", "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
+              await WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: 0, y: 0, z: -0.4 }, 1920, 1080)
               await WebSpatial.createMesh("myWindow", "myMesh")
               await WebSpatial.createDOMModel("myWindow", "myPanel2", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
               setTimeout(() => {
                 WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: 0, y: -0.5, z: 0 })
-              }, 1000);
+              }, 3000);
 
             }}>
             Click Me</button>
-          <input type="range" step='0.005' className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          <input type="range" step='0.005' className="mt-10 w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg dark:bg-gray-700"
+            // style={{ height: "30px" }}
             onChange={async (e) => {
-              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: 0 }, 1920, 1080)
+              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
               await WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
             }}></input>
@@ -140,7 +143,7 @@ function App() {
           <button className="px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               await WebSpatial.createWindowGroup("myWindow2", "Plain")
-              await WebSpatial.createWebPanel("myWindow2", "myPanel", "/index.html?pageName=helloWorldApp/main2.tsx")
+              await WebSpatial.createWebPanel("myWindow2", "root", "/index.html?pageName=helloWorldApp/main2.tsx")
             }}>
             Click Me
           </button>
@@ -160,6 +163,28 @@ function App() {
         </div>
       </div>
 
+      <div className="flex text-white h-64 m-10">
+        <SpatialDiv webViewID='A' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
+          <div className="text-white bg-red-300 bg-opacity-20 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+            <p className='text-center'>Hello world always works</p>
+          </div>
+        </SpatialDiv>
+        <SpatialDiv webViewID='B' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
+          <div className="text-white bg-green-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+            <p className='text-center' remote-click="(window).wx.log('trevor here')">Hello worfdsfdsld 2</p>
+          </div>
+        </SpatialDiv>
+        <SpatialDiv webViewID='C' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
+          <div className="text-white bg-blue-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+            <p className='text-center'>Hello world 5</p>
+          </div>
+        </SpatialDiv>
+        <SpatialDiv webViewID='D' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
+          <div className="text-white bg-yellow-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+            <p className='text-center'>Hello worlds</p>
+          </div>
+        </SpatialDiv>
+      </div>
 
       <div className="flex text-white">
         <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
@@ -202,21 +227,21 @@ var main = async () => {
     var element = document.getElementById("modelHere")!
     var rect = element.getBoundingClientRect();
     var curPosX = (rect.left + ((rect.right - rect.left) / 2))
-    var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
+    var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
     await WebSpatial.createDOMModel("root", "root", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
     await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 })
 
-    {
-      WebSpatial.onFrame(async () => {
-        var element = document.getElementById("modelHere")!
-        var rect = element.getBoundingClientRect();
-        var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
-        var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
-        curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.3))
-        curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.3))
-        await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 });
-      })
-    }
+    // {
+    //   WebSpatial.onFrame(async () => {
+    //     var element = document.getElementById("modelHere")!
+    //     var rect = element.getBoundingClientRect();
+    //     var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
+    //     var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
+    //     curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.3))
+    //     curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.3))
+    //     await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 });
+    //   })
+    // }
 
   }, 100);
 
