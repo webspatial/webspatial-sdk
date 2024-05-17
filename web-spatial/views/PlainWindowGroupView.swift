@@ -44,18 +44,19 @@ struct PlainWindowGroupView: View {
 
                     view.webView
                         .frame(width: width, height: height).padding3D(.front, -100000) // .padding3D(.all, -100000)
-                        .hoverEffect(.automatic, isEnabled: true)
+//                        .hoverEffect(.automatic, isEnabled: true)
                         .cornerRadius(24)
                         .shadow(radius: 20)
                         .position(x: x, y: y)
                         .offset(z: z)
+                        // .allowsHitTesting(key == "root")
                 }
                 ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
                     Model3D(url: windowGroupContent.models[key]!.url) { model in
                         model.model?
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000)
+                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000)
                 }
             }
         }
