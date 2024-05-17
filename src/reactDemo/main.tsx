@@ -39,8 +39,6 @@ function SpatialDiv(props: { webViewID: string, className: string, children: Rea
             setTimeout(() => {
                 WebSpatial.updatePanelContent("root", props.webViewID, innerStr)
             }, 1000);
-
-            WebSpatial.log("hit")
         }
         a()
 
