@@ -9,7 +9,6 @@ function App() {
     const myDiv = useRef(null);
     useEffect(() => {
         (window as any).updatePanelContent = (str: string) => {
-            WebSpatial.log("GOT MESSAGE! :" + str);
             (myDiv.current! as HTMLElement).innerHTML = str
         }
     })
