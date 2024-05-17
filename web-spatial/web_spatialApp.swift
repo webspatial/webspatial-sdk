@@ -27,7 +27,7 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
 
-        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://10.73.196.42:5173/http://10.73.196.42:5173/?pageName=helloWorldApp/main.tsx")!)
+        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://10.73.196.42:5173/?pageName=reactDemo/main.tsx")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
