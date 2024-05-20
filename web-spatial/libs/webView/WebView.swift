@@ -67,7 +67,7 @@ class WebView {
                         targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
                     }
 
-                    // TODO this needs to be cleaned up
+                    // TODO: this needs to be cleaned up
                     let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
                     if wv.loadRequestID != -1 {
                         wv.webView.webViewHolder.gWebView?.load(URLRequest(url: URL(string: targetUrl)!))
@@ -75,6 +75,8 @@ class WebView {
                     wv.loadRequestID = requestID
                     wv.loadRequestWV = self
                 }
+            } else if command == "resizeCompleted" {
+                parent?.resizing = false
             } else if command == "updatePanelContent" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
