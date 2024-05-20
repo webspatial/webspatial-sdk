@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import '../index.css'
 import { SpatialWeb } from "../../lib/spatialWeb.ts"
 import hnLogo from './assets/y18.svg'
-import { SpatialDiv } from '../../lib/webSpatialComponents'
+import { SpatialDiv, SpatialModel } from '../../lib/webSpatialComponents'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
@@ -157,9 +157,9 @@ function App() {
         </div>
         <div className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
           <h1>Model3D</h1>
-          <div id="modelHere" className='w-full h-full bg-white bg-opacity-50'>
 
-          </div>
+          <SpatialModel webViewID='testModel' className='w-full h-full bg-white bg-opacity-50' spatialOffset={{ z: 0 }}>
+          </SpatialModel>
         </div>
       </div>
 
@@ -224,12 +224,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 var main = async () => {
   setTimeout(async () => {
-    var element = document.getElementById("modelHere")!
-    var rect = element.getBoundingClientRect();
-    var curPosX = (rect.left + ((rect.right - rect.left) / 2))
-    var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-    await WebSpatial.createDOMModel("root", "root", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
-    await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 })
+    // var element = document.getElementById("modelHere")!
+    // var rect = element.getBoundingClientRect();
+    // var curPosX = (rect.left + ((rect.right - rect.left) / 2))
+    // var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+    // await WebSpatial.createDOMModel("root", "root", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
+    // await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 })
 
     // {
     //   WebSpatial.onFrame(async () => {
