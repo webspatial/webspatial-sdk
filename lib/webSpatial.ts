@@ -127,6 +127,12 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
+  static async resizeCompleted() {
+    var cmd = new RemoteCommand()
+    cmd.command = "resizeCompleted"
+    await WebSpatial.sendCommand(cmd)
+  }
+
   static onFrame(fn: any) {
     var loop = () => {
       setTimeout(() => {
@@ -139,4 +145,7 @@ class WebSpatial {
   }
 }
 WebSpatial.init()
+window.addEventListener("resize", ()=>{
+  WebSpatial.resizeCompleted()
+});
 export default WebSpatial
