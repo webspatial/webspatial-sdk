@@ -28,29 +28,31 @@ export function SpatialDiv(props: { webViewID: string, className: string, childr
 
     const myDiv = useRef(null);
     useEffect(() => {
-        var innerStr = ReactDomServer.renderToString(props.children)
-        innerStr = innerStr.replace("remote-click", "onclick")
-        console.log(innerStr)
         if (!(window as any).WebSpatailEnabled) {
             return
         }
-        var a = async () => {
-            await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", innerStr)
 
+        var innerStr = ReactDomServer.renderToString(props.children)
+        innerStr = innerStr.replace("remote-click", "onclick")
+
+        var resizeDiv = async () => {
             var rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
-
             var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
             var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-
             await WebSpatial.updatePanelPose("root", props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
-            WebSpatial.updatePanelContent("root", props.webViewID, innerStr)
         }
-        a()
+        var setContent = async () => {
+            await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", innerStr)
+            await WebSpatial.updatePanelContent("root", props.webViewID, innerStr)
+            await resizeDiv()
+        }
+        setContent()
+        addEventListener("resize", resizeDiv);
 
         return () => {
-
+            removeEventListener("resize", resizeDiv)
         }
-    })
+    }, [])
 
     return (
         <div ref={myDiv} className={props.className}>
