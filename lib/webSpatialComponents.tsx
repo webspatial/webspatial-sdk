@@ -32,27 +32,51 @@ export function SpatialDiv(props: { webViewID: string, className: string, childr
             return
         }
 
-        var innerStr = ReactDomServer.renderToString(props.children)
+        let innerStr = ReactDomServer.renderToString(props.children)
         innerStr = innerStr.replace("remote-click", "onclick")
 
-        var resizeDiv = async () => {
-            var rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
-            var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
-            var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+        let resizeDiv = async () => {
+            let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
+            let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
+            let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
             await WebSpatial.updatePanelPose("root", props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
         }
-        var setContent = async () => {
+        let setContent = async () => {
             await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", innerStr)
             await WebSpatial.updatePanelContent("root", props.webViewID, innerStr)
             await resizeDiv()
         }
         setContent()
-        addEventListener("resize", resizeDiv);
+        resizeDiv()
+        // WebSpatial.log("mount " + props.webViewID)
+        //addEventListener("resize", resizeDiv);
+        // new ResizeObserver(resizeDiv).observe((myDiv.current! as HTMLElement));
+        // new IntersectionObserver((changes) => {
+        //     WebSpatial.log("got move " + props.webViewID)
+        //     changes.forEach(change => {
+        //         WebSpatial.log(change.intersectionRatio)
+        //     });
+        // }, {
+        //     root: (myDiv.current! as HTMLElement).parentElement,
+        // }).observe((myDiv.current! as HTMLElement));
+        // WebSpatial.log("attached")
 
+        // new MutationObserver((mutationsList, observer) => {
+
+        //     resizeDiv()
+        //     for (const mutation of mutationsList) {
+        //         WebSpatial.log(mutation.type)
+        //         if (mutation.type === 'childList') {
+        //             WebSpatial.log(mutation.target.id)
+        //             WebSpatial.log("childChange")
+        //         }
+        //     }
+        // })
+        //     .observe((myDiv.current! as HTMLElement), { childList: true })
         return () => {
             removeEventListener("resize", resizeDiv)
         }
-    }, [])
+    }, [props.children])
 
     return (
         <div ref={myDiv} className={props.className}>
