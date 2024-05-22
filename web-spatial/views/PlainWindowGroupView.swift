@@ -5,7 +5,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
-import typealias RealityKit.Model3D
+import RealityKit
 import SwiftUI
 
 struct PlainWindowGroupView: View {
@@ -13,6 +13,29 @@ struct PlainWindowGroupView: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
+
+    init(windowGroupContent: WindowGroupContentDictionary) {
+        self.windowGroupContent = windowGroupContent
+        // UpdateWebViewSystem.registerSystem()
+    }
+
+    var dragGesture: some Gesture {
+        DragGesture()
+            .targetedToAnyEntity()
+            .onChanged { value in
+                //  value.entity.position.x = Float(value.location3D.x)
+                //  print(value.entity.name + "test")
+                // value.entity.position = value.convert(value.location3D, from: .local, to: value.entity.parent!)
+
+                // var p = value.convert(value.location3D, from: .local, to: value.entity.parent!)
+
+                var x = Transform()
+                x.translation.x = value.entity.position.x < 0 ? 0.4 : -0.4
+                // x.translation = p
+
+                value.entity.move(to: x, relativeTo: nil, duration: 10.0)
+            }
+    }
 
     var body: some View {
         VStack {}.onAppear().onReceive(windowGroupContent.$x.dropFirst()) { v in
@@ -32,6 +55,19 @@ struct PlainWindowGroupView: View {
 
         GeometryReader { proxy3D in
             ZStack {
+                RealityView { content in
+                    let cube = ModelEntity(mesh: .generateBox(size: 0.1))
+                    cube.generateCollisionShapes(recursive: false)
+                    var c = UpdateWebViewComponent()
+                    c.webView = windowGroupContent.webViews["root"]
+                    // cube.components.set(c)
+                    cube.position.x = -0.5
+                    cube.position.z = 0.2
+                    cube.generateCollisionShapes(recursive: false)
+                    cube.components.set(InputTargetComponent())
+                    content.add(cube)
+                }.gesture(dragGesture).offset(z: -0.1)
+
                 let oval = Float(windowGroupContent.webViews["root"]!.scrollOffset.y)
                 ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
                     let view = windowGroupContent.webViews[key]!
