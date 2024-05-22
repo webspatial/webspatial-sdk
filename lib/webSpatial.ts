@@ -145,7 +145,24 @@ class WebSpatial {
   }
 }
 WebSpatial.init()
-window.addEventListener("resize", ()=>{
-  WebSpatial.resizeCompleted()
-});
+if((window as any).WebSpatailEnabled){
+  window.addEventListener("resize", ()=>{
+    WebSpatial.resizeCompleted()
+  });
+
+  let pos = 0
+  let last = 0;
+  (window as any)._magicUpdate = ()=>{
+    const now = Date.now();
+    let dt = now - last;
+    last = now
+    if((dt/1000) < 1/10){
+      pos += 1 * (dt/1000)
+      return Math.sin(pos) * 0.3
+    }else{
+      return 0
+    }
+  }
+}
+
 export default WebSpatial
