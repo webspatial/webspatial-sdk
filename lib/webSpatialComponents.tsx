@@ -13,68 +13,50 @@ export function SpatialDebug() {
 }
 
 export function SpatialDiv(props: { webViewID: string, className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
-    if (!props.spatialOffset) {
-        props.spatialOffset = { x: 0, y: 0, z: 0 }
+    props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
+    if (props.spatialOffset!.x === undefined) {
+        props.spatialOffset!.x = 0
     }
-    if (props.spatialOffset.x === undefined) {
-        props.spatialOffset.x = 0
+    if (props.spatialOffset!.y === undefined) {
+        props.spatialOffset!.y = 0
     }
-    if (props.spatialOffset.y === undefined) {
-        props.spatialOffset.y = 0
-    }
-    if (props.spatialOffset.z === undefined) {
-        props.spatialOffset.z = 0
+    if (props.spatialOffset!.z === undefined) {
+        props.spatialOffset!.z = 0
     }
 
     const myDiv = useRef(null);
+    let resizeDiv = async () => {
+        let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
+        let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
+        let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+        await WebSpatial.updatePanelPose("root", props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
+    }
+    let setContent = async (str: string) => {
+        await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", str)
+        await WebSpatial.updatePanelContent("root", props.webViewID, str)
+        await resizeDiv()
+    }
+
     useEffect(() => {
         if (!(window as any).WebSpatailEnabled) {
             return
         }
-
         let innerStr = ReactDomServer.renderToString(props.children)
         innerStr = innerStr.replace("remote-click", "onclick")
+        setContent(innerStr)
 
-        let resizeDiv = async () => {
-            let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
-            let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
-            let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-            await WebSpatial.updatePanelPose("root", props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
-        }
-        let setContent = async () => {
-            await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", innerStr)
-            await WebSpatial.updatePanelContent("root", props.webViewID, innerStr)
-            await resizeDiv()
-        }
-        setContent()
-        resizeDiv()
-        // WebSpatial.log("mount " + props.webViewID)
-        //addEventListener("resize", resizeDiv);
-        // new ResizeObserver(resizeDiv).observe((myDiv.current! as HTMLElement));
-        // new IntersectionObserver((changes) => {
-        //     WebSpatial.log("got move " + props.webViewID)
-        //     changes.forEach(change => {
-        //         WebSpatial.log(change.intersectionRatio)
-        //     });
-        // }, {
-        //     root: (myDiv.current! as HTMLElement).parentElement,
-        // }).observe((myDiv.current! as HTMLElement));
-        // WebSpatial.log("attached")
-
-        // new MutationObserver((mutationsList, observer) => {
-
-        //     resizeDiv()
-        //     for (const mutation of mutationsList) {
-        //         WebSpatial.log(mutation.type)
-        //         if (mutation.type === 'childList') {
-        //             WebSpatial.log(mutation.target.id)
-        //             WebSpatial.log("childChange")
-        //         }
-        //     }
-        // })
-        //     .observe((myDiv.current! as HTMLElement), { childList: true })
+        addEventListener("resize", resizeDiv);
+        new ResizeObserver(resizeDiv).observe((myDiv.current! as HTMLElement));
         return () => {
             removeEventListener("resize", resizeDiv)
+        }
+    }, [])
+    useEffect(() => {
+        if (!(window as any).WebSpatailEnabled) {
+            return
+        }
+        resizeDiv()
+        return () => {
         }
     }, [props.children])
 
