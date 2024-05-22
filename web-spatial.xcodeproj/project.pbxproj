@@ -20,6 +20,7 @@
 		2B2F1D962BED8E6C006897EE /* WindowGroupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D952BED8E6C006897EE /* WindowGroupManager.swift */; };
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
 		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
+		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,7 @@
 		2B2F1D952BED8E6C006897EE /* WindowGroupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupManager.swift; sourceTree = "<group>"; };
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
 		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
+		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +143,7 @@
 		2B2F1D8B2BED4CDA006897EE /* webView */ = {
 			isa = PBXGroup;
 			children = (
+				2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */,
 				2B2F1D8D2BED4CFA006897EE /* backend */,
 				2B2F1D922BED61CA006897EE /* WebView.swift */,
 			);
@@ -284,6 +287,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B2F1D6D2BEBFAAA006897EE /* ContentView.swift in Sources */,
+				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
 				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
 				2B2F1D962BED8E6C006897EE /* WindowGroupManager.swift in Sources */,
