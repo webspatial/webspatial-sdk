@@ -31,24 +31,30 @@ class WebView {
         webView.webViewRef = self
     }
 
+    func completeEvent(requestID: Int, data: String = "{}") {
+        webView.webViewHolder.gWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(requestID)+", data: "+data+"})")
+    }
+
     // Request information of webview that request this webview to load
     var loadRequestWV: WebView?
     var loadRequestID = -1
     // A load request of a child webview was loaded
     func didLoad(loadRequestID: Int) {
         print("did load "+String(loadRequestID))
-        webView.webViewHolder.gWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(loadRequestID)+"})")
+        completeEvent(requestID: loadRequestID)
     }
 
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
             if command == "createWindowGroup" {
                 if let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"]),
-                   let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"])
+                   let requestID: Int = json.getValue(lookup: ["requestID"])
                 {
-                    let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: windowGroupID)
+                    let uuid = UUID().uuidString
+                    let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
+                    completeEvent(requestID: requestID, data: "{createdID: '"+uuid+"'}")
                 }
             } else if command == "createWebPanel" {
                 if let url: String = json.getValue(lookup: ["data", "url"]),
