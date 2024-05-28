@@ -8,6 +8,7 @@ import ReactDomServer from 'react-dom/server';
 
 var _panelContentUpdate = "";
 (window as any).updatePanelContent = (str: string) => {
+    str = decodeURIComponent(str)
     _panelContentUpdate = str;
     if ((window as any).myContentUpdate) {
         (window as any).myContentUpdate(_panelContentUpdate)
