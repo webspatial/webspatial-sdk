@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
-import { SpatialWeb } from "../../lib/spatialWeb.ts"
+import { WindowGroup } from "../../lib/webSpatial.ts"
 import hnLogo from './assets/y18.svg'
 import { SpatialDiv, SpatialModel } from '../../lib/webSpatialComponents'
 
@@ -83,6 +83,8 @@ function App() {
   const sharedCount = useSelector((state: any) => state.count.value);
   const dispatch = useDispatch()
   const [created, setCreated] = useState(false)
+  var volumetricWG = new WindowGroup()
+
 
   const children = [];
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
@@ -111,9 +113,9 @@ function App() {
                 await WebSpatial.openImmersiveSpace()
                 if (!created) {
                   setCreated(true)
-                  await WebSpatial.createDOMModel("Immersive", "x", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
+                  await WebSpatial.createDOMModel(WebSpatial.getImmersiveWindowGroup(), "x", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
                   WebSpatial.onFrame(async (x: number) => {
-                    WebSpatial.updateDOMModelPosition("Immersive", "x", "testModel", { x: Math.sin(x / 1000), y: 1.5, z: -1 })
+                    WebSpatial.updateDOMModelPosition(WebSpatial.getImmersiveWindowGroup(), "x", "testModel", { x: Math.sin(x / 1000), y: 1.5, z: -1 })
                   })
                 }
               } else {
@@ -127,23 +129,27 @@ function App() {
           <h1>Open Volumetric</h1>
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
-              await WebSpatial.createWindowGroup("myWindow", "Volumetric")
-              await new Promise(resolve => setTimeout(resolve, 500));
-              await WebSpatial.createWebPanel("myWindow", "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
-              await WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: 0, y: 0, z: -0.4 }, 1920, 1080)
-              await WebSpatial.createMesh("myWindow", "myMesh")
-              await WebSpatial.createDOMModel("myWindow", "myPanel2", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
-              setTimeout(() => {
-                WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: 0, y: -0.5, z: 0 })
-              }, 3000);
+              if (volumetricWG.id === "") {
+                volumetricWG = await WebSpatial.createWindowGroup("Volumetric")
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await WebSpatial.createWebPanel(volumetricWG, "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
+                await WebSpatial.updatePanelPose(volumetricWG, "myPanel2", { x: 0, y: 0, z: -0.4 }, 1920, 1080)
+                await WebSpatial.createMesh(volumetricWG, "myMesh")
+                await WebSpatial.createDOMModel(volumetricWG, "myPanel2", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
+                setTimeout(() => {
+                  WebSpatial.updateDOMModelPosition(volumetricWG, "myPanel2", "testModel", { x: 0, y: -0.5, z: 0 })
+                }, 3000);
+              }
+
+
 
             }}>
             Click Me</button>
           <input type="range" step='0.005' className="mt-10 w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg dark:bg-gray-700"
             // style={{ height: "30px" }}
             onChange={async (e) => {
-              WebSpatial.updatePanelPose("myWindow", "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
-              await WebSpatial.updateDOMModelPosition("myWindow", "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
+              WebSpatial.updatePanelPose(volumetricWG, "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
+              await WebSpatial.updateDOMModelPosition(volumetricWG, "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
             }}></input>
 
@@ -152,8 +158,8 @@ function App() {
           <h1>Open Plain</h1>
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
-              await WebSpatial.createWindowGroup("myWindow2", "Plain")
-              await WebSpatial.createWebPanel("myWindow2", "root", "/index.html?pageName=helloWorldApp/main2.tsx")
+              var newPage = await WebSpatial.createWindowGroup("Plain")
+              await WebSpatial.createWebPanel(newPage, "root", "/index.html?pageName=helloWorldApp/main2.tsx")
             }}>
             Click Me
           </button>

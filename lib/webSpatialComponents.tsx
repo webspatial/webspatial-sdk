@@ -86,12 +86,12 @@ export function SpatialDiv(props: { webViewID: string, className: string, childr
         let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-        await WebSpatial.updatePanelPose("root", props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
+        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
     }
     let setContent = async (str: string) => {
         //var start = Date.now()
-        await WebSpatial.createWebPanel("root", props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", str)
-        await WebSpatial.updatePanelContent("root", props.webViewID, str)
+        await WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", str)
+        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), props.webViewID, str)
         await resizeDiv()
         //var latency = (Date.now() - start) / 1000
         // WebSpatial.log(latency)
@@ -154,10 +154,10 @@ export function SpatialModel(props: { webViewID: string, className: string, chil
             var rect = element.getBoundingClientRect();
             var curPosX = (rect.left + ((rect.right - rect.left) / 2))
             var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-            await WebSpatial.updateDOMModelPosition("root", "root", props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
+            await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), "root", props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
         }
         var setContent = async () => {
-            await WebSpatial.createDOMModel("root", "root", props.webViewID, "http://npmURL:5173/src/assets/FlightHelmet.usdz")
+            await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), "root", props.webViewID, "http://npmURL:5173/src/assets/FlightHelmet.usdz")
             await resizeDiv()
         }
         setContent()
