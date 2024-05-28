@@ -38,14 +38,14 @@ import WebSpatial from "../../lib/webSpatial.ts"
 
 //   const listItems = stories.map((story: any) =>
 //     <div className='p-2'>
-//       <button className='p-3 w-full bg-white bg-opacity-25 rounded-xl shadow-lg flex flex-row items-left space-x-4'>
+//       <button className='select-none p-3 w-full bg-white bg-opacity-25 rounded-xl shadow-lg flex flex-row items-left space-x-4'>
 //         <div className='basis-3/4'>
 //           <div className="text-xl font-medium text-white text-left">{story.title}</div>
 //           {/* <p className="text-white">You have a new message!</p> */}
 //         </div>
 //         <div className="basis-1/4">
 //           {/* <img className="h-12 w-12" src="/img/logo.svg" alt="ChitChat Logo"></img> */}
-//           <button className="bg-white bg-opacity-25 hover:bg-gray-100 text-white-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow text-white">
+//           <button className="select-none bg-white bg-opacity-25 hover:bg-gray-100 text-white-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow text-white">
 //             Comments
 //           </button>
 //         </div>
@@ -125,7 +125,7 @@ function App() {
         </div>
         <div className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
           <h1>Open Volumetric</h1>
-          <button className="px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
+          <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               await WebSpatial.createWindowGroup("myWindow", "Volumetric")
               await new Promise(resolve => setTimeout(resolve, 500));
@@ -148,9 +148,9 @@ function App() {
             }}></input>
 
         </div>
-        <div className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
+        <div className="select-none p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
           <h1>Open Plain</h1>
-          <button className="px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
+          <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               await WebSpatial.createWindowGroup("myWindow2", "Plain")
               await WebSpatial.createWebPanel("myWindow2", "root", "/index.html?pageName=helloWorldApp/main2.tsx")
@@ -158,7 +158,7 @@ function App() {
             Click Me
           </button>
           <h1>test: {sharedCount}</h1>
-          <button className="px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
+          <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               dispatch(increment())
             }}>
