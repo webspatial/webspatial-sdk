@@ -106,6 +106,7 @@ struct WebViewNative: UIViewRepresentable {
             let request = URLRequest(url: url)
             webView.load(request)
             webView.isOpaque = false
+            webView.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
     }
