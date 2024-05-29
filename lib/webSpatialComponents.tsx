@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import WebSpatial from './webSpatial'
+import WebSpatial, { WebPanel } from './webSpatial'
 import ReactDomServer from 'react-dom/server';
 
 export function SpatialDebug() {
@@ -68,7 +68,7 @@ function getInheritedStyle(from: HTMLElement) {
 }
 
 
-export function SpatialDiv(props: { webViewID: string, className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+export function SpatialDiv(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     if (props.spatialOffset!.x === undefined) {
         props.spatialOffset!.x = 0
@@ -79,6 +79,7 @@ export function SpatialDiv(props: { webViewID: string, className: string, childr
     if (props.spatialOffset!.z === undefined) {
         props.spatialOffset!.z = 0
     }
+    var panel = new WebPanel()
 
     const myStyleDiv = useRef(null);
     const myDiv = useRef(null);
@@ -86,12 +87,12 @@ export function SpatialDiv(props: { webViewID: string, className: string, childr
         let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), props.webViewID, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
+        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), panel, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
     }
     let setContent = async (str: string) => {
         //var start = Date.now()
-        await WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), props.webViewID, "/index.html?pageName=reactDemo/basic.tsx", str)
-        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), props.webViewID, str)
+        panel = await WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
+        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), panel, str)
         await resizeDiv()
         //var latency = (Date.now() - start) / 1000
         // WebSpatial.log(latency)
@@ -154,10 +155,10 @@ export function SpatialModel(props: { webViewID: string, className: string, chil
             var rect = element.getBoundingClientRect();
             var curPosX = (rect.left + ((rect.right - rect.left) / 2))
             var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-            await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), "root", props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
+            await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
         }
         var setContent = async () => {
-            await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), "root", props.webViewID, "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
+            await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
             await resizeDiv()
         }
         setContent()
