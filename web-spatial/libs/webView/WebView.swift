@@ -45,7 +45,7 @@ class WebView {
     }
 
     func didLoadPage() {
-      //  print("I loaded: "+webView.url.absoluteString)
+        //  print("I loaded: "+webView.url.absoluteString)
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -185,9 +185,9 @@ class WebView {
 
             } else if command == "createMesh" {
             } else if command == "openImmersiveSpace" {
-                wgManager.getWindowGroup(windowGroup: "root").x = true
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = true
             } else if command == "dismissImmersiveSpace" {
-                wgManager.getWindowGroup(windowGroup: "root").x = false
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
             } else if command == "log" {
                 if let logString: String = json.getValue(lookup: ["data", "logString"]) {
                     print(logString)

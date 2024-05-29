@@ -38,7 +38,7 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        VStack {}.onAppear().onReceive(windowGroupContent.$x.dropFirst()) { v in
+        VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
             if v {
                 Task {
                     await openImmersiveSpace(id: "ImmersiveSpace")
@@ -68,7 +68,8 @@ struct PlainWindowGroupView: View {
                     content.add(cube)
                 }.gesture(dragGesture).offset(z: -0.1)
 
-                let oval = Float(windowGroupContent.webViews.first!.value.scrollOffset.y)
+                let wv = windowGroupContent.webViews["root"] == nil ? windowGroupContent.webViews.first!.value : windowGroupContent.webViews["root"]!
+                let oval = Float(wv.scrollOffset.y)
                 ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
                     let view = windowGroupContent.webViews[key]!
 
