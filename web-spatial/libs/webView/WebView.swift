@@ -40,9 +40,12 @@ class WebView {
     var loadRequestID = -1
     var webViewID = ""
     // A load request of a child webview was loaded
-    func didLoad(loadRequestID: Int, webViewID: String) {
-        print("did load "+String(loadRequestID))
+    func didLoadChild(loadRequestID: Int, webViewID: String) {
         completeEvent(requestID: loadRequestID, data: "{createdID: '"+webViewID+"'}")
+    }
+
+    func didLoadPage() {
+      //  print("I loaded: "+webView.url.absoluteString)
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -149,13 +152,9 @@ class WebView {
 
                         Task {
                             do {
-                                print("model A")
                                 let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent("nike3.usdz"))
-                                print("model B")
                                 d.models[modelID]?.entity.entity = m
-                                print("model C")
                                 await d.rootEntity.addChild(m)
-                                print("model loaded")
                             } catch {
                                 print("failed to load model: "+error.localizedDescription)
                             }
