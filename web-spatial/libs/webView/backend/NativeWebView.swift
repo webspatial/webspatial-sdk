@@ -32,11 +32,13 @@ struct WebViewNative: UIViewRepresentable {
         
         var webView: WKWebView?
         var webViewRef: WebView? = nil
-            
+        
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
+            webViewRef?.didStartLoadPage()
+        }
+        
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             self.webView = webView
-            
-            webViewRef?.didLoadPage()
             
             webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, webViewID: webViewRef!.webViewID)
             webViewRef?.loadRequestID = -1
