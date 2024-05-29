@@ -48,6 +48,15 @@ class WindowGroupManager {
         return windowGroups[windowGroup]!.webViews[windowID]!
     }
 
+    func destroyWebView(windowGroup: String, windowID: String)->Bool {
+        if windowGroups[windowGroup] != nil {
+            if windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) != nil {
+                return true
+            }
+        }
+        return false
+    }
+
     func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
         if windowGroups[windowGroup] == nil {
             windowGroups[windowGroup] = WindowGroupContentDictionary()
