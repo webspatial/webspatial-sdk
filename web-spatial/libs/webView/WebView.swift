@@ -83,6 +83,13 @@ class WebView {
                     wv.loadRequestID = requestID
                     wv.loadRequestWV = self
                 }
+            } else if command == "destroyWebPanel" {
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]),
+                   let requestID: Int = json.getValue(lookup: ["requestID"])
+                {
+                    wgManager.destroyWebView(windowGroup: windowGroupID, windowID: webPanelID)
+                }
             } else if command == "resizeCompleted" {
                 parent?.resizing = false
             } else if command == "updatePanelContent" {

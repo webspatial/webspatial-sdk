@@ -68,7 +68,7 @@ struct PlainWindowGroupView: View {
                     content.add(cube)
                 }.gesture(dragGesture).offset(z: -0.1)
 
-                let oval = Float(windowGroupContent.webViews["root"]!.scrollOffset.y)
+                let oval = Float(windowGroupContent.webViews.first!.value.scrollOffset.y)
                 ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
                     let view = windowGroupContent.webViews[key]!
 
