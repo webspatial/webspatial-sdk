@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
-import { WindowGroup } from "../../lib/webSpatial.ts"
+import { WebPanel, WindowGroup } from "../../lib/webSpatial.ts"
 import hnLogo from './assets/y18.svg'
 import { SpatialDiv, SpatialModel } from '../../lib/webSpatialComponents'
 
@@ -84,6 +84,7 @@ function App() {
   const dispatch = useDispatch()
   const [created, setCreated] = useState(false)
   var volumetricWG = new WindowGroup()
+  var volumetricPanel = new WebPanel()
 
 
   const children = [];
@@ -113,9 +114,9 @@ function App() {
                 await WebSpatial.openImmersiveSpace()
                 if (!created) {
                   setCreated(true)
-                  await WebSpatial.createDOMModel(WebSpatial.getImmersiveWindowGroup(), "x", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
+                  await WebSpatial.createDOMModel(WebSpatial.getImmersiveWindowGroup(), new WebPanel(), "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
                   WebSpatial.onFrame(async (x: number) => {
-                    WebSpatial.updateDOMModelPosition(WebSpatial.getImmersiveWindowGroup(), "x", "testModel", { x: Math.sin(x / 1000), y: 1.5, z: -1 })
+                    WebSpatial.updateDOMModelPosition(WebSpatial.getImmersiveWindowGroup(), new WebPanel(), "testModel", { x: Math.sin(x / 1000), y: 1.5, z: -1 })
                   })
                 }
               } else {
@@ -132,12 +133,12 @@ function App() {
               if (volumetricWG.id === "") {
                 volumetricWG = await WebSpatial.createWindowGroup("Volumetric")
                 await new Promise(resolve => setTimeout(resolve, 500));
-                await WebSpatial.createWebPanel(volumetricWG, "myPanel2", "/index.html?pageName=helloWorldApp/main2.tsx")
-                await WebSpatial.updatePanelPose(volumetricWG, "myPanel2", { x: 0, y: 0, z: -0.4 }, 1920, 1080)
+                volumetricPanel = await WebSpatial.createWebPanel(volumetricWG, "/index.html?pageName=helloWorldApp/main2.tsx")
+                await WebSpatial.updatePanelPose(volumetricWG, volumetricPanel, { x: 0, y: 0, z: -0.4 }, 1920, 1080)
                 await WebSpatial.createMesh(volumetricWG, "myMesh")
-                await WebSpatial.createDOMModel(volumetricWG, "myPanel2", "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
+                await WebSpatial.createDOMModel(volumetricWG, volumetricPanel, "testModel", "http://npmURL:5173/src/assets/FlightHelmet.usdz")
                 setTimeout(() => {
-                  WebSpatial.updateDOMModelPosition(volumetricWG, "myPanel2", "testModel", { x: 0, y: -0.5, z: 0 })
+                  WebSpatial.updateDOMModelPosition(volumetricWG, volumetricPanel, "testModel", { x: 0, y: -0.5, z: 0 })
                 }, 3000);
               }
 
@@ -148,8 +149,8 @@ function App() {
           <input type="range" step='0.005' className="mt-10 w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg dark:bg-gray-700"
             // style={{ height: "30px" }}
             onChange={async (e) => {
-              WebSpatial.updatePanelPose(volumetricWG, "myPanel2", { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
-              await WebSpatial.updateDOMModelPosition(volumetricWG, "myPanel2", "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
+              WebSpatial.updatePanelPose(volumetricWG, volumetricPanel, { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
+              await WebSpatial.updateDOMModelPosition(volumetricWG, volumetricPanel, "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
               //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
             }}></input>
 
@@ -159,7 +160,7 @@ function App() {
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               var newPage = await WebSpatial.createWindowGroup("Plain")
-              await WebSpatial.createWebPanel(newPage, "root", "/index.html?pageName=helloWorldApp/main2.tsx")
+              await WebSpatial.createWebPanel(newPage, "/index.html?pageName=helloWorldApp/main2.tsx")
             }}>
             Click Me
           </button>
@@ -183,22 +184,22 @@ function App() {
         {children}
       </div>
       <div className="flex text-white h-64 m-10">
-        <SpatialDiv webViewID='A' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
+        <SpatialDiv className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
           <div className="text-white bg-red-300 bg-opacity-20 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <p className='text-center'>Hello world always works</p>
           </div>
         </SpatialDiv>
-        <SpatialDiv webViewID='B' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
+        <SpatialDiv className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
           <div className="text-white bg-green-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <p className='text-center' remote-click="(window).wx.log('trevor here')">Hello worfdsfdsld 2</p>
           </div>
         </SpatialDiv>
-        <SpatialDiv webViewID='C' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
+        <SpatialDiv className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
           <div className="text-white bg-blue-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <p className='text-center'>Hello world 5</p>
           </div>
         </SpatialDiv>
-        <SpatialDiv webViewID='D' className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
+        <SpatialDiv className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
           <div className="text-white bg-yellow-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <p className='text-center'>Hello worlds</p>
           </div>
