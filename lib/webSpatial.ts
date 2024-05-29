@@ -81,6 +81,14 @@ class WebSpatial {
     res.id = (result as any).data.createdID
     res.windowGroupId = windowGroup.id
     return res
+  } 
+   static async destroyWebPanel(windowGroup: WindowGroup, webPanel:WebPanel) {
+    var cmd = new RemoteCommand()
+    cmd.command = "destroyWebPanel"
+    cmd.data.windowGroupID = windowGroup.id
+    cmd.data.webPanelID = webPanel.id
+    
+    WebSpatial.sendCommand(cmd)
   }
 
   static async updatePanelPose(windowGroup: WindowGroup, webPanel:WebPanel, position: {x:number,y:number,z:number}, width:number, height:number) {
