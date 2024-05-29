@@ -90,7 +90,7 @@ function App() {
   const children = [];
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
     children.push(
-      <SpatialDiv key={i} webViewID={'wv' + i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
+      <SpatialDiv key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
         <div className="text-white bg-purple-300 bg-opacity-20 flex min-h-full flex-1 flex-col justify-center px-6 py-0 lg:px-8">
           <p className='text-center'>Hello world {i}</p>
         </div>
