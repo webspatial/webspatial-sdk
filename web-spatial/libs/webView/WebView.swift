@@ -38,10 +38,11 @@ class WebView {
     // Request information of webview that request this webview to load
     var loadRequestWV: WebView?
     var loadRequestID = -1
+    var webViewID = ""
     // A load request of a child webview was loaded
-    func didLoad(loadRequestID: Int) {
+    func didLoad(loadRequestID: Int, webViewID: String) {
         print("did load "+String(loadRequestID))
-        completeEvent(requestID: loadRequestID)
+        completeEvent(requestID: loadRequestID, data: "{createdID: '"+webViewID+"'}")
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -59,10 +60,10 @@ class WebView {
             } else if command == "createWebPanel" {
                 if let url: String = json.getValue(lookup: ["data", "url"]),
                    let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
                    let _: String = json.getValue(lookup: ["data", "rawHTML"]),
                    let requestID: Int = json.getValue(lookup: ["requestID"])
                 {
+                    let uuid = UUID().uuidString
                     var targetUrl = url
                     if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
                         var port = ""
@@ -74,10 +75,11 @@ class WebView {
                     }
 
                     // TODO: this needs to be cleaned up
-                    let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: windowID, url: URL(string: targetUrl)!)
+                    let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: uuid, url: URL(string: targetUrl)!)
                     if wv.loadRequestID != -1 {
                         wv.webView.webViewHolder.gWebView?.load(URLRequest(url: URL(string: targetUrl)!))
                     }
+                    wv.webViewID = uuid
                     wv.loadRequestID = requestID
                     wv.loadRequestWV = self
                 }
