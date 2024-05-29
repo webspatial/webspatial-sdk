@@ -2,6 +2,11 @@ export class WindowGroup {
   id = ""
 }
 
+export class WebPanel {
+  id = ""
+  windowGroupId=""
+}
+
 class RemoteCommand {
     private static requestCounter = 0
     command = "cmd"
@@ -40,6 +45,13 @@ class WebSpatial {
     return wg
   }
 
+  static getCurrentWebPanel(){
+    var wg = new WebPanel()
+    wg.id = "root"
+    wg.windowGroupId = WebSpatial.getCurrentWindowGroup().id
+    return wg
+  }
+
   static async createWindowGroup(style: WindowStyle = "Plain") {
     var cmd = new RemoteCommand()
     cmd.command = "createWindowGroup"
@@ -54,69 +66,72 @@ class WebSpatial {
     return res
   }
 
-  static async createWebPanel(windowGroup: WindowGroup, windowID: string, url: string, rawHTML = "") {
+  static async createWebPanel(windowGroup: WindowGroup, url: string, rawHTML = "") {
     var cmd = new RemoteCommand()
     cmd.command = "createWebPanel"
     cmd.data.url = url
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
     cmd.data.rawHTML = rawHTML
 
-    await new Promise((res,rej)=>{
+    var result = await new Promise((res,rej)=>{
       WebSpatial.eventPromises[cmd.requestID] = res
       WebSpatial.sendCommand(cmd)
     })
+    var res = new WebPanel()
+    res.id = (result as any).data.createdID
+    res.windowGroupId = windowGroup.id
+    return res
   }
 
-  static async updatePanelPose(windowGroup: WindowGroup, windowID: string, position: {x:number,y:number,z:number}, width:number, height:number) {
+  static async updatePanelPose(windowGroup: WindowGroup, webPanel:WebPanel, position: {x:number,y:number,z:number}, width:number, height:number) {
     var cmd = new RemoteCommand()
     cmd.command = "updatePanelPose"
     cmd.data.position = position
     cmd.data.width = width
     cmd.data.height = height
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
+    cmd.data.windowID = webPanel.id
 
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async updatePanelContent(windowGroup: WindowGroup, windowID: string, html: string) {
+  static async updatePanelContent(windowGroup: WindowGroup, webPanel:WebPanel, html: string) {
     var cmd = new RemoteCommand()
     cmd.command = "updatePanelContent"
     cmd.data.html = html
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
+    cmd.data.windowID = webPanel.id
 
     await WebSpatial.sendCommand(cmd)
   }
 
 
 
-  static async createMesh(windowGroup: WindowGroup, windowID: string) {
+  static async createMesh(windowGroup: WindowGroup, meshName:String) {
     var cmd = new RemoteCommand()
     cmd.command = "createMesh"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
+    cmd.data.windowID = meshName
 
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async createDOMModel(windowGroup: WindowGroup, windowID: string, modelID: string, modelURL: string) {
+  static async createDOMModel(windowGroup: WindowGroup, webPanel:WebPanel, modelID: string, modelURL: string) {
     var cmd = new RemoteCommand()
     cmd.command = "createDOMModel"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
+    cmd.data.windowID = webPanel.id
     cmd.data.modelID = modelID
     cmd.data.modelURL = modelURL
 
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async updateDOMModelPosition(windowGroup: WindowGroup, windowID: string, modelID: string, position: {x:number,y:number,z:number}) {
+  static async updateDOMModelPosition(windowGroup: WindowGroup, webPanel:WebPanel, modelID: string, position: {x:number,y:number,z:number}) {
     var cmd = new RemoteCommand()
     cmd.command = "updateDOMModelPosition"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = windowID
+    cmd.data.windowID = webPanel.id
     cmd.data.modelID = modelID
     cmd.data.modelPosition = position
 
