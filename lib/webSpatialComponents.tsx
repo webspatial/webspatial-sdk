@@ -80,6 +80,7 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
         props.spatialOffset!.z = 0
     }
     var panel = new WebPanel()
+    var panelP: Promise<any>
 
     const myStyleDiv = useRef(null);
     const myDiv = useRef(null);
@@ -91,7 +92,8 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
     }
     let setContent = async (str: string) => {
         //var start = Date.now()
-        panel = await WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
+        panelP = WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
+        panel = await panelP;
         await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), panel, str)
         await resizeDiv()
         //var latency = (Date.now() - start) / 1000
@@ -112,6 +114,13 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
         new ResizeObserver(resizeDiv).observe((myDiv.current! as HTMLElement));
         return () => {
             removeEventListener("resize", resizeDiv)
+
+            var m = async () => {
+                await panelP;
+                WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), panel)
+            }
+            m()
+
         }
     }, [])
     useEffect(() => {
