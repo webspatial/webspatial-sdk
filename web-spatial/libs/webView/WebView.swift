@@ -25,6 +25,7 @@ class WebView {
     var height: Double = 0
 
     var parent: WindowGroupContentDictionary?
+    var childPages = [String]()
 
     init(url: URL) {
         webView = WebViewNative(url: url)
@@ -44,8 +45,15 @@ class WebView {
         completeEvent(requestID: loadRequestID, data: "{createdID: '"+webViewID+"'}")
     }
 
-    func didLoadPage() {
-        //  print("I loaded: "+webView.url.absoluteString)
+    func didStartLoadPage() {
+        //  Remove existing child pages
+        if childPages.count > 0 {
+            //print("removing "+String(childPages.count))
+        }
+        for page in childPages {
+            var k = parent?.webViews.removeValue(forKey: page)
+        }
+        childPages = [String]()
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -83,6 +91,7 @@ class WebView {
                         wv.webView.webViewHolder.gWebView?.load(URLRequest(url: URL(string: targetUrl)!))
                     }
                     wv.webViewID = uuid
+                    childPages.append(uuid)
                     wv.loadRequestID = requestID
                     wv.loadRequestWV = self
                 }
