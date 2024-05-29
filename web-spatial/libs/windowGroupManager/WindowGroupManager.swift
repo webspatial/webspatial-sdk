@@ -23,7 +23,7 @@ struct ModelViewData {
 class WindowGroupContentDictionary: ObservableObject {
     @Published var webViews = [String: WebView]()
     @Published var models = [String: ModelViewData]()
-    @Published var x = false
+    @Published var toggleImmersiveSpace = false
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
 
