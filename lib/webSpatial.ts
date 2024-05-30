@@ -147,6 +147,11 @@ class WebSpatial {
   }
 
   static async log(log: any) {
+    if(!(window as any).WebSpatailEnabled){
+      console.log(log)
+      return
+    }
+
     var cmd = new RemoteCommand()
     cmd.command = "log"
     if(log !== null && log !== undefined && log.toString){
