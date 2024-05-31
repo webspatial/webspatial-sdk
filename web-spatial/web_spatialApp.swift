@@ -36,12 +36,12 @@ struct web_spatialApp: App {
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData == nil {
-                PlainWindowGroupView(windowGroupContent: rootWGD)
+                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0))
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView(windowGroupContent: wg)
             }
-        }
+        }.windowStyle(.plain)
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
