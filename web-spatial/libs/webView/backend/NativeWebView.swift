@@ -99,14 +99,13 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: configuration)
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
-                
+            
             webViewHolder.appleWebView!.allowsLinkPreview = true
-//                webView.navigationDelegate = self
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
             webViewHolder.needsUpdate = true
         }
-            
+
         return webViewHolder.appleWebView!
     }
         
@@ -115,7 +114,7 @@ struct WebViewNative: UIViewRepresentable {
             let request = URLRequest(url: url)
             webView.load(request)
             webView.isOpaque = false
-            webView.backgroundColor = UIColor.clear
+            //webView.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
     }
