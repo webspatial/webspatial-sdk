@@ -21,13 +21,14 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
 
 @main
 struct web_spatialApp: App {
-    var root: WebView
+    var root: SpatialWebView
     var rootWGD: WindowGroupContentDictionary
 
     init() {
         print("WebSpatial App Started --------")
 
-        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/?pageName=helloWorldApp/main.tsx")!)
+        // "http://npmURL:5173/?pageName=helloWorldApp/main.tsx"
+        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }

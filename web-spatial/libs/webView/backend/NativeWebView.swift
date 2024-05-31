@@ -17,62 +17,67 @@ var wgManager = WindowGroupManager()
 
 class WebViewHolder {
     var needsUpdate = false
-    var gWebView: WKWebView?
+    var appleWebView: WKWebView?
+    var webViewCoordinator: Coordinator?
+    deinit {
+        appleWebView = nil
+    }
+}
+
+class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate {
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+
+    deinit {
+    }
+    
+    weak var webViewRef: SpatialWebView? = nil
+    
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
+        webViewRef?.didStartLoadPage()
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, webViewID: webViewRef!.webViewID)
+        webViewRef?.loadRequestID = -1
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
+        decisionHandler(.allow)
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
+        decisionHandler(.allow)
+    }
+
+    // receive message from wkwebview
+    func userContentController(
+        _ userContentController: WKUserContentController,
+        didReceive message: WKScriptMessage
+    ) {
+        let json = JsonParser(str: message.body as? String)
+        if let wv = webViewRef {
+            wv.onJSScriptMessage(json: json)
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        webViewRef?.scrollOffset = scrollView.contentOffset
+        webViewRef?.parent?.updateFrame = !(webViewRef!.parent!.updateFrame)
+    }
 }
 
 struct WebViewNative: UIViewRepresentable {
-    var webViewRef: WebView? = nil
-    let url: URL
+    weak var webViewRef: SpatialWebView? = nil
+    var url: URL = .init(filePath: "/")
     var webViewHolder = WebViewHolder()
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate {
-        @Environment(\.openWindow) private var openWindow
-        @Environment(\.dismissWindow) private var dismissWindow
-        @Environment(\.dismiss) private var dismiss
-        @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-        
-        var webView: WKWebView?
-        var webViewRef: WebView? = nil
-        
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
-            webViewRef?.didStartLoadPage()
-        }
-        
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            self.webView = webView
-            
-            webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, webViewID: webViewRef!.webViewID)
-            webViewRef?.loadRequestID = -1
-        }
-        
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-            decisionHandler(.allow)
-        }
-
-        func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
-            decisionHandler(.allow)
-        }
-
-        // receive message from wkwebview
-        func userContentController(
-            _ userContentController: WKUserContentController,
-            didReceive message: WKScriptMessage
-        ) {
-            let json = JsonParser(str: message.body as? String)
-            if let wv = webViewRef {
-                wv.onJSScriptMessage(json: json)
-            }
-        }
-        
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            webViewRef?.scrollOffset = scrollView.contentOffset
-            webViewRef?.parent?.updateFrame = !(webViewRef!.parent!.updateFrame)
-        }
-            
-        func messageToWebview(msg: String) {
-            webView?.evaluateJavaScript("webkit.messageHandlers.bridge.onMessage('\(msg)')")
-        }
+    
+    init(url: URL) {
+        self.url = url
     }
-        
+    
     func makeCoordinator() -> Coordinator {
         let c = Coordinator()
         c.webViewRef = webViewRef
@@ -80,29 +85,29 @@ struct WebViewNative: UIViewRepresentable {
     }
         
     func makeUIView(context: Context) -> WKWebView {
-        let coordinator = makeCoordinator()
-        let userContentController = WKUserContentController()
-        
-        let userScript = WKUserScript(source: "window.WebSpatailEnabled = true", injectionTime: .atDocumentStart, forMainFrameOnly: false)
-        userContentController.addUserScript(userScript)
-        userContentController.add(coordinator, name: "bridge")
+        if webViewHolder.appleWebView == nil {
+            webViewHolder.webViewCoordinator = makeCoordinator()
+            let userContentController = WKUserContentController()
             
-        let configuration = WKWebViewConfiguration()
-        configuration.userContentController = userContentController
+            let userScript = WKUserScript(source: "window.WebSpatailEnabled = true", injectionTime: .atDocumentStart, forMainFrameOnly: false)
+            userContentController.addUserScript(userScript)
+            userContentController.add(webViewHolder.webViewCoordinator!, name: "bridge")
             
-        if webViewHolder.gWebView == nil {
-            webViewHolder.gWebView = WKWebView(frame: .zero, configuration: configuration)
-            webViewHolder.gWebView!.uiDelegate = coordinator
-            webViewHolder.gWebView!.allowsBackForwardNavigationGestures = true
+            let configuration = WKWebViewConfiguration()
+            configuration.userContentController = userContentController
+            
+            webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: configuration)
+            webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
+            webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
                 
-            webViewHolder.gWebView!.allowsLinkPreview = true
+            webViewHolder.appleWebView!.allowsLinkPreview = true
 //                webView.navigationDelegate = self
-            webViewHolder.gWebView!.navigationDelegate = coordinator
-            webViewHolder.gWebView!.scrollView.delegate = coordinator
+            webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
+            webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
             webViewHolder.needsUpdate = true
         }
             
-        return webViewHolder.gWebView!
+        return webViewHolder.appleWebView!
     }
         
     func updateUIView(_ webView: WKWebView, context: Context) {
