@@ -15,10 +15,10 @@ func getDocumentsDirectory() -> URL {
     return documentsDirectory
 }
 
-class WebView {
+class SpatialWebView {
     var scrollOffset = CGPoint()
     var pose = SIMD3<Float>(0, 0, 0)
-    var webView: WebViewNative
+    var webViewNative: WebViewNative?
 
     var full = true
     var width: Double = 0
@@ -27,17 +27,29 @@ class WebView {
     var parent: WindowGroupContentDictionary?
     var childPages = [String]()
 
+    init() {
+    }
+
     init(url: URL) {
-        webView = WebViewNative(url: url)
-        webView.webViewRef = self
+        webViewNative = WebViewNative(url: url)
+        webViewNative?.webViewRef = self
+    }
+
+    deinit {
+        print("WORKING! trevor deinit webview")
+        // Remove references to Coordinator so that it gets cleaned up by arc
+        webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
+        webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
+        webViewNative!.webViewHolder.appleWebView!.navigationDelegate = nil
+        webViewNative!.webViewHolder.appleWebView!.scrollView.delegate = nil
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
-        webView.webViewHolder.gWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(requestID)+", data: "+data+"})")
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(requestID)+", data: "+data+"})")
     }
 
     // Request information of webview that request this webview to load
-    var loadRequestWV: WebView?
+    weak var loadRequestWV: SpatialWebView?
     var loadRequestID = -1
     var webViewID = ""
     // A load request of a child webview was loaded
@@ -48,10 +60,8 @@ class WebView {
     func didStartLoadPage() {
         //  Remove existing child pages
         if childPages.count > 0 {
-            //print("removing "+String(childPages.count))
         }
         for page in childPages {
-            var k = parent?.webViews.removeValue(forKey: page)
         }
         childPages = [String]()
     }
@@ -78,17 +88,17 @@ class WebView {
                     var targetUrl = url
                     if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
                         var port = ""
-                        if let p = webView.url.port {
+                        if let p = webViewNative?.url.port {
                             port = ":"+String(p)
                         }
-                        let domain = webView.url.scheme!+"://"+webView.url.host()!+port+"/"
+                        let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
                         targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
                     }
 
                     // TODO: this needs to be cleaned up
                     let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: uuid, url: URL(string: targetUrl)!)
                     if wv.loadRequestID != -1 {
-                        wv.webView.webViewHolder.gWebView?.load(URLRequest(url: URL(string: targetUrl)!))
+                        wv.webViewNative?.webViewHolder.appleWebView?.load(URLRequest(url: URL(string: targetUrl)!))
                     }
                     wv.webViewID = uuid
                     childPages.append(uuid)
@@ -111,7 +121,7 @@ class WebView {
                 {
                     let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
 
-                    d.webViews[windowID]?.webView.webViewHolder.gWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
+                    d.webViews[windowID]?.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "updatePanelPose" {

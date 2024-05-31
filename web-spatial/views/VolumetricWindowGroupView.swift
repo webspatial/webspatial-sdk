@@ -34,7 +34,7 @@ struct VolumetricWindowGroupView: View {
         } attachments: {
             ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
                 Attachment(id: key) {
-                    windowGroupContent.webViews[key]?.webView.glassBackgroundEffect()
+                    windowGroupContent.webViews[key]?.webViewNative.glassBackgroundEffect()
                 }
             }
         }
