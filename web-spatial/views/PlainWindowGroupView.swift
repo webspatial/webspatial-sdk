@@ -58,8 +58,8 @@ struct PlainWindowGroupView: View {
                 RealityView { content in
                     let cube = ModelEntity(mesh: .generateBox(size: 0.1))
                     cube.generateCollisionShapes(recursive: false)
-                    var c = UpdateWebViewComponent()
-                    c.webView = windowGroupContent.webViews["root"]
+//                    var c = UpdateWebViewComponent()
+//                    c.webView = windowGroupContent.webViews["root"]
                     // cube.components.set(c)
                     cube.position.x = -0.5
                     cube.position.z = 0.2
@@ -79,7 +79,7 @@ struct PlainWindowGroupView: View {
                     let width = view.full ? (proxy3D.size.width) : CGFloat(view.width)
                     let height = view.full ? (proxy3D.size.height) : CGFloat(view.height)
 
-                    view.webView
+                    view.webViewNative
                         .frame(width: width, height: height).padding3D(.front, -100000) // .padding3D(.all, -100000)
                         //                        .hoverEffect(.automatic, isEnabled: true)
                         .cornerRadius(24)
