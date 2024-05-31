@@ -97,11 +97,15 @@ function App() {
       </SpatialDiv>
     );
   };
+  var goHome = () => {
+    history.go(-1)
+  }
   return (
     <>
       <div className="flex text-white">
         <div className="text-xl p-20  m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
           <h1>Hello Web Spatial</h1>
+          <a href="#" onClick={goHome}>Go Back</a>
         </div>
       </div>
 
@@ -229,7 +233,7 @@ function App() {
     </>
   )
 }
-
+WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
