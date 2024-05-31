@@ -50,7 +50,7 @@ class WindowGroupManager {
 
     func destroyWebView(windowGroup: String, windowID: String)->Bool {
         if windowGroups[windowGroup] != nil {
-            if let wv = windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) {
+            if let _ = windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) {
 //                print("-----------deinit attempt on webview")
 
                 //  Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
