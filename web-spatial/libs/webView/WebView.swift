@@ -24,11 +24,10 @@ class SpatialWebView {
     var width: Double = 0
     var height: Double = 0
 
-    var parent: WindowGroupContentDictionary?
+    var parentWindowGroupId: String = ""
     var childPages = [String]()
 
-    init() {
-    }
+    init() {}
 
     init(url: URL) {
         webViewNative = WebViewNative(url: url)
@@ -36,7 +35,6 @@ class SpatialWebView {
     }
 
     deinit {
-        print("WORKING! trevor deinit webview")
         // Remove references to Coordinator so that it gets cleaned up by arc
         webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
         webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
@@ -60,10 +58,11 @@ class SpatialWebView {
     func didStartLoadPage() {
         //  Remove existing child pages
         if childPages.count > 0 {
+            for page in childPages {
+                _ = wgManager.destroyWebView(windowGroup: parentWindowGroupId, windowID: page)
+            }
+            childPages = [String]()
         }
-        for page in childPages {
-        }
-        childPages = [String]()
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -113,7 +112,7 @@ class SpatialWebView {
                     wgManager.destroyWebView(windowGroup: windowGroupID, windowID: webPanelID)
                 }
             } else if command == "resizeCompleted" {
-                parent?.resizing = false
+                wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
             } else if command == "updatePanelContent" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
