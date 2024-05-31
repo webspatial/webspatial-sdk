@@ -27,7 +27,7 @@ class WindowGroupContentDictionary: ObservableObject {
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
 
-    @Published var resizing = false
+    @Published var hidden = false
     var rootEntity = Entity()
     init() {}
 }
