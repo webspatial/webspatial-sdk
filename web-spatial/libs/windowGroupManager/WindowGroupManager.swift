@@ -42,7 +42,7 @@ class WindowGroupManager {
 
         if windowGroups[windowGroup]!.webViews[windowID] == nil {
             windowGroups[windowGroup]!.webViews[windowID] = SpatialWebView(url: url)
-            windowGroups[windowGroup]!.webViews[windowID]?.parent = windowGroups[windowGroup]!
+            windowGroups[windowGroup]!.webViews[windowID]?.parentWindowGroupId = windowGroup
         }
 
         return windowGroups[windowGroup]!.webViews[windowID]!

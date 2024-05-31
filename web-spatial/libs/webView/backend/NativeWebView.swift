@@ -30,8 +30,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
 
-    deinit {
-    }
+    deinit {}
     
     weak var webViewRef: SpatialWebView? = nil
     
@@ -65,7 +64,8 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
-        webViewRef?.parent?.updateFrame = !(webViewRef!.parent!.updateFrame)
+        let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupId)
+        wg.updateFrame = !(wg.updateFrame)
     }
 }
 
