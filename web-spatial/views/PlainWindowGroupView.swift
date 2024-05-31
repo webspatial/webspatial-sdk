@@ -98,8 +98,7 @@ struct PlainWindowGroupView: View {
                             .aspectRatio(contentMode: .fit)
                     }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.resizing ? 0 : 1)
                 }
-            }.onChange(of: proxy3D.size) { _ in
-                
+            }.onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
                 if windowResizeInProgress == 0 {
                     windowResizeInProgress = 1
