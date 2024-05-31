@@ -15,7 +15,7 @@ func getDocumentsDirectory() -> URL {
     return documentsDirectory
 }
 
-class SpatialWebView {
+class SpatialWebView: ObservableObject {
     var scrollOffset = CGPoint()
     var pose = SIMD3<Float>(0, 0, 0)
     var webViewNative: WebViewNative?
@@ -26,6 +26,8 @@ class SpatialWebView {
 
     var parentWindowGroupId: String = ""
     var childPages = [String]()
+
+    @Published var glassEffect = false
 
     init() {}
 
@@ -56,6 +58,7 @@ class SpatialWebView {
     }
 
     func didStartLoadPage() {
+        glassEffect = false
         //  Remove existing child pages
         if childPages.count > 0 {
             for page in childPages {
@@ -111,8 +114,16 @@ class SpatialWebView {
                 {
                     _ = wgManager.destroyWebView(windowGroup: windowGroupID, windowID: webPanelID)
                 }
+            } else if command == "setWebPanelStyle" {
+                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
+                   let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]),
+                   let _: Int = json.getValue(lookup: ["requestID"])
+                {
+                    let wv = wgManager.getWebView(windowGroup: windowGroupID, windowID: webPanelID)
+                    wv?.glassEffect = true
+                }
             } else if command == "resizeCompleted" {
-                wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
+                // wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
             } else if command == "updatePanelContent" {
                 if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
                    let windowID: String = json.getValue(lookup: ["data", "windowID"]),
