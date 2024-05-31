@@ -91,6 +91,15 @@ class WebSpatial {
     WebSpatial.sendCommand(cmd)
   }
 
+  static async setWebPanelStyle(windowGroup: WindowGroup, webPanel:WebPanel) {
+    var cmd = new RemoteCommand()
+    cmd.command = "setWebPanelStyle"
+    cmd.data.windowGroupID = windowGroup.id
+    cmd.data.webPanelID = webPanel.id
+    
+    WebSpatial.sendCommand(cmd)
+  }
+
   static async updatePanelPose(windowGroup: WindowGroup, webPanel:WebPanel, position: {x:number,y:number,z:number}, width:number, height:number) {
     var cmd = new RemoteCommand()
     cmd.command = "updatePanelPose"
