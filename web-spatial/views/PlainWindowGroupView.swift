@@ -8,6 +8,16 @@
 import RealityKit
 import SwiftUI
 
+struct SpatialWebViewUI: View {
+    @ObservedObject var wv: SpatialWebView
+
+    var body: some View {
+        wv.webViewNative
+            .background(wv.glassEffect ? Color.clear.opacity(0) : Color.white)
+            .glassBackgroundEffect(displayMode: wv.glassEffect ? .always : .never)
+    }
+}
+
 struct PlainWindowGroupView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
@@ -80,14 +90,16 @@ struct PlainWindowGroupView: View {
                     let width = view.full ? (proxy3D.size.width) : CGFloat(view.width)
                     let height = view.full ? (proxy3D.size.height) : CGFloat(view.height)
 
-                    view.webViewNative
+                    SpatialWebViewUI(wv: view)
                         .frame(width: width, height: height).padding3D(.front, -100000) // .padding3D(.all, -100000)
                         //                        .hoverEffect(.automatic, isEnabled: true)
-                        .cornerRadius(24)
-                        .shadow(radius: 20)
+
+                        // .shadow(radius: 20)
                         .position(x: x, y: y)
                         .offset(z: z).refreshable {}
-                        .opacity(windowGroupContent.resizing ? 0 : 1)
+                        .opacity(windowGroupContent.hidden ? 0 : 1)
+                        .cornerRadius(24)
+
                     // .allowsHitTesting(key == "root")
                     // view.webViewNative?.frame(width: reflow % 2 == 0 ? width : (width + 1), height: height)
                 }
@@ -96,7 +108,7 @@ struct PlainWindowGroupView: View {
                         model.model?
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.resizing ? 0 : 1)
+                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.hidden ? 0 : 1)
                 }
             }.onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
