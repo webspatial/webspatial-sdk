@@ -13,6 +13,7 @@ struct PlainWindowGroupView: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
+    @State var windowResizeInProgress = 0
 
     init(windowGroupContent: WindowGroupContentDictionary) {
         self.windowGroupContent = windowGroupContent
@@ -88,6 +89,7 @@ struct PlainWindowGroupView: View {
                         .offset(z: z).refreshable {}
                         .opacity(windowGroupContent.resizing ? 0 : 1)
                     // .allowsHitTesting(key == "root")
+                    // view.webViewNative?.frame(width: reflow % 2 == 0 ? width : (width + 1), height: height)
                 }
                 ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
                     Model3D(url: windowGroupContent.models[key]!.url) { model in
@@ -97,7 +99,17 @@ struct PlainWindowGroupView: View {
                     }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.resizing ? 0 : 1)
                 }
             }.onChange(of: proxy3D.size) { _ in
-                windowGroupContent.resizing = true
+                
+                // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
+                if windowResizeInProgress == 0 {
+                    windowResizeInProgress = 1
+                    Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
+                        windowResizeInProgress = 0
+                        let wv = windowGroupContent.webViews["root"] == nil ? windowGroupContent.webViews.first!.value : windowGroupContent.webViews["root"]!
+                        wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
+                        wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
+                    }
+                }
             }
         }
     }
