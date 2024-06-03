@@ -29,6 +29,7 @@ struct web_spatialApp: App {
 
         // "http://10.73.196.42:5173/?pageName=helloWorldApp/main.tsx"
         root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://10.73.196.42:5173/testList.html")!)
+        root.visible = true
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
@@ -36,7 +37,7 @@ struct web_spatialApp: App {
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData == nil {
-                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0))
+                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0)).cornerRadius(0)
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView(windowGroupContent: wg)
