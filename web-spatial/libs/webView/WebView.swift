@@ -15,6 +15,12 @@ func getDocumentsDirectory() -> URL {
     return documentsDirectory
 }
 
+struct CommandInfo {
+    var windowGroupID = "notFound"
+    var webPanelID = "notFound"
+    var requestID = -1
+}
+
 class SpatialWebView: ObservableObject {
     var scrollOffset = CGPoint()
     var pose = SIMD3<Float>(0, 0, 0)
@@ -37,6 +43,32 @@ class SpatialWebView: ObservableObject {
     init(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
+    }
+
+    func getCommandInfo(json: JsonParser) -> CommandInfo? {
+        if let rID: Int = json.getValue(lookup: ["requestID"]) {
+            var ret = CommandInfo()
+            ret.requestID = rID
+
+            if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]) {
+                ret.windowGroupID = windowGroupID
+            }
+
+            if let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]) {
+                ret.webPanelID = webPanelID
+            }
+
+            if ret.webPanelID == "current" {
+                ret.webPanelID = webViewID
+                ret.windowGroupID = parentWindowGroupId
+            }
+
+            if ret.windowGroupID == "current" {
+                ret.windowGroupID = parentWindowGroupId
+            }
+            return ret
+        }
+        return nil
     }
 
     deinit {
@@ -78,6 +110,7 @@ class SpatialWebView: ObservableObject {
     func didFinishLoadPage() {
         Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
             if !self.gotStyle {
+                self.visible = true
                 // Set default styles if cient hasn't set them by now
                 self.glassEffect = false
             }
@@ -87,20 +120,19 @@ class SpatialWebView: ObservableObject {
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
             if command == "createWindowGroup" {
-                if let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"]),
-                   let requestID: Int = json.getValue(lookup: ["requestID"])
+                if let cmdInfo = getCommandInfo(json: json),
+                   let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"])
                 {
                     let uuid = UUID().uuidString
                     let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
-                    completeEvent(requestID: requestID, data: "{createdID: '"+uuid+"'}")
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
                 }
             } else if command == "createWebPanel" {
-                if let url: String = json.getValue(lookup: ["data", "url"]),
-                   let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let _: String = json.getValue(lookup: ["data", "rawHTML"]),
-                   let requestID: Int = json.getValue(lookup: ["requestID"])
+                if let cmdInfo = getCommandInfo(json: json),
+                   let url: String = json.getValue(lookup: ["data", "url"]),
+                   let _: String = json.getValue(lookup: ["data", "rawHTML"])
                 {
                     let uuid = UUID().uuidString
                     var targetUrl = url
@@ -114,28 +146,22 @@ class SpatialWebView: ObservableObject {
                     }
 
                     // TODO: this needs to be cleaned up
-                    let wv = wgManager.createWebView(windowGroup: windowGroupID, windowID: uuid, url: URL(string: targetUrl)!)
+                    let wv = wgManager.createWebView(windowGroup: cmdInfo.windowGroupID, windowID: uuid, url: URL(string: targetUrl)!)
                     if wv.loadRequestID != -1 {
                         wv.webViewNative?.webViewHolder.appleWebView?.load(URLRequest(url: URL(string: targetUrl)!))
                     }
                     wv.webViewID = uuid
                     childPages.append(uuid)
-                    wv.loadRequestID = requestID
+                    wv.loadRequestID = cmdInfo.requestID
                     wv.loadRequestWV = self
                 }
             } else if command == "destroyWebPanel" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]),
-                   let _: Int = json.getValue(lookup: ["requestID"])
-                {
-                    _ = wgManager.destroyWebView(windowGroup: windowGroupID, windowID: webPanelID)
+                if let cmdInfo = getCommandInfo(json: json) {
+                    _ = wgManager.destroyWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)
                 }
             } else if command == "setWebPanelStyle" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]),
-                   let _: Int = json.getValue(lookup: ["requestID"])
-                {
-                    let wv = wgManager.getWebView(windowGroup: windowGroupID, windowID: webPanelID)
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let wv = wgManager.getWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)
                     wv?.glassEffect = true
                     wv?.visible = true
                     gotStyle = true
@@ -143,41 +169,38 @@ class SpatialWebView: ObservableObject {
             } else if command == "resizeCompleted" {
                 // wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
             } else if command == "updatePanelContent" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
+                if let cmdInfo = getCommandInfo(json: json),
                    let html: String = json.getValue(lookup: ["data", "html"])
                 {
-                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
 
-                    d.webViews[windowID]?.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
+                    d.webViews[cmdInfo.webPanelID]?.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "updatePanelPose" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let windowID: String = json.getValue(lookup: ["data", "windowID"]),
+                if let cmdInfo = getCommandInfo(json: json),
                    let x: Double = json.getValue(lookup: ["data", "position", "x"]),
                    let y: Double = json.getValue(lookup: ["data", "position", "y"]),
                    let z: Double = json.getValue(lookup: ["data", "position", "z"]),
                    let width: Double = json.getValue(lookup: ["data", "width"]),
                    let height: Double = json.getValue(lookup: ["data", "height"])
                 {
-                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
-                    d.webViews[windowID]?.pose.x = Float(x)
-                    d.webViews[windowID]?.pose.y = Float(y)
-                    d.webViews[windowID]?.pose.z = Float(z)
+                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    d.webViews[cmdInfo.webPanelID]?.pose.x = Float(x)
+                    d.webViews[cmdInfo.webPanelID]?.pose.y = Float(y)
+                    d.webViews[cmdInfo.webPanelID]?.pose.z = Float(z)
 
-                    d.webViews[windowID]?.width = width
-                    d.webViews[windowID]?.height = height
-                    d.webViews[windowID]?.full = false
+                    d.webViews[cmdInfo.webPanelID]?.width = width
+                    d.webViews[cmdInfo.webPanelID]?.height = height
+                    d.webViews[cmdInfo.webPanelID]?.full = false
                     d.updateFrame = !d.updateFrame
                 }
             } else if command == "createDOMModel" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let _: String = json.getValue(lookup: ["data", "windowID"]),
+                if let cmdInfo = getCommandInfo(json: json),
                    let modelID: String = json.getValue(lookup: ["data", "modelID"]),
                    let modelURL: String = json.getValue(lookup: ["data", "modelURL"])
                 {
-                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     d.models[modelID] = ModelViewData(url: URL(string: modelURL)!, position: simd_float3(0, 0, 0))
 
                     let url = URL(string: modelURL)!
@@ -212,14 +235,13 @@ class SpatialWebView: ObservableObject {
                 }
 
             } else if command == "updateDOMModelPosition" {
-                if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]),
-                   let _: String = json.getValue(lookup: ["data", "windowID"]),
+                if let cmdInfo = getCommandInfo(json: json),
                    let modelID: String = json.getValue(lookup: ["data", "modelID"]),
                    let x: Double = json.getValue(lookup: ["data", "modelPosition", "x"]),
                    let y: Double = json.getValue(lookup: ["data", "modelPosition", "y"]),
                    let z: Double = json.getValue(lookup: ["data", "modelPosition", "z"])
                 {
-                    let d = wgManager.getWindowGroup(windowGroup: windowGroupID)
+                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     d.models[modelID]?.position.x = Float(x)
                     d.models[modelID]?.position.y = Float(y)
                     d.models[modelID]?.position.z = Float(z)
