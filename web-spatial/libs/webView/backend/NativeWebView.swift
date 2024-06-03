@@ -38,9 +38,17 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         webViewRef?.didStartLoadPage()
     }
     
+    func webView(
+        _ webView: WKWebView,
+        didCommit navigation: WKNavigation!
+    ) {
+        webViewRef?.didStartReceivePageContent()
+    }
+    
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, webViewID: webViewRef!.webViewID)
         webViewRef?.loadRequestID = -1
+        webViewRef?.didFinishLoadPage()
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {

@@ -14,7 +14,9 @@ struct SpatialWebViewUI: View {
     var body: some View {
         wv.webViewNative
             .background(wv.glassEffect ? Color.clear.opacity(0) : Color.white)
-            .glassBackgroundEffect(displayMode: wv.glassEffect ? .always : .never)
+            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
+            .cornerRadius(wv.cornerRadius)
+            .opacity(wv.visible ? 1 : 0)
     }
 }
 
@@ -96,9 +98,7 @@ struct PlainWindowGroupView: View {
 
                         // .shadow(radius: 20)
                         .position(x: x, y: y)
-                        .offset(z: z).refreshable {}
-                        .opacity(windowGroupContent.hidden ? 0 : 1)
-                        .cornerRadius(24)
+                        .offset(z: z)
 
                     // .allowsHitTesting(key == "root")
                     // view.webViewNative?.frame(width: reflow % 2 == 0 ? width : (width + 1), height: height)

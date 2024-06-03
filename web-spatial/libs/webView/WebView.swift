@@ -27,7 +27,10 @@ class SpatialWebView: ObservableObject {
     var parentWindowGroupId: String = ""
     var childPages = [String]()
 
-    @Published var glassEffect = false
+    var gotStyle = false
+    @Published var visible = false
+    @Published var glassEffect = true
+    @Published var cornerRadius = CGFloat(0)
 
     init() {}
 
@@ -58,13 +61,26 @@ class SpatialWebView: ObservableObject {
     }
 
     func didStartLoadPage() {
-        glassEffect = false
+        gotStyle = false
         //  Remove existing child pages
         if childPages.count > 0 {
             for page in childPages {
                 _ = wgManager.destroyWebView(windowGroup: parentWindowGroupId, windowID: page)
             }
             childPages = [String]()
+        }
+    }
+
+    func didStartReceivePageContent() {
+        glassEffect = true
+    }
+
+    func didFinishLoadPage() {
+        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
+            if !self.gotStyle {
+                // Set default styles if cient hasn't set them by now
+                self.glassEffect = false
+            }
         }
     }
 
@@ -121,6 +137,8 @@ class SpatialWebView: ObservableObject {
                 {
                     let wv = wgManager.getWebView(windowGroup: windowGroupID, windowID: webPanelID)
                     wv?.glassEffect = true
+                    wv?.visible = true
+                    gotStyle = true
                 }
             } else if command == "resizeCompleted" {
                 // wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
