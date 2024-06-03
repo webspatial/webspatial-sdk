@@ -6,6 +6,7 @@ import { Provider } from 'react-redux'
 import { initStateWithPrevTab } from 'redux-state-sync';
 import { useDispatch, useSelector } from "react-redux";
 import store, { increment } from "./store.ts"
+import WebSpatial from '../../lib/webSpatial.ts';
 
 console.log("A")
 initStateWithPrevTab(store);
@@ -40,6 +41,7 @@ function App() {
     )
 }
 
+WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <Provider store={store}>

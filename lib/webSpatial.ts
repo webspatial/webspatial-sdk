@@ -41,13 +41,13 @@ class WebSpatial {
 
   static getCurrentWindowGroup(){
     var wg = new WindowGroup()
-    wg.id = "root"
+    wg.id = "current"
     return wg
   }
 
   static getCurrentWebPanel(){
     var wg = new WebPanel()
-    wg.id = "root"
+    wg.id = "current"
     wg.windowGroupId = WebSpatial.getCurrentWindowGroup().id
     return wg
   }
@@ -107,7 +107,7 @@ class WebSpatial {
     cmd.data.width = width
     cmd.data.height = height
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = webPanel.id
+    cmd.data.webPanelID = webPanel.id
 
     await WebSpatial.sendCommand(cmd)
   }
@@ -117,7 +117,7 @@ class WebSpatial {
     cmd.command = "updatePanelContent"
     cmd.data.html = html
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = webPanel.id
+    cmd.data.webPanelID = webPanel.id
 
     await WebSpatial.sendCommand(cmd)
   }
@@ -128,7 +128,7 @@ class WebSpatial {
     var cmd = new RemoteCommand()
     cmd.command = "createMesh"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = meshName
+    cmd.data.webPanelID = meshName
 
     await WebSpatial.sendCommand(cmd)
   }
@@ -137,7 +137,7 @@ class WebSpatial {
     var cmd = new RemoteCommand()
     cmd.command = "createDOMModel"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = webPanel.id
+    cmd.data.webPanelID = webPanel.id
     cmd.data.modelID = modelID
     cmd.data.modelURL = modelURL
 
@@ -148,7 +148,7 @@ class WebSpatial {
     var cmd = new RemoteCommand()
     cmd.command = "updateDOMModelPosition"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.windowID = webPanel.id
+    cmd.data.webPanelID = webPanel.id
     cmd.data.modelID = modelID
     cmd.data.modelPosition = position
 
