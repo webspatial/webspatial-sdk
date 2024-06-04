@@ -67,7 +67,7 @@ function getInheritedStyle(from: HTMLElement) {
     return styleString
 }
 
-
+let _SpatialDivInstanceIDCounter = 0
 export function SpatialDiv(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     if (props.spatialOffset!.x === undefined) {
@@ -79,22 +79,25 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
     if (props.spatialOffset!.z === undefined) {
         props.spatialOffset!.z = 0
     }
-    var panel = new WebPanel()
-    var panelP: Promise<any>
+
+    // Since we do initialize/cleanup async we need to keep track of state for all instances
+    let instanceState = useRef({} as any)
+    let currentInstanceID = useRef(0)
 
     const myStyleDiv = useRef(null);
     const myDiv = useRef(null);
-    let resizeDiv = async () => {
+    async function resizeDiv() {
         let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), panel, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
+        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), instanceState.current[currentInstanceID.current].panel, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
     }
-    let setContent = async (str: string) => {
+    async function setContent(savedId: number, str: string) {
         //var start = Date.now()
-        panelP = WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
-        panel = await panelP;
-        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), panel, str)
+
+        instanceState.current[savedId].panelP = WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
+        instanceState.current[savedId].panel = (await instanceState.current[savedId].panelP) as any;
+        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel, str)
         await resizeDiv()
         //var latency = (Date.now() - start) / 1000
         // WebSpatial.log(latency)
@@ -104,22 +107,30 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
         if (!(window as any).WebSpatailEnabled) {
             return
         }
+        currentInstanceID.current = ++_SpatialDivInstanceIDCounter
+        instanceState.current[currentInstanceID.current] = {
+            panel: new WebPanel(),
+            panelP: new Promise((res) => { res(null) }),
+            createP: new Promise((res) => { res(null) }),
+        }
+        window.addEventListener("resize", resizeDiv);
+
         (myDiv.current! as HTMLElement).style.visibility = "visible"
         let innerStr = "<div style=\"" + getInheritedStyle(myStyleDiv.current!) + "\">" + ReactDomServer.renderToString(props.children) + "</div>"
         innerStr = encodeURIComponent(innerStr.replace("remote-click", "onclick"))
-        setContent(innerStr);
+        instanceState.current[currentInstanceID.current].createP = setContent(currentInstanceID.current, innerStr);
         (myDiv.current! as HTMLElement).style.visibility = "hidden"
 
-        addEventListener("resize", resizeDiv);
-        new ResizeObserver(resizeDiv).observe((myDiv.current! as HTMLElement));
         return () => {
-            removeEventListener("resize", resizeDiv)
-
-            var m = async () => {
-                await panelP;
-                WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), panel)
-            }
-            m()
+            // Get reference to id so it isn't overwritten when a new instance is created
+            var savedId = currentInstanceID.current
+            removeEventListener("resize", resizeDiv);
+            (async () => {
+                await instanceState.current[savedId].createP
+                await instanceState.current[savedId].panelP;
+                WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel)
+                delete instanceState.current[savedId]
+            })()
 
         }
     }, [])
