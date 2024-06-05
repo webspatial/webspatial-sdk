@@ -1,29 +1,50 @@
+class Vec3 {
+  x = 0
+  y = 0
+  z = 0
+}
+
+class Vec4 {
+  x = 0
+  y = 0
+  z = 0
+  w = 1
+}
+
 export class WindowGroup {
   id = ""
 }
 
+export class SpatialEntity {
+  id = ""
+  windowGroupId = ""
+  position = new Vec3()
+  orientation = new Vec4()
+
+}
+
 export class WebPanel {
   id = ""
-  windowGroupId=""
+  windowGroupId = ""
 }
 
 class RemoteCommand {
-    private static requestCounter = 0
-    command = "cmd"
-    data = {} as any
-    requestID = ++RemoteCommand.requestCounter
+  private static requestCounter = 0
+  command = "cmd"
+  data = {} as any
+  requestID = ++RemoteCommand.requestCounter
 }
-  
+
 type WindowStyle = "Plain" | "Volumetric" | "Immersive"
 
 class WebSpatial {
-  public static eventPromises:any = {}
+  public static eventPromises: any = {}
 
-  static init(){
-    (window as any).__SpatialWebEvent = (e:any)=>{
+  static init() {
+    (window as any).__SpatialWebEvent = (e: any) => {
       var res = WebSpatial.eventPromises[e.requestID];
-      if(res){
-          res(e)
+      if (res) {
+        res(e)
       }
     }
   }
@@ -32,20 +53,20 @@ class WebSpatial {
     var msg = JSON.stringify(cmd);
     (window as any).webkit.messageHandlers.bridge.postMessage(msg)
   }
-  
-  static getImmersiveWindowGroup(){
+
+  static getImmersiveWindowGroup() {
     var wg = new WindowGroup()
     wg.id = "Immersive"
     return wg
   }
 
-  static getCurrentWindowGroup(){
+  static getCurrentWindowGroup() {
     var wg = new WindowGroup()
     wg.id = "current"
     return wg
   }
 
-  static getCurrentWebPanel(){
+  static getCurrentWebPanel() {
     var wg = new WebPanel()
     wg.id = "current"
     wg.windowGroupId = WebSpatial.getCurrentWindowGroup().id
@@ -57,7 +78,7 @@ class WebSpatial {
     cmd.command = "createWindowGroup"
     cmd.data.windowStyle = style
 
-    var result = await new Promise((res,rej)=>{
+    var result = await new Promise((res, rej) => {
       WebSpatial.eventPromises[cmd.requestID] = res
       WebSpatial.sendCommand(cmd)
     })
@@ -73,7 +94,7 @@ class WebSpatial {
     cmd.data.windowGroupID = windowGroup.id
     cmd.data.rawHTML = rawHTML
 
-    var result = await new Promise((res,rej)=>{
+    var result = await new Promise((res, rej) => {
       WebSpatial.eventPromises[cmd.requestID] = res
       WebSpatial.sendCommand(cmd)
     })
@@ -81,26 +102,26 @@ class WebSpatial {
     res.id = (result as any).data.createdID
     res.windowGroupId = windowGroup.id
     return res
-  } 
-   static async destroyWebPanel(windowGroup: WindowGroup, webPanel:WebPanel) {
+  }
+  static async destroyWebPanel(windowGroup: WindowGroup, webPanel: WebPanel) {
     var cmd = new RemoteCommand()
     cmd.command = "destroyWebPanel"
     cmd.data.windowGroupID = windowGroup.id
     cmd.data.webPanelID = webPanel.id
-    
+
     WebSpatial.sendCommand(cmd)
   }
 
-  static async setWebPanelStyle(windowGroup: WindowGroup, webPanel:WebPanel) {
+  static async setWebPanelStyle(windowGroup: WindowGroup, webPanel: WebPanel) {
     var cmd = new RemoteCommand()
     cmd.command = "setWebPanelStyle"
     cmd.data.windowGroupID = windowGroup.id
     cmd.data.webPanelID = webPanel.id
-    
+
     WebSpatial.sendCommand(cmd)
   }
 
-  static async updatePanelPose(windowGroup: WindowGroup, webPanel:WebPanel, position: {x:number,y:number,z:number}, width:number, height:number) {
+  static async updatePanelPose(windowGroup: WindowGroup, webPanel: WebPanel, position: { x: number, y: number, z: number }, width: number, height: number) {
     var cmd = new RemoteCommand()
     cmd.command = "updatePanelPose"
     cmd.data.position = position
@@ -112,7 +133,7 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async updatePanelContent(windowGroup: WindowGroup, webPanel:WebPanel, html: string) {
+  static async updatePanelContent(windowGroup: WindowGroup, webPanel: WebPanel, html: string) {
     var cmd = new RemoteCommand()
     cmd.command = "updatePanelContent"
     cmd.data.html = html
@@ -124,7 +145,37 @@ class WebSpatial {
 
 
 
-  static async createMesh(windowGroup: WindowGroup, meshName:String) {
+
+  static async createEntity() {
+    var cmd = new RemoteCommand()
+    cmd.command = "createEntity"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = res
+      WebSpatial.sendCommand(cmd)
+    })
+    var res = new SpatialEntity()
+    res.id = (result as any).data.createdID
+    return res
+  }
+
+  static async updateEntityPose(entity: SpatialEntity) {
+    var cmd = new RemoteCommand()
+    cmd.command = "updateEntityPose"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+    cmd.data.entityID = entity.id
+    cmd.data.position = entity.position
+    cmd.data.orientation = entity.orientation
+
+    await WebSpatial.sendCommand(cmd)
+  }
+
+
+
+  static async createMesh(windowGroup: WindowGroup, meshName: String) {
     var cmd = new RemoteCommand()
     cmd.command = "createMesh"
     cmd.data.windowGroupID = windowGroup.id
@@ -133,7 +184,7 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async createDOMModel(windowGroup: WindowGroup, webPanel:WebPanel, modelID: string, modelURL: string) {
+  static async createDOMModel(windowGroup: WindowGroup, webPanel: WebPanel, modelID: string, modelURL: string) {
     var cmd = new RemoteCommand()
     cmd.command = "createDOMModel"
     cmd.data.windowGroupID = windowGroup.id
@@ -144,7 +195,7 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async updateDOMModelPosition(windowGroup: WindowGroup, webPanel:WebPanel, modelID: string, position: {x:number,y:number,z:number}) {
+  static async updateDOMModelPosition(windowGroup: WindowGroup, webPanel: WebPanel, modelID: string, position: { x: number, y: number, z: number }) {
     var cmd = new RemoteCommand()
     cmd.command = "updateDOMModelPosition"
     cmd.data.windowGroupID = windowGroup.id
@@ -156,21 +207,21 @@ class WebSpatial {
   }
 
   static async log(log: any) {
-    if(!(window as any).WebSpatailEnabled){
+    if (!(window as any).WebSpatailEnabled) {
       console.log(log)
       return
     }
 
     var cmd = new RemoteCommand()
     cmd.command = "log"
-    if(log !== null && log !== undefined && log.toString){
+    if (log !== null && log !== undefined && log.toString) {
       cmd.data.logString = log.toString()
-    }else if(log !== null && log !== undefined && typeof log === 'object'){
+    } else if (log !== null && log !== undefined && typeof log === 'object') {
       cmd.data.logString = JSON.stringify(log)
-    }else{
+    } else {
       cmd.data.logString = log
     }
-    
+
     await WebSpatial.sendCommand(cmd)
   }
 
@@ -193,32 +244,36 @@ class WebSpatial {
   }
 
   static onFrame(fn: any) {
+    var dt = 0
+    var lastTime = window.performance.now()
     var loop = () => {
       setTimeout(() => {
         loop()
       }, 1000 / 90);
-      fn(window.performance.now())
+      var curTime = window.performance.now()
+      fn(curTime, curTime - lastTime)
+      lastTime = curTime
     }
     loop()
 
   }
 }
 WebSpatial.init()
-if((window as any).WebSpatailEnabled){
-  window.addEventListener("resize", ()=>{
+if ((window as any).WebSpatailEnabled) {
+  window.addEventListener("resize", () => {
     WebSpatial.resizeCompleted()
   });
 
   let pos = 0
   let last = 0;
-  (window as any)._magicUpdate = ()=>{
+  (window as any)._magicUpdate = () => {
     const now = Date.now();
     let dt = now - last;
     last = now
-    if((dt/1000) < 1/10){
-      pos += 1 * (dt/1000)
+    if ((dt / 1000) < 1 / 10) {
+      pos += 1 * (dt / 1000)
       return Math.sin(pos) * 0.3
-    }else{
+    } else {
       return 0
     }
   }
