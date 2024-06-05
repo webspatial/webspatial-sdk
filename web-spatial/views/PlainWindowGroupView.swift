@@ -68,18 +68,23 @@ struct PlainWindowGroupView: View {
 
         GeometryReader { proxy3D in
             ZStack {
-                RealityView { content in
-                    let cube = ModelEntity(mesh: .generateBox(size: 0.1))
-                    cube.generateCollisionShapes(recursive: false)
-//                    var c = UpdateWebViewComponent()
-//                    c.webView = windowGroupContent.webViews["root"]
-                    // cube.components.set(c)
-                    cube.position.x = -0.5
-                    cube.position.z = 0.2
-                    cube.generateCollisionShapes(recursive: false)
-                    cube.components.set(InputTargetComponent())
-                    content.add(cube)
-                }.gesture(dragGesture).offset(z: -0.1)
+                RealityView { _ in
+                //    let cube = ModelEntity()
+                //    cube.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
+                //    cube.generateCollisionShapes(recursive: false)
+                //    cube.position.x = -0.5
+                //    cube.position.z = 0.2
+                //    cube.generateCollisionShapes(recursive: false)
+                //    cube.components.set(InputTargetComponent())
+                //    content.add(cube)
+
+                } update: { content in
+                    for (key, entity) in windowGroupContent.entities {
+                        content.add(entity.modelEntity)
+                    }
+                }
+
+                .gesture(dragGesture).offset(z: -0.1)
 
                 let wv = windowGroupContent.webViews["root"] == nil ? windowGroupContent.webViews.first!.value : windowGroupContent.webViews["root"]!
                 let oval = Float(wv.scrollOffset.y)
