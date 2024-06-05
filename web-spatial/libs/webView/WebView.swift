@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import typealias RealityKit.ModelEntity
+import RealityKit
 import SwiftUI
 
 func getDocumentsDirectory() -> URL {
@@ -18,6 +18,7 @@ func getDocumentsDirectory() -> URL {
 struct CommandInfo {
     var windowGroupID = "notFound"
     var webPanelID = "notFound"
+    var entityID = "notFound"
     var requestID = -1
 }
 
@@ -56,6 +57,10 @@ class SpatialWebView: ObservableObject {
 
             if let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]) {
                 ret.webPanelID = webPanelID
+            }
+
+            if let entityID: String = json.getValue(lookup: ["data", "entityID"]) {
+                ret.entityID = entityID
             }
 
             if ret.webPanelID == "current" {
@@ -119,7 +124,29 @@ class SpatialWebView: ObservableObject {
 
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
-            if command == "createWindowGroup" {
+            if command == "createEntity" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let uuid = UUID().uuidString
+
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    let se = SpatialEntity()
+                    se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
+                    wg.entities[uuid] = se
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                }
+            } else if command == "updateEntityPose" {
+                if let cmdInfo = getCommandInfo(json: json),
+                   let x: Double = json.getValue(lookup: ["data", "position", "x"]),
+                   let y: Double = json.getValue(lookup: ["data", "position", "y"]),
+                   let z: Double = json.getValue(lookup: ["data", "position", "z"])
+                {
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    let e = wg.entities[cmdInfo.entityID]
+                    e!.modelEntity.position.x = Float(x)
+                    e!.modelEntity.position.y = Float(y)
+                    e!.modelEntity.position.z = Float(z)
+                }
+            } else if command == "createWindowGroup" {
                 if let cmdInfo = getCommandInfo(json: json),
                    let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"])
                 {

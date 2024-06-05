@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RealityKit
 import typealias RealityKit.Entity
 
 // Use class wrap avoid publishing swiftUI state on a background thread
@@ -20,7 +21,17 @@ struct ModelViewData {
     var added = false
 }
 
+class SpatialMesh {}
+
+class SpatialMaterial {}
+
+class SpatialEntity {
+    let modelEntity = ModelEntity()
+}
+
 class WindowGroupContentDictionary: ObservableObject {
+    @Published var entities = [String: SpatialEntity]()
+
     @Published var webViews = [String: SpatialWebView]()
     @Published var models = [String: ModelViewData]()
     @Published var toggleImmersiveSpace = false
