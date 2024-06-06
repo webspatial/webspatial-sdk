@@ -33,6 +33,7 @@ class SpatialWebView: ObservableObject {
 
     var parentWindowGroupId: String = ""
     var childPages = [String]()
+    var childEntities = [String]()
 
     var gotStyle = false
     @Published var visible = false
@@ -106,6 +107,17 @@ class SpatialWebView: ObservableObject {
             }
             childPages = [String]()
         }
+
+        if childEntities.count > 0 {
+            for ent in childEntities {
+                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupId)
+                if wg.entities[ent]!.modelEntity.scene != nil {
+                    wg.entities[ent]!.modelEntity.removeFromParent()
+                    wg.entities.removeValue(forKey: ent)
+                }
+            }
+            childEntities = [String]()
+        }
     }
 
     func didStartReceivePageContent() {
@@ -133,6 +145,8 @@ class SpatialWebView: ObservableObject {
                     se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
                     wg.entities[uuid] = se
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+
+                    childEntities.append(uuid)
                 }
             } else if command == "updateEntityPose" {
                 if let cmdInfo = getCommandInfo(json: json),
@@ -141,10 +155,11 @@ class SpatialWebView: ObservableObject {
                    let z: Double = json.getValue(lookup: ["data", "position", "z"])
                 {
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    let e = wg.entities[cmdInfo.entityID]
-                    e!.modelEntity.position.x = Float(x)
-                    e!.modelEntity.position.y = Float(y)
-                    e!.modelEntity.position.z = Float(z)
+                    if let e = wg.entities[cmdInfo.entityID] {
+                        e.modelEntity.position.x = Float(x)
+                        e.modelEntity.position.y = Float(y)
+                        e.modelEntity.position.z = Float(z)
+                    }
                 }
             } else if command == "createWindowGroup" {
                 if let cmdInfo = getCommandInfo(json: json),
