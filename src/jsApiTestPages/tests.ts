@@ -60,6 +60,23 @@ var main = async () => {
 
         })
         WebSpatial.log("entity created")
+    } else if (page == "pingNativePerf") {
+        WebSpatial.log("Attempt ping start")
+        var startTime = Date.now()
+        var pingCount = 100
+        var charCount = 10000;
+        var str = ''
+        for (let i = 0; i < charCount; i++) {
+            str += 'x'
+        }
+        for (let i = 0; i < pingCount; i++) {
+            await WebSpatial.ping(str)
+        }
+        var delta = Date.now() - startTime;
+        let b = document.createElement("h1")
+        b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms"
+        document.body.appendChild(b)
+        WebSpatial.log("Got response")
     }
 }
 main()
