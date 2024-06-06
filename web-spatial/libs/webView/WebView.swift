@@ -136,7 +136,11 @@ class SpatialWebView: ObservableObject {
 
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
-            if command == "createEntity" {
+            if command == "ping" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
+                }
+            } else if command == "createEntity" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     let uuid = UUID().uuidString
 
