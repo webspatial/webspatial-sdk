@@ -1,4 +1,4 @@
-import WebSpatial from '../../lib/webSpatial'
+import WebSpatial, { SpatialEntity } from '../../lib/webSpatial'
 
 var main = async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -24,10 +24,40 @@ var main = async () => {
         await WebSpatial.log("set to glass background")
     } else if (page == "model") {
         WebSpatial.log("create entity")
-        var entty = await WebSpatial.createEntity();
+
+
+        var entities = new Array<{ e: SpatialEntity, v: number }>()
+
+        for (var i = 0; i < 100; i++) {
+            let entity = await WebSpatial.createEntity();
+            entity.position.x = -0.3 + (i * 0.005)
+            entity.position.z = 0.2 + 0.00001 * i
+            entities.push({ e: entity, v: 0 })
+        }
+
+        var b = document.createElement("button")
+        b.innerHTML = "Click me"
+        document.body.appendChild(b)
+
+        b.onclick = () => {
+            for (var i = 0; i < entities.length; i++) {
+                entities[i].v = (i + 2) * 0.015
+            }
+        }
         WebSpatial.onFrame((time: number, dt: number) => {
-            entty.position.x += (dt / 1000) * 0.1
-            WebSpatial.updateEntityPose(entty)
+            var floor = -0.10
+            for (var i = 0; i < entities.length; i++) {
+                var entity = entities[i].e
+                entities[i].v -= 5 * (dt / 1000)
+                entity.position.y += (dt / 1000) * entities[i].v
+                if (entity.position.y < floor) {
+                    entity.position.y = floor
+                    entities[i].v = -entities[i].v * 0.5
+                }
+                // entity.position.x = Math.sin(time / 1000) * 0.1
+                WebSpatial.updateEntityPose(entity)
+            }
+
         })
         WebSpatial.log("entity created")
     }
