@@ -144,7 +144,18 @@ class WebSpatial {
   }
 
 
-
+  static async ping(msg: string) {
+    var cmd = new RemoteCommand()
+    cmd.command = "ping"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+    cmd.data.message = msg
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = res
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
 
   static async createEntity() {
     var cmd = new RemoteCommand()
