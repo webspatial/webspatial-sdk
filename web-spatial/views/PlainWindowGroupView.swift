@@ -69,17 +69,17 @@ struct PlainWindowGroupView: View {
         GeometryReader { proxy3D in
             ZStack {
                 RealityView { _ in
-                //    let cube = ModelEntity()
-                //    cube.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
-                //    cube.generateCollisionShapes(recursive: false)
-                //    cube.position.x = -0.5
-                //    cube.position.z = 0.2
-                //    cube.generateCollisionShapes(recursive: false)
-                //    cube.components.set(InputTargetComponent())
-                //    content.add(cube)
+                    //    let cube = ModelEntity()
+                    //    cube.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
+                    //    cube.generateCollisionShapes(recursive: false)
+                    //    cube.position.x = -0.5
+                    //    cube.position.z = 0.2
+                    //    cube.generateCollisionShapes(recursive: false)
+                    //    cube.components.set(InputTargetComponent())
+                    //    content.add(cube)
 
                 } update: { content in
-                    for (key, entity) in windowGroupContent.entities {
+                    for (_, entity) in windowGroupContent.entities {
                         content.add(entity.modelEntity)
                     }
                 }
