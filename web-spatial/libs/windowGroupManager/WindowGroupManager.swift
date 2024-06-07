@@ -25,12 +25,24 @@ class SpatialMesh {}
 
 class SpatialMaterial {}
 
+class SpatialResource {
+    var resourceType = "undefined"
+    var meshResource: MeshResource?
+    var physicallyBasedMaterial: PhysicallyBasedMaterial?
+    var modelComponent: ModelComponent?
+}
+
+class SpatialComponent {
+    var componentType = "undefined"
+}
+
 class SpatialEntity {
     let modelEntity = ModelEntity()
 }
 
 class WindowGroupContentDictionary: ObservableObject {
     @Published var entities = [String: SpatialEntity]()
+    @Published var resources = [String: SpatialResource]()
 
     @Published var webViews = [String: SpatialWebView]()
     @Published var models = [String: ModelViewData]()

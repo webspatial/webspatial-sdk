@@ -19,6 +19,7 @@ struct CommandInfo {
     var windowGroupID = "notFound"
     var webPanelID = "notFound"
     var entityID = "notFound"
+    var resourceID = "notFound"
     var requestID = -1
 }
 
@@ -34,6 +35,7 @@ class SpatialWebView: ObservableObject {
     var parentWindowGroupId: String = ""
     var childPages = [String]()
     var childEntities = [String]()
+    var childResources = [String]()
 
     var gotStyle = false
     @Published var visible = false
@@ -62,6 +64,10 @@ class SpatialWebView: ObservableObject {
 
             if let entityID: String = json.getValue(lookup: ["data", "entityID"]) {
                 ret.entityID = entityID
+            }
+
+            if let resourceID: String = json.getValue(lookup: ["data", "resourceID"]) {
+                ret.resourceID = resourceID
             }
 
             if ret.webPanelID == "current" {
@@ -146,23 +152,106 @@ class SpatialWebView: ObservableObject {
 
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     let se = SpatialEntity()
-                    se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
+                    se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                     wg.entities[uuid] = se
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
 
                     childEntities.append(uuid)
                 }
+            } else if command == "setComponent" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    let c = wg.resources[cmdInfo.resourceID]!
+                    let e = wg.entities[cmdInfo.entityID]!
+                    if c.resourceType == "ModelComponent" {
+                        e.modelEntity.model = c.modelComponent
+                    }
+                }
+            } else if command == "createResource" {
+                if let cmdInfo = getCommandInfo(json: json),
+                   let type: String = json.getValue(lookup: ["data", "type"])
+                {
+                    let uuid = UUID().uuidString
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    let sr = SpatialResource()
+                    sr.resourceType = type
+                    if type == "MeshResource" {
+                        if let shape: String = json.getValue(lookup: ["data", "params", "shape"]) {
+                            if shape == "sphere" {
+                                sr.meshResource = .generateSphere(radius: 0.5)
+                            } else {
+                                sr.meshResource = .generateBox(size: 1.0)
+                            }
+                        }
+                    } else if type == "PhysicallyBasedMaterial" {
+                        sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
+                    } else if type == "ModelComponent" {
+                        sr.modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                    }
+                    wg.resources[uuid] = sr
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                    childResources.append(uuid)
+                }
+            } else if command == "updateResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    let sr = wg.resources[cmdInfo.resourceID]!
+                    if sr.resourceType == "MeshResource" {
+                    } else if sr.resourceType == "PhysicallyBasedMaterial" {
+                        if let r: Double = json.getValue(lookup: ["data", "update", "baseColor", "r"]),
+                           let g: Double = json.getValue(lookup: ["data", "update", "baseColor", "g"]),
+                           let b: Double = json.getValue(lookup: ["data", "update", "baseColor", "b"]),
+                           let a: Double = json.getValue(lookup: ["data", "update", "baseColor", "a"])
+                        {
+                            sr.physicallyBasedMaterial!.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: r, green: g, blue: b, alpha: a))
+                        }
+
+                        if let roughness: Double = json.getValue(lookup: ["data", "update", "roughness", "value"]) {
+                            sr.physicallyBasedMaterial!.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: Float(roughness))
+                        }
+
+                        if let metallic: Double = json.getValue(lookup: ["data", "update", "metallic", "value"]) {
+                            sr.physicallyBasedMaterial!.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
+                        }
+
+                    } else if sr.resourceType == "ModelComponent" {
+                        if let meshResource: String = json.getValue(lookup: ["data", "update", "meshResource"]) {
+                            sr.modelComponent!.mesh = wg.resources[meshResource]!.meshResource!
+                        }
+
+                        if let materials: [String] = json.getValue(lookup: ["data", "update", "materials"]) {
+                            sr.modelComponent!.materials = []
+                            for matID in materials {
+                                sr.modelComponent!.materials.append(wg.resources[matID]!.physicallyBasedMaterial!)
+                            }
+                        }
+                    }
+                }
             } else if command == "updateEntityPose" {
                 if let cmdInfo = getCommandInfo(json: json),
                    let x: Double = json.getValue(lookup: ["data", "position", "x"]),
                    let y: Double = json.getValue(lookup: ["data", "position", "y"]),
-                   let z: Double = json.getValue(lookup: ["data", "position", "z"])
+                   let z: Double = json.getValue(lookup: ["data", "position", "z"]),
+                   let scalex: Double = json.getValue(lookup: ["data", "scale", "x"]),
+                   let scaley: Double = json.getValue(lookup: ["data", "scale", "y"]),
+                   let scalez: Double = json.getValue(lookup: ["data", "scale", "z"]),
+                   let orientationx: Double = json.getValue(lookup: ["data", "orientation", "x"]),
+                   let orientationy: Double = json.getValue(lookup: ["data", "orientation", "y"]),
+                   let orientationz: Double = json.getValue(lookup: ["data", "orientation", "z"]),
+                   let orientationw: Double = json.getValue(lookup: ["data", "orientation", "w"])
                 {
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     if let e = wg.entities[cmdInfo.entityID] {
                         e.modelEntity.position.x = Float(x)
                         e.modelEntity.position.y = Float(y)
                         e.modelEntity.position.z = Float(z)
+                        e.modelEntity.scale.x = Float(scalex)
+                        e.modelEntity.scale.y = Float(scaley)
+                        e.modelEntity.scale.z = Float(scalez)
+                        e.modelEntity.orientation.vector.x = Float(orientationx)
+                        e.modelEntity.orientation.vector.y = Float(orientationy)
+                        e.modelEntity.orientation.vector.z = Float(orientationz)
+                        e.modelEntity.orientation.vector.w = Float(orientationw)
                     }
                 }
             } else if command == "createWindowGroup" {
