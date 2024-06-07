@@ -1,3 +1,4 @@
+import { Euler, Quaternion, Vector3 } from 'three';
 import WebSpatial, { SpatialEntity } from '../../lib/webSpatial'
 
 var main = async () => {
@@ -28,10 +29,25 @@ var main = async () => {
 
         var entities = new Array<{ e: SpatialEntity, v: number }>()
 
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 7; i++) {
             let entity = await WebSpatial.createEntity();
-            entity.position.x = -0.3 + (i * 0.005)
+            entity.position.x = -0.35 + (i * 0.1)
             entity.position.z = 0.2 + 0.00001 * i
+            entity.scale = { x: 0.07, y: 0.07, z: 0.07 }
+            WebSpatial.updateEntityPose(entity)
+
+            let mesh = await WebSpatial.createResource("MeshResource", { shape: Math.random() < 0.3 ? "sphere" : "box" });
+            let material = await WebSpatial.createResource("PhysicallyBasedMaterial");
+            material.data.baseColor = { r: Math.random(), g: Math.random() * 0.3, b: Math.random() * 0.3, a: 1.0 }
+            material.data.metallic = { value: Math.random() * 0.3 }
+            material.data.roughness = { value: Math.random() }
+            WebSpatial.updateResource(material)
+            let modelComponent = await WebSpatial.createResource("ModelComponent");
+            modelComponent.data.meshResource = mesh.id
+            modelComponent.data.materials = [material.id]
+            WebSpatial.updateResource(modelComponent)
+
+            WebSpatial.setComponent(entity, modelComponent)
             entities.push({ e: entity, v: 0 })
         }
 
@@ -41,9 +57,12 @@ var main = async () => {
 
         b.onclick = () => {
             for (var i = 0; i < entities.length; i++) {
-                entities[i].v = (i + 2) * 0.015
+                entities[i].v = Math.sqrt((i + 40) * 0.035)
             }
         }
+
+        var q = new Quaternion()
+
         WebSpatial.onFrame((time: number, dt: number) => {
             var floor = -0.10
             for (var i = 0; i < entities.length; i++) {
@@ -54,7 +73,11 @@ var main = async () => {
                     entity.position.y = floor
                     entities[i].v = -entities[i].v * 0.5
                 }
-                // entity.position.x = Math.sin(time / 1000) * 0.1
+                q.setFromEuler(new Euler(0, time / 1000, 0))
+                entity.orientation.x = q.x
+                entity.orientation.y = q.y
+                entity.orientation.z = q.z
+                entity.orientation.w = q.w
                 WebSpatial.updateEntityPose(entity)
             }
 
