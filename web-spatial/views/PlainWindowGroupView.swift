@@ -8,6 +8,20 @@
 import RealityKit
 import SwiftUI
 
+// struct PageBackground<Content: View>: View {
+//    @ObservedObject var wv: SpatialWebView
+//    var content: () -> Content
+//
+//    init(wvx: SpatialWebView, @ViewBuilder content: @escaping () -> Content) {
+//        self.content = content
+//        self.wv = wvx
+//    }
+//
+//    var body: some View {
+//        VStack(content: content).padding().background(Color.clear.opacity(0)).cornerRadius(wv.cornerRadius)
+//    }
+// }
+
 struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
 

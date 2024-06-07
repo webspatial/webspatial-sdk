@@ -136,6 +136,7 @@ class SpatialWebView: ObservableObject {
                 self.visible = true
                 // Set default styles if cient hasn't set them by now
                 self.glassEffect = false
+                self.cornerRadius = CGFloat(0)
             }
         }
     }
@@ -296,9 +297,10 @@ class SpatialWebView: ObservableObject {
                 }
             } else if command == "setWebPanelStyle" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let wv = wgManager.getWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)
-                    wv?.glassEffect = true
-                    wv?.visible = true
+                    let wv = wgManager.getWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)!
+                    wv.glassEffect = true
+                    wv.visible = true
+                    wv.cornerRadius = CGFloat(100)
                     gotStyle = true
                 }
             } else if command == "resizeCompleted" {
