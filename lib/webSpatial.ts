@@ -1,7 +1,6 @@
 class Vec3 {
-  x = 0
-  y = 0
-  z = 0
+  constructor(public x = 0, public y = 0, public z = 0) {
+  }
 }
 
 class Vec4 {
@@ -15,11 +14,17 @@ export class WindowGroup {
   id = ""
 }
 
+export class SpatialResource {
+  id = ""
+  data = {} as any
+}
+
 export class SpatialEntity {
   id = ""
   windowGroupId = ""
   position = new Vec3()
   orientation = new Vec4()
+  scale = new Vec3(1, 1, 1)
 
 }
 
@@ -172,6 +177,44 @@ class WebSpatial {
     return res
   }
 
+  static async setComponent(entity: SpatialEntity, resource: SpatialResource) {
+    var cmd = new RemoteCommand()
+    cmd.command = "setComponent"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+    cmd.data.resourceID = resource.id
+    cmd.data.entityID = entity.id
+    WebSpatial.sendCommand(cmd)
+  }
+
+  static async createResource(type: string, params = {} as any) {
+    var cmd = new RemoteCommand()
+    cmd.command = "createResource"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+    cmd.data.type = type
+    cmd.data.params = params
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = res
+      WebSpatial.sendCommand(cmd)
+    })
+    var res = new SpatialResource()
+    res.id = (result as any).data.createdID
+    return res
+  }
+
+  static async updateResource(resource: SpatialResource) {
+    var cmd = new RemoteCommand()
+    cmd.command = "updateResource"
+    cmd.data.windowGroupID = this.getCurrentWindowGroup().id
+    cmd.data.webPanelID = this.getCurrentWebPanel().id
+    cmd.data.resourceID = resource.id
+    cmd.data.update = resource.data
+
+    WebSpatial.sendCommand(cmd)
+  }
+
   static async updateEntityPose(entity: SpatialEntity) {
     var cmd = new RemoteCommand()
     cmd.command = "updateEntityPose"
@@ -180,6 +223,7 @@ class WebSpatial {
     cmd.data.entityID = entity.id
     cmd.data.position = entity.position
     cmd.data.orientation = entity.orientation
+    cmd.data.scale = entity.scale
 
     await WebSpatial.sendCommand(cmd)
   }
