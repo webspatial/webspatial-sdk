@@ -187,7 +187,43 @@ class SpatialWebView: ObservableObject {
                     } else if type == "PhysicallyBasedMaterial" {
                         sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
                     } else if type == "ModelComponent" {
-                        sr.modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                        if let modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
+                            // Create download task for the url
+                            let url = URL(string: modelURL)!
+                            let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
+                            let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
+                                // Copy temp file to documentes directory
+                                let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
+                                do {
+                                    let fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
+                                    try FileManager.default.copyItem(at: a!, to: fileURL)
+                                    print("Downloaded and copied model")
+                                } catch {
+                                    print("Model already exists")
+                                }
+
+                                Task {
+                                    do {
+                                        let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent(fileStr))
+                                        sr.modelComponent = await m.model!
+                                        Task.detached { @MainActor in
+                                            // Update state on main thread
+                                            wg.resources[uuid] = sr
+                                            self.completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                                            self.childResources.append(uuid)
+                                            print("Model load success!")
+                                        }
+                                    } catch {
+                                        print("failed to load model: "+error.localizedDescription)
+                                    }
+                                }
+
+                            })
+                            downloadTask.resume()
+                            return
+                        } else {
+                            sr.modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                        }
                     }
                     wg.resources[uuid] = sr
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
