@@ -24,8 +24,9 @@ var main = async () => {
         document.body.style.backgroundColor = "transparent"
         await WebSpatial.log("set to glass background")
     } else if (page == "model") {
-        WebSpatial.log("create entity")
-
+        WebSpatial.log("create entitys")
+        let ballModel = await WebSpatial.createResource("ModelComponent", { modelURL: "http://testIP:5173/src/assets/ball.usdz" });
+        let helmetModel = await WebSpatial.createResource("ModelComponent", { modelURL: "http://testIP:5173/src/assets/FlightHelmet.usdz" });
 
         var entities = new Array<{ e: SpatialEntity, v: number }>()
 
@@ -47,7 +48,14 @@ var main = async () => {
             modelComponent.data.materials = [material.id]
             WebSpatial.updateResource(modelComponent)
 
-            WebSpatial.setComponent(entity, modelComponent)
+            if (i == 4) {
+                WebSpatial.setComponent(entity, ballModel)
+            } else if (i == 2) {
+                WebSpatial.setComponent(entity, helmetModel)
+            } else {
+                WebSpatial.setComponent(entity, modelComponent)
+            }
+
             entities.push({ e: entity, v: 0 })
         }
 
@@ -78,6 +86,7 @@ var main = async () => {
                 entity.orientation.y = q.y
                 entity.orientation.z = q.z
                 entity.orientation.w = q.w
+                entity.scale.y = (Math.pow(((Math.sin(time / 100) + 1) / 2), 5) * 0.02) + 0.07 // 0.07 * (Math.abs((entities[i].v / 2)) + 1)
                 WebSpatial.updateEntityPose(entity)
             }
 
