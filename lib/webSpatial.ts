@@ -228,17 +228,6 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-
-
-  static async createMesh(windowGroup: WindowGroup, meshName: String) {
-    var cmd = new RemoteCommand()
-    cmd.command = "createMesh"
-    cmd.data.windowGroupID = windowGroup.id
-    cmd.data.webPanelID = meshName
-
-    await WebSpatial.sendCommand(cmd)
-  }
-
   static async createDOMModel(windowGroup: WindowGroup, webPanel: WebPanel, modelID: string, modelURL: string) {
     var cmd = new RemoteCommand()
     cmd.command = "createDOMModel"
@@ -292,12 +281,6 @@ class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static async resizeCompleted() {
-    var cmd = new RemoteCommand()
-    cmd.command = "resizeCompleted"
-    await WebSpatial.sendCommand(cmd)
-  }
-
   static onFrame(fn: any) {
     var dt = 0
     var lastTime = window.performance.now()
@@ -315,10 +298,6 @@ class WebSpatial {
 }
 WebSpatial.init()
 if ((window as any).WebSpatailEnabled) {
-  window.addEventListener("resize", () => {
-    WebSpatial.resizeCompleted()
-  });
-
   let pos = 0
   let last = 0;
   (window as any)._magicUpdate = () => {
