@@ -339,8 +339,6 @@ class SpatialWebView: ObservableObject {
                     wv.cornerRadius = CGFloat(100)
                     gotStyle = true
                 }
-            } else if command == "resizeCompleted" {
-                // wgManager.getWindowGroup(windowGroup: parentWindowGroupId).resizing = false
             } else if command == "updatePanelContent" {
                 if let cmdInfo = getCommandInfo(json: json),
                    let html: String = json.getValue(lookup: ["data", "html"])
@@ -425,7 +423,6 @@ class SpatialWebView: ObservableObject {
                     }
                 }
 
-            } else if command == "createMesh" {
             } else if command == "openImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = true
             } else if command == "dismissImmersiveSpace" {
