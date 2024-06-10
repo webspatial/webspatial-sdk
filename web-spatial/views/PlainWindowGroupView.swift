@@ -126,7 +126,7 @@ struct PlainWindowGroupView: View {
                     Model3D(url: windowGroupContent.models[key]!.url) { model in
                         model.model?
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
+                            .aspectRatio(contentMode: .fill)
                     }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.hidden ? 0 : 1)
                 }
             }.onChange(of: proxy3D.size) {
