@@ -25,26 +25,65 @@ class SpatialMesh {}
 
 class SpatialMaterial {}
 
-class SpatialResource {
+class SpatialResource: ObservableObject {
+    // Always populated
+    let id = UUID().uuidString
+    let windowGroupID: String
     var resourceType = "undefined"
+    weak var mngr: WindowGroupManager?
+
+    // populated based on type
     var meshResource: MeshResource?
     var physicallyBasedMaterial: PhysicallyBasedMaterial?
     var modelComponent: ModelComponent?
+    @Published var spatialWebView: SpatialWebView?
+    @Published var forceUpdate = false
+
+    // Entity
+    let modelEntity = ModelEntity()
+
+    init(resourceType: String, mngr: WindowGroupManager, windowGroupID: String) {
+        self.windowGroupID = windowGroupID
+        self.mngr = mngr
+        let wg = mngr.getWindowGroup(windowGroup: windowGroupID)
+        self.resourceType = resourceType
+
+        if resourceType == "Entity" {
+            if wg.entities[id] == nil {
+                wg.entities[id] = self
+            }
+        } else {
+            if wg.resources[id] == nil {
+                wg.resources[id] = self
+            }
+        }
+    }
+
+    func destroy()->Bool {
+        let wg = mngr!.getWindowGroup(windowGroup: windowGroupID)
+        if resourceType == "Entity" {
+            if let _ = wg.entities.removeValue(forKey: id) {
+                return true
+            }
+        } else {
+            if let _ = wg.resources.removeValue(forKey: id) {
+                return true
+            }
+        }
+        return false
+    }
 }
+
+class SpatialEntity: SpatialResource {}
 
 class SpatialComponent {
     var componentType = "undefined"
 }
 
-class SpatialEntity {
-    let modelEntity = ModelEntity()
-}
-
 class WindowGroupContentDictionary: ObservableObject {
-    @Published var entities = [String: SpatialEntity]()
+    @Published var entities = [String: SpatialResource]()
     @Published var resources = [String: SpatialResource]()
 
-    @Published var webViews = [String: SpatialWebView]()
     @Published var models = [String: ModelViewData]()
     @Published var toggleImmersiveSpace = false
     @Published var updateFrame = false
@@ -58,48 +97,34 @@ class WindowGroupContentDictionary: ObservableObject {
 class WindowGroupManager {
     var windowGroups = [String: WindowGroupContentDictionary]()
 
-    func createWebView(windowGroup: String, windowID: String, url: URL)->SpatialWebView {
-        if windowGroups[windowGroup] == nil {
-            windowGroups[windowGroup] = WindowGroupContentDictionary()
-        }
-
-        if windowGroups[windowGroup]!.webViews[windowID] == nil {
-            windowGroups[windowGroup]!.webViews[windowID] = SpatialWebView(url: url)
-            windowGroups[windowGroup]!.webViews[windowID]?.webViewID = windowID
-            windowGroups[windowGroup]!.webViews[windowID]?.parentWindowGroupId = windowGroup
-        }
-
-        return windowGroups[windowGroup]!.webViews[windowID]!
-    }
-
-    func destroyWebView(windowGroup: String, windowID: String)->Bool {
-        if windowGroups[windowGroup] != nil {
-            if let _ = windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) {
-//                print("-----------deinit attempt on webview")
-
-                //  Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
-                // print("Timer fired!")
-
-                // Cleanup webview wrapper refs
-                // wv.webViewNative?.webViewRef = nil
-                // wv.loadRequestWV = nil
-
-                // Remove references to Coordinator so that it gets cleaned up by arc
-//                wv.webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-//                wv.webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
-//                wv.webViewNative!.webViewHolder.appleWebView!.navigationDelegate = nil
-//                wv.webViewNative!.webViewHolder.appleWebView!.scrollView.delegate = nil
-                // Destory the apple webview (not needed)
-                // wv.webViewNative!.webViewHolder.appleWebView = nil
-
-                // Cleanup native webview ref which will destroy the apple webview
-                //    wv.webViewNative = nil
-
-                return true
-            }
-        }
-        return false
-    }
+//    func destroyWebView(windowGroup: String, windowID: String)->Bool {
+//        if windowGroups[windowGroup] != nil {
+//            if let _ = windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) {
+    ////                print("-----------deinit attempt on webview")
+//
+//                //  Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+//                // print("Timer fired!")
+//
+//                // Cleanup webview wrapper refs
+//                // wv.webViewNative?.webViewRef = nil
+//                // wv.loadRequestWV = nil
+//
+//                // Remove references to Coordinator so that it gets cleaned up by arc
+    ////                wv.webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
+    ////                wv.webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
+    ////                wv.webViewNative!.webViewHolder.appleWebView!.navigationDelegate = nil
+    ////                wv.webViewNative!.webViewHolder.appleWebView!.scrollView.delegate = nil
+//                // Destory the apple webview (not needed)
+//                // wv.webViewNative!.webViewHolder.appleWebView = nil
+//
+//                // Cleanup native webview ref which will destroy the apple webview
+//                //    wv.webViewNative = nil
+//
+//                return true
+//            }
+//        }
+//        return false
+//    }
 
     func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
         if windowGroups[windowGroup] == nil {
@@ -110,8 +135,8 @@ class WindowGroupManager {
 
     func getWebView(windowGroup: String, windowID: String)->SpatialWebView? {
         if windowGroups[windowGroup] != nil {
-            if windowGroups[windowGroup]!.webViews[windowID] != nil {
-                return windowGroups[windowGroup]!.webViews[windowID]!
+            if windowGroups[windowGroup]!.entities[windowID] != nil {
+                return windowGroups[windowGroup]!.entities[windowID]!.spatialWebView
             }
         }
         return nil
