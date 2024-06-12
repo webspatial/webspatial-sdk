@@ -1,9 +1,9 @@
-class Vec3 {
+export class Vec3 {
   constructor(public x = 0, public y = 0, public z = 0) {
   }
 }
 
-class Vec4 {
+export class Vec4 {
   x = 0
   y = 0
   z = 0
@@ -18,15 +18,6 @@ export class SpatialResource {
   id = ""
   windowGroupId = ""
   data = {} as any
-}
-
-export class SpatialEntity {
-  id = ""
-  windowGroupId = ""
-  position = new Vec3()
-  orientation = new Vec4()
-  scale = new Vec3(1, 1, 1)
-
 }
 
 class RemoteCommand {
@@ -93,15 +84,6 @@ class WebSpatial {
     return res
   }
 
-  static async destroyEntity(entity: SpatialEntity) {
-    var cmd = new RemoteCommand()
-    cmd.command = "destroyEntity"
-    cmd.data.windowGroupID = entity.windowGroupId
-    cmd.data.entityID = entity.id
-
-    WebSpatial.sendCommand(cmd)
-  }
-
   static async destroyResource(resource: SpatialResource) {
     var cmd = new RemoteCommand()
     cmd.command = "destroyResource"
@@ -110,8 +92,6 @@ class WebSpatial {
 
     WebSpatial.sendCommand(cmd)
   }
-
-
 
   static async ping(msg: string) {
     var cmd = new RemoteCommand()
@@ -126,30 +106,7 @@ class WebSpatial {
     return result
   }
 
-  // windowGroup is the group the entity will be tied to (if not provided it will use the current window grou)
-  // resourceid is the SpatialWebView that the entity will be tied to (if not provided, entity will continue to exist even if this page is unloaded)
-  static async createEntity(windowGroup?: WindowGroup) {
-    var cmd = new RemoteCommand()
-    cmd.command = "createEntity"
-    if (windowGroup) {
-      cmd.data.windowGroupID = windowGroup.id
-    } else {
-      cmd.data.windowGroupID = this.getCurrentWindowGroup().id
-    }
-
-    cmd.data.resourceID = this.getCurrentWebPanel().id
-
-    var result = await new Promise((res, rej) => {
-      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-      WebSpatial.sendCommand(cmd)
-    })
-    var res = new SpatialEntity()
-    res.windowGroupId = cmd.data.windowGroupID
-    res.id = (result as any).data.createdID
-    return res
-  }
-
-  static async setComponent(entity: SpatialEntity, resource: SpatialResource) {
+  static async setComponent(entity: SpatialResource, resource: SpatialResource) {
     var cmd = new RemoteCommand()
     cmd.command = "setComponent"
     cmd.data.windowGroupID = entity.windowGroupId
@@ -158,11 +115,13 @@ class WebSpatial {
     WebSpatial.sendCommand(cmd)
   }
 
-  static async createResource(type: string, windowGroup: WindowGroup, params = {} as any) {
+  // windowGroup is the group the resource will be tied to (if not provided it will use the current window grou)
+  // parentWebView is the SpatialWebView that the resource will be tied to (if not provided, resource will continue to exist even if this page is unloaded)
+  static async createResource(type: string, windowGroup: WindowGroup, parentWebView: SpatialResource, params = {} as any) {
     var cmd = new RemoteCommand()
     cmd.command = "createResource"
     cmd.data.windowGroupID = windowGroup.id
-    cmd.data.resourceID = this.getCurrentWebPanel().id
+    cmd.data.resourceID = parentWebView.id
     cmd.data.type = type
     cmd.data.params = params
 
@@ -193,18 +152,6 @@ class WebSpatial {
       WebSpatial.sendCommand(cmd)
     })
     return result
-  }
-
-  static async updateEntityPose(entity: SpatialEntity) {
-    var cmd = new RemoteCommand()
-    cmd.command = "updateEntityPose"
-    cmd.data.windowGroupID = entity.windowGroupId
-    cmd.data.entityID = entity.id
-    cmd.data.position = entity.position
-    cmd.data.orientation = entity.orientation
-    cmd.data.scale = entity.scale
-
-    await WebSpatial.sendCommand(cmd)
   }
 
   static async log(log: any) {
