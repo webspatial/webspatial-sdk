@@ -17,7 +17,6 @@ func getDocumentsDirectory() -> URL {
 
 struct CommandInfo {
     var windowGroupID = "notFound"
-    var webPanelID = "notFound"
     var entityID = "notFound"
     var resourceID = "notFound"
     var requestID = -1
@@ -25,15 +24,15 @@ struct CommandInfo {
 
 class SpatialWebView: ObservableObject {
     var scrollOffset = CGPoint()
-    var pose = SIMD3<Float>(0, 0, 0)
     var webViewNative: WebViewNative?
 
-    var full = true
-    var width: Double = 0
-    var height: Double = 0
+    var full = false
+    var root = false
+    var resolutionX: Double = 0
+    var resolutionY: Double = 0
+    var inline = true
 
-    var parentWindowGroupId: String = ""
-    var childPages = [String]()
+    var parentWindowGroupID: String
     var childEntities = [String]()
     var childResources = [String]()
 
@@ -42,9 +41,17 @@ class SpatialWebView: ObservableObject {
     @Published var glassEffect = true
     @Published var cornerRadius = CGFloat(0)
 
-    init() {}
+    init(parentWindowGroupID: String) {
+        self.parentWindowGroupID = parentWindowGroupID
+    }
 
-    init(url: URL) {
+    init(parentWindowGroupID: String, url: URL) {
+        self.parentWindowGroupID = parentWindowGroupID
+        webViewNative = WebViewNative(url: url)
+        webViewNative?.webViewRef = self
+    }
+
+    func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
     }
@@ -58,10 +65,6 @@ class SpatialWebView: ObservableObject {
                 ret.windowGroupID = windowGroupID
             }
 
-            if let webPanelID: String = json.getValue(lookup: ["data", "webPanelID"]) {
-                ret.webPanelID = webPanelID
-            }
-
             if let entityID: String = json.getValue(lookup: ["data", "entityID"]) {
                 ret.entityID = entityID
             }
@@ -70,13 +73,12 @@ class SpatialWebView: ObservableObject {
                 ret.resourceID = resourceID
             }
 
-            if ret.webPanelID == "current" {
-                ret.webPanelID = webViewID
-                ret.windowGroupID = parentWindowGroupId
+            if ret.resourceID == "current" {
+                ret.resourceID = resourceID
             }
 
             if ret.windowGroupID == "current" {
-                ret.windowGroupID = parentWindowGroupId
+                ret.windowGroupID = parentWindowGroupID
             }
             return ret
         }
@@ -86,40 +88,46 @@ class SpatialWebView: ObservableObject {
     deinit {
         // Remove references to Coordinator so that it gets cleaned up by arc
         webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-        webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
-        webViewNative!.webViewHolder.appleWebView!.navigationDelegate = nil
-        webViewNative!.webViewHolder.appleWebView!.scrollView.delegate = nil
+        webViewNative!.webViewHolder.appleWebView?.uiDelegate = nil
+        webViewNative!.webViewHolder.appleWebView?.navigationDelegate = nil
+        webViewNative!.webViewHolder.appleWebView?.scrollView.delegate = nil
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
-        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({requestID:"+String(requestID)+", data: "+data+"})")
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:"+String(requestID)+", data: "+data+"})")
+    }
+
+    func failEvent(requestID: Int, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:"+String(requestID)+", data: "+data+"})")
     }
 
     // Request information of webview that request this webview to load
     weak var loadRequestWV: SpatialWebView?
     var loadRequestID = -1
-    var webViewID = ""
+    var resourceID = ""
     // A load request of a child webview was loaded
-    func didLoadChild(loadRequestID: Int, webViewID: String) {
-        completeEvent(requestID: loadRequestID, data: "{createdID: '"+webViewID+"'}")
+    func didLoadChild(loadRequestID: Int, resourceID: String) {
+        completeEvent(requestID: loadRequestID, data: "{createdID: '"+resourceID+"'}")
     }
 
     func didStartLoadPage() {
         gotStyle = false
-        //  Remove existing child pages
-        if childPages.count > 0 {
-            for page in childPages {
-                _ = wgManager.destroyWebView(windowGroup: parentWindowGroupId, windowID: page)
+
+        // TODO: remove entities/resources from their window group instead of this pages
+        if childResources.count > 0 {
+            for resource in childResources {
+                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
+                _ = wg.resources[resource]?.destroy()
             }
-            childPages = [String]()
+            childResources = [String]()
         }
 
         if childEntities.count > 0 {
             for ent in childEntities {
-                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupId)
-                if wg.entities[ent]!.modelEntity.scene != nil {
+                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
+                if wg.entities[ent]?.modelEntity.scene != nil {
                     wg.entities[ent]!.modelEntity.removeFromParent()
-                    wg.entities.removeValue(forKey: ent)
+                    _ = wg.entities[ent]!.destroy()
                 }
             }
             childEntities = [String]()
@@ -149,15 +157,15 @@ class SpatialWebView: ObservableObject {
                 }
             } else if command == "createEntity" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let uuid = UUID().uuidString
-
-                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    let se = SpatialEntity()
+                    let se = SpatialEntity(resourceType: "Entity", mngr: wgManager, windowGroupID: cmdInfo.windowGroupID)
                     se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
-                    wg.entities[uuid] = se
-                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+se.id+"'}")
 
-                    childEntities.append(uuid)
+                    childEntities.append(se.id)
+                }
+            } else if command == "destroyEntity" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    _ = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID).entities[cmdInfo.entityID]!.destroy()
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
@@ -166,16 +174,15 @@ class SpatialWebView: ObservableObject {
                     let e = wg.entities[cmdInfo.entityID]!
                     if c.resourceType == "ModelComponent" {
                         e.modelEntity.model = c.modelComponent
+                    } else if c.resourceType == "SpatialWebView" {
+                        e.spatialWebView = c.spatialWebView
                     }
                 }
             } else if command == "createResource" {
                 if let cmdInfo = getCommandInfo(json: json),
                    let type: String = json.getValue(lookup: ["data", "type"])
                 {
-                    let uuid = UUID().uuidString
-                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    let sr = SpatialResource()
-                    sr.resourceType = type
+                    let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID)
                     if type == "MeshResource" {
                         if let shape: String = json.getValue(lookup: ["data", "params", "shape"]) {
                             if shape == "sphere" {
@@ -186,6 +193,9 @@ class SpatialWebView: ObservableObject {
                         }
                     } else if type == "PhysicallyBasedMaterial" {
                         sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
+                    } else if type == "SpatialWebView" {
+                        sr.spatialWebView = SpatialWebView(parentWindowGroupID: parentWindowGroupID)
+                        sr.spatialWebView?.resourceID = sr.id
                     } else if type == "ModelComponent" {
                         if let modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
                             // Create download task for the url
@@ -208,9 +218,8 @@ class SpatialWebView: ObservableObject {
                                         sr.modelComponent = await m.model!
                                         Task.detached { @MainActor in
                                             // Update state on main thread
-                                            wg.resources[uuid] = sr
-                                            self.completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
-                                            self.childResources.append(uuid)
+                                            self.completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
+                                            self.childResources.append(sr.id)
                                             print("Model load success!")
                                         }
                                     } catch {
@@ -225,9 +234,12 @@ class SpatialWebView: ObservableObject {
                             sr.modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                         }
                     }
-                    wg.resources[uuid] = sr
-                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
-                    childResources.append(uuid)
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
+                    childResources.append(sr.id)
+                }
+            } else if command == "destroyResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    _ = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID).resources[cmdInfo.resourceID]?.destroy()
                 }
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
@@ -262,6 +274,54 @@ class SpatialWebView: ObservableObject {
                                 sr.modelComponent!.materials.append(wg.resources[matID]!.physicallyBasedMaterial!)
                             }
                         }
+                    } else if sr.resourceType == "SpatialWebView" {
+                        var delayComplete = false
+                        if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                            // Compute target url depending if the url is relative or not
+                            var targetUrl = url
+                            if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+                                var port = ""
+                                if let p = webViewNative?.url.port {
+                                    port = ":"+String(p)
+                                }
+                                let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
+                                targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+                            }
+                            // Create the webview
+                            if sr.spatialWebView?.webViewNative == nil {
+                                sr.spatialWebView!.initFromURL(url: URL(string: targetUrl)!)
+                                sr.spatialWebView!.webViewNative?.createResources()
+                                sr.spatialWebView!.webViewNative?.initialLoad()
+                            }
+
+                            delayComplete = true
+                            if sr.spatialWebView!.loadRequestID == -1 {
+                                sr.spatialWebView!.loadRequestID = cmdInfo.requestID
+                                sr.spatialWebView!.loadRequestWV = self
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.load(URLRequest(url: URL(string: targetUrl)!))
+                            } else {
+                                failEvent(requestID: cmdInfo.requestID)
+                            }
+                        }
+
+                        if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
+                        {
+                            sr.spatialWebView?.resolutionX = x
+                            sr.spatialWebView?.resolutionY = y
+                        }
+
+                        if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]),
+                           let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"])
+                        {
+                            sr.spatialWebView?.glassEffect = glassEffect
+                            sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
+                            sr.spatialWebView?.visible = true
+                            gotStyle = true
+                        }
+                        if !delayComplete {
+                            completeEvent(requestID: cmdInfo.requestID)
+                        }
                     }
                 }
             } else if command == "updateEntityPose" {
@@ -289,6 +349,7 @@ class SpatialWebView: ObservableObject {
                         e.modelEntity.orientation.vector.y = Float(orientationy)
                         e.modelEntity.orientation.vector.z = Float(orientationz)
                         e.modelEntity.orientation.vector.w = Float(orientationw)
+                        e.forceUpdate = !e.forceUpdate
                     }
                 }
             } else if command == "createWindowGroup" {
@@ -301,128 +362,6 @@ class SpatialWebView: ObservableObject {
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
                 }
-            } else if command == "createWebPanel" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let url: String = json.getValue(lookup: ["data", "url"]),
-                   let _: String = json.getValue(lookup: ["data", "rawHTML"])
-                {
-                    let uuid = UUID().uuidString
-                    var targetUrl = url
-                    if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
-                        var port = ""
-                        if let p = webViewNative?.url.port {
-                            port = ":"+String(p)
-                        }
-                        let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
-                        targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
-                    }
-
-                    // TODO: this needs to be cleaned up
-                    let wv = wgManager.createWebView(windowGroup: cmdInfo.windowGroupID, windowID: uuid, url: URL(string: targetUrl)!)
-                    if wv.loadRequestID != -1 {
-                        wv.webViewNative?.webViewHolder.appleWebView?.load(URLRequest(url: URL(string: targetUrl)!))
-                    }
-                    wv.webViewID = uuid
-                    childPages.append(uuid)
-                    wv.loadRequestID = cmdInfo.requestID
-                    wv.loadRequestWV = self
-                }
-            } else if command == "destroyWebPanel" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    _ = wgManager.destroyWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)
-                }
-            } else if command == "setWebPanelStyle" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    let wv = wgManager.getWebView(windowGroup: cmdInfo.windowGroupID, windowID: cmdInfo.webPanelID)!
-                    wv.glassEffect = true
-                    wv.visible = true
-                    wv.cornerRadius = CGFloat(100)
-                    gotStyle = true
-                }
-            } else if command == "updatePanelContent" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let html: String = json.getValue(lookup: ["data", "html"])
-                {
-                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-
-                    d.webViews[cmdInfo.webPanelID]?.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.updatePanelContent('"+html+"')")
-                    d.updateFrame = !d.updateFrame
-                }
-            } else if command == "updatePanelPose" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let x: Double = json.getValue(lookup: ["data", "position", "x"]),
-                   let y: Double = json.getValue(lookup: ["data", "position", "y"]),
-                   let z: Double = json.getValue(lookup: ["data", "position", "z"]),
-                   let width: Double = json.getValue(lookup: ["data", "width"]),
-                   let height: Double = json.getValue(lookup: ["data", "height"])
-                {
-                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    d.webViews[cmdInfo.webPanelID]?.pose.x = Float(x)
-                    d.webViews[cmdInfo.webPanelID]?.pose.y = Float(y)
-                    d.webViews[cmdInfo.webPanelID]?.pose.z = Float(z)
-
-                    d.webViews[cmdInfo.webPanelID]?.width = width
-                    d.webViews[cmdInfo.webPanelID]?.height = height
-                    d.webViews[cmdInfo.webPanelID]?.full = false
-                    d.updateFrame = !d.updateFrame
-                }
-            } else if command == "createDOMModel" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let modelID: String = json.getValue(lookup: ["data", "modelID"]),
-                   let modelURL: String = json.getValue(lookup: ["data", "modelURL"])
-                {
-                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    d.models[modelID] = ModelViewData(url: URL(string: modelURL)!, position: simd_float3(0, 0, 0))
-
-                    let url = URL(string: modelURL)!
-                    let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
-                    let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
-
-                        do {
-                            let fileURL = getDocumentsDirectory().appendingPathComponent("nike3.usdz")
-                            // if FileManager.default.fileExists(atPath: fileURL.path()) {
-                            // print("remove")
-                            // try FileManager.default.removeItem(at: fileURL)
-                            try FileManager.default.copyItem(at: a!, to: fileURL)
-                            print("Downloaded and copied model")
-                            // }
-
-                        } catch {
-                            print("Model already exists")
-                        }
-
-                        Task {
-                            do {
-                                let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent("nike3.usdz"))
-                                d.models[modelID]?.entity.entity = m
-                                await d.rootEntity.addChild(m)
-                            } catch {
-                                print("failed to load model: "+error.localizedDescription)
-                            }
-                        }
-
-                    })
-                    downloadTask.resume()
-                }
-
-            } else if command == "updateDOMModelPosition" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let modelID: String = json.getValue(lookup: ["data", "modelID"]),
-                   let x: Double = json.getValue(lookup: ["data", "modelPosition", "x"]),
-                   let y: Double = json.getValue(lookup: ["data", "modelPosition", "y"]),
-                   let z: Double = json.getValue(lookup: ["data", "modelPosition", "z"])
-                {
-                    let d = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    d.models[modelID]?.position.x = Float(x)
-                    d.models[modelID]?.position.y = Float(y)
-                    d.models[modelID]?.position.z = Float(z)
-
-                    if let e = d.models[modelID]?.entity.entity {
-                        e.position = d.models[modelID]!.position
-                        d.updateFrame = !d.updateFrame
-                    }
-                }
-
             } else if command == "openImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = true
             } else if command == "dismissImmersiveSpace" {

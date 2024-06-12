@@ -21,21 +21,10 @@ struct VolumetricWindowGroupView: View {
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
 
     var body: some View {
-        VStack {}
-        RealityView { content, _ in
-            content.add(windowGroupContent.rootEntity)
-        } update: { content, attachments in
-            for key in Array(windowGroupContent.webViews.keys) {
-                if let glassCubeAttachment = attachments.entity(for: key) {
-                    glassCubeAttachment.position = windowGroupContent.webViews[key]!.pose
-                    content.add(glassCubeAttachment)
-                }
-            }
-        } attachments: {
-            ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
-                Attachment(id: key) {
-                    windowGroupContent.webViews[key]?.webViewNative.glassBackgroundEffect()
-                }
+        RealityView { _ in
+        } update: { content in
+            for (_, entity) in windowGroupContent.entities {
+                content.add(entity.modelEntity)
             }
         }
     }

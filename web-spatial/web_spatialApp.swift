@@ -28,7 +28,17 @@ struct web_spatialApp: App {
         print("WebSpatial App Started --------")
 
         // "http://npmURL:5173/?pageName=helloWorldApp/main.tsx"
-        root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
+        let rootEnt = SpatialEntity(resourceType: "Entity", mngr: wgManager, windowGroupID: "root")
+        let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root")
+
+        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
+        root.root = true
+        root.resourceID = sr.id
+        sr.spatialWebView = root
+        rootEnt.spatialWebView = root
+
+        // root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
+        root.full = true
         root.visible = true
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
