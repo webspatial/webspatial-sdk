@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
-import WebSpatial from '../../lib/webSpatial'
+import { WebSpatial } from '../../lib/webSpatialPrivate'
 import ReactDomServer from 'react-dom/server';
 
 (window as any).wx = WebSpatial
