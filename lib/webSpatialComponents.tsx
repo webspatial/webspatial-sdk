@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import WebSpatial, { WebPanel } from './webSpatial'
+import WebSpatial, { SpatialEntity } from './webSpatial'
 import ReactDomServer from 'react-dom/server';
 
 export function SpatialDebug() {
@@ -68,7 +68,7 @@ function getInheritedStyle(from: HTMLElement) {
 }
 
 let _SpatialDivInstanceIDCounter = 0
-export function SpatialDiv(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+export function SpatialIFrame(props: { className: string, src: string, children?: ReactElement | Array<ReactElement> | undefined, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     if (props.spatialOffset!.x === undefined) {
         props.spatialOffset!.x = 0
@@ -90,14 +90,35 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
         let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-        await WebSpatial.updatePanelPose(WebSpatial.getCurrentWindowGroup(), instanceState.current[currentInstanceID.current].panel, { x: targetPosX + props.spatialOffset!.x!, y: targetPosY + props.spatialOffset!.y!, z: props.spatialOffset!.z! }, rect.width, rect.height)
+
+        if (!instanceState.current[currentInstanceID.current].panel) {
+            return
+        }
+        var entity = instanceState.current[currentInstanceID.current].panel.entity
+        entity.position.x = targetPosX + props.spatialOffset!.x!
+        entity.position.y = targetPosY + props.spatialOffset!.y!
+        entity.position.z = props.spatialOffset!.z!
+        WebSpatial.updateEntityPose(entity)
+
+        var webview = instanceState.current[currentInstanceID.current].panel.webview
+        await WebSpatial.updateResource(webview, { resolution: { x: rect.width, y: rect.height } })
     }
     async function setContent(savedId: number, str: string) {
         //var start = Date.now()
 
-        instanceState.current[savedId].panelP = WebSpatial.createWebPanel(WebSpatial.getCurrentWindowGroup(), "/index.html?pageName=reactDemo/basic.tsx", str)
+        var promise = new Promise(async (res, rej) => {
+            let entity = await WebSpatial.createEntity();
+            let webview = await WebSpatial.createResource("SpatialWebView", WebSpatial.getCurrentWindowGroup());
+            webview.data.url = props.src
+            webview.data.inline = true
+            await WebSpatial.updateResource(webview)
+            WebSpatial.setComponent(entity, webview)
+            res({ entity: entity, webview: webview })
+        })
+
+        instanceState.current[savedId].panelP = promise
         instanceState.current[savedId].panel = (await instanceState.current[savedId].panelP) as any;
-        await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel, str)
+        // await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel, str)
         await resizeDiv()
         //var latency = (Date.now() - start) / 1000
         // WebSpatial.log(latency)
@@ -109,7 +130,7 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
         }
         currentInstanceID.current = ++_SpatialDivInstanceIDCounter
         instanceState.current[currentInstanceID.current] = {
-            panel: new WebPanel(),
+            panel: new SpatialEntity(),
             panelP: new Promise((res) => { res(null) }),
             createP: new Promise((res) => { res(null) }),
         }
@@ -128,7 +149,10 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
             (async () => {
                 await instanceState.current[savedId].createP
                 await instanceState.current[savedId].panelP;
-                WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel)
+
+                WebSpatial.destroyEntity(instanceState.current[savedId].panel.entity)
+                WebSpatial.destroyResource(instanceState.current[savedId].panel.webview)
+                //    WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel)
                 delete instanceState.current[savedId]
             })()
 
@@ -152,47 +176,47 @@ export function SpatialDiv(props: { className: string, children: ReactElement | 
 }
 
 
-export function SpatialModel(props: { webViewID: string, className: string, children?: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
-    props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
-    if (props.spatialOffset!.x === undefined) {
-        props.spatialOffset!.x = 0
-    }
-    if (props.spatialOffset!.y === undefined) {
-        props.spatialOffset!.y = 0
-    }
-    if (props.spatialOffset!.z === undefined) {
-        props.spatialOffset!.z = 0
-    }
+// export function SpatialModel(props: { webViewID: string, className: string, children?: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+//     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
+//     if (props.spatialOffset!.x === undefined) {
+//         props.spatialOffset!.x = 0
+//     }
+//     if (props.spatialOffset!.y === undefined) {
+//         props.spatialOffset!.y = 0
+//     }
+//     if (props.spatialOffset!.z === undefined) {
+//         props.spatialOffset!.z = 0
+//     }
 
-    const myDiv = useRef(null);
-    useEffect(() => {
-        if (!(window as any).WebSpatailEnabled) {
-            return
-        }
+//     const myDiv = useRef(null);
+//     useEffect(() => {
+//         if (!(window as any).WebSpatailEnabled) {
+//             return
+//         }
 
-        var resizeDiv = async () => {
-            var element = (myDiv.current! as HTMLElement)
-            var rect = element.getBoundingClientRect();
-            var curPosX = (rect.left + ((rect.right - rect.left) / 2))
-            var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-            await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
-        }
-        var setContent = async () => {
-            await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
-            await resizeDiv()
-        }
-        setContent()
+//         var resizeDiv = async () => {
+//             var element = (myDiv.current! as HTMLElement)
+//             var rect = element.getBoundingClientRect();
+//             var curPosX = (rect.left + ((rect.right - rect.left) / 2))
+//             var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+//             await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
+//         }
+//         var setContent = async () => {
+//             await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
+//             await resizeDiv()
+//         }
+//         setContent()
 
-        addEventListener("resize", resizeDiv);
+//         addEventListener("resize", resizeDiv);
 
-        return () => {
-            removeEventListener("resize", resizeDiv)
-        }
-    }, [])
+//         return () => {
+//             removeEventListener("resize", resizeDiv)
+//         }
+//     }, [])
 
-    return (
-        <div ref={myDiv} className={props.className}>
-            {((window as any).WebSpatailEnabled) ? <div /> : props.children}
-        </div>
-    )
-}
+//     return (
+//         <div ref={myDiv} className={props.className}>
+//             {((window as any).WebSpatailEnabled) ? <div /> : props.children}
+//         </div>
+//     )
+// }
