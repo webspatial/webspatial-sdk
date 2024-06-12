@@ -232,7 +232,12 @@ class SpatialWebView: ObservableObject {
                 }
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
+                    var delayComplete = false
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    if wg.resources[cmdInfo.resourceID] == nil {
+                        print("Missing resource")
+                        return
+                    }
                     let sr = wg.resources[cmdInfo.resourceID]!
                     if sr.resourceType == "Entity" {
                         if let x: Double = json.getValue(lookup: ["data", "update", "position", "x"]),
@@ -291,7 +296,6 @@ class SpatialWebView: ObservableObject {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
-                        var delayComplete = false
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
                             // Compute target url depending if the url is relative or not
                             var targetUrl = url
@@ -335,11 +339,12 @@ class SpatialWebView: ObservableObject {
                             sr.spatialWebView?.visible = true
                             gotStyle = true
                         }
-                        if !delayComplete {
-                            completeEvent(requestID: cmdInfo.requestID)
-                        }
+                    }
+                    if !delayComplete {
+                        completeEvent(requestID: cmdInfo.requestID)
                     }
                 }
+
             } else if command == "createWindowGroup" {
                 if let cmdInfo = getCommandInfo(json: json),
                    let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"])
