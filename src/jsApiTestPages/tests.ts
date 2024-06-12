@@ -1,113 +1,134 @@
 import { Euler, Quaternion, Vector3 } from 'three';
-import WebSpatial, { SpatialResource, Vec3, Vec4 } from '../../lib/webSpatial'
+import { Spatial, SpatialEntity } from '../../lib/webSpatial'
 
 var main = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     var page = urlParams.get("pageName")
     page = (page ? page : "default")
-    await WebSpatial.log("        --------------Page loaded: " + page)
+
+    var spatial = new Spatial()
+    let session = await spatial.requestSession()
+    await session.log("        --------------Page loaded: " + page)
 
     if (page == "default") {
-        await WebSpatial.log("Nothing to do")
+        await session.log("Nothing to do")
     } else if (page == "webView") {
-        await WebSpatial.log("Trying to load webview")
-        let entity = await WebSpatial.createResource("Entity", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-        await WebSpatial.log("create complete")
-        entity.data.position = new Vec3(700, 300, 300)
-        entity.data.orientation = new Vec4()
-        entity.data.scale = new Vec3(1, 1, 1)
-        await WebSpatial.log("Trying to update resource")
-        WebSpatial.updateResource(entity)
+        await session.log("Trying to load webview")
 
-        let webview = await WebSpatial.createResource("SpatialWebView", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-        webview.data.url = "http://10.73.196.42:5173/testList.html"
-        webview.data.resolution = { x: 300, y: 300 }
-        webview.data.inline = true
-        WebSpatial.updateResource(webview)
-        WebSpatial.setComponent(entity, webview)
+        {
+            var e = await session.createEntity()
+            e.transform.position.x = 500
+            e.transform.position.y = 300
+            e.transform.position.z = 300
 
-        await WebSpatial.log("created webview")
-        setTimeout(async () => {
-            await WebSpatial.destroyResource(entity)
-            await WebSpatial.log("destroy complete")
-        }, 2000);
+            await e.updateTransform()
+            let i = await session.createIFrameComponent()
+            await Promise.all([
+                i.loadURL("/index.html?pageName=reactDemo/basic.tsx"), // 
+                i.setResolution(300, 300),
+                e.setComponent(i)
+            ])
+
+            var loop = (time: DOMHighResTimeStamp) => {
+                if (e.isDestroyed()) {
+                    return
+                }
+                session.requestAnimationFrame(loop)
+                e.transform.position.x = 500 + Math.sin(time / 1000) * 200
+                e.updateTransform()
+            }
+            session.requestAnimationFrame(loop)
+
+
+            setTimeout(async () => {
+                await e.destroy()
+                await session.log("destroy complete")
+            }, 5000);
+
+
+            return
+        }
     } else if (page == "glassBackground") {
-        await WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
+        await session.getCurrentIFrameComponent().setStyle({ glassEffect: true, cornerRadius: 50 })
         // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"
-        await WebSpatial.log("set to glass background")
+        await session.log("set to glass background")
     } else if (page == "model") {
-        WebSpatial.log("create entitys")
-        let ballModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), { modelURL: "http://10.73.196.42:5173/src/assets/ball.usdz" });
-        let helmetModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), { modelURL: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" });
+        session.log("create entitys")
 
-        var entities = new Array<{ e: SpatialResource, v: number }>()
+        {
+            var entities = new Array<{ e: SpatialEntity, v: number }>()
 
-        for (var i = 0; i < 7; i++) {
-            let entity = await WebSpatial.createResource("Entity", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-            entity.data.position = new Vec3(-0.35 + (i * 0.1), 0, 0.2 + 0.00001 * i)
-            entity.data.orientation = new Vec4()
-            entity.data.scale = new Vec3(0.07, 0.07, 0.07)
-            WebSpatial.updateResource(entity)
+            var box = await session.createMeshResource({ shape: "box" })
+            var model = await session.createModelComponent({ url: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" })
 
-            let mesh = await WebSpatial.createResource("MeshResource", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), { shape: Math.random() < 0.3 ? "sphere" : "box" });
-            let material = await WebSpatial.createResource("PhysicallyBasedMaterial", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-            material.data.baseColor = { r: Math.random(), g: Math.random() * 0.3, b: Math.random() * 0.3, a: 1.0 }
-            material.data.metallic = { value: Math.random() * 0.3 }
-            material.data.roughness = { value: Math.random() }
-            WebSpatial.updateResource(material)
-            let modelComponent = await WebSpatial.createResource("ModelComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-            modelComponent.data.meshResource = mesh.id
-            modelComponent.data.materials = [material.id]
-            WebSpatial.updateResource(modelComponent)
+            for (var i = 0; i < 7; i++) {
+                var e = await session.createEntity()
+                e.transform.position = new DOMPoint(-0.35 + (i * 0.1), 0, 0.2 + 0.00001 * i)
+                e.transform.scale = new DOMPoint(0.07, 0.07, 0.07)
+                await e.updateTransform()
 
-            if (i == 4) {
-                WebSpatial.setComponent(entity, ballModel)
-            } else if (i == 2) {
-                WebSpatial.setComponent(entity, helmetModel)
-            } else {
-                WebSpatial.setComponent(entity, modelComponent)
-            }
-
-            entities.push({ e: entity, v: 0 })
-        }
-
-        var b = document.createElement("button")
-        b.innerHTML = "Click me"
-        document.body.appendChild(b)
-
-        b.onclick = () => {
-            for (var i = 0; i < entities.length; i++) {
-                entities[i].v = Math.sqrt((i + 40) * 0.035)
-            }
-        }
-
-        var q = new Quaternion()
-
-        WebSpatial.onFrame((time: number, dt: number) => {
-            var floor = -0.10
-            for (var i = 0; i < entities.length; i++) {
-                var entity = entities[i].e
-                entities[i].v -= 5 * (dt / 1000)
-                entity.data.position.y += (dt / 1000) * entities[i].v
-                if (entity.data.position.y < floor) {
-                    entity.data.position.y = floor
-                    entities[i].v = -entities[i].v * 0.5
+                if (i == 3) {
+                    await e.setComponent(model)
+                } else {
+                    var mat = await session.createPhysicallyBasedMaterial()
+                    mat.baseColor.r = Math.random()
+                    await mat.update()
+                    var customModel = await session.createModelComponent()
+                    customModel.setMaterials([mat])
+                    customModel.setMesh(box)
+                    await e.setComponent(customModel)
                 }
-                q.setFromEuler(new Euler(0, time / 1000, 0))
-                entity.data.orientation.x = q.x
-                entity.data.orientation.y = q.y
-                entity.data.orientation.z = q.z
-                entity.data.orientation.w = q.w
-                entity.data.scale.y = (Math.pow(((Math.sin(time / 100) + 1) / 2), 5) * 0.02) + 0.07 // 0.07 * (Math.abs((entities[i].v / 2)) + 1)
-                WebSpatial.updateResource(entity)
+                entities.push({ e: e, v: 0 })
+            }
+            var b = document.createElement("button")
+            b.innerHTML = "Click me"
+            document.body.appendChild(b)
+
+            b.onclick = () => {
+                for (var i = 0; i < entities.length; i++) {
+                    entities[i].v = Math.sqrt((i + 40) * 0.035)
+                }
             }
 
-        })
-        WebSpatial.log("entity created")
+            var q = new Quaternion()
+
+            var dt = 0
+            var curTime = Date.now()
+            var loop = (time: DOMHighResTimeStamp) => {
+                session.requestAnimationFrame(loop)
+                dt = Date.now() - curTime
+                curTime = Date.now()
+                var floor = -0.10
+                for (var i = 0; i < entities.length; i++) {
+                    var entity = entities[i].e
+                    entities[i].v -= 5 * (dt / 1000)
+                    entity.transform.position.y += (dt / 1000) * entities[i].v
+                    if (entity.transform.position.y < floor) {
+                        entity.transform.position.y = floor
+                        entities[i].v = -entities[i].v * 0.5
+                    }
+                    q.setFromEuler(new Euler(0, time / 1000, 0))
+                    entity.transform.orientation.x = q.x
+                    entity.transform.orientation.y = q.y
+                    entity.transform.orientation.z = q.z
+                    entity.transform.orientation.w = q.w
+                    entity.transform.scale.y = (Math.pow(((Math.sin(time / 100) + 1) / 2), 5) * 0.02) + 0.07 // 0.07 * (Math.abs((entities[i].v / 2)) + 1)
+                    entity.updateTransform()
+                }
+            }
+            session.requestAnimationFrame(loop)
+
+
+            session.log("entity created")
+            return
+        }
+
+
+
     } else if (page == "pingNativePerf") {
-        WebSpatial.log("Attempt ping start")
+        session.log("Attempt ping start")
         var startTime = Date.now()
         var pingCount = 100
         var charCount = 10000;
@@ -116,13 +137,13 @@ var main = async () => {
             str += 'x'
         }
         for (let i = 0; i < pingCount; i++) {
-            await WebSpatial.ping(str)
+            await session.ping(str)
         }
         var delta = Date.now() - startTime;
         let b = document.createElement("h1")
         b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms"
         document.body.appendChild(b)
-        WebSpatial.log("Got response")
+        session.log("Got response")
     }
 }
 main()
