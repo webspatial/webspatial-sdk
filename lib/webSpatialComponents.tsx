@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { WebSpatial } from './webSpatialPrivate'
 import ReactDomServer from 'react-dom/server';
+import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialSession } from './webSpatial';
 
 export function SpatialDebug() {
     return (
@@ -67,6 +67,16 @@ function getInheritedStyle(from: HTMLElement) {
     return styleString
 }
 
+var _currentSession = null as SpatialSession | null
+export async function getSessionAsync() {
+    if (_currentSession) {
+        return _currentSession
+    }
+    _currentSession = await new Spatial().requestSession()
+    return _currentSession
+}
+
+
 let _SpatialDivInstanceIDCounter = 0
 export function SpatialIFrame(props: { className: string, src: string, children?: ReactElement | Array<ReactElement> | undefined, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
@@ -94,32 +104,31 @@ export function SpatialIFrame(props: { className: string, src: string, children?
         if (!instanceState.current[currentInstanceID.current].panel) {
             return
         }
-        var entity = instanceState.current[currentInstanceID.current].panel.entity
-        entity.position.x = targetPosX + props.spatialOffset!.x!
-        entity.position.y = targetPosY + props.spatialOffset!.y!
-        entity.position.z = props.spatialOffset!.z!
-        WebSpatial.updateEntityPose(entity)
+        var panel = instanceState.current[currentInstanceID.current].panel as { entity: SpatialEntity, webview: SpatialIFrameComponent }
+        var entity = panel.entity
+        entity.transform.position.x = targetPosX + props.spatialOffset!.x!
+        entity.transform.position.y = targetPosY + props.spatialOffset!.y!
+        entity.transform.position.z = props.spatialOffset!.z!
+        entity.updateTransform()
 
-        var webview = instanceState.current[currentInstanceID.current].panel.webview
-        await WebSpatial.updateResource(webview, { resolution: { x: rect.width, y: rect.height } })
+        var webview = panel.webview
+        await webview.setResolution(rect.width, rect.height)
     }
     async function setContent(savedId: number, str: string) {
         //var start = Date.now()
 
-        var promise = new Promise(async (res, rej) => {
-            let entity = await WebSpatial.createEntity();
-            let webview = await WebSpatial.createResource("SpatialWebView", WebSpatial.getCurrentWindowGroup());
-            webview.data.url = props.src
-            webview.data.inline = true
-            await WebSpatial.updateResource(webview)
-            WebSpatial.setComponent(entity, webview)
+        var promise = new Promise<{ entity: SpatialEntity, webview: SpatialIFrameComponent }>(async (res, rej) => {
+            let entity = await (await getSessionAsync()).createEntity()
+            let webview = await (await getSessionAsync()).createIFrameComponent()
+            await webview.loadURL(props.src)
+            await entity.setComponent(webview)
             res({ entity: entity, webview: webview })
         })
 
         instanceState.current[savedId].panelP = promise
         instanceState.current[savedId].panel = (await instanceState.current[savedId].panelP) as any;
         // await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel, str)
-        await resizeDiv()
+        await resizeDiv();
         //var latency = (Date.now() - start) / 1000
         // WebSpatial.log(latency)
     }
@@ -128,9 +137,10 @@ export function SpatialIFrame(props: { className: string, src: string, children?
         if (!(window as any).WebSpatailEnabled) {
             return
         }
+        // We need to be very careful with currentInstanceID as it can get overwritten mid async call, to handle this we create state per new instance and then we must cache the id to align our create/destroy logic
         currentInstanceID.current = ++_SpatialDivInstanceIDCounter
         instanceState.current[currentInstanceID.current] = {
-            panel: new SpatialEntity(),
+            panel: null,
             panelP: new Promise((res) => { res(null) }),
             createP: new Promise((res) => { res(null) }),
         }
@@ -149,9 +159,13 @@ export function SpatialIFrame(props: { className: string, src: string, children?
             (async () => {
                 await instanceState.current[savedId].createP
                 await instanceState.current[savedId].panelP;
+                if (!instanceState.current[savedId].panel) {
+                    return
+                }
+                var panel = instanceState.current[savedId].panel as { entity: SpatialEntity, webview: SpatialIFrameComponent }
+                panel.entity.destroy()
+                panel.webview.destroy()
 
-                WebSpatial.destroyEntity(instanceState.current[savedId].panel.entity)
-                WebSpatial.destroyResource(instanceState.current[savedId].panel.webview)
                 //    WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel)
                 delete instanceState.current[savedId]
             })()
