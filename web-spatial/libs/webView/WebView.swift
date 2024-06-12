@@ -126,7 +126,6 @@ class SpatialWebView: ObservableObject {
             for ent in childEntities {
                 let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
                 if wg.entities[ent]?.modelEntity.scene != nil {
-                    wg.entities[ent]!.modelEntity.removeFromParent()
                     _ = wg.entities[ent]!.destroy()
                 }
             }
@@ -155,18 +154,6 @@ class SpatialWebView: ObservableObject {
                 if let cmdInfo = getCommandInfo(json: json) {
                     completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
                 }
-            } else if command == "createEntity" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    let se = SpatialEntity(resourceType: "Entity", mngr: wgManager, windowGroupID: cmdInfo.windowGroupID)
-                    se.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
-                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+se.id+"'}")
-
-                    childEntities.append(se.id)
-                }
-            } else if command == "destroyEntity" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    _ = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID).entities[cmdInfo.entityID]!.destroy()
-                }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
@@ -183,7 +170,9 @@ class SpatialWebView: ObservableObject {
                    let type: String = json.getValue(lookup: ["data", "type"])
                 {
                     let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID)
-                    if type == "MeshResource" {
+                    if type == "Entity" {
+                        sr.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                    } else if type == "MeshResource" {
                         if let shape: String = json.getValue(lookup: ["data", "params", "shape"]) {
                             if shape == "sphere" {
                                 sr.meshResource = .generateSphere(radius: 0.5)
@@ -245,7 +234,34 @@ class SpatialWebView: ObservableObject {
                 if let cmdInfo = getCommandInfo(json: json) {
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     let sr = wg.resources[cmdInfo.resourceID]!
-                    if sr.resourceType == "MeshResource" {
+                    if sr.resourceType == "Entity" {
+                        if let x: Double = json.getValue(lookup: ["data", "update", "position", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "position", "y"]),
+                           let z: Double = json.getValue(lookup: ["data", "update", "position", "z"]),
+                           let scalex: Double = json.getValue(lookup: ["data", "update", "scale", "x"]),
+                           let scaley: Double = json.getValue(lookup: ["data", "update", "scale", "y"]),
+                           let scalez: Double = json.getValue(lookup: ["data", "update", "scale", "z"]),
+                           let orientationx: Double = json.getValue(lookup: ["data", "update", "orientation", "x"]),
+                           let orientationy: Double = json.getValue(lookup: ["data", "update", "orientation", "y"]),
+                           let orientationz: Double = json.getValue(lookup: ["data", "update", "orientation", "z"]),
+                           let orientationw: Double = json.getValue(lookup: ["data", "update", "orientation", "w"])
+                        {
+                            let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                            if let e = wg.resources[cmdInfo.resourceID] {
+                                e.modelEntity.position.x = Float(x)
+                                e.modelEntity.position.y = Float(y)
+                                e.modelEntity.position.z = Float(z)
+                                e.modelEntity.scale.x = Float(scalex)
+                                e.modelEntity.scale.y = Float(scaley)
+                                e.modelEntity.scale.z = Float(scalez)
+                                e.modelEntity.orientation.vector.x = Float(orientationx)
+                                e.modelEntity.orientation.vector.y = Float(orientationy)
+                                e.modelEntity.orientation.vector.z = Float(orientationz)
+                                e.modelEntity.orientation.vector.w = Float(orientationw)
+                                e.forceUpdate = !e.forceUpdate
+                            }
+                        }
+                    } else if sr.resourceType == "MeshResource" {
                     } else if sr.resourceType == "PhysicallyBasedMaterial" {
                         if let r: Double = json.getValue(lookup: ["data", "update", "baseColor", "r"]),
                            let g: Double = json.getValue(lookup: ["data", "update", "baseColor", "g"]),
@@ -322,34 +338,6 @@ class SpatialWebView: ObservableObject {
                         if !delayComplete {
                             completeEvent(requestID: cmdInfo.requestID)
                         }
-                    }
-                }
-            } else if command == "updateEntityPose" {
-                if let cmdInfo = getCommandInfo(json: json),
-                   let x: Double = json.getValue(lookup: ["data", "position", "x"]),
-                   let y: Double = json.getValue(lookup: ["data", "position", "y"]),
-                   let z: Double = json.getValue(lookup: ["data", "position", "z"]),
-                   let scalex: Double = json.getValue(lookup: ["data", "scale", "x"]),
-                   let scaley: Double = json.getValue(lookup: ["data", "scale", "y"]),
-                   let scalez: Double = json.getValue(lookup: ["data", "scale", "z"]),
-                   let orientationx: Double = json.getValue(lookup: ["data", "orientation", "x"]),
-                   let orientationy: Double = json.getValue(lookup: ["data", "orientation", "y"]),
-                   let orientationz: Double = json.getValue(lookup: ["data", "orientation", "z"]),
-                   let orientationw: Double = json.getValue(lookup: ["data", "orientation", "w"])
-                {
-                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    if let e = wg.entities[cmdInfo.entityID] {
-                        e.modelEntity.position.x = Float(x)
-                        e.modelEntity.position.y = Float(y)
-                        e.modelEntity.position.z = Float(z)
-                        e.modelEntity.scale.x = Float(scalex)
-                        e.modelEntity.scale.y = Float(scaley)
-                        e.modelEntity.scale.z = Float(scalez)
-                        e.modelEntity.orientation.vector.x = Float(orientationx)
-                        e.modelEntity.orientation.vector.y = Float(orientationy)
-                        e.modelEntity.orientation.vector.z = Float(orientationz)
-                        e.modelEntity.orientation.vector.w = Float(orientationw)
-                        e.forceUpdate = !e.forceUpdate
                     }
                 }
             } else if command == "createWindowGroup" {

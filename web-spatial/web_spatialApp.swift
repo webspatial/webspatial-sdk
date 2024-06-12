@@ -28,7 +28,7 @@ struct web_spatialApp: App {
         print("WebSpatial App Started --------")
 
         // "http://npmURL:5173/?pageName=helloWorldApp/main.tsx"
-        let rootEnt = SpatialEntity(resourceType: "Entity", mngr: wgManager, windowGroupID: "root")
+        let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root")
         let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root")
 
         root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
