@@ -41,7 +41,10 @@ function App() {
     )
 }
 
-WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
+// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+document.documentElement.style.backgroundColor = "transparent";
+document.body.style.backgroundColor = "transparent"
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <Provider store={store}>
