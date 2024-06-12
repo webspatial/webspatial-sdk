@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import WebSpatial, { SpatialEntity } from './webSpatial'
+import { WebSpatial } from './webSpatialPrivate'
 import ReactDomServer from 'react-dom/server';
 
 export function SpatialDebug() {
