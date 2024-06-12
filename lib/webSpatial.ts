@@ -35,12 +35,15 @@ export class SpatialEntity {
   }
 }
 
-class SpatialResource {
+export class SpatialResource {
   constructor(public _resource: WebSpatialResource) {
+  }
+  async destroy() {
+    await WebSpatial.destroyResource(this._resource)
   }
 }
 
-class SpatialIFrameComponent extends SpatialResource {
+export class SpatialIFrameComponent extends SpatialResource {
   async loadURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
@@ -81,7 +84,7 @@ export class SpatialPhysicallyBasedMaterial extends SpatialResource {
 }
 
 type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
-class SpatialSession {
+export class SpatialSession {
   _currentFrame = new SpatialFrame()
   _animationFrameCallbacks = Array<animCallback>()
   _frameLoopStarted = false
