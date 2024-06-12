@@ -52,16 +52,18 @@ class SpatialResource: ObservableObject {
             if wg.entities[id] == nil {
                 wg.entities[id] = self
             }
-        } else {
-            if wg.resources[id] == nil {
-                wg.resources[id] = self
-            }
+        }
+
+        if wg.resources[id] == nil {
+            wg.resources[id] = self
         }
     }
 
     func destroy()->Bool {
         let wg = mngr!.getWindowGroup(windowGroup: windowGroupID)
         if resourceType == "Entity" {
+            modelEntity.removeFromParent()
+            wg.resources.removeValue(forKey: id)
             if let _ = wg.entities.removeValue(forKey: id) {
                 return true
             }
@@ -73,8 +75,6 @@ class SpatialResource: ObservableObject {
         return false
     }
 }
-
-class SpatialEntity: SpatialResource {}
 
 class SpatialComponent {
     var componentType = "undefined"
