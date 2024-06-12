@@ -46,7 +46,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, webViewID: webViewRef!.webViewID)
+        webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, resourceID: webViewRef!.resourceID)
         webViewRef?.loadRequestID = -1
         webViewRef?.didFinishLoadPage()
     }
@@ -72,7 +72,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
-        let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupId)
+        let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupID)
         wg.updateFrame = !(wg.updateFrame)
     }
 }
@@ -91,8 +91,8 @@ struct WebViewNative: UIViewRepresentable {
         c.webViewRef = webViewRef
         return c
     }
-        
-    func makeUIView(context: Context) -> WKWebView {
+    
+    func createResources() -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
@@ -116,14 +116,22 @@ struct WebViewNative: UIViewRepresentable {
 
         return webViewHolder.appleWebView!
     }
-        
-    func updateUIView(_ webView: WKWebView, context: Context) {
+    
+    func initialLoad() {
         if webViewHolder.needsUpdate {
             let request = URLRequest(url: url)
-            webView.load(request)
-            webView.isOpaque = false
+            webViewHolder.appleWebView!.load(request)
+            webViewHolder.appleWebView!.isOpaque = false
             // webView.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
+    }
+        
+    func makeUIView(context: Context) -> WKWebView {
+        return createResources()
+    }
+        
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        initialLoad()
     }
 }

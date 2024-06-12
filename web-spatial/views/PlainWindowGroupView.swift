@@ -8,19 +8,20 @@
 import RealityKit
 import SwiftUI
 
-// struct PageBackground<Content: View>: View {
-//    @ObservedObject var wv: SpatialWebView
-//    var content: () -> Content
-//
-//    init(wvx: SpatialWebView, @ViewBuilder content: @escaping () -> Content) {
-//        self.content = content
-//        self.wv = wvx
-//    }
-//
-//    var body: some View {
-//        VStack(content: content).padding().background(Color.clear.opacity(0)).cornerRadius(wv.cornerRadius)
-//    }
-// }
+// Helper view to tell swiftui to watch a certain object without needing to create another view
+struct WatchObj<T: ObservableObject, Content: View>: View {
+    @ObservedObject var toWatch: T
+    var content: () -> Content
+
+    init(toWatch: T, @ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+        self.toWatch = toWatch
+    }
+
+    var body: some View {
+        VStack(content: content)
+    }
+}
 
 struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
@@ -65,6 +66,7 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
+        let wv = windowGroupContent.entities.filter { $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true }.first!.value.spatialWebView!
         VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
             if v {
                 Task {
@@ -100,27 +102,25 @@ struct PlainWindowGroupView: View {
 
                 .gesture(dragGesture).offset(z: -0.1)
 
-                let wv = windowGroupContent.webViews["root"] == nil ? windowGroupContent.webViews.first!.value : windowGroupContent.webViews["root"]!
                 let oval = Float(wv.scrollOffset.y)
-                ForEach(Array(windowGroupContent.webViews.keys), id: \.self) { key in
-                    let view = windowGroupContent.webViews[key]!
+                ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
+                    let e = windowGroupContent.entities[key]!
+                    WatchObj(toWatch: e) {
+                        if e.spatialWebView != nil && e.spatialWebView!.inline {
+                            let view = e.spatialWebView!
 
-                    let x = view.full ? (proxy3D.size.width/2) : CGFloat(view.pose.x)
-                    let y = view.full ? (proxy3D.size.height/2) : CGFloat(view.pose.y - oval)
-                    let z = CGFloat(view.pose.z)
-                    let width = view.full ? (proxy3D.size.width) : CGFloat(view.width)
-                    let height = view.full ? (proxy3D.size.height) : CGFloat(view.height)
+                            let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                            let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
+                            let z = CGFloat(e.modelEntity.position.z)
+                            let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                            let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
 
-                    SpatialWebViewUI(wv: view)
-                        .frame(width: width, height: height).padding3D(.front, -100000) // .padding3D(.all, -100000)
-                        //                        .hoverEffect(.automatic, isEnabled: true)
-
-                        // .shadow(radius: 20)
-                        .position(x: x, y: y)
-                        .offset(z: z)
-
-                    // .allowsHitTesting(key == "root")
-                    // view.webViewNative?.frame(width: reflow % 2 == 0 ? width : (width + 1), height: height)
+                            SpatialWebViewUI(wv: view)
+                                .frame(width: width, height: height).padding3D(.front, -100000)
+                                .position(x: x, y: y)
+                                .offset(z: z)
+                        }
+                    }
                 }
                 ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
                     Model3D(url: windowGroupContent.models[key]!.url) { model in
@@ -135,7 +135,6 @@ struct PlainWindowGroupView: View {
                     windowResizeInProgress = 1
                     Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
                         windowResizeInProgress = 0
-                        let wv = windowGroupContent.webViews["root"] == nil ? windowGroupContent.webViews.first!.value : windowGroupContent.webViews["root"]!
                         wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
                         wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
                     }
