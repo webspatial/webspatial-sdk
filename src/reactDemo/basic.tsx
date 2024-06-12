@@ -21,19 +21,18 @@ function App() {
         (window as any).myContentUpdate = (str: string) => {
             (myDiv.current! as HTMLElement).innerHTML = str
         }
-        (window as any).myContentUpdate(_panelContentUpdate)
+        //  (window as any).myContentUpdate(_panelContentUpdate)
     }, [])
     return (
         <div className='w-screen h-screen' ref={myDiv}>
-
+            <div className="text-white bg-purple-500 bg-opacity-10 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+                <p className='text-center'>Hello world</p>
+            </div>
         </div>
-        // <div className="text-white bg-white bg-opacity-10 flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-        //     <p className='text-center'>Hello world</p>
-        // </div>
     )
 }
 
-WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />
