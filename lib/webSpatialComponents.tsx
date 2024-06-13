@@ -1,72 +1,8 @@
-import React, { ReactElement, useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
-import ReactDomServer from 'react-dom/server';
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialSession } from './webSpatial';
+import React, { ReactElement, useEffect, useRef } from 'react'
+import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './webSpatial';
+type vecType = { x: number, y: number, z: number }
 
-export function SpatialDebug() {
-    return (
-        <div>
-            debug
-        </div>
-    )
-}
-function getInheritedStyle(from: HTMLElement) {
-    //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
-    var inheritStyleProps = [
-        [["azimuth"], ["azimuth"]],
-        [["border-collapse"], ["borderCollapse"]],
-        [["border-spacing"], ["borderSpacing"]],
-        [["caption-side"], ["captionSide"]],
-        [["color"], ["color"]],
-        [["cursor"], ["cursor"]],
-        [["direction"], ["direction"]],
-        [["elevation"], ["elevation"]],
-        [["empty-cells"], ["emptyCells"]],
-        [["font-family"], ["fontFamily"]],
-        [["font-size"], ["fontSize"]],
-        [["font-style"], ["fontStyle"]],
-        [["font-variant"], ["fontVariant"]],
-        [["font-weight"], ["fontWeight"]],
-        [["font"], ["font"]],
-        [["letter-spacing"], ["letterSpacing"]],
-        [["line-height"], ["lineHeight"]],
-        [["list-style-image"], ["listStyleImage"]],
-        [["list-style-position"], ["listStylePosition"]],
-        [["list-style-type"], ["listStyleType"]],
-        [["list-style"], ["listStyle"]],
-        [["orphans"], ["orphans"]],
-        [["pitch-range"], ["pitchRange"]],
-        [["pitch"], ["pitch"]],
-        [["quotes"], ["quotes"]],
-        [["richness"], ["richness"]],
-        [["speak-header"], ["speakHeader"]],
-        [["speak-numeral"], ["speakNumeral"]],
-        [["speak-punctuation"], ["speakPunctuation"]],
-        [["speak"], ["speak"]],
-        [["speech-rate"], ["speechRate"]],
-        [["stress"], ["stress"]],
-        [["text-align"], ["textAlign"]],
-        [["text-indent"], ["textIndent"]],
-        [["text-transform"], ["textTransform"]],
-        [["visibility"], ["visibility"]],
-        [["voice-family"], ["voiceFamily"]],
-        [["volume"], ["volume"]],
-        [["white-space"], ["whiteSpace"]],
-        [["widows"], ["widows"]],
-        [["word-spacing"], ["wordSpacing"]],
-    ]
-    var styleString = "width:100%;height:100%;"
-    var styleObject = getComputedStyle(from)
-    for (var cssName of (inheritStyleProps as any)) {
-        if ((styleObject as any)[cssName[1]]) {
-            //(to.style as any)[cssName] = (s as any)[cssName]
-            styleString += cssName[0] + ": " + ((styleObject as any)[cssName[1]]) + ";"
-        }
-
-    }
-    return styleString
-}
-
+// Create the default Spatial session for the app
 var _currentSession = null as SpatialSession | null
 export async function getSessionAsync() {
     if (_currentSession) {
@@ -76,161 +12,222 @@ export async function getSessionAsync() {
     return _currentSession
 }
 
-
-let _SpatialDivInstanceIDCounter = 0
-export function SpatialIFrame(props: { className: string, src: string, children?: ReactElement | Array<ReactElement> | undefined, spatialOffset?: { x?: number, y?: number, z?: number } }) {
-    props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
-    if (props.spatialOffset!.x === undefined) {
-        props.spatialOffset!.x = 0
+// Cleanup param helpers
+function initializeSpatialOffset(offset: any) {
+    if (offset.x === undefined) {
+        offset.x = 0
     }
-    if (props.spatialOffset!.y === undefined) {
-        props.spatialOffset!.y = 0
+    if (offset.y === undefined) {
+        offset.y = 0
     }
-    if (props.spatialOffset!.z === undefined) {
-        props.spatialOffset!.z = 0
+    if (offset.z === undefined) {
+        offset.z = 0
     }
+}
 
-    // Since we do initialize/cleanup async we need to keep track of state for all instances
-    let instanceState = useRef({} as any)
-    let currentInstanceID = useRef(0)
+// Manager classes to handle resource creation/deletion
+class SpatialIFrameManager {
+    initPromise?: Promise<any>
+    entity?: SpatialEntity
+    webview?: SpatialIFrameComponent
 
-    const myStyleDiv = useRef(null);
-    const myDiv = useRef(null);
-    async function resizeDiv() {
-        let rect = (myDiv.current! as HTMLElement).getBoundingClientRect();
+    async initInternal(url: string) {
+        this.entity = await (await getSessionAsync()).createEntity()
+        this.webview = await (await getSessionAsync()).createIFrameComponent()
+        await this.webview.loadURL(url)
+        await this.entity.setComponent(this.webview)
+    }
+    async init(url: string) {
+        this.initPromise = this.initInternal(url)
+        await this.initPromise
+    }
+    async resize(element: HTMLElement, offset: vecType) {
+        let rect = element.getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-
-        if (!instanceState.current[currentInstanceID.current].panel) {
+        if (!this.webview) {
             return
         }
-        var panel = instanceState.current[currentInstanceID.current].panel as { entity: SpatialEntity, webview: SpatialIFrameComponent }
-        var entity = panel.entity
-        entity.transform.position.x = targetPosX + props.spatialOffset!.x!
-        entity.transform.position.y = targetPosY + props.spatialOffset!.y!
-        entity.transform.position.z = props.spatialOffset!.z!
-        entity.updateTransform()
+        var entity = this.entity!
+        entity.transform.position.x = targetPosX + offset.x
+        entity.transform.position.y = targetPosY + offset.y
+        entity.transform.position.z = offset.z
+        await entity.updateTransform()
 
-        var webview = panel.webview
+        var webview = this.webview!
         await webview.setResolution(rect.width, rect.height)
     }
+    async destroy() {
+        if (this.initPromise) {
+            await this.initPromise
+            this.entity?.destroy()
+            this.webview?.destroy()
+        }
+    }
+}
+
+class SpatialModelUIManager {
+    initPromise?: Promise<any>
+    entity?: SpatialEntity
+    modelComponent?: SpatialModelUIComponent
+
+    async initInternal(url: string) {
+        this.entity = await (await getSessionAsync()).createEntity()
+        this.modelComponent = await (await getSessionAsync()).createModelUIComponent()
+        await this.modelComponent.setURL(url)
+        await this.entity.setComponent(this.modelComponent)
+    }
+    async init(url: string) {
+        this.initPromise = this.initInternal(url)
+        await this.initPromise
+    }
+    async resize(element: HTMLElement, offset: vecType) {
+        let rect = element.getBoundingClientRect();
+        let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
+        let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+        if (!this.modelComponent) {
+            return
+        }
+        var entity = this.entity!
+        entity.transform.position.x = targetPosX + offset.x
+        entity.transform.position.y = targetPosY + offset.y
+        entity.transform.position.z = offset.z
+        await entity.updateTransform()
+
+        var modelComponent = this.modelComponent!
+        await modelComponent.setResolution(rect.width, rect.height);
+
+        await modelComponent.setAspectRatio("fit");
+    }
+    async destroy() {
+        if (this.initPromise) {
+            await this.initPromise
+            this.entity?.destroy()
+            this.modelComponent?.destroy()
+        }
+    }
+}
+
+
+// React components
+let _SpatialUIInstanceIDCounter = 0
+export function SpatialIFrame(props: { className: string, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+    props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
+    initializeSpatialOffset(props.spatialOffset!)
+
+    // Since we do initialize/cleanup async we need to keep track of state for all instances
+    let instanceState = useRef({} as { [id: string]: SpatialIFrameManager })
+    let currentInstanceID = useRef(0)
+
+    const myDiv = useRef(null);
+    async function resizeDiv() {
+        instanceState.current[currentInstanceID.current].resize((myDiv.current! as HTMLElement), props.spatialOffset as vecType)
+    }
     async function setContent(savedId: number, str: string) {
-        //var start = Date.now()
+        await instanceState.current[savedId].init(props.src);
 
-        var promise = new Promise<{ entity: SpatialEntity, webview: SpatialIFrameComponent }>(async (res, rej) => {
-            let entity = await (await getSessionAsync()).createEntity()
-            let webview = await (await getSessionAsync()).createIFrameComponent()
-            await webview.loadURL(props.src)
-            await entity.setComponent(webview)
-            res({ entity: entity, webview: webview })
-        })
-
-        instanceState.current[savedId].panelP = promise
-        instanceState.current[savedId].panel = (await instanceState.current[savedId].panelP) as any;
-        // await WebSpatial.updatePanelContent(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel, str)
         await resizeDiv();
-        //var latency = (Date.now() - start) / 1000
-        // WebSpatial.log(latency)
     }
 
     useEffect(() => {
         if (!(window as any).WebSpatailEnabled) {
             return
         }
+        let options = {
+            root: document.body,
+        };
+
+        let observer = new IntersectionObserver(async () => {
+            (await getSessionAsync()).log("observed")
+        }, options)
+        observer.observe((myDiv.current! as HTMLElement))
+
         // We need to be very careful with currentInstanceID as it can get overwritten mid async call, to handle this we create state per new instance and then we must cache the id to align our create/destroy logic
-        currentInstanceID.current = ++_SpatialDivInstanceIDCounter
-        instanceState.current[currentInstanceID.current] = {
-            panel: null,
-            panelP: new Promise((res) => { res(null) }),
-            createP: new Promise((res) => { res(null) }),
-        }
+        currentInstanceID.current = ++_SpatialUIInstanceIDCounter
+        instanceState.current[currentInstanceID.current] = new SpatialIFrameManager()
         window.addEventListener("resize", resizeDiv);
 
-        (myDiv.current! as HTMLElement).style.visibility = "visible"
-        let innerStr = "<div style=\"" + getInheritedStyle(myStyleDiv.current!) + "\">" + ReactDomServer.renderToString(props.children) + "</div>"
-        innerStr = encodeURIComponent(innerStr.replace("remote-click", "onclick"))
-        instanceState.current[currentInstanceID.current].createP = setContent(currentInstanceID.current, innerStr);
-        (myDiv.current! as HTMLElement).style.visibility = "hidden"
+        setContent(currentInstanceID.current, "");
 
         return () => {
             // Get reference to id so it isn't overwritten when a new instance is created
-            var savedId = currentInstanceID.current
+            var savedId = currentInstanceID.current;
             removeEventListener("resize", resizeDiv);
             (async () => {
-                await instanceState.current[savedId].createP
-                await instanceState.current[savedId].panelP;
-                if (!instanceState.current[savedId].panel) {
-                    return
-                }
-                var panel = instanceState.current[savedId].panel as { entity: SpatialEntity, webview: SpatialIFrameComponent }
-                panel.entity.destroy()
-                panel.webview.destroy()
 
-                //    WebSpatial.destroyWebPanel(WebSpatial.getCurrentWindowGroup(), instanceState.current[savedId].panel)
-                delete instanceState.current[savedId]
+                await instanceState.current[savedId].destroy()
+                delete instanceState.current[savedId];
             })()
-
         }
     }, [])
+
     useEffect(() => {
-        if (!(window as any).WebSpatailEnabled) {
-            return
-        }
         resizeDiv()
         return () => {
         }
-    }, [props.children])
+    }, [props.spatialOffset])
 
     return (
         <div ref={myDiv} className={props.className}>
-            {props.children}
-            <div ref={myStyleDiv}></div>
         </div>
     )
 }
 
+{/* <model interactive width="670" height="1191">
+<source src="assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" />
+<source src="assets/FlightHelmet.glb" type="model/gltf-binary" />
+<picture>
+  <img src="assets/FlightHelmet.png" width="670" height="1191" />
+</picture>
+</model> */}
+export function Model(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+    props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
+    initializeSpatialOffset(props.spatialOffset!)
 
-// export function SpatialModel(props: { webViewID: string, className: string, children?: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
-//     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
-//     if (props.spatialOffset!.x === undefined) {
-//         props.spatialOffset!.x = 0
-//     }
-//     if (props.spatialOffset!.y === undefined) {
-//         props.spatialOffset!.y = 0
-//     }
-//     if (props.spatialOffset!.z === undefined) {
-//         props.spatialOffset!.z = 0
-//     }
+    let instanceState = useRef({} as { [id: string]: SpatialModelUIManager })
+    let currentInstanceID = useRef(0)
 
-//     const myDiv = useRef(null);
-//     useEffect(() => {
-//         if (!(window as any).WebSpatailEnabled) {
-//             return
-//         }
+    const myDiv = useRef(null);
+    async function resizeDiv() {
+        instanceState.current[currentInstanceID.current].resize((myDiv.current! as HTMLElement), props.spatialOffset as vecType);
+    }
+    async function setContent(savedId: number, src: string) {
+        await instanceState.current[savedId].init(src);
+        await resizeDiv();
+    }
 
-//         var resizeDiv = async () => {
-//             var element = (myDiv.current! as HTMLElement)
-//             var rect = element.getBoundingClientRect();
-//             var curPosX = (rect.left + ((rect.right - rect.left) / 2))
-//             var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-//             await WebSpatial.updateDOMModelPosition(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, { x: curPosX, y: curPosY, z: props.spatialOffset!.z! })
-//         }
-//         var setContent = async () => {
-//             await WebSpatial.createDOMModel(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), props.webViewID, "http://npmURL:5173/src/assets/FlightHelmet.usdz")
-//             await resizeDiv()
-//         }
-//         setContent()
+    useEffect(() => {
+        // Created
+        currentInstanceID.current = ++_SpatialUIInstanceIDCounter
+        instanceState.current[currentInstanceID.current] = new SpatialModelUIManager()
+        window.addEventListener("resize", resizeDiv);
+        (async () => {
+            var savedId = currentInstanceID.current
+            var srcAr = new Array<string>()
+            React.Children.forEach(props.children, async (element) => {
+                srcAr.push(element.props.src);
+            });
+            setContent(savedId, srcAr[0])
+        })()
+        return () => {
+            // destroyed
+            var savedId = currentInstanceID.current;
+            removeEventListener("resize", resizeDiv);
+            (async () => {
+                await instanceState.current[savedId].destroy()
+                delete instanceState.current[savedId];
+            })()
+        }
+    }, [])
 
-//         addEventListener("resize", resizeDiv);
+    useEffect(() => {
+        resizeDiv()
+        return () => {
+        }
+    }, [props.spatialOffset])
 
-//         return () => {
-//             removeEventListener("resize", resizeDiv)
-//         }
-//     }, [])
-
-//     return (
-//         <div ref={myDiv} className={props.className}>
-//             {((window as any).WebSpatailEnabled) ? <div /> : props.children}
-//         </div>
-//     )
-// }
+    return (
+        <div ref={myDiv} className={props.className}>
+        </div>
+    )
+}

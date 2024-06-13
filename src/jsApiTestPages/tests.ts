@@ -54,6 +54,18 @@ var main = async () => {
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"
         await session.log("set to glass background")
+    } else if (page == "modelUI") {
+        var e = await session.createEntity()
+        e.transform.position.x = 500
+        e.transform.position.y = 300
+        e.transform.position.z = 50
+        await e.updateTransform()
+        let i = await session.createModelUIComponent()
+        await Promise.all([
+            i.setURL("http://npmURL:5173/src/assets/FlightHelmet.usdz"), // 
+            i.setResolution(200, 200),
+            e.setComponent(i)
+        ])
     } else if (page == "model") {
         session.log("create entitys")
 
