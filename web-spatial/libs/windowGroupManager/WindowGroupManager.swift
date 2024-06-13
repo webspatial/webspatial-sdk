@@ -14,16 +14,12 @@ class EntityWrap {
     var entity: Entity?
 }
 
-struct ModelViewData {
-    var url: URL
-    var entity: EntityWrap = .init()
-    var position: SIMD3<Float>
-    var added = false
+class ModelUIComponent: ObservableObject {
+    @Published var url: URL?
+    @Published var aspectRatio: String = "fit"
+    @Published var resolutionX: Double = 0
+    @Published var resolutionY: Double = 0
 }
-
-class SpatialMesh {}
-
-class SpatialMaterial {}
 
 class SpatialResource: ObservableObject {
     // Always populated
@@ -36,6 +32,7 @@ class SpatialResource: ObservableObject {
     var meshResource: MeshResource?
     var physicallyBasedMaterial: PhysicallyBasedMaterial?
     var modelComponent: ModelComponent?
+    @Published var modelUIComponent: ModelUIComponent?
     @Published var spatialWebView: SpatialWebView?
     @Published var forceUpdate = false
 
@@ -84,7 +81,6 @@ class WindowGroupContentDictionary: ObservableObject {
     @Published var entities = [String: SpatialResource]()
     @Published var resources = [String: SpatialResource]()
 
-    @Published var models = [String: ModelViewData]()
     @Published var toggleImmersiveSpace = false
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil

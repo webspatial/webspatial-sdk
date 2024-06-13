@@ -28,8 +28,8 @@ class SpatialWebView: ObservableObject {
 
     var full = false
     var root = false
-    var resolutionX: Double = 0
-    var resolutionY: Double = 0
+    @Published var resolutionX: Double = 0
+    @Published var resolutionY: Double = 0
     var inline = true
 
     var parentWindowGroupID: String
@@ -159,7 +159,10 @@ class SpatialWebView: ObservableObject {
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     let c = wg.resources[cmdInfo.resourceID]!
                     let e = wg.entities[cmdInfo.entityID]!
-                    if c.resourceType == "ModelComponent" {
+
+                    if c.resourceType == "ModelUIComponent" {
+                        e.modelUIComponent = c.modelUIComponent
+                    } else if c.resourceType == "ModelComponent" {
                         e.modelEntity.model = c.modelComponent
                     } else if c.resourceType == "SpatialWebView" {
                         e.spatialWebView = c.spatialWebView
@@ -185,6 +188,8 @@ class SpatialWebView: ObservableObject {
                     } else if type == "SpatialWebView" {
                         sr.spatialWebView = SpatialWebView(parentWindowGroupID: parentWindowGroupID)
                         sr.spatialWebView?.resourceID = sr.id
+                    } else if type == "ModelUIComponent" {
+                        sr.modelUIComponent = ModelUIComponent()
                     } else if type == "ModelComponent" {
                         if let modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
                             // Create download task for the url
@@ -284,6 +289,20 @@ class SpatialWebView: ObservableObject {
                             sr.physicallyBasedMaterial!.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
                         }
 
+                    } else if sr.resourceType == "ModelUIComponent" {
+                        if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                            sr.modelUIComponent?.url = URL(string: url)!
+                        }
+                        if let aspectRatio: String = json.getValue(lookup: ["data", "update", "aspectRatio"]) {
+                            sr.modelUIComponent?.aspectRatio = aspectRatio
+                        }
+                        if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
+                        {
+                            sr.modelUIComponent?.resolutionX = x
+                            sr.modelUIComponent?.resolutionY = y
+                        }
+
                     } else if sr.resourceType == "ModelComponent" {
                         if let meshResource: String = json.getValue(lookup: ["data", "update", "meshResource"]) {
                             sr.modelComponent!.mesh = wg.resources[meshResource]!.meshResource!
@@ -310,7 +329,7 @@ class SpatialWebView: ObservableObject {
                             // Create the webview
                             if sr.spatialWebView?.webViewNative == nil {
                                 sr.spatialWebView!.initFromURL(url: URL(string: targetUrl)!)
-                                sr.spatialWebView!.webViewNative?.createResources()
+                                _ = sr.spatialWebView!.webViewNative?.createResources()
                                 sr.spatialWebView!.webViewNative?.initialLoad()
                             }
 

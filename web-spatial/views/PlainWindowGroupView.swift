@@ -103,31 +103,49 @@ struct PlainWindowGroupView: View {
                 .gesture(dragGesture).offset(z: -0.1)
 
                 let oval = Float(wv.scrollOffset.y)
+
+                // Webview content
                 ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
                     let e = windowGroupContent.entities[key]!
                     WatchObj(toWatch: e) {
                         if e.spatialWebView != nil && e.spatialWebView!.inline {
                             let view = e.spatialWebView!
+                            WatchObj(toWatch: view) {
+                                let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                                let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
+                                let z = CGFloat(e.modelEntity.position.z)
+                                let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                                let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
 
-                            let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                            let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
-                            let z = CGFloat(e.modelEntity.position.z)
-                            let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                            let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
-
-                            SpatialWebViewUI(wv: view)
-                                .frame(width: width, height: height).padding3D(.front, -100000)
-                                .position(x: x, y: y)
-                                .offset(z: z)
+                                SpatialWebViewUI(wv: view)
+                                    .frame(width: width, height: height).padding3D(.front, -100000)
+                                    .position(x: x, y: y)
+                                    .offset(z: z)
+                            }
                         }
                     }
                 }
-                ForEach(Array(windowGroupContent.models.keys), id: \.self) { key in
-                    Model3D(url: windowGroupContent.models[key]!.url) { model in
-                        model.model?
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    }.frame(width: 50, height: 100).position(x: CGFloat(windowGroupContent.models[key]!.position.x), y: CGFloat(windowGroupContent.models[key]!.position.y - oval)).offset(z: CGFloat(windowGroupContent.models[key]!.position.z)).padding3D(.front, -100000).opacity(windowGroupContent.hidden ? 0 : 1)
+
+                // Mode3D content
+                ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
+                    let e = windowGroupContent.entities[key]!
+                    WatchObj(toWatch: e) {
+                        if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
+                            WatchObj(toWatch: e.modelUIComponent!) {
+                                let x = CGFloat(e.modelEntity.position.x)
+                                let y = CGFloat(e.modelEntity.position.y - oval)
+                                let z = CGFloat(e.modelEntity.position.z)
+                                let width = CGFloat(e.modelUIComponent!.resolutionX)
+                                let height = CGFloat(e.modelUIComponent!.resolutionY)
+
+                                Model3D(url: e.modelUIComponent!.url!) { model in
+                                    model.model?
+                                        .resizable()
+                                        .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                                }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000)
+                            }
+                        }
+                    }
                 }
             }.onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
