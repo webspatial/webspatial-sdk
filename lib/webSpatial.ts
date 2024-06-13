@@ -66,6 +66,18 @@ export class SpatialModelComponent extends SpatialResource {
   }
 }
 
+export class SpatialModelUIComponent extends SpatialResource {
+  async setURL(url: string) {
+    await WebSpatial.updateResource(this._resource, { url: url })
+  }
+  async setAspectRatio(aspectRatio: string) {
+    await WebSpatial.updateResource(this._resource, { aspectRatio: aspectRatio })
+  }
+  async setResolution(x: number, y: number) {
+    await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
+  }
+}
+
 export class SpatialMeshResource extends SpatialResource {
 }
 
@@ -111,6 +123,11 @@ export class SpatialSession {
   async createIFrameComponent() {
     let entity = await WebSpatial.createResource("SpatialWebView", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
     return new SpatialIFrameComponent(entity)
+  }
+
+  async createModelUIComponent(options?: any) {
+    let entity = await WebSpatial.createResource("ModelUIComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
+    return new SpatialModelUIComponent(entity)
   }
 
   async createModelComponent(options?: { url: string }) {
