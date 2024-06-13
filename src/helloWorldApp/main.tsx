@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
 import hnLogo from './assets/y18.svg'
-import { SpatialIFrame, getSessionAsync } from '../../lib/webSpatialComponents'
+import { Model, SpatialIFrame, getSessionAsync } from '../../lib/webSpatialComponents'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
@@ -23,9 +23,6 @@ function App() {
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
     children.push(
       <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
-        <div className="text-white bg-purple-300 bg-opacity-20 flex min-h-full flex-1 flex-col justify-center px-6 py-0 lg:px-8">
-          <p className='text-center'>Hello world {i}</p>
-        </div>
       </SpatialIFrame>
     );
   };
@@ -118,6 +115,10 @@ function App() {
         <div className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center">
           <h1>Model3D</h1>
 
+          <Model className="w-full h-full bg-purple-500 bg-opacity-50 rounded-xl text-center">
+            <source src="http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+          </Model>
+
           {/* <SpatialModel webViewID='testModel' className='w-full h-full bg-white bg-opacity-50' spatialOffset={{ z: 0 }}>
           </SpatialModel> */}
         </div>
@@ -128,24 +129,15 @@ function App() {
       </div>
       <div className="flex text-white h-64 m-10">
         <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
-          <div className="text-white bg-red-300 bg-opacity-20 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <p className='text-center'>Hello world always works</p>
-          </div>
         </SpatialIFrame>
         <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
-          <div className="text-white bg-green-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <p className='text-center' remote-click="(window).wx.log('trevor here')">Hello worfdsfdsld 2</p>
-          </div>
+
         </SpatialIFrame>
         <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
-          <div className="text-white bg-blue-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <p className='text-center'>Hello world 5</p>
-          </div>
+
         </SpatialIFrame>
         <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
-          <div className="text-white bg-yellow-300  bg-opacity-10 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <p className='text-center'>Hello worlds</p>
-          </div>
+
         </SpatialIFrame>
       </div>
 
@@ -190,29 +182,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 
 var main = async () => {
-  setTimeout(async () => {
-    // var element = document.getElementById("modelHere")!
-    // var rect = element.getBoundingClientRect();
-    // var curPosX = (rect.left + ((rect.right - rect.left) / 2))
-    // var curPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-    // await WebSpatial.createDOMModel("root", "root", "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
-    // await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 })
-
-    // {
-    //   WebSpatial.onFrame(async () => {
-    //     var element = document.getElementById("modelHere")!
-    //     var rect = element.getBoundingClientRect();
-    //     var targetPosX = (rect.left + ((rect.right - rect.left) / 2))
-    //     var targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2))
-    //     curPosX = Math.floor(curPosX + ((targetPosX - curPosX) * 0.3))
-    //     curPosY = Math.floor(curPosY + ((targetPosY - curPosY) * 0.3))
-    //     await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: curPosX, y: curPosY, z: 0 });
-    //   })
-    // }
-
-  }, 100);
-
-
-
 }
 main()
