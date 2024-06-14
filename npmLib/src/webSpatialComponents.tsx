@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useRef } from 'react'
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './webSpatial';
+import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './index';
 type vecType = { x: number, y: number, z: number }
 
 // Create the default Spatial session for the app
