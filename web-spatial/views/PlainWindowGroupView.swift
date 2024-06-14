@@ -47,21 +47,38 @@ struct PlainWindowGroupView: View {
         // UpdateWebViewSystem.registerSystem()
     }
 
+
+    @State var trackedPosition: Vector3D = .zero
     var dragGesture: some Gesture {
-        DragGesture()
+        DragGesture().handActivationBehavior(.automatic)
             .targetedToAnyEntity()
             .onChanged { value in
-                //  value.entity.position.x = Float(value.location3D.x)
+                //  value.
+                // value.st
+                // value.entity.position.x = Float(value.location3D.x)
                 //  print(value.entity.name + "test")
-                // value.entity.position = value.convert(value.location3D, from: .local, to: value.entity.parent!)
+                // print(value.inputDevicePose3D!.position.x)
+//                var entityPos = value.entity.position // value.convert(value.inputDevicePose3D!.position, from: .local, to: value.entity.parent!)
+//                var dragLocation = value.convert(value.startLocation3D, from: .local, to: value.entity.parent!)
+                let translate = value.convert(value.translation3D + trackedPosition, from: .local, to: .scene)
+
+                // print((entityPos - dragLocation).x)
+
+                value.entity.position.x = Float(translate.x)
+                value.entity.position.y = Float(translate.y)
+
+                //   value.entity.position.x = startLocation.x
 
                 // var p = value.convert(value.location3D, from: .local, to: value.entity.parent!)
 
-                var x = Transform()
-                x.translation.x = value.entity.position.x < 0 ? 0.4 : -0.4
-                // x.translation = p
-
-                value.entity.move(to: x, relativeTo: nil, duration: 10.0)
+//                var x = Transform()
+//                x.translation.x = value.entity.position.x < 0 ? 0.4 : -0.4
+//                // x.translation = p
+//
+//                value.entity.move(to: x, relativeTo: nil, duration: 10.0)
+            }
+            .onEnded {
+                self.trackedPosition += $0.translation3D
             }
     }
 
@@ -85,14 +102,14 @@ struct PlainWindowGroupView: View {
         GeometryReader { proxy3D in
             ZStack {
                 RealityView { _ in
-                    //    let cube = ModelEntity()
-                    //    cube.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
-                    //    cube.generateCollisionShapes(recursive: false)
-                    //    cube.position.x = -0.5
-                    //    cube.position.z = 0.2
-                    //    cube.generateCollisionShapes(recursive: false)
-                    //    cube.components.set(InputTargetComponent())
-                    //    content.add(cube)
+                    let cube = ModelEntity()
+                    cube.model = ModelComponent(mesh: .generateBox(size: 0.1), materials: [])
+                    cube.generateCollisionShapes(recursive: false)
+                    cube.position.x = -0.0
+                    cube.position.z = 0.2
+                    cube.generateCollisionShapes(recursive: false)
+                    cube.components.set(InputTargetComponent())
+                    // content.add(cube)
 
                 } update: { content in
                     for (_, entity) in windowGroupContent.entities {
