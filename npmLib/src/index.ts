@@ -1,8 +1,11 @@
 import { WebSpatial, WebSpatialResource } from './webSpatialPrivate'
 
-// Public api
-class SpatialTransform {
+/**
+ * Transform containing position, orientation and scale
+ */
+export class SpatialTransform {
   position = new DOMPoint(0, 0, 0)
+  /** Quaternion value for x,y,z,y */
   orientation = new DOMPoint(0, 0, 0, 1)
   scale = new DOMPoint(1, 1, 1)
 }
@@ -11,25 +14,42 @@ class SpatialFrame {
 
 }
 
+/**
+ * Entity used to describe an object that can be added to the scene
+ */
 export class SpatialEntity {
   transform = new SpatialTransform()
-  _destroyed = false
+  private _destroyed = false
   constructor(public _entity: WebSpatialResource) {
 
   }
+
+  /**
+   * Syncs the transform with the renderer, must be called to observe updates
+   */
   async updateTransform() {
     await WebSpatial.updateResource(this._entity, this.transform)
   }
 
+  /**
+  * Attaches a component to the entity to be displayed
+  */
   async setComponent(component: SpatialResource) {
     await WebSpatial.setComponent(this._entity, component._resource)
   }
 
+  /**
+  * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
+  */
   async destroy() {
     this._destroyed = true
     await WebSpatial.destroyResource(this._entity)
   }
 
+
+  /**
+  * Check if destroy has been called
+  */
   isDestroyed() {
     return this._destroyed
   }
@@ -43,6 +63,9 @@ export class SpatialResource {
   }
 }
 
+/**
+* Used to position an iframe in 3D space
+*/
 export class SpatialIFrameComponent extends SpatialResource {
   async loadURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
@@ -56,7 +79,9 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 }
 
-
+/**
+* Used to position a model in 3D space
+*/
 export class SpatialModelComponent extends SpatialResource {
   async setMesh(mesh: SpatialMeshResource) {
     await WebSpatial.updateResource(this._resource, { meshResource: mesh._resource.id })
@@ -66,6 +91,9 @@ export class SpatialModelComponent extends SpatialResource {
   }
 }
 
+/**
+* Used to position a model in 3D space inline to the webpage (Maps to Model3D) 
+*/
 export class SpatialModelUIComponent extends SpatialResource {
   async setURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
@@ -81,6 +109,9 @@ export class SpatialModelUIComponent extends SpatialResource {
 export class SpatialMeshResource extends SpatialResource {
 }
 
+/**
+* PBR material which can be set on a SpatialModelComponent
+*/
 export class SpatialPhysicallyBasedMaterial extends SpatialResource {
   baseColor = { r: 0.0, g: 0.7, b: 0.7, a: 1.0 }
   metallic = { value: 0.5 }
@@ -96,6 +127,10 @@ export class SpatialPhysicallyBasedMaterial extends SpatialResource {
 }
 
 type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
+
+/**
+* Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
+*/
 export class SpatialSession {
   _currentFrame = new SpatialFrame()
   _animationFrameCallbacks = Array<animCallback>()
@@ -154,15 +189,24 @@ export class SpatialSession {
     return new SpatialIFrameComponent(WebSpatial.getCurrentWebPanel())
   }
 
+  /**
+   * Debugging only, issues a native log
+   */
   async log(obj: any) {
     await WebSpatial.log(obj)
   }
 
+  /**
+  * Debugging only, used to ping the native renderer
+  */
   async ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
 }
 
+/**
+ * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr
+ */
 export class Spatial {
   async requestSession() {
     return new SpatialSession()
