@@ -1,5 +1,6 @@
 import { Euler, Quaternion, Vector3 } from 'three';
-import { Spatial, SpatialEntity } from '../../lib/webSpatial'
+import { Spatial, SpatialEntity } from "web-spatial"
+
 
 var main = async () => {
     const urlParams = new URLSearchParams(window.location.search);
