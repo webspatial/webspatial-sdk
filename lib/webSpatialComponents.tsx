@@ -133,14 +133,6 @@ export function SpatialIFrame(props: { className: string, children?: ReactElemen
         if (!(window as any).WebSpatailEnabled) {
             return
         }
-        let options = {
-            root: document.body,
-        };
-
-        let observer = new IntersectionObserver(async () => {
-            (await getSessionAsync()).log("observed")
-        }, options)
-        observer.observe((myDiv.current! as HTMLElement))
 
         // We need to be very careful with currentInstanceID as it can get overwritten mid async call, to handle this we create state per new instance and then we must cache the id to align our create/destroy logic
         currentInstanceID.current = ++_SpatialUIInstanceIDCounter
