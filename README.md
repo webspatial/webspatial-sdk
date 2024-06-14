@@ -4,6 +4,9 @@
 
 An easy-to-use library that allows developers to create content for XR Platforms using standard web technology (eg. html/css/js) that can be extended by good integration with popular libraries like ReactJS, BabylonJS, ThreeJS, etc.
 
+### Full Api Docs
+**web-spatial** • [**Docs**](npmLib/docs/globals.md)
+
 ### Usage
 
 This code shows how to create an iframe placed in 3D space as well embed 3D files placed on the page.
@@ -48,5 +51,29 @@ var loop = (time: DOMHighResTimeStamp) => {
 }
 session.requestAnimationFrame(loop)
 ```
+
+### Contribute/Build locally
+###### Build and link web library
+`cd npmLib/ && npm run build`
+`cd npmLib/ && yarn link`
+
+###### Build and run example website
+Build and link the web library (instructions above)
+`cd webTests/ && yarn link web-spatial` // Add link to web library
+`cd webTests/ && npm run dev -- --host` // Start web server
+`http://localhost:5173/` // Observe homepage loads (note 3D content can only be displayed in app at the moment)
+
+###### Run the app to view your website in 3D on VisionOS simulator
+ - `cd visionOSApp/ && open web-spatial.xcodeproj/` // Open xcode project and click play
+ - To view on a real device, make sure you can open the website in safari (may need to use the network ip address url from example site instead of localhost)
+ - Update the url in web_spatialApp.swift in the xcode project to your url
+`root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://YOUR_URL")!) `
+ - Launch on device and observe it working
+
+###### Generate docs
+`cd npmLib/ && npm run genDocs`
+
+
+
 
 
