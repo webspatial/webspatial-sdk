@@ -31,7 +31,7 @@ struct web_spatialApp: App {
         let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root")
         let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root")
 
-        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://10.73.196.42:5173/testList.html")!)
+        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://localhost:5173/testList.html")!)
         root.root = true
         root.resourceID = sr.id
         sr.spatialWebView = root
