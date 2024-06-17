@@ -202,6 +202,14 @@ export class SpatialSession {
   async ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
+
+  async openImmersiveSpace() {
+    return await WebSpatial.openImmersiveSpace()
+  }
+
+  async dismissImmersiveSpace() {
+    return await WebSpatial.dismissImmersiveSpace()
+  }
 }
 
 /**
