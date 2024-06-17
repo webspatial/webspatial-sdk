@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
 import hnLogo from './assets/y18.svg'
-import { Model, SpatialIFrame, getSessionAsync } from '../../lib/webSpatialComponents'
+import { Spatial } from 'web-spatial'
+import { Model, SpatialIFrame, getSessionAsync } from 'web-spatial/src/webSpatialComponents.tsx'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
