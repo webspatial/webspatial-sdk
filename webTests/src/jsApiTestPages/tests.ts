@@ -43,6 +43,7 @@ var main = async () => {
 
             setTimeout(async () => {
                 await e.destroy()
+                await i.destroy()
                 await session.log("destroy complete")
             }, 5000);
 
