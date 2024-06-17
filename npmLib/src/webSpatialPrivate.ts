@@ -138,8 +138,7 @@ export class WebSpatial {
     static async updateResource(resource: WebSpatialResource, data: any = null) {
         var cmd = new RemoteCommand()
         cmd.command = "updateResource"
-        cmd.data.windowGroupID = this.getCurrentWindowGroup().id
-        cmd.data.resourceID = this.getCurrentWebPanel().id
+        cmd.data.windowGroupID = resource.windowGroupId
         cmd.data.resourceID = resource.id
         if (data) {
             cmd.data.update = data

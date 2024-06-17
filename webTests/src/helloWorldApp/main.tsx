@@ -44,10 +44,21 @@ function App() {
           <h1>Toggle Immersive</h1>
           <label className="inline-flex items-center cursor-pointer">
             <input type="checkbox" value="" className="sr-only peer" onChange={async (e) => {
+              var session = await getSessionAsync()
               if (e.target.checked) {
-                (await getSessionAsync()).openImmersiveSpace();
+                session.openImmersiveSpace();
                 if (!created) {
                   setCreated(true)
+                  var immersiveWG = await session.getImmersiveWindowGroup()
+                  var ent = await session.createEntity()
+                  ent.transform.position.x = 0
+                  ent.transform.position.y = 0
+                  ent.transform.position.z = 0
+                  ent.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+                  await ent.updateTransform()
+                  var helmetModel = await session.createModelComponent({ url: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" })
+                  await ent.setComponent(helmetModel)
+
 
                   // let helmetModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getImmersiveWindowGroup(), { modelURL: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" });
                   // var ent = await WebSpatial.createEntity(WebSpatial.getImmersiveWindowGroup())
@@ -61,7 +72,7 @@ function App() {
                   // })
                 }
               } else {
-                (await getSessionAsync()).dismissImmersiveSpace();
+                session.dismissImmersiveSpace();
               }
             }}></input>
             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
