@@ -1,10 +1,10 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
-import { WebSpatial } from '../../lib/webSpatialPrivate'
 import ReactDomServer from 'react-dom/server';
+import { Spatial, SpatialEntity } from "web-spatial"
 
-(window as any).wx = WebSpatial
+//(window as any).wx = WebSpatial
 
 var _panelContentUpdate = "";
 (window as any).updatePanelContent = (str: string) => {
@@ -32,7 +32,11 @@ function App() {
     )
 }
 
-WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
+var session = await (new Spatial()).requestSession()
+await session.getCurrentIFrameComponent().setStyle({ glassEffect: true, cornerRadius: 50 })
+// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+document.documentElement.style.backgroundColor = "transparent";
+document.body.style.backgroundColor = "transparent"
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />
