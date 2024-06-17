@@ -22,7 +22,7 @@ struct CommandInfo {
     var requestID = -1
 }
 
-class SpatialWebView: ObservableObject {
+class SpatialWebView: WatchableObject {
     var scrollOffset = CGPoint()
     var webViewNative: WebViewNative?
 
@@ -48,6 +48,7 @@ class SpatialWebView: ObservableObject {
     init(parentWindowGroupID: String, url: URL) {
         self.parentWindowGroupID = parentWindowGroupID
         webViewNative = WebViewNative(url: url)
+        super.init()
         webViewNative?.webViewRef = self
     }
 

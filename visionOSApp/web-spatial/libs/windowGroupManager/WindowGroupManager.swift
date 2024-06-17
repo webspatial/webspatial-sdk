@@ -14,14 +14,14 @@ class EntityWrap {
     var entity: Entity?
 }
 
-class ModelUIComponent: ObservableObject {
+class ModelUIComponent: WatchableObject {
     @Published var url: URL?
     @Published var aspectRatio: String = "fit"
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
 }
 
-class SpatialResource: ObservableObject {
+class SpatialResource: WatchableObject {
     // Always populated
     let id = UUID().uuidString
     let windowGroupID: String
@@ -45,6 +45,7 @@ class SpatialResource: ObservableObject {
         let wg = mngr.getWindowGroup(windowGroup: windowGroupID)
         self.resourceType = resourceType
 
+        super.init()
         if resourceType == "Entity" {
             if wg.entities[id] == nil {
                 wg.entities[id] = self

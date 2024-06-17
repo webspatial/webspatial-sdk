@@ -8,21 +8,6 @@
 import RealityKit
 import SwiftUI
 
-// Helper view to tell swiftui to watch a certain object without needing to create another view
-struct WatchObj<T: ObservableObject, Content: View>: View {
-    @ObservedObject var toWatch: T
-    var content: () -> Content
-
-    init(toWatch: T, @ViewBuilder content: @escaping () -> Content) {
-        self.content = content
-        self.toWatch = toWatch
-    }
-
-    var body: some View {
-        VStack(content: content)
-    }
-}
-
 struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
 
@@ -46,7 +31,6 @@ struct PlainWindowGroupView: View {
         self.windowGroupContent = windowGroupContent
         // UpdateWebViewSystem.registerSystem()
     }
-
 
     @State var trackedPosition: Vector3D = .zero
     var dragGesture: some Gesture {
@@ -124,10 +108,10 @@ struct PlainWindowGroupView: View {
                 // Webview content
                 ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
                     let e = windowGroupContent.entities[key]!
-                    WatchObj(toWatch: e) {
+                    WatchObj(toWatch: [e]) {
                         if e.spatialWebView != nil && e.spatialWebView!.inline {
                             let view = e.spatialWebView!
-                            WatchObj(toWatch: view) {
+                            WatchObj(toWatch: [e, view]) {
                                 let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
                                 let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
                                 let z = CGFloat(e.modelEntity.position.z)
@@ -146,9 +130,9 @@ struct PlainWindowGroupView: View {
                 // Mode3D content
                 ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
                     let e = windowGroupContent.entities[key]!
-                    WatchObj(toWatch: e) {
+                    WatchObj(toWatch: [e]) {
                         if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
-                            WatchObj(toWatch: e.modelUIComponent!) {
+                            WatchObj(toWatch: [e, e.modelUIComponent!]) {
                                 let x = CGFloat(e.modelEntity.position.x)
                                 let y = CGFloat(e.modelEntity.position.y - oval)
                                 let z = CGFloat(e.modelEntity.position.z)
