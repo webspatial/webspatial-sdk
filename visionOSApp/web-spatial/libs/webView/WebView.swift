@@ -92,6 +92,7 @@ class SpatialWebView: WatchableObject {
         webViewNative!.webViewHolder.appleWebView?.uiDelegate = nil
         webViewNative!.webViewHolder.appleWebView?.navigationDelegate = nil
         webViewNative!.webViewHolder.appleWebView?.scrollView.delegate = nil
+        webViewNative!.webViewHolder.appleWebView = nil
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
