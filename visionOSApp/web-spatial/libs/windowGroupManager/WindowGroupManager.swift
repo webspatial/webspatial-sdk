@@ -79,49 +79,20 @@ class SpatialComponent {
 }
 
 class WindowGroupContentDictionary: ObservableObject {
+    // Resources
     @Published var entities = [String: SpatialResource]()
     @Published var resources = [String: SpatialResource]()
 
+    // Global state
     @Published var toggleImmersiveSpace = false
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
-
     @Published var hidden = false
     var rootEntity = Entity()
-    init() {}
 }
 
 class WindowGroupManager {
     var windowGroups = [String: WindowGroupContentDictionary]()
-
-//    func destroyWebView(windowGroup: String, windowID: String)->Bool {
-//        if windowGroups[windowGroup] != nil {
-//            if let _ = windowGroups[windowGroup]?.webViews.removeValue(forKey: windowID) {
-    ////                print("-----------deinit attempt on webview")
-//
-//                //  Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
-//                // print("Timer fired!")
-//
-//                // Cleanup webview wrapper refs
-//                // wv.webViewNative?.webViewRef = nil
-//                // wv.loadRequestWV = nil
-//
-//                // Remove references to Coordinator so that it gets cleaned up by arc
-    ////                wv.webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-    ////                wv.webViewNative!.webViewHolder.appleWebView!.uiDelegate = nil
-    ////                wv.webViewNative!.webViewHolder.appleWebView!.navigationDelegate = nil
-    ////                wv.webViewNative!.webViewHolder.appleWebView!.scrollView.delegate = nil
-//                // Destory the apple webview (not needed)
-//                // wv.webViewNative!.webViewHolder.appleWebView = nil
-//
-//                // Cleanup native webview ref which will destroy the apple webview
-//                //    wv.webViewNative = nil
-//
-//                return true
-//            }
-//        }
-//        return false
-//    }
 
     func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
         if windowGroups[windowGroup] == nil {
