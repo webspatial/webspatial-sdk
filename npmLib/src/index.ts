@@ -1,4 +1,13 @@
-import { WebSpatial, WebSpatialResource } from './webSpatialPrivate'
+import { WebSpatial, WebSpatialResource, WindowGroup } from './webSpatialPrivate'
+
+// Types
+type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
+
+export class SpatialWindowGroup {
+  constructor(public _wg: WindowGroup) {
+
+  }
+}
 
 /**
  * Transform containing position, orientation and scale
@@ -126,8 +135,6 @@ export class SpatialPhysicallyBasedMaterial extends SpatialResource {
   }
 }
 
-type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
-
 /**
 * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
 */
@@ -209,6 +216,10 @@ export class SpatialSession {
 
   async dismissImmersiveSpace() {
     return await WebSpatial.dismissImmersiveSpace()
+  }
+
+  async getImmersiveWindowGroup() {
+    return new SpatialWindowGroup(WebSpatial.getImmersiveWindowGroup())
   }
 }
 
