@@ -44,25 +44,25 @@ function App() {
           <h1>Toggle Immersive</h1>
           <label className="inline-flex items-center cursor-pointer">
             <input type="checkbox" value="" className="sr-only peer" onChange={async (e) => {
-              // if (e.target.checked) {
-              //   await WebSpatial.openImmersiveSpace()
-              //   if (!created) {
-              //     setCreated(true)
+              if (e.target.checked) {
+                (await getSessionAsync()).openImmersiveSpace();
+                if (!created) {
+                  setCreated(true)
 
-              //     let helmetModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getImmersiveWindowGroup(), { modelURL: "http://testIP:5173/src/assets/FlightHelmet.usdz" });
-              //     var ent = await WebSpatial.createEntity(WebSpatial.getImmersiveWindowGroup())
-              //     WebSpatial.setComponent(ent, helmetModel)
-              //     WebSpatial.onFrame(async (x: number) => {
+                  // let helmetModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getImmersiveWindowGroup(), { modelURL: "http://testIP:5173/src/assets/FlightHelmet.usdz" });
+                  // var ent = await WebSpatial.createEntity(WebSpatial.getImmersiveWindowGroup())
+                  // WebSpatial.setComponent(ent, helmetModel)
+                  // WebSpatial.onFrame(async (x: number) => {
 
-              //       ent.position.x = Math.sin(x / 1000)
-              //       ent.position.y = 1.5
-              //       ent.position.z = -1
-              //       WebSpatial.updateEntityPose(ent)
-              //     })
-              //   }
-              // } else {
-              //   await WebSpatial.dismissImmersiveSpace()
-              // }
+                  //   ent.position.x = Math.sin(x / 1000)
+                  //   ent.position.y = 1.5
+                  //   ent.position.z = -1
+                  //   WebSpatial.updateEntityPose(ent)
+                  // })
+                }
+              } else {
+                (await getSessionAsync()).dismissImmersiveSpace();
+              }
             }}></input>
             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
