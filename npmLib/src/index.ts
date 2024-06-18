@@ -87,6 +87,15 @@ export class SpatialIFrameComponent extends SpatialResource {
   async loadURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
+
+  /**
+   * Sets if this IFrame can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
+   * @param makeRoot sets if this should be root or not
+   */
+  async setAsRoot(makeRoot: boolean) {
+    await WebSpatial.updateResource(this._resource, { setRoot: makeRoot })
+  }
+
   async setResolution(x: number, y: number) {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
@@ -170,8 +179,8 @@ export class SpatialSession {
     return new SpatialEntity(entity)
   }
 
-  async createIFrameComponent() {
-    let entity = await WebSpatial.createResource("SpatialWebView", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
+  async createIFrameComponent(wg?: SpatialWindowGroup) {
+    let entity = await WebSpatial.createResource("SpatialWebView", wg ? wg._wg : WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
     return new SpatialIFrameComponent(entity)
   }
 
