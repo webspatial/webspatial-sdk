@@ -48,6 +48,14 @@ export class SpatialEntity {
   }
 
   /**
+   * Sets the windowgroup that this entity should be rendered by (this does not effect resource ownership)
+   * @param wg the window group that should render this entity
+   */
+  async setParentWindowGroup(wg: SpatialWindowGroup) {
+    await WebSpatial.updateResource(this._entity, { setParentWindowGroupID: wg._wg.id })
+  }
+
+  /**
   * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
   */
   async destroy() {
@@ -218,8 +226,14 @@ export class SpatialSession {
     return await WebSpatial.dismissImmersiveSpace()
   }
 
+  // Retreives the windowgroup corresponding to the Immersive space
   async getImmersiveWindowGroup() {
     return new SpatialWindowGroup(WebSpatial.getImmersiveWindowGroup())
+  }
+
+  // Retreives the window group that is the parent to this spatial web page
+  async getCurrentWindowGroup() {
+    return new SpatialWindowGroup(WebSpatial.getCurrentWindowGroup())
   }
 }
 

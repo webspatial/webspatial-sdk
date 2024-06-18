@@ -37,29 +37,9 @@ struct PlainWindowGroupView: View {
         DragGesture().handActivationBehavior(.automatic)
             .targetedToAnyEntity()
             .onChanged { value in
-                //  value.
-                // value.st
-                // value.entity.position.x = Float(value.location3D.x)
-                //  print(value.entity.name + "test")
-                // print(value.inputDevicePose3D!.position.x)
-//                var entityPos = value.entity.position // value.convert(value.inputDevicePose3D!.position, from: .local, to: value.entity.parent!)
-//                var dragLocation = value.convert(value.startLocation3D, from: .local, to: value.entity.parent!)
                 let translate = value.convert(value.translation3D + trackedPosition, from: .local, to: .scene)
-
-                // print((entityPos - dragLocation).x)
-
                 value.entity.position.x = Float(translate.x)
                 value.entity.position.y = Float(translate.y)
-
-                //   value.entity.position.x = startLocation.x
-
-                // var p = value.convert(value.location3D, from: .local, to: value.entity.parent!)
-
-//                var x = Transform()
-//                x.translation.x = value.entity.position.x < 0 ? 0.4 : -0.4
-//                // x.translation = p
-//
-//                value.entity.move(to: x, relativeTo: nil, duration: 10.0)
             }
             .onEnded {
                 self.trackedPosition += $0.translation3D
@@ -67,7 +47,7 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        let wv = windowGroupContent.entities.filter { $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true }.first!.value.spatialWebView!
+        let wv = windowGroupContent.childEntities.filter { $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true }.first!.value.spatialWebView!
         VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
             if v {
                 Task {
@@ -96,7 +76,7 @@ struct PlainWindowGroupView: View {
                     // content.add(cube)
 
                 } update: { content in
-                    for (_, entity) in windowGroupContent.entities {
+                    for (_, entity) in windowGroupContent.childEntities {
                         content.add(entity.modelEntity)
                     }
                 }
@@ -106,8 +86,8 @@ struct PlainWindowGroupView: View {
                 let oval = Float(wv.scrollOffset.y)
 
                 // Webview content
-                ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
-                    let e = windowGroupContent.entities[key]!
+                ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
+                    let e = windowGroupContent.childEntities[key]!
                     WatchObj(toWatch: [e]) {
                         if e.spatialWebView != nil && e.spatialWebView!.inline {
                             let view = e.spatialWebView!
@@ -128,8 +108,8 @@ struct PlainWindowGroupView: View {
                 }
 
                 // Mode3D content
-                ForEach(Array(windowGroupContent.entities.keys), id: \.self) { key in
-                    let e = windowGroupContent.entities[key]!
+                ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
+                    let e = windowGroupContent.childEntities[key]!
                     WatchObj(toWatch: [e]) {
                         if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
                             WatchObj(toWatch: [e, e.modelUIComponent!]) {

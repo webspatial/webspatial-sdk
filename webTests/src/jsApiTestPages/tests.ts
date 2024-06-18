@@ -1,5 +1,5 @@
 import { Euler, Quaternion, Vector3 } from 'three';
-import { Spatial, SpatialEntity } from "web-spatial"
+import { Spatial, SpatialEntity } from "web-spatial/src/index.ts"
 
 
 var main = async () => {
@@ -21,6 +21,7 @@ var main = async () => {
             e.transform.position.x = 500
             e.transform.position.y = 300
             e.transform.position.z = 300
+            await e.setParentWindowGroup(await session.getCurrentWindowGroup())
 
             await e.updateTransform()
             let i = await session.createIFrameComponent()
@@ -62,6 +63,7 @@ var main = async () => {
         e.transform.position.y = 300
         e.transform.position.z = 50
         await e.updateTransform()
+        await e.setParentWindowGroup(await session.getCurrentWindowGroup())
         let i = await session.createModelUIComponent()
         await Promise.all([
             i.setURL("http://testIP:5173/src/assets/FlightHelmet.usdz"), // 
@@ -94,6 +96,7 @@ var main = async () => {
                     customModel.setMesh(box)
                     await e.setComponent(customModel)
                 }
+                await e.setParentWindowGroup(await session.getCurrentWindowGroup())
                 entities.push({ e: e, v: 0 })
             }
             var b = document.createElement("button")
