@@ -52,10 +52,11 @@ function App() {
                   var immersiveWG = await session.getImmersiveWindowGroup()
                   var ent = await session.createEntity()
                   ent.transform.position.x = 0
-                  ent.transform.position.y = 0
-                  ent.transform.position.z = 0
-                  ent.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+                  ent.transform.position.y = 1.3
+                  ent.transform.position.z = -1
+                  ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
                   await ent.updateTransform()
+                  await ent.setParentWindowGroup(immersiveWG)
                   var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
                   await ent.setComponent(helmetModel)
 
