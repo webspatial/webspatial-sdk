@@ -33,6 +33,7 @@ class SpatialIFrameManager {
 
     async initInternal(url: string) {
         this.entity = await (await getSessionAsync()).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
         this.webview = await (await getSessionAsync()).createIFrameComponent()
         await this.webview.loadURL(url)
         await this.entity.setComponent(this.webview)
@@ -73,6 +74,7 @@ class SpatialModelUIManager {
 
     async initInternal(url: string) {
         this.entity = await (await getSessionAsync()).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
         this.modelComponent = await (await getSessionAsync()).createModelUIComponent()
         await this.modelComponent.setURL(url)
         await this.entity.setComponent(this.modelComponent)

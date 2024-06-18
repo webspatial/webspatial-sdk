@@ -33,8 +33,7 @@ class SpatialWebView: WatchableObject {
     var inline = true
 
     var parentWindowGroupID: String
-    var childEntities = [String]()
-    var childResources = [String]()
+    var childResources = [String: SpatialResource]()
 
     var gotStyle = false
     @Published var visible = false
@@ -50,11 +49,21 @@ class SpatialWebView: WatchableObject {
         webViewNative = WebViewNative(url: url)
         super.init()
         webViewNative?.webViewRef = self
+
+        // childResources[resourceID] = self
     }
 
     func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
+    }
+
+    func readWinodwGroupID(id: String) -> String {
+        if id == "current" {
+            return parentWindowGroupID
+        } else {
+            return id
+        }
     }
 
     func getCommandInfo(json: JsonParser) -> CommandInfo? {
@@ -63,7 +72,7 @@ class SpatialWebView: WatchableObject {
             ret.requestID = rID
 
             if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]) {
-                ret.windowGroupID = windowGroupID
+                ret.windowGroupID = readWinodwGroupID(id: windowGroupID)
             }
 
             if let entityID: String = json.getValue(lookup: ["data", "entityID"]) {
@@ -76,10 +85,6 @@ class SpatialWebView: WatchableObject {
 
             if ret.resourceID == "current" {
                 ret.resourceID = resourceID
-            }
-
-            if ret.windowGroupID == "current" {
-                ret.windowGroupID = parentWindowGroupID
             }
             return ret
         }
@@ -114,24 +119,11 @@ class SpatialWebView: WatchableObject {
 
     func didStartLoadPage() {
         gotStyle = false
-
-        // TODO: remove entities/resources from their window group instead of this pages
-        if childResources.count > 0 {
-            for resource in childResources {
-                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
-                _ = wg.resources[resource]?.destroy()
+        let keys = childResources.map { $0.key }
+        for k in keys {
+            if k != resourceID {
+                childResources[k]!.destroy()
             }
-            childResources = [String]()
-        }
-
-        if childEntities.count > 0 {
-            for ent in childEntities {
-                let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
-                if wg.entities[ent]?.modelEntity.scene != nil {
-                    _ = wg.entities[ent]!.destroy()
-                }
-            }
-            childEntities = [String]()
         }
     }
 
@@ -158,9 +150,8 @@ class SpatialWebView: WatchableObject {
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    let c = wg.resources[cmdInfo.resourceID]!
-                    let e = wg.entities[cmdInfo.entityID]!
+                    let c = childResources[cmdInfo.resourceID]!
+                    let e = childResources[cmdInfo.entityID]!
 
                     if c.resourceType == "ModelUIComponent" {
                         e.modelUIComponent = c.modelUIComponent
@@ -174,7 +165,7 @@ class SpatialWebView: WatchableObject {
                 if let cmdInfo = getCommandInfo(json: json),
                    let type: String = json.getValue(lookup: ["data", "type"])
                 {
-                    let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID)
+                    let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID, owner: self)
                     if type == "Entity" {
                         sr.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                     } else if type == "MeshResource" {
@@ -190,6 +181,7 @@ class SpatialWebView: WatchableObject {
                     } else if type == "SpatialWebView" {
                         sr.spatialWebView = SpatialWebView(parentWindowGroupID: parentWindowGroupID)
                         sr.spatialWebView?.resourceID = sr.id
+                        sr.spatialWebView?.childResources[sr.id] = sr
                     } else if type == "ModelUIComponent" {
                         sr.modelUIComponent = ModelUIComponent()
                     } else if type == "ModelComponent" {
@@ -215,7 +207,7 @@ class SpatialWebView: WatchableObject {
                                         Task.detached { @MainActor in
                                             // Update state on main thread
                                             self.completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
-                                            self.childResources.append(sr.id)
+                                            self.childResources[sr.id] = sr
                                             print("Model load success!")
                                         }
                                     } catch {
@@ -231,22 +223,28 @@ class SpatialWebView: WatchableObject {
                         }
                     }
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
-                    childResources.append(sr.id)
+                    childResources[sr.id] = sr
                 }
             } else if command == "destroyResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    _ = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID).resources[cmdInfo.resourceID]?.destroy()
+                    let _ = childResources[cmdInfo.resourceID]?.destroy()
                 }
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     var delayComplete = false
                     let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                    if wg.resources[cmdInfo.resourceID] == nil {
+                    if childResources[cmdInfo.resourceID] == nil {
                         print("Missing resource")
                         return
                     }
-                    let sr = wg.resources[cmdInfo.resourceID]!
+                    let sr = childResources[cmdInfo.resourceID]!
                     if sr.resourceType == "Entity" {
+                        if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
+                            newParentID = readWinodwGroupID(id: newParentID)
+                            var wg = wgManager.getWindowGroup(windowGroup: newParentID)
+                            sr.setParentWindowGroup(wg: wg)
+                        }
+
                         if let x: Double = json.getValue(lookup: ["data", "update", "position", "x"]),
                            let y: Double = json.getValue(lookup: ["data", "update", "position", "y"]),
                            let z: Double = json.getValue(lookup: ["data", "update", "position", "z"]),
@@ -259,7 +257,7 @@ class SpatialWebView: WatchableObject {
                            let orientationw: Double = json.getValue(lookup: ["data", "update", "orientation", "w"])
                         {
                             let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
-                            if let e = wg.resources[cmdInfo.resourceID] {
+                            if let e = childResources[cmdInfo.resourceID] {
                                 e.modelEntity.position.x = Float(x)
                                 e.modelEntity.position.y = Float(y)
                                 e.modelEntity.position.z = Float(z)
@@ -307,13 +305,13 @@ class SpatialWebView: WatchableObject {
 
                     } else if sr.resourceType == "ModelComponent" {
                         if let meshResource: String = json.getValue(lookup: ["data", "update", "meshResource"]) {
-                            sr.modelComponent!.mesh = wg.resources[meshResource]!.meshResource!
+                            sr.modelComponent!.mesh = childResources[meshResource]!.meshResource!
                         }
 
                         if let materials: [String] = json.getValue(lookup: ["data", "update", "materials"]) {
                             sr.modelComponent!.materials = []
                             for matID in materials {
-                                sr.modelComponent!.materials.append(wg.resources[matID]!.physicallyBasedMaterial!)
+                                sr.modelComponent!.materials.append(childResources[matID]!.physicallyBasedMaterial!)
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
