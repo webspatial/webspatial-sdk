@@ -32,7 +32,7 @@ PBR material which can be set on a SpatialModelComponent
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Properties
 
@@ -46,7 +46,7 @@ index.ts:59
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ***
 
@@ -72,7 +72,7 @@ index.ts:59
 
 #### Source
 
-index.ts:116
+index.ts:133
 
 ***
 
@@ -86,7 +86,7 @@ index.ts:116
 
 #### Source
 
-index.ts:117
+index.ts:134
 
 ***
 
@@ -100,7 +100,7 @@ index.ts:117
 
 #### Source
 
-index.ts:118
+index.ts:135
 
 ## Methods
 
@@ -118,7 +118,7 @@ index.ts:118
 
 #### Source
 
-index.ts:61
+index.ts:78
 
 ***
 
@@ -132,4 +132,4 @@ index.ts:61
 
 #### Source
 
-index.ts:120
+index.ts:137

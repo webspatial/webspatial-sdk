@@ -24,7 +24,7 @@ Entity used to describe an object that can be added to the scene
 
 #### Source
 
-index.ts:23
+index.ts:32
 
 ## Properties
 
@@ -34,7 +34,7 @@ index.ts:23
 
 #### Source
 
-index.ts:22
+index.ts:31
 
 ***
 
@@ -44,7 +44,7 @@ index.ts:22
 
 #### Source
 
-index.ts:23
+index.ts:32
 
 ***
 
@@ -54,7 +54,7 @@ index.ts:23
 
 #### Source
 
-index.ts:21
+index.ts:30
 
 ## Methods
 
@@ -70,7 +70,7 @@ Removes a reference to the entity by the renderer and this object should no long
 
 #### Source
 
-index.ts:44
+index.ts:61
 
 ***
 
@@ -86,7 +86,7 @@ Check if destroy has been called
 
 #### Source
 
-index.ts:53
+index.ts:70
 
 ***
 
@@ -106,7 +106,29 @@ Attaches a component to the entity to be displayed
 
 #### Source
 
-index.ts:37
+index.ts:46
+
+***
+
+### setParentWindowGroup()
+
+> **setParentWindowGroup**(`wg`): `Promise`\<`void`\>
+
+Sets the windowgroup that this entity should be rendered by (this does not effect resource ownership)
+
+#### Parameters
+
+• **wg**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
+
+the window group that should render this entity
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:54
 
 ***
 
@@ -122,4 +144,4 @@ Syncs the transform with the renderer, must be called to observe updates
 
 #### Source
 
-index.ts:30
+index.ts:39
