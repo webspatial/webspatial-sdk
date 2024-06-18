@@ -28,12 +28,13 @@ struct web_spatialApp: App {
         print("WebSpatial App Started --------")
 
         // "http://10.73.196.42:5173/?pageName=helloWorldApp/main.tsx"
-        let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root")
-        let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root")
+        let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
+        let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
 
         root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://localhost:5173/testList.html")!)
         root.root = true
         root.resourceID = sr.id
+        root.childResources[sr.id] = sr
         sr.spatialWebView = root
         rootEnt.spatialWebView = root
 
@@ -41,6 +42,9 @@ struct web_spatialApp: App {
         root.full = true
         root.visible = true
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
+        rootWGD.childEntities[rootEnt.id] = rootEnt
+        rootEnt.parentWindowGroup = rootWGD
+
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
 

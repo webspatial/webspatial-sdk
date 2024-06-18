@@ -24,7 +24,6 @@ class ModelUIComponent: WatchableObject {
 class SpatialResource: WatchableObject {
     // Always populated
     let id = UUID().uuidString
-    let windowGroupID: String
     var resourceType = "undefined"
     weak var mngr: WindowGroupManager?
 
@@ -39,38 +38,56 @@ class SpatialResource: WatchableObject {
     // Entity
     let modelEntity = ModelEntity()
 
-    init(resourceType: String, mngr: WindowGroupManager, windowGroupID: String) {
-        self.windowGroupID = windowGroupID
-        self.mngr = mngr
-        let wg = mngr.getWindowGroup(windowGroup: windowGroupID)
-        self.resourceType = resourceType
+    // This resource will be destroyed if this webview is destroyed
+    weak var ownerWebview: SpatialWebView?
 
-        super.init()
-        if resourceType == "Entity" {
-            if wg.entities[id] == nil {
-                wg.entities[id] = self
-            }
+    // Window group that this entity will be displayed in (not related to resource ownership)
+    weak var parentWindowGroup: WindowGroupContentDictionary?
+
+    func setParentWindowGroup(wg: WindowGroupContentDictionary?) {
+        if let g = parentWindowGroup {
+            g.childEntities.removeValue(forKey: id)
         }
-
-        if wg.resources[id] == nil {
-            wg.resources[id] = self
+        parentWindowGroup = wg
+        if let g = parentWindowGroup {
+            g.childEntities[id] = self
         }
     }
 
+    init(resourceType: String, mngr: WindowGroupManager, windowGroupID: String, owner: SpatialWebView?) {
+        self.mngr = mngr
+        self.resourceType = resourceType
+        self.ownerWebview = owner
+
+        super.init()
+//        if resourceType == "Entity" {
+//            if wg.entities[id] == nil {
+//                wg.entities[id] = self
+//            }
+//        }
+
+//        if wg.resources[id] == nil {
+//            wg.resources[id] = self
+//        }
+    }
+
     func destroy()->Bool {
-        let wg = mngr!.getWindowGroup(windowGroup: windowGroupID)
+        var removed = false
         if resourceType == "Entity" {
             modelEntity.removeFromParent()
-            wg.resources.removeValue(forKey: id)
-            if let _ = wg.entities.removeValue(forKey: id) {
-                return true
-            }
-        } else {
-            if let _ = wg.resources.removeValue(forKey: id) {
-                return true
+            if let wg = parentWindowGroup {
+                if let _ = wg.childEntities.removeValue(forKey: id) {
+                    removed = true
+                }
             }
         }
-        return false
+
+        if let wv = ownerWebview {
+            if let _ = wv.childResources.removeValue(forKey: id) {
+                removed = true
+            }
+        }
+        return removed
     }
 }
 
@@ -80,8 +97,8 @@ class SpatialComponent {
 
 class WindowGroupContentDictionary: ObservableObject {
     // Resources
-    @Published var entities = [String: SpatialResource]()
-    @Published var resources = [String: SpatialResource]()
+    @Published var childEntities = [String: SpatialResource]()
+    // @Published var childResources = [String: SpatialResource]()
 
     // Global state
     @Published var toggleImmersiveSpace = false
@@ -103,8 +120,8 @@ class WindowGroupManager {
 
     func getWebView(windowGroup: String, windowID: String)->SpatialWebView? {
         if windowGroups[windowGroup] != nil {
-            if windowGroups[windowGroup]!.entities[windowID] != nil {
-                return windowGroups[windowGroup]!.entities[windowID]!.spatialWebView
+            if windowGroups[windowGroup]!.childEntities[windowID] != nil {
+                return windowGroups[windowGroup]!.childEntities[windowID]!.spatialWebView
             }
         }
         return nil

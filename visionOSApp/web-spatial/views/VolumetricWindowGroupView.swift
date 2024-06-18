@@ -23,7 +23,7 @@ struct VolumetricWindowGroupView: View {
     var body: some View {
         RealityView { _ in
         } update: { content in
-            for (_, entity) in windowGroupContent.entities {
+            for (_, entity) in windowGroupContent.childEntities {
                 content.add(entity.modelEntity)
             }
         }
