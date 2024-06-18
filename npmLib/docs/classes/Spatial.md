@@ -30,4 +30,4 @@ Base object designed to be placed on navigator.spatial to mirror navigator.xr fo
 
 #### Source
 
-index.ts:211
+index.ts:244

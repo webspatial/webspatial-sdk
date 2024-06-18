@@ -30,7 +30,7 @@
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Properties
 
@@ -40,7 +40,7 @@ index.ts:59
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Methods
 
@@ -54,4 +54,4 @@ index.ts:59
 
 #### Source
 
-index.ts:61
+index.ts:78
