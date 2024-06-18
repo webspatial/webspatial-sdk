@@ -1,4 +1,4 @@
-import { WebSpatial, WebSpatialResource, WindowGroup } from './webSpatialPrivate'
+import { WebSpatial, WebSpatialResource, WindowGroup, WindowStyle } from './webSpatialPrivate'
 
 // Types
 type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
@@ -198,6 +198,10 @@ export class SpatialSession {
   async createPhysicallyBasedMaterial(options?: any) {
     let entity = await WebSpatial.createResource("PhysicallyBasedMaterial", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
     return new SpatialPhysicallyBasedMaterial(entity)
+  }
+
+  async createWindowGroup(style: WindowStyle = "Plain") {
+    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
   }
 
   getCurrentIFrameComponent() {
