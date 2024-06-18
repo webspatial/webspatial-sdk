@@ -32,7 +32,7 @@ Used to position a model in 3D space inline to the webpage (Maps to Model3D)
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Properties
 
@@ -46,7 +46,7 @@ index.ts:59
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Methods
 
@@ -64,7 +64,7 @@ index.ts:59
 
 #### Source
 
-index.ts:61
+index.ts:78
 
 ***
 
@@ -82,7 +82,7 @@ index.ts:61
 
 #### Source
 
-index.ts:101
+index.ts:118
 
 ***
 
@@ -102,7 +102,7 @@ index.ts:101
 
 #### Source
 
-index.ts:104
+index.ts:121
 
 ***
 
@@ -120,4 +120,4 @@ index.ts:104
 
 #### Source
 
-index.ts:98
+index.ts:115

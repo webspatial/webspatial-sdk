@@ -26,7 +26,7 @@ Session use to establish a connection to the spatial renderer of the system. All
 
 #### Source
 
-index.ts:136
+index.ts:151
 
 ***
 
@@ -36,7 +36,7 @@ index.ts:136
 
 #### Source
 
-index.ts:135
+index.ts:150
 
 ***
 
@@ -46,7 +46,7 @@ index.ts:135
 
 #### Source
 
-index.ts:137
+index.ts:152
 
 ## Methods
 
@@ -60,7 +60,7 @@ index.ts:137
 
 #### Source
 
-index.ts:153
+index.ts:168
 
 ***
 
@@ -74,7 +74,7 @@ index.ts:153
 
 #### Source
 
-index.ts:158
+index.ts:173
 
 ***
 
@@ -92,7 +92,7 @@ index.ts:158
 
 #### Source
 
-index.ts:177
+index.ts:192
 
 ***
 
@@ -112,7 +112,7 @@ index.ts:177
 
 #### Source
 
-index.ts:168
+index.ts:183
 
 ***
 
@@ -130,7 +130,7 @@ index.ts:168
 
 #### Source
 
-index.ts:163
+index.ts:178
 
 ***
 
@@ -148,7 +148,21 @@ index.ts:163
 
 #### Source
 
-index.ts:183
+index.ts:198
+
+***
+
+### dismissImmersiveSpace()
+
+> **dismissImmersiveSpace**(): `Promise`\<`void`\>
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:225
 
 ***
 
@@ -162,7 +176,35 @@ index.ts:183
 
 #### Source
 
-index.ts:188
+index.ts:203
+
+***
+
+### getCurrentWindowGroup()
+
+> **getCurrentWindowGroup**(): `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+#### Returns
+
+`Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+#### Source
+
+index.ts:235
+
+***
+
+### getImmersiveWindowGroup()
+
+> **getImmersiveWindowGroup**(): `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+#### Returns
+
+`Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+#### Source
+
+index.ts:230
 
 ***
 
@@ -182,7 +224,21 @@ Debugging only, issues a native log
 
 #### Source
 
-index.ts:195
+index.ts:210
+
+***
+
+### openImmersiveSpace()
+
+> **openImmersiveSpace**(): `Promise`\<`void`\>
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:221
 
 ***
 
@@ -202,7 +258,7 @@ Debugging only, used to ping the native renderer
 
 #### Source
 
-index.ts:202
+index.ts:217
 
 ***
 
@@ -220,4 +276,4 @@ index.ts:202
 
 #### Source
 
-index.ts:138
+index.ts:153
