@@ -38,7 +38,6 @@ struct web_spatialApp: App {
         sr.spatialWebView = root
         rootEnt.spatialWebView = root
 
-        // root = wgManager.createWebView(windowGroup: "root", windowID: "root", url: URL(string: "http://npmURL:5173/testList.html")!)
         root.full = true
         root.visible = true
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")

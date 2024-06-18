@@ -58,6 +58,20 @@ class SpatialWebView: WatchableObject {
         webViewNative?.webViewRef = self
     }
 
+    func parseURL(url: String) -> String {
+        // Compute target url depending if the url is relative or not
+        var targetUrl = url
+        if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+            var port = ""
+            if let p = webViewNative?.url.port {
+                port = ":"+String(p)
+            }
+            let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
+            targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+        }
+        return targetUrl
+    }
+
     func readWinodwGroupID(id: String) -> String {
         if id == "current" {
             return parentWindowGroupID
@@ -185,7 +199,8 @@ class SpatialWebView: WatchableObject {
                     } else if type == "ModelUIComponent" {
                         sr.modelUIComponent = ModelUIComponent()
                     } else if type == "ModelComponent" {
-                        if let modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
+                        if var modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
+                            modelURL = parseURL(url: modelURL)
                             // Create download task for the url
                             let url = URL(string: modelURL)!
                             let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
@@ -290,7 +305,8 @@ class SpatialWebView: WatchableObject {
                         }
 
                     } else if sr.resourceType == "ModelUIComponent" {
-                        if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                        if var url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                            url = parseURL(url: url)
                             sr.modelUIComponent?.url = URL(string: url)!
                         }
                         if let aspectRatio: String = json.getValue(lookup: ["data", "update", "aspectRatio"]) {
@@ -317,15 +333,8 @@ class SpatialWebView: WatchableObject {
                     } else if sr.resourceType == "SpatialWebView" {
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
                             // Compute target url depending if the url is relative or not
-                            var targetUrl = url
-                            if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
-                                var port = ""
-                                if let p = webViewNative?.url.port {
-                                    port = ":"+String(p)
-                                }
-                                let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
-                                targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
-                            }
+                            var targetUrl = parseURL(url: url)
+
                             // Create the webview
                             if sr.spatialWebView?.webViewNative == nil {
                                 sr.spatialWebView!.initFromURL(url: URL(string: targetUrl)!)
