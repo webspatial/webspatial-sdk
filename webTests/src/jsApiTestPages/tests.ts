@@ -66,7 +66,7 @@ var main = async () => {
         await e.setParentWindowGroup(await session.getCurrentWindowGroup())
         let i = await session.createModelUIComponent()
         await Promise.all([
-            i.setURL("http://testIP:5173/src/assets/FlightHelmet.usdz"), // 
+            i.setURL("/src/assets/FlightHelmet.usdz"), // 
             i.setResolution(200, 200),
             e.setComponent(i)
         ])
@@ -77,7 +77,7 @@ var main = async () => {
             var entities = new Array<{ e: SpatialEntity, v: number }>()
 
             var box = await session.createMeshResource({ shape: "box" })
-            var model = await session.createModelComponent({ url: "http://testIP:5173/src/assets/FlightHelmet.usdz" })
+            var model = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
 
             for (var i = 0; i < 7; i++) {
                 var e = await session.createEntity()
