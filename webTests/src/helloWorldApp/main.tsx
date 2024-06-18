@@ -9,6 +9,7 @@ import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
 import { useDispatch, useSelector } from "react-redux";
 import store, { increment } from "./store.ts"
+import { SpatialEntity } from 'web-spatial/src/index.ts'
 initMessageListener(store);
 
 function App() {
@@ -18,6 +19,9 @@ function App() {
   const [created, setCreated] = useState(false)
   //var volumetricWG = new WindowGroup()
   //var volumetricPanel = new WebPanel()
+
+  var volumeModelEnt: SpatialEntity | null = null
+  var volumePanelEnt: SpatialEntity | null = null
 
 
   const children = [];
@@ -59,16 +63,6 @@ function App() {
                   await ent.setParentWindowGroup(immersiveWG)
                   var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
                   await ent.setComponent(helmetModel)
-
-                  // var ent = await WebSpatial.createEntity(WebSpatial.getImmersiveWindowGroup())
-                  // WebSpatial.setComponent(ent, helmetModel)
-                  // WebSpatial.onFrame(async (x: number) => {
-
-                  //   ent.position.x = Math.sin(x / 1000)
-                  //   ent.position.y = 1.5
-                  //   ent.position.z = -1
-                  //   WebSpatial.updateEntityPose(ent)
-                  // })
                 }
               } else {
                 session.dismissImmersiveSpace();
@@ -81,28 +75,45 @@ function App() {
           <h1>Open Volumetric</h1>
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
-              // if (volumetricWG.id === "") {
-              //   volumetricWG = await WebSpatial.createWindowGroup("Volumetric")
-              //   await new Promise(resolve => setTimeout(resolve, 500));
-              //   // volumetricPanel = await WebSpatial.createWebPanel(volumetricWG, "/index.html?pageName=helloWorldApp/main2.tsx")
-              //   // await WebSpatial.updatePanelPose(volumetricWG, volumetricPanel, { x: 0, y: 0, z: -0.4 }, 1920, 1080)
-              //   // await WebSpatial.createMesh(volumetricWG, "myMesh")
-              //   // await WebSpatial.createDOMModel(volumetricWG, volumetricPanel, "testModel", "/src/assets/FlightHelmet.usdz")
-              //   // setTimeout(() => {
-              //   //   WebSpatial.updateDOMModelPosition(volumetricWG, volumetricPanel, "testModel", { x: 0, y: -0.5, z: 0 })
-              //   // }, 3000);
-              // }
+              var session = await getSessionAsync()
+              var wg = await session.createWindowGroup("Volumetric")
+
+              var ent = await session.createEntity()
+              ent.transform.position.x = 0
+              ent.transform.position.y = 0
+              ent.transform.position.z = 0
+              await ent.updateTransform()
+              await ent.setParentWindowGroup(wg)
+              volumePanelEnt = ent
+
+              var i = await session.createIFrameComponent()
+              await i.setResolution(300, 300)
+              await i.loadURL("/testList.html")
+              await ent.setComponent(i)
 
 
 
+              var ent = await session.createEntity()
+              ent.transform.position.x = 0
+              ent.transform.position.y = 0
+              ent.transform.position.z = 0
+              ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
+              await ent.updateTransform()
+              await ent.setParentWindowGroup(wg)
+              var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
+              await ent.setComponent(helmetModel)
+              volumeModelEnt = ent
             }}>
             Click Me</button>
           <input type="range" step='0.005' className="mt-10 w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg dark:bg-gray-700"
             // style={{ height: "30px" }}
             onChange={async (e) => {
-              // WebSpatial.updatePanelPose(volumetricWG, volumetricPanel, { x: (Number(e.target.value) / 100), y: 0, z: -0.4 }, 1920, 1080)
-              // await WebSpatial.updateDOMModelPosition(volumetricWG, volumetricPanel, "testModel", { x: -(Number(e.target.value) / 100), y: -0.5, z: 0 })
-              // //   await WebSpatial.updateDOMModelPosition("root", "root", "testModel", { x: Math.floor(Number(e.target.value) * 3) + 200, y: 300, z: 0 })
+              if (volumeModelEnt && volumePanelEnt) {
+                volumeModelEnt.transform.position = new DOMPoint((Number(e.target.value) / 100), 0, -0.4)
+                volumePanelEnt.transform.position = new DOMPoint(-(Number(e.target.value) / 100), 0, -0.4)
+                await volumeModelEnt.updateTransform()
+                await volumePanelEnt.updateTransform()
+              }
             }}></input>
 
         </div>
