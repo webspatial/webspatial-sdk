@@ -56,11 +56,9 @@ function App() {
                   ent.transform.position.z = 0
                   ent.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
                   await ent.updateTransform()
-                  var helmetModel = await session.createModelComponent({ url: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" })
+                  var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
                   await ent.setComponent(helmetModel)
 
-
-                  // let helmetModel = await WebSpatial.createResource("ModelComponent", WebSpatial.getImmersiveWindowGroup(), { modelURL: "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" });
                   // var ent = await WebSpatial.createEntity(WebSpatial.getImmersiveWindowGroup())
                   // WebSpatial.setComponent(ent, helmetModel)
                   // WebSpatial.onFrame(async (x: number) => {
@@ -88,7 +86,7 @@ function App() {
               //   // volumetricPanel = await WebSpatial.createWebPanel(volumetricWG, "/index.html?pageName=helloWorldApp/main2.tsx")
               //   // await WebSpatial.updatePanelPose(volumetricWG, volumetricPanel, { x: 0, y: 0, z: -0.4 }, 1920, 1080)
               //   // await WebSpatial.createMesh(volumetricWG, "myMesh")
-              //   // await WebSpatial.createDOMModel(volumetricWG, volumetricPanel, "testModel", "http://10.73.196.42:5173/src/assets/FlightHelmet.usdz")
+              //   // await WebSpatial.createDOMModel(volumetricWG, volumetricPanel, "testModel", "/src/assets/FlightHelmet.usdz")
               //   // setTimeout(() => {
               //   //   WebSpatial.updateDOMModelPosition(volumetricWG, volumetricPanel, "testModel", { x: 0, y: -0.5, z: 0 })
               //   // }, 3000);
@@ -128,7 +126,7 @@ function App() {
           <h1>Model3D</h1>
 
           <Model className="w-full h-full bg-purple-500 bg-opacity-50 rounded-xl text-center">
-            <source src="http://10.73.196.42:5173/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+            <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
           </Model>
 
           {/* <SpatialModel webViewID='testModel' className='w-full h-full bg-white bg-opacity-50' spatialOffset={{ z: 0 }}>
