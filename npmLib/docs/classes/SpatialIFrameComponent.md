@@ -32,7 +32,7 @@ Used to position an iframe in 3D space
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Properties
 
@@ -46,7 +46,7 @@ index.ts:59
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Methods
 
@@ -64,7 +64,7 @@ index.ts:59
 
 #### Source
 
-index.ts:61
+index.ts:78
 
 ***
 
@@ -82,7 +82,7 @@ index.ts:61
 
 #### Source
 
-index.ts:70
+index.ts:87
 
 ***
 
@@ -102,7 +102,7 @@ index.ts:70
 
 #### Source
 
-index.ts:73
+index.ts:90
 
 ***
 
@@ -120,4 +120,4 @@ index.ts:73
 
 #### Source
 
-index.ts:77
+index.ts:94

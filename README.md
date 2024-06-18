@@ -22,11 +22,12 @@ This code shows how to create an iframe placed in 3D space as well embed 3D file
 
 #### JS/Typescript API
 ```typescript
-import { Spatial, SpatialEntity } from '../../lib/webSpatial'
+import { Spatial, SpatialEntity } from 'web-spatial'
 
 // Create Session
 var spatial = new Spatial()
 let session = await spatial.requestSession()
+var currentWindowGroup = await session.getCurrentWindowGroup()
 
 // Create entity on the page at page coordinates
 var e = await session.createEntity()
@@ -34,6 +35,9 @@ e.transform.position.x = 500
 e.transform.position.y = 300
 e.transform.position.z = 300
 await e.updateTransform()
+
+// Add to window group to display it
+await e.setParentWindowGroup(currentWindowGroup)
 
 // Load a spatial iframe element and attach to entity
 let i = await session.createIFrameComponent()

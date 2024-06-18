@@ -32,7 +32,7 @@ Used to position a model in 3D space
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Properties
 
@@ -46,7 +46,7 @@ index.ts:59
 
 #### Source
 
-index.ts:59
+index.ts:76
 
 ## Methods
 
@@ -64,7 +64,7 @@ index.ts:59
 
 #### Source
 
-index.ts:61
+index.ts:78
 
 ***
 
@@ -82,7 +82,7 @@ index.ts:61
 
 #### Source
 
-index.ts:89
+index.ts:106
 
 ***
 
@@ -100,4 +100,4 @@ index.ts:89
 
 #### Source
 
-index.ts:86
+index.ts:103

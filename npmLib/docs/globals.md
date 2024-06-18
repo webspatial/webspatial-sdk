@@ -16,3 +16,4 @@
 - [SpatialResource](classes/SpatialResource.md)
 - [SpatialSession](classes/SpatialSession.md)
 - [SpatialTransform](classes/SpatialTransform.md)
+- [SpatialWindowGroup](classes/SpatialWindowGroup.md)
