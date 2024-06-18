@@ -121,6 +121,28 @@ function App() {
           <h1>Open Plain</h1>
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
+
+              var session = await getSessionAsync()
+              var wg = await session.createWindowGroup("Plain")
+
+              var ent = await session.createEntity()
+              ent.transform.position.x = 0
+              ent.transform.position.y = 0
+              ent.transform.position.z = 0
+              await ent.updateTransform()
+
+              volumePanelEnt = ent
+
+              var i = await session.createIFrameComponent(wg)
+              await i.setResolution(300, 300)
+              await i.loadURL("/testList.html")
+              await i.setAsRoot(true)
+              await ent.setComponent(i)
+
+
+              await ent.setParentWindowGroup(wg)
+
+
               // var newPage = await WebSpatial.createWindowGroup("Plain")
               // await WebSpatial.createWebPanel(newPage, "/index.html?pageName=helloWorldApp/main2.tsx")
             }}>
