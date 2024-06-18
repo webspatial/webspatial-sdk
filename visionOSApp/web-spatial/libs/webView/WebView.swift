@@ -27,7 +27,7 @@ class SpatialWebView: WatchableObject {
     var webViewNative: WebViewNative?
 
     var full = false
-    var root = false
+    @Published var root = false
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
     var inline = true
@@ -193,7 +193,7 @@ class SpatialWebView: WatchableObject {
                     } else if type == "PhysicallyBasedMaterial" {
                         sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
                     } else if type == "SpatialWebView" {
-                        sr.spatialWebView = SpatialWebView(parentWindowGroupID: parentWindowGroupID)
+                        sr.spatialWebView = SpatialWebView(parentWindowGroupID: cmdInfo.windowGroupID)
                         sr.spatialWebView?.resourceID = sr.id
                         sr.spatialWebView?.childResources[sr.id] = sr
                     } else if type == "ModelUIComponent" {
@@ -348,6 +348,11 @@ class SpatialWebView: WatchableObject {
                             } else {
                                 failEvent(requestID: cmdInfo.requestID)
                             }
+                        }
+
+                        if let isRoot: Bool = json.getValue(lookup: ["data", "update", "setRoot"]) {
+                            sr.spatialWebView!.root = isRoot
+                            sr.spatialWebView?.full = isRoot
                         }
 
                         if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),

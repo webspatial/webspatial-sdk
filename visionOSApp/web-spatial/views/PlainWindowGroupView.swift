@@ -47,7 +47,9 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        let wv = windowGroupContent.childEntities.filter { $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true }.first!.value.spatialWebView!
+        let rootWebview = windowGroupContent.childEntities.filter {
+            $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true
+        }.first?.value.spatialWebView
         VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
             if v {
                 Task {
@@ -82,48 +84,49 @@ struct PlainWindowGroupView: View {
                 }
 
                 .gesture(dragGesture).offset(z: -0.1)
+                if let wv = rootWebview {
+                    let oval = Float(wv.scrollOffset.y)
 
-                let oval = Float(wv.scrollOffset.y)
+                    // Webview content
+                    ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
+                        let e = windowGroupContent.childEntities[key]!
+                        WatchObj(toWatch: [e]) {
+                            if e.spatialWebView != nil && e.spatialWebView!.inline {
+                                let view = e.spatialWebView!
+                                WatchObj(toWatch: [e, view]) {
+                                    let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                                    let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
+                                    let z = CGFloat(e.modelEntity.position.z)
+                                    let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                                    let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
 
-                // Webview content
-                ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                    let e = windowGroupContent.childEntities[key]!
-                    WatchObj(toWatch: [e]) {
-                        if e.spatialWebView != nil && e.spatialWebView!.inline {
-                            let view = e.spatialWebView!
-                            WatchObj(toWatch: [e, view]) {
-                                let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                                let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
-                                let z = CGFloat(e.modelEntity.position.z)
-                                let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                                let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
-
-                                SpatialWebViewUI(wv: view)
-                                    .frame(width: width, height: height).padding3D(.front, -100000)
-                                    .position(x: x, y: y)
-                                    .offset(z: z)
+                                    SpatialWebViewUI(wv: view)
+                                        .frame(width: width, height: height).padding3D(.front, -100000)
+                                        .position(x: x, y: y)
+                                        .offset(z: z)
+                                }
                             }
                         }
                     }
-                }
 
-                // Mode3D content
-                ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                    let e = windowGroupContent.childEntities[key]!
-                    WatchObj(toWatch: [e]) {
-                        if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
-                            WatchObj(toWatch: [e, e.modelUIComponent!]) {
-                                let x = CGFloat(e.modelEntity.position.x)
-                                let y = CGFloat(e.modelEntity.position.y - oval)
-                                let z = CGFloat(e.modelEntity.position.z)
-                                let width = CGFloat(e.modelUIComponent!.resolutionX)
-                                let height = CGFloat(e.modelUIComponent!.resolutionY)
+                    // Mode3D content
+                    ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
+                        let e = windowGroupContent.childEntities[key]!
+                        WatchObj(toWatch: [e]) {
+                            if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
+                                WatchObj(toWatch: [e, e.modelUIComponent!]) {
+                                    let x = CGFloat(e.modelEntity.position.x)
+                                    let y = CGFloat(e.modelEntity.position.y - oval)
+                                    let z = CGFloat(e.modelEntity.position.z)
+                                    let width = CGFloat(e.modelUIComponent!.resolutionX)
+                                    let height = CGFloat(e.modelUIComponent!.resolutionY)
 
-                                Model3D(url: e.modelUIComponent!.url!) { model in
-                                    model.model?
-                                        .resizable()
-                                        .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                                }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000)
+                                    Model3D(url: e.modelUIComponent!.url!) { model in
+                                        model.model?
+                                            .resizable()
+                                            .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                                    }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000)
+                                }
                             }
                         }
                     }
@@ -134,8 +137,10 @@ struct PlainWindowGroupView: View {
                     windowResizeInProgress = 1
                     Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
                         windowResizeInProgress = 0
-                        wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
-                        wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
+                        if let wv = rootWebview {
+                            wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
+                            wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
+                        }
                     }
                 }
             }
