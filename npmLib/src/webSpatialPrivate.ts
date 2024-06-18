@@ -27,7 +27,7 @@ export class RemoteCommand {
     requestID = ++RemoteCommand.requestCounter
 }
 
-type WindowStyle = "Plain" | "Volumetric" | "Immersive"
+export type WindowStyle = "Plain" | "Volumetric"
 
 export class WebSpatial {
     public static eventPromises: any = {}
