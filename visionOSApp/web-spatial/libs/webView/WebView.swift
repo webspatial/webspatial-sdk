@@ -136,7 +136,7 @@ class SpatialWebView: WatchableObject {
         let keys = childResources.map { $0.key }
         for k in keys {
             if k != resourceID {
-                childResources[k]!.destroy()
+                _ = childResources[k]!.destroy()
             }
         }
     }
@@ -247,7 +247,6 @@ class SpatialWebView: WatchableObject {
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     var delayComplete = false
-                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                     if childResources[cmdInfo.resourceID] == nil {
                         print("Missing resource")
                         return
@@ -256,7 +255,7 @@ class SpatialWebView: WatchableObject {
                     if sr.resourceType == "Entity" {
                         if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
                             newParentID = readWinodwGroupID(id: newParentID)
-                            var wg = wgManager.getWindowGroup(windowGroup: newParentID)
+                            let wg = wgManager.getWindowGroup(windowGroup: newParentID)
                             sr.setParentWindowGroup(wg: wg)
                         }
 
@@ -271,7 +270,6 @@ class SpatialWebView: WatchableObject {
                            let orientationz: Double = json.getValue(lookup: ["data", "update", "orientation", "z"]),
                            let orientationw: Double = json.getValue(lookup: ["data", "update", "orientation", "w"])
                         {
-                            let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
                             if let e = childResources[cmdInfo.resourceID] {
                                 e.modelEntity.position.x = Float(x)
                                 e.modelEntity.position.y = Float(y)
@@ -333,7 +331,7 @@ class SpatialWebView: WatchableObject {
                     } else if sr.resourceType == "SpatialWebView" {
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
                             // Compute target url depending if the url is relative or not
-                            var targetUrl = parseURL(url: url)
+                            let targetUrl = parseURL(url: url)
 
                             // Create the webview
                             if sr.spatialWebView?.webViewNative == nil {
