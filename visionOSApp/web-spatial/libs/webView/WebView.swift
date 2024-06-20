@@ -34,6 +34,7 @@ class SpatialWebView: WatchableObject {
 
     var parentWindowGroupID: String
     var childResources = [String: SpatialResource]()
+    var childWindowGroups = [String: WindowGroupData]()
 
     var gotStyle = false
     @Published var visible = false
@@ -138,6 +139,11 @@ class SpatialWebView: WatchableObject {
             if k != resourceID {
                 _ = childResources[k]!.destroy()
             }
+        }
+
+        let wgkeys = childWindowGroups.map { $0.key }
+        for k in wgkeys {
+            wgManager.getWindowGroup(windowGroup: k).closeWindowData = childWindowGroups[k]
         }
     }
 
@@ -384,6 +390,7 @@ class SpatialWebView: WatchableObject {
                     let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
+                    childWindowGroups[uuid] = wgd
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
                 }
             } else if command == "openImmersiveSpace" {
