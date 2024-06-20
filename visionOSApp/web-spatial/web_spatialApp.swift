@@ -50,7 +50,15 @@ struct web_spatialApp: App {
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData == nil {
-                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0)).cornerRadius(0)
+                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
+                    let urlToLoad = myURL.absoluteString.replacingOccurrences(of: "webspatial://", with: "").replacingOccurrences(of: "//", with: "://")
+                    print(urlToLoad)
+
+                    if let url = URL(string: urlToLoad) {
+                        let request = URLRequest(url: url)
+                        root.webViewNative?.webViewHolder.appleWebView!.load(request)
+                    }
+                }
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView(windowGroupContent: wg)
