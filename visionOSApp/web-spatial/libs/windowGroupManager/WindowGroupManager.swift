@@ -104,6 +104,7 @@ class WindowGroupContentDictionary: ObservableObject {
     @Published var toggleImmersiveSpace = false
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
+    @Published var closeWindowData: WindowGroupData? = nil
     @Published var hidden = false
     var rootEntity = Entity()
 }
