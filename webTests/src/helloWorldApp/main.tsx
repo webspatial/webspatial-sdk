@@ -80,23 +80,23 @@ function App() {
 
               var ent = await session.createEntity()
               ent.transform.position.x = 0
-              ent.transform.position.y = 0
-              ent.transform.position.z = 0
+              ent.transform.position.y = -0.4
+              ent.transform.position.z = 0.4
               await ent.updateTransform()
               await ent.setParentWindowGroup(wg)
               volumePanelEnt = ent
 
               var i = await session.createIFrameComponent()
               await i.setResolution(300, 300)
-              await i.loadURL("/testList.html")
+              await i.loadURL("/index.html?pageName=reactDemo/basic.tsx")
               await ent.setComponent(i)
 
 
 
               var ent = await session.createEntity()
               ent.transform.position.x = 0
-              ent.transform.position.y = 0
-              ent.transform.position.z = 0
+              ent.transform.position.y = -0.4
+              ent.transform.position.z = 0.4
               ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
               await ent.updateTransform()
               await ent.setParentWindowGroup(wg)
@@ -109,8 +109,8 @@ function App() {
             // style={{ height: "30px" }}
             onChange={async (e) => {
               if (volumeModelEnt && volumePanelEnt) {
-                volumeModelEnt.transform.position = new DOMPoint((Number(e.target.value) / 100), 0, -0.4)
-                volumePanelEnt.transform.position = new DOMPoint(-(Number(e.target.value) / 100), 0, -0.4)
+                volumeModelEnt.transform.position = new DOMPoint((Number(e.target.value) / 100), -0.4, 0.4)
+                volumePanelEnt.transform.position = new DOMPoint(-(Number(e.target.value) / 100), -0.4, 0.4)
                 await volumeModelEnt.updateTransform()
                 await volumePanelEnt.updateTransform()
               }
