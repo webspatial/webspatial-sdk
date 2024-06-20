@@ -24,6 +24,7 @@ struct PlainWindowGroupView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
     @State var windowResizeInProgress = 0
 
@@ -63,6 +64,8 @@ struct PlainWindowGroupView: View {
 
         }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
             let _ = openWindow(id: wd!.windowStyle, value: wd!)
+        }.onReceive(windowGroupContent.$closeWindowData.dropFirst()) { wd in
+            dismissWindow(id: wd!.windowStyle, value: wd!)
         }
 
         GeometryReader { proxy3D in
