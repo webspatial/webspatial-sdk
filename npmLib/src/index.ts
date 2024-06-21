@@ -100,6 +100,10 @@ export class SpatialIFrameComponent extends SpatialResource {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
 
+  async sendContent(x: string) {
+    await WebSpatial.updateResource(this._resource, { sendContent: x })
+  }
+
   async setStyle(options: any) {
     await WebSpatial.updateResource(this._resource, { style: options })
   }
@@ -256,5 +260,9 @@ export class SpatialSession {
 export class Spatial {
   async requestSession() {
     return new SpatialSession()
+  }
+
+  isSupported() {
+    return (window as any).WebSpatailEnabled
   }
 }

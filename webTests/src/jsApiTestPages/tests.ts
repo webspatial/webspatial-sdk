@@ -26,7 +26,7 @@ var main = async () => {
             await e.updateTransform()
             let i = await session.createIFrameComponent()
             await Promise.all([
-                i.loadURL("/index.html?pageName=reactDemo/basic.tsx"), // 
+                i.loadURL("/loadTsx.html?pageName=reactDemo/basic.tsx"), // 
                 i.setResolution(300, 300),
                 e.setComponent(i)
             ])

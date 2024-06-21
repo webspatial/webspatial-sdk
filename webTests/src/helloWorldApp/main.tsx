@@ -27,7 +27,7 @@ function App() {
   const children = [];
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
     children.push(
-      <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
+      <SpatialIFrame src="/loadTsx.html?pageName=reactDemo/basic.tsx" key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
       </SpatialIFrame>
     );
   };
@@ -88,7 +88,7 @@ function App() {
 
               var i = await session.createIFrameComponent()
               await i.setResolution(300, 300)
-              await i.loadURL("/index.html?pageName=reactDemo/basic.tsx")
+              await i.loadURL("/loadTsx.html?pageName=reactDemo/basic.tsx")
               await ent.setComponent(i)
 
 
@@ -144,7 +144,7 @@ function App() {
 
 
               // var newPage = await WebSpatial.createWindowGroup("Plain")
-              // await WebSpatial.createWebPanel(newPage, "/index.html?pageName=helloWorldApp/main2.tsx")
+              // await WebSpatial.createWebPanel(newPage, "/loadTsx.html?pageName=helloWorldApp/main2.tsx")
             }}>
             Click Me
           </button>
@@ -172,15 +172,15 @@ function App() {
         {children}
       </div>
       <div className="flex text-white h-64 m-10">
-        <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
+        <SpatialIFrame src="/loadTsx.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
         </SpatialIFrame>
-        <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
+        <SpatialIFrame src="/loadTsx.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
 
         </SpatialIFrame>
-        <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
+        <SpatialIFrame src="/loadTsx.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
 
         </SpatialIFrame>
-        <SpatialIFrame src="/index.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
+        <SpatialIFrame src="/loadTsx.html?pageName=reactDemo/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
 
         </SpatialIFrame>
       </div>

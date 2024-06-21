@@ -27,11 +27,11 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
 
-        // "http://testIP:5173/?pageName=helloWorldApp/main.tsx"
+        // "http://testIP:5173/loadTsx.html?pageName=helloWorldApp/main.tsx"
         let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
         let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
 
-        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://localhost:5173/testList.html")!)
+        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://localhost:5173")!)
         root.root = true
         root.resourceID = sr.id
         root.childResources[sr.id] = sr
@@ -56,6 +56,7 @@ struct web_spatialApp: App {
 
                     if let url = URL(string: urlToLoad) {
                         let request = URLRequest(url: url)
+                        root.webViewNative?.url = url
                         root.webViewNative?.webViewHolder.appleWebView!.load(request)
                     }
                 }

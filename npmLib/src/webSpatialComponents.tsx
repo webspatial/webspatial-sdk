@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useRef } from 'react'
+import React, { CSSProperties, ReactElement, useEffect, useRef } from 'react'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './index';
 type vecType = { x: number, y: number, z: number }
 
@@ -113,7 +113,7 @@ class SpatialModelUIManager {
 
 // React components
 let _SpatialUIInstanceIDCounter = 0
-export function SpatialIFrame(props: { className: string, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+export function SpatialIFrame(props: { onload?: (x: SpatialIFrameComponent) => void, className: string, style?: CSSProperties | undefined, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
 
@@ -129,6 +129,9 @@ export function SpatialIFrame(props: { className: string, children?: ReactElemen
         await instanceState.current[savedId].init(props.src);
 
         await resizeDiv();
+        if (props.onload) {
+            props.onload(instanceState.current[savedId].webview!)
+        }
     }
 
     useEffect(() => {
@@ -162,7 +165,7 @@ export function SpatialIFrame(props: { className: string, children?: ReactElemen
     }, [props.spatialOffset])
 
     return (
-        <div ref={myDiv} className={props.className}>
+        <div ref={myDiv} style={props.style} className={props.className}>
         </div>
     )
 }
