@@ -36,6 +36,10 @@ class SpatialWebView: WatchableObject {
     var childResources = [String: SpatialResource]()
     var childWindowGroups = [String: WindowGroupData]()
 
+    // Drag event handling
+    var dragStarted = false
+    var dragStart = 0.0
+
     var gotStyle = false
     @Published var visible = false
     @Published var glassEffect = true
@@ -335,6 +339,10 @@ class SpatialWebView: WatchableObject {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
+                        if let sendContent: String = json.getValue(lookup: ["data", "update", "sendContent"]) {
+                            sr.spatialWebView?.webViewNative?.webViewHolder.appleWebView!.evaluateJavaScript("window.updatePanelContent(`"+sendContent+"`)")
+                        }
+
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
                             // Compute target url depending if the url is relative or not
                             let targetUrl = parseURL(url: url)

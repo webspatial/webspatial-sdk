@@ -106,7 +106,24 @@ struct PlainWindowGroupView: View {
                                     SpatialWebViewUI(wv: view)
                                         .frame(width: width, height: height).padding3D(.front, -100000)
                                         .position(x: x, y: y)
-                                        .offset(z: z)
+                                        .offset(z: z).gesture(
+                                            DragGesture()
+                                                .onChanged { gesture in
+                                                    if !view.dragStarted {
+                                                        view.dragStarted = true
+                                                        view.dragStart = (gesture.translation.height)
+                                                    }
+                                                    
+                                                    // TODO this should have velocity
+                                                    var delta = view.dragStart - gesture.translation.height
+                                                    view.dragStart = gesture.translation.height
+                                                    wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
+                                                }
+                                                .onEnded { _ in
+                                                    view.dragStarted = false
+                                                    view.dragStart = 0
+                                                }
+                                        )
                                 }
                             }
                         }
