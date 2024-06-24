@@ -27,6 +27,7 @@ var main = async () => {
             let i = await session.createIFrameComponent()
             await Promise.all([
                 i.loadURL("/loadTsx.html?pageName=reactDemo/basic.tsx"), // 
+                i.setScrollEnabled(false),
                 i.setResolution(300, 300),
                 e.setComponent(i)
             ])
