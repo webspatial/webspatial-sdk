@@ -137,6 +137,7 @@ function App() {
               await i.setResolution(300, 300)
               await i.loadURL("/testList.html")
               await i.setAsRoot(true)
+              await i.setInline(true)
               await ent.setComponent(i)
 
 
