@@ -30,7 +30,7 @@ class SpatialWebView: WatchableObject {
     @Published var root = false
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
-    var inline = true
+    var inline = false
 
     var parentWindowGroupID: String
     var childResources = [String: SpatialResource]()
@@ -351,6 +351,10 @@ class SpatialWebView: WatchableObject {
                             } else {
                                 webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
                             }
+                        }
+
+                        if let inline: Bool = json.getValue(lookup: ["data", "update", "inline"]) {
+                            sr.spatialWebView!.inline = inline
                         }
 
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
