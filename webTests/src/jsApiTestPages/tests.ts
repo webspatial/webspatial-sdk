@@ -28,6 +28,7 @@ var main = async () => {
             await Promise.all([
                 i.loadURL("/loadTsx.html?pageName=reactDemo/basic.tsx"), // 
                 i.setScrollEnabled(false),
+                i.setInline(true),
                 i.setResolution(300, 300),
                 e.setComponent(i)
             ])
