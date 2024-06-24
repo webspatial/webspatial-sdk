@@ -111,6 +111,10 @@ export class SpatialIFrameComponent extends SpatialResource {
   async setScrollEnabled(enabled: boolean) {
     await WebSpatial.updateResource(this._resource, { scrollEnabled: enabled })
   }
+
+  async setInline(isInline: boolean) {
+    await WebSpatial.updateResource(this._resource, { inline: isInline })
+  }
 }
 
 /**

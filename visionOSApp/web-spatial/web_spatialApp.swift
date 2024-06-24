@@ -37,6 +37,7 @@ struct web_spatialApp: App {
         root.childResources[sr.id] = sr
         sr.spatialWebView = root
         rootEnt.spatialWebView = root
+        rootEnt.spatialWebView?.inline = true
 
         root.full = true
         root.visible = true
