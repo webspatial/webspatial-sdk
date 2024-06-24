@@ -39,6 +39,7 @@ class SpatialWebView: WatchableObject {
     // Drag event handling
     var dragStarted = false
     var dragStart = 0.0
+    var dragVelocity = 0.0
 
     var gotStyle = false
     @Published var visible = false
@@ -341,6 +342,15 @@ class SpatialWebView: WatchableObject {
                     } else if sr.resourceType == "SpatialWebView" {
                         if let sendContent: String = json.getValue(lookup: ["data", "update", "sendContent"]) {
                             sr.spatialWebView?.webViewNative?.webViewHolder.appleWebView!.evaluateJavaScript("window.updatePanelContent(`"+sendContent+"`)")
+                        }
+
+                        if let scrollEnabled: Bool = json.getValue(lookup: ["data", "update", "scrollEnabled"]) {
+                            if !scrollEnabled {
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = false
+                            } else {
+                                webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
+                            }
                         }
 
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
