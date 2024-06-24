@@ -114,12 +114,12 @@ struct PlainWindowGroupView: View {
                                                         if !view.dragStarted {
                                                             view.dragStarted = true
                                                             view.dragStart = (gesture.translation.height)
-                                                        }                               
+                                                        }
 
-   // TODO this should have velocity
-                                                    var delta = view.dragStart - gesture.translation.height
-                                                    view.dragStart = gesture.translation.height
-                                                    wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
+                                                        // TODO: this should have velocity
+                                                        let delta = view.dragStart - gesture.translation.height
+                                                        view.dragStart = gesture.translation.height
+                                                        wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
                                                     }
                                                 }
                                                 .onEnded { _ in
@@ -128,7 +128,7 @@ struct PlainWindowGroupView: View {
                                                         view.dragStarted = false
                                                         view.dragStart = 0
 
-                                                         wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
+                                                        wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
                                                     }
                                                 }
                                         )
