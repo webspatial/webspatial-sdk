@@ -8,6 +8,36 @@
 import RealityKit
 import SwiftUI
 
+struct OpenDismissHandlerUI: View {
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
+
+    @ObservedObject var windowGroupContent: WindowGroupContentDictionary
+
+    var body: some View {
+        VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
+            if v {
+                Task {
+                    await openImmersiveSpace(id: "ImmersiveSpace")
+                }
+            } else {
+                Task {
+                    await dismissImmersiveSpace()
+                }
+            }
+
+        }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
+            let _ = openWindow(id: wd!.windowStyle, value: wd!)
+        }.onReceive(windowGroupContent.$closeWindowData.dropFirst()) { wd in
+            print("DISMISS")
+            print(wd!.windowStyle)
+            dismissWindow(id: wd!.windowStyle, value: wd!)
+        }
+    }
+}
+
 struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
 
@@ -51,22 +81,7 @@ struct PlainWindowGroupView: View {
         let rootWebview = windowGroupContent.childEntities.filter {
             $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true
         }.first?.value.spatialWebView
-        VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
-            if v {
-                Task {
-                    await openImmersiveSpace(id: "ImmersiveSpace")
-                }
-            } else {
-                Task {
-                    await dismissImmersiveSpace()
-                }
-            }
-
-        }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
-            let _ = openWindow(id: wd!.windowStyle, value: wd!)
-        }.onReceive(windowGroupContent.$closeWindowData.dropFirst()) { wd in
-            dismissWindow(id: wd!.windowStyle, value: wd!)
-        }
+        OpenDismissHandlerUI(windowGroupContent: windowGroupContent)
 
         GeometryReader { proxy3D in
             ZStack {
