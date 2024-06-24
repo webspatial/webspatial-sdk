@@ -49,16 +49,10 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, resourceID: webViewRef!.resourceID)
         webViewRef?.loadRequestID = -1
         webViewRef?.didFinishLoadPage()
-        
-        // Disable scrolling
-        if webViewRef?.loadRequestWV != nil {
-            let webview = webViewRef?.webViewNative?.webViewHolder.appleWebView!
-            webview!.scrollView.isScrollEnabled = false
-        }
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        //print("try nav " + navigationAction.request.url!.absoluteString)
+        // print("try nav " + navigationAction.request.url!.absoluteString)
         decisionHandler(.allow)
     }
 
@@ -67,7 +61,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        //print(" broken " + error.localizedDescription)
+        // print(" broken " + error.localizedDescription)
     }
 
     // receive message from wkwebview
