@@ -109,19 +109,27 @@ struct PlainWindowGroupView: View {
                                         .offset(z: z).gesture(
                                             DragGesture()
                                                 .onChanged { gesture in
-                                                    if !view.dragStarted {
-                                                        view.dragStarted = true
-                                                        view.dragStart = (gesture.translation.height)
-                                                    }
-                                                    
-                                                    // TODO this should have velocity
+                                                    let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
+                                                    if scrollEnabled != nil, !scrollEnabled! {
+                                                        if !view.dragStarted {
+                                                            view.dragStarted = true
+                                                            view.dragStart = (gesture.translation.height)
+                                                        }                               
+
+   // TODO this should have velocity
                                                     var delta = view.dragStart - gesture.translation.height
                                                     view.dragStart = gesture.translation.height
                                                     wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
+                                                    }
                                                 }
                                                 .onEnded { _ in
-                                                    view.dragStarted = false
-                                                    view.dragStart = 0
+                                                    let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
+                                                    if scrollEnabled != nil, !scrollEnabled! {
+                                                        view.dragStarted = false
+                                                        view.dragStart = 0
+
+                                                         wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
+                                                    }
                                                 }
                                         )
                                 }
