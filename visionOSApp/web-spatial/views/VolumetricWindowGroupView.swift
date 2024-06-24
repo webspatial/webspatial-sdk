@@ -21,6 +21,8 @@ struct VolumetricWindowGroupView: View {
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
 
     var body: some View {
+        OpenDismissHandlerUI(windowGroupContent: windowGroupContent)
+
         RealityView { _, _ in
         } update: { content, attachments in
 
