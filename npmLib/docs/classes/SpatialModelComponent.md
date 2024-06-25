@@ -6,53 +6,19 @@
 
 # Class: SpatialModelComponent
 
-Used to position a model in 3D space
+Used to position a model in 3D space, made up of a mesh and materials to be applied to the mesh
 
 ## Extends
 
 - [`SpatialResource`](SpatialResource.md)
-
-## Constructors
-
-### new SpatialModelComponent()
-
-> **new SpatialModelComponent**(`_resource`): [`SpatialModelComponent`](SpatialModelComponent.md)
-
-#### Parameters
-
-• **\_resource**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialModelComponent`](SpatialModelComponent.md)
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`constructor`](SpatialResource.md#constructors)
-
-#### Source
-
-index.ts:76
-
-## Properties
-
-### \_resource
-
-> **\_resource**: `WebSpatialResource`
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`_resource`](SpatialResource.md#_resource)
-
-#### Source
-
-index.ts:76
 
 ## Methods
 
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
+
+Marks resource to be released (it should no longer be used)
 
 #### Returns
 
@@ -64,7 +30,7 @@ index.ts:76
 
 #### Source
 
-index.ts:78
+index.ts:96
 
 ***
 
@@ -72,9 +38,13 @@ index.ts:78
 
 > **setMaterials**(`materials`): `Promise`\<`void`\>
 
+Sets the materials that should be applied to the mesh
+
 #### Parameters
 
 • **materials**: [`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)[]
+
+array of materials to set
 
 #### Returns
 
@@ -82,7 +52,7 @@ index.ts:78
 
 #### Source
 
-index.ts:106
+index.ts:182
 
 ***
 
@@ -90,9 +60,13 @@ index.ts:106
 
 > **setMesh**(`mesh`): `Promise`\<`void`\>
 
+Sets the mesh to be displayed by the component
+
 #### Parameters
 
 • **mesh**: [`SpatialMeshResource`](SpatialMeshResource.md)
+
+mesh to set
 
 #### Returns
 
@@ -100,4 +74,4 @@ index.ts:106
 
 #### Source
 
-index.ts:103
+index.ts:174

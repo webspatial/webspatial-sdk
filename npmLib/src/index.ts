@@ -4,7 +4,11 @@ import { WebSpatial, WebSpatialResource, WindowGroup, WindowStyle } from './webS
 type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
 
 export class SpatialWindowGroup {
-  constructor(public _wg: WindowGroup) {
+  /** @hidden */
+  constructor(
+    /** @hidden */
+    public _wg: WindowGroup
+  ) {
 
   }
 }
@@ -28,8 +32,14 @@ class SpatialFrame {
  */
 export class SpatialEntity {
   transform = new SpatialTransform()
+
+  /** @hidden */
   private _destroyed = false
-  constructor(public _entity: WebSpatialResource) {
+  /** @hidden */
+  constructor(
+    /** @hidden */
+    public _entity: WebSpatialResource
+  ) {
 
   }
 
@@ -73,8 +83,16 @@ export class SpatialEntity {
 }
 
 export class SpatialResource {
-  constructor(public _resource: WebSpatialResource) {
+  /** @hidden */
+  constructor(
+    /** @hidden */
+    public _resource: WebSpatialResource
+  ) {
   }
+
+  /**
+   * Marks resource to be released (it should no longer be used)
+   */
   async destroy() {
     await WebSpatial.destroyResource(this._resource)
   }
@@ -84,6 +102,10 @@ export class SpatialResource {
 * Used to position an iframe in 3D space
 */
 export class SpatialIFrameComponent extends SpatialResource {
+  /**
+   * Loads a url page in the iframe
+   * @param url url to load
+   */
   async loadURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
@@ -96,49 +118,92 @@ export class SpatialIFrameComponent extends SpatialResource {
     await WebSpatial.updateResource(this._resource, { setRoot: makeRoot })
   }
 
+  /**
+   * Sets the resolution of the IFrame, the resulting dimensions when rendered will be equal to 1/1360 units
+   * eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
+   * @param x width in pixels
+   * @param y height in pixels
+   */
   async setResolution(x: number, y: number) {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
 
-  async sendContent(x: string) {
-    await WebSpatial.updateResource(this._resource, { sendContent: x })
+  /**
+   * Sends a message to the iframe telling it to display the content string
+   * @param content Content to be displayed
+   */
+  async sendContent(content: string) {
+    await WebSpatial.updateResource(this._resource, { sendContent: content })
   }
 
+  /**
+   * Sets the style that should be applied to the iframe
+   * @param options style options
+   */
   async setStyle(options: any) {
     await WebSpatial.updateResource(this._resource, { style: options })
   }
 
+  /**
+   * Enable/Disable scrolling in the iframe (defaults to enabled), if disabled, scrolling will be applied to the root page
+   * @param enabled value to set
+   */
   async setScrollEnabled(enabled: boolean) {
     await WebSpatial.updateResource(this._resource, { scrollEnabled: enabled })
   }
 
+  /**
+   * Sets how the iframe should be rendered. 
+   * If inline, position will be relative to root webpage (0,0,0) will place the center of the iframe at the top left of the page and coordinate space will be in pixels.
+   * If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
+   * @param isInline value to set
+   */
   async setInline(isInline: boolean) {
     await WebSpatial.updateResource(this._resource, { inline: isInline })
   }
 }
 
 /**
-* Used to position a model in 3D space
+* Used to position a model in 3D space, made up of a mesh and materials to be applied to the mesh
 */
 export class SpatialModelComponent extends SpatialResource {
+  /**
+   * Sets the mesh to be displayed by the component
+   * @param mesh mesh to set
+   */
   async setMesh(mesh: SpatialMeshResource) {
     await WebSpatial.updateResource(this._resource, { meshResource: mesh._resource.id })
   }
+
+  /**
+   * Sets the materials that should be applied to the mesh
+   * @param materials array of materials to set
+   */
   async setMaterials(materials: Array<SpatialPhysicallyBasedMaterial>) {
     await WebSpatial.updateResource(this._resource, { materials: materials.map((m) => { return m._resource.id }) })
   }
 }
 
 /**
-* Used to position a model in 3D space inline to the webpage (Maps to Model3D) 
+* Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
+* Positioning behaves the same as a spatial iframe marked as inline
 */
 export class SpatialModelUIComponent extends SpatialResource {
+  /**
+   * Sets the url of the model to load
+   * @param url url of the model to load
+   */
   async setURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
   async setAspectRatio(aspectRatio: string) {
     await WebSpatial.updateResource(this._resource, { aspectRatio: aspectRatio })
   }
+  /**
+   * Sets the resolution of the component to be displayed (behaves the same as inline iframe)
+   * @param x resolution in pixels
+   * @param y resolution in pixels
+   */
   async setResolution(x: number, y: number) {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
@@ -155,6 +220,9 @@ export class SpatialPhysicallyBasedMaterial extends SpatialResource {
   metallic = { value: 0.5 }
   roughness = { value: 0.5 }
 
+  /**
+   * Syncs state of color, metallic, roupghness to the renderer
+   */
   async update() {
     await WebSpatial.updateResource(this._resource, {
       baseColor: this.baseColor,
@@ -168,9 +236,17 @@ export class SpatialPhysicallyBasedMaterial extends SpatialResource {
 * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
 */
 export class SpatialSession {
+  /** @hidden */
   _currentFrame = new SpatialFrame()
+  /** @hidden */
   _animationFrameCallbacks = Array<animCallback>()
+  /** @hidden */
   _frameLoopStarted = false
+
+  /**
+   * Request a callback to be called before the next render update
+   * @param callback callback to be called before next render update
+   */
   requestAnimationFrame(callback: animCallback) {
     this._animationFrameCallbacks.push(callback)
 
@@ -186,21 +262,37 @@ export class SpatialSession {
     }
 
   }
+  /**
+   * Creates a Entity
+   * @returns Entity
+   */
   async createEntity() {
     let entity = await WebSpatial.createResource("Entity", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
     return new SpatialEntity(entity)
   }
 
+  /**
+   * Creates a IFrameComponent
+   * @returns IFrameComponent
+   */
   async createIFrameComponent(wg?: SpatialWindowGroup) {
     let entity = await WebSpatial.createResource("SpatialWebView", wg ? wg._wg : WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
     return new SpatialIFrameComponent(entity)
   }
 
+  /**
+   * Creates a ModelUIComponent
+   * @returns ModelUIComponent
+   */
   async createModelUIComponent(options?: any) {
     let entity = await WebSpatial.createResource("ModelUIComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
     return new SpatialModelUIComponent(entity)
   }
 
+  /**
+   * Creates a ModelComponent
+   * @returns ModelComponent
+   */
   async createModelComponent(options?: { url: string }) {
     var opts = undefined
     if (options) {
@@ -210,21 +302,36 @@ export class SpatialSession {
     return new SpatialModelComponent(entity)
   }
 
+  /**
+   * Creates a MeshResource
+   * @returns MeshResource
+   */
   async createMeshResource(options?: any) {
     let entity = await WebSpatial.createResource("MeshResource", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
     return new SpatialMeshResource(entity)
   }
 
-
+  /**
+   * Creates a PhysicallyBasedMaterial
+   * @returns PhysicallyBasedMaterial
+   */
   async createPhysicallyBasedMaterial(options?: any) {
     let entity = await WebSpatial.createResource("PhysicallyBasedMaterial", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
     return new SpatialPhysicallyBasedMaterial(entity)
   }
 
+  /**
+   * Creates a WindowGroup
+   * @returns WindowGroup
+   */
   async createWindowGroup(style: WindowStyle = "Plain") {
     return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
   }
 
+  /**
+   * Retrieves the iframe for this page
+   * @returns the iframe component corresponding to the js running on this page
+   */
   getCurrentIFrameComponent() {
     return new SpatialIFrameComponent(WebSpatial.getCurrentWebPanel())
   }
@@ -243,10 +350,12 @@ export class SpatialSession {
     return await WebSpatial.ping(msg)
   }
 
+  /** Opens the immersive space */
   async openImmersiveSpace() {
     return await WebSpatial.openImmersiveSpace()
   }
 
+  /** Closes the immersive space */
   async dismissImmersiveSpace() {
     return await WebSpatial.dismissImmersiveSpace()
   }
