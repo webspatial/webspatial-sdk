@@ -20,6 +20,20 @@ Base object designed to be placed on navigator.spatial to mirror navigator.xr fo
 
 ## Methods
 
+### isSupported()
+
+> **isSupported**(): `any`
+
+#### Returns
+
+`any`
+
+#### Source
+
+index.ts:382
+
+***
+
 ### requestSession()
 
 > **requestSession**(): `Promise`\<[`SpatialSession`](SpatialSession.md)\>
@@ -30,4 +44,4 @@ Base object designed to be placed on navigator.spatial to mirror navigator.xr fo
 
 #### Source
 
-index.ts:244
+index.ts:378
