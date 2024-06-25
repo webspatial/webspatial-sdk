@@ -10,47 +10,13 @@
 
 - [`SpatialResource`](SpatialResource.md)
 
-## Constructors
-
-### new SpatialMeshResource()
-
-> **new SpatialMeshResource**(`_resource`): [`SpatialMeshResource`](SpatialMeshResource.md)
-
-#### Parameters
-
-• **\_resource**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialMeshResource`](SpatialMeshResource.md)
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`constructor`](SpatialResource.md#constructors)
-
-#### Source
-
-index.ts:76
-
-## Properties
-
-### \_resource
-
-> **\_resource**: `WebSpatialResource`
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`_resource`](SpatialResource.md#_resource)
-
-#### Source
-
-index.ts:76
-
 ## Methods
 
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
+
+Marks resource to be released (it should no longer be used)
 
 #### Returns
 
@@ -62,4 +28,4 @@ index.ts:76
 
 #### Source
 
-index.ts:78
+index.ts:96

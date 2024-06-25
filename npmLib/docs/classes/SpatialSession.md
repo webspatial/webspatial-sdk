@@ -18,69 +18,53 @@ Session use to establish a connection to the spatial renderer of the system. All
 
 [`SpatialSession`](SpatialSession.md)
 
-## Properties
-
-### \_animationFrameCallbacks
-
-> **\_animationFrameCallbacks**: `animCallback`[]
-
-#### Source
-
-index.ts:151
-
-***
-
-### \_currentFrame
-
-> **\_currentFrame**: `SpatialFrame`
-
-#### Source
-
-index.ts:150
-
-***
-
-### \_frameLoopStarted
-
-> **\_frameLoopStarted**: `boolean` = `false`
-
-#### Source
-
-index.ts:152
-
 ## Methods
 
 ### createEntity()
 
 > **createEntity**(): `Promise`\<[`SpatialEntity`](SpatialEntity.md)\>
 
+Creates a Entity
+
 #### Returns
 
 `Promise`\<[`SpatialEntity`](SpatialEntity.md)\>
 
+Entity
+
 #### Source
 
-index.ts:168
+index.ts:269
 
 ***
 
 ### createIFrameComponent()
 
-> **createIFrameComponent**(): `Promise`\<[`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
+> **createIFrameComponent**(`wg`?): `Promise`\<[`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
+
+Creates a IFrameComponent
+
+#### Parameters
+
+• **wg?**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
 
 #### Returns
 
 `Promise`\<[`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
 
+IFrameComponent
+
 #### Source
 
-index.ts:173
+index.ts:278
 
 ***
 
 ### createMeshResource()
 
 > **createMeshResource**(`options`?): `Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
+
+Creates a MeshResource
 
 #### Parameters
 
@@ -90,15 +74,19 @@ index.ts:173
 
 `Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
 
+MeshResource
+
 #### Source
 
-index.ts:192
+index.ts:309
 
 ***
 
 ### createModelComponent()
 
 > **createModelComponent**(`options`?): `Promise`\<[`SpatialModelComponent`](SpatialModelComponent.md)\>
+
+Creates a ModelComponent
 
 #### Parameters
 
@@ -110,15 +98,19 @@ index.ts:192
 
 `Promise`\<[`SpatialModelComponent`](SpatialModelComponent.md)\>
 
+ModelComponent
+
 #### Source
 
-index.ts:183
+index.ts:296
 
 ***
 
 ### createModelUIComponent()
 
 > **createModelUIComponent**(`options`?): `Promise`\<[`SpatialModelUIComponent`](SpatialModelUIComponent.md)\>
+
+Creates a ModelUIComponent
 
 #### Parameters
 
@@ -128,15 +120,19 @@ index.ts:183
 
 `Promise`\<[`SpatialModelUIComponent`](SpatialModelUIComponent.md)\>
 
+ModelUIComponent
+
 #### Source
 
-index.ts:178
+index.ts:287
 
 ***
 
 ### createPhysicallyBasedMaterial()
 
 > **createPhysicallyBasedMaterial**(`options`?): `Promise`\<[`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)\>
+
+Creates a PhysicallyBasedMaterial
 
 #### Parameters
 
@@ -146,9 +142,33 @@ index.ts:178
 
 `Promise`\<[`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)\>
 
+PhysicallyBasedMaterial
+
 #### Source
 
-index.ts:198
+index.ts:318
+
+***
+
+### createWindowGroup()
+
+> **createWindowGroup**(`style`): `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+Creates a WindowGroup
+
+#### Parameters
+
+• **style**: `WindowStyle`= `"Plain"`
+
+#### Returns
+
+`Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+
+WindowGroup
+
+#### Source
+
+index.ts:327
 
 ***
 
@@ -156,13 +176,15 @@ index.ts:198
 
 > **dismissImmersiveSpace**(): `Promise`\<`void`\>
 
+Closes the immersive space
+
 #### Returns
 
 `Promise`\<`void`\>
 
 #### Source
 
-index.ts:225
+index.ts:359
 
 ***
 
@@ -170,13 +192,17 @@ index.ts:225
 
 > **getCurrentIFrameComponent**(): [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
 
+Retrieves the iframe for this page
+
 #### Returns
 
 [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
 
+the iframe component corresponding to the js running on this page
+
 #### Source
 
-index.ts:203
+index.ts:335
 
 ***
 
@@ -190,7 +216,7 @@ index.ts:203
 
 #### Source
 
-index.ts:235
+index.ts:369
 
 ***
 
@@ -204,7 +230,7 @@ index.ts:235
 
 #### Source
 
-index.ts:230
+index.ts:364
 
 ***
 
@@ -224,7 +250,7 @@ Debugging only, issues a native log
 
 #### Source
 
-index.ts:210
+index.ts:342
 
 ***
 
@@ -232,13 +258,15 @@ index.ts:210
 
 > **openImmersiveSpace**(): `Promise`\<`void`\>
 
+Opens the immersive space
+
 #### Returns
 
 `Promise`\<`void`\>
 
 #### Source
 
-index.ts:221
+index.ts:354
 
 ***
 
@@ -258,7 +286,7 @@ Debugging only, used to ping the native renderer
 
 #### Source
 
-index.ts:217
+index.ts:349
 
 ***
 
@@ -266,9 +294,13 @@ index.ts:217
 
 > **requestAnimationFrame**(`callback`): `void`
 
+Request a callback to be called before the next render update
+
 #### Parameters
 
 • **callback**: `animCallback`
+
+callback to be called before next render update
 
 #### Returns
 
@@ -276,4 +308,4 @@ index.ts:217
 
 #### Source
 
-index.ts:153
+index.ts:250

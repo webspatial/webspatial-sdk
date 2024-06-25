@@ -12,43 +12,7 @@ PBR material which can be set on a SpatialModelComponent
 
 - [`SpatialResource`](SpatialResource.md)
 
-## Constructors
-
-### new SpatialPhysicallyBasedMaterial()
-
-> **new SpatialPhysicallyBasedMaterial**(`_resource`): [`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)
-
-#### Parameters
-
-• **\_resource**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`constructor`](SpatialResource.md#constructors)
-
-#### Source
-
-index.ts:76
-
 ## Properties
-
-### \_resource
-
-> **\_resource**: `WebSpatialResource`
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`_resource`](SpatialResource.md#_resource)
-
-#### Source
-
-index.ts:76
-
-***
 
 ### baseColor
 
@@ -72,7 +36,7 @@ index.ts:76
 
 #### Source
 
-index.ts:133
+index.ts:219
 
 ***
 
@@ -86,7 +50,7 @@ index.ts:133
 
 #### Source
 
-index.ts:134
+index.ts:220
 
 ***
 
@@ -100,13 +64,15 @@ index.ts:134
 
 #### Source
 
-index.ts:135
+index.ts:221
 
 ## Methods
 
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
+
+Marks resource to be released (it should no longer be used)
 
 #### Returns
 
@@ -118,7 +84,7 @@ index.ts:135
 
 #### Source
 
-index.ts:78
+index.ts:96
 
 ***
 
@@ -126,10 +92,12 @@ index.ts:78
 
 > **update**(): `Promise`\<`void`\>
 
+Syncs state of color, metallic, roupghness to the renderer
+
 #### Returns
 
 `Promise`\<`void`\>
 
 #### Source
 
-index.ts:137
+index.ts:226
