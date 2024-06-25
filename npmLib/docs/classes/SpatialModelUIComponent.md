@@ -6,53 +6,20 @@
 
 # Class: SpatialModelUIComponent
 
-Used to position a model in 3D space inline to the webpage (Maps to Model3D)
+Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
+Positioning behaves the same as a spatial iframe marked as inline
 
 ## Extends
 
 - [`SpatialResource`](SpatialResource.md)
-
-## Constructors
-
-### new SpatialModelUIComponent()
-
-> **new SpatialModelUIComponent**(`_resource`): [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
-
-#### Parameters
-
-• **\_resource**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialModelUIComponent`](SpatialModelUIComponent.md)
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`constructor`](SpatialResource.md#constructors)
-
-#### Source
-
-index.ts:76
-
-## Properties
-
-### \_resource
-
-> **\_resource**: `WebSpatialResource`
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`_resource`](SpatialResource.md#_resource)
-
-#### Source
-
-index.ts:76
 
 ## Methods
 
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
+
+Marks resource to be released (it should no longer be used)
 
 #### Returns
 
@@ -64,7 +31,7 @@ index.ts:76
 
 #### Source
 
-index.ts:78
+index.ts:96
 
 ***
 
@@ -82,7 +49,7 @@ index.ts:78
 
 #### Source
 
-index.ts:118
+index.ts:199
 
 ***
 
@@ -90,11 +57,17 @@ index.ts:118
 
 > **setResolution**(`x`, `y`): `Promise`\<`void`\>
 
+Sets the resolution of the component to be displayed (behaves the same as inline iframe)
+
 #### Parameters
 
 • **x**: `number`
 
+resolution in pixels
+
 • **y**: `number`
+
+resolution in pixels
 
 #### Returns
 
@@ -102,7 +75,7 @@ index.ts:118
 
 #### Source
 
-index.ts:121
+index.ts:207
 
 ***
 
@@ -110,9 +83,13 @@ index.ts:121
 
 > **setURL**(`url`): `Promise`\<`void`\>
 
+Sets the url of the model to load
+
 #### Parameters
 
 • **url**: `string`
+
+url of the model to load
 
 #### Returns
 
@@ -120,4 +97,4 @@ index.ts:121
 
 #### Source
 
-index.ts:115
+index.ts:196

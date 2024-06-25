@@ -8,45 +8,7 @@
 
 Entity used to describe an object that can be added to the scene
 
-## Constructors
-
-### new SpatialEntity()
-
-> **new SpatialEntity**(`_entity`): [`SpatialEntity`](SpatialEntity.md)
-
-#### Parameters
-
-• **\_entity**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialEntity`](SpatialEntity.md)
-
-#### Source
-
-index.ts:32
-
 ## Properties
-
-### \_destroyed
-
-> `private` **\_destroyed**: `boolean` = `false`
-
-#### Source
-
-index.ts:31
-
-***
-
-### \_entity
-
-> **\_entity**: `WebSpatialResource`
-
-#### Source
-
-index.ts:32
-
-***
 
 ### transform
 
@@ -54,7 +16,7 @@ index.ts:32
 
 #### Source
 
-index.ts:30
+index.ts:34
 
 ## Methods
 
@@ -70,7 +32,7 @@ Removes a reference to the entity by the renderer and this object should no long
 
 #### Source
 
-index.ts:61
+index.ts:71
 
 ***
 
@@ -86,7 +48,7 @@ Check if destroy has been called
 
 #### Source
 
-index.ts:70
+index.ts:80
 
 ***
 
@@ -106,7 +68,7 @@ Attaches a component to the entity to be displayed
 
 #### Source
 
-index.ts:46
+index.ts:56
 
 ***
 
@@ -128,7 +90,7 @@ the window group that should render this entity
 
 #### Source
 
-index.ts:54
+index.ts:64
 
 ***
 
@@ -144,4 +106,4 @@ Syncs the transform with the renderer, must be called to observe updates
 
 #### Source
 
-index.ts:39
+index.ts:49

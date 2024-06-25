@@ -31,8 +31,6 @@ struct OpenDismissHandlerUI: View {
         }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
             let _ = openWindow(id: wd!.windowStyle, value: wd!)
         }.onReceive(windowGroupContent.$closeWindowData.dropFirst()) { wd in
-            print("DISMISS")
-            print(wd!.windowStyle)
             dismissWindow(id: wd!.windowStyle, value: wd!)
         }
     }

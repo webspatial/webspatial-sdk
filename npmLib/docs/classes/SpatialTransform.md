@@ -28,7 +28,7 @@ Quaternion value for x,y,z,y
 
 #### Source
 
-index.ts:18
+index.ts:22
 
 ***
 
@@ -38,7 +38,7 @@ index.ts:18
 
 #### Source
 
-index.ts:16
+index.ts:20
 
 ***
 
@@ -48,4 +48,4 @@ index.ts:16
 
 #### Source
 
-index.ts:19
+index.ts:23

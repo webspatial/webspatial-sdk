@@ -12,47 +12,13 @@ Used to position an iframe in 3D space
 
 - [`SpatialResource`](SpatialResource.md)
 
-## Constructors
-
-### new SpatialIFrameComponent()
-
-> **new SpatialIFrameComponent**(`_resource`): [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
-
-#### Parameters
-
-• **\_resource**: `WebSpatialResource`
-
-#### Returns
-
-[`SpatialIFrameComponent`](SpatialIFrameComponent.md)
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`constructor`](SpatialResource.md#constructors)
-
-#### Source
-
-index.ts:76
-
-## Properties
-
-### \_resource
-
-> **\_resource**: `WebSpatialResource`
-
-#### Inherited from
-
-[`SpatialResource`](SpatialResource.md).[`_resource`](SpatialResource.md#_resource)
-
-#### Source
-
-index.ts:76
-
 ## Methods
 
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
+
+Marks resource to be released (it should no longer be used)
 
 #### Returns
 
@@ -64,7 +30,7 @@ index.ts:76
 
 #### Source
 
-index.ts:78
+index.ts:96
 
 ***
 
@@ -72,9 +38,13 @@ index.ts:78
 
 > **loadURL**(`url`): `Promise`\<`void`\>
 
+Loads a url page in the iframe
+
 #### Parameters
 
 • **url**: `string`
+
+url to load
 
 #### Returns
 
@@ -82,7 +52,75 @@ index.ts:78
 
 #### Source
 
-index.ts:87
+index.ts:109
+
+***
+
+### sendContent()
+
+> **sendContent**(`content`): `Promise`\<`void`\>
+
+Sends a message to the iframe telling it to display the content string
+
+#### Parameters
+
+• **content**: `string`
+
+Content to be displayed
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:135
+
+***
+
+### setAsRoot()
+
+> **setAsRoot**(`makeRoot`): `Promise`\<`void`\>
+
+Sets if this IFrame can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
+
+#### Parameters
+
+• **makeRoot**: `boolean`
+
+sets if this should be root or not
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:117
+
+***
+
+### setInline()
+
+> **setInline**(`isInline`): `Promise`\<`void`\>
+
+Sets how the iframe should be rendered. 
+If inline, position will be relative to root webpage (0,0,0) will place the center of the iframe at the top left of the page and coordinate space will be in pixels.
+If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
+
+#### Parameters
+
+• **isInline**: `boolean`
+
+value to set
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:161
 
 ***
 
@@ -90,11 +128,18 @@ index.ts:87
 
 > **setResolution**(`x`, `y`): `Promise`\<`void`\>
 
+Sets the resolution of the IFrame, the resulting dimensions when rendered will be equal to 1/1360 units
+eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
+
 #### Parameters
 
 • **x**: `number`
 
+width in pixels
+
 • **y**: `number`
+
+height in pixels
 
 #### Returns
 
@@ -102,7 +147,29 @@ index.ts:87
 
 #### Source
 
-index.ts:90
+index.ts:127
+
+***
+
+### setScrollEnabled()
+
+> **setScrollEnabled**(`enabled`): `Promise`\<`void`\>
+
+Enable/Disable scrolling in the iframe (defaults to enabled), if disabled, scrolling will be applied to the root page
+
+#### Parameters
+
+• **enabled**: `boolean`
+
+value to set
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+index.ts:151
 
 ***
 
@@ -110,9 +177,13 @@ index.ts:90
 
 > **setStyle**(`options`): `Promise`\<`void`\>
 
+Sets the style that should be applied to the iframe
+
 #### Parameters
 
 • **options**: `any`
+
+style options
 
 #### Returns
 
@@ -120,4 +191,4 @@ index.ts:90
 
 #### Source
 
-index.ts:94
+index.ts:143
