@@ -163,7 +163,11 @@ export class WebSpatial {
         cmd.command = "log"
         if (log !== null && log !== undefined && log.toString) {
             cmd.data.logString = log.toString()
-        } else if (log !== null && log !== undefined && typeof log === 'object') {
+            if (cmd.data.logString == "[object Object]") {
+                delete cmd.data.logString
+            }
+        }
+        if (cmd.data.logString === undefined && log !== null && log !== undefined && typeof log === 'object') {
             cmd.data.logString = JSON.stringify(log)
         } else {
             cmd.data.logString = log
