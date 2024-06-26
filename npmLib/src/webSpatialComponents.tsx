@@ -115,7 +115,7 @@ class SpatialModelUIManager {
 
 // React components
 let _SpatialUIInstanceIDCounter = 0
-export function SpatialIFrame(props: { onload?: (x: SpatialIFrameComponent) => void, className: string, style?: CSSProperties | undefined, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
+export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: SpatialIFrameComponent) => void, className: string, style?: CSSProperties | undefined, styleString?: string, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
 
@@ -139,6 +139,10 @@ export function SpatialIFrame(props: { onload?: (x: SpatialIFrameComponent) => v
     useEffect(() => {
         if (!(window as any).WebSpatailEnabled) {
             return
+        }
+
+        if (props.styleString) {
+            (myDiv.current! as HTMLElement).setAttribute('style', props.styleString);
         }
 
         // We need to be very careful with currentInstanceID as it can get overwritten mid async call, to handle this we create state per new instance and then we must cache the id to align our create/destroy logic
@@ -168,6 +172,7 @@ export function SpatialIFrame(props: { onload?: (x: SpatialIFrameComponent) => v
 
     return (
         <div ref={myDiv} style={props.style} className={props.className}>
+            <div className="" style={{ visibility: "hidden" }} dangerouslySetInnerHTML={{ __html: props.innerHTMLContent ? props.innerHTMLContent : "" }}></div>
         </div>
     )
 }
