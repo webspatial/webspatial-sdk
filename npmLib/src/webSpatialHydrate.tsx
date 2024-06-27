@@ -41,6 +41,9 @@ export default class SpatialIFrameElement extends HTMLElement {
     }
 
     attributeChangedCallback(name: string, oldValue: any, newValue: any) {
+        if (!this.root) {
+            return;
+        }
         if (name === 'source') {
             this.root!.render(this.createCollapsed(newValue));
         }
