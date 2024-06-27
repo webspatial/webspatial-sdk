@@ -6,7 +6,6 @@ import { Provider } from 'react-redux'
 import { initStateWithPrevTab } from 'redux-state-sync';
 import { useDispatch, useSelector } from "react-redux";
 import store, { increment } from "./store.ts"
-import WebSpatial from '../../lib/webSpatial.ts';
 
 console.log("A")
 initStateWithPrevTab(store);
@@ -41,10 +40,6 @@ function App() {
     )
 }
 
-WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
-// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
-document.documentElement.style.backgroundColor = "transparent";
-document.body.style.backgroundColor = "transparent"
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <Provider store={store}>
