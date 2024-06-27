@@ -60,15 +60,7 @@ class SpatialResource: WatchableObject {
         self.ownerWebview = owner
 
         super.init()
-//        if resourceType == "Entity" {
-//            if wg.entities[id] == nil {
-//                wg.entities[id] = self
-//            }
-//        }
-
-//        if wg.resources[id] == nil {
-//            wg.resources[id] = self
-//        }
+        mngr.allResources[id] = self
     }
 
     func destroy()->Bool {
@@ -87,6 +79,8 @@ class SpatialResource: WatchableObject {
                 removed = true
             }
         }
+
+        _ = mngr!.allResources.removeValue(forKey: id)
         return removed
     }
 }
@@ -110,6 +104,7 @@ class WindowGroupContentDictionary: ObservableObject {
 }
 
 class WindowGroupManager {
+    var allResources = [String: SpatialResource]()
     var windowGroups = [String: WindowGroupContentDictionary]()
 
     func getWindowGroup(windowGroup: String)->WindowGroupContentDictionary {
