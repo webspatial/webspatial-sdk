@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactElement, useEffect, useRef } from 'react'
+import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './index';
 type vecType = { x: number, y: number, z: number }
 
@@ -165,6 +165,9 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
     }, [])
 
     useEffect(() => {
+        if (!(window as any).WebSpatailEnabled) {
+            return
+        }
         resizeDiv()
         return () => {
         }
