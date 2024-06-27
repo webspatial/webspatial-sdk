@@ -15,12 +15,12 @@ export default class SpatialIFrameElement extends HTMLElement {
     root?: ReactDOM.Root
 
     createCollapsed(source: string) {
-        this.style as CSSProperties;
+        var style = this.style as CSSProperties;
         let toSet = encodeURIComponent(this.innerHTML)
         return React.createElement(SpatialIFrame, {
             innerHTMLContent: this.innerHTML,
             spatialOffset: { z: 50 },
-            style: { width: this.style.width, height: this.style.height, backgroundColor: "red" },
+            style: { width: style.width, height: style.height, boxShadow: style.boxShadow, backgroundColor: style.backgroundColor, filter: style.filter },
             className: "",
             src: source,
             onload: (spatialFrame) => {
@@ -50,6 +50,23 @@ export default class SpatialIFrameElement extends HTMLElement {
 export class WebSpatialHydrate {
     static async Hydrate() {
         window.customElements.define('spatial-iframe', SpatialIFrameElement);
+    }
+
+    static async ReplaceLinks() {
+        var s = await getSessionAsync()
+        var aEl = document.getElementsByTagName("a")
+        for (var e of aEl) {
+            if (e.href && e.href != "#") {
+                let link = e.href
+                e.href = "#"
+                e.onclick = async () => {
+                    var p = await s.getParentIFrameComponent()
+                    if (p) {
+                        p.loadURL(link)
+                    }
+                }
+            }
+        }
     }
 }
 

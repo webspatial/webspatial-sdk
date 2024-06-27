@@ -54,7 +54,7 @@ var main = async () => {
             return
         }
     } else if (page == "glassBackground") {
-        await session.getCurrentIFrameComponent().setStyle({ glassEffect: true, cornerRadius: 50 })
+        await (await session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
         // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"

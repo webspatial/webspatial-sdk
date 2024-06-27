@@ -1,3 +1,3 @@
 import { WebSpatialHydrate } from "web-spatial/src/webSpatialHydrate"
 
-WebSpatialHydrate.Hydrate()
+(window as any).WebSpatialHydrate = WebSpatialHydrate
