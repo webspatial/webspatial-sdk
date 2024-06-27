@@ -332,8 +332,23 @@ export class SpatialSession {
    * Retrieves the iframe for this page
    * @returns the iframe component corresponding to the js running on this page
    */
-  getCurrentIFrameComponent() {
+  async getCurrentIFrameComponent() {
     return new SpatialIFrameComponent(WebSpatial.getCurrentWebPanel())
+  }
+
+  /**
+   * Retrieves the parent iframe for this page or null if this is the root page
+   * @returns the iframe component or null
+   */
+  async getParentIFrameComponent() {
+    let parentResp: any = await WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { getParentID: "" })
+    if (parentResp.data.parentID === "") {
+      return null
+    } else {
+      var res = new WebSpatialResource()
+      res.id = parentResp.data.parentID
+      return new SpatialIFrameComponent(res)
+    }
   }
 
   /**

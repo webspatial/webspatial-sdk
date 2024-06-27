@@ -32,6 +32,8 @@ class SpatialWebView: WatchableObject {
     @Published var resolutionY: Double = 0
     var inline = false
 
+    // ID of the webview that created this or empty if its root
+    var parentWebviewID: String = ""
     var parentWindowGroupID: String
     var childResources = [String: SpatialResource]()
     var childWindowGroups = [String: WindowGroupData]()
@@ -205,6 +207,7 @@ class SpatialWebView: WatchableObject {
                         sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
                     } else if type == "SpatialWebView" {
                         sr.spatialWebView = SpatialWebView(parentWindowGroupID: cmdInfo.windowGroupID)
+                        sr.spatialWebView?.parentWebviewID = resourceID
                         sr.spatialWebView?.resourceID = sr.id
                         sr.spatialWebView?.childResources[sr.id] = sr
                     } else if type == "ModelUIComponent" {
@@ -258,11 +261,11 @@ class SpatialWebView: WatchableObject {
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     var delayComplete = false
-                    if childResources[cmdInfo.resourceID] == nil {
+                    if wgManager.allResources[cmdInfo.resourceID] == nil {
                         print("Missing resource")
                         return
                     }
-                    let sr = childResources[cmdInfo.resourceID]!
+                    let sr = wgManager.allResources[cmdInfo.resourceID]!
                     if sr.resourceType == "Entity" {
                         if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
                             newParentID = readWinodwGroupID(id: newParentID)
@@ -340,6 +343,11 @@ class SpatialWebView: WatchableObject {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
+                        if let sendContent: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
+                            completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+sr.spatialWebView!.parentWebviewID+"'}")
+                            return
+                        }
+
                         if let sendContent: String = json.getValue(lookup: ["data", "update", "sendContent"]) {
                             sr.spatialWebView?.webViewNative?.webViewHolder.appleWebView!.evaluateJavaScript("window.updatePanelContent(`"+sendContent+"`)")
                         }
