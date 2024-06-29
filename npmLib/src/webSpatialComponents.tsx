@@ -174,8 +174,8 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
     }, [props.spatialOffset])
 
     return (
-        <div ref={myDiv} style={props.style} className={props.className}>
-            <div className="" style={{ visibility: "hidden" }} dangerouslySetInnerHTML={{ __html: props.innerHTMLContent ? props.innerHTMLContent : "" }}></div>
+        <div ref={myDiv} style={{ visibility: "hidden" }} className={props.className} >
+            {props.children}
         </div>
     )
 }

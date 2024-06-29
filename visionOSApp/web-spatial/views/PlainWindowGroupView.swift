@@ -41,7 +41,7 @@ struct SpatialWebViewUI: View {
 
     var body: some View {
         wv.webViewNative
-            .background(wv.glassEffect ? Color.clear.opacity(0) : Color.white)
+            .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
             .cornerRadius(wv.cornerRadius)
             .opacity(wv.visible ? 1 : 0)
