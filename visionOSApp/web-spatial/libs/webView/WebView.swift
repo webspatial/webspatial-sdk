@@ -46,6 +46,7 @@ class SpatialWebView: WatchableObject {
     var gotStyle = false
     @Published var visible = false
     @Published var glassEffect = true
+    @Published var transparentEffect = true
     @Published var cornerRadius = CGFloat(0)
 
     init(parentWindowGroupID: String) {
@@ -156,6 +157,7 @@ class SpatialWebView: WatchableObject {
 
     func didStartReceivePageContent() {
         glassEffect = true
+        transparentEffect = true
     }
 
     func didFinishLoadPage() {
@@ -164,6 +166,7 @@ class SpatialWebView: WatchableObject {
                 self.visible = true
                 // Set default styles if cient hasn't set them by now
                 self.glassEffect = false
+                self.transparentEffect = false
                 self.cornerRadius = CGFloat(0)
             }
         }
@@ -399,9 +402,30 @@ class SpatialWebView: WatchableObject {
                         }
 
                         if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]),
+                           let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"]),
                            let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"])
                         {
                             sr.spatialWebView?.glassEffect = glassEffect
+                            sr.spatialWebView?.transparentEffect = transparentEffect
+                            sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
+                            sr.spatialWebView?.visible = true
+                            gotStyle = true
+                        }
+                        if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
+                            sr.spatialWebView?.glassEffect = glassEffect
+                            sr.spatialWebView?.visible = true
+                            gotStyle = true
+                        }
+                        if
+                            let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"])
+                        {
+                            sr.spatialWebView?.transparentEffect = transparentEffect
+                            sr.spatialWebView?.visible = true
+                            gotStyle = true
+                        }
+                        if
+                            let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"])
+                        {
                             sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
                             sr.spatialWebView?.visible = true
                             gotStyle = true
