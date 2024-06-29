@@ -47,7 +47,7 @@ struct VolumetricWindowGroupView: View {
                 if e.spatialWebView != nil && !e.spatialWebView!.inline {
                     Attachment(id: key) {
                         let wv = e.spatialWebView!
-                        wv.webViewNative.background(wv.glassEffect ? Color.clear.opacity(0) : Color.white)
+                        wv.webViewNative.background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
                             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
                             .cornerRadius(wv.cornerRadius).frame(width: wv.resolutionX, height: wv.resolutionY)
                     }
