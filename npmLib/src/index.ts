@@ -185,6 +185,18 @@ export class SpatialModelComponent extends SpatialResource {
 }
 
 /**
+* Used to handle input events on an entity
+*/
+export class SpatialInputComponent extends SpatialResource {
+  public _gotEvent(data: any) {
+    this.onTranslate(data)
+  }
+  public onTranslate(data: any) {
+
+  }
+}
+
+/**
 * Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
 * Positioning behaves the same as a spatial iframe marked as inline
 */
@@ -300,6 +312,17 @@ export class SpatialSession {
     }
     let entity = await WebSpatial.createResource("ModelComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), opts);
     return new SpatialModelComponent(entity)
+  }
+
+  /**
+ * Creates a InputComponent
+ * @returns InputComponent
+ */
+  async createInputComponent() {
+    let entity = await WebSpatial.createResource("InputComponent", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
+    var ic = new SpatialInputComponent(entity)
+    WebSpatial.inputComponents[ic._resource.id] = ic
+    return ic
   }
 
   /**

@@ -61,17 +61,33 @@ struct PlainWindowGroupView: View {
         // UpdateWebViewSystem.registerSystem()
     }
 
-    @State var trackedPosition: Vector3D = .zero
+    func toJson(val: SIMD3<Float>) -> String {
+        return "{x: " + String(val.x) + ",y: " + String(val.y) + ",z: " + String(val.z) + "}"
+    }
+
     var dragGesture: some Gesture {
         DragGesture().handActivationBehavior(.automatic)
             .targetedToAnyEntity()
             .onChanged { value in
-                let translate = value.convert(value.translation3D + trackedPosition, from: .local, to: .scene)
-                value.entity.position.x = Float(translate.x)
-                value.entity.position.y = Float(translate.y)
+                let startPos = value.convert(value.startLocation3D, from: .local, to: .scene)
+                let translate = value.convert(value.location3D, from: .local, to: .scene)
+                let ic = value.entity.components[SpatialResource.self]!.inputComponent!
+                if !ic.isDragging {
+                    ic.isDragging = true
+                    ic.trackedPosition = startPos
+                    let delta = translate - ic.trackedPosition
+                    ic.trackedPosition = translate
+
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.resourceID, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                } else {
+                    let delta = translate - ic.trackedPosition
+                    ic.trackedPosition = translate
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.resourceID, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                }
             }
-            .onEnded {
-                self.trackedPosition += $0.translation3D
+            .onEnded { value in
+                value.entity.components[SpatialResource.self]!.inputComponent!.wv!.fireGestureEvent(inputComponentID: value.entity.components[SpatialResource.self]!.inputComponent!.resourceID, data: "{eventType: 'dragend'}")
+                value.entity.components[SpatialResource.self]!.inputComponent!.isDragging = false
             }
     }
 
