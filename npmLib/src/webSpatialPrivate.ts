@@ -1,3 +1,5 @@
+import { SpatialInputComponent } from "."
+
 export class Vec3 {
     constructor(public x = 0, public y = 0, public z = 0) {
     }
@@ -31,17 +33,22 @@ export type WindowStyle = "Plain" | "Volumetric"
 
 export class WebSpatial {
     public static eventPromises: any = {}
+    public static inputComponents: { [key: string]: SpatialInputComponent; } = {}
 
     static init() {
         (window as any).__SpatialWebEvent = (e: any) => {
-            var p = WebSpatial.eventPromises[e.requestID];
-            if (p) {
-                if (e.success) {
-                    p.res(e)
-                } else {
-                    p.rej(e)
+            if (e.inputComponentID) {
+                var obj = WebSpatial.inputComponents[e.inputComponentID]
+                obj._gotEvent(e.data)
+            } else {
+                var p = WebSpatial.eventPromises[e.requestID];
+                if (p) {
+                    if (e.success) {
+                        p.res(e)
+                    } else {
+                        p.rej(e)
+                    }
                 }
-
             }
         }
     }

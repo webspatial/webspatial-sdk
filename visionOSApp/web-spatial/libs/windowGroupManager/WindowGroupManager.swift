@@ -8,6 +8,7 @@
 import Foundation
 import RealityKit
 import typealias RealityKit.Entity
+import SwiftUI
 
 // Use class wrap avoid publishing swiftUI state on a background thread
 class EntityWrap {
@@ -21,7 +22,15 @@ class ModelUIComponent: WatchableObject {
     @Published var resolutionY: Double = 0
 }
 
-class SpatialResource: WatchableObject {
+class InputComponent: WatchableObject {
+    weak var wv: SpatialWebView?
+    var itc = InputTargetComponent()
+    var resourceID = ""
+    var isDragging = false
+    var trackedPosition: SIMD3<Float> = .zero
+}
+
+class SpatialResource: WatchableObject, Component {
     // Always populated
     let id = UUID().uuidString
     var resourceType = "undefined"
@@ -32,6 +41,7 @@ class SpatialResource: WatchableObject {
     var physicallyBasedMaterial: PhysicallyBasedMaterial?
     var modelComponent: ModelComponent?
     @Published var modelUIComponent: ModelUIComponent?
+    @Published var inputComponent: InputComponent?
     @Published var spatialWebView: SpatialWebView?
     @Published var forceUpdate = false
 

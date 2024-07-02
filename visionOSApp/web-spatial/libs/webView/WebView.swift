@@ -127,6 +127,10 @@ class SpatialWebView: WatchableObject {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:"+String(requestID)+", data: "+data+"})")
     }
 
+    func fireGestureEvent(inputComponentID: String, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'"+inputComponentID+"', data: "+data+"})")
+    }
+
     func failEvent(requestID: Int, data: String = "{}") {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:"+String(requestID)+", data: "+data+"})")
     }
@@ -189,6 +193,11 @@ class SpatialWebView: WatchableObject {
                         e.modelEntity.model = c.modelComponent
                     } else if c.resourceType == "SpatialWebView" {
                         e.spatialWebView = c.spatialWebView
+                    } else if c.resourceType == "InputComponent" {
+                        e.inputComponent = c.inputComponent
+                        e.modelEntity.generateCollisionShapes(recursive: false)
+                        e.modelEntity.components.set(c.inputComponent!.itc)
+                        e.modelEntity.components.set(e)
                     }
                 }
             } else if command == "createResource" {
@@ -198,6 +207,10 @@ class SpatialWebView: WatchableObject {
                     let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID, owner: self)
                     if type == "Entity" {
                         sr.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                    } else if type == "InputComponent" {
+                        sr.inputComponent = InputComponent()
+                        sr.inputComponent?.wv = self
+                        sr.inputComponent?.resourceID = sr.id
                     } else if type == "MeshResource" {
                         if let shape: String = json.getValue(lookup: ["data", "params", "shape"]) {
                             if shape == "sphere" {
