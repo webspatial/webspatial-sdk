@@ -67,6 +67,96 @@ function App() {
             (async () => {
                 await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 50 })
                 document.documentElement.style.backgroundColor = "#1155aa55";
+
+                // Create entities
+                var meshResource = await session.createMeshResource({ shape: "sphere" })
+                var entities = new Array<{ e: SpatialEntity, v: { x: number, y: number, z: number } }>()
+                for (var i = 0; i < 7; i++) {
+                    let e = await session.createEntity()
+                    e.transform.position = new DOMPoint(-0.35 + (i * 0.1), 0, 0.15)
+                    e.transform.scale = new DOMPoint(0.04, 0.04, 0.04)
+                    await e.updateTransform()
+                    var mat = await session.createPhysicallyBasedMaterial()
+                    mat.baseColor.r = 0.8
+                    mat.baseColor.g = 0.8
+                    mat.baseColor.b = 0.8 + (Math.random() * 0.2)
+                    mat.metallic.value = 0.0
+                    mat.roughness.value = 1.0
+                    await mat.update()
+                    var customModel = await session.createModelComponent()
+                    customModel.setMaterials([mat])
+                    customModel.setMesh(meshResource)
+                    await e.setComponent(customModel)
+
+                    // Handle input
+                    let v = { x: (Math.random() - 0.5) * 0.01, y: (Math.random() - 0.5) * 0.01, z: (Math.random() - 0.5) * 0.01 }
+                    var input = await session.createInputComponent()
+                    await e.setComponent(input)
+                    input.onTranslate = (data: any) => {
+                        if (data.translate && data.translate.x) {
+                            v.x = data.translate.x
+                            v.y = data.translate.y
+                            v.z = data.translate.z
+                            e.updateTransform()
+                        }
+                    }
+
+                    await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+                    entities.push({ e: e, v: v })
+                }
+
+                // Update loop for entities
+                var dt = 0
+                var curTime = Date.now()
+                var loop = (time: DOMHighResTimeStamp) => {
+                    session.requestAnimationFrame(loop)
+                    dt = Date.now() - curTime
+                    curTime = Date.now()
+                    if (dt <= 0 || dt > 1000) {
+                        return
+                    }
+                    for (var i = 0; i < entities.length; i++) {
+                        var entity = entities[i].e
+                        var timeMultiplier = (dt / (1000 / 90))
+                        entity.transform.position.x += entities[i].v.x * timeMultiplier
+                        entity.transform.position.y += entities[i].v.y * timeMultiplier
+                        entity.transform.position.z += entities[i].v.z * timeMultiplier
+
+                        entities[i].v.x *= 0.96 * Math.min(timeMultiplier, 1)
+                        entities[i].v.y *= 0.96 * Math.min(timeMultiplier, 1)
+                        entities[i].v.z *= 0.96 * Math.min(timeMultiplier, 1)
+
+                        if (entity.transform.position.x < -0.5) {
+                            entity.transform.position.x = -0.5
+                            entities[i].v.x = Math.abs(entities[i].v.x)
+                        }
+                        if (entity.transform.position.x > 0.5) {
+                            entity.transform.position.x = 0.5
+                            entities[i].v.x = -Math.abs(entities[i].v.x)
+                        }
+
+                        if (entity.transform.position.y < -0.3) {
+                            entity.transform.position.y = -0.3
+                            entities[i].v.y = Math.abs(entities[i].v.y)
+                        }
+                        if (entity.transform.position.y > 0.3) {
+                            entity.transform.position.y = 0.3
+                            entities[i].v.y = -Math.abs(entities[i].v.y)
+                        }
+
+                        if (entity.transform.position.z < -0) {
+                            entity.transform.position.z = -0
+                            entities[i].v.z = Math.abs(entities[i].v.z)
+                        }
+                        if (entity.transform.position.z > 0.3) {
+                            entity.transform.position.z = 0.3
+                            entities[i].v.z = -Math.abs(entities[i].v.z)
+                        }
+
+                        entity.updateTransform()
+                    }
+                }
+                session.requestAnimationFrame(loop)
             })();
         } else {
             document.body.style.backgroundColor = "#1155aa99"
@@ -153,14 +243,13 @@ var names = {
 }
 
 var pageName = (new URLSearchParams(window.location.search)).get("pageName");
-console.log(pageName)
 var MyTag = names[pageName ? pageName : "App"]
 
 // Create react root
 var root = document.createElement("div")
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-        <MyTag></MyTag>
-    </React.StrictMode >,
+    // <React.StrictMode>
+    <MyTag></MyTag>
+    // </React.StrictMode >,
 )
