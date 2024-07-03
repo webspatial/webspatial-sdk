@@ -21,6 +21,7 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
 
 @main
 struct web_spatialApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var root: SpatialWebView
     var rootWGD: WindowGroupContentDictionary
 
