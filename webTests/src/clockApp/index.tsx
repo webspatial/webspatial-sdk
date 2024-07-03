@@ -15,8 +15,8 @@ if (spatial.isSupported()) {
 // Create session if spatial is supported
 if (spatial) {
     var session = await spatial.requestSession()
-    // Set default style
-    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70 })
+    // Set default style 
+    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 1280, y: 720 } })
 }
 
 const useAnimationFrame = (callback: any) => {
@@ -53,11 +53,14 @@ function App() {
 
         setTimeout(() => {
             window.localStorage.setItem("config", JSON.stringify({ a: 5 }))
-            session.log("app set config")
-            session.log("readback " + window.localStorage.getItem("config"))
+            // session.log("app set config")
+            // session.log("readback " + window.localStorage.getItem("config"))
             //  window.dispatchEvent(new Event('storage'))
         }, 100);
 
+        (async () => {
+            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
+        })()
     }, []);
 
     useAnimationFrame((deltaTime: number) => {

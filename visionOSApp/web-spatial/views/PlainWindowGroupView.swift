@@ -49,6 +49,7 @@ struct SpatialWebViewUI: View {
 }
 
 struct PlainWindowGroupView: View {
+    @EnvironmentObject var sceneDelegate: SceneDelegate
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
@@ -59,6 +60,10 @@ struct PlainWindowGroupView: View {
     init(windowGroupContent: WindowGroupContentDictionary) {
         self.windowGroupContent = windowGroupContent
         // UpdateWebViewSystem.registerSystem()
+    }
+
+    public func setSize(size: CGSize) {
+        sceneDelegate.window!.windowScene!.requestGeometryUpdate(.Vision(size: size))
     }
 
     func toJson(val: SIMD3<Float>) -> String {
@@ -188,19 +193,22 @@ struct PlainWindowGroupView: View {
                         }
                     }
                 }
-            }.onChange(of: proxy3D.size) {
-                // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
-                if windowResizeInProgress == 0 {
-                    windowResizeInProgress = 1
-                    Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
-                        windowResizeInProgress = 0
-                        if let wv = rootWebview {
-                            wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
-                            wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
+            }.onAppear()
+                .onReceive(windowGroupContent.$setSize) { newSize in
+                    setSize(size: newSize)
+                }.onChange(of: proxy3D.size) {
+                    // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
+                    if windowResizeInProgress == 0 {
+                        windowResizeInProgress = 1
+                        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
+                            windowResizeInProgress = 0
+                            if let wv = rootWebview {
+                                wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
+                                wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
+                            }
                         }
                     }
                 }
-            }
         }
     }
 }
