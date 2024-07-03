@@ -106,6 +106,7 @@ class WindowGroupContentDictionary: ObservableObject {
 
     // Global state
     @Published var toggleImmersiveSpace = false
+    @Published var setSize = CGSize(width: 1280, height: 720)
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
     @Published var closeWindowData: WindowGroupData? = nil

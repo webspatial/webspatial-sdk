@@ -21,6 +21,7 @@
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
 		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
+		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
 		2BBE85372C20E18700B732C5 /* WatchableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBE85362C20E18700B732C5 /* WatchableObject.swift */; };
 /* End PBXBuildFile section */
 
@@ -52,6 +53,7 @@
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
 		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
+		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2BBE85362C20E18700B732C5 /* WatchableObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchableObject.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -135,6 +137,7 @@
 		2B2F1D8A2BED4CD0006897EE /* libs */ = {
 			isa = PBXGroup;
 			children = (
+				2B9909912C360594004826D1 /* uiKitDelegate */,
 				2BBE85352C20E16600B732C5 /* watchableObject */,
 				2B2F1D942BED8E26006897EE /* windowGroupManager */,
 				2B2F1D8C2BED4CE7006897EE /* json */,
@@ -184,6 +187,14 @@
 				2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */,
 			);
 			path = views;
+			sourceTree = "<group>";
+		};
+		2B9909912C360594004826D1 /* uiKitDelegate */ = {
+			isa = PBXGroup;
+			children = (
+				2B9909922C3605A9004826D1 /* Window.swift */,
+			);
+			path = uiKitDelegate;
 			sourceTree = "<group>";
 		};
 		2BBE85352C20E16600B732C5 /* watchableObject */ = {
@@ -308,6 +319,7 @@
 				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
 				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
 				2B2F1D932BED61CA006897EE /* WebView.swift in Sources */,
+				2B9909932C3605A9004826D1 /* Window.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
