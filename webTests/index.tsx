@@ -28,31 +28,31 @@ function WebSpatialTitle(props: { makeShadow?: boolean }) {
 }
 
 function FeatureList() {
-    return <div className='text-white'>
-        <h3 className='text-2xl text-center mx-10'>Features</h3>
-        <div className='grid grid-cols-2 gap-4 m-10 text-center'>
+    return <div className='text-white text-sm sm:text-xl'>
+        <h3 className='text-sm sm:text-2xl text-center mx-10'>Features</h3>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 m-10 text-center'>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>🛰</div>
+                <div className='text-sm sm:text-5xl w-full'>🛰</div>
                 Embed 3D models
             </div>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>🚀</div>
+                <div className='text-sm sm:text-5xl w-full'>🚀</div>
                 Place IFrames in 3D space
             </div>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>🕹️</div>
+                <div className='text-sm sm:text-5xl w-full'>🕹️</div>
                 Get input from 3D elements
             </div>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>🍷</div>
+                <div className='text-sm sm:text-5xl w-full'>🍷</div>
                 Glass Background Effect
             </div>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>🖼</div>
+                <div className='text-sm sm:text-5xl w-full'>🖼</div>
                 Open spatial windows
             </div>
             <div className='p-10 bg-black bg-opacity-25'>
-                <div className='text-5xl w-full'>⚛️</div>
+                <div className='text-sm sm:text-5xl w-full'>⚛️</div>
                 Compatable with ReactJS
             </div>
         </div>
