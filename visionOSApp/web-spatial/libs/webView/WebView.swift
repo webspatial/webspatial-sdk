@@ -359,7 +359,7 @@ class SpatialWebView: WatchableObject {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
-                        if let sendContent: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
+                        if let _: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
                             completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+sr.spatialWebView!.parentWebviewID+"'}")
                             return
                         }
@@ -414,33 +414,26 @@ class SpatialWebView: WatchableObject {
                             sr.spatialWebView?.resolutionY = y
                         }
 
-                        if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]),
-                           let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"]),
-                           let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"])
-                        {
-                            sr.spatialWebView?.glassEffect = glassEffect
-                            sr.spatialWebView?.transparentEffect = transparentEffect
-                            sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
-                            sr.spatialWebView?.visible = true
-                            gotStyle = true
-                        }
                         if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
                             sr.spatialWebView?.glassEffect = glassEffect
                             sr.spatialWebView?.visible = true
                             gotStyle = true
                         }
-                        if
-                            let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"])
-                        {
+                        if let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"]) {
                             sr.spatialWebView?.transparentEffect = transparentEffect
                             sr.spatialWebView?.visible = true
                             gotStyle = true
                         }
-                        if
-                            let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"])
-                        {
+                        if let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"]) {
                             sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
                             sr.spatialWebView?.visible = true
+                            gotStyle = true
+                        }
+
+                        if let x: Double = json.getValue(lookup: ["data", "update", "style", "windowGroupDimensions", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "style", "windowGroupDimensions", "y"])
+                        {
+                            wgManager.windowGroups[sr.spatialWebView!.parentWindowGroupID]?.setSize = CGSize(width: x, height: y)
                             gotStyle = true
                         }
                     }
