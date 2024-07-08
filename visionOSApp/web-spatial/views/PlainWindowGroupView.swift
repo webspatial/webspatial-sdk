@@ -198,15 +198,8 @@ struct PlainWindowGroupView: View {
                     setSize(size: newSize)
                 }.onChange(of: proxy3D.size) {
                     // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
-                    if windowResizeInProgress == 0 {
-                        windowResizeInProgress = 1
-                        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
-                            windowResizeInProgress = 0
-                            if let wv = rootWebview {
-                                wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
-                                wv.webViewNative!.webViewHolder.appleWebView!.clearsContextBeforeDrawing = true
-                            }
-                        }
+                    if let wv = rootWebview {
+                        wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
                     }
                 }
         }
