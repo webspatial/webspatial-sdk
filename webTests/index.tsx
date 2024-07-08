@@ -21,7 +21,7 @@ if (spatial) {
 
 
 function WebSpatialTitle(props: { makeShadow?: boolean }) {
-    return <div className={props.makeShadow ? "absolute text-black" : "text-white"} style={props.makeShadow ? { zIndex: -1, filter: "blur(10px)", opacity: "50%" } : {}}>
+    return <div className={props.makeShadow ? "absolute text-black" : "text-white bg-opacity-0"} style={props.makeShadow ? { zIndex: -1, filter: "blur(10px)", opacity: "50%" } : {}}>
         <h1 className='text-9xl'>WebSpatial</h1>
         <h3 className='text-2xl py-10'>Build cross-platform XR apps with JavaScript, HTML, and CSS</h3>
     </div>
@@ -242,7 +242,13 @@ var names = {
     "FeatureList": FeatureList
 }
 
+var isEmbed = false
 var pageName = (new URLSearchParams(window.location.search)).get("pageName");
+if (pageName) {
+    isEmbed = true
+    // Clear the background
+    document.documentElement.style.backgroundColor = "#FFFFFF00";
+}
 var MyTag = names[pageName ? pageName : "App"]
 
 // Create react root
