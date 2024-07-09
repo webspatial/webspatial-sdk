@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { Spatial } from 'web-spatial/src/index';
 // Import tailwind CSS (tailwind.config.js also required)
 import '/src/index.css'
+import { SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
 
 var spatial: Spatial | null = new Spatial();
 if (spatial.isSupported()) {
@@ -12,8 +13,9 @@ if (spatial.isSupported()) {
 }
 
 // Create session if spatial is supported
+var session: any
 if (spatial) {
-    var session = await spatial.requestSession()
+    session = await spatial.requestSession()
     // Set default style 
     await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 500, y: 300 } })
 }
@@ -62,24 +64,12 @@ const useSettingsData = () => {
     return [settingsData, setSettingsData]
 }
 
+function Time(props: { makeShadow?: boolean }) {
+    const [settingsData] = useSettingsData()
 
-function App() {
     const [hours, setHours] = React.useState(0)
     const [minutes, setMinutes] = React.useState(0)
     const [seconds, setSeconds] = React.useState(0)
-
-    const [settingsData] = useSettingsData()
-
-    React.useEffect(() => {
-
-        (async () => {
-            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
-        })()
-    }, []);
-
-    React.useEffect(() => {
-        document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
-    }, [settingsData])
 
     useAnimationFrame((deltaTime: number) => {
         // Pass on a function to the setter of the state
@@ -94,9 +84,53 @@ function App() {
         setMinutes(m)
         setSeconds(s)
     })
+
+    React.useEffect(() => {
+        (async () => {
+            // await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
+        })()
+    }, []);
+
+
+    return <div className={'w-full text-center font-mono select-none ' + (props.makeShadow ? " absolute text-black" : " text-white")} style={props.makeShadow ? { zIndex: -1, filter: "blur(7px)", opacity: "50%" } : {}}>
+        <span className=' text-sm'>{hours > 12 ? "PM" : "AM"}</span><span className='text-9xl'>{hours % 12 ? hours % 12 : 12}:{minutes < 10 ? "0" + minutes : minutes}{!settingsData.showSeconds ? "" : (":" + (seconds < 10 ? "0" + seconds : seconds))}</span>
+    </div>
+
+}
+
+
+function App() {
+
+
+    const [settingsData] = useSettingsData()
+
+    React.useEffect(() => {
+
+        (async () => {
+            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
+        })()
+    }, []);
+
+    React.useEffect(() => {
+        document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
+    }, [settingsData])
+
+
     return (
         <div className='w-full text-white text-center font-mono select-none'>
-            <span className=' text-sm'>{hours > 12 ? "PM" : "AM"}</span><span className='text-9xl'>{hours % 12 ? hours % 12 : 12}:{minutes < 10 ? "0" + minutes : minutes}{!settingsData.showSeconds ? "" : (":" + (seconds < 10 ? "0" + seconds : seconds))}</span>
+            {
+                settingsData.disableZOffset ?
+                    <Time makeShadow={false} />
+                    :
+                    <div>
+                        <Time makeShadow={true} />
+                        <SpatialIFrame src="/src/clockApp/index.html?pageName=Time" className="" spatialOffset={{ z: 50 }}>
+                            <Time makeShadow={false} />
+                        </SpatialIFrame>
+                    </div>
+            }
+
+
             <h1 className='w-full flex flex-row-reverse'>
                 {/* <a href="#" className='w-1/3 text-md py-5'>⏲️</a>
                 <a href="#" className='w-1/3 text-md py-5'>🕗</a> */}
@@ -150,7 +184,16 @@ function Settings() {
                                         setSettingsData(newSettings)
                                     }} />
                             </label>
-
+                            <label className="label cursor-pointer">
+                                <span className="label-text">Disable floating clock text</span>
+                                <input type="checkbox" className="toggle" checked={settingsData.disableZOffset == true}
+                                    onChange={(e) => {
+                                        let newSettings = { ...settingsData }
+                                        newSettings.disableZOffset = !newSettings.disableZOffset
+                                        saveSettingsDataToStorage(newSettings)
+                                        setSettingsData(newSettings)
+                                    }} />
+                            </label>
                             <label className="label cursor-pointer">
                                 <span className="label-text">Color</span>
                                 <input type="color" onChange={(e) => {
@@ -162,30 +205,6 @@ function Settings() {
                                 }} />
                             </label>
                         </div>
-                        {/* <div className="form-control w-52">
-                            <label className="label cursor-pointer">
-                                <span className="label-text">Text Z-Offset</span>
-                                <input type="checkbox" className="toggle" checked={settingsData.zOffset == true}
-                                    onChange={(e) => {
-                                        let newSettings = { ...settingsData }
-                                        newSettings.zOffset = !newSettings.zOffset
-                                        saveSettingsDataToStorage(newSettings)
-                                        setSettingsData(newSettings)
-                                    }} />
-                            </label>
-                        </div>
-                        <div className="form-control w-52">
-                            <label className="label cursor-pointer">
-                                <span className="label-text">Show Pomodoro</span>
-                                <input type="checkbox" className="toggle" checked={settingsData.pomodoro == true}
-                                    onChange={(e) => {
-                                        let newSettings = { ...settingsData }
-                                        newSettings.pomodoro = !newSettings.pomodoro
-                                        saveSettingsDataToStorage(newSettings)
-                                        setSettingsData(newSettings)
-                                    }} />
-                            </label>
-                        </div> */}
                     </div>
 
                 </div>
@@ -198,9 +217,22 @@ function Settings() {
 var names = {
     "App": App,
     "Settings": Settings,
+    "Time": Time,
 } as { [x: string]: any }
 
+var isEmbed = false
 var pageName = (new URLSearchParams(window.location.search)).get("pageName");
+if (pageName && pageName != "Settings") {
+    isEmbed = true
+    // Clear the background
+    if (spatial) {
+        ; (async () => {
+            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
+        })()
+    }
+    document.documentElement.style.backgroundColor = "#FFFFFF00";
+}
+
 var MyTag = names[pageName ? pageName : "App"] as any;
 
 // Create react root
