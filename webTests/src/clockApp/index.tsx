@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from 'web-spatial/src/index';
-import { Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
+import { Spatial } from 'web-spatial/src/index';
 // Import tailwind CSS (tailwind.config.js also required)
 import '/src/index.css'
 
@@ -16,9 +15,10 @@ if (spatial.isSupported()) {
 if (spatial) {
     var session = await spatial.requestSession()
     // Set default style 
-    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 1280, y: 720 } })
+    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 500, y: 300 } })
 }
 
+// Animation frame effect
 const useAnimationFrame = (callback: any) => {
     // Use useRef for mutable variables that we want to persist
     // without triggering a re-render on their change
@@ -40,28 +40,46 @@ const useAnimationFrame = (callback: any) => {
     }, []); // Make sure the effect runs only once
 }
 
+// Localstorage syncing
+function loadSettingsDataFromStorage() {
+    var dataString = localStorage.getItem('settingsData')
+    if (dataString) {
+        return JSON.parse(dataString)
+    }
+    return {}
+}
+function saveSettingsDataToStorage(data: object) {
+    localStorage.setItem("settingsData", JSON.stringify(data))
+}
+const useSettingsData = () => {
+    const [settingsData, setSettingsData] = React.useState(loadSettingsDataFromStorage());
+    React.useEffect(() => {
+        setSettingsData(loadSettingsDataFromStorage())
+        window.addEventListener("storage", function () {
+            setSettingsData(loadSettingsDataFromStorage())
+        }, false);
+    }, []);
+    return [settingsData, setSettingsData]
+}
+
+
 function App() {
     const [hours, setHours] = React.useState(0)
     const [minutes, setMinutes] = React.useState(0)
     const [seconds, setSeconds] = React.useState(0)
 
-    React.useEffect(() => {
-        //   session.log("got storage update")
-        window.addEventListener("storage", function () {
-            session.log("got storage update")
-        }, false);
+    const [settingsData] = useSettingsData()
 
-        setTimeout(() => {
-            window.localStorage.setItem("config", JSON.stringify({ a: 5 }))
-            // session.log("app set config")
-            // session.log("readback " + window.localStorage.getItem("config"))
-            //  window.dispatchEvent(new Event('storage'))
-        }, 100);
+    React.useEffect(() => {
 
         (async () => {
             await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
         })()
     }, []);
+
+    React.useEffect(() => {
+        document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
+    }, [settingsData])
 
     useAnimationFrame((deltaTime: number) => {
         // Pass on a function to the setter of the state
@@ -76,11 +94,9 @@ function App() {
         setMinutes(m)
         setSeconds(s)
     })
-
-    document.documentElement.style.backgroundColor = "#1155aa55";
     return (
         <div className='w-full text-white text-center font-mono select-none'>
-            <span className=' text-sm'>{hours > 12 ? "PM" : "AM"}</span><span className='text-9xl'>{hours % 12}:{minutes < 10 ? "0" + minutes : minutes}:{seconds < 10 ? "0" + seconds : seconds}</span>
+            <span className=' text-sm'>{hours > 12 ? "PM" : "AM"}</span><span className='text-9xl'>{hours % 12 ? hours % 12 : 12}:{minutes < 10 ? "0" + minutes : minutes}{!settingsData.showSeconds ? "" : (":" + (seconds < 10 ? "0" + seconds : seconds))}</span>
             <h1 className='w-full flex flex-row-reverse'>
                 {/* <a href="#" className='w-1/3 text-md py-5'>⏲️</a>
                 <a href="#" className='w-1/3 text-md py-5'>🕗</a> */}
@@ -111,10 +127,69 @@ function App() {
 }
 
 function Settings() {
-    document.documentElement.style.backgroundColor = "#1155aa55";
+    const [settingsData, setSettingsData] = useSettingsData()
+
+    React.useEffect(() => {
+        document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
+    }, [settingsData])
+
     return (
         <div className='w-full text-white text-center font-mono select-none'>
-            <div className='text-3xl'>Settings</div>
+            <div className='w-full text-3xl'>Settings</div>
+            <div className='flex w-full justify-center'>
+                <div className='text-3xl text-left w-auto p'>
+                    <div className="flex flex-col ">
+                        <div className="form-control w-52">
+                            <label className="label cursor-pointer">
+                                <span className="label-text">Show seconds</span>
+                                <input type="checkbox" className="toggle" checked={settingsData.showSeconds == true}
+                                    onChange={(e) => {
+                                        let newSettings = { ...settingsData }
+                                        newSettings.showSeconds = !newSettings.showSeconds
+                                        saveSettingsDataToStorage(newSettings)
+                                        setSettingsData(newSettings)
+                                    }} />
+                            </label>
+
+                            <label className="label cursor-pointer">
+                                <span className="label-text">Color</span>
+                                <input type="color" onChange={(e) => {
+                                    console.log(e)
+                                    let newSettings = { ...settingsData }
+                                    newSettings.bgColor = e.target.value
+                                    saveSettingsDataToStorage(newSettings)
+                                    setSettingsData(newSettings)
+                                }} />
+                            </label>
+                        </div>
+                        {/* <div className="form-control w-52">
+                            <label className="label cursor-pointer">
+                                <span className="label-text">Text Z-Offset</span>
+                                <input type="checkbox" className="toggle" checked={settingsData.zOffset == true}
+                                    onChange={(e) => {
+                                        let newSettings = { ...settingsData }
+                                        newSettings.zOffset = !newSettings.zOffset
+                                        saveSettingsDataToStorage(newSettings)
+                                        setSettingsData(newSettings)
+                                    }} />
+                            </label>
+                        </div>
+                        <div className="form-control w-52">
+                            <label className="label cursor-pointer">
+                                <span className="label-text">Show Pomodoro</span>
+                                <input type="checkbox" className="toggle" checked={settingsData.pomodoro == true}
+                                    onChange={(e) => {
+                                        let newSettings = { ...settingsData }
+                                        newSettings.pomodoro = !newSettings.pomodoro
+                                        saveSettingsDataToStorage(newSettings)
+                                        setSettingsData(newSettings)
+                                    }} />
+                            </label>
+                        </div> */}
+                    </div>
+
+                </div>
+            </div>
         </div>
     )
 }
