@@ -28,11 +28,14 @@ struct web_spatialApp: App {
     init() {
         print("WebSpatial App Started --------")
 
-        // "http://testIP:5173/loadTsx.html?pageName=helloWorldApp/main.tsx"
         let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
         let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
 
-        root = SpatialWebView(parentWindowGroupID: "root", url: URL(string: "http://localhost:5173")!)
+        // Set initial URL to load
+        let useStaticFile = false
+        let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html")! : URL(string: "http://localhost:5173")!
+
+        root = SpatialWebView(parentWindowGroupID: "root", url: fileurl)
         root.root = true
         root.resourceID = sr.id
         root.childResources[sr.id] = sr
