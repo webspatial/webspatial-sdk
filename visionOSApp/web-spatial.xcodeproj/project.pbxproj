@@ -22,6 +22,7 @@
 		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
+		2B9909962C3DCD83004826D1 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 2B9909952C3DCD83004826D1 /* index.html */; };
 		2BBE85372C20E18700B732C5 /* WatchableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBE85362C20E18700B732C5 /* WatchableObject.swift */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +55,7 @@
 		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		2B9909952C3DCD83004826D1 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		2BBE85362C20E18700B732C5 /* WatchableObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchableObject.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -98,6 +100,7 @@
 		2B2F1D652BEBFAAA006897EE /* web-spatial */ = {
 			isa = PBXGroup;
 			children = (
+				2B9909942C3DCD50004826D1 /* static-web */,
 				2B2F1D972BEDA8BD006897EE /* views */,
 				2B2F1D8A2BED4CD0006897EE /* libs */,
 				2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */,
@@ -197,6 +200,14 @@
 			path = uiKitDelegate;
 			sourceTree = "<group>";
 		};
+		2B9909942C3DCD50004826D1 /* static-web */ = {
+			isa = PBXGroup;
+			children = (
+				2B9909952C3DCD83004826D1 /* index.html */,
+			);
+			path = "static-web";
+			sourceTree = "<group>";
+		};
 		2BBE85352C20E16600B732C5 /* watchableObject */ = {
 			isa = PBXGroup;
 			children = (
@@ -289,6 +300,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B9909962C3DCD83004826D1 /* index.html in Resources */,
 				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
 				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
 			);
