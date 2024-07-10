@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from 'web-spatial/src/index';
+import { Spatial, SpatialSession } from 'web-spatial/src/index';
 // Import tailwind CSS (tailwind.config.js also required)
 import '/src/index.css'
 import { SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
@@ -13,11 +13,9 @@ if (spatial.isSupported()) {
 }
 
 // Create session if spatial is supported
-var session: any
+var session: SpatialSession | undefined
 if (spatial) {
     session = await spatial.requestSession()
-    // Set default style 
-    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 500, y: 300 } })
 }
 
 // Animation frame effect
@@ -105,9 +103,10 @@ function App() {
     const [settingsData] = useSettingsData()
 
     React.useEffect(() => {
-
         (async () => {
-            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
+            if (session) {
+                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
+            }
         })()
     }, []);
 
@@ -135,23 +134,24 @@ function App() {
                 {/* <a href="#" className='w-1/3 text-md py-5'>⏲️</a>
                 <a href="#" className='w-1/3 text-md py-5'>🕗</a> */}
                 <a href="#" onClick={async () => {
-                    var wg = await session.createWindowGroup("Plain")
+                    if (session) {
+                        var wg = await session.createWindowGroup("Plain")
 
-                    var ent = await session.createEntity()
-                    ent.transform.position.x = 0
-                    ent.transform.position.y = 0
-                    ent.transform.position.z = 0
-                    await ent.updateTransform()
+                        var ent = await session.createEntity()
+                        ent.transform.position.x = 0
+                        ent.transform.position.y = 0
+                        ent.transform.position.z = 0
+                        await ent.updateTransform()
 
-                    var i = await session.createIFrameComponent(wg)
-                    await i.setResolution(300, 300)
-                    await i.loadURL("/src/clockApp/index.html?pageName=Settings")
-                    await i.setAsRoot(true)
-                    await i.setInline(true)
-                    await ent.setComponent(i)
+                        var i = await session.createIFrameComponent(wg)
+                        await i.setResolution(300, 300)
+                        await i.loadURL("/src/clockApp/index.html?pageName=Settings")
+                        await i.setAsRoot(true)
+                        await i.setInline(true)
+                        await ent.setComponent(i)
 
-                    await ent.setParentWindowGroup(wg)
-
+                        await ent.setParentWindowGroup(wg)
+                    }
                 }} className='w-1/3 text-md py-5'>⚙️</a>
             </h1>
 
@@ -166,6 +166,14 @@ function Settings() {
     React.useEffect(() => {
         document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
     }, [settingsData])
+
+    React.useEffect(() => {
+        (async () => {
+            if (session) {
+                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 300, y: 500 } })
+            }
+        })()
+    }, []);
 
     return (
         <div className='w-full text-white text-center font-mono select-none'>
@@ -227,10 +235,13 @@ if (pageName && pageName != "Settings") {
     // Clear the background
     if (spatial) {
         ; (async () => {
-            await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
+            if (session) {
+                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
+            }
         })()
+        document.documentElement.style.backgroundColor = "#FFFFFF00";
     }
-    document.documentElement.style.backgroundColor = "#FFFFFF00";
+
 }
 
 var MyTag = names[pageName ? pageName : "App"] as any;
