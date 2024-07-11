@@ -22,47 +22,53 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    var root: SpatialWebView
+    @State var root: SpatialWebView? = nil
     var rootWGD: WindowGroupContentDictionary
 
     init() {
         print("WebSpatial App Started --------")
-
-        let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
-        let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
-
-        // Set initial URL to load
-        let useStaticFile = false
-        let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html")! : URL(string: "http://localhost:5173")!
-
-        root = SpatialWebView(parentWindowGroupID: "root", url: fileurl)
-        root.root = true
-        root.resourceID = sr.id
-        root.childResources[sr.id] = sr
-        sr.spatialWebView = root
-        rootEnt.spatialWebView = root
-        rootEnt.spatialWebView?.inline = true
-
-        root.full = true
-        root.visible = true
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
-        rootWGD.childEntities[rootEnt.id] = rootEnt
-        rootEnt.parentWindowGroup = rootWGD
-
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
+    }
+
+    // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
+    // https://forums.developer.apple.com/forums/thread/61432
+    func initAppOnViewMount() {
+        if root == nil {
+            // Set initial URL to load
+            let useStaticFile = false
+            let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html")! : URL(string: "http://localhost:5173")!
+
+            // Create a default entity with webview resource
+            let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
+            let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
+            root = SpatialWebView(parentWindowGroupID: "root", url: fileurl)
+            root!.root = true
+            root!.resourceID = sr.id
+            root!.childResources[sr.id] = sr
+            sr.spatialWebView = root
+            rootEnt.spatialWebView = root
+            rootEnt.spatialWebView?.inline = true
+            root!.full = true
+            root!.visible = true
+            rootWGD.childEntities[rootEnt.id] = rootEnt
+            rootEnt.parentWindowGroup = rootWGD
+        }
     }
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData == nil {
+                VStack {}.onAppear { initAppOnViewMount() }
+
                 PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
+                    initAppOnViewMount()
                     let urlToLoad = myURL.absoluteString.replacingOccurrences(of: "webspatial://", with: "").replacingOccurrences(of: "//", with: "://")
-                    print(urlToLoad)
 
                     if let url = URL(string: urlToLoad) {
                         let request = URLRequest(url: url)
-                        root.webViewNative?.url = url
-                        root.webViewNative?.webViewHolder.appleWebView!.load(request)
+                        root!.webViewNative!.url = url
+                        root!.webViewNative!.webViewHolder.appleWebView!.load(request)
                     }
                 }
             } else {
