@@ -55,7 +55,8 @@ struct PlainWindowGroupView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
     @ObservedObject var windowGroupContent: WindowGroupContentDictionary
-    @State var windowResizeInProgress = 0
+    @State var windowResizeInProgress = false
+    @State var timer: Timer?
 
     init(windowGroupContent: WindowGroupContentDictionary) {
         self.windowGroupContent = windowGroupContent
@@ -118,9 +119,8 @@ struct PlainWindowGroupView: View {
                     for (_, entity) in windowGroupContent.childEntities {
                         content.add(entity.modelEntity)
                     }
-                }
-
-                .gesture(dragGesture).offset(z: -0.1)
+                }.opacity(windowResizeInProgress ? 0 : 1)
+                    .gesture(dragGesture).offset(z: -0.1)
                 if let wv = rootWebview {
                     let oval = Float(wv.scrollOffset.y)
 
@@ -137,35 +137,42 @@ struct PlainWindowGroupView: View {
                                     let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
                                     let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
 
-                                    SpatialWebViewUI(wv: view)
-                                        .frame(width: width, height: height).padding3D(.front, -100000)
-                                        .position(x: x, y: y)
-                                        .offset(z: z).gesture(
-                                            DragGesture()
-                                                .onChanged { gesture in
-                                                    let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
-                                                    if scrollEnabled != nil, !scrollEnabled! {
-                                                        if !view.dragStarted {
-                                                            view.dragStarted = true
-                                                            view.dragStart = (gesture.translation.height)
+                                    if windowResizeInProgress && view.full {
+                                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
+                                            .position(x: x, y: y)
+                                            .offset(z: z)
+                                    }
+                                    if !windowResizeInProgress {
+                                        SpatialWebViewUI(wv: view)
+                                            .frame(width: width, height: height).padding3D(.front, -100000)
+                                            .position(x: x, y: y)
+                                            .offset(z: z).gesture(
+                                                DragGesture()
+                                                    .onChanged { gesture in
+                                                        let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
+                                                        if scrollEnabled != nil, !scrollEnabled! {
+                                                            if !view.dragStarted {
+                                                                view.dragStarted = true
+                                                                view.dragStart = (gesture.translation.height)
+                                                            }
+
+                                                            // TODO: this should have velocity
+                                                            let delta = view.dragStart - gesture.translation.height
+                                                            view.dragStart = gesture.translation.height
+                                                            wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
                                                         }
-
-                                                        // TODO: this should have velocity
-                                                        let delta = view.dragStart - gesture.translation.height
-                                                        view.dragStart = gesture.translation.height
-                                                        wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
                                                     }
-                                                }
-                                                .onEnded { _ in
-                                                    let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
-                                                    if scrollEnabled != nil, !scrollEnabled! {
-                                                        view.dragStarted = false
-                                                        view.dragStart = 0
+                                                    .onEnded { _ in
+                                                        let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
+                                                        if scrollEnabled != nil, !scrollEnabled! {
+                                                            view.dragStarted = false
+                                                            view.dragStart = 0
 
-                                                        wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
+                                                            wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
+                                                        }
                                                     }
-                                                }
-                                        )
+                                            ).opacity(windowResizeInProgress ? 0 : 1)
+                                    }
                                 }
                             }
                         }
@@ -187,21 +194,36 @@ struct PlainWindowGroupView: View {
                                         model.model?
                                             .resizable()
                                             .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                                    }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000)
+                                    }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000).opacity(windowResizeInProgress ? 0 : 1)
                                 }
                             }
                         }
                     }
                 }
-            }.onAppear()
-                .onReceive(windowGroupContent.$setSize) { newSize in
-                    setSize(size: newSize)
-                }.onChange(of: proxy3D.size) {
-                    // WkWebview has an issue where it doesn't resize while the swift window is resized, call didMoveToWindow to force redraw to occur
-                    // if let wv = rootWebview {
-                    //     wv.webViewNative!.webViewHolder.appleWebView!.didMoveToWindow()
-                    // }
+            }.onAppear {
+                // windowGroupContent.setSize = CGSize(width: 300, height: 500)
+            }
+            .onReceive(windowGroupContent.$setSize) { newSize in
+                setSize(size: newSize)
+            }.onChange(of: proxy3D.size) {
+                // WkWebview has an issue where it doesn't resize while the swift window is resized
+                // Treid to call didMoveToWindow to force redraw to occur but that seemed to cause rendering artifacts so that solution was rejected
+                // Now we use a windowResizeInProgress state to hide the webview (by removoving from the view) and other content (using opacity).
+                // After resize is completed the webview is added back to the page which causes a redraw at the correct dimensions/position
+                if let wv = rootWebview {
+                    windowResizeInProgress = true
+                    if timer != nil {
+                        timer!.invalidate()
+                    }
+                    // If we don't detect resolution change after x seconds we treat the resize as complete
+                    timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
+                        windowResizeInProgress = false
+                    }
+
+                    // Trigger resize in the webview's body width and fire a window resize event to get the JS on the page to update state while dragging occurs
+                    wv.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("var tempWidth_ = document.body.style.width;document.body.style.width='" + String(Float(proxy3D.size.width)) + "px'; window.dispatchEvent(new Event('resize'));")
                 }
+            }
         }
     }
 }
