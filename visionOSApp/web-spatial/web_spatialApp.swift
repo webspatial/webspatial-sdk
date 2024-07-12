@@ -66,9 +66,7 @@ struct web_spatialApp: App {
                     let urlToLoad = myURL.absoluteString.replacingOccurrences(of: "webspatial://", with: "").replacingOccurrences(of: "//", with: "://")
 
                     if let url = URL(string: urlToLoad) {
-                        let request = URLRequest(url: url)
-                        root!.webViewNative!.url = url
-                        root!.webViewNative!.webViewHolder.appleWebView!.load(request)
+                        root!.navigateToURL(url: url)
                     }
                 }
             } else {
