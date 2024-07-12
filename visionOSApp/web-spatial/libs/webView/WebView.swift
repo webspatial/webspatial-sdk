@@ -51,6 +51,10 @@ class SpatialWebView: WatchableObject {
 
     init(parentWindowGroupID: String) {
         self.parentWindowGroupID = parentWindowGroupID
+        super.init()
+        webViewNative = WebViewNative()
+        webViewNative?.webViewRef = self
+        webViewNative?.createResources()
     }
 
     init(parentWindowGroupID: String, url: URL) {
@@ -58,6 +62,7 @@ class SpatialWebView: WatchableObject {
         webViewNative = WebViewNative(url: url)
         super.init()
         webViewNative?.webViewRef = self
+        webViewNative?.createResources()
 
         // childResources[resourceID] = self
     }
@@ -65,6 +70,7 @@ class SpatialWebView: WatchableObject {
     func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
+        webViewNative?.createResources()
     }
 
     func parseURL(url: String) -> String {
@@ -386,17 +392,16 @@ class SpatialWebView: WatchableObject {
                             let targetUrl = parseURL(url: url)
 
                             // Create the webview
-                            if sr.spatialWebView?.webViewNative == nil {
-                                sr.spatialWebView!.initFromURL(url: URL(string: targetUrl)!)
-                                _ = sr.spatialWebView!.webViewNative?.createResources()
-                                sr.spatialWebView!.webViewNative?.initialLoad()
-                            }
+                            //   if sr.spatialWebView?.webViewNative == nil {
+                            //  sr.spatialWebView!.webViewNative?.initialLoad()
+                            //  }
 
                             delayComplete = true
                             if sr.spatialWebView!.loadRequestID == -1 {
                                 sr.spatialWebView!.loadRequestID = cmdInfo.requestID
                                 sr.spatialWebView!.loadRequestWV = self
-                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.load(URLRequest(url: URL(string: targetUrl)!))
+                                sr.spatialWebView!.webViewNative?.url = URL(string: targetUrl)!
+                                sr.spatialWebView!.webViewNative?.initialLoad()
                             } else {
                                 failEvent(requestID: cmdInfo.requestID)
                             }
@@ -404,14 +409,14 @@ class SpatialWebView: WatchableObject {
 
                         if let isRoot: Bool = json.getValue(lookup: ["data", "update", "setRoot"]) {
                             sr.spatialWebView!.root = isRoot
-                            sr.spatialWebView?.full = isRoot
+                            sr.spatialWebView!.full = isRoot
                         }
 
                         if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
                            let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
                         {
-                            sr.spatialWebView?.resolutionX = x
-                            sr.spatialWebView?.resolutionY = y
+                            sr.spatialWebView!.resolutionX = x
+                            sr.spatialWebView!.resolutionY = y
                         }
 
                         if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
