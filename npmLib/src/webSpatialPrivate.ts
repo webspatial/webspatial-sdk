@@ -142,6 +142,19 @@ export class WebSpatial {
         return res
     }
 
+    static async updateWindowGroup(wg: WindowGroup, data: any) {
+        var cmd = new RemoteCommand()
+        cmd.command = "updateWindowGroup"
+        cmd.data.windowGroupID = wg.id
+        cmd.data.update = data
+
+        var result = await new Promise((res, rej) => {
+            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+            WebSpatial.sendCommand(cmd)
+        })
+        return result
+    }
+
     static async updateResource(resource: WebSpatialResource, data: any = null) {
         var cmd = new RemoteCommand()
         cmd.command = "updateResource"
