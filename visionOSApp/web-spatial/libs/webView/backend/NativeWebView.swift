@@ -91,10 +91,6 @@ struct WebViewNative: UIViewRepresentable {
     var url: URL = .init(filePath: "/")
     var webViewHolder = WebViewHolder()
     
-    init(url: URL) {
-        self.url = url
-    }
-    
     func makeCoordinator() -> Coordinator {
         let c = Coordinator()
         c.webViewRef = webViewRef
