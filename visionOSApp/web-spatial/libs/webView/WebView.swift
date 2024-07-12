@@ -467,13 +467,6 @@ class SpatialWebView: WatchableObject {
                             sr.spatialWebView?.visible = true
                             gotStyle = true
                         }
-
-                        if let x: Double = json.getValue(lookup: ["data", "update", "style", "windowGroupDimensions", "x"]),
-                           let y: Double = json.getValue(lookup: ["data", "update", "style", "windowGroupDimensions", "y"])
-                        {
-                            wgManager.windowGroups[sr.spatialWebView!.parentWindowGroupID]?.setSize = CGSize(width: x, height: y)
-                            gotStyle = true
-                        }
                     }
                     if !delayComplete {
                         completeEvent(requestID: cmdInfo.requestID)
@@ -490,6 +483,17 @@ class SpatialWebView: WatchableObject {
                     wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
                     childWindowGroups[uuid] = wgd
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                }
+            } else if command == "updateWindowGroup" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    if let x: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "x"]),
+                       let y: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "y"])
+                    {
+                        wg.setSize = CGSize(width: x, height: y)
+                    }
+
+                    completeEvent(requestID: cmdInfo.requestID)
                 }
             } else if command == "openImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = true

@@ -105,7 +105,8 @@ function App() {
     React.useEffect(() => {
         (async () => {
             if (session) {
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 880, y: 200 } })
+                await (await session.getCurrentWindowGroup()).setStyle({ dimensions: { x: 880, y: 200 } });
+                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70 });
             }
         })()
     }, []);
@@ -136,6 +137,7 @@ function App() {
                 <a href="#" onClick={async () => {
                     if (session) {
                         var wg = await session.createWindowGroup("Plain")
+                        await wg.setStyle({ dimensions: { x: 300, y: 500 } });
 
                         var ent = await session.createEntity()
                         ent.transform.position.x = 0
@@ -170,7 +172,7 @@ function Settings() {
     React.useEffect(() => {
         (async () => {
             if (session) {
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70, windowGroupDimensions: { x: 300, y: 500 } })
+                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70 })
             }
         })()
     }, []);
