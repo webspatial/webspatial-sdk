@@ -11,6 +11,14 @@ export class SpatialWindowGroup {
   ) {
 
   }
+
+  /**
+   * Sets the style that should be applied to the windowGroup
+   * @param options style options
+   */
+  async setStyle(options: any) {
+    await WebSpatial.updateWindowGroup(this._wg, { style: options })
+  }
 }
 
 /**
