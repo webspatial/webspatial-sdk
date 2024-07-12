@@ -36,7 +36,6 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
         webViewRef?.didStartLoadPage()
-        webViewRef?.webViewNative?.url = webView.url!
     }
     
     func webView(
@@ -73,7 +72,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         let json = JsonParser(str: message.body as? String)
         if let wv = webViewRef {
             // Don't process message if new page is already loaded
-            if message.frameInfo.request.url!.path() == wv.webViewNative?.url.path() {
+            if message.frameInfo.request.url!.path() == wv.getURL()?.path() {
                 wv.onJSScriptMessage(json: json)
             }
         }
