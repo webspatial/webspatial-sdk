@@ -24,7 +24,7 @@ struct CommandInfo {
 
 class SpatialWebView: WatchableObject {
     var scrollOffset = CGPoint()
-    var webViewNative: WebViewNative?
+    private var webViewNative: WebViewNative?
 
     var full = false
     @Published var root = false
@@ -71,6 +71,37 @@ class SpatialWebView: WatchableObject {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
         webViewNative?.createResources()
+    }
+
+    func navigateToURL(url: URL) {
+        let request = URLRequest(url: url)
+        webViewNative!.url = url
+        webViewNative!.webViewHolder.needsUpdate = true
+        webViewNative!.initialLoad()
+    }
+
+    func isScrollEnabled() -> Bool {
+        return webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled
+    }
+
+    func updateScrollOffset(delta: CGFloat) {
+        webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y += delta
+    }
+
+    func stopScrolling() {
+        webViewNative!.webViewHolder.appleWebView!.scrollView.stopScrollingAndZooming()
+    }
+
+    func getView() -> WebViewNative? {
+        return webViewNative
+    }
+
+    func evaluateJS(js: String) {
+        webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript(js)
+    }
+
+    func getURL() -> URL? {
+        return webViewNative?.url
     }
 
     func parseURL(url: String) -> String {
@@ -163,6 +194,8 @@ class SpatialWebView: WatchableObject {
         for k in wgkeys {
             wgManager.getWindowGroup(windowGroup: k).closeWindowData = childWindowGroups[k]
         }
+        var url = webViewNative?.webViewHolder.appleWebView?.url
+        webViewNative!.url = url!
     }
 
     func didStartReceivePageContent() {

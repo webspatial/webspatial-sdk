@@ -40,7 +40,7 @@ struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
 
     var body: some View {
-        wv.webViewNative
+        wv.getView()
             .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
             .cornerRadius(wv.cornerRadius)
@@ -149,8 +149,8 @@ struct PlainWindowGroupView: View {
                                             .offset(z: z).gesture(
                                                 DragGesture()
                                                     .onChanged { gesture in
-                                                        let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
-                                                        if scrollEnabled != nil, !scrollEnabled! {
+                                                        let scrollEnabled = view.isScrollEnabled()
+                                                        if scrollEnabled != nil, !scrollEnabled {
                                                             if !view.dragStarted {
                                                                 view.dragStarted = true
                                                                 view.dragStart = (gesture.translation.height)
@@ -159,16 +159,16 @@ struct PlainWindowGroupView: View {
                                                             // TODO: this should have velocity
                                                             let delta = view.dragStart - gesture.translation.height
                                                             view.dragStart = gesture.translation.height
-                                                            wv.webViewNative?.webViewHolder.appleWebView?.scrollView.contentOffset.y += delta
+                                                            wv.updateScrollOffset(delta: delta)
                                                         }
                                                     }
                                                     .onEnded { _ in
-                                                        let scrollEnabled = view.webViewNative?.webViewHolder.appleWebView?.scrollView.isScrollEnabled
-                                                        if scrollEnabled != nil, !scrollEnabled! {
+                                                        let scrollEnabled = view.isScrollEnabled()
+                                                        if scrollEnabled != nil, !scrollEnabled {
                                                             view.dragStarted = false
                                                             view.dragStart = 0
 
-                                                            wv.webViewNative?.webViewHolder.appleWebView?.scrollView.stopScrollingAndZooming()
+                                                            wv.stopScrolling()
                                                         }
                                                     }
                                             ).opacity(windowResizeInProgress ? 0 : 1)
@@ -221,7 +221,7 @@ struct PlainWindowGroupView: View {
                     }
 
                     // Trigger resize in the webview's body width and fire a window resize event to get the JS on the page to update state while dragging occurs
-                    wv.webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("var tempWidth_ = document.body.style.width;document.body.style.width='" + String(Float(proxy3D.size.width)) + "px'; window.dispatchEvent(new Event('resize'));")
+                    wv.evaluateJS(js: "var tempWidth_ = document.body.style.width;document.body.style.width='" + String(Float(proxy3D.size.width)) + "px'; window.dispatchEvent(new Event('resize'));")
                 }
             }
         }
