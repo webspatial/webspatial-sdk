@@ -63,9 +63,13 @@ const useSettingsData = () => {
 function Time(props: { makeShadow?: boolean }) {
     const [settingsData] = useSettingsData()
 
-    const [hours, setHours] = React.useState(0)
-    const [minutes, setMinutes] = React.useState(0)
-    const [seconds, setSeconds] = React.useState(0)
+    const today = new Date();
+    let h = today.getHours();
+    let m = today.getMinutes();
+    let s = today.getSeconds();
+    const [hours, setHours] = React.useState(h)
+    const [minutes, setMinutes] = React.useState(m)
+    const [seconds, setSeconds] = React.useState(s)
 
     useAnimationFrame((deltaTime: number) => {
         // Pass on a function to the setter of the state
