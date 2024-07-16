@@ -72,18 +72,20 @@ struct web_spatialApp: App {
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView(windowGroupContent: wg)
+                    // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+                    .handlesExternalEvents(preferring: [], allowing: [])
             }
         }.windowStyle(.plain)
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
-            VolumetricWindowGroupView(windowGroupContent: wg)
+            VolumetricWindowGroupView(windowGroupContent: wg).handlesExternalEvents(preferring: [], allowing: [])
 
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
             let wg = wgManager.getWindowGroup(windowGroup: "Immersive")
-            VolumetricWindowGroupView(windowGroupContent: wg)
+            VolumetricWindowGroupView(windowGroupContent: wg).handlesExternalEvents(preferring: [], allowing: [])
         }
     }
 }
