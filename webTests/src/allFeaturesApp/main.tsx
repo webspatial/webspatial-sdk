@@ -210,8 +210,6 @@ function App() {
   )
 }
 
-// WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { style: { glassEffect: true, cornerRadius: 50 } })
-await (await (await getSessionAsync()).getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
 document.documentElement.style.backgroundColor = "transparent";
 document.body.style.backgroundColor = "transparent"
 ReactDOM.createRoot(document.getElementById('root')!).render(

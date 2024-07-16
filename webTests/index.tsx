@@ -2,21 +2,16 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from 'web-spatial/src/index';
 import { Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
-// Import tailwind CSS (tailwind.config.js also required)
-import '/src/index.css'
+
 
 var spatial: Spatial | null = new Spatial();
-if (spatial.isSupported()) {
-    (window.navigator as any).spatial = spatial;
-} else {
+if (!spatial.isSupported()) {
     spatial = null
 }
 
 // Create session if spatial is supported
 if (spatial) {
-    var session = await spatial.requestSession()
-    // Set default style
-    await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 0 })
+    var session = spatial.requestSession()
 }
 
 
@@ -65,7 +60,6 @@ function App() {
         if (session) {
             setSpatialSupported(true);
             (async () => {
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 50 })
                 document.documentElement.style.backgroundColor = "#1155aa55";
 
                 // Create entities
@@ -176,7 +170,7 @@ function App() {
                     {spatialSupported ?
                         <div>
                             <WebSpatialTitle makeShadow={true} />
-                            <SpatialIFrame src="/index.html?pageName=WebSpatialTitle" className="" spatialOffset={{ z: 100 }}>
+                            <SpatialIFrame src="/index.html?pageName=WebSpatialTitle&transparent=true" className="" spatialOffset={{ z: 100 }}>
                                 <WebSpatialTitle />
                             </SpatialIFrame>
                         </div>
@@ -222,7 +216,7 @@ function App() {
                 <div className='grow flex flex-col w-full bg-black bg-opacity-25 p-10 my-10'>
                     {spatialSupported ?
                         <div>
-                            <SpatialIFrame src="/index.html?pageName=FeatureList" className="" spatialOffset={{ z: 100 }}>
+                            <SpatialIFrame src="/index.html?pageName=FeatureList&transparent=true" className="" spatialOffset={{ z: 100 }}>
                                 <FeatureList />
                             </SpatialIFrame>
                         </div>

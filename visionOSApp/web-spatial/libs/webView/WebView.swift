@@ -22,6 +22,13 @@ struct CommandInfo {
     var requestID = -1
 }
 
+struct LoadingStyles {
+    var visible = true
+    var glassEffect = false
+    var transparentEffect = false
+    var cornerRadius = CGFloat(0)
+}
+
 class SpatialWebView: WatchableObject {
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
@@ -44,10 +51,13 @@ class SpatialWebView: WatchableObject {
     var dragVelocity = 0.0
 
     var gotStyle = false
-    @Published var visible = false
-    @Published var glassEffect = true
-    @Published var transparentEffect = true
+    @Published var visible = true
+    @Published var glassEffect = false
+    @Published var transparentEffect = false
     @Published var cornerRadius = CGFloat(0)
+
+    var loadingStyles = LoadingStyles()
+    var isLoading = true
 
     init(parentWindowGroupID: String) {
         self.parentWindowGroupID = parentWindowGroupID
@@ -182,7 +192,6 @@ class SpatialWebView: WatchableObject {
     }
 
     func didStartLoadPage() {
-        gotStyle = false
         let keys = childResources.map { $0.key }
         for k in keys {
             if k != resourceID {
@@ -196,23 +205,25 @@ class SpatialWebView: WatchableObject {
         }
         var url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
+
+        // Mark that we havn't gotten a style update
+        gotStyle = false
+        isLoading = true
+        loadingStyles = LoadingStyles()
     }
 
-    func didStartReceivePageContent() {
-        glassEffect = true
-        transparentEffect = true
-    }
+    func didStartReceivePageContent() {}
 
     func didFinishLoadPage() {
-        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: false) { _ in
-            if !self.gotStyle {
-                self.visible = true
-                // Set default styles if cient hasn't set them by now
-                self.glassEffect = false
-                self.transparentEffect = false
-                self.cornerRadius = CGFloat(0)
-            }
+        glassEffect = loadingStyles.glassEffect
+        transparentEffect = loadingStyles.transparentEffect
+        cornerRadius = loadingStyles.cornerRadius
+        if !gotStyle {
+            // We didn't get a style update in time (might result in FOUC)
+            // Set default style
+            print("Didn't get SwiftUI styles prior to page finish load")
         }
+        isLoading = false
     }
 
     func onJSScriptMessage(json: JsonParser) {
@@ -424,17 +435,12 @@ class SpatialWebView: WatchableObject {
                             // Compute target url depending if the url is relative or not
                             let targetUrl = parseURL(url: url)
 
-                            // Create the webview
-                            //   if sr.spatialWebView?.webViewNative == nil {
-                            //  sr.spatialWebView!.webViewNative?.initialLoad()
-                            //  }
-
                             delayComplete = true
                             if sr.spatialWebView!.loadRequestID == -1 {
                                 sr.spatialWebView!.loadRequestID = cmdInfo.requestID
                                 sr.spatialWebView!.loadRequestWV = self
-                                sr.spatialWebView!.webViewNative?.url = URL(string: targetUrl)!
-                                sr.spatialWebView!.webViewNative?.initialLoad()
+                                sr.spatialWebView!.webViewNative!.url = URL(string: targetUrl)!
+                                sr.spatialWebView!.webViewNative!.initialLoad()
                             } else {
                                 failEvent(requestID: cmdInfo.requestID)
                             }
@@ -453,20 +459,24 @@ class SpatialWebView: WatchableObject {
                         }
 
                         if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
+                            if isLoading {
+                                loadingStyles.glassEffect = glassEffect
+                            }
                             sr.spatialWebView?.glassEffect = glassEffect
-                            sr.spatialWebView?.visible = true
-                            gotStyle = true
                         }
                         if let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"]) {
+                            if isLoading {
+                                loadingStyles.transparentEffect = transparentEffect
+                            }
                             sr.spatialWebView?.transparentEffect = transparentEffect
-                            sr.spatialWebView?.visible = true
-                            gotStyle = true
                         }
                         if let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"]) {
+                            if isLoading {
+                                loadingStyles.cornerRadius = CGFloat(cornerRadius)
+                            }
                             sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
-                            sr.spatialWebView?.visible = true
-                            gotStyle = true
                         }
+                        sr.spatialWebView!.gotStyle = true
                     }
                     if !delayComplete {
                         completeEvent(requestID: cmdInfo.requestID)
