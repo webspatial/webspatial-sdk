@@ -26,12 +26,12 @@ var main = async () => {
             await e.updateTransform()
             let i = await session.createIFrameComponent()
             await Promise.all([
-                i.loadURL("/src/loadTsx.html?pageName=embed/basic.tsx"), // 
+                i.loadURL("/src/loadTsx.html?pageName=embed/basic.tsx"),
                 i.setScrollEnabled(false),
                 i.setInline(true),
                 i.setResolution(300, 300),
-                e.setComponent(i)
             ])
+            await e.setComponent(i)
 
             var loop = (time: DOMHighResTimeStamp) => {
                 if (e.isDestroyed()) {
