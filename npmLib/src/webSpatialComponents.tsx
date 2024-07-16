@@ -3,12 +3,13 @@ import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, 
 type vecType = { x: number, y: number, z: number }
 
 // Create the default Spatial session for the app
-var _currentSession = null as SpatialSession | null
+let spatial = new Spatial()
+let _currentSession = null as SpatialSession | null
 export async function getSessionAsync() {
     if (_currentSession) {
         return _currentSession
     }
-    _currentSession = await new Spatial().requestSession()
+    _currentSession = spatial.requestSession()
     return _currentSession
 }
 
@@ -137,7 +138,7 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
     }
 
     useEffect(() => {
-        if (!(window as any).WebSpatailEnabled) {
+        if (!spatial.isSupported()) {
             return
         }
 
@@ -165,7 +166,7 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
     }, [])
 
     useEffect(() => {
-        if (!(window as any).WebSpatailEnabled) {
+        if (!spatial.isSupported()) {
             return
         }
         resizeDiv()
