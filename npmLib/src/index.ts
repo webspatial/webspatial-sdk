@@ -363,7 +363,7 @@ export class SpatialSession {
    * Retrieves the iframe for this page
    * @returns the iframe component corresponding to the js running on this page
    */
-  async getCurrentIFrameComponent() {
+  getCurrentIFrameComponent() {
     return new SpatialIFrameComponent(WebSpatial.getCurrentWebPanel())
   }
 
@@ -421,7 +421,7 @@ export class SpatialSession {
  * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr
  */
 export class Spatial {
-  async requestSession() {
+  requestSession() {
     return new SpatialSession()
   }
 

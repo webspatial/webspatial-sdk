@@ -6,16 +6,14 @@ import '/src/index.css'
 import { SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
 
 var spatial: Spatial | null = new Spatial();
-if (spatial.isSupported()) {
-    (window.navigator as any).spatial = spatial;
-} else {
+if (!spatial.isSupported()) {
     spatial = null
 }
 
 // Create session if spatial is supported
 var session: SpatialSession | undefined
 if (spatial) {
-    session = await spatial.requestSession()
+    session = spatial.requestSession()
 }
 
 // Animation frame effect
@@ -83,13 +81,6 @@ function Time(props: { makeShadow?: boolean }) {
         setSeconds(s)
     })
 
-    React.useEffect(() => {
-        (async () => {
-            // await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
-        })()
-    }, []);
-
-
     return <div className={'w-full text-center font-mono select-none ' + (props.makeShadow ? " absolute text-black" : " text-white")} style={props.makeShadow ? { zIndex: -1, filter: "blur(7px)", opacity: "50%" } : {}}>
         <span className=' text-sm'>{hours > 12 ? "PM" : "AM"}</span><span className='text-9xl'>{hours % 12 ? hours % 12 : 12}:{minutes < 10 ? "0" + minutes : minutes}{!settingsData.showSeconds ? "" : (":" + (seconds < 10 ? "0" + seconds : seconds))}</span>
     </div>
@@ -98,15 +89,12 @@ function Time(props: { makeShadow?: boolean }) {
 
 
 function App() {
-
-
     const [settingsData] = useSettingsData()
 
     React.useEffect(() => {
         (async () => {
             if (session) {
                 await (await session.getCurrentWindowGroup()).setStyle({ dimensions: { x: 880, y: 200 } });
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70 });
             }
         })()
     }, []);
@@ -124,7 +112,7 @@ function App() {
                     :
                     <div>
                         <Time makeShadow={true} />
-                        <SpatialIFrame src="/src/clockApp/index.html?pageName=Time" className="" spatialOffset={{ z: 50 }}>
+                        <SpatialIFrame src="/src/clockApp/index.html?pageName=Time&transparent=true" className="" spatialOffset={{ z: 50 }}>
                             <Time makeShadow={false} />
                         </SpatialIFrame>
                     </div>
@@ -168,14 +156,6 @@ function Settings() {
     React.useEffect(() => {
         document.documentElement.style.backgroundColor = (settingsData.bgColor ? settingsData.bgColor : "#1155aa") + "55";
     }, [settingsData])
-
-    React.useEffect(() => {
-        (async () => {
-            if (session) {
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 70 })
-            }
-        })()
-    }, []);
 
     return (
         <div className='w-full text-white text-center font-mono select-none'>
@@ -230,21 +210,7 @@ var names = {
     "Time": Time,
 } as { [x: string]: any }
 
-var isEmbed = false
 var pageName = (new URLSearchParams(window.location.search)).get("pageName");
-if (pageName && pageName != "Settings") {
-    isEmbed = true
-    // Clear the background
-    if (spatial) {
-        ; (async () => {
-            if (session) {
-                await (await session.getCurrentIFrameComponent()).setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 70 })
-            }
-        })()
-        document.documentElement.style.backgroundColor = "#FFFFFF00";
-    }
-
-}
 
 var MyTag = names[pageName ? pageName : "App"] as any;
 
