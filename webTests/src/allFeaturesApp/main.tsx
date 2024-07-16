@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import '../index.css'
-import hnLogo from './assets/y18.svg'
-import { Spatial } from 'web-spatial'
 import { Model, SpatialIFrame, getSessionAsync } from 'web-spatial/src/webSpatialComponents.tsx'
 
 import { Provider } from 'react-redux'
@@ -17,8 +14,6 @@ function App() {
   const sharedCount = useSelector((state: any) => state.count.value);
   const dispatch = useDispatch()
   const [created, setCreated] = useState(false)
-  //var volumetricWG = new WindowGroup()
-  //var volumetricPanel = new WebPanel()
 
   var volumeModelEnt: SpatialEntity | null = null
   var volumePanelEnt: SpatialEntity | null = null
@@ -109,8 +104,8 @@ function App() {
             // style={{ height: "30px" }}
             onChange={async (e) => {
               if (volumeModelEnt && volumePanelEnt) {
-                volumeModelEnt.transform.position = new DOMPoint((Number(e.target.value) / 100), -0.4, 0.4)
-                volumePanelEnt.transform.position = new DOMPoint(-(Number(e.target.value) / 100), -0.4, 0.4)
+                volumeModelEnt.transform.position = new DOMPoint((Number(e.target.value) / 1000), -0.4, 0.4)
+                volumePanelEnt.transform.position = new DOMPoint(-(Number(e.target.value) / 1000), -0.4, 0.4)
                 await volumeModelEnt.updateTransform()
                 await volumePanelEnt.updateTransform()
               }
@@ -210,8 +205,10 @@ function App() {
   )
 }
 
+; (await getSessionAsync()).getCurrentIFrameComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
 document.documentElement.style.backgroundColor = "transparent";
 document.body.style.backgroundColor = "transparent"
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>

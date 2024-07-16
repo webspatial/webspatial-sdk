@@ -7,22 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vite + React + TS</title>
 </head>
+<link rel="stylesheet" href="/src/index.css">
 
 <body>
-  <!-- <model src="src/assets/FlightHelmet"></model>
-  <model interactive="" width="670" height="1191">
-    <source src="src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip">
-    <source src="src/assets/FlightHelmet.glb" type="model/gltf-binary">
-    <picture>
-      <img src="src/assets/FlightHelmet.png" width="670" height="1191">
-    </picture>
-  </model> -->
   <div id="root"></div>
-  <!-- <script type="module" src="/src/helloWorldApp/main.tsx"></script> -->
   <script>
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    console.log(urlParams.get("pageName"))
 
     let newScriptTag = document.createElement('script');
     newScriptTag.type = "module"
