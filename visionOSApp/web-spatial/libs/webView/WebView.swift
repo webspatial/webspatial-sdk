@@ -27,6 +27,7 @@ struct LoadingStyles {
     var glassEffect = false
     var transparentEffect = false
     var cornerRadius = CGFloat(0)
+    var windowGroupSize = DefaultPlainWindowGroupSize
 }
 
 class SpatialWebView: WatchableObject {
@@ -218,10 +219,15 @@ class SpatialWebView: WatchableObject {
         glassEffect = loadingStyles.glassEffect
         transparentEffect = loadingStyles.transparentEffect
         cornerRadius = loadingStyles.cornerRadius
+
+        if root {
+            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
+            wg.setSize = loadingStyles.windowGroupSize
+        }
         if !gotStyle {
             // We didn't get a style update in time (might result in FOUC)
             // Set default style
-            print("Didn't get SwiftUI styles prior to page finish load")
+            //   print("Didn't get SwiftUI styles prior to page finish load")
         }
         isLoading = false
     }
@@ -500,7 +506,8 @@ class SpatialWebView: WatchableObject {
                     if let x: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "x"]),
                        let y: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "y"])
                     {
-                        wg.setSize = CGSize(width: x, height: y)
+                        loadingStyles.windowGroupSize = CGSize(width: x, height: y)
+                        wg.setSize = loadingStyles.windowGroupSize
                     }
 
                     completeEvent(requestID: cmdInfo.requestID)

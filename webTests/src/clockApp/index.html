@@ -7,11 +7,15 @@
 <!-- Load webspatial and set styling before the page is loaded to avoid https://en.wikipedia.org/wiki/Flash_of_unstyled_content -->
 <script src="/dist/webSpatial.umd.js"></script>
 <script>
+    var pageName = (new URLSearchParams(window.location.search)).get("pageName");
     var transparent = (new URLSearchParams(window.location.search)).get("transparent");
     var spatial = new webSpatial.Spatial()
     if (spatial.isSupported()) {
         var session = spatial.requestSession()
         session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+        if (!pageName) {
+            session.getCurrentWindowGroup().setStyle({ dimensions: { x: 880, y: 200 } })
+        }
     } else {
         console.log("not supported")
     }
