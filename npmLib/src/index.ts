@@ -412,7 +412,7 @@ export class SpatialSession {
   }
 
   // Retreives the window group that is the parent to this spatial web page
-  async getCurrentWindowGroup() {
+  getCurrentWindowGroup() {
     return new SpatialWindowGroup(WebSpatial.getCurrentWindowGroup())
   }
 }

@@ -49,7 +49,7 @@ struct SpatialWebViewUI: View {
 }
 
 struct PlainWindowGroupView: View {
-    @EnvironmentObject var sceneDelegate: SceneDelegate
+    @EnvironmentObject private var sceneDelegate: SceneDelegate
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
@@ -64,7 +64,7 @@ struct PlainWindowGroupView: View {
     }
 
     public func setSize(size: CGSize) {
-        sceneDelegate.window!.windowScene!.requestGeometryUpdate(.Vision(size: size))
+        sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
     }
 
     func toJson(val: SIMD3<Float>) -> String {
