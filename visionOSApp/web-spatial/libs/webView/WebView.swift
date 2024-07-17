@@ -199,6 +199,7 @@ class SpatialWebView: WatchableObject {
                 _ = childResources[k]!.destroy()
             }
         }
+        childResources = [String: SpatialResource]()
 
         let wgkeys = childWindowGroups.map { $0.key }
         for k in wgkeys {
