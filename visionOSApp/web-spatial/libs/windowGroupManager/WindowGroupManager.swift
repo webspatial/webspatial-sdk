@@ -99,6 +99,8 @@ class SpatialComponent {
     var componentType = "undefined"
 }
 
+let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
+
 class WindowGroupContentDictionary: ObservableObject {
     // Resources
     @Published var childEntities = [String: SpatialResource]()
@@ -106,7 +108,7 @@ class WindowGroupContentDictionary: ObservableObject {
 
     // Global state
     @Published var toggleImmersiveSpace = false
-    @Published var setSize = CGSize(width: 1280, height: 720)
+    @Published var setSize = DefaultPlainWindowGroupSize
     @Published var updateFrame = false
     @Published var openWindowData: WindowGroupData? = nil
     @Published var closeWindowData: WindowGroupData? = nil
