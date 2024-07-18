@@ -8,6 +8,7 @@
 import Foundation
 import RealityKit
 import SwiftUI
+import SwiftyBeaver
 
 func getDocumentsDirectory() -> URL {
     let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
@@ -33,6 +34,8 @@ struct LoadingStyles {
 class SpatialWebView: WatchableObject {
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
+    
+
 
     var full = false
     @Published var root = false
@@ -76,6 +79,8 @@ class SpatialWebView: WatchableObject {
         webViewNative?.createResources()
 
         // childResources[resourceID] = self
+
+         
     }
 
     func initFromURL(url: URL) {
@@ -518,8 +523,44 @@ class SpatialWebView: WatchableObject {
             } else if command == "dismissImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
             } else if command == "log" {
-                if let logString: String = json.getValue(lookup: ["data", "logString"]) {
-                    print(logString)
+                if let logString: String = json.getValue(lookup: ["data", "logString"]),  let logLevel: String = json.getValue(lookup: ["data", "logLevel"])  {
+                    let log = Utils.getLogger();
+                    switch logLevel {
+                    case "TRACE":
+                        log.verbose(logString)
+                    case "DEBUG":
+                        log.debug(logString)
+
+                    case "INFO":
+                        log.info(logString)
+
+                    case "WARN":
+                        log.warning(logString)
+
+                    case "ERROR":
+                        log.error(logString)
+
+                    default:
+                        print(logString)
+                    }
+                }
+            } else if command == "setLogLevel" {
+                if let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
+                    let levelDict = [
+                        "DEBUG": SwiftyBeaver.Level.debug,
+                        "ERROR": SwiftyBeaver.Level.error,
+                        "TRACE": SwiftyBeaver.Level.verbose,
+                        "WARN": SwiftyBeaver.Level.warning,
+                        "INFO": SwiftyBeaver.Level.info,
+                    ]
+                    
+                    if let level = levelDict[logLevel] {
+                        let log = Utils.getLogger();
+                        SwiftyBeaver.self.destinations.forEach({destination in
+                            destination.minLevel = level
+                        })
+
+                    }
                 }
             }
         }
