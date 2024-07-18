@@ -1,3 +1,4 @@
+import { LoggerLevel } from './Logger'
 import { WebSpatial, WebSpatialResource, WindowGroup, WindowStyle } from './webSpatialPrivate'
 
 // Types
@@ -381,12 +382,33 @@ export class SpatialSession {
       return new SpatialIFrameComponent(res)
     }
   }
+ 
+  async setLogLevel(logLevel: LoggerLevel) {
+    await WebSpatial.logger.setLevel(logLevel)
+  }
 
-  /**
-   * Debugging only, issues a native log
-   */
   async log(obj: any) {
-    await WebSpatial.log(obj)
+    await WebSpatial.logger.info(obj)
+  }
+
+  async info(obj: any) {
+    await WebSpatial.logger.info(obj)
+  }
+
+  async warn(obj: any) {
+    await WebSpatial.logger.warn(obj)
+  }
+
+  async debug(obj: any) {
+    await WebSpatial.logger.debug(obj)
+  }
+
+  async error(obj: any) {
+    await WebSpatial.logger.error(obj)
+  }
+
+  async trace(obj: any) {
+    await WebSpatial.logger.trace(obj)
   }
 
   /**

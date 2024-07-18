@@ -1,4 +1,7 @@
 import { SpatialInputComponent } from "."
+import { Logger, LoggerLevel, NativeLogger, WebLogger } from "./Logger"
+import { RemoteCommand } from "./RemoteCommand"
+
 
 export class Vec3 {
     constructor(public x = 0, public y = 0, public z = 0) {
@@ -22,18 +25,14 @@ export class WebSpatialResource {
     data = {} as any
 }
 
-export class RemoteCommand {
-    private static requestCounter = 0
-    command = "cmd"
-    data = {} as any
-    requestID = ++RemoteCommand.requestCounter
-}
+
 
 export type WindowStyle = "Plain" | "Volumetric"
 
 export class WebSpatial {
     public static eventPromises: any = {}
     public static inputComponents: { [key: string]: SpatialInputComponent; } = {}
+
 
     static init() {
         (window as any).__SpatialWebEvent = (e: any) => {
@@ -58,6 +57,8 @@ export class WebSpatial {
         (window as any).webkit.messageHandlers.bridge.postMessage(msg)
     }
 
+    static logger: Logger = (window as any).WebSpatailEnabled ? new NativeLogger(this.sendCommand) : new WebLogger('WebSpatial');
+
     static getImmersiveWindowGroup() {
         var wg = new WindowGroup()
         wg.id = "Immersive"
@@ -78,9 +79,7 @@ export class WebSpatial {
     }
 
     static async createWindowGroup(style: WindowStyle = "Plain") {
-        var cmd = new RemoteCommand()
-        cmd.command = "createWindowGroup"
-        cmd.data.windowStyle = style
+        var cmd = new RemoteCommand("createWindowGroup", {windowStyle: style} )
 
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
@@ -92,20 +91,24 @@ export class WebSpatial {
     }
 
     static async destroyResource(resource: WebSpatialResource) {
-        var cmd = new RemoteCommand()
-        cmd.command = "destroyResource"
-        cmd.data.windowGroupID = resource.windowGroupId
-        cmd.data.resourceID = resource.id
+        const data = {
+
+        }
+        var cmd = new RemoteCommand("destroyResource", {
+            windowGroupID: resource.windowGroupId,
+            resourceID : resource.id
+        })
 
         WebSpatial.sendCommand(cmd)
     }
 
     static async ping(msg: string) {
-        var cmd = new RemoteCommand()
-        cmd.command = "ping"
-        cmd.data.windowGroupID = this.getCurrentWindowGroup().id
-        cmd.data.resourceID = this.getCurrentWebPanel().id
-        cmd.data.message = msg
+        var cmd = new RemoteCommand("ping", {
+            windowGroupID: this.getCurrentWindowGroup().id,
+            resourceID : this.getCurrentWebPanel().id,
+            message : msg
+        })
+        
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
             WebSpatial.sendCommand(cmd)
@@ -114,23 +117,24 @@ export class WebSpatial {
     }
 
     static async setComponent(entity: WebSpatialResource, resource: WebSpatialResource) {
-        var cmd = new RemoteCommand()
-        cmd.command = "setComponent"
-        cmd.data.windowGroupID = entity.windowGroupId
-        cmd.data.resourceID = resource.id
-        cmd.data.entityID = entity.id
+        var cmd = new RemoteCommand( "setComponent", {
+            windowGroupID: entity.windowGroupId,
+            resourceID : resource.id,
+            entityID : entity.id,
+        })
+        
         WebSpatial.sendCommand(cmd)
     }
 
     // windowGroup is the group the resource will be tied to (if not provided it will use the current window grou)
     // parentWebView is the SpatialWebView that the resource will be tied to (if not provided, resource will continue to exist even if this page is unloaded)
     static async createResource(type: string, windowGroup: WindowGroup, parentWebView: WebSpatialResource, params = {} as any) {
-        var cmd = new RemoteCommand()
-        cmd.command = "createResource"
-        cmd.data.windowGroupID = windowGroup.id
-        cmd.data.resourceID = parentWebView.id
-        cmd.data.type = type
-        cmd.data.params = params
+        var cmd = new RemoteCommand("createResource", {
+            windowGroupID: windowGroup.id,
+            resourceID : parentWebView.id,
+            type : type,
+            params : params
+        });
 
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
@@ -143,10 +147,10 @@ export class WebSpatial {
     }
 
     static async updateWindowGroup(wg: WindowGroup, data: any) {
-        var cmd = new RemoteCommand()
-        cmd.command = "updateWindowGroup"
-        cmd.data.windowGroupID = wg.id
-        cmd.data.update = data
+        var cmd = new RemoteCommand("updateWindowGroup", {
+            windowGroupID: wg.id,
+            update : data
+        })
 
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
@@ -156,15 +160,11 @@ export class WebSpatial {
     }
 
     static async updateResource(resource: WebSpatialResource, data: any = null) {
-        var cmd = new RemoteCommand()
-        cmd.command = "updateResource"
-        cmd.data.windowGroupID = resource.windowGroupId
-        cmd.data.resourceID = resource.id
-        if (data) {
-            cmd.data.update = data
-        } else {
-            cmd.data.update = resource.data
-        }
+        var cmd = new RemoteCommand("updateResource" , {
+            windowGroupID: resource.windowGroupId,
+            resourceID : resource.id,
+            update : data || resource.data
+        });
 
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
@@ -173,38 +173,13 @@ export class WebSpatial {
         return result
     }
 
-    static async log(log: any) {
-        if (!(window as any).WebSpatailEnabled) {
-            console.log(log)
-            return
-        }
-
-        var cmd = new RemoteCommand()
-        cmd.command = "log"
-        if (log !== null && log !== undefined && log.toString) {
-            cmd.data.logString = log.toString()
-            if (cmd.data.logString == "[object Object]") {
-                delete cmd.data.logString
-            }
-        }
-        if (cmd.data.logString === undefined && log !== null && log !== undefined && typeof log === 'object') {
-            cmd.data.logString = JSON.stringify(log)
-        } else {
-            cmd.data.logString = log
-        }
-
-        await WebSpatial.sendCommand(cmd)
-    }
-
     static async openImmersiveSpace() {
-        var cmd = new RemoteCommand()
-        cmd.command = "openImmersiveSpace"
+        var cmd = new RemoteCommand("openImmersiveSpace");
         await WebSpatial.sendCommand(cmd)
     }
 
     static async dismissImmersiveSpace() {
-        var cmd = new RemoteCommand()
-        cmd.command = "dismissImmersiveSpace"
+        var cmd = new RemoteCommand("dismissImmersiveSpace");
         await WebSpatial.sendCommand(cmd)
     }
 
