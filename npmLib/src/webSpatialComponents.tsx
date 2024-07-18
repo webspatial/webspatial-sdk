@@ -76,6 +76,9 @@ class SpatialModelUIManager {
     modelComponent?: SpatialModelUIComponent
 
     async initInternal(url: string) {
+        const session = await getSessionAsync();
+        session.info("SpatialModelUIManager initInternal");
+
         this.entity = await (await getSessionAsync()).createEntity()
         await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
         this.modelComponent = await (await getSessionAsync()).createModelUIComponent()
