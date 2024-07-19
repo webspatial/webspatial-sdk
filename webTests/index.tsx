@@ -3,16 +3,24 @@ import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from 'web-spatial/src/index';
 import { Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
 
-
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
     spatial = null
 }
 
 // Create session if spatial is supported
+var session;
 if (spatial) {
-    var session = spatial.requestSession()
+    session = spatial.requestSession()
 }
+
+var transparent = (new URLSearchParams(window.location.search)).get("transparent");
+if (session) {
+    session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+} else {
+    console.log("not supported")
+}
+document.documentElement.style.backgroundColor = "#FFFFFF00";
 
 
 function WebSpatialTitle(props: { makeShadow?: boolean }) {

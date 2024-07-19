@@ -1,8 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialSession } from 'web-spatial/src/index';
-// Import tailwind CSS (tailwind.config.js also required)
-import '/src/index.css'
 import { SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
 
 var spatial: Spatial | null = new Spatial();
@@ -15,6 +13,18 @@ var session: SpatialSession | undefined
 if (spatial) {
     session = spatial.requestSession()
 }
+
+var pageName = (new URLSearchParams(window.location.search)).get("pageName");
+var transparent = (new URLSearchParams(window.location.search)).get("transparent");
+if (session) {
+    session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+    if (!pageName) {
+        session.getCurrentWindowGroup().setStyle({ dimensions: { x: 880, y: 200 } })
+    }
+} else {
+    console.log("not supported")
+}
+document.documentElement.style.backgroundColor = "#FFFFFF00";
 
 // Animation frame effect
 const useAnimationFrame = (callback: any) => {
