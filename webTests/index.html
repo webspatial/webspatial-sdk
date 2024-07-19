@@ -3,26 +3,10 @@
 <meta charset="UTF-8">
 <title>WebSpatial</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="/src/index.css">
-
-<!-- Load webspatial and set styling before the page is loaded to avoid https://en.wikipedia.org/wiki/Flash_of_unstyled_content -->
-<script src="/dist/webSpatial.umd.js"></script>
-<script>
-    var transparent = (new URLSearchParams(window.location.search)).get("transparent");
-    var spatial = new webSpatial.Spatial()
-    if (spatial.isSupported()) {
-        var session = spatial.requestSession()
-        session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
-    } else {
-        console.log("not supported")
-    }
-    document.documentElement.style.backgroundColor = "#FFFFFF00";
-</script>
-
-<!-- Then we can load our script which runs after page is loaded due to default behavior of type='module' -->
-<script type="module" src="index.tsx"></script>
+<link rel="stylesheet" href="/dist/src/index.css">
 
 <body>
 </body>
+<script src="/dist/index.js"></script>
 
 </html>
