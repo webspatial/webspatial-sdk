@@ -61,7 +61,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        // print(" broken " + error.localizedDescription)
+        print("Navigation failed!!! " + error.localizedDescription)
     }
 
     // receive message from wkwebview
