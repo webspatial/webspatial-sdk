@@ -1,7 +1,5 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import '../index.css'
-import ReactDomServer from 'react-dom/server';
 import { Spatial, SpatialEntity } from "../../../npmLib/src/index"
 
 //(window as any).wx = WebSpatial
@@ -32,8 +30,12 @@ function App() {
     )
 }
 
-var session = await (new Spatial()).requestSession()
-await (await session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+
+if ((new Spatial()).isSupported()) {
+    var session = (new Spatial()).requestSession();
+    (session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+}
+
 // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
 document.documentElement.style.backgroundColor = "transparent";
 document.body.style.backgroundColor = "transparent"

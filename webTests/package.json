@@ -4,15 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently 'vite build --watch' 'vite --host'",
-    "build": "vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "dev": "node esbuild.mjs",
+    "build": "node esbuild.mjs",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.4",
     "@types/three": "^0.164.0",
     "autoprefixer": "^10.4.19",
+    "esbuild": "^0.23.0",
+    "livereload": "^0.9.3",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -20,7 +21,8 @@
     "redux": "^5.0.1",
     "redux-state-sync": "^3.1.4",
     "tailwindcss": "^3.4.3",
-    "three": "^0.164.1"
+    "three": "^0.164.1",
+    "tiny-glob": "^0.2.9"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
@@ -32,10 +34,10 @@
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^8.2.2",
     "daisyui": "^4.12.10",
+    "esbuild-plugin-tailwindcss": "^1.2.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0"
+    "typescript": "^5.2.2"
   }
 }
