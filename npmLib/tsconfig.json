@@ -23,6 +23,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "outDir": "./dist",
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
     "src"

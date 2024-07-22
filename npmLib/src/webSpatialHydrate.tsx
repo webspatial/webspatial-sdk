@@ -63,8 +63,8 @@ export class WebSpatialHydrate {
                 let link = e.href
                 e.href = "#"
                 e.onclick = async () => {
-                    var p = await s.getParentIFrameComponent()
-                    if (p) {
+                    var p = await s!.getParentIFrameComponent()
+                    if (p != null) {
                         p.loadURL(link)
                     }
                 }

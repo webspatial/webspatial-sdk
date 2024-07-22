@@ -29,9 +29,9 @@ Marks resource to be released (it should no longer be used)
 
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105
 
 ***
 
@@ -47,9 +47,9 @@ index.ts:96
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:199
+index.ts:220
 
 ***
 
@@ -73,9 +73,9 @@ resolution in pixels
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:207
+index.ts:228
 
 ***
 
@@ -95,6 +95,6 @@ url of the model to load
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:196
+index.ts:217

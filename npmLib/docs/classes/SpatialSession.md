@@ -32,9 +32,9 @@ Creates a Entity
 
 Entity
 
-#### Source
+#### Defined in
 
-index.ts:269
+index.ts:290
 
 ***
 
@@ -54,9 +54,27 @@ Creates a IFrameComponent
 
 IFrameComponent
 
-#### Source
+#### Defined in
 
-index.ts:278
+index.ts:299
+
+***
+
+### createInputComponent()
+
+> **createInputComponent**(): `Promise`\<[`SpatialInputComponent`](SpatialInputComponent.md)\>
+
+Creates a InputComponent
+
+#### Returns
+
+`Promise`\<[`SpatialInputComponent`](SpatialInputComponent.md)\>
+
+InputComponent
+
+#### Defined in
+
+index.ts:330
 
 ***
 
@@ -76,9 +94,9 @@ Creates a MeshResource
 
 MeshResource
 
-#### Source
+#### Defined in
 
-index.ts:309
+index.ts:341
 
 ***
 
@@ -100,9 +118,9 @@ Creates a ModelComponent
 
 ModelComponent
 
-#### Source
+#### Defined in
 
-index.ts:296
+index.ts:317
 
 ***
 
@@ -122,9 +140,9 @@ Creates a ModelUIComponent
 
 ModelUIComponent
 
-#### Source
+#### Defined in
 
-index.ts:287
+index.ts:308
 
 ***
 
@@ -144,9 +162,9 @@ Creates a PhysicallyBasedMaterial
 
 PhysicallyBasedMaterial
 
-#### Source
+#### Defined in
 
-index.ts:318
+index.ts:350
 
 ***
 
@@ -158,7 +176,7 @@ Creates a WindowGroup
 
 #### Parameters
 
-• **style**: `WindowStyle`= `"Plain"`
+• **style**: `WindowStyle` = `"Plain"`
 
 #### Returns
 
@@ -166,9 +184,27 @@ Creates a WindowGroup
 
 WindowGroup
 
-#### Source
+#### Defined in
 
-index.ts:327
+index.ts:359
+
+***
+
+### debug()
+
+> **debug**(`obj`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **obj**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:402
 
 ***
 
@@ -182,9 +218,27 @@ Closes the immersive space
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:359
+index.ts:427
+
+***
+
+### error()
+
+> **error**(`obj`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **obj**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:406
 
 ***
 
@@ -200,23 +254,23 @@ Retrieves the iframe for this page
 
 the iframe component corresponding to the js running on this page
 
-#### Source
+#### Defined in
 
-index.ts:335
+index.ts:367
 
 ***
 
 ### getCurrentWindowGroup()
 
-> **getCurrentWindowGroup**(): `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+> **getCurrentWindowGroup**(): [`SpatialWindowGroup`](SpatialWindowGroup.md)
 
 #### Returns
 
-`Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
+[`SpatialWindowGroup`](SpatialWindowGroup.md)
 
-#### Source
+#### Defined in
 
-index.ts:369
+index.ts:437
 
 ***
 
@@ -228,17 +282,33 @@ index.ts:369
 
 `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
 
-#### Source
+#### Defined in
 
-index.ts:364
+index.ts:432
 
 ***
 
-### log()
+### getParentIFrameComponent()
 
-> **log**(`obj`): `Promise`\<`void`\>
+> **getParentIFrameComponent**(): `Promise`\<`null` \| [`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
 
-Debugging only, issues a native log
+Retrieves the parent iframe for this page or null if this is the root page
+
+#### Returns
+
+`Promise`\<`null` \| [`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
+
+the iframe component or null
+
+#### Defined in
+
+index.ts:375
+
+***
+
+### info()
+
+> **info**(`obj`): `Promise`\<`void`\>
 
 #### Parameters
 
@@ -248,9 +318,27 @@ Debugging only, issues a native log
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:342
+index.ts:394
+
+***
+
+### log()
+
+> **log**(`obj`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **obj**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:390
 
 ***
 
@@ -264,9 +352,9 @@ Opens the immersive space
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:354
+index.ts:422
 
 ***
 
@@ -284,9 +372,9 @@ Debugging only, used to ping the native renderer
 
 `Promise`\<`unknown`\>
 
-#### Source
+#### Defined in
 
-index.ts:349
+index.ts:417
 
 ***
 
@@ -306,6 +394,60 @@ callback to be called before next render update
 
 `void`
 
-#### Source
+#### Defined in
 
-index.ts:250
+index.ts:271
+
+***
+
+### setLogLevel()
+
+> **setLogLevel**(`logLevel`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **logLevel**: `LoggerLevel`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:386
+
+***
+
+### trace()
+
+> **trace**(`obj`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **obj**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:410
+
+***
+
+### warn()
+
+> **warn**(`obj`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **obj**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:398

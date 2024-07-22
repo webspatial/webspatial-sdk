@@ -28,20 +28,20 @@ Base object designed to be placed on navigator.spatial to mirror navigator.xr fo
 
 `any`
 
-#### Source
+#### Defined in
 
-index.ts:382
+index.ts:450
 
 ***
 
 ### requestSession()
 
-> **requestSession**(): `Promise`\<[`SpatialSession`](SpatialSession.md)\>
+> **requestSession**(): [`SpatialSession`](SpatialSession.md)
 
 #### Returns
 
-`Promise`\<[`SpatialSession`](SpatialSession.md)\>
+[`SpatialSession`](SpatialSession.md)
 
-#### Source
+#### Defined in
 
-index.ts:378
+index.ts:446
