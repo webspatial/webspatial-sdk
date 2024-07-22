@@ -126,7 +126,7 @@ function App() {
                     :
                     <div>
                         <Time makeShadow={true} />
-                        <SpatialIFrame src="/src/clockApp/index.html?pageName=Time&transparent=true" className="" spatialOffset={{ z: 50 }}>
+                        <SpatialIFrame src="index.html?pageName=Time&transparent=true" className="" spatialOffset={{ z: 50 }}>
                             <Time makeShadow={false} />
                         </SpatialIFrame>
                     </div>
@@ -149,7 +149,7 @@ function App() {
 
                         var i = await session.createIFrameComponent(wg)
                         await i.setResolution(300, 300)
-                        await i.loadURL("/src/clockApp/index.html?pageName=Settings")
+                        await i.loadURL("index.html?pageName=Settings")
                         await i.setAsRoot(true)
                         await i.setInline(true)
                         await ent.setComponent(i)
