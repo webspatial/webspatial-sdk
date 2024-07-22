@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
+import React, { StrictMode, useEffect, useRef, useState } from 'react'
+
 import { Model, SpatialIFrame, getSessionAsync } from 'web-spatial/src/webSpatialComponents.tsx'
+
+
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
@@ -22,7 +25,7 @@ function App() {
   const children = [];
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
     children.push(
-      <SpatialIFrame src="/src/loadTsx.html?pageName=embed/basic.tsx" key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
+      <SpatialIFrame src="/src/embed/basic.html" key={i} className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4" spatialOffset={{ z: 100 }}>
       </SpatialIFrame>
     );
   };
@@ -45,22 +48,22 @@ function App() {
             <input type="checkbox" value="" className="sr-only peer" onChange={async (e) => {
               var session = await getSessionAsync()
               if (e.target.checked) {
-                session.openImmersiveSpace();
+                session!.openImmersiveSpace();
                 if (!created) {
                   setCreated(true)
-                  var immersiveWG = await session.getImmersiveWindowGroup()
-                  var ent = await session.createEntity()
+                  var immersiveWG = await session!.getImmersiveWindowGroup()
+                  var ent = await session!.createEntity()
                   ent.transform.position.x = 0
                   ent.transform.position.y = 1.3
                   ent.transform.position.z = -1
                   ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
                   await ent.updateTransform()
                   await ent.setParentWindowGroup(immersiveWG)
-                  var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
+                  var helmetModel = await session!.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
                   await ent.setComponent(helmetModel)
                 }
               } else {
-                session.dismissImmersiveSpace();
+                session!.dismissImmersiveSpace();
               }
             }}></input>
             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -71,9 +74,9 @@ function App() {
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
               var session = await getSessionAsync()
-              var wg = await session.createWindowGroup("Volumetric")
+              var wg = await session!.createWindowGroup("Volumetric")
 
-              var ent = await session.createEntity()
+              var ent = await session!.createEntity()
               ent.transform.position.x = 0
               ent.transform.position.y = -0.4
               ent.transform.position.z = 0.4
@@ -81,21 +84,21 @@ function App() {
               await ent.setParentWindowGroup(wg)
               volumePanelEnt = ent
 
-              var i = await session.createIFrameComponent()
+              var i = await session!.createIFrameComponent()
               await i.setResolution(300, 300)
-              await i.loadURL("/src/loadTsx.html?pageName=embed/basic.tsx")
+              await i.loadURL("/src/embed/basic.html")
               await ent.setComponent(i)
 
 
 
-              var ent = await session.createEntity()
+              var ent = await session!.createEntity()
               ent.transform.position.x = 0
               ent.transform.position.y = -0.4
               ent.transform.position.z = 0.4
               ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
               await ent.updateTransform()
               await ent.setParentWindowGroup(wg)
-              var helmetModel = await session.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
+              var helmetModel = await session!.createModelComponent({ url: "/src/assets/FlightHelmet.usdz" })
               await ent.setComponent(helmetModel)
               volumeModelEnt = ent
             }}>
@@ -118,9 +121,9 @@ function App() {
             onClick={async (e) => {
 
               var session = await getSessionAsync()
-              var wg = await session.createWindowGroup("Plain")
+              var wg = await session!.createWindowGroup("Plain")
 
-              var ent = await session.createEntity()
+              var ent = await session!.createEntity()
               ent.transform.position.x = 0
               ent.transform.position.y = 0
               ent.transform.position.z = 0
@@ -128,7 +131,7 @@ function App() {
 
               volumePanelEnt = ent
 
-              var i = await session.createIFrameComponent(wg)
+              var i = await session!.createIFrameComponent(wg)
               await i.setResolution(300, 300)
               await i.loadURL("/src/jsApiTestPages/testList.html")
               await i.setAsRoot(true)
@@ -168,15 +171,15 @@ function App() {
         {children}
       </div>
       <div className="flex text-white h-64 m-10">
-        <SpatialIFrame src="/src/loadTsx.html?pageName=embed/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
+        <SpatialIFrame src="/src/embed/basic.html" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 100 }}>
         </SpatialIFrame>
-        <SpatialIFrame src="/src/loadTsx.html?pageName=embed/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
+        <SpatialIFrame src="/src/embed/basic.html" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 50 }}>
 
         </SpatialIFrame>
-        <SpatialIFrame src="/src/loadTsx.html?pageName=embed/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
+        <SpatialIFrame src="/src/embed/basic.html" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 25 }}>
 
         </SpatialIFrame>
-        <SpatialIFrame src="/src/loadTsx.html?pageName=embed/basic.tsx" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
+        <SpatialIFrame src="/src/embed/basic.html" className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64" spatialOffset={{ z: 10 }}>
 
         </SpatialIFrame>
       </div>
@@ -205,9 +208,16 @@ function App() {
   )
 }
 
-; (await getSessionAsync()).getCurrentIFrameComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
-document.documentElement.style.backgroundColor = "transparent";
-document.body.style.backgroundColor = "transparent"
+var session = getSessionAsync();
+if (session) {
+  session!.getCurrentIFrameComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
+  document.documentElement.style.backgroundColor = "transparent";
+  document.body.style.backgroundColor = "transparent"
+} else {
+  document.documentElement.style.backgroundColor = "gray";
+  document.body.style.backgroundColor = "gray"
+}
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -219,8 +229,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode >,
 )
 
-
-
-var main = async () => {
-}
-main()

@@ -1,12 +1,15 @@
-import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './index';
-import { LoggerLevel } from './Logger';
+import React, { CSSProperties, ReactElement, useEffect, useRef } from 'react'
+import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelUIComponent, SpatialSession } from './index';
+
 type vecType = { x: number, y: number, z: number }
 
 // Create the default Spatial session for the app
 let spatial = new Spatial()
 let _currentSession = null as SpatialSession | null
-export async function getSessionAsync() {
+export function getSessionAsync() {
+    if (!spatial.isSupported()) {
+        return null
+    }
     if (_currentSession) {
         return _currentSession
     }
@@ -34,9 +37,9 @@ class SpatialIFrameManager {
     webview?: SpatialIFrameComponent
 
     async initInternal(url: string) {
-        this.entity = await (await getSessionAsync()).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
-        this.webview = await (await getSessionAsync()).createIFrameComponent()
+        this.entity = await (await getSessionAsync()!).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
+        this.webview = await (await getSessionAsync()!).createIFrameComponent()
         await this.webview.loadURL(url)
         await this.webview.setInline(true);
         await this.webview.setScrollEnabled(false);
@@ -77,23 +80,9 @@ class SpatialModelUIManager {
     modelComponent?: SpatialModelUIComponent
 
     async initInternal(url: string) {
-        const session = await getSessionAsync();
-
-        // await session.setLogLevel(LoggerLevel.INFO);
-
-        // await session.trace("SpatialModelUIManager initInternal trace");
-
-        // await session.info("SpatialModelUIManager initInternal");
-
-        // await session.warn("SpatialModelUIManager initInternal warn");
-
-        // await session.setLogLevel(LoggerLevel.TRACE);
-
-        // await session.trace("SpatialModelUIManager initInternal trace again");
-
-        this.entity = await (await getSessionAsync()).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
-        this.modelComponent = await (await getSessionAsync()).createModelUIComponent()
+        this.entity = await (await getSessionAsync()!).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
+        this.modelComponent = await (await getSessionAsync()!).createModelUIComponent()
         await this.modelComponent.setURL(url)
         await this.entity.setComponent(this.modelComponent)
     }
