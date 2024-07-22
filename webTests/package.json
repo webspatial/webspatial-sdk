@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node esbuild.mjs",
     "build": "node esbuild.mjs",
+    "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
     "autoprefixer": "^10.4.19",
     "esbuild": "^0.23.0",
     "livereload": "^0.9.3",
+    "loglevel": "^1.9.1",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
