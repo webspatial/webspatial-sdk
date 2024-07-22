@@ -34,9 +34,9 @@ PBR material which can be set on a SpatialModelComponent
 
 > **r**: `number` = `0.0`
 
-#### Source
+#### Defined in
 
-index.ts:219
+index.ts:240
 
 ***
 
@@ -48,9 +48,9 @@ index.ts:219
 
 > **value**: `number` = `0.5`
 
-#### Source
+#### Defined in
 
-index.ts:220
+index.ts:241
 
 ***
 
@@ -62,9 +62,9 @@ index.ts:220
 
 > **value**: `number` = `0.5`
 
-#### Source
+#### Defined in
 
-index.ts:221
+index.ts:242
 
 ## Methods
 
@@ -82,9 +82,9 @@ Marks resource to be released (it should no longer be used)
 
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105
 
 ***
 
@@ -98,6 +98,6 @@ Syncs state of color, metallic, roupghness to the renderer
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:226
+index.ts:247

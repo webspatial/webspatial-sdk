@@ -14,9 +14,9 @@ Entity used to describe an object that can be added to the scene
 
 > **transform**: [`SpatialTransform`](SpatialTransform.md)
 
-#### Source
+#### Defined in
 
-index.ts:34
+index.ts:43
 
 ## Methods
 
@@ -30,9 +30,9 @@ Removes a reference to the entity by the renderer and this object should no long
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:71
+index.ts:80
 
 ***
 
@@ -46,9 +46,9 @@ Check if destroy has been called
 
 `boolean`
 
-#### Source
+#### Defined in
 
-index.ts:80
+index.ts:89
 
 ***
 
@@ -66,9 +66,9 @@ Attaches a component to the entity to be displayed
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:56
+index.ts:65
 
 ***
 
@@ -88,9 +88,9 @@ the window group that should render this entity
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:64
+index.ts:73
 
 ***
 
@@ -104,6 +104,6 @@ Syncs the transform with the renderer, must be called to observe updates
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:49
+index.ts:58

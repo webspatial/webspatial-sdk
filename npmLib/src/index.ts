@@ -375,14 +375,14 @@ export class SpatialSession {
   async getParentIFrameComponent() {
     let parentResp: any = await WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { getParentID: "" })
     if (parentResp.data.parentID === "") {
-      return null
+      return new Promise<SpatialIFrameComponent | null>((res, rej) => { res(null) })
     } else {
       var res = new WebSpatialResource()
       res.id = parentResp.data.parentID
       return new SpatialIFrameComponent(res)
     }
   }
- 
+
   async setLogLevel(logLevel: LoggerLevel) {
     await WebSpatial.logger.setLevel(logLevel)
   }
