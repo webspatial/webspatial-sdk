@@ -26,9 +26,9 @@ Transform containing position, orientation and scale
 
 Quaternion value for x,y,z,y
 
-#### Source
+#### Defined in
 
-index.ts:22
+index.ts:31
 
 ***
 
@@ -36,9 +36,9 @@ index.ts:22
 
 > **position**: `DOMPoint`
 
-#### Source
+#### Defined in
 
-index.ts:20
+index.ts:29
 
 ***
 
@@ -46,6 +46,6 @@ index.ts:20
 
 > **scale**: `DOMPoint`
 
-#### Source
+#### Defined in
 
-index.ts:23
+index.ts:32

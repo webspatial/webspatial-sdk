@@ -28,9 +28,9 @@ Marks resource to be released (it should no longer be used)
 
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105
 
 ***
 
@@ -50,9 +50,9 @@ url to load
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:109
+index.ts:118
 
 ***
 
@@ -72,9 +72,9 @@ Content to be displayed
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:135
+index.ts:144
 
 ***
 
@@ -94,9 +94,9 @@ sets if this should be root or not
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:117
+index.ts:126
 
 ***
 
@@ -118,9 +118,9 @@ value to set
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:161
+index.ts:170
 
 ***
 
@@ -145,9 +145,9 @@ height in pixels
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:127
+index.ts:136
 
 ***
 
@@ -167,9 +167,9 @@ value to set
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:151
+index.ts:160
 
 ***
 
@@ -189,6 +189,6 @@ style options
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:143
+index.ts:152
