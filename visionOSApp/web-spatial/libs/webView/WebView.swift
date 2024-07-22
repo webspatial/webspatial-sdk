@@ -124,12 +124,18 @@ class SpatialWebView: WatchableObject {
         // Compute target url depending if the url is relative or not
         var targetUrl = url
         if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+            // Absolute path
             var port = ""
             if let p = webViewNative?.url.port {
                 port = ":"+String(p)
             }
             let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
             targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+        } else {
+            // Reletive path
+            var localDir = NSString(string: webViewNative!.url.absoluteString)
+            var relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl
+            return relPath
         }
         return targetUrl
     }
