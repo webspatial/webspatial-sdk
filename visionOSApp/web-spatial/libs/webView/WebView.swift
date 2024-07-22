@@ -555,7 +555,6 @@ class SpatialWebView: WatchableObject {
                     ]
                     
                     if let level = levelDict[logLevel] {
-                        let log = Logger.getLogger();
                         SwiftyBeaver.self.destinations.forEach({destination in
                             destination.minLevel = level
                         })
