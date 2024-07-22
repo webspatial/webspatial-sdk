@@ -26,6 +26,6 @@ Marks resource to be released (it should no longer be used)
 
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105

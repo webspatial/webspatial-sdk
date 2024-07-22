@@ -10,6 +10,7 @@
 
 - [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
 - [`SpatialModelComponent`](SpatialModelComponent.md)
+- [`SpatialInputComponent`](SpatialInputComponent.md)
 - [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
 - [`SpatialMeshResource`](SpatialMeshResource.md)
 - [`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)
@@ -26,6 +27,6 @@ Marks resource to be released (it should no longer be used)
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105
