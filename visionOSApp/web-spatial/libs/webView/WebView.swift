@@ -524,7 +524,7 @@ class SpatialWebView: WatchableObject {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
             } else if command == "log" {
                 if let logString: String = json.getValue(lookup: ["data", "logString"]),  let logLevel: String = json.getValue(lookup: ["data", "logLevel"])  {
-                    let log = Utils.getLogger();
+                    let log = Logger.getLogger();
                     switch logLevel {
                     case "TRACE":
                         log.verbose(logString)
@@ -555,7 +555,7 @@ class SpatialWebView: WatchableObject {
                     ]
                     
                     if let level = levelDict[logLevel] {
-                        let log = Utils.getLogger();
+                        let log = Logger.getLogger();
                         SwiftyBeaver.self.destinations.forEach({destination in
                             destination.minLevel = level
                         })
