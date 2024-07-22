@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swiftybeaver",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyBeaver/SwiftyBeaver",
+      "state" : {
+        "revision" : "8cba041db09596183331d123f337d0eb2e6e8e91",
+        "version" : "2.1.1"
+      }
+    }
+  ],
+  "version" : 2
+}
