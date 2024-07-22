@@ -1,5 +1,6 @@
 import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from './index';
+import { LoggerLevel } from './Logger';
 type vecType = { x: number, y: number, z: number }
 
 // Create the default Spatial session for the app
@@ -77,7 +78,18 @@ class SpatialModelUIManager {
 
     async initInternal(url: string) {
         const session = await getSessionAsync();
-        session.info("SpatialModelUIManager initInternal");
+
+        // await session.setLogLevel(LoggerLevel.INFO);
+
+        // await session.trace("SpatialModelUIManager initInternal trace");
+
+        // await session.info("SpatialModelUIManager initInternal");
+
+        // await session.warn("SpatialModelUIManager initInternal warn");
+
+        // await session.setLogLevel(LoggerLevel.TRACE);
+
+        // await session.trace("SpatialModelUIManager initInternal trace again");
 
         this.entity = await (await getSessionAsync()).createEntity()
         await this.entity.setParentWindowGroup(await (await getSessionAsync()).getCurrentWindowGroup())
