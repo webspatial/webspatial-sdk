@@ -28,9 +28,9 @@ Marks resource to be released (it should no longer be used)
 
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
-#### Source
+#### Defined in
 
-index.ts:96
+index.ts:105
 
 ***
 
@@ -50,9 +50,9 @@ array of materials to set
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:182
+index.ts:191
 
 ***
 
@@ -72,6 +72,6 @@ mesh to set
 
 `Promise`\<`void`\>
 
-#### Source
+#### Defined in
 
-index.ts:174
+index.ts:183
