@@ -27,10 +27,10 @@ struct web_spatialApp: App {
 
     init() {
         print("WebSpatial App Started --------")
-        
+
         // init global logger
         Logger.initLogger()
-        
+
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
@@ -41,7 +41,8 @@ struct web_spatialApp: App {
         if root == nil {
             // Set initial URL to load
             let useStaticFile = false
-            let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html")! : URL(string: "http://localhost:5173")!
+
+            let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "static-web/src/clockApp")! : URL(string: "http://localhost:5173")!
 
             // Create a default entity with webview resource
             let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
