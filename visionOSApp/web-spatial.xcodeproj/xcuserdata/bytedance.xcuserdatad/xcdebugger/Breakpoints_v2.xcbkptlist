@@ -46,8 +46,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "65"
-            endingLineNumber = "65"
+            startingLineNumber = "67"
+            endingLineNumber = "67"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -56,14 +56,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "A642A077-DBA8-44D3-BAB6-4D5F505B9FDF"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "69"
-            endingLineNumber = "69"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -72,14 +72,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "E8051F1A-D71E-4A49-B837-AC39CFFBDEF6"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "77"
-            endingLineNumber = "77"
+            startingLineNumber = "79"
+            endingLineNumber = "79"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -200,7 +200,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "4BBB40F3-FE5A-4675-AEC8-6EBE73CCF742"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "web-spatial/views/PlainWindowGroupView.swift"
@@ -226,6 +226,50 @@
             endingLineNumber = "526"
             landmarkName = "onJSScriptMessage(json:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
+                  moduleName = "web-spatial"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "526"
+                  endingLineNumber = "526">
+               </Location>
+               <Location
+                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
+                  moduleName = "web-spatial"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "526"
+                  endingLineNumber = "526">
+               </Location>
+               <Location
+                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
+                  moduleName = "web-spatial"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "526"
+                  endingLineNumber = "526">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -241,6 +285,54 @@
             startingLineNumber = "32"
             endingLineNumber = "32"
             landmarkName = "init()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F0CE6200-16E9-4793-ABFB-B07A8A5CCAD5"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "web-spatial/libs/webView/WebView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "529"
+            endingLineNumber = "529"
+            landmarkName = "onJSScriptMessage(json:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C9DB2FBF-9ECF-47EF-8376-7307136D4DCB"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "web-spatial/libs/webView/WebView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "559"
+            endingLineNumber = "559"
+            landmarkName = "onJSScriptMessage(json:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AF96D39A-7B19-4AC6-9A6F-FBD777E7EB5B"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "web-spatial/libs/webView/WebView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "527"
+            endingLineNumber = "527"
+            landmarkName = "onJSScriptMessage(json:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -14,7 +14,7 @@ struct Logger {
     }
     
     static func initLogger(){
-        var logConsole = ConsoleDestination();
+        let logConsole = ConsoleDestination();
         logConsole.useTerminalColors = true;
         SwiftyBeaver.self.addDestination(logConsole)
     }
