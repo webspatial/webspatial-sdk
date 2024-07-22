@@ -14,8 +14,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
+            startingLineNumber = "34"
+            endingLineNumber = "34"
             landmarkName = "init()"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "40"
-            endingLineNumber = "40"
+            startingLineNumber = "41"
+            endingLineNumber = "41"
             landmarkName = "initAppOnViewMount()"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "64"
-            endingLineNumber = "64"
+            startingLineNumber = "65"
+            endingLineNumber = "65"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "68"
-            endingLineNumber = "68"
+            startingLineNumber = "69"
+            endingLineNumber = "69"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -78,8 +78,8 @@
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "76"
-            endingLineNumber = "76"
+            startingLineNumber = "77"
+            endingLineNumber = "77"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -216,7 +216,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "web-spatial/libs/webView/WebView.swift"
@@ -226,64 +226,20 @@
             endingLineNumber = "526"
             landmarkName = "onJSScriptMessage(json:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
-                  moduleName = "web-spatial"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "526"
-                  endingLineNumber = "526">
-               </Location>
-               <Location
-                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
-                  moduleName = "web-spatial"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "526"
-                  endingLineNumber = "526">
-               </Location>
-               <Location
-                  uuid = "D03FBDCA-A006-4A66-9077-6794F31F5ADD - c9db7210d1f4cc79"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "web_spatial.SpatialWebView.onJSScriptMessage(json: web_spatial.JsonParser) -&gt; ()"
-                  moduleName = "web-spatial"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bytedance/gitlab/web-spatial-visionos/visionOSApp/web-spatial/libs/webView/WebView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "526"
-                  endingLineNumber = "526">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "69CDCD88-6A21-46AB-BE2C-08B654778236"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "web-spatial/web_spatialApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "31"
-            endingLineNumber = "31"
+            startingLineNumber = "32"
+            endingLineNumber = "32"
             landmarkName = "init()"
             landmarkType = "7">
          </BreakpointContent>
