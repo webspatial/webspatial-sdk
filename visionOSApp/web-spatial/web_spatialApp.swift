@@ -27,6 +27,10 @@ struct web_spatialApp: App {
 
     init() {
         print("WebSpatial App Started --------")
+        
+        // init global logger
+        Logger.initLogger()
+        
         rootWGD = wgManager.getWindowGroup(windowGroup: "root")
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
