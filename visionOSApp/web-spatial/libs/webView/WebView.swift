@@ -34,9 +34,6 @@ struct LoadingStyles {
 class SpatialWebView: WatchableObject {
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
-    
-
-
     var full = false
     @Published var root = false
     @Published var resolutionX: Double = 0
@@ -68,7 +65,7 @@ class SpatialWebView: WatchableObject {
         super.init()
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
-        webViewNative?.createResources()
+        _ = webViewNative?.createResources()
     }
 
     init(parentWindowGroupID: String, url: URL) {
@@ -76,21 +73,18 @@ class SpatialWebView: WatchableObject {
         webViewNative = WebViewNative(url: url)
         super.init()
         webViewNative?.webViewRef = self
-        webViewNative?.createResources()
+        _ = webViewNative?.createResources()
 
         // childResources[resourceID] = self
-
-         
     }
 
     func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
-        webViewNative?.createResources()
+        _ = webViewNative?.createResources()
     }
 
     func navigateToURL(url: URL) {
-        let request = URLRequest(url: url)
         webViewNative!.url = url
         webViewNative!.webViewHolder.needsUpdate = true
         webViewNative!.initialLoad()
@@ -133,8 +127,8 @@ class SpatialWebView: WatchableObject {
             targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
         } else {
             // Reletive path
-            var localDir = NSString(string: webViewNative!.url.absoluteString)
-            var relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl
+            let localDir = NSString(string: webViewNative!.url.absoluteString)
+            let relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl
             return relPath
         }
         return targetUrl
@@ -216,7 +210,7 @@ class SpatialWebView: WatchableObject {
         for k in wgkeys {
             wgManager.getWindowGroup(windowGroup: k).closeWindowData = childWindowGroups[k]
         }
-        var url = webViewNative?.webViewHolder.appleWebView?.url
+        let url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
 
         // Mark that we havn't gotten a style update
@@ -529,8 +523,8 @@ class SpatialWebView: WatchableObject {
             } else if command == "dismissImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
             } else if command == "log" {
-                if let logString: String = json.getValue(lookup: ["data", "logString"]),  let logLevel: String = json.getValue(lookup: ["data", "logLevel"])  {
-                    let log = Logger.getLogger();
+                if let logString: String = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
+                    let log = Logger.getLogger()
                     switch logLevel {
                     case "TRACE":
                         log.verbose(logString)
@@ -559,12 +553,10 @@ class SpatialWebView: WatchableObject {
                         "WARN": SwiftyBeaver.Level.warning,
                         "INFO": SwiftyBeaver.Level.info,
                     ]
-                    
                     if let level = levelDict[logLevel] {
-                        SwiftyBeaver.self.destinations.forEach({destination in
+                        for destination in SwiftyBeaver.destinations {
                             destination.minLevel = level
-                        })
-
+                        }
                     }
                 }
             }
