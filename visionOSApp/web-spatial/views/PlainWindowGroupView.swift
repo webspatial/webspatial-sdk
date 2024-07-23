@@ -150,7 +150,7 @@ struct PlainWindowGroupView: View {
                                                 DragGesture()
                                                     .onChanged { gesture in
                                                         let scrollEnabled = view.isScrollEnabled()
-                                                        if scrollEnabled != nil, !scrollEnabled {
+                                                        if !scrollEnabled {
                                                             if !view.dragStarted {
                                                                 view.dragStarted = true
                                                                 view.dragStart = (gesture.translation.height)
@@ -164,7 +164,7 @@ struct PlainWindowGroupView: View {
                                                     }
                                                     .onEnded { _ in
                                                         let scrollEnabled = view.isScrollEnabled()
-                                                        if scrollEnabled != nil, !scrollEnabled {
+                                                        if !scrollEnabled {
                                                             view.dragStarted = false
                                                             view.dragStart = 0
 
