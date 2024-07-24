@@ -33,5 +33,8 @@ ctx.serve({
 })
 
 var server = livereload.createServer();
-server.watch(path.resolve("dist"));
+var watchPaths = [path.resolve("dist")]
+watchPaths = watchPaths.concat(await glob("./src/**/*.html"))
+watchPaths.push("index.html")
+server.watch(watchPaths);
 console.log("server created!")
