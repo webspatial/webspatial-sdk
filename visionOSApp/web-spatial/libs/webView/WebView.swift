@@ -45,6 +45,7 @@ class SpatialWebView: WatchableObject {
     var parentWindowGroupID: String
     var childResources = [String: SpatialResource]()
     var childWindowGroups = [String: WindowGroupData]()
+    var spawnedNativeWebviews = [String: WebViewNative]()
 
     // Drag event handling
     var dragStarted = false
@@ -205,6 +206,7 @@ class SpatialWebView: WatchableObject {
             }
         }
         childResources = [String: SpatialResource]()
+        spawnedNativeWebviews = [String: WebViewNative]()
 
         let wgkeys = childWindowGroups.map { $0.key }
         for k in wgkeys {
@@ -217,6 +219,12 @@ class SpatialWebView: WatchableObject {
         gotStyle = false
         isLoading = true
         loadingStyles = LoadingStyles()
+    }
+
+    func didSpawnWebView(wv: WebViewNative) {
+        let uuid = UUID().uuidString
+        wv.webViewHolder.appleWebView?.evaluateJavaScript("window._webSpatialID = '"+uuid+"'")
+        spawnedNativeWebviews[uuid] = wv
     }
 
     func didStartReceivePageContent() {}
@@ -441,6 +449,11 @@ class SpatialWebView: WatchableObject {
 
                         if let inline: Bool = json.getValue(lookup: ["data", "update", "inline"]) {
                             sr.spatialWebView!.inline = inline
+                        }
+
+                        if let windowID: String = json.getValue(lookup: ["data", "update", "windowID"]) {
+                            sr.spatialWebView?.webViewNative = spawnedNativeWebviews[windowID]
+                            spawnedNativeWebviews.removeValue(forKey: windowID)
                         }
 
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
