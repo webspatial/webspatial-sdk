@@ -119,6 +119,13 @@ export class SpatialIFrameComponent extends SpatialResource {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
 
+  async setFromWindow(window: any) {
+    if (window._webSpatialID) {
+      await WebSpatial.updateResource(this._resource, { windowID: window._webSpatialID })
+    } else {
+      await WebSpatial.logger.error("failed to call setFromWindow, window provided is not valid")
+    }
+  }
   /**
    * Sets if this IFrame can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
    * @param makeRoot sets if this should be root or not
