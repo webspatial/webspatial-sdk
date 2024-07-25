@@ -163,6 +163,53 @@ var main = async () => {
         b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms"
         document.body.appendChild(b)
         session.log("Got response")
+    } else if (page == "winodwInnerHTML") {
+        if (!spatial.isSupported()) {
+            return
+        }
+
+        for (let j = 0; j < 2; j++) {
+            let x = window.open("/src/jsApiTestPages/htmlSkeleton.html", undefined, "webSpatialId=10")
+
+            if (x) {
+                x.addEventListener("load", async (event) => {
+                    await session.log("load complete")
+
+                    x.document.body.innerHTML = "Hello World"
+
+                    x.document.onclick = () => {
+                        window.document.body.style.backgroundColor = "yellow"
+                    }
+
+                    let e = await session.createEntity()
+                    e.transform.position.x = 500
+                    e.transform.position.y = 300
+                    e.transform.position.z = 300
+                    await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+                    await e.updateTransform()
+                    let i = await session.createIFrameComponent()
+                    x.document.documentElement.style.backgroundColor = "transparent";
+                    x.document.documentElement.style.color = "white"
+                    x.document.documentElement.style.fontSize = "5em"
+                    await i.setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 0 })
+                    await Promise.all([
+                        i.setFromWindow(x),
+                        i.setScrollEnabled(false),
+                        i.setInline(true),
+                        i.setResolution(300, 300),
+                    ])
+                    await e.setComponent(i)
+
+                    let offset = j
+
+
+                    e.transform.position.x = (500 + Math.sin(0 / 1000) * 200) + (offset * 200)
+                    e.updateTransform()
+                });
+            }
+        }
+        window.document.body.style.backgroundColor = "red"
     }
 }
 main()
