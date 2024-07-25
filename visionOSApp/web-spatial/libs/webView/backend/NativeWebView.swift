@@ -63,6 +63,28 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         print("Navigation failed!!! " + error.localizedDescription)
     }
+    
+    func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        print("webview?")
+        //  print(windowFeatures.value(forKey: <#T##String#>))
+        //        var value = windowFeatures.value(forKey: "webSpatialId")
+//        print(value)
+        //  let newWebView = WKWebView(frame: webView.bounds, configuration: configuration)
+        var wvNative = WebViewNative()
+        wvNative.createResources(configuration: configuration)
+        
+        // webViewRef?.getView()!.webViewHolder.appleWebView = wvNative.webViewHolder.appleWebView
+        
+        // newWebView.evaluateJavaScript("", completionHandler: <#T##((Any?, (any Error)?) -> Void)?##((Any?, (any Error)?) -> Void)?##(Any?, (any Error)?) -> Void#>)
+        webViewRef?.didSpawnWebView(wv: wvNative)
+        //  webViewRef?.didSpawnWebView(wv: newWebView)
+        return wvNative.webViewHolder.appleWebView
+    }
 
     // receive message from wkwebview
     func userContentController(
@@ -80,8 +102,10 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
-        let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupID)
-        wg.updateFrame = !(wg.updateFrame)
+        if webViewRef != nil {
+            let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupID)
+            wg.updateFrame = !(wg.updateFrame)
+        }
     }
 }
 
@@ -96,7 +120,7 @@ struct WebViewNative: UIViewRepresentable {
         return c
     }
     
-    func createResources() -> WKWebView {
+    func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
@@ -105,17 +129,18 @@ struct WebViewNative: UIViewRepresentable {
             userContentController.addUserScript(userScript)
             userContentController.add(webViewHolder.webViewCoordinator!, name: "bridge")
             
-            let configuration = WKWebViewConfiguration()
-            configuration.userContentController = userContentController
+            let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
+            myConfig.userContentController = userContentController
+            myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
             
-            webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: configuration)
+            webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
-            
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
-            webViewHolder.needsUpdate = true
+            webViewHolder.appleWebView!.isOpaque = false
+            webViewHolder.needsUpdate = (configuration != nil) ? false : true
         }
 
         return webViewHolder.appleWebView!
