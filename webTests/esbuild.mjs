@@ -32,9 +32,15 @@ ctx.serve({
     port: 5173,
 })
 
-var server = livereload.createServer();
+var server = livereload.createServer({
+    extraExts: ["ts", "tsx"],
+    delay: 50
+});
 var watchPaths = [path.resolve("dist")]
 watchPaths = watchPaths.concat(await glob("./src/**/*.html"))
+watchPaths = watchPaths.concat(await glob("./src/**/*.tsx"))
+watchPaths = watchPaths.concat(await glob("./src/**/*.ts"))
 watchPaths.push("index.html")
+watchPaths.push("index.tsx")
 server.watch(watchPaths);
 console.log("server created!")
