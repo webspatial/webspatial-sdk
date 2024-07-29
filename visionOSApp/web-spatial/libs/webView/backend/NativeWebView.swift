@@ -70,19 +70,9 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        print("webview?")
-        //  print(windowFeatures.value(forKey: <#T##String#>))
-        //        var value = windowFeatures.value(forKey: "webSpatialId")
-//        print(value)
-        //  let newWebView = WKWebView(frame: webView.bounds, configuration: configuration)
         var wvNative = WebViewNative()
         wvNative.createResources(configuration: configuration)
-        
-        // webViewRef?.getView()!.webViewHolder.appleWebView = wvNative.webViewHolder.appleWebView
-        
-        // newWebView.evaluateJavaScript("", completionHandler: <#T##((Any?, (any Error)?) -> Void)?##((Any?, (any Error)?) -> Void)?##(Any?, (any Error)?) -> Void#>)
         webViewRef?.didSpawnWebView(wv: wvNative)
-        //  webViewRef?.didSpawnWebView(wv: newWebView)
         return wvNative.webViewHolder.appleWebView
     }
 

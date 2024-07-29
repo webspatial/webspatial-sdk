@@ -1,5 +1,6 @@
-import React, { CSSProperties, ReactElement, useEffect, useRef } from 'react'
+import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
 import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelUIComponent, SpatialSession } from './index';
+import { createPortal } from 'react-dom';
 
 type vecType = { x: number, y: number, z: number }
 
@@ -45,8 +46,21 @@ class SpatialIFrameManager {
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
     }
+    async initInternalFromWindow(w: any) {
+        this.entity = await (await getSessionAsync()!).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
+        this.webview = await (await getSessionAsync()!).createIFrameComponent()
+        await this.webview.setFromWindow(w)
+        await this.webview.setInline(true);
+        await this.webview.setScrollEnabled(false);
+        await this.entity.setComponent(this.webview)
+    }
     async init(url: string) {
         this.initPromise = this.initInternal(url)
+        await this.initPromise
+    }
+    async initFromWidow(w: any) {
+        this.initPromise = this.initInternalFromWindow(w)
         await this.initPromise
     }
     async resize(element: HTMLElement, offset: vecType) {
@@ -242,4 +256,146 @@ export function Model(props: { className: string, children: ReactElement | Array
         <div ref={myDiv} className={props.className}>
         </div>
     )
+}
+
+
+
+/**
+ * Hook to manage multiple instances of objects that could be initialized as async
+ */
+function useAsyncInstances<T>(
+    createInstance: () => T,
+    destroyInstance: (instance: T) => void,
+    dependencies: React.DependencyList | undefined
+) {
+    let instanceState = useRef({} as { [id: number]: T })
+    let currentInstanceID = useRef(0)
+
+    useEffect(() => {
+        currentInstanceID.current = ++_SpatialUIInstanceIDCounter
+        let currentVal = currentInstanceID.current
+        instanceState.current[currentVal] = createInstance()
+        return () => {
+            destroyInstance(instanceState.current[currentVal])
+            delete instanceState.current[currentVal]
+        }
+    }, [])
+    return {
+        getActiveInstance() {
+            var i = instanceState.current[currentInstanceID.current]
+            return i ? i : null
+        }
+    }
+}
+
+
+export function PortalIFrame(props: { children?: ReactElement | Array<ReactElement> }) {
+    let childrenSizeRef = useRef(null as null | HTMLDivElement)
+    let iframeRef = useRef(null as null | HTMLIFrameElement)
+    const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
+
+    let mode = "iframe"
+    let session = getSessionAsync()
+    if (session) {
+        mode = "spatial"
+    }
+
+    if (mode === "none") { // Used for debugging purposes
+        return <>
+            {props.children}
+        </>
+    } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
+        useEffect(() => {
+            let i = iframeRef.current! as HTMLIFrameElement;
+            i.contentWindow!.document.body.style.margin = "0"
+            i.contentWindow!.document.body.style.overflow = "hidden"
+            i.contentWindow!.document.documentElement.style.backgroundColor = "transparent"
+            // Copy styles
+            var links = document.getElementsByTagName("link")
+            for (var l of links) {
+                if (l.rel == "stylesheet") {
+                    var styleEl = l.cloneNode(true)
+                    i.contentWindow!.document.head.appendChild(styleEl)
+                }
+            }
+
+            // Watch for resize
+            let ro = new ResizeObserver((entries) => {
+                iframeRef.current!.style.height = i.contentWindow!.document.body.scrollHeight.toString() + "px"
+            })
+            ro.observe(i.contentWindow!.document.body)
+            setPortalEl(i.contentWindow!.document.body)
+
+            return () => {
+                // Cleanup
+                ro.disconnect()
+                setPortalEl(null)
+            }
+        }, [])
+        return <>
+            <iframe ref={iframeRef} style={{ width: "100%", overflow: "hidden" }}></iframe>
+            {portalEl ? <>
+                {createPortal(<>
+                    {props.children}
+                </>, portalEl)}
+            </> : <></>}
+        </>
+    } else if (mode === "spatial") { // Behavior on spatial
+        let iframeInstance = useAsyncInstances(() => {
+            // Open window and set style
+            let openedWindow = window.open();
+            openedWindow!.document.documentElement.style.backgroundColor = "transparent"
+            openedWindow!.document.head.innerHTML = `
+                <meta charset="UTF-8">
+                <title>WebSpatial</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            `
+            var links = document.getElementsByTagName("link")
+            for (var l of links) {
+                if (l.rel == "stylesheet") {
+                    var styleEl = l.cloneNode(true)
+                    openedWindow!.document.head.appendChild(styleEl)
+                }
+            }
+            // Create portal
+            setPortalEl(openedWindow!.document.body)
+
+            // Create spatial iframe
+            let iframeMngr = new SpatialIFrameManager()
+            iframeMngr.initFromWidow(openedWindow!).then(async () => {
+                // Set style
+                await iframeMngr.webview?.setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 0 })
+                await resizeSpatial()
+            })
+
+            return iframeMngr
+        }, (instance) => {
+            instance.destroy()
+        }, [])
+
+        // Handle resizing
+        let resizeSpatial = async () => {
+            var ins = iframeInstance.getActiveInstance()
+            if (ins) {
+                await ins.resize(childrenSizeRef.current!, { x: 0, y: 0, z: 50 })
+            }
+        }
+        useEffect(() => {
+            window.addEventListener("resize", resizeSpatial);
+            return () => {
+                window.removeEventListener("resize", resizeSpatial);
+            }
+        })
+
+        return <>
+            <div ref={childrenSizeRef} style={{ visibility: "hidden" }}  >
+                {props.children}
+            </div>
+            {portalEl ? <>
+                {createPortal(<>
+                    {props.children}
+                </>, portalEl)}
+            </> : <></>}
+        </>
+    }
 }
