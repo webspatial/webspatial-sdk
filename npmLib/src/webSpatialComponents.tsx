@@ -63,17 +63,17 @@ class SpatialIFrameManager {
         this.initPromise = this.initInternalFromWindow(w)
         await this.initPromise
     }
-    async resize(element: HTMLElement, offset: vecType) {
-        let rect = element.getBoundingClientRect();
+    async resize(element?: HTMLElement, offset?: vecType, domRect?: DOMRect) {
+        let rect = domRect ? domRect : element!.getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
         if (!this.webview) {
             return
         }
         var entity = this.entity!
-        entity.transform.position.x = targetPosX + offset.x
-        entity.transform.position.y = targetPosY + offset.y
-        entity.transform.position.z = offset.z
+        entity.transform.position.x = targetPosX + (offset ? offset.x : 0)
+        entity.transform.position.y = targetPosY + (offset ? offset.y : 0)
+        entity.transform.position.z = (offset ? offset.z : 0)
         await entity.updateTransform()
 
         var webview = this.webview!
@@ -293,6 +293,10 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
+    const [isCustomElement, setIsCustomElement] = useState(false)
+    let customElEnabled = false
+    let customElements = null as null | HTMLElement
+
 
     let mode = "iframe"
     let session = getSessionAsync()
@@ -300,14 +304,37 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
         mode = "spatial"
     }
 
+    useEffect(() => {
+        if (mode == "none") {
+            return
+        }
+
+        // Detect if we are running within a custom element instead of react
+        if ((props as any).container) {
+            let containerHtml: string = (props as any).container.host.innerHTML.trim()
+            if (!props.children && containerHtml.length != 0) {
+                setIsCustomElement(true)
+                customElEnabled = true
+                customElements = document.createElement("div")
+                for (let el of (props as any).container.host.children) {
+                    customElements.appendChild(el)
+                }
+                if (iframeRef.current) {
+                    iframeRef.current!.contentWindow!.document.body.appendChild(customElements!)
+                }
+            }
+        }
+    }, [])
+
+
     if (mode === "none") { // Used for debugging purposes
         return <>
-            {props.children}
+            <slot></slot>
         </>
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
             let i = iframeRef.current! as HTMLIFrameElement;
-            i.contentWindow!.document.body.style.margin = "0"
+            i.contentWindow!.document.body.style.margin = "0px"
             i.contentWindow!.document.body.style.overflow = "hidden"
             i.contentWindow!.document.documentElement.style.backgroundColor = "transparent"
             // Copy styles
@@ -333,7 +360,7 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
             }
         }, [])
         return <>
-            <iframe ref={iframeRef} style={{ width: "100%", overflow: "hidden" }}></iframe>
+            <iframe ref={iframeRef} frameBorder="0" style={{ width: "100%", overflow: "hidden" }}></iframe>
             {portalEl ? <>
                 {createPortal(<>
                     {props.children}
@@ -345,6 +372,8 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
             // Open window and set style
             let openedWindow = window.open();
             openedWindow!.document.documentElement.style.backgroundColor = "transparent"
+            openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
+            openedWindow!.document.body.style.margin = "0px"
             openedWindow!.document.head.innerHTML = `
                 <meta charset="UTF-8">
                 <title>WebSpatial</title>
@@ -357,8 +386,13 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
                     openedWindow!.document.head.appendChild(styleEl)
                 }
             }
-            // Create portal
-            setPortalEl(openedWindow!.document.body)
+
+            if (customElEnabled) {
+                openedWindow!.document.body.appendChild(customElements!)
+            } else {
+                // Create portal
+                setPortalEl(openedWindow!.document.body)
+            }
 
             // Create spatial iframe
             let iframeMngr = new SpatialIFrameManager()
@@ -377,7 +411,15 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
         let resizeSpatial = async () => {
             var ins = iframeInstance.getActiveInstance()
             if (ins) {
-                await ins.resize(childrenSizeRef.current!, { x: 0, y: 0, z: 50 })
+
+                let rect = childrenSizeRef.current!.getBoundingClientRect()
+                if (customElEnabled) {
+                    let p = customElements!.parentElement!
+                    childrenSizeRef.current!.appendChild(customElements!)
+                    rect = childrenSizeRef.current!.getBoundingClientRect()
+                    p.appendChild(customElements!)
+                }
+                await ins.resize(undefined, { x: 0, y: 0, z: 50 }, rect)
             }
         }
         useEffect(() => {
@@ -391,7 +433,7 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
             <div ref={childrenSizeRef} style={{ visibility: "hidden" }}  >
                 {props.children}
             </div>
-            {portalEl ? <>
+            {!isCustomElement && portalEl ? <>
                 {createPortal(<>
                     {props.children}
                 </>, portalEl)}
