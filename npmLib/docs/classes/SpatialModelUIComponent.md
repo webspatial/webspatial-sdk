@@ -49,7 +49,7 @@ index.ts:105
 
 #### Defined in
 
-index.ts:220
+index.ts:227
 
 ***
 
@@ -75,7 +75,7 @@ resolution in pixels
 
 #### Defined in
 
-index.ts:228
+index.ts:235
 
 ***
 
@@ -97,4 +97,4 @@ url of the model to load
 
 #### Defined in
 
-index.ts:217
+index.ts:224

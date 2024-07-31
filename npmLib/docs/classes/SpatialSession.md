@@ -34,7 +34,7 @@ Entity
 
 #### Defined in
 
-index.ts:290
+index.ts:297
 
 ***
 
@@ -56,7 +56,7 @@ IFrameComponent
 
 #### Defined in
 
-index.ts:299
+index.ts:306
 
 ***
 
@@ -74,7 +74,7 @@ InputComponent
 
 #### Defined in
 
-index.ts:330
+index.ts:337
 
 ***
 
@@ -96,7 +96,7 @@ MeshResource
 
 #### Defined in
 
-index.ts:341
+index.ts:348
 
 ***
 
@@ -120,7 +120,7 @@ ModelComponent
 
 #### Defined in
 
-index.ts:317
+index.ts:324
 
 ***
 
@@ -142,7 +142,7 @@ ModelUIComponent
 
 #### Defined in
 
-index.ts:308
+index.ts:315
 
 ***
 
@@ -164,7 +164,7 @@ PhysicallyBasedMaterial
 
 #### Defined in
 
-index.ts:350
+index.ts:357
 
 ***
 
@@ -186,7 +186,7 @@ WindowGroup
 
 #### Defined in
 
-index.ts:359
+index.ts:366
 
 ***
 
@@ -204,7 +204,7 @@ index.ts:359
 
 #### Defined in
 
-index.ts:402
+index.ts:409
 
 ***
 
@@ -220,7 +220,7 @@ Closes the immersive space
 
 #### Defined in
 
-index.ts:427
+index.ts:434
 
 ***
 
@@ -238,7 +238,7 @@ index.ts:427
 
 #### Defined in
 
-index.ts:406
+index.ts:413
 
 ***
 
@@ -256,7 +256,7 @@ the iframe component corresponding to the js running on this page
 
 #### Defined in
 
-index.ts:367
+index.ts:374
 
 ***
 
@@ -270,7 +270,7 @@ index.ts:367
 
 #### Defined in
 
-index.ts:437
+index.ts:444
 
 ***
 
@@ -284,7 +284,7 @@ index.ts:437
 
 #### Defined in
 
-index.ts:432
+index.ts:439
 
 ***
 
@@ -302,7 +302,7 @@ the iframe component or null
 
 #### Defined in
 
-index.ts:375
+index.ts:382
 
 ***
 
@@ -320,7 +320,7 @@ index.ts:375
 
 #### Defined in
 
-index.ts:394
+index.ts:401
 
 ***
 
@@ -338,7 +338,7 @@ index.ts:394
 
 #### Defined in
 
-index.ts:390
+index.ts:397
 
 ***
 
@@ -354,7 +354,7 @@ Opens the immersive space
 
 #### Defined in
 
-index.ts:422
+index.ts:429
 
 ***
 
@@ -374,7 +374,7 @@ Debugging only, used to ping the native renderer
 
 #### Defined in
 
-index.ts:417
+index.ts:424
 
 ***
 
@@ -396,7 +396,7 @@ callback to be called before next render update
 
 #### Defined in
 
-index.ts:271
+index.ts:278
 
 ***
 
@@ -414,7 +414,7 @@ index.ts:271
 
 #### Defined in
 
-index.ts:386
+index.ts:393
 
 ***
 
@@ -432,7 +432,7 @@ index.ts:386
 
 #### Defined in
 
-index.ts:410
+index.ts:417
 
 ***
 
@@ -450,4 +450,4 @@ index.ts:410
 
 #### Defined in
 
-index.ts:398
+index.ts:405
