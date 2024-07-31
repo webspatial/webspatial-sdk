@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import React, { CSSProperties } from 'react'
-import { PortalIFrame, SpatialIFrame, getSessionAsync } from './webSpatialComponents'
+import { SpatialDiv, SpatialIFrame, getSessionAsync } from './webSpatialComponents'
 import { Spatial } from '.'
 import r2wc from "@r2wc/react-to-web-component"
 
@@ -27,7 +27,7 @@ export class WebSpatialHydrate {
         }
 
         // Create custom element components from React components
-        const CustomPortalIFrame = r2wc(PortalIFrame, { shadow: "open" })
+        const CustomPortalIFrame = r2wc(SpatialDiv, { shadow: "open" })
         customElements.define("spatial-iframe", CustomPortalIFrame)
     }
 }
