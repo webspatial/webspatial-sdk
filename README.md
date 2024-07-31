@@ -5,7 +5,8 @@
 An easy-to-use library that allows developers to create content for XR Platforms using standard web technology (eg. html/css/js) that can be extended by good integration with popular libraries like ReactJS, BabylonJS, ThreeJS, etc.
 
 ### Full Api Docs
-**web-spatial** • [**Docs**](npmLib/docs/globals.md)
+ - **web-spatial JS API** • [**Docs**](/npmLib/docs/globals.md)
+ - **web-spatial React API** • [**Docs**](/npmLib/docs/reactComponents/globals.md)
 
 ### Usage
 

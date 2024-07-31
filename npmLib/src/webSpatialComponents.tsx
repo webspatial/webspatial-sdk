@@ -7,6 +7,7 @@ type vecType = { x: number, y: number, z: number }
 // Create the default Spatial session for the app
 let spatial = new Spatial()
 let _currentSession = null as SpatialSession | null
+/** @hidden */
 export function getSessionAsync() {
     if (!spatial.isSupported()) {
         return null
@@ -134,6 +135,7 @@ class SpatialModelUIManager {
 
 // React components
 let _SpatialUIInstanceIDCounter = 0
+/** @hidden */
 export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: SpatialIFrameComponent) => void, className: string, style?: CSSProperties | undefined, styleString?: string, children?: ReactElement | Array<ReactElement>, src: string, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
@@ -206,6 +208,7 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
   <img src="assets/FlightHelmet.png" width="670" height="1191" />
 </picture>
 </model> */}
+/** @hidden */
 export function Model(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
@@ -289,6 +292,11 @@ function useAsyncInstances<T>(
 }
 
 
+/**
+ * Component that extends the div tag that allows the inner contents to be posisioned in 3D space
+ * 
+ * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
+ */
 export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement>, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
