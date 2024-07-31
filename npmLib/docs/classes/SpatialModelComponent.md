@@ -52,7 +52,7 @@ array of materials to set
 
 #### Defined in
 
-index.ts:191
+index.ts:198
 
 ***
 
@@ -74,4 +74,4 @@ mesh to set
 
 #### Defined in
 
-index.ts:183
+index.ts:190

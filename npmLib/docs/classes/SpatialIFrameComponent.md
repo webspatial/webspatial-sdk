@@ -74,7 +74,7 @@ Content to be displayed
 
 #### Defined in
 
-index.ts:144
+index.ts:151
 
 ***
 
@@ -96,7 +96,25 @@ sets if this should be root or not
 
 #### Defined in
 
-index.ts:126
+index.ts:133
+
+***
+
+### setFromWindow()
+
+> **setFromWindow**(`window`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **window**: `any`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+index.ts:122
 
 ***
 
@@ -120,7 +138,7 @@ value to set
 
 #### Defined in
 
-index.ts:170
+index.ts:177
 
 ***
 
@@ -147,7 +165,7 @@ height in pixels
 
 #### Defined in
 
-index.ts:136
+index.ts:143
 
 ***
 
@@ -169,7 +187,7 @@ value to set
 
 #### Defined in
 
-index.ts:160
+index.ts:167
 
 ***
 
@@ -191,4 +209,4 @@ style options
 
 #### Defined in
 
-index.ts:152
+index.ts:159
