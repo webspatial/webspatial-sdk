@@ -36,7 +36,7 @@ PBR material which can be set on a SpatialModelComponent
 
 #### Defined in
 
-index.ts:240
+index.ts:247
 
 ***
 
@@ -50,7 +50,7 @@ index.ts:240
 
 #### Defined in
 
-index.ts:241
+index.ts:248
 
 ***
 
@@ -64,7 +64,7 @@ index.ts:241
 
 #### Defined in
 
-index.ts:242
+index.ts:249
 
 ## Methods
 
@@ -100,4 +100,4 @@ Syncs state of color, metallic, roupghness to the renderer
 
 #### Defined in
 
-index.ts:247
+index.ts:254
