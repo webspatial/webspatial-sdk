@@ -289,7 +289,7 @@ function useAsyncInstances<T>(
 }
 
 
-export function PortalIFrame(props: { children?: ReactElement | Array<ReactElement> }) {
+export function PortalIFrame(props: { children?: ReactElement | Array<ReactElement>, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -298,7 +298,7 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
     let customElements = null as null | HTMLElement
 
 
-    let mode = "iframe"
+    let mode = "none"
     let session = getSessionAsync()
     if (session) {
         mode = "spatial"
@@ -328,9 +328,12 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
 
 
     if (mode === "none") { // Used for debugging purposes
-        return <>
-            <slot></slot>
-        </>
+        return <div style={props.style}>
+            {!isCustomElement ? <>
+                {props.children}
+            </> : <slot></slot>}
+
+        </div>
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
             let i = iframeRef.current! as HTMLIFrameElement;
@@ -430,13 +433,13 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
         })
 
         return <>
-            <div ref={childrenSizeRef} style={{ visibility: "hidden" }}  >
+            <div ref={childrenSizeRef} style={{ ...props.style, ...{ visibility: "hidden" } }}  >
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<>
+                {createPortal(<div style={{ ...props.style, ...{ width: "", height: "" } }}>
                     {props.children}
-                </>, portalEl)}
+                </div>, portalEl)}
             </> : <></>}
         </>
     }
