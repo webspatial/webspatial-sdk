@@ -11,11 +11,21 @@ function PortalTest() {
             To be implemented
         </div>
         <div>
-            <PortalIFrame>
+            <PortalIFrame style={{ backgroundColor: "red", width: "50%" }}>
                 <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
                     This text is inside a portal iframe
                 </div>
             </PortalIFrame>
+            <div style={{ backgroundColor: "red", width: "50%" }}>
+                <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
+                    This text is inside a div notiframe
+                </div>
+            </div>
+            <div>
+                <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
+                    This text is inside a div notiframe
+                </div>
+            </div>
         </div>
 
     </>
