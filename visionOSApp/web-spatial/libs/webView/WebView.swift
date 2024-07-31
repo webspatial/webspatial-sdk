@@ -254,20 +254,23 @@ class SpatialWebView: WatchableObject {
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let c = childResources[cmdInfo.resourceID]!
-                    let e = childResources[cmdInfo.entityID]!
+                    if let c = childResources[cmdInfo.resourceID] {
+                        let e = childResources[cmdInfo.entityID]!
 
-                    if c.resourceType == "ModelUIComponent" {
-                        e.modelUIComponent = c.modelUIComponent
-                    } else if c.resourceType == "ModelComponent" {
-                        e.modelEntity.model = c.modelComponent
-                    } else if c.resourceType == "SpatialWebView" {
-                        e.spatialWebView = c.spatialWebView
-                    } else if c.resourceType == "InputComponent" {
-                        e.inputComponent = c.inputComponent
-                        e.modelEntity.generateCollisionShapes(recursive: false)
-                        e.modelEntity.components.set(c.inputComponent!.itc)
-                        e.modelEntity.components.set(e)
+                        if c.resourceType == "ModelUIComponent" {
+                            e.modelUIComponent = c.modelUIComponent
+                        } else if c.resourceType == "ModelComponent" {
+                            e.modelEntity.model = c.modelComponent
+                        } else if c.resourceType == "SpatialWebView" {
+                            e.spatialWebView = c.spatialWebView
+                        } else if c.resourceType == "InputComponent" {
+                            e.inputComponent = c.inputComponent
+                            e.modelEntity.generateCollisionShapes(recursive: false)
+                            e.modelEntity.components.set(c.inputComponent!.itc)
+                            e.modelEntity.components.set(e)
+                        }
+                    } else {
+                        print("missing resource, event not processed")
                     }
                 }
             } else if command == "createResource" {
