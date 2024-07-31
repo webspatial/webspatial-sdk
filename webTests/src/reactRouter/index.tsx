@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter, Link, Route, Routes } from 'react-router-dom'
-import { PortalIFrame } from 'web-spatial/src/webSpatialComponents'
+import { SpatialDiv } from 'web-spatial/src/webSpatialComponents'
 
 
 
@@ -11,11 +11,11 @@ function PortalTest() {
             To be implemented
         </div>
         <div>
-            <PortalIFrame style={{ backgroundColor: "red", width: "50%" }}>
+            <SpatialDiv style={{ backgroundColor: "red", width: "50%" }}>
                 <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
                     This text is inside a portal iframe
                 </div>
-            </PortalIFrame>
+            </SpatialDiv>
             <div style={{ backgroundColor: "red", width: "50%" }}>
                 <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
                     This text is inside a div notiframe

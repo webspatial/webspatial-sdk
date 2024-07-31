@@ -289,7 +289,7 @@ function useAsyncInstances<T>(
 }
 
 
-export function PortalIFrame(props: { children?: ReactElement | Array<ReactElement>, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement>, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -332,7 +332,6 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
-
         </div>
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
