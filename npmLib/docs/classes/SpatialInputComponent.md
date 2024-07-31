@@ -28,7 +28,7 @@ Used to handle input events on an entity
 
 #### Defined in
 
-index.ts:200
+index.ts:207
 
 ***
 
@@ -66,4 +66,4 @@ index.ts:105
 
 #### Defined in
 
-index.ts:203
+index.ts:210
