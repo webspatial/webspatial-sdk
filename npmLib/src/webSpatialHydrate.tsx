@@ -1,75 +1,34 @@
 import ReactDOM from 'react-dom/client'
 import React, { CSSProperties } from 'react'
-import { SpatialIFrame, getSessionAsync } from './webSpatialComponents'
+import { PortalIFrame, SpatialIFrame, getSessionAsync } from './webSpatialComponents'
 import { Spatial } from '.'
-
-// import * as retargetEvents from 'react-shadow-dom-retarget-events';
-
-export default class SpatialIFrameElement extends HTMLElement {
-    static get observedAttributes() {
-        return ['source'];
-    }
-
-    mountPoint?: HTMLSpanElement;
-    source: string = "";
-    root?: ReactDOM.Root
-
-    createCollapsed(source: string) {
-        var style = this.style as CSSProperties;
-        let toSet = encodeURIComponent(this.innerHTML)
-        return React.createElement(SpatialIFrame, {
-            innerHTMLContent: this.innerHTML,
-            spatialOffset: { z: 50 },
-            style: { width: style.width, height: style.height, boxShadow: style.boxShadow, backgroundColor: style.backgroundColor, filter: style.filter },
-            className: "",
-            src: source,
-            onload: (spatialFrame) => {
-                spatialFrame.sendContent(toSet)
-            }
-        }, React.createElement('slot'));
-    }
-
-    connectedCallback() {
-        this.mountPoint = document.createElement('div');
-        const shadowRoot = this.attachShadow({ mode: 'open' });
-        shadowRoot.appendChild(this.mountPoint);
-
-        const source = this.getAttribute('source');
-        this.root = ReactDOM.createRoot(this.mountPoint);
-        this.root.render(this.createCollapsed(source!));
-        //   retargetEvents(shadowRoot);
-    }
-
-    attributeChangedCallback(name: string, oldValue: any, newValue: any) {
-        if (!this.root) {
-            return;
-        }
-        if (name === 'source') {
-            this.root!.render(this.createCollapsed(newValue));
-        }
-    }
-}
+import r2wc from "@r2wc/react-to-web-component"
 
 export class WebSpatialHydrate {
-    static async Hydrate() {
-        window.customElements.define('spatial-iframe', SpatialIFrameElement);
-    }
-
-    static async ReplaceLinks() {
-        var s = await getSessionAsync()
-        var aEl = document.getElementsByTagName("a")
-        for (var e of aEl) {
-            if (e.href && e.href != "#") {
-                let link = e.href
-                e.href = "#"
-                e.onclick = async () => {
-                    var p = await s!.getParentIFrameComponent()
-                    if (p != null) {
-                        p.loadURL(link)
+    static Hydrate() {
+        let session = getSessionAsync()
+        if (session) {
+            // Set styles
+            let documentSpatialStyle = document.documentElement.attributes['spatial-style' as any]
+            if (documentSpatialStyle) {
+                document.documentElement.style.cssText += documentSpatialStyle.value
+                let styles = documentSpatialStyle.value.split(";")
+                for (let style of styles) {
+                    let keyVal = style.split(":")
+                    if (keyVal.length == 2) {
+                        let key = keyVal[0].trim()
+                        let val = keyVal[1].trim()
+                        if (key == "glassEffect" && val == "true") {
+                            session.getCurrentIFrameComponent().setStyle({ glassEffect: true })
+                        }
                     }
                 }
             }
         }
+
+        // Create custom element components from React components
+        const CustomPortalIFrame = r2wc(PortalIFrame, { shadow: "open" })
+        customElements.define("spatial-iframe", CustomPortalIFrame)
     }
 }
 
