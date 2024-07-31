@@ -63,8 +63,8 @@ class SpatialIFrameManager {
         this.initPromise = this.initInternalFromWindow(w)
         await this.initPromise
     }
-    async resize(element?: HTMLElement, offset?: vecType, domRect?: DOMRect) {
-        let rect = domRect ? domRect : element!.getBoundingClientRect();
+    async resize(domRect: DOMRect, offset: vecType) {
+        let rect = domRect
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
         if (!this.webview) {
@@ -144,7 +144,7 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
 
     const myDiv = useRef(null);
     async function resizeDiv() {
-        instanceState.current[currentInstanceID.current].resize((myDiv.current! as HTMLElement), props.spatialOffset as vecType)
+        instanceState.current[currentInstanceID.current].resize((myDiv.current! as HTMLElement).getBoundingClientRect(), props.spatialOffset as vecType)
     }
     async function setContent(savedId: number, str: string) {
         await instanceState.current[savedId].init(props.src);
@@ -419,7 +419,7 @@ export function PortalIFrame(props: { children?: ReactElement | Array<ReactEleme
                     rect = childrenSizeRef.current!.getBoundingClientRect()
                     p.appendChild(customElements!)
                 }
-                await ins.resize(undefined, { x: 0, y: 0, z: 50 }, rect)
+                await ins.resize(rect, { x: 0, y: 0, z: 50 })
             }
         }
         useEffect(() => {
