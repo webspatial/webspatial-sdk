@@ -3,6 +3,8 @@ import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelUIComponent
 import { createPortal } from 'react-dom';
 
 type vecType = { x: number, y: number, z: number }
+type quatType = { x: number, y: number, z: number, w: number }
+type spatialStyleDef = { position: vecType, rotation: quatType }
 
 // Create the default Spatial session for the app
 let spatial = new Spatial()
@@ -297,7 +299,7 @@ function useAsyncInstances<T>(
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement>, className?: string, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | Array<ReactElement>, className?: string, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -429,7 +431,7 @@ export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement
                     rect = childrenSizeRef.current!.getBoundingClientRect()
                     p.appendChild(customElements!)
                 }
-                await ins.resize(rect, { x: 0, y: 0, z: 50 })
+                await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position })
             }
         }
         useEffect(() => {
