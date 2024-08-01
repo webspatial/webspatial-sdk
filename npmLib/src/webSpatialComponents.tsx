@@ -297,7 +297,7 @@ function useAsyncInstances<T>(
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement>, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement>, className?: string, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -336,7 +336,7 @@ export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement
 
 
     if (mode === "none") { // Used for debugging purposes
-        return <div style={props.style}>
+        return <div className={props.className} style={props.style}>
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
@@ -440,11 +440,11 @@ export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement
         })
 
         return <>
-            <div ref={childrenSizeRef} style={{ ...props.style, ...{ visibility: "hidden" } }}  >
+            <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: "hidden" } }}  >
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<div style={{ ...props.style, ...{ width: "", height: "" } }}>
+                {createPortal(<div className={props.className} style={{ ...props.style, ...{ width: "", height: "" } }}>
                     {props.children}
                 </div>, portalEl)}
             </> : <></>}
