@@ -18,6 +18,10 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 • **props.children?**: `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\>[]
 
+• **props.className?**: `string`
+
+• **props.spatialStyle?**: `Partial`\<`spatialStyleDef`\>
+
 • **props.style?**: `CSSProperties`
 
 ## Returns
@@ -26,4 +30,4 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 ## Defined in
 
-webSpatialComponents.tsx:300
+webSpatialComponents.tsx:307
