@@ -210,7 +210,12 @@ export function SpatialIFrame(props: { innerHTMLContent?: string, onload?: (x: S
   <img src="assets/FlightHelmet.png" width="670" height="1191" />
 </picture>
 </model> */}
-/** @hidden */
+
+/**
+ * Allows embedding 3D graphical content inline within the webpage. Behaves similar to an img element but displays a 3D model instead
+ * 
+ * Intended to behave similar to https://immersive-web.github.io/model-element/ 
+ */
 export function Model(props: { className: string, children: ReactElement | Array<ReactElement>, spatialOffset?: { x?: number, y?: number, z?: number } }) {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
