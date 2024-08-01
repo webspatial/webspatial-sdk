@@ -439,6 +439,21 @@ export function SpatialDiv(props: { children?: ReactElement | Array<ReactElement
             }
         })
 
+        // Overwrite href to navigate the parents page
+        useEffect(() => {
+            let links = portalEl?.querySelectorAll('a')
+            links?.forEach((l) => {
+                let href = l.href
+                if (href) {
+                    l.removeAttribute("href")
+                    l.onclick = () => {
+                        window.location.href = href
+                    }
+                }
+            })
+        }, [portalEl])
+
+
         return <>
             <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: "hidden" } }}  >
                 {props.children}
