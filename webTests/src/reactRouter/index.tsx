@@ -11,19 +11,20 @@ function PortalTest() {
             To be implemented
         </div>
         <div>
-            <SpatialDiv className='p-10' style={{ backgroundColor: "red", width: "50%" }}>
-                <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
-                    This text is inside a portal iframe
+            <SpatialDiv className='p-10' style={{ backgroundColor: "gray", width: "50%" }}>
+                <div onClick={() => { document.body.style.backgroundColor = 'gray' }}>
+                    <p>This text is inside a portal iframe</p>
+                    <a href="/">click me</a>
                 </div>
             </SpatialDiv>
-            <div className='p-10' style={{ backgroundColor: "red", width: "50%" }}>
-                <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
-                    This text is inside a div notiframe
+            <div className='p-10' style={{ backgroundColor: "gray", width: "50%" }}>
+                <div onClick={() => { document.body.style.backgroundColor = 'gray' }}>
+                    <p>This text is inside a div notiframe</p>
                 </div>
             </div>
             <div className='p-10' >
-                <div onClick={() => { document.body.style.backgroundColor = 'red' }}>
-                    This text is inside a div notiframe
+                <div onClick={() => { document.body.style.backgroundColor = 'gray' }}>
+                    <p>This text is inside a div notiframe</p>
                 </div>
             </div>
         </div>
