@@ -54,6 +54,11 @@ export class WebSpatial {
 
     static async sendCommand(cmd: RemoteCommand) {
         var msg = JSON.stringify(cmd);
+
+        // Android testing
+        // (window as any).Android.nativeMessage(msg)
+        // return
+
         (window as any).webkit.messageHandlers.bridge.postMessage(msg)
     }
 
@@ -79,7 +84,7 @@ export class WebSpatial {
     }
 
     static async createWindowGroup(style: WindowStyle = "Plain") {
-        var cmd = new RemoteCommand("createWindowGroup", {windowStyle: style} )
+        var cmd = new RemoteCommand("createWindowGroup", { windowStyle: style })
 
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
@@ -96,7 +101,7 @@ export class WebSpatial {
         }
         var cmd = new RemoteCommand("destroyResource", {
             windowGroupID: resource.windowGroupId,
-            resourceID : resource.id
+            resourceID: resource.id
         })
 
         WebSpatial.sendCommand(cmd)
@@ -105,10 +110,10 @@ export class WebSpatial {
     static async ping(msg: string) {
         var cmd = new RemoteCommand("ping", {
             windowGroupID: this.getCurrentWindowGroup().id,
-            resourceID : this.getCurrentWebPanel().id,
-            message : msg
+            resourceID: this.getCurrentWebPanel().id,
+            message: msg
         })
-        
+
         var result = await new Promise((res, rej) => {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
             WebSpatial.sendCommand(cmd)
@@ -117,12 +122,12 @@ export class WebSpatial {
     }
 
     static async setComponent(entity: WebSpatialResource, resource: WebSpatialResource) {
-        var cmd = new RemoteCommand( "setComponent", {
+        var cmd = new RemoteCommand("setComponent", {
             windowGroupID: entity.windowGroupId,
-            resourceID : resource.id,
-            entityID : entity.id,
+            resourceID: resource.id,
+            entityID: entity.id,
         })
-        
+
         WebSpatial.sendCommand(cmd)
     }
 
@@ -131,9 +136,9 @@ export class WebSpatial {
     static async createResource(type: string, windowGroup: WindowGroup, parentWebView: WebSpatialResource, params = {} as any) {
         var cmd = new RemoteCommand("createResource", {
             windowGroupID: windowGroup.id,
-            resourceID : parentWebView.id,
-            type : type,
-            params : params
+            resourceID: parentWebView.id,
+            type: type,
+            params: params
         });
 
         var result = await new Promise((res, rej) => {
@@ -149,7 +154,7 @@ export class WebSpatial {
     static async updateWindowGroup(wg: WindowGroup, data: any) {
         var cmd = new RemoteCommand("updateWindowGroup", {
             windowGroupID: wg.id,
-            update : data
+            update: data
         })
 
         var result = await new Promise((res, rej) => {
@@ -160,10 +165,10 @@ export class WebSpatial {
     }
 
     static async updateResource(resource: WebSpatialResource, data: any = null) {
-        var cmd = new RemoteCommand("updateResource" , {
+        var cmd = new RemoteCommand("updateResource", {
             windowGroupID: resource.windowGroupId,
-            resourceID : resource.id,
-            update : data || resource.data
+            resourceID: resource.id,
+            update: data || resource.data
         });
 
         var result = await new Promise((res, rej) => {
