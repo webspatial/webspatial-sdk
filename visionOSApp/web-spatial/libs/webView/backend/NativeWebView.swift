@@ -126,6 +126,7 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
+            webViewHolder.appleWebView!.isInspectable = true
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
