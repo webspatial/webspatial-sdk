@@ -304,7 +304,7 @@ function useAsyncInstances<T>(
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | Array<ReactElement>, className?: string, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -391,18 +391,13 @@ export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, chi
             openedWindow!.document.documentElement.style.backgroundColor = "transparent"
             openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
             openedWindow!.document.body.style.margin = "0px"
-            openedWindow!.document.head.innerHTML = `
-                <meta charset="UTF-8">
-                <title>WebSpatial</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            `
-            var links = document.getElementsByTagName("link")
-            for (var l of links) {
-                if (l.rel == "stylesheet") {
-                    var styleEl = l.cloneNode(true)
-                    openedWindow!.document.head.appendChild(styleEl)
-                }
-            }
+
+            // Synchronize head of parent page to this page to ensure styles are in sync
+            document.head.addEventListener("DOMNodeInserted", () => {
+                openedWindow!.document.head.innerHTML = document.head.innerHTML
+
+            })
+            openedWindow!.document.head.innerHTML = document.head.innerHTML
 
             if (customElEnabled) {
                 openedWindow!.document.body.appendChild(customElements!)
