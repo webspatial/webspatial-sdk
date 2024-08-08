@@ -50,7 +50,6 @@ struct web_spatialApp: App {
             root = SpatialWebView(parentWindowGroupID: "root", url: fileurl)
             root!.root = true
             root!.resourceID = sr.id
-            root!.childResources[sr.id] = sr
             sr.spatialWebView = root
             rootEnt.spatialWebView = root
             rootEnt.spatialWebView?.inline = true

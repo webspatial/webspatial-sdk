@@ -104,6 +104,15 @@ struct WebViewNative: UIViewRepresentable {
     var url: URL = .init(filePath: "/")
     var webViewHolder = WebViewHolder()
     
+    func destroy() {
+        // Remove references to Coordinator so that it gets cleaned up by arc
+        webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
+        webViewHolder.appleWebView?.uiDelegate = nil
+        webViewHolder.appleWebView?.navigationDelegate = nil
+        webViewHolder.appleWebView?.scrollView.delegate = nil
+        webViewHolder.appleWebView = nil
+    }
+    
     func makeCoordinator() -> Coordinator {
         let c = Coordinator()
         c.webViewRef = webViewRef
