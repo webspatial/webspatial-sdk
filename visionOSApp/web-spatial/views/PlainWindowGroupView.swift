@@ -187,9 +187,12 @@ struct PlainWindowGroupView: View {
                                     let x = CGFloat(e.modelEntity.position.x)
                                     let y = CGFloat(e.modelEntity.position.y - oval)
                                     let z = CGFloat(e.modelEntity.position.z)
-                                    let width = CGFloat(e.modelUIComponent!.resolutionX)
-                                    let height = CGFloat(e.modelUIComponent!.resolutionY)
+                                    
+                                    let scaleX = e.modelEntity.scale.x;
+                                    let scaleY = e.modelEntity.scale.y;
 
+                                    let width = CGFloat(e.modelUIComponent!.resolutionX  ) * CGFloat(scaleX)
+                                    let height = CGFloat(e.modelUIComponent!.resolutionY  ) * CGFloat(scaleY)
                                     Model3D(url: e.modelUIComponent!.url!) { model in
                                         model.model?
                                             .resizable()
