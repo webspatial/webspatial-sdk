@@ -169,12 +169,7 @@ class SpatialWebView: WatchableObject {
     }
 
     deinit {
-        // Remove references to Coordinator so that it gets cleaned up by arc
-        webViewNative!.webViewHolder.appleWebView?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-        webViewNative!.webViewHolder.appleWebView?.uiDelegate = nil
-        webViewNative!.webViewHolder.appleWebView?.navigationDelegate = nil
-        webViewNative!.webViewHolder.appleWebView?.scrollView.delegate = nil
-        webViewNative!.webViewHolder.appleWebView = nil
+        webViewNative!.destroy()
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
@@ -201,9 +196,7 @@ class SpatialWebView: WatchableObject {
     func didStartLoadPage() {
         let keys = childResources.map { $0.key }
         for k in keys {
-            if k != resourceID {
-                _ = childResources[k]!.destroy()
-            }
+            _ = childResources[k]!.destroy()
         }
         childResources = [String: SpatialResource]()
         spawnedNativeWebviews = [String: WebViewNative]()
@@ -298,7 +291,6 @@ class SpatialWebView: WatchableObject {
                         sr.spatialWebView = SpatialWebView(parentWindowGroupID: cmdInfo.windowGroupID)
                         sr.spatialWebView?.parentWebviewID = resourceID
                         sr.spatialWebView?.resourceID = sr.id
-                        sr.spatialWebView?.childResources[sr.id] = sr
                     } else if type == "ModelUIComponent" {
                         sr.modelUIComponent = ModelUIComponent()
                     } else if type == "ModelComponent" {
@@ -455,8 +447,10 @@ class SpatialWebView: WatchableObject {
                         }
 
                         if let windowID: String = json.getValue(lookup: ["data", "update", "windowID"]) {
-                            sr.spatialWebView?.webViewNative = spawnedNativeWebviews[windowID]
-                            spawnedNativeWebviews.removeValue(forKey: windowID)
+                            sr.spatialWebView!.webViewNative!.destroy()
+
+                            sr.spatialWebView!.webViewNative = spawnedNativeWebviews.removeValue(forKey: windowID)!
+                            sr.spatialWebView!.webViewNative!.webViewRef = sr.spatialWebView
                         }
 
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
