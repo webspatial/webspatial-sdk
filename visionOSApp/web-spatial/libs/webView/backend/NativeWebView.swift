@@ -83,10 +83,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     ) {
         let json = JsonParser(str: message.body as? String)
         if let wv = webViewRef {
-            // Don't process message if new page is already loaded
-            if message.frameInfo.request.url!.path() == wv.getURL()?.path() {
-                wv.onJSScriptMessage(json: json)
-            }
+            wv.onJSScriptMessage(json: json)
         }
     }
     
