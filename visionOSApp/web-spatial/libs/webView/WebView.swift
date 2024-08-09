@@ -216,7 +216,7 @@ class SpatialWebView: WatchableObject {
 
     func didSpawnWebView(wv: WebViewNative) {
         let uuid = UUID().uuidString
-        wv.webViewHolder.appleWebView?.evaluateJavaScript("window._webSpatialID = '"+uuid+"'")
+        wv.webViewHolder.appleWebView!.evaluateJavaScript("window._webSpatialID = '"+uuid+"'")
         spawnedNativeWebviews[uuid] = wv
     }
 
@@ -447,10 +447,11 @@ class SpatialWebView: WatchableObject {
                         }
 
                         if let windowID: String = json.getValue(lookup: ["data", "update", "windowID"]) {
-                            sr.spatialWebView!.webViewNative!.destroy()
-
-                            sr.spatialWebView!.webViewNative = spawnedNativeWebviews.removeValue(forKey: windowID)!
-                            sr.spatialWebView!.webViewNative!.webViewRef = sr.spatialWebView
+                            if let spawnedWebView = spawnedNativeWebviews.removeValue(forKey: windowID) {
+                                sr.spatialWebView!.webViewNative!.destroy()
+                                sr.spatialWebView!.webViewNative = spawnedWebView
+                                sr.spatialWebView!.webViewNative!.webViewRef = sr.spatialWebView
+                            }
                         }
 
                         if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
