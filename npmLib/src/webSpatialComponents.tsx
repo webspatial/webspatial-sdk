@@ -66,7 +66,7 @@ class SpatialIFrameManager {
         this.initPromise = this.initInternalFromWindow(w)
         await this.initPromise
     }
-    async resize(domRect: DOMRect, offset: vecType) {
+    async resize(domRect: DOMRect, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
         let rect = domRect
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
@@ -77,6 +77,11 @@ class SpatialIFrameManager {
         entity.transform.position.x = targetPosX + (offset ? offset.x : 0)
         entity.transform.position.y = targetPosY + (offset ? offset.y : 0)
         entity.transform.position.z = (offset ? offset.z : 0)
+
+        entity.transform.orientation.x = rotation.x
+        entity.transform.orientation.y = rotation.y
+        entity.transform.orientation.z = rotation.z
+        entity.transform.orientation.w = rotation.w
         await entity.updateTransform()
 
         var webview = this.webview!
@@ -431,9 +436,13 @@ export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, chi
                     rect = childrenSizeRef.current!.getBoundingClientRect()
                     p.appendChild(customElements!)
                 }
-                await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position })
+                await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
             }
         }
+        useEffect(() => {
+            resizeSpatial()
+        }, [props.spatialStyle])
+
         useEffect(() => {
             window.addEventListener("resize", resizeSpatial);
             return () => {

@@ -145,6 +145,7 @@ struct PlainWindowGroupView: View {
                                     if !windowResizeInProgress {
                                         SpatialWebViewUI(wv: view)
                                             .frame(width: width, height: height).padding3D(.front, -100000)
+                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                                             .position(x: x, y: y)
                                             .offset(z: z).gesture(
                                                 DragGesture()
