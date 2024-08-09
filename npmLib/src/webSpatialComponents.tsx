@@ -470,7 +470,7 @@ export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, chi
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<div className={props.className} style={{ ...props.style, ...{ width: "", height: "" } }}>
+                {createPortal(<div className={props.className} style={{ ...props.style, ...{ width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px" } }}>
                     {props.children}
                 </div>, portalEl)}
             </> : <></>}
