@@ -34,4 +34,4 @@ Intended to behave similar to https://immersive-web.github.io/model-element/
 
 ## Defined in
 
-webSpatialComponents.tsx:219
+Model.tsx:21

@@ -16,7 +16,7 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 • **props**
 
-• **props.children?**: `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\>[]
+• **props.children?**: `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `Element` \| (`ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `Element`)[]
 
 • **props.className?**: `string`
 
@@ -30,4 +30,4 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 ## Defined in
 
-webSpatialComponents.tsx:307
+SpatialDiv.tsx:42

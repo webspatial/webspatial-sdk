@@ -192,11 +192,11 @@ index.ts:366
 
 ### debug()
 
-> **debug**(`obj`): `Promise`\<`void`\>
+> **debug**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
@@ -226,11 +226,11 @@ index.ts:434
 
 ### error()
 
-> **error**(`obj`): `Promise`\<`void`\>
+> **error**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
@@ -308,11 +308,11 @@ index.ts:382
 
 ### info()
 
-> **info**(`obj`): `Promise`\<`void`\>
+> **info**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
@@ -326,11 +326,11 @@ index.ts:401
 
 ### log()
 
-> **log**(`obj`): `Promise`\<`void`\>
+> **log**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
@@ -420,11 +420,11 @@ index.ts:393
 
 ### trace()
 
-> **trace**(`obj`): `Promise`\<`void`\>
+> **trace**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
@@ -438,11 +438,11 @@ index.ts:417
 
 ### warn()
 
-> **warn**(`obj`): `Promise`\<`void`\>
+> **warn**(...`msg`): `Promise`\<`void`\>
 
 #### Parameters
 
-• **obj**: `any`
+• ...**msg**: `any`[]
 
 #### Returns
 
