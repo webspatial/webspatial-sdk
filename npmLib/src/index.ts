@@ -457,4 +457,8 @@ export class Spatial {
   isSupported() {
     return (window as any).WebSpatailEnabled
   }
+
+  
 }
+
+export const WebSpatialLogger = WebSpatial.logger
