@@ -16,7 +16,7 @@ Entity used to describe an object that can be added to the scene
 
 #### Defined in
 
-index.ts:43
+SpatialEntity.ts:10
 
 ## Methods
 
@@ -32,7 +32,7 @@ Removes a reference to the entity by the renderer and this object should no long
 
 #### Defined in
 
-index.ts:80
+SpatialEntity.ts:47
 
 ***
 
@@ -48,7 +48,7 @@ Check if destroy has been called
 
 #### Defined in
 
-index.ts:89
+SpatialEntity.ts:56
 
 ***
 
@@ -68,7 +68,7 @@ Attaches a component to the entity to be displayed
 
 #### Defined in
 
-index.ts:65
+SpatialEntity.ts:32
 
 ***
 
@@ -90,7 +90,7 @@ the window group that should render this entity
 
 #### Defined in
 
-index.ts:73
+SpatialEntity.ts:40
 
 ***
 
@@ -106,4 +106,4 @@ Syncs the transform with the renderer, must be called to observe updates
 
 #### Defined in
 
-index.ts:58
+SpatialEntity.ts:25

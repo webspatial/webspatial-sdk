@@ -1,5 +1,5 @@
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelUIComponent, SpatialSession } from '../index';
-
+import { Spatial } from "../Spatial"
+import { SpatialSession } from "../SpatialSession"
 
 // Create the default Spatial session for the app
 let spatial = new Spatial()

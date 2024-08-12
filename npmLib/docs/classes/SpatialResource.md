@@ -9,10 +9,10 @@
 ## Extended by
 
 - [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
-- [`SpatialModelComponent`](SpatialModelComponent.md)
 - [`SpatialInputComponent`](SpatialInputComponent.md)
-- [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
 - [`SpatialMeshResource`](SpatialMeshResource.md)
+- [`SpatialModelComponent`](SpatialModelComponent.md)
+- [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
 - [`SpatialPhysicallyBasedMaterial`](SpatialPhysicallyBasedMaterial.md)
 
 ## Methods
@@ -29,4 +29,4 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-index.ts:105
+SpatialResource.ts:15
