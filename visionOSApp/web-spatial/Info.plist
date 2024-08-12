@@ -5,12 +5,12 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.testOrg3224234.web-spatial</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>webSpatial</string>
 			</array>
-			<key>CFBundleURLName</key>
-			<string>com.testOrg3224234.web-spatial</string>
 		</dict>
 	</array>
 	<key>UIApplicationSceneManifest</key>
