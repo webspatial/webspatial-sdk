@@ -18,3 +18,7 @@
 - [SpatialSession](classes/SpatialSession.md)
 - [SpatialTransform](classes/SpatialTransform.md)
 - [SpatialWindowGroup](classes/SpatialWindowGroup.md)
+
+## Variables
+
+- [WebSpatialLogger](variables/WebSpatialLogger.md)

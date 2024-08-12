@@ -394,28 +394,28 @@ export class SpatialSession {
     await WebSpatial.logger.setLevel(logLevel)
   }
 
-  async log(obj: any) {
-    await WebSpatial.logger.info(obj)
+  async log(...msg: any[]) {
+    await WebSpatial.logger.info(msg)
   }
 
-  async info(obj: any) {
-    await WebSpatial.logger.info(obj)
+  async info(...msg: any[]) {
+    await WebSpatial.logger.info(msg)
   }
 
-  async warn(obj: any) {
-    await WebSpatial.logger.warn(obj)
+  async warn(...msg: any[]) {
+    await WebSpatial.logger.warn(msg)
   }
 
-  async debug(obj: any) {
-    await WebSpatial.logger.debug(obj)
+  async debug(...msg: any[]) {
+    await WebSpatial.logger.debug(msg)
   }
 
-  async error(obj: any) {
-    await WebSpatial.logger.error(obj)
+  async error(...msg: any[]) {
+    await WebSpatial.logger.error(msg)
   }
 
-  async trace(obj: any) {
-    await WebSpatial.logger.trace(obj)
+  async trace(...msg: any[]) {
+    await WebSpatial.logger.trace(msg)
   }
 
   /**
