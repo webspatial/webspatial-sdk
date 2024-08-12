@@ -36,7 +36,7 @@ PBR material which can be set on a SpatialModelComponent
 
 #### Defined in
 
-index.ts:247
+SpatialPhysicallyBasedMaterial.ts:8
 
 ***
 
@@ -50,7 +50,7 @@ index.ts:247
 
 #### Defined in
 
-index.ts:248
+SpatialPhysicallyBasedMaterial.ts:9
 
 ***
 
@@ -64,7 +64,7 @@ index.ts:248
 
 #### Defined in
 
-index.ts:249
+SpatialPhysicallyBasedMaterial.ts:10
 
 ## Methods
 
@@ -84,7 +84,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-index.ts:105
+SpatialResource.ts:15
 
 ***
 
@@ -100,4 +100,4 @@ Syncs state of color, metallic, roupghness to the renderer
 
 #### Defined in
 
-index.ts:254
+SpatialPhysicallyBasedMaterial.ts:15
