@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client'
-import React, { StrictMode, useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 
-import { Model, SpatialIFrame, getSessionAsync } from 'web-spatial/src/webSpatialComponents.tsx'
+import { Model, SpatialIFrame, getSessionAsync } from 'web-spatial/src/webSpatialComponents'
 
 
 

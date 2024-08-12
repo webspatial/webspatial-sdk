@@ -1,7 +1,5 @@
-import ReactDOM from 'react-dom/client'
-import React, { CSSProperties } from 'react'
-import { SpatialDiv, SpatialIFrame, getSessionAsync } from './webSpatialComponents'
-import { Spatial } from '.'
+import { SpatialDiv,  getSessionAsync } from './webSpatialComponents'
+// import { Spatial } from '.'
 import r2wc from "@r2wc/react-to-web-component"
 
 export class WebSpatialHydrate {
