@@ -146,7 +146,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, spatialStyle?: Partia
             let iframeMngr = new SpatialIFrameManager()
             iframeMngr.initFromWidow(openedWindow!).then(async () => {
                 // Set style
-                await iframeMngr.webview?.setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 0 })
+                await iframeMngr.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
                 await resizeSpatial()
                 await iframeMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
             })
@@ -172,6 +172,12 @@ export function SpatialDiv(props: { allowScroll?: boolean, spatialStyle?: Partia
             }
         }
         useEffect(() => {
+            (async () => {
+                var ins = iframeInstance.getActiveInstance()
+                if (ins) {
+                    await ins.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
+                }
+            })();
             resizeSpatial()
         }, [props.spatialStyle])
 
