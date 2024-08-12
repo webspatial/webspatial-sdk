@@ -39,6 +39,7 @@ class SpatialWebView: WatchableObject {
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
     var inline = false
+    var scrollWithParent = false
 
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
@@ -444,6 +445,10 @@ class SpatialWebView: WatchableObject {
 
                         if let inline: Bool = json.getValue(lookup: ["data", "update", "inline"]) {
                             sr.spatialWebView!.inline = inline
+                        }
+
+                        if let scrollWithParent: Bool = json.getValue(lookup: ["data", "update", "scrollWithParent"]) {
+                            sr.spatialWebView!.scrollWithParent = scrollWithParent
                         }
 
                         if let windowID: String = json.getValue(lookup: ["data", "update", "windowID"]) {
