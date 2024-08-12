@@ -1,5 +1,5 @@
 import { SpatialResource } from "./SpatialResource"
-import { WebSpatial } from "./webSpatialPrivate"
+import { WebSpatial } from "../webSpatialPrivate"
 
 /**
 * PBR material which can be set on a SpatialModelComponent

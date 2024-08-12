@@ -29,4 +29,4 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialResource/SpatialResource.ts:15

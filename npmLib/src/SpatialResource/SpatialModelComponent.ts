@@ -2,7 +2,7 @@
 import { SpatialMeshResource } from "./SpatialMeshResource"
 import { SpatialPhysicallyBasedMaterial } from "./SpatialPhysicallyBasedMaterial"
 import { SpatialResource } from "./SpatialResource"
-import { WebSpatial } from "./webSpatialPrivate"
+import { WebSpatial } from "../webSpatialPrivate"
 
 /**
 * Used to position a model in 3D space, made up of a mesh and materials to be applied to the mesh
