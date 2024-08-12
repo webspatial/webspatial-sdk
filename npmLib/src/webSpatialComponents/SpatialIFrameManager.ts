@@ -17,6 +17,7 @@ export class SpatialIFrameManager {
         this.webview = await (await getSessionAsync()!).createIFrameComponent()
         await this.webview.loadURL(url)
         await this.webview.setInline(true);
+        await this.webview.setScrollWithParent(true);
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
     }
@@ -26,6 +27,7 @@ export class SpatialIFrameManager {
         this.webview = await (await getSessionAsync()!).createIFrameComponent()
         await this.webview.setFromWindow(w)
         await this.webview.setInline(true);
+        await this.webview.setScrollWithParent(true);
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
     }
