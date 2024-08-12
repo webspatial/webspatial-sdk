@@ -28,7 +28,7 @@ Used to handle input events on an entity
 
 #### Defined in
 
-index.ts:207
+SpatialInputComponent.ts:7
 
 ***
 
@@ -48,7 +48,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-index.ts:105
+SpatialResource.ts:15
 
 ***
 
@@ -66,4 +66,4 @@ index.ts:105
 
 #### Defined in
 
-index.ts:210
+SpatialInputComponent.ts:10

@@ -31,7 +31,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-index.ts:105
+SpatialResource.ts:15
 
 ***
 
@@ -49,7 +49,7 @@ index.ts:105
 
 #### Defined in
 
-index.ts:227
+SpatialModelUIComponent.ts:16
 
 ***
 
@@ -75,7 +75,7 @@ resolution in pixels
 
 #### Defined in
 
-index.ts:235
+SpatialModelUIComponent.ts:24
 
 ***
 
@@ -97,4 +97,4 @@ url of the model to load
 
 #### Defined in
 
-index.ts:224
+SpatialModelUIComponent.ts:13

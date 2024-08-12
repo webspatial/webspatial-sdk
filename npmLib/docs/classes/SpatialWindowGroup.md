@@ -26,4 +26,4 @@ style options
 
 #### Defined in
 
-index.ts:20
+SpatialWindowGroup.ts:16

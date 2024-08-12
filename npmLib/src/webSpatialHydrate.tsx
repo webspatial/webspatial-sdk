@@ -1,5 +1,4 @@
 import { SpatialDiv,  getSessionAsync } from './webSpatialComponents'
-// import { Spatial } from '.'
 import r2wc from "@r2wc/react-to-web-component"
 
 export class WebSpatialHydrate {
