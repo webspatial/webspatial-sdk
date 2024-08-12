@@ -10,4 +10,4 @@
 
 ## Defined in
 
-index.ts:15
+index.ts:9

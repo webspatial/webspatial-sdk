@@ -1,4 +1,4 @@
-import { SpatialInputComponent } from "./SpatialInputComponent"
+import { SpatialInputComponent } from "./SpatialResource/SpatialInputComponent"
 import { Logger, LoggerLevel, NativeLogger, WebLogger } from "./Logger"
 import { RemoteCommand } from "./RemoteCommand"
 

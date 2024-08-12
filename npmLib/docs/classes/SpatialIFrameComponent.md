@@ -30,7 +30,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialResource/SpatialResource.ts:15
 
 ***
 
@@ -52,7 +52,7 @@ url to load
 
 #### Defined in
 
-SpatialIFrameComponent.ts:12
+SpatialResource/SpatialIFrameComponent.ts:12
 
 ***
 
@@ -74,7 +74,7 @@ Content to be displayed
 
 #### Defined in
 
-SpatialIFrameComponent.ts:45
+SpatialResource/SpatialIFrameComponent.ts:45
 
 ***
 
@@ -96,7 +96,7 @@ sets if this should be root or not
 
 #### Defined in
 
-SpatialIFrameComponent.ts:27
+SpatialResource/SpatialIFrameComponent.ts:27
 
 ***
 
@@ -114,7 +114,7 @@ SpatialIFrameComponent.ts:27
 
 #### Defined in
 
-SpatialIFrameComponent.ts:16
+SpatialResource/SpatialIFrameComponent.ts:16
 
 ***
 
@@ -138,7 +138,7 @@ value to set
 
 #### Defined in
 
-SpatialIFrameComponent.ts:71
+SpatialResource/SpatialIFrameComponent.ts:71
 
 ***
 
@@ -165,7 +165,7 @@ height in pixels
 
 #### Defined in
 
-SpatialIFrameComponent.ts:37
+SpatialResource/SpatialIFrameComponent.ts:37
 
 ***
 
@@ -187,7 +187,7 @@ value to set
 
 #### Defined in
 
-SpatialIFrameComponent.ts:61
+SpatialResource/SpatialIFrameComponent.ts:61
 
 ***
 
@@ -209,4 +209,4 @@ style options
 
 #### Defined in
 
-SpatialIFrameComponent.ts:53
+SpatialResource/SpatialIFrameComponent.ts:53

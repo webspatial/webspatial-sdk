@@ -1,6 +1,6 @@
 
 import { SpatialEntity } from '../SpatialEntity';
-import { SpatialModelUIComponent } from '../SpatialModelUIComponent';
+import { SpatialModelUIComponent } from '../SpatialResource/SpatialModelUIComponent';
 import { getSessionAsync } from './getSessionAsync';
 import { vecType } from './types';
 
