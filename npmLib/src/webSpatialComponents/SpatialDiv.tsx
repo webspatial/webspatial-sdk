@@ -39,7 +39,7 @@ function useAsyncInstances<T>(
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { allowScroll?: boolean, spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: boolean, spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -149,6 +149,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, spatialStyle?: Partia
                 await iframeMngr.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
                 await resizeSpatial()
                 await iframeMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
+                await iframeMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
             })
 
             return iframeMngr
