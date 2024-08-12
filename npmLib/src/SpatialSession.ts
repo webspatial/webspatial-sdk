@@ -1,14 +1,12 @@
 import { LoggerLevel } from "./Logger"
 import { SpatialEntity } from "./SpatialEntity"
-import { SpatialFrame } from "./SpatialFrame"
-import { SpatialIFrameComponent } from "./SpatialIFrameComponent"
-import { SpatialInputComponent } from "./SpatialInputComponent"
-import { SpatialMeshResource } from "./SpatialMeshResource"
-import { SpatialModelComponent } from "./SpatialModelComponent"
-import { SpatialModelUIComponent } from "./SpatialModelUIComponent"
-import { SpatialPhysicallyBasedMaterial } from "./SpatialPhysicallyBasedMaterial"
+import { SpatialIFrameComponent, SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialMeshResource, SpatialPhysicallyBasedMaterial } from "./SpatialResource"
 import { SpatialWindowGroup } from "./SpatialWindowGroup"
 import { WebSpatial, WindowStyle, WebSpatialResource } from "./webSpatialPrivate"
+
+class SpatialFrame {
+
+}
 
 
 // Types

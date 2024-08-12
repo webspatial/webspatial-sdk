@@ -1,6 +1,6 @@
 
 import { SpatialEntity } from '../SpatialEntity';
-import { SpatialIFrameComponent } from '../SpatialIFrameComponent';
+import { SpatialIFrameComponent } from '../SpatialResource/SpatialIFrameComponent';
 import { getSessionAsync } from './getSessionAsync';
 import { vecType, quatType } from './types';
 

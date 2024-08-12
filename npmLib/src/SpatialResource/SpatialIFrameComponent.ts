@@ -1,5 +1,5 @@
 import { SpatialResource } from "./SpatialResource"
-import { WebSpatial } from "./webSpatialPrivate"
+import { WebSpatial } from "../webSpatialPrivate"
 
 /**
 * Used to position an iframe in 3D space
