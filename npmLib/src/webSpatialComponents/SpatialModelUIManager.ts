@@ -1,7 +1,8 @@
-import {  SpatialEntity,   SpatialModelUIComponent,   } from '../index';
+
+import { SpatialEntity } from '../SpatialEntity';
+import { SpatialModelUIComponent } from '../SpatialModelUIComponent';
 import { getSessionAsync } from './getSessionAsync';
 import { vecType } from './types';
-
 
 export class SpatialModelUIManager {
     initPromise?: Promise<any>
