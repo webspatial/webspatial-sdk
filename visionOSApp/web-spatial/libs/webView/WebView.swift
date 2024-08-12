@@ -438,7 +438,7 @@ class SpatialWebView: WatchableObject {
                                 sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
                                 sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = false
                             } else {
-                                webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
                             }
                         }
 

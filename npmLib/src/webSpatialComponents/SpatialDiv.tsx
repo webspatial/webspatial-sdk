@@ -39,7 +39,7 @@ function useAsyncInstances<T>(
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
+export function SpatialDiv(props: { allowScroll?: boolean, spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -123,7 +123,9 @@ export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, chi
             // Open window and set style
             let openedWindow = window.open();
             openedWindow!.document.documentElement.style.backgroundColor = "transparent"
+            openedWindow!.document.documentElement.style.overflow = "hidden"
             openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
+            openedWindow!.document.body.style.overflow = "hidden"
             openedWindow!.document.body.style.margin = "0px"
 
             // Synchronize head of parent page to this page to ensure styles are in sync
@@ -146,6 +148,7 @@ export function SpatialDiv(props: { spatialStyle?: Partial<spatialStyleDef>, chi
                 // Set style
                 await iframeMngr.webview?.setStyle({ transparentEffect: true, glassEffect: false, cornerRadius: 0 })
                 await resizeSpatial()
+                await iframeMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
             })
 
             return iframeMngr
