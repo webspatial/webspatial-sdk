@@ -1,5 +1,5 @@
 import { SpatialResource } from "./SpatialResource"
-import { WebSpatial } from "./webSpatialPrivate"
+import { WebSpatial } from "../webSpatialPrivate"
 
 /**
 * Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)

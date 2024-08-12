@@ -1,5 +1,5 @@
-import { WebSpatial } from "./webSpatialPrivate";
-import { WebSpatialResource } from "./webSpatialPrivate";
+import { WebSpatial } from "../webSpatialPrivate";
+import { WebSpatialResource } from "../webSpatialPrivate";
 
 export class SpatialResource {
     /** @hidden */

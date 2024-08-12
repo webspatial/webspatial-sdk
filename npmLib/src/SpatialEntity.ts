@@ -1,4 +1,4 @@
-import { SpatialResource } from "./SpatialResource"
+import { SpatialResource } from "./SpatialResource/SpatialResource"
 import { SpatialTransform } from "./SpatialTransform"
 import { SpatialWindowGroup } from "./SpatialWindowGroup"
 import { WebSpatial, WebSpatialResource } from './webSpatialPrivate'

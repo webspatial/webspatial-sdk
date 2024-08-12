@@ -34,7 +34,7 @@ Entity
 
 #### Defined in
 
-SpatialSession.ts:51
+SpatialSession.ts:49
 
 ***
 
@@ -56,7 +56,7 @@ IFrameComponent
 
 #### Defined in
 
-SpatialSession.ts:60
+SpatialSession.ts:58
 
 ***
 
@@ -74,7 +74,7 @@ InputComponent
 
 #### Defined in
 
-SpatialSession.ts:91
+SpatialSession.ts:89
 
 ***
 
@@ -96,7 +96,7 @@ MeshResource
 
 #### Defined in
 
-SpatialSession.ts:102
+SpatialSession.ts:100
 
 ***
 
@@ -120,7 +120,7 @@ ModelComponent
 
 #### Defined in
 
-SpatialSession.ts:78
+SpatialSession.ts:76
 
 ***
 
@@ -142,7 +142,7 @@ ModelUIComponent
 
 #### Defined in
 
-SpatialSession.ts:69
+SpatialSession.ts:67
 
 ***
 
@@ -164,7 +164,7 @@ PhysicallyBasedMaterial
 
 #### Defined in
 
-SpatialSession.ts:111
+SpatialSession.ts:109
 
 ***
 
@@ -186,7 +186,7 @@ WindowGroup
 
 #### Defined in
 
-SpatialSession.ts:120
+SpatialSession.ts:118
 
 ***
 
@@ -204,7 +204,7 @@ SpatialSession.ts:120
 
 #### Defined in
 
-SpatialSession.ts:163
+SpatialSession.ts:161
 
 ***
 
@@ -220,7 +220,7 @@ Closes the immersive space
 
 #### Defined in
 
-SpatialSession.ts:188
+SpatialSession.ts:186
 
 ***
 
@@ -238,7 +238,7 @@ SpatialSession.ts:188
 
 #### Defined in
 
-SpatialSession.ts:167
+SpatialSession.ts:165
 
 ***
 
@@ -256,7 +256,7 @@ the iframe component corresponding to the js running on this page
 
 #### Defined in
 
-SpatialSession.ts:128
+SpatialSession.ts:126
 
 ***
 
@@ -270,7 +270,7 @@ SpatialSession.ts:128
 
 #### Defined in
 
-SpatialSession.ts:198
+SpatialSession.ts:196
 
 ***
 
@@ -284,7 +284,7 @@ SpatialSession.ts:198
 
 #### Defined in
 
-SpatialSession.ts:193
+SpatialSession.ts:191
 
 ***
 
@@ -302,7 +302,7 @@ the iframe component or null
 
 #### Defined in
 
-SpatialSession.ts:136
+SpatialSession.ts:134
 
 ***
 
@@ -320,7 +320,7 @@ SpatialSession.ts:136
 
 #### Defined in
 
-SpatialSession.ts:155
+SpatialSession.ts:153
 
 ***
 
@@ -338,7 +338,7 @@ SpatialSession.ts:155
 
 #### Defined in
 
-SpatialSession.ts:151
+SpatialSession.ts:149
 
 ***
 
@@ -354,7 +354,7 @@ Opens the immersive space
 
 #### Defined in
 
-SpatialSession.ts:183
+SpatialSession.ts:181
 
 ***
 
@@ -374,7 +374,7 @@ Debugging only, used to ping the native renderer
 
 #### Defined in
 
-SpatialSession.ts:178
+SpatialSession.ts:176
 
 ***
 
@@ -396,7 +396,7 @@ callback to be called before next render update
 
 #### Defined in
 
-SpatialSession.ts:32
+SpatialSession.ts:30
 
 ***
 
@@ -414,7 +414,7 @@ SpatialSession.ts:32
 
 #### Defined in
 
-SpatialSession.ts:147
+SpatialSession.ts:145
 
 ***
 
@@ -432,7 +432,7 @@ SpatialSession.ts:147
 
 #### Defined in
 
-SpatialSession.ts:171
+SpatialSession.ts:169
 
 ***
 
@@ -450,4 +450,4 @@ SpatialSession.ts:171
 
 #### Defined in
 
-SpatialSession.ts:159
+SpatialSession.ts:157
