@@ -28,7 +28,7 @@ Quaternion value for x,y,z,y
 
 #### Defined in
 
-index.ts:31
+SpatialTransform.ts:7
 
 ***
 
@@ -38,7 +38,7 @@ index.ts:31
 
 #### Defined in
 
-index.ts:29
+SpatialTransform.ts:5
 
 ***
 
@@ -48,4 +48,4 @@ index.ts:29
 
 #### Defined in
 
-index.ts:32
+SpatialTransform.ts:8

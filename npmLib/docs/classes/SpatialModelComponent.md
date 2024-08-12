@@ -30,7 +30,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-index.ts:105
+SpatialResource.ts:15
 
 ***
 
@@ -52,7 +52,7 @@ array of materials to set
 
 #### Defined in
 
-index.ts:198
+SpatialModelComponent.ts:23
 
 ***
 
@@ -74,4 +74,4 @@ mesh to set
 
 #### Defined in
 
-index.ts:190
+SpatialModelComponent.ts:15

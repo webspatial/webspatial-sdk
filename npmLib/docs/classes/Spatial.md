@@ -30,7 +30,7 @@ Base object designed to be placed on navigator.spatial to mirror navigator.xr fo
 
 #### Defined in
 
-index.ts:457
+Spatial.ts:11
 
 ***
 
@@ -44,4 +44,4 @@ index.ts:457
 
 #### Defined in
 
-index.ts:453
+Spatial.ts:7
