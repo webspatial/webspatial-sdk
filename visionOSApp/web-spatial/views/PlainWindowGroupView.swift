@@ -122,7 +122,7 @@ struct PlainWindowGroupView: View {
                 }.opacity(windowResizeInProgress ? 0 : 1)
                     .gesture(dragGesture).offset(z: -0.1)
                 if let wv = rootWebview {
-                    let oval = Float(wv.scrollOffset.y)
+                    let parentYOffset = Float(wv.scrollOffset.y)
 
                     // Webview content
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
@@ -132,7 +132,7 @@ struct PlainWindowGroupView: View {
                                 let view = e.spatialWebView!
                                 WatchObj(toWatch: [e, view]) {
                                     let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                                    let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - oval)
+                                    let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
                                     let z = CGFloat(e.modelEntity.position.z)
                                     let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
                                     let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
@@ -186,14 +186,14 @@ struct PlainWindowGroupView: View {
                             if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
                                 WatchObj(toWatch: [e, e.modelUIComponent!]) {
                                     let x = CGFloat(e.modelEntity.position.x)
-                                    let y = CGFloat(e.modelEntity.position.y - oval)
+                                    let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                     let z = CGFloat(e.modelEntity.position.z)
-                                    
-                                    let scaleX = e.modelEntity.scale.x;
-                                    let scaleY = e.modelEntity.scale.y;
 
-                                    let width = CGFloat(e.modelUIComponent!.resolutionX  ) * CGFloat(scaleX)
-                                    let height = CGFloat(e.modelUIComponent!.resolutionY  ) * CGFloat(scaleY)
+                                    let scaleX = e.modelEntity.scale.x
+                                    let scaleY = e.modelEntity.scale.y
+
+                                    let width = CGFloat(e.modelUIComponent!.resolutionX) * CGFloat(scaleX)
+                                    let height = CGFloat(e.modelUIComponent!.resolutionY) * CGFloat(scaleY)
                                     Model3D(url: e.modelUIComponent!.url!) { model in
                                         model.model?
                                             .resizable()
