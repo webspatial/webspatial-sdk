@@ -13,23 +13,23 @@ export class NativeLogger implements Logger{
         return this.rpc(createSetLogLevelCommand(level)); 
     }
 
-    async trace(msg: any): Promise<void> {
+    async trace(...msg: any[]): Promise<void> {
         this.rpc(createLogMsgCommand(LoggerLevel.TRACE, msg)); 
     }
 
-    async debug(msg: any): Promise<void> {
+    async debug(...msg: any[]): Promise<void> {
         this.rpc(createLogMsgCommand(LoggerLevel.DEBUG, msg)); 
     }
 
-    async info(msg: any): Promise<void> {
+    async info(...msg: any[]): Promise<void> {
         this.rpc(createLogMsgCommand(LoggerLevel.INFO, msg)); 
     }
 
-    async warn(msg: any): Promise<void> {
+    async warn(...msg: any[]): Promise<void> {
         this.rpc(createLogMsgCommand(LoggerLevel.WARN, msg)); 
     }
 
-    async error(msg: any): Promise<void> {
+    async error(...msg: any[]): Promise<void> {
         this.rpc(createLogMsgCommand(LoggerLevel.ERROR, msg)); 
     }
 }
