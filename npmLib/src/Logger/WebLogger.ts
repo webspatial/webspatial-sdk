@@ -23,23 +23,23 @@ export class WebLogger implements Logger {
         this.logger.setLevel(LoggerLevelMap[level]);
     }
 
-    async trace(msg: any): Promise<void> {
+    async trace(...msg: any[]): Promise<void> {
         this.logger.trace(msg);
     }
 
-    async debug(msg: any): Promise<void> {
+    async debug(...msg: any[]): Promise<void> {
         this.logger.debug(msg);
     }
 
-    async info(msg: any): Promise<void> {
+    async info(...msg: any[]): Promise<void> {
         this.logger.info(msg);
     }
 
-    async warn(msg: any): Promise<void> {
+    async warn(...msg: any[]): Promise<void> {
         this.logger.warn(msg);
     }
 
-    async error(msg: any): Promise<void> {
+    async error(...msg: any[]): Promise<void> {
         this.logger.error(msg);
     }
 }
