@@ -123,9 +123,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             // Open window and set style
             let openedWindow = window.open();
             openedWindow!.document.documentElement.style.backgroundColor = "transparent"
-            openedWindow!.document.documentElement.style.overflow = "hidden"
             openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
-            openedWindow!.document.body.style.overflow = "hidden"
             openedWindow!.document.body.style.margin = "0px"
 
             // Synchronize head of parent page to this page to ensure styles are in sync
