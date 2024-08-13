@@ -539,8 +539,9 @@ class SpatialWebView: WatchableObject {
             } else if command == "dismissImmersiveSpace" {
                 wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
             } else if command == "log" {
-                if let logString: String = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
+                if let logStringArr: [String] = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
                     let log = Logger.getLogger()
+                    let logString = logStringArr.joined();
                     switch logLevel {
                     case "TRACE":
                         log.verbose(logString)
