@@ -38,8 +38,8 @@ class SpatialWebView: WatchableObject {
     @Published var root = false
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
-    var inline = false
-    var scrollWithParent = false
+    @Published var inline = false
+    @Published var scrollWithParent = false
 
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
@@ -541,7 +541,7 @@ class SpatialWebView: WatchableObject {
             } else if command == "log" {
                 if let logStringArr: [String] = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
                     let log = Logger.getLogger()
-                    let logString = logStringArr.joined();
+                    let logString = logStringArr.joined()
                     switch logLevel {
                     case "TRACE":
                         log.verbose(logString)
