@@ -196,10 +196,13 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
                 var ins = iframeInstance.getActiveInstance()
                 if (ins) {
                     await ins.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
+
+                    await ins.webview?.setScrollEnabled(props.allowScroll ? true : false)
+                    await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
                 }
             })();
             resizeSpatial()
-        }, [props.spatialStyle])
+        }, [props.spatialStyle, props.allowScroll, props.scrollWithParent])
 
         useEffect(() => {
             let ro = new ResizeObserver((elements) => {
