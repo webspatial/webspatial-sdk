@@ -17,6 +17,7 @@ export class WebLogger implements Logger {
     private logger;
     constructor(name: string = '') {
         this.logger = log.getLogger(name);
+        this.logger.setLevel(LoggerLevel.INFO);
     }
 
     async setLevel(level: LoggerLevel): Promise<void> {
@@ -28,18 +29,18 @@ export class WebLogger implements Logger {
     }
 
     async debug(...msg: any[]): Promise<void> {
-        this.logger.debug(msg);
+        this.logger.debug(...msg);
     }
 
     async info(...msg: any[]): Promise<void> {
-        this.logger.info(msg);
+        this.logger.info(...msg);
     }
 
     async warn(...msg: any[]): Promise<void> {
-        this.logger.warn(msg);
+        this.logger.warn(...msg);
     }
 
     async error(...msg: any[]): Promise<void> {
-        this.logger.error(msg);
+        this.logger.error(...msg);
     }
 }
