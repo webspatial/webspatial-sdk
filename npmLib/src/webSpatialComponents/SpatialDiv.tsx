@@ -78,9 +78,9 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
 
     if (mode === "none") { // Used for debugging purposes
         return <div className={props.className} style={props.style}>
-            // {!isCustomElement ? <>
-            //     {props.children}
-            // </> : <slot></slot>}
+            {!isCustomElement ? <>
+                {props.children}
+            </> : <slot></slot>}
         </div>
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
@@ -215,5 +215,5 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             </> : <></>}
         </>
     }
-    
+
 }
