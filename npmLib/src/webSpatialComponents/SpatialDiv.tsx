@@ -181,7 +181,6 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
         let resizeSpatial = async () => {
             var ins = iframeInstance.getActiveInstance()
             if (ins) {
-
                 let rect = childrenSizeRef.current!.getBoundingClientRect()
                 if (customElEnabled) {
                     let p = customElements!.parentElement!
@@ -203,11 +202,16 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
         }, [props.spatialStyle])
 
         useEffect(() => {
+            let ro = new ResizeObserver((elements) => {
+                resizeSpatial()
+            })
+            ro.observe(childrenSizeRef.current!)
             window.addEventListener("resize", resizeSpatial);
             return () => {
                 window.removeEventListener("resize", resizeSpatial);
+                ro.disconnect()
             }
-        })
+        }, [])
 
 
         return <>
