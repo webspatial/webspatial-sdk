@@ -147,27 +147,27 @@ export class SpatialSession {
     }
   
     async log(...msg: any[]) {
-      await WebSpatial.logger.info(msg)
+      await WebSpatial.logger.info(...msg)
     }
   
     async info(...msg: any[]) {
-      await WebSpatial.logger.info(msg)
+      await WebSpatial.logger.info(...msg)
     }
   
     async warn(...msg: any[]) {
-      await WebSpatial.logger.warn(msg)
+      await WebSpatial.logger.warn(...msg)
     }
   
     async debug(...msg: any[]) {
-      await WebSpatial.logger.debug(msg)
+      await WebSpatial.logger.debug(...msg)
     }
   
     async error(...msg: any[]) {
-      await WebSpatial.logger.error(msg)
+      await WebSpatial.logger.error(...msg)
     }
   
     async trace(...msg: any[]) {
-      await WebSpatial.logger.trace(msg)
+      await WebSpatial.logger.trace(...msg)
     }
   
     /**
