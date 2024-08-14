@@ -126,6 +126,28 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
             openedWindow!.document.body.style.margin = "0px"
 
+            // Overwrite link href to navigate the parents page
+            openedWindow!.document.onclick = function (e) {
+                let element = (e.target) as HTMLElement | null;
+                let found = false
+
+                // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
+                while (!found) {
+                    if (element && (element).tagName == 'A') {
+                        // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
+                        if (!element.onclick) {
+                            window.location.href = (element as HTMLAnchorElement).href
+                        }
+                        return false; // prevent default action and stop event propagation
+                    }
+                    if (element && element.parentElement) {
+                        element = element.parentElement
+                    } else {
+                        break;
+                    }
+                }
+            };
+
             // Synchronize head of parent page to this page to ensure styles are in sync
             document.head.addEventListener("DOMNodeInserted", () => {
                 openedWindow!.document.head.innerHTML = document.head.innerHTML
@@ -159,7 +181,6 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
         let resizeSpatial = async () => {
             var ins = iframeInstance.getActiveInstance()
             if (ins) {
-
                 let rect = childrenSizeRef.current!.getBoundingClientRect()
                 if (customElEnabled) {
                     let p = customElements!.parentElement!
@@ -175,31 +196,25 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
                 var ins = iframeInstance.getActiveInstance()
                 if (ins) {
                     await ins.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
+
+                    await ins.webview?.setScrollEnabled(props.allowScroll ? true : false)
+                    await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
                 }
             })();
             resizeSpatial()
-        }, [props.spatialStyle])
+        }, [props.spatialStyle, props.allowScroll, props.scrollWithParent])
 
         useEffect(() => {
+            let ro = new ResizeObserver((elements) => {
+                resizeSpatial()
+            })
+            ro.observe(childrenSizeRef.current!)
             window.addEventListener("resize", resizeSpatial);
             return () => {
                 window.removeEventListener("resize", resizeSpatial);
+                ro.disconnect()
             }
-        })
-
-        // Overwrite href to navigate the parents page
-        useEffect(() => {
-            let links = portalEl?.querySelectorAll('a')
-            links?.forEach((l) => {
-                let href = l.href
-                if (href) {
-                    l.removeAttribute("href")
-                    l.onclick = () => {
-                        window.location.href = href
-                    }
-                }
-            })
-        }, [portalEl])
+        }, [])
 
 
         return <>
