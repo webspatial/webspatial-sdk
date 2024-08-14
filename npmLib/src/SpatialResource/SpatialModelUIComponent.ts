@@ -1,5 +1,6 @@
 import { SpatialResource } from "./SpatialResource"
 import { WebSpatial } from "../webSpatialPrivate"
+import { AnimationBuilder } from "../webSpatialComponents/AnimationBuilder"
 
 /**
 * Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
@@ -25,7 +26,8 @@ export class SpatialModelUIComponent extends SpatialResource {
       await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
     }
 
-    async applyAnimationToResource(animationDescription: any) {
+    async applyAnimationToResource(animationBuilder: AnimationBuilder) {
+      const animationDescription = animationBuilder.build();
       await WebSpatial.applyAnimationToResource(this._resource, animationDescription)
     }
   }
