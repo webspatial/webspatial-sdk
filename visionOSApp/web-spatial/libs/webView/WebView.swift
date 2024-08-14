@@ -576,6 +576,23 @@ class SpatialWebView: WatchableObject {
                         }
                     }
                 }
+            } else if command == "animateResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
+                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
+                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])  {
+                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration);
+                            if let modelUIComponent = sr.modelUIComponent {
+                                modelUIComponent.triggerAnimation(animationDesc)
+                            }
+
+                        }
+                    }
+
+                    // todo: consider completeEvent after finish animation
+                    completeEvent(requestID: cmdInfo.requestID)
+                }
+
             }
         }
     }

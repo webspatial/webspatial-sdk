@@ -24,5 +24,9 @@ export class SpatialModelUIComponent extends SpatialResource {
     async setResolution(x: number, y: number) {
       await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
     }
+
+    async applyAnimationToResource(animationDescription: any) {
+      await WebSpatial.applyAnimationToResource(this._resource, animationDescription)
+    }
   }
   
