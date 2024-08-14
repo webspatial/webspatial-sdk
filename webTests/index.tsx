@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity, SpatialIFrameComponent, SpatialModelComponent, SpatialModelUIComponent, SpatialSession } from 'web-spatial/src/index';
-import { Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
+import { Spatial, SpatialEntity } from 'web-spatial/src';
+import { AnimationBuilder, Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
+import { ModelRef } from 'web-spatial/src/webSpatialComponents/Model';
 
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
@@ -165,6 +166,19 @@ function App() {
         }
     }, [])
 
+    const modelRef: ModelRef= useRef(null);
+    const onAnimateModelFadeIn = () => {
+        const animationBuilder = new AnimationBuilder();
+        animationBuilder.fadeOut(false);
+        modelRef.current?.animate(animationBuilder)
+    }
+
+    const onAnimateModelFadeOut = () => {
+        const animationBuilder = new AnimationBuilder();
+        animationBuilder.fadeOut(true);
+        modelRef.current?.animate(animationBuilder)
+    }
+
     return (
         <div>
             <div className='flex text-white text-lg bg-black bg-opacity-25 p-8 gap-5'>
@@ -194,9 +208,11 @@ function App() {
                 <div className='grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20'>
                     {spatialSupported ?
                         <div className='w-full h-52'>
-                            <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
+                            <Model ref={modelRef} className="w-full h-full bg-white bg-opacity-25 rounded-xl">
                                 <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
                             </Model>
+
+                            
                         </div>
                         :
                         <div className='w-full h-52'>
@@ -207,6 +223,9 @@ function App() {
                     }
                     <h3 className='text-xl'>Get Started</h3>
                     <h3 className='text-2xl'>npm i web-spatial</h3>
+
+                    <div onClick={onAnimateModelFadeIn}> 开启渐入动画 </div>
+                    <div onClick={onAnimateModelFadeOut}> 开启渐出动画 </div>
                 </div>
 
 
@@ -261,3 +280,4 @@ ReactDOM.createRoot(root).render(
     <MyTag></MyTag>
     // </React.StrictMode >,
 )
+
