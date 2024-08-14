@@ -11,6 +11,11 @@ function PortalTest() {
             To be implemented
         </div>
         <div>
+            <div style={{ color: "red" }}>
+                <SpatialDiv spatialStyle={{ position: { z: 20, x: 0, y: 0 } }}>
+                    <p>This text should be red</p>
+                </SpatialDiv>
+            </div>
             <SpatialDiv className='p-10' spatialStyle={{ position: { z: 50, x: 100, y: 50 } }} style={{ backgroundColor: "gray", width: "50%" }}>
                 <div onClick={() => { document.body.style.backgroundColor = 'gray' }}>
                     <p>This text is inside a portal iframe</p>
