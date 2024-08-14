@@ -34,6 +34,62 @@ function useAsyncInstances<T>(
 }
 
 
+function getInheritedStyleProps(from: HTMLElement) {
+    //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
+    var propNames = [
+        "azimuth",
+        "borderCollapse",
+        "borderSpacing",
+        "captionSide",
+        "color",
+        "cursor",
+        "direction",
+        "elevation",
+        "emptyCells",
+        "fontFamily",
+        "fontSize",
+        "fontStyle",
+        "fontVariant",
+        "fontWeight",
+        "font",
+        "letterSpacing",
+        "lineHeight",
+        "listStyleImage",
+        "listStylePosition",
+        "listStyleType",
+        "listStyle",
+        "orphans",
+        "pitchRange",
+        "pitch",
+        "quotes",
+        "richness",
+        "speakHeader",
+        "speakNumeral",
+        "speakPunctuation",
+        "speak",
+        "speechRate",
+        "stress",
+        "textAlign",
+        "textIndent",
+        "textTransform",
+        "visibility",
+        "voiceFamily",
+        "volume",
+        "whiteSpace",
+        "widows",
+        "wordSpacing",
+    ]
+    var props = {} as any
+    var styleObject = getComputedStyle(from)
+    for (var cssName of propNames) {
+        if ((styleObject as any)[cssName]) {
+            props[cssName] = (styleObject as any)[cssName]
+        }
+    }
+    return props
+}
+
+
 /**
  * Component that extends the div tag that allows the inner contents to be posisioned in 3D space
  * 
@@ -222,7 +278,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<div className={props.className} style={{ ...props.style, ...{ width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px" } }}>
+                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: undefined, width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px" } }}>
                     {props.children}
                 </div>, portalEl)}
             </> : <></>}
