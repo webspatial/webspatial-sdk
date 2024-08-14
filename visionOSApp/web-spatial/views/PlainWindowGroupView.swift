@@ -183,8 +183,9 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         let e = windowGroupContent.childEntities[key]!
                         WatchObj(toWatch: [e]) {
-                            if e.modelUIComponent != nil && e.modelUIComponent?.url != nil {
-                                WatchObj(toWatch: [e, e.modelUIComponent!]) {
+                            
+                            if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url  {
+                                WatchObj(toWatch: [e, modelUIComponent]) {
                                     let x = CGFloat(e.modelEntity.position.x)
                                     let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                     let z = CGFloat(e.modelEntity.position.z)
@@ -192,13 +193,36 @@ struct PlainWindowGroupView: View {
                                     let scaleX = e.modelEntity.scale.x
                                     let scaleY = e.modelEntity.scale.y
 
-                                    let width = CGFloat(e.modelUIComponent!.resolutionX) * CGFloat(scaleX)
-                                    let height = CGFloat(e.modelUIComponent!.resolutionY) * CGFloat(scaleY)
-                                    Model3D(url: e.modelUIComponent!.url!) { model in
+                                    let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
+                                    let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
+                                    Model3D(url: modelUrl) { model in
                                         model.model?
                                             .resizable()
                                             .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                                    }.frame(width: width, height: height).position(x: x, y: y).offset(z: z).padding3D(.front, -100000).opacity(windowResizeInProgress ? 0 : 1)
+                                    }
+                                    .frame(width: width, height: height)
+                                    .position(x: x, y: y)
+                                    .offset(z: z)
+                                    .padding3D(.front, -100000)
+                                    .opacity(windowResizeInProgress || (modelUIComponent.opacity )
+                                             ? 0 : 1)
+                                    .onReceive(modelUIComponent.animateSubject) { animationDescription in
+                                        var baseAnimation: Animation;
+                                        switch animationDescription.animationEaseFn {
+                                        case .easeIn:
+                                            baseAnimation = Animation.easeIn(duration: modelUIComponent.animateDuration)
+                                        default:
+                                            baseAnimation = Animation.easeInOut(duration: modelUIComponent.animateDuration)
+                                        }
+                                         
+                                        withAnimation(baseAnimation) {
+                                            modelUIComponent.onAnimation(animationDescription)
+                                        }
+                                    }
+                                    
+                                    
+                    
+                                
                                 }
                             }
                         }
