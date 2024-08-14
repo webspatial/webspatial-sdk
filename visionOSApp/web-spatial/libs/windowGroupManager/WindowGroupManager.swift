@@ -9,17 +9,37 @@ import Foundation
 import RealityKit
 import typealias RealityKit.Entity
 import SwiftUI
+import Combine
 
 // Use class wrap avoid publishing swiftUI state on a background thread
 class EntityWrap {
     var entity: Entity?
 }
 
+
+
 class ModelUIComponent: WatchableObject {
     @Published var url: URL?
     @Published var aspectRatio: String = "fit"
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
+    
+    @Published var opacity = false
+    
+//  animation related function and props
+//    var animationEaseFn: AnimationEaseStyle  = .easeInOut
+    @Published var animateSubject = PassthroughSubject<AnimationDescription, Never>()
+    
+    func triggerAnimation(_ animationDesc: AnimationDescription) {
+        animateSubject.send(animationDesc);
+    }
+    
+//    called by PlainWindowGroupView
+    func onAnimation(_ animationDesc: AnimationDescription) {
+        print("onAnimation triggered")
+        opacity = animationDesc.fadeOut
+    }
+
 }
 
 class InputComponent: WatchableObject {
