@@ -36,7 +36,7 @@ class ModelUIComponent: WatchableObject {
     
 //    called by PlainWindowGroupView
     func onAnimation(_ animationDesc: AnimationDescription) {
-        print("onAnimation triggered")
+//        print("onAnimation triggered")
         opacity = animationDesc.fadeOut
     }
 

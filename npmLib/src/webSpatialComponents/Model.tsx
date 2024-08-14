@@ -3,6 +3,7 @@ import { initializeSpatialOffset } from './utils'
 import { SpatialModelUIManager } from './SpatialModelUIManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { vecType } from './types'
+import { AnimationBuilder } from './AnimationBuilder'
 
 
 // 定义子组件的 props 类型
@@ -13,13 +14,8 @@ interface ModelProps {
 }
 
 export type ModelRef = Ref<{ 
-    animateOpacityFadeIn: (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => void,
-    animateOpacityFadeOut: (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => void
+    animate :(animationBuilder: AnimationBuilder) => void,
  }>
-
-export enum ModelAnimateOpacityEaseFn {
-    easeInOut = 'easeInOut'
-}
 
 {/* <model interactive width="670" height="1191">
 <source src="assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" />
@@ -38,23 +34,27 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!)
 
-    const animateOpacityFadeIn = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
-        // To be implemented
-        const spatialModelUIManager = instanceState.current[currentInstanceID.current];
-        const animationDescription = {fadeOut: false, fadeDuration: durationSeconds}
-        spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
-    };
+    // const animateOpacityFadeIn = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
+    //     // To be implemented
+    //     const spatialModelUIManager = instanceState.current[currentInstanceID.current];
+    //     const animationDescription = {fadeOut: false, fadeDuration: durationSeconds}
+    //     spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
+    // };
 
-    const animateOpacityFadeOut = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
-        // To be implemented
+    // const animateOpacityFadeOut = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
+    //     // To be implemented
+    //     const spatialModelUIManager = instanceState.current[currentInstanceID.current];
+    //     const animationDescription = {fadeOut: true, fadeDuration: durationSeconds}
+    //     spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
+    // };
+
+    const animate = (animationBuilder: AnimationBuilder) => {
         const spatialModelUIManager = instanceState.current[currentInstanceID.current];
-        const animationDescription = {fadeOut: true, fadeDuration: durationSeconds}
-        spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
-    };
+        spatialModelUIManager.modelComponent?.applyAnimationToResource(animationBuilder)
+    }
 
     useImperativeHandle(ref, () => ({
-        animateOpacityFadeIn,
-        animateOpacityFadeOut
+        animate
     }));
 
     let instanceState = useRef({} as { [id: string]: SpatialModelUIManager })

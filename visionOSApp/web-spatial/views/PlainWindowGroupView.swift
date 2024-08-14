@@ -210,9 +210,9 @@ struct PlainWindowGroupView: View {
                                         var baseAnimation: Animation;
                                         switch animationDescription.animationEaseFn {
                                         case .easeIn:
-                                            baseAnimation = Animation.easeIn(duration: modelUIComponent.animateDuration)
+                                            baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
                                         default:
-                                            baseAnimation = Animation.easeInOut(duration: modelUIComponent.animateDuration)
+                                            baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
                                         }
                                          
                                         withAnimation(baseAnimation) {
