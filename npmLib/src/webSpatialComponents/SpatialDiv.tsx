@@ -278,7 +278,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: undefined, width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px" } }}>
+                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: undefined, width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
                     {props.children}
                 </div>, portalEl)}
             </> : <></>}
