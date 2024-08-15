@@ -11,6 +11,9 @@ function PortalTest() {
             To be implemented
         </div>
         <div>
+            <SpatialDiv spatialStyle={{ position: { z: 100, x: 0, y: 0 } }} style={{ position: "absolute", top: "45%", left: "45%", width: "10%", height: "10%", backgroundColor: "white" }}>
+                <p>This is a popup</p>
+            </SpatialDiv>
             <div style={{ color: "red" }}>
                 <SpatialDiv spatialStyle={{ position: { z: 20, x: 0, y: 0 } }}>
                     <p>This text should be red</p>
