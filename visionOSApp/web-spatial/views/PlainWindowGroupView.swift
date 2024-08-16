@@ -38,10 +38,12 @@ struct OpenDismissHandlerUI: View {
 
 struct SpatialWebViewUI: View {
     @ObservedObject var wv: SpatialWebView
-
     var body: some View {
         wv.getView()
             .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
+            .background(
+                wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
+            )
             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
             .cornerRadius(wv.cornerRadius)
             .opacity(wv.visible ? 1 : 0)
@@ -183,8 +185,7 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         let e = windowGroupContent.childEntities[key]!
                         WatchObj(toWatch: [e]) {
-                            
-                            if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url  {
+                            if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
                                 WatchObj(toWatch: [e, modelUIComponent]) {
                                     let x = CGFloat(e.modelEntity.position.x)
                                     let y = CGFloat(e.modelEntity.position.y - parentYOffset)
@@ -204,25 +205,21 @@ struct PlainWindowGroupView: View {
                                     .position(x: x, y: y)
                                     .offset(z: z)
                                     .padding3D(.front, -100000)
-                                    .opacity(windowResizeInProgress || (modelUIComponent.opacity )
-                                             ? 0 : 1)
+                                    .opacity(windowResizeInProgress || (modelUIComponent.opacity)
+                                        ? 0 : 1)
                                     .onReceive(modelUIComponent.animateSubject) { animationDescription in
-                                        var baseAnimation: Animation;
+                                        var baseAnimation: Animation
                                         switch animationDescription.animationEaseFn {
                                         case .easeIn:
                                             baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
                                         default:
                                             baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
                                         }
-                                         
+
                                         withAnimation(baseAnimation) {
                                             modelUIComponent.onAnimation(animationDescription)
                                         }
                                     }
-                                    
-                                    
-                    
-                                
                                 }
                             }
                         }
