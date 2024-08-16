@@ -25,7 +25,7 @@ export class WebLogger implements Logger {
     }
 
     async trace(...msg: any[]): Promise<void> {
-        this.logger.trace(msg);
+        this.logger.trace(...msg);
     }
 
     async debug(...msg: any[]): Promise<void> {
