@@ -317,11 +317,11 @@ export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRe
 
 
         return <>
-            <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: "hidden" } }}  >
+            <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </div>
             {!isCustomElement && portalEl ? <>
-                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: undefined, width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
+                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
                     {props.children}
                 </div>, portalEl)}
             </> : <></>}
