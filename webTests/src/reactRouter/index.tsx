@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter, Link, Route, Routes } from 'react-router-dom'
 import { SpatialDiv } from 'web-spatial/src/webSpatialComponents'
@@ -35,6 +35,9 @@ function PortalTest() {
                     <p>This text is inside a div notiframe</p>
                 </div>
             </div>
+            <SpatialDiv className='p-10' spatialStyle={{ position: { z: 50, x: 0, y: 0 }, glassEffect: true, materialThickness: "thick" }} >
+                <p>Another spatial div</p>
+            </SpatialDiv>
         </div>
 
     </>
