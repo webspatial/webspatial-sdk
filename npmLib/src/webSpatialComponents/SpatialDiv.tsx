@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
+import React, { CSSProperties, ReactElement, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle } from 'react'
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSessionAsync } from './getSessionAsync'
@@ -89,13 +89,29 @@ function getInheritedStyleProps(from: HTMLElement) {
     return props
 }
 
+interface SpatialDivProps {
+    allowScroll?: boolean, 
+    scrollWithParent?: boolean, 
+    spatialStyle?: Partial<spatialStyleDef>, 
+    children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>,
+    className?: string, 
+    style?: CSSProperties | undefined
+    // TBF: when disableSpatial, display as normal div in current webview
+    disableSpatial?: boolean
+}
+
+export type SpatialDivRef = Ref<{
+    // animate :(animationBuilder: AnimationBuilder) => void,
+    getBoundingClientRect: () => DOMRect
+ }>
+
 
 /**
  * Component that extends the div tag that allows the inner contents to be posisioned in 3D space
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: boolean, spatialStyle?: Partial<spatialStyleDef>, children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>, className?: string, style?: CSSProperties | undefined }) {
+export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRef ) => {
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -109,6 +125,12 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
     if (session) {
         mode = "spatial"
     }
+
+    useImperativeHandle(ref, () => ({
+        getBoundingClientRect() {
+            return (childrenSizeRef.current! as HTMLElement).getBoundingClientRect();
+        }
+    }));
 
     useEffect(() => {
         if (mode == "none") {
@@ -133,7 +155,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
     }, []);
 
     if (mode === "none") { // Used for debugging purposes
-        return <div className={props.className} style={props.style}>
+        return <div className={props.className} style={props.style} ref={childrenSizeRef} >
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
@@ -175,6 +197,14 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             </> : <></>}
         </>
     } else if (mode === "spatial") { // Behavior on spatial
+
+        function setViewport(openedWindow?: WindowProxy) {
+            if (!openedWindow) return;
+            const bodyWidth = document.body.getBoundingClientRect().width;
+            const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
+            viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0`)
+        }
+
         let iframeInstance = useAsyncInstances(() => {
             // Open window and set style
             let openedWindow = window.open();
@@ -208,6 +238,7 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             document.head.addEventListener("DOMNodeInserted", () => {
                 openedWindow!.document.head.innerHTML = document.head.innerHTML
 
+                setViewport(openedWindow!);
             })
             openedWindow!.document.head.innerHTML = document.head.innerHTML
 
@@ -250,6 +281,8 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
                     p.appendChild(customElements!)
                 }
                 await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
+                
+                setViewport(ins.window)
             }
         }
         useEffect(() => {
@@ -295,4 +328,4 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
         </>
     }
 
-}
+})

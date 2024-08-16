@@ -15,6 +15,7 @@ interface ModelProps {
 
 export type ModelRef = Ref<{ 
     animate :(animationBuilder: AnimationBuilder) => void,
+    getBoundingClientRect: () => DOMRect
  }>
 
 {/* <model interactive width="670" height="1191">
@@ -32,21 +33,7 @@ export type ModelRef = Ref<{
  */
 export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
-    initializeSpatialOffset(props.spatialOffset!)
-
-    // const animateOpacityFadeIn = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
-    //     // To be implemented
-    //     const spatialModelUIManager = instanceState.current[currentInstanceID.current];
-    //     const animationDescription = {fadeOut: false, fadeDuration: durationSeconds}
-    //     spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
-    // };
-
-    // const animateOpacityFadeOut = (easeFn: ModelAnimateOpacityEaseFn, durationSeconds: number) => {
-    //     // To be implemented
-    //     const spatialModelUIManager = instanceState.current[currentInstanceID.current];
-    //     const animationDescription = {fadeOut: true, fadeDuration: durationSeconds}
-    //     spatialModelUIManager.modelComponent?.applyAnimationToResource(animationDescription)
-    // };
+    initializeSpatialOffset(props.spatialOffset!);
 
     const animate = (animationBuilder: AnimationBuilder) => {
         const spatialModelUIManager = instanceState.current[currentInstanceID.current];
@@ -54,7 +41,10 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
     }
 
     useImperativeHandle(ref, () => ({
-        animate
+        animate,
+        getBoundingClientRect() {
+            return (myDiv.current! as HTMLElement).getBoundingClientRect();
+        }
     }));
 
     let instanceState = useRef({} as { [id: string]: SpatialModelUIManager })
