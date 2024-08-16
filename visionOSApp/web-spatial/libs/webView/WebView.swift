@@ -28,6 +28,8 @@ struct LoadingStyles {
     var glassEffect = false
     var transparentEffect = false
     var cornerRadius = CGFloat(0)
+    var materialThickness = Material.ultraThin
+    var useMaterialThickness = false
     var windowGroupSize = DefaultPlainWindowGroupSize
 }
 
@@ -58,6 +60,8 @@ class SpatialWebView: WatchableObject {
     @Published var glassEffect = false
     @Published var transparentEffect = false
     @Published var cornerRadius = CGFloat(0)
+    @Published var materialThickness = Material.ultraThin
+    @Published var useMaterialThickness = false
 
     var loadingStyles = LoadingStyles()
     var isLoading = true
@@ -114,6 +118,19 @@ class SpatialWebView: WatchableObject {
 
     func getURL() -> URL? {
         return webViewNative?.url
+    }
+
+    func stringToThickness(str: String) -> SwiftUI.Material? {
+        if str == "thin" {
+            return Material.thin
+        }
+        if str == "thick" {
+            return Material.thick
+        }
+        if str == "regular" {
+            return Material.regular
+        }
+        return nil
     }
 
     func parseURL(url: String) -> String {
@@ -227,6 +244,8 @@ class SpatialWebView: WatchableObject {
         glassEffect = loadingStyles.glassEffect
         transparentEffect = loadingStyles.transparentEffect
         cornerRadius = loadingStyles.cornerRadius
+        materialThickness = loadingStyles.materialThickness
+        useMaterialThickness = loadingStyles.useMaterialThickness
 
         if root {
             let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
@@ -486,6 +505,23 @@ class SpatialWebView: WatchableObject {
                             sr.spatialWebView!.resolutionY = y
                         }
 
+                        if let materialThickness: String = json.getValue(lookup: ["data", "update", "style", "materialThickness"]) {
+                            var mat = stringToThickness(str: materialThickness)
+                            if mat != nil {
+                                if isLoading {
+                                    loadingStyles.useMaterialThickness = true
+                                    loadingStyles.materialThickness = mat!
+                                }
+                                sr.spatialWebView?.useMaterialThickness = true
+                                sr.spatialWebView?.materialThickness = mat!
+                            } else {
+                                if isLoading {
+                                    loadingStyles.useMaterialThickness = false
+                                }
+                                sr.spatialWebView?.useMaterialThickness = false
+                            }
+                        }
+
                         if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
                             if isLoading {
                                 loadingStyles.glassEffect = glassEffect
@@ -580,19 +616,18 @@ class SpatialWebView: WatchableObject {
                 if let cmdInfo = getCommandInfo(json: json) {
                     if let sr = wgManager.allResources[cmdInfo.resourceID] {
                         if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
-                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])  {
-                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration);
+                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
+                        {
+                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
                             if let modelUIComponent = sr.modelUIComponent {
                                 modelUIComponent.triggerAnimation(animationDesc)
                             }
-
                         }
                     }
 
-                    // todo: consider completeEvent after finish animation
+                    // TODO: consider completeEvent after finish animation
                     completeEvent(requestID: cmdInfo.requestID)
                 }
-
             }
         }
     }

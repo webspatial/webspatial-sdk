@@ -222,7 +222,12 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             let iframeMngr = new SpatialIFrameManager()
             iframeMngr.initFromWidow(openedWindow!).then(async () => {
                 // Set style
-                await iframeMngr.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
+                await iframeMngr.webview?.setStyle({
+                    transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
+                    glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect,
+                    cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius,
+                    materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
+                })
                 await resizeSpatial()
                 await iframeMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
                 await iframeMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
@@ -251,7 +256,12 @@ export function SpatialDiv(props: { allowScroll?: boolean, scrollWithParent?: bo
             (async () => {
                 var ins = iframeInstance.getActiveInstance()
                 if (ins) {
-                    await ins.webview?.setStyle({ transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect, glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect, cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius })
+                    await ins.webview?.setStyle({
+                        transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
+                        glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect,
+                        cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius,
+                        materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
+                    })
 
                     await ins.webview?.setScrollEnabled(props.allowScroll ? true : false)
                     await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
