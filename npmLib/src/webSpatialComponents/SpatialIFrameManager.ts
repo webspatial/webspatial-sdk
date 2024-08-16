@@ -10,6 +10,7 @@ export class SpatialIFrameManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
     webview?: SpatialIFrameComponent
+    window?: WindowProxy
 
     async initInternal(url: string) {
         this.entity = await (await getSessionAsync()!).createEntity()
@@ -35,7 +36,8 @@ export class SpatialIFrameManager {
         this.initPromise = this.initInternal(url)
         await this.initPromise
     }
-    async initFromWidow(w: any) {
+    async initFromWidow(w: WindowProxy) {
+        this.window = w;
         this.initPromise = this.initInternalFromWindow(w)
         await this.initPromise
     }
@@ -62,13 +64,14 @@ export class SpatialIFrameManager {
         await entity.updateTransform()
 
         var webview = this.webview!
-        await webview.setResolution(rect.width, rect.height)
+        await webview.setResolution(rect.width, rect.height);
     }
     async destroy() {
         if (this.initPromise) {
             await this.initPromise
             this.entity?.destroy()
             this.webview?.destroy()
+            this.window = undefined
         }
     }
 }
