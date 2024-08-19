@@ -70,8 +70,8 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        var wvNative = WebViewNative()
-        wvNative.createResources(configuration: configuration)
+        let wvNative = WebViewNative()
+        _ = wvNative.createResources(configuration: configuration)
         webViewRef!.didSpawnWebView(wv: wvNative)
         return wvNative.webViewHolder.appleWebView
     }
