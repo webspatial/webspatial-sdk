@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactElement, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle } from 'react'
+import React, { CSSProperties, ReactElement, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSessionAsync } from './getSessionAsync'
@@ -34,7 +34,7 @@ function useAsyncInstances<T>(
 }
 
 
-function getInheritedStyleProps(from: HTMLElement) {
+function getInheritedStyleProps(from: HTMLElement): any {
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
         "azimuth",
@@ -90,20 +90,21 @@ function getInheritedStyleProps(from: HTMLElement) {
 }
 
 interface SpatialDivProps {
-    allowScroll?: boolean, 
-    scrollWithParent?: boolean, 
-    spatialStyle?: Partial<spatialStyleDef>, 
+    allowScroll?: boolean,
+    scrollWithParent?: boolean,
+    spatialStyle?: Partial<spatialStyleDef>,
     children?: ReactElement | JSX.Element | Array<ReactElement | JSX.Element>,
-    className?: string, 
+    className?: string,
     style?: CSSProperties | undefined
     // TBF: when disableSpatial, display as normal div in current webview
-    disableSpatial?: boolean
+    disableSpatial?: boolean,
+    debugName?: string
 }
 
 export type SpatialDivRef = Ref<{
     // animate :(animationBuilder: AnimationBuilder) => void,
     getBoundingClientRect: () => DOMRect
- }>
+}>
 
 
 /**
@@ -111,7 +112,10 @@ export type SpatialDivRef = Ref<{
  * 
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
-export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRef ) => {
+export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef) => {
+    // Used to validate if this spatial div will be visible or not (eg. when a spatial div is in the hidden child path, it should not create a window)
+    let isVisibleRef = useRef(null as null | HTMLDivElement)
+
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -206,6 +210,9 @@ export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRe
         }
 
         let iframeInstance = useAsyncInstances(() => {
+            if (getInheritedStyleProps(isVisibleRef.current!).visibility == "hidden") {
+                return null
+            }
             // Open window and set style
             let openedWindow = window.open();
             openedWindow!.document.documentElement.style.backgroundColor = "transparent"
@@ -266,8 +273,11 @@ export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRe
 
             return iframeMngr
         }, (instance) => {
-            instance.destroy()
+            if (instance) {
+                instance.destroy()
+            }
         }, [])
+
 
         // Handle resizing
         let resizeSpatial = async () => {
@@ -281,7 +291,7 @@ export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRe
                     p.appendChild(customElements!)
                 }
                 await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
-                
+
                 setViewport(ins.window)
             }
         }
@@ -317,10 +327,11 @@ export const SpatialDiv = forwardRef ((props: SpatialDivProps, ref: SpatialDivRe
 
 
         return <>
+            <div ref={isVisibleRef}></div>
             <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </div>
-            {!isCustomElement && portalEl ? <>
+            {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
                 {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
                     {props.children}
                 </div>, portalEl)}
