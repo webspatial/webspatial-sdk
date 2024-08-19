@@ -5,41 +5,33 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import typealias RealityKit.Entity
 import SwiftUI
-import Combine
-
-// Use class wrap avoid publishing swiftUI state on a background thread
-class EntityWrap {
-    var entity: Entity?
-}
-
-
 
 class ModelUIComponent: WatchableObject {
     @Published var url: URL?
     @Published var aspectRatio: String = "fit"
     @Published var resolutionX: Double = 0
     @Published var resolutionY: Double = 0
-    
+
     @Published var opacity = false
-    
-//  animation related function and props
+
+    //  animation related function and props
 //    var animationEaseFn: AnimationEaseStyle  = .easeInOut
     @Published var animateSubject = PassthroughSubject<AnimationDescription, Never>()
-    
+
     func triggerAnimation(_ animationDesc: AnimationDescription) {
-        animateSubject.send(animationDesc);
+        animateSubject.send(animationDesc)
     }
-    
+
 //    called by PlainWindowGroupView
     func onAnimation(_ animationDesc: AnimationDescription) {
 //        print("onAnimation triggered")
         opacity = animationDesc.fadeOut
     }
-
 }
 
 class InputComponent: WatchableObject {
@@ -54,7 +46,6 @@ class SpatialResource: WatchableObject, Component {
     // Always populated
     let id = UUID().uuidString
     var resourceType = "undefined"
-    weak var mngr: WindowGroupManager?
 
     // populated based on type
     var meshResource: MeshResource?
@@ -85,7 +76,6 @@ class SpatialResource: WatchableObject, Component {
     }
 
     init(resourceType: String, mngr: WindowGroupManager, windowGroupID: String, owner: SpatialWebView?) {
-        self.mngr = mngr
         self.resourceType = resourceType
         self.ownerWebview = owner
 
@@ -110,7 +100,7 @@ class SpatialResource: WatchableObject, Component {
             }
         }
 
-        _ = mngr!.allResources.removeValue(forKey: id)
+        _ = wgManager.allResources.removeValue(forKey: id)
         return removed
     }
 }

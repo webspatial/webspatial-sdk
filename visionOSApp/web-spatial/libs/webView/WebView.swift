@@ -506,7 +506,7 @@ class SpatialWebView: WatchableObject {
                         }
 
                         if let materialThickness: String = json.getValue(lookup: ["data", "update", "style", "materialThickness"]) {
-                            var mat = stringToThickness(str: materialThickness)
+                            let mat = stringToThickness(str: materialThickness)
                             if mat != nil {
                                 if isLoading {
                                     loadingStyles.useMaterialThickness = true
