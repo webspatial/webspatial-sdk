@@ -5,6 +5,8 @@ import { getSessionAsync } from './getSessionAsync'
 import { SpatialIFrameManager } from './SpatialIFrameManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 
+const SpatialDivContext = createContext(null as null | any);
+
 /**
  * Hook to manage multiple instances of objects that could be initialized as async
  */
@@ -113,9 +115,9 @@ export type SpatialDivRef = Ref<{
  * Note: Inner html will actually be placed within a separate window element so directly accessing the dom elements may cause unexpected behavior
  */
 export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef) => {
-    // Used to validate if this spatial div will be visible or not (eg. when a spatial div is in the hidden child path, it should not create a window)
-    let isVisibleRef = useRef(null as null | HTMLDivElement)
+    const parentSpatialDiv = useContext(SpatialDivContext)
 
+    let isVisibleRef = useRef(null as null | HTMLDivElement)
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
@@ -210,6 +212,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
         }
 
         let iframeInstance = useAsyncInstances(() => {
+            // session?.log("TREVORX " + props.debugName + " " + (parentSpatialDiv !== null ? "hasParent" : "NoParent"))
             if (getInheritedStyleProps(isVisibleRef.current!).visibility == "hidden") {
                 return null
             }
@@ -327,15 +330,17 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
 
         return <>
-            <div ref={isVisibleRef}></div>
-            <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
-                {props.children}
-            </div>
-            {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
-                {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
+            <SpatialDivContext.Provider value={iframeInstance}>
+                <div ref={isVisibleRef}></div>
+                <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                     {props.children}
-                </div>, portalEl)}
-            </> : <></>}
+                </div>
+                {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
+                    {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
+                        {props.children}
+                    </div>, portalEl)}
+                </> : <></>}
+            </SpatialDivContext.Provider>
         </>
     }
 
