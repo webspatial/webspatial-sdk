@@ -13,18 +13,22 @@ import SwiftUI
 
 let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
 
-class WindowGroupContentDictionary: ObservableObject {
+@Observable
+class WindowGroupContentDictionary {
     // Resources
-    @Published var childEntities = [String: SpatialResource]()
-    // @Published var childResources = [String: SpatialResource]()
+    var childEntities = [String: SpatialResource]()
+    // var childResources = [String: SpatialResource]()
 
     // Global state
-    @Published var toggleImmersiveSpace = false
-    @Published var setSize = DefaultPlainWindowGroupSize
-    @Published var updateFrame = false
-    @Published var openWindowData: WindowGroupData? = nil
-    @Published var closeWindowData: WindowGroupData? = nil
-    @Published var hidden = false
+    var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
+
+    var setSize = PassthroughSubject<CGSize, Never>()
+
+    var updateFrame = false
+    var openWindowData = PassthroughSubject<WindowGroupData, Never>()
+    var closeWindowData = PassthroughSubject<WindowGroupData, Never>()
+//    var hidden = false
+
     var rootEntity = Entity()
 }
 
