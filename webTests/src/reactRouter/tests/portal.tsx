@@ -28,7 +28,7 @@ export function PortalTest() {
                 </div>
             </div>
             <SpatialDiv className='p-10' spatialStyle={{ position: { z: 50, x: 0, y: 0 }, glassEffect: true, materialThickness: "thick" }} >
-                <p>Another spatial div</p>
+                <p> Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text Another spatial div with a lot of text</p>
             </SpatialDiv>
         </div>
 
