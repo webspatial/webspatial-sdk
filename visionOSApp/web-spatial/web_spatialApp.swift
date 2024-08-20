@@ -23,7 +23,7 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var root: SpatialWebView? = nil
-    var rootWGD: WindowGroupContentDictionary
+    @State var rootWGD: WindowGroupContentDictionary
 
     init() {
         print("WebSpatial App Started --------")
@@ -65,7 +65,7 @@ struct web_spatialApp: App {
             if windowData == nil {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowGroupView(windowGroupContent: rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
+                PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
                     initAppOnViewMount()
                     let urlToLoad = myURL.absoluteString.replacingOccurrences(of: "webspatial://", with: "").replacingOccurrences(of: "//", with: "://")
 
@@ -75,21 +75,21 @@ struct web_spatialApp: App {
                 }
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
-                PlainWindowGroupView(windowGroupContent: wg)
-                    // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+                PlainWindowGroupView().environment(wg)
+                // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
                     .handlesExternalEvents(preferring: [], allowing: [])
             }
         }.windowStyle(.plain)
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
-            VolumetricWindowGroupView(windowGroupContent: wg).handlesExternalEvents(preferring: [], allowing: [])
+            VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
 
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
             let wg = wgManager.getWindowGroup(windowGroup: "Immersive")
-            VolumetricWindowGroupView(windowGroupContent: wg).handlesExternalEvents(preferring: [], allowing: [])
+            VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
         }
     }
 }

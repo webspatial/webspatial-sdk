@@ -8,36 +8,8 @@
 import RealityKit
 import SwiftUI
 
-struct OpenDismissHandlerUI: View {
-    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismissWindow) private var dismissWindow
-
-    @ObservedObject var windowGroupContent: WindowGroupContentDictionary
-
-    var body: some View {
-        VStack {}.onAppear().onReceive(windowGroupContent.$toggleImmersiveSpace.dropFirst()) { v in
-            if v {
-                Task {
-                    await openImmersiveSpace(id: "ImmersiveSpace")
-                }
-            } else {
-                Task {
-                    await dismissImmersiveSpace()
-                }
-            }
-
-        }.onReceive(windowGroupContent.$openWindowData.dropFirst()) { wd in
-            let _ = openWindow(id: wd!.windowStyle, value: wd!)
-        }.onReceive(windowGroupContent.$closeWindowData.dropFirst()) { wd in
-            dismissWindow(id: wd!.windowStyle, value: wd!)
-        }
-    }
-}
-
 struct SpatialWebViewUI: View {
-    @ObservedObject var wv: SpatialWebView
+    @Environment(SpatialWebView.self) var wv: SpatialWebView
     var body: some View {
         wv.getView()
             .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
@@ -56,23 +28,24 @@ struct PlainWindowGroupView: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
-    @ObservedObject var windowGroupContent: WindowGroupContentDictionary
+    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
+    
     @State var windowResizeInProgress = false
     @State var timer: Timer?
-
-    init(windowGroupContent: WindowGroupContentDictionary) {
-        self.windowGroupContent = windowGroupContent
-        // UpdateWebViewSystem.registerSystem()
-    }
-
+    
+//    init(windowGroupContent: WindowGroupContentDictionary) {
+//        //        self.windowGroupContent = windowGroupContent
+//        // UpdateWebViewSystem.registerSystem()
+//    }
+    
     public func setSize(size: CGSize) {
         sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
     }
-
+    
     func toJson(val: SIMD3<Float>) -> String {
         return "{x: " + String(val.x) + ",y: " + String(val.y) + ",z: " + String(val.z) + "}"
     }
-
+    
     var dragGesture: some Gesture {
         DragGesture().handActivationBehavior(.automatic)
             .targetedToAnyEntity()
@@ -85,7 +58,7 @@ struct PlainWindowGroupView: View {
                     ic.trackedPosition = startPos
                     let delta = translate - ic.trackedPosition
                     ic.trackedPosition = translate
-
+                    
                     ic.wv!.fireGestureEvent(inputComponentID: ic.resourceID, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
                 } else {
                     let delta = translate - ic.trackedPosition
@@ -98,13 +71,14 @@ struct PlainWindowGroupView: View {
                 value.entity.components[SpatialResource.self]!.inputComponent!.isDragging = false
             }
     }
-
+    
     var body: some View {
         let rootWebview = windowGroupContent.childEntities.filter {
             $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true
         }.first?.value.spatialWebView
-        OpenDismissHandlerUI(windowGroupContent: windowGroupContent)
-
+        
+        OpenDismissHandlerUI().environment(windowGroupContent)
+        
         GeometryReader { proxy3D in
             ZStack {
                 RealityView { _ in
@@ -116,121 +90,119 @@ struct PlainWindowGroupView: View {
                     cube.generateCollisionShapes(recursive: false)
                     cube.components.set(InputTargetComponent())
                     // content.add(cube)
-
+                    
                 } update: { content in
                     for (_, entity) in windowGroupContent.childEntities {
                         content.add(entity.modelEntity)
                     }
                 }.opacity(windowResizeInProgress ? 0 : 1)
                     .gesture(dragGesture).offset(z: -0.1)
+                
                 if let wv = rootWebview {
                     let parentYOffset = Float(wv.scrollOffset.y)
-
+                    
                     // Webview content
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         let e = windowGroupContent.childEntities[key]!
-                        WatchObj(toWatch: [e]) {
-                            if e.spatialWebView != nil && e.spatialWebView!.inline {
-                                let view = e.spatialWebView!
-                                WatchObj(toWatch: [e, view]) {
-                                    let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                                    let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
-                                    let z = CGFloat(e.modelEntity.position.z)
-                                    let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                                    let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
-
-                                    if windowResizeInProgress && view.full {
-                                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
-                                            .position(x: x, y: y)
-                                            .offset(z: z)
-                                    }
-                                    if !windowResizeInProgress {
-                                        SpatialWebViewUI(wv: view)
-                                            .frame(width: width, height: height).padding3D(.front, -100000)
-                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
-                                            .position(x: x, y: y)
-                                            .offset(z: z).gesture(
-                                                DragGesture()
-                                                    .onChanged { gesture in
-                                                        let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled {
-                                                            if !view.dragStarted {
-                                                                view.dragStarted = true
-                                                                view.dragStart = (gesture.translation.height)
-                                                            }
-
-                                                            // TODO: this should have velocity
-                                                            let delta = view.dragStart - gesture.translation.height
-                                                            view.dragStart = gesture.translation.height
-                                                            wv.updateScrollOffset(delta: delta)
-                                                        }
+                        //                        WatchObj(toWatch: [e]) {
+                        if e.spatialWebView != nil && e.spatialWebView!.inline {
+                            let view = e.spatialWebView!
+                            //                                WatchObj(toWatch: [e, view]) {
+                            let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                            let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
+                            let z = CGFloat(e.modelEntity.position.z)
+                            let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                            let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
+                            
+                            if windowResizeInProgress && view.full {
+                                VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
+                                    .position(x: x, y: y)
+                                    .offset(z: z)
+                            }
+                            if !windowResizeInProgress {
+                                SpatialWebViewUI().environment(view)
+                                    .frame(width: width, height: height).padding3D(.front, -100000)
+                                    .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                    .position(x: x, y: y)
+                                    .offset(z: z).gesture(
+                                        DragGesture()
+                                            .onChanged { gesture in
+                                                let scrollEnabled = view.isScrollEnabled()
+                                                if !scrollEnabled {
+                                                    if !view.dragStarted {
+                                                        view.dragStarted = true
+                                                        view.dragStart = (gesture.translation.height)
                                                     }
-                                                    .onEnded { _ in
-                                                        let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled {
-                                                            view.dragStarted = false
-                                                            view.dragStart = 0
-
-                                                            wv.stopScrolling()
-                                                        }
-                                                    }
-                                            ).opacity(windowResizeInProgress ? 0 : 1)
-                                    }
-                                }
+                                                    
+                                                    // TODO: this should have velocity
+                                                    let delta = view.dragStart - gesture.translation.height
+                                                    view.dragStart = gesture.translation.height
+                                                    wv.updateScrollOffset(delta: delta)
+                                                }
+                                            }
+                                            .onEnded { _ in
+                                                let scrollEnabled = view.isScrollEnabled()
+                                                if !scrollEnabled {
+                                                    view.dragStarted = false
+                                                    view.dragStart = 0
+                                                    
+                                                    wv.stopScrolling()
+                                                }
+                                            }
+                                    ).opacity(windowResizeInProgress ? 0 : 1)
                             }
                         }
                     }
-
+                    
                     // Mode3D content
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         let e = windowGroupContent.childEntities[key]!
-                        WatchObj(toWatch: [e]) {
-                            if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
-                                WatchObj(toWatch: [e, modelUIComponent]) {
-                                    let x = CGFloat(e.modelEntity.position.x)
-                                    let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                                    let z = CGFloat(e.modelEntity.position.z)
-
-                                    let scaleX = e.modelEntity.scale.x
-                                    let scaleY = e.modelEntity.scale.y
-
-                                    let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
-                                    let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
-                                    Model3D(url: modelUrl) { model in
-                                        model.model?
-                                            .resizable()
-                                            .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                                    }
-                                    .frame(width: width, height: height)
-                                    .position(x: x, y: y)
-                                    .offset(z: z)
-                                    .padding3D(.front, -100000)
-                                    .opacity(windowResizeInProgress || (modelUIComponent.opacity)
-                                        ? 0 : 1)
-                                    .onReceive(modelUIComponent.animateSubject) { animationDescription in
-                                        var baseAnimation: Animation
-                                        switch animationDescription.animationEaseFn {
-                                        case .easeIn:
-                                            baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
-                                        default:
-                                            baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
-                                        }
-
-                                        withAnimation(baseAnimation) {
-                                            modelUIComponent.onAnimation(animationDescription)
-                                        }
-                                    }
+                        //                        WatchObj(toWatch: [e]) {
+                        if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
+                            //                                WatchObj(toWatch: [e, modelUIComponent]) {
+                            let x = CGFloat(e.modelEntity.position.x)
+                            let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                            let z = CGFloat(e.modelEntity.position.z)
+                            
+                            let scaleX = e.modelEntity.scale.x
+                            let scaleY = e.modelEntity.scale.y
+                            
+                            let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
+                            let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
+                            Model3D(url: modelUrl) { model in
+                                model.model?
+                                    .resizable()
+                                    .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                            }
+                            .frame(width: width, height: height)
+                            .position(x: x, y: y)
+                            .offset(z: z)
+                            .padding3D(.front, -100000)
+                            .opacity(windowResizeInProgress || (modelUIComponent.opacity)
+                                ? 0 : 1)
+                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
+                                var baseAnimation: Animation
+                                switch animationDescription.animationEaseFn {
+                                case .easeIn:
+                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
+                                default:
+                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
+                                }
+                                
+                                withAnimation(baseAnimation) {
+                                    modelUIComponent.onAnimation(animationDescription)
                                 }
                             }
+                            //                                }
+                            //                            }
                         }
                     }
                 }
-            }.onAppear {
-                // windowGroupContent.setSize = CGSize(width: 300, height: 500)
             }
-            .onReceive(windowGroupContent.$setSize) { newSize in
+            .onReceive(windowGroupContent.setSize) { newSize in
                 setSize(size: newSize)
-            }.onChange(of: proxy3D.size) {
+            }
+            .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized
                 // Treid to call didMoveToWindow to force redraw to occur but that seemed to cause rendering artifacts so that solution was rejected
                 // Now we use a windowResizeInProgress state to hide the webview (by removoving from the view) and other content (using opacity).
@@ -244,7 +216,7 @@ struct PlainWindowGroupView: View {
                     timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
                         windowResizeInProgress = false
                     }
-
+                    
                     // Trigger resize in the webview's body width and fire a window resize event to get the JS on the page to update state while dragging occurs
                     wv.evaluateJS(js: "var tempWidth_ = document.body.style.width;document.body.style.width='" + String(Float(proxy3D.size.width)) + "px'; window.dispatchEvent(new Event('resize'));")
                 }
