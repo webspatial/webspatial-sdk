@@ -262,6 +262,10 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
             // Create spatial iframe
             let iframeMngr = new SpatialIFrameManager()
             iframeMngr.initFromWidow(openedWindow!).then(async () => {
+                if (parentSpatialDiv !== null) {
+                    await parentSpatialDiv.initPromise
+                    iframeMngr.entity!.setParent(parentSpatialDiv.entity!)
+                }
                 // Set style
                 await iframeMngr.webview?.setStyle({
                     transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
