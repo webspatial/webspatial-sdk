@@ -31,6 +31,30 @@ class SpatialResource: Component {
 
     // Entity
     let modelEntity = ModelEntity()
+    // Entity can have a child/parent relationship
+    var childEntities = [String: SpatialResource]()
+    weak var parent: SpatialResource? = nil
+
+    func addChild(child: SpatialResource) {
+        child.setParent(parentEnt: self)
+    }
+
+    func setParent(parentEnt: SpatialResource?) {
+        assert(parentEnt?.resourceType == "Entity")
+        assert(resourceType == "Entity")
+
+        // Remove parent windowGroup
+        parentWindowGroup?.childEntities.removeValue(forKey: id)
+
+        // Remove from existing parent
+        parent?.childEntities.removeValue(forKey: id)
+
+        // Set new parent
+        if let p = parentEnt {
+            parent = p
+            p.childEntities[id] = self
+        }
+    }
 
     // This resource will be destroyed if this webview is destroyed
     weak var ownerWebview: SpatialWebView?
