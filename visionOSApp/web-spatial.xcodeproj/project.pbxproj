@@ -25,7 +25,7 @@
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
 		2BA52EB62C6C8D1300C24DED /* AnimationDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA52EB52C6C8D0C00C24DED /* AnimationDescription.swift */; };
-		2BBE85372C20E18700B732C5 /* WatchableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBE85362C20E18700B732C5 /* WatchableObject.swift */; };
+		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 		2BDBF9BA2C73F33600D269D7 /* SpatialResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B92C73F33600D269D7 /* SpatialResource.swift */; };
 /* End PBXBuildFile section */
@@ -61,7 +61,7 @@
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2BA52EB52C6C8D0C00C24DED /* AnimationDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationDescription.swift; sourceTree = "<group>"; };
-		2BBE85362C20E18700B732C5 /* WatchableObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchableObject.swift; sourceTree = "<group>"; };
+		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 		2BDBF9B92C73F33600D269D7 /* SpatialResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialResource.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -159,7 +159,6 @@
 				2BDBF9B82C73F2E900D269D7 /* spatialResource */,
 				2B0B1C0E2C494E4100E644F9 /* Utils */,
 				2B9909912C360594004826D1 /* uiKitDelegate */,
-				2BBE85352C20E16600B732C5 /* watchableObject */,
 				2B2F1D942BED8E26006897EE /* windowGroupManager */,
 				2B2F1D8C2BED4CE7006897EE /* json */,
 				2B2F1D8B2BED4CDA006897EE /* webView */,
@@ -207,6 +206,7 @@
 			children = (
 				2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */,
 				2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */,
+				2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -217,14 +217,6 @@
 				2B9909922C3605A9004826D1 /* Window.swift */,
 			);
 			path = uiKitDelegate;
-			sourceTree = "<group>";
-		};
-		2BBE85352C20E16600B732C5 /* watchableObject */ = {
-			isa = PBXGroup;
-			children = (
-				2BBE85362C20E18700B732C5 /* WatchableObject.swift */,
-			);
-			path = watchableObject;
 			sourceTree = "<group>";
 		};
 		2BDBF9B82C73F2E900D269D7 /* spatialResource */ = {
@@ -346,12 +338,12 @@
 				2B2F1D6D2BEBFAAA006897EE /* ContentView.swift in Sources */,
 				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
 				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
+				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
 				2BA52EB62C6C8D1300C24DED /* AnimationDescription.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
 				2B2F1D962BED8E6C006897EE /* WindowGroupManager.swift in Sources */,
 				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
 				2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */,
-				2BBE85372C20E18700B732C5 /* WatchableObject.swift in Sources */,
 				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
 				2BDBF9BA2C73F33600D269D7 /* SpatialResource.swift in Sources */,
 				2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */,
