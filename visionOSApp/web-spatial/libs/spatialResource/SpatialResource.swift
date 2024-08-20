@@ -89,6 +89,12 @@ class SpatialResource: Component {
                     removed = true
                 }
             }
+
+            let keys = childEntities.map { $0.key }
+            for k in keys {
+                childEntities[k]!.setParent(parentEnt: nil)
+            }
+            childEntities = [String: SpatialResource]()
         }
 
         if let wv = ownerWebview {
