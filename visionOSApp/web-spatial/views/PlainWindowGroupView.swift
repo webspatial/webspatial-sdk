@@ -9,8 +9,9 @@ import RealityKit
 import SwiftUI
 
 struct SpatialWebViewUI: View {
-    @Environment(SpatialWebView.self) var wv: SpatialWebView
+    @Environment(SpatialResource.self) var ent: SpatialResource
     var body: some View {
+        let wv = ent.spatialWebView!
         wv.getView()
             .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
             .background(
@@ -19,6 +20,25 @@ struct SpatialWebViewUI: View {
             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
             .cornerRadius(wv.cornerRadius)
             .opacity(wv.visible ? 1 : 0)
+        
+        ForEach(Array(ent.childEntities.keys), id: \.self) { key in
+            let e = ent.childEntities[key]!
+            let parentYOffset = Float(wv.scrollOffset.y)
+            if e.spatialWebView != nil && e.spatialWebView!.inline {
+                let view = e.spatialWebView!
+                let x = CGFloat(e.modelEntity.position.x)
+                let y = CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
+                let z = CGFloat(e.modelEntity.position.z)
+                let width = CGFloat(view.resolutionX)
+                let height = CGFloat(view.resolutionY)
+                
+                SpatialWebViewUI().environment(e)
+                    .frame(width: width, height: height).padding3D(.front, -100000)
+                    .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                    .position(x: x, y: y)
+                    .offset(z: z)
+            }
+        }
     }
 }
 
@@ -120,7 +140,7 @@ struct PlainWindowGroupView: View {
                                     .offset(z: z)
                             }
                             if !windowResizeInProgress {
-                                SpatialWebViewUI().environment(view)
+                                SpatialWebViewUI().environment(e)
                                     .frame(width: width, height: height).padding3D(.front, -100000)
                                     .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                                     .position(x: x, y: y)
