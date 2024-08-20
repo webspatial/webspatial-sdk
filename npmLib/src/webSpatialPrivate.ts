@@ -121,6 +121,19 @@ export class WebSpatial {
         return result
     }
 
+    static async getStats() {
+        var cmd = new RemoteCommand("getStats", {
+            windowGroupID: this.getCurrentWindowGroup().id,
+            resourceID: this.getCurrentWebPanel().id
+        })
+
+        var result = await new Promise((res, rej) => {
+            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+            WebSpatial.sendCommand(cmd)
+        })
+        return result
+    }
+
     static async setComponent(entity: WebSpatialResource, resource: WebSpatialResource) {
         var cmd = new RemoteCommand("setComponent", {
             windowGroupID: entity.windowGroupId,
