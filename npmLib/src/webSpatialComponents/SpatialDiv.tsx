@@ -119,6 +119,8 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
     let isVisibleRef = useRef(null as null | HTMLDivElement)
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
+    const [elWidth, setElWidth] = useState(0)
+    const [elHeight, setElHeight] = useState(0)
     let iframeRef = useRef(null as null | HTMLIFrameElement)
     const [portalEl, setPortalEl] = useState(null as null | HTMLElement)
     const [isCustomElement, setIsCustomElement] = useState(false)
@@ -300,6 +302,9 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
                 await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
                 setViewport(ins.window)
+
+                setElWidth(childrenSizeRef.current?.clientWidth!)
+                setElHeight(childrenSizeRef.current?.clientHeight!)
             }
         }
         useEffect(() => {
@@ -340,7 +345,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
                     {props.children}
                 </div>
                 {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
-                    {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + childrenSizeRef.current?.clientWidth + "px", height: "" + childrenSizeRef.current?.clientHeight + "px", position: "", top: "", left: "" } }}>
+                    {createPortal(<div className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "" } }}>
                         {props.children}
                     </div>, portalEl)}
                 </> : <></>}
