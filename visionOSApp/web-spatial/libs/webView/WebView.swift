@@ -33,15 +33,16 @@ struct LoadingStyles {
     var windowGroupSize = DefaultPlainWindowGroupSize
 }
 
-class SpatialWebView: WatchableObject {
+@Observable
+class SpatialWebView {
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
     var full = false
-    @Published var root = false
-    @Published var resolutionX: Double = 0
-    @Published var resolutionY: Double = 0
-    @Published var inline = false
-    @Published var scrollWithParent = false
+    var root = false
+    var resolutionX: Double = 0
+    var resolutionY: Double = 0
+    var inline = false
+    var scrollWithParent = false
 
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
@@ -56,19 +57,19 @@ class SpatialWebView: WatchableObject {
     var dragVelocity = 0.0
 
     var gotStyle = false
-    @Published var visible = true
-    @Published var glassEffect = false
-    @Published var transparentEffect = false
-    @Published var cornerRadius = CGFloat(0)
-    @Published var materialThickness = Material.ultraThin
-    @Published var useMaterialThickness = false
+    var visible = true
+    var glassEffect = false
+    var transparentEffect = false
+    var cornerRadius = CGFloat(0)
+    var materialThickness = Material.ultraThin
+    var useMaterialThickness = false
 
     var loadingStyles = LoadingStyles()
     var isLoading = true
 
     init(parentWindowGroupID: String) {
         self.parentWindowGroupID = parentWindowGroupID
-        super.init()
+//        super.init()
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
@@ -77,7 +78,7 @@ class SpatialWebView: WatchableObject {
     init(parentWindowGroupID: String, url: URL) {
         self.parentWindowGroupID = parentWindowGroupID
         webViewNative = WebViewNative(url: url)
-        super.init()
+//        super.init()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
 
@@ -221,7 +222,7 @@ class SpatialWebView: WatchableObject {
 
         let wgkeys = childWindowGroups.map { $0.key }
         for k in wgkeys {
-            wgManager.getWindowGroup(windowGroup: k).closeWindowData = childWindowGroups[k]
+            wgManager.getWindowGroup(windowGroup: k).closeWindowData.send(childWindowGroups[k]!)
         }
         let url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
@@ -249,7 +250,7 @@ class SpatialWebView: WatchableObject {
 
         if root {
             let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
-            wg.setSize = loadingStyles.windowGroupSize
+            wg.setSize.send(loadingStyles.windowGroupSize)
         }
         if !gotStyle {
             // We didn't get a style update in time (might result in FOUC)
@@ -357,7 +358,7 @@ class SpatialWebView: WatchableObject {
                 }
             } else if command == "destroyResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let _ = childResources[cmdInfo.resourceID]?.destroy()
+                    _ = childResources[cmdInfo.resourceID]?.destroy()
                 }
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
@@ -554,7 +555,7 @@ class SpatialWebView: WatchableObject {
                     let uuid = UUID().uuidString
                     let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
-                    wgManager.getWindowGroup(windowGroup: "root").openWindowData = wgd
+                    wgManager.getWindowGroup(windowGroup: "root").openWindowData.send(wgd)
                     childWindowGroups[uuid] = wgd
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
                 }
@@ -565,15 +566,15 @@ class SpatialWebView: WatchableObject {
                        let y: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "y"])
                     {
                         loadingStyles.windowGroupSize = CGSize(width: x, height: y)
-                        wg.setSize = loadingStyles.windowGroupSize
+                        wg.setSize.send(loadingStyles.windowGroupSize)
                     }
 
                     completeEvent(requestID: cmdInfo.requestID)
                 }
             } else if command == "openImmersiveSpace" {
-                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = true
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace.send(true)
             } else if command == "dismissImmersiveSpace" {
-                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace = false
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace.send(false)
             } else if command == "log" {
                 if let logStringArr: [String] = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
                     let log = Logger.getLogger()
@@ -581,6 +582,7 @@ class SpatialWebView: WatchableObject {
                     switch logLevel {
                     case "TRACE":
                         log.verbose(logString)
+
                     case "DEBUG":
                         log.debug(logString)
 

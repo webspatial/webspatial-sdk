@@ -14,7 +14,8 @@ import SwiftUI
 /**
  * Resource created from JS. Can be an entity or object that is attached to an entity like a mesh
  */
-class SpatialResource: WatchableObject, Component {
+@Observable
+class SpatialResource: Component {
     // Always populated
     let id = UUID().uuidString
     var resourceType = "undefined"
@@ -23,10 +24,10 @@ class SpatialResource: WatchableObject, Component {
     var meshResource: MeshResource?
     var physicallyBasedMaterial: PhysicallyBasedMaterial?
     var modelComponent: ModelComponent?
-    @Published var modelUIComponent: ModelUIComponent?
-    @Published var inputComponent: InputComponent?
-    @Published var spatialWebView: SpatialWebView?
-    @Published var forceUpdate = false
+    var modelUIComponent: ModelUIComponent?
+    var inputComponent: InputComponent?
+    var spatialWebView: SpatialWebView?
+    var forceUpdate = false
 
     // Entity
     let modelEntity = ModelEntity()
@@ -51,7 +52,7 @@ class SpatialResource: WatchableObject, Component {
         self.resourceType = resourceType
         self.ownerWebview = owner
 
-        super.init()
+//        super.init()
         mngr.allResources[id] = self
     }
 
@@ -77,17 +78,18 @@ class SpatialResource: WatchableObject, Component {
     }
 }
 
-class ModelUIComponent: WatchableObject {
-    @Published var url: URL?
-    @Published var aspectRatio: String = "fit"
-    @Published var resolutionX: Double = 0
-    @Published var resolutionY: Double = 0
+@Observable
+class ModelUIComponent {
+    var url: URL?
+    var aspectRatio: String = "fit"
+    var resolutionX: Double = 0
+    var resolutionY: Double = 0
 
-    @Published var opacity = false
+    var opacity = false
 
     //  animation related function and props
 //    var animationEaseFn: AnimationEaseStyle  = .easeInOut
-    @Published var animateSubject = PassthroughSubject<AnimationDescription, Never>()
+    var animateSubject = PassthroughSubject<AnimationDescription, Never>()
 
     func triggerAnimation(_ animationDesc: AnimationDescription) {
         animateSubject.send(animationDesc)
@@ -100,7 +102,8 @@ class ModelUIComponent: WatchableObject {
     }
 }
 
-class InputComponent: WatchableObject {
+@Observable
+class InputComponent {
     weak var wv: SpatialWebView?
     var itc = InputTargetComponent()
     var resourceID = ""
