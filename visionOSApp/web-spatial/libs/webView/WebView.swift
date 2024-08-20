@@ -369,6 +369,14 @@ class SpatialWebView {
                     }
                     let sr = wgManager.allResources[cmdInfo.resourceID]!
                     if sr.resourceType == "Entity" {
+                        if var setParentID: String = json.getValue(lookup: ["data", "update", "setParent"]) {
+                            if setParentID.isEmpty {
+                                sr.setParent(parentEnt: nil)
+                            } else {
+                                sr.setParent(parentEnt: wgManager.allResources[setParentID]!)
+                            }
+                        }
+
                         if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
                             newParentID = readWinodwGroupID(id: newParentID)
                             let wg = wgManager.getWindowGroup(windowGroup: newParentID)
