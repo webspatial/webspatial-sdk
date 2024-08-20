@@ -5,7 +5,7 @@ import { getSessionAsync } from './getSessionAsync'
 import { SpatialIFrameManager } from './SpatialIFrameManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 
-const SpatialDivContext = createContext(null as null | any);
+const SpatialDivContext = createContext(null as null | SpatialIFrameManager);
 
 /**
  * Hook to manage multiple instances of objects that could be initialized as async
@@ -330,7 +330,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
 
         return <>
-            <SpatialDivContext.Provider value={iframeInstance}>
+            <SpatialDivContext.Provider value={iframeInstance.getActiveInstance()}>
                 <div ref={isVisibleRef}></div>
                 <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                     {props.children}
