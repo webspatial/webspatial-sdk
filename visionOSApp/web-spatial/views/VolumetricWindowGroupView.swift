@@ -18,10 +18,10 @@ struct VolumetricWindowGroupView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
-    @ObservedObject var windowGroupContent: WindowGroupContentDictionary
+    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
 
     var body: some View {
-        OpenDismissHandlerUI(windowGroupContent: windowGroupContent)
+//        OpenDismissHandlerUI(windowGroupContent: windowGroupContent)
 
         RealityView { _, _ in
         } update: { content, attachments in
