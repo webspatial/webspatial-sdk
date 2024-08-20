@@ -207,6 +207,14 @@ var main = async () => {
                 e.updateTransform()
             }
         }
+    } else if (page == "getStats") {
+        let b = document.createElement("code")
+        b.style.whiteSpace = "pre-wrap"
+        b.style.fontSize = "3em"
+        b.innerHTML = "LOADING"
+        document.body.appendChild(b)
+        var d = await session.getStats()
+        b.innerHTML = "// webviewRefs should be 1\n" + JSON.stringify(d, null, 4)
     }
 }
 main()

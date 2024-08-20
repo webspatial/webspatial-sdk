@@ -68,6 +68,7 @@ class SpatialWebView {
     var isLoading = true
 
     init(parentWindowGroupID: String) {
+        wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
 //        super.init()
         webViewNative = WebViewNative()
@@ -76,6 +77,7 @@ class SpatialWebView {
     }
 
     init(parentWindowGroupID: String, url: URL) {
+        wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
         webViewNative = WebViewNative(url: url)
 //        super.init()
@@ -188,6 +190,7 @@ class SpatialWebView {
     }
 
     deinit {
+        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
     }
 
@@ -265,6 +268,10 @@ class SpatialWebView {
             if command == "ping" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
+                }
+            } else if command == "getStats" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    completeEvent(requestID: cmdInfo.requestID, data: "{totalRefs: '"+String(wgManager.allResources.count)+"',webViewRefs: '"+String(wgManager.wvActiveInstances)+"'}")
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
