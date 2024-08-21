@@ -40,7 +40,7 @@ class SpatialResource: Component {
     }
 
     func setParent(parentEnt: SpatialResource?) {
-        assert(parentEnt?.resourceType == "Entity")
+        assert(parentEnt == nil || parentEnt?.resourceType == "Entity")
         assert(resourceType == "Entity")
 
         // Remove parent windowGroup
