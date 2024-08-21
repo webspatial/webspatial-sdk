@@ -9,7 +9,7 @@ import RealityKit
 import SwiftUI
 
 struct SpatialWebViewUI: View {
-    @Environment(SpatialResource.self) var ent: SpatialResource
+    var ent: SpatialResource
     var body: some View {
         let wv = ent.spatialWebView!
         wv.getView()
@@ -32,7 +32,7 @@ struct SpatialWebViewUI: View {
                 let width = CGFloat(view.resolutionX)
                 let height = CGFloat(view.resolutionY)
                 
-                SpatialWebViewUI().environment(e)
+                SpatialWebViewUI(ent: e)
                     .frame(width: width, height: height).padding3D(.front, -100000)
                     .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                     .position(x: x, y: y)
@@ -140,7 +140,7 @@ struct PlainWindowGroupView: View {
                                     .offset(z: z)
                             }
                             if !windowResizeInProgress {
-                                SpatialWebViewUI().environment(e)
+                                SpatialWebViewUI(ent: e)
                                     .frame(width: width, height: height).padding3D(.front, -100000)
                                     .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                                     .position(x: x, y: y)
