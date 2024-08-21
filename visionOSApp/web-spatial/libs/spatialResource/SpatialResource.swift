@@ -14,7 +14,6 @@ import SwiftUI
 /**
  * Resource created from JS. Can be an entity or object that is attached to an entity like a mesh
  */
-@Observable
 class SpatialResource: Component {
     // Always populated
     let id = UUID().uuidString
