@@ -11,32 +11,34 @@ import SwiftUI
 struct SpatialWebViewUI: View {
     @Environment(SpatialResource.self) var ent: SpatialResource
     var body: some View {
-        let wv = ent.spatialWebView!
-        wv.getView()
-            .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
-            .background(
-                wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
-            )
-            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
-            .cornerRadius(wv.cornerRadius)
-            .opacity(wv.visible ? 1 : 0)
-        
-        ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-            let e = ent.childEntities[key]!
-            let parentYOffset = Float(wv.scrollOffset.y)
-            if e.spatialWebView != nil && e.spatialWebView!.inline {
-                let view = e.spatialWebView!
-                let x = CGFloat(e.modelEntity.position.x)
-                let y = CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
-                let z = CGFloat(e.modelEntity.position.z)
-                let width = CGFloat(view.resolutionX)
-                let height = CGFloat(view.resolutionY)
-                
-                SpatialWebViewUI().environment(e)
-                    .frame(width: width, height: height).padding3D(.front, -100000)
-                    .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
-                    .position(x: x, y: y)
-                    .offset(z: z)
+        if let wv = ent.spatialWebView {
+            wv.getView()
+                .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
+                .background(
+                    wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
+                )
+                .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
+                .cornerRadius(wv.cornerRadius)
+                .opacity(wv.visible ? 1 : 0)
+            
+            ForEach(Array(ent.childEntities.keys), id: \.self) { key in
+                if let e = ent.childEntities[key] {
+                    let parentYOffset = Float(wv.scrollOffset.y)
+                    if e.spatialWebView != nil && e.spatialWebView!.inline {
+                        let view = e.spatialWebView!
+                        let x = CGFloat(e.modelEntity.position.x)
+                        let y = CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
+                        let z = CGFloat(e.modelEntity.position.z)
+                        let width = CGFloat(view.resolutionX)
+                        let height = CGFloat(view.resolutionY)
+                        
+                        SpatialWebViewUI().environment(e)
+                            .frame(width: width, height: height).padding3D(.front, -100000)
+                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                            .position(x: x, y: y)
+                            .offset(z: z)
+                    }
+                }
             }
         }
     }
@@ -123,53 +125,53 @@ struct PlainWindowGroupView: View {
                     
                     // Webview content
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                        let e = windowGroupContent.childEntities[key]!
-                        //                        WatchObj(toWatch: [e]) {
-                        if e.spatialWebView != nil && e.spatialWebView!.inline {
-                            let view = e.spatialWebView!
-                            //                                WatchObj(toWatch: [e, view]) {
-                            let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                            let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
-                            let z = CGFloat(e.modelEntity.position.z)
-                            let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                            let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
-                            
-                            if windowResizeInProgress && view.full {
-                                VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
-                                    .position(x: x, y: y)
-                                    .offset(z: z)
-                            }
-                            if !windowResizeInProgress {
-                                SpatialWebViewUI().environment(e)
-                                    .frame(width: width, height: height).padding3D(.front, -100000)
-                                    .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
-                                    .position(x: x, y: y)
-                                    .offset(z: z).gesture(
-                                        DragGesture()
-                                            .onChanged { gesture in
-                                                let scrollEnabled = view.isScrollEnabled()
-                                                if !scrollEnabled {
-                                                    if !view.dragStarted {
-                                                        view.dragStarted = true
-                                                        view.dragStart = (gesture.translation.height)
+                        if let e = windowGroupContent.childEntities[key] {
+                            if e.spatialWebView != nil && e.spatialWebView!.inline {
+                                let view = e.spatialWebView!
+                                //                                WatchObj(toWatch: [e, view]) {
+                                let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                                let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
+                                let z = CGFloat(e.modelEntity.position.z)
+                                let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                                let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
+                                
+                                if windowResizeInProgress && view.full {
+                                    VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
+                                        .position(x: x, y: y)
+                                        .offset(z: z)
+                                }
+                                if !windowResizeInProgress {
+                                    SpatialWebViewUI().environment(e)
+                                        .frame(width: width, height: height).padding3D(.front, -100000)
+                                        .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                        .position(x: x, y: y)
+                                        .offset(z: z).gesture(
+                                            DragGesture()
+                                                .onChanged { gesture in
+                                                    let scrollEnabled = view.isScrollEnabled()
+                                                    if !scrollEnabled {
+                                                        if !view.dragStarted {
+                                                            view.dragStarted = true
+                                                            view.dragStart = (gesture.translation.height)
+                                                        }
+                                                        
+                                                        // TODO: this should have velocity
+                                                        let delta = view.dragStart - gesture.translation.height
+                                                        view.dragStart = gesture.translation.height
+                                                        wv.updateScrollOffset(delta: delta)
                                                     }
-                                                    
-                                                    // TODO: this should have velocity
-                                                    let delta = view.dragStart - gesture.translation.height
-                                                    view.dragStart = gesture.translation.height
-                                                    wv.updateScrollOffset(delta: delta)
                                                 }
-                                            }
-                                            .onEnded { _ in
-                                                let scrollEnabled = view.isScrollEnabled()
-                                                if !scrollEnabled {
-                                                    view.dragStarted = false
-                                                    view.dragStart = 0
-                                                    
-                                                    wv.stopScrolling()
+                                                .onEnded { _ in
+                                                    let scrollEnabled = view.isScrollEnabled()
+                                                    if !scrollEnabled {
+                                                        view.dragStarted = false
+                                                        view.dragStart = 0
+                                                        
+                                                        wv.stopScrolling()
+                                                    }
                                                 }
-                                            }
-                                    ).opacity(windowResizeInProgress ? 0 : 1)
+                                        ).opacity(windowResizeInProgress ? 0 : 1)
+                                }
                             }
                         }
                     }
