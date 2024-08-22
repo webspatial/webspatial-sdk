@@ -70,7 +70,6 @@ class SpatialWebView {
     init(parentWindowGroupID: String) {
         wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
-//        super.init()
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
@@ -80,11 +79,8 @@ class SpatialWebView {
         wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
         webViewNative = WebViewNative(url: url)
-//        super.init()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
-
-        // childResources[resourceID] = self
     }
 
     func initFromURL(url: URL) {
@@ -382,7 +378,7 @@ class SpatialWebView {
                     }
                     let sr = wgManager.allResources[cmdInfo.resourceID]!
                     if sr.resourceType == "Entity" {
-                        if var setParentID: String = json.getValue(lookup: ["data", "update", "setParent"]) {
+                        if let setParentID: String = json.getValue(lookup: ["data", "update", "setParent"]) {
                             if setParentID.isEmpty {
                                 sr.setParent(parentEnt: nil)
                             } else {
