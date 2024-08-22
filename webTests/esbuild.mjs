@@ -24,6 +24,7 @@ var ctx = await esbuild.context({
         // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
         alias: {
             react: path.resolve('node_modules/react'),
+            "react-dom": path.resolve('node_modules/react-dom'),
         }
 });
 ctx.watch()
