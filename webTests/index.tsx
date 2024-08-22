@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialEntity } from 'web-spatial/src';
 import { Model, SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
- 
+
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
     spatial = null
@@ -198,7 +198,7 @@ function App() {
                                 <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
                             </Model>
 
-                            
+
                         </div>
                         :
                         <div className='w-full h-52'>
