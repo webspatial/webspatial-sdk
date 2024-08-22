@@ -210,7 +210,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
             if (!openedWindow) return;
             const bodyWidth = document.body.getBoundingClientRect().width;
             const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
-            viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0`)
+            viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no` )
         }
 
         let iframeInstance = useAsyncInstances(() => {
