@@ -13,16 +13,27 @@
   "license": "ISC",
   "dependencies": {
     "@r2wc/react-to-web-component": "^2.0.3",
+    "loglevel": "^1.9.1"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typedoc": "^0.26.5",
+    "typedoc-plugin-markdown": "^4.2.2",
+    "typescript": "^5.5.4",
     "@types/hast": "^3.0.4",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/unist": "^3.0.2",
-    "loglevel": "^1.9.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.2",
-    "typescript": "^5.5.4"
-  },
-  "devDependencies": {}
+    "@types/unist": "^3.0.2"
+  }
 }
