@@ -76,7 +76,6 @@ class SpatialResource: Component {
         self.resourceType = resourceType
         self.ownerWebview = owner
 
-//        super.init()
         wgManager.srActiveInstances += 1
         mngr.allResources[id] = self
     }
@@ -130,16 +129,15 @@ class ModelUIComponent {
     var opacity = false
 
     //  animation related function and props
-//    var animationEaseFn: AnimationEaseStyle  = .easeInOut
+    //    var animationEaseFn: AnimationEaseStyle  = .easeInOut
     var animateSubject = PassthroughSubject<AnimationDescription, Never>()
 
     func triggerAnimation(_ animationDesc: AnimationDescription) {
         animateSubject.send(animationDesc)
     }
 
-//    called by PlainWindowGroupView
+    // called by PlainWindowGroupView
     func onAnimation(_ animationDesc: AnimationDescription) {
-//        print("onAnimation triggered")
         opacity = animationDesc.fadeOut
     }
 }
