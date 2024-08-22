@@ -77,6 +77,7 @@ class SpatialResource: Component {
         self.ownerWebview = owner
 
 //        super.init()
+        wgManager.srActiveInstances += 1
         mngr.allResources[id] = self
     }
 
@@ -103,8 +104,19 @@ class SpatialResource: Component {
             }
         }
 
+        meshResource = nil
+        physicallyBasedMaterial = nil
+        modelComponent = nil
+        modelUIComponent = nil
+        inputComponent = nil
+        spatialWebView = nil
+        modelEntity.components.removeAll()
         _ = wgManager.allResources.removeValue(forKey: id)
         return removed
+    }
+
+    deinit {
+        wgManager.srActiveInstances -= 1
     }
 }
 
