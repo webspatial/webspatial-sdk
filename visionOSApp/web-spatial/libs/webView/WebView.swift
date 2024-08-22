@@ -271,7 +271,13 @@ class SpatialWebView {
                 }
             } else if command == "getStats" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    completeEvent(requestID: cmdInfo.requestID, data: "{totalRefs: '"+String(wgManager.allResources.count)+"',webViewRefs: '"+String(wgManager.wvActiveInstances)+"'}")
+                    completeEvent(requestID: cmdInfo.requestID, data: """
+                    {
+                        totalRefs: \(String(wgManager.allResources.count)),
+                        activeSpatialResources: \(String(wgManager.srActiveInstances)),
+                        webViewRefs: \(String(wgManager.wvActiveInstances))
+                    }
+                    """)
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {

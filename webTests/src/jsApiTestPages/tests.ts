@@ -210,7 +210,7 @@ var main = async () => {
     } else if (page == "getStats") {
         let b = document.createElement("code")
         b.style.whiteSpace = "pre-wrap"
-        b.style.fontSize = "3em"
+        b.style.fontSize = "1em"
         b.innerHTML = "LOADING"
         document.body.appendChild(b)
         var d = await session.getStats()

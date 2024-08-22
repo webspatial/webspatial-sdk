@@ -34,6 +34,7 @@ class WindowGroupContentDictionary {
 
 class WindowGroupManager {
     var allResources = [String: SpatialResource]()
+    var srActiveInstances = 0
     var wvActiveInstances = 0
     var windowGroups = [String: WindowGroupContentDictionary]()
 
