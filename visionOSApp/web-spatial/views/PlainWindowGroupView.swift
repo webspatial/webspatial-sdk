@@ -23,6 +23,7 @@ struct SpatialWebViewUI: View {
             
             ForEach(Array(ent.childEntities.keys), id: \.self) { key in
                 if let e = ent.childEntities[key] {
+                    let _ = e.forceUpdate ? 0 : 0
                     let parentYOffset = Float(wv.scrollOffset.y)
                     if e.spatialWebView != nil && e.spatialWebView!.inline {
                         let view = e.spatialWebView!
@@ -126,6 +127,7 @@ struct PlainWindowGroupView: View {
                     // Webview content
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         if let e = windowGroupContent.childEntities[key] {
+                            let _ = e.forceUpdate ? 0 : 0
                             if e.spatialWebView != nil && e.spatialWebView!.inline {
                                 let view = e.spatialWebView!
                                 //                                WatchObj(toWatch: [e, view]) {
