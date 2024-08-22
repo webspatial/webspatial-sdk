@@ -14,6 +14,9 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
+// To load a local path, remove http:// eg.  "static-web/"
+let initialPageToLoad = "http://localhost:5173"
+
 struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowStyle: String
     let windowGroupID: String
@@ -35,19 +38,26 @@ struct web_spatialApp: App {
         let _ = wgManager.getWindowGroup(windowGroup: "Immersive")
     }
 
+    func getFileUrl() -> URL {
+        var useStaticFile = true
+        let urlType = initialPageToLoad.split(separator: "://").first
+        if urlType == "http" || urlType == "https" {
+            useStaticFile = false
+        }
+        let fileUrl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: initialPageToLoad)! : URL(string: initialPageToLoad)!
+        return fileUrl
+    }
+
     // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
     // https://forums.developer.apple.com/forums/thread/61432
     func initAppOnViewMount() {
         if root == nil {
-            // Set initial URL to load
-            let useStaticFile = false
-
-            let fileurl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "static-web/src/clockApp")! : URL(string: "http://localhost:5173")!
+            let fileUrl = getFileUrl()
 
             // Create a default entity with webview resource
             let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
             let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
-            root = SpatialWebView(parentWindowGroupID: "root", url: fileurl)
+            root = SpatialWebView(parentWindowGroupID: "root", url: fileUrl)
             root!.root = true
             root!.resourceID = sr.id
             sr.spatialWebView = root
@@ -76,7 +86,7 @@ struct web_spatialApp: App {
             } else {
                 let wg = wgManager.getWindowGroup(windowGroup: windowData!.windowGroupID)
                 PlainWindowGroupView().environment(wg)
-                // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+                    // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
                     .handlesExternalEvents(preferring: [], allowing: [])
             }
         }.windowStyle(.plain)
