@@ -1,0 +1,28 @@
+{
+  "name": "web-spatial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "genDocs": "typedoc --plugin typedoc-plugin-markdown src/index.ts && typedoc --plugin typedoc-plugin-markdown src/webSpatialComponents/index.ts --out docs/reactComponents"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@r2wc/react-to-web-component": "^2.0.3",
+    "@types/hast": "^3.0.4",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/unist": "^3.0.2",
+    "loglevel": "^1.9.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typedoc": "^0.26.5",
+    "typedoc-plugin-markdown": "^4.2.2",
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {}
+}
