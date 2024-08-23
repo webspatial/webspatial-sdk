@@ -1,3 +1,7 @@
+**web-spatial** • [**Docs**](globals.md)
+
+***
+
 # Web Spatial
 
 #### Spatial 3D library for the web
@@ -77,8 +81,3 @@ Build and link the web library (instructions above)
 
 ###### Generate docs
 `cd npmLib/ && npm run genDocs`
-
-
-
-
-
