@@ -1,0 +1,651 @@
+//
+//  WebView.swift
+//  web-spatial
+//
+//  Created by ByteDance on 5/9/24.
+//
+
+import Foundation
+import RealityKit
+import SwiftUI
+import SwiftyBeaver
+
+func getDocumentsDirectory() -> URL {
+    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    let documentsDirectory = paths[0]
+    return documentsDirectory
+}
+
+struct CommandInfo {
+    var windowGroupID = "notFound"
+    var entityID = "notFound"
+    var resourceID = "notFound"
+    var requestID = -1
+}
+
+struct LoadingStyles {
+    var visible = true
+    var glassEffect = false
+    var transparentEffect = false
+    var cornerRadius = CGFloat(0)
+    var materialThickness = Material.ultraThin
+    var useMaterialThickness = false
+    var windowGroupSize = DefaultPlainWindowGroupSize
+}
+
+@Observable
+class SpatialWebView {
+    var scrollOffset = CGPoint()
+    private var webViewNative: WebViewNative?
+    var full = false
+    var root = false
+    var resolutionX: Double = 0
+    var resolutionY: Double = 0
+    var inline = false
+    var scrollWithParent = false
+
+    // ID of the webview that created this or empty if its root
+    var parentWebviewID: String = ""
+    var parentWindowGroupID: String
+    var childResources = [String: SpatialResource]()
+    var childWindowGroups = [String: WindowGroupData]()
+    var spawnedNativeWebviews = [String: WebViewNative]()
+
+    // Drag event handling
+    var dragStarted = false
+    var dragStart = 0.0
+    var dragVelocity = 0.0
+
+    var gotStyle = false
+    var visible = true
+    var glassEffect = false
+    var transparentEffect = false
+    var cornerRadius = CGFloat(0)
+    var materialThickness = Material.ultraThin
+    var useMaterialThickness = false
+
+    var loadingStyles = LoadingStyles()
+    var isLoading = true
+
+    init(parentWindowGroupID: String) {
+        wgManager.wvActiveInstances += 1
+        self.parentWindowGroupID = parentWindowGroupID
+//        super.init()
+        webViewNative = WebViewNative()
+        webViewNative?.webViewRef = self
+        _ = webViewNative?.createResources()
+    }
+
+    init(parentWindowGroupID: String, url: URL) {
+        wgManager.wvActiveInstances += 1
+        self.parentWindowGroupID = parentWindowGroupID
+        webViewNative = WebViewNative(url: url)
+//        super.init()
+        webViewNative?.webViewRef = self
+        _ = webViewNative?.createResources()
+
+        // childResources[resourceID] = self
+    }
+
+    func initFromURL(url: URL) {
+        webViewNative = WebViewNative(url: url)
+        webViewNative?.webViewRef = self
+        _ = webViewNative?.createResources()
+    }
+
+    func navigateToURL(url: URL) {
+        webViewNative!.url = url
+        webViewNative!.webViewHolder.needsUpdate = true
+        webViewNative!.initialLoad()
+    }
+
+    func isScrollEnabled() -> Bool {
+        return webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled
+    }
+
+    func updateScrollOffset(delta: CGFloat) {
+        webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y += delta
+    }
+
+    func stopScrolling() {
+        webViewNative!.webViewHolder.appleWebView!.scrollView.stopScrollingAndZooming()
+    }
+
+    func getView() -> WebViewNative? {
+        return webViewNative
+    }
+
+    func evaluateJS(js: String) {
+        webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript(js)
+    }
+
+    func getURL() -> URL? {
+        return webViewNative?.url
+    }
+
+    func stringToThickness(str: String) -> SwiftUI.Material? {
+        if str == "thin" {
+            return Material.thin
+        }
+        if str == "thick" {
+            return Material.thick
+        }
+        if str == "regular" {
+            return Material.regular
+        }
+        return nil
+    }
+
+    func parseURL(url: String) -> String {
+        // Compute target url depending if the url is relative or not
+        var targetUrl = url
+        if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+            // Absolute path
+            var port = ""
+            if let p = webViewNative?.url.port {
+                port = ":"+String(p)
+            }
+            let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
+            targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+        } else {
+            // Reletive path
+            let localDir = NSString(string: webViewNative!.url.absoluteString)
+            let relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl
+            return relPath
+        }
+        return targetUrl
+    }
+
+    func readWinodwGroupID(id: String) -> String {
+        if id == "current" {
+            return parentWindowGroupID
+        } else {
+            return id
+        }
+    }
+
+    func getCommandInfo(json: JsonParser) -> CommandInfo? {
+        if let rID: Int = json.getValue(lookup: ["requestID"]) {
+            var ret = CommandInfo()
+            ret.requestID = rID
+
+            if let windowGroupID: String = json.getValue(lookup: ["data", "windowGroupID"]) {
+                ret.windowGroupID = readWinodwGroupID(id: windowGroupID)
+            }
+
+            if let entityID: String = json.getValue(lookup: ["data", "entityID"]) {
+                ret.entityID = entityID
+            }
+
+            if let resourceID: String = json.getValue(lookup: ["data", "resourceID"]) {
+                ret.resourceID = resourceID
+            }
+
+            if ret.resourceID == "current" {
+                ret.resourceID = resourceID
+            }
+            return ret
+        }
+        return nil
+    }
+
+    deinit {
+        wgManager.wvActiveInstances -= 1
+        webViewNative!.destroy()
+    }
+
+    func completeEvent(requestID: Int, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:"+String(requestID)+", data: "+data+"})")
+    }
+
+    func fireGestureEvent(inputComponentID: String, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'"+inputComponentID+"', data: "+data+"})")
+    }
+
+    func failEvent(requestID: Int, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:"+String(requestID)+", data: "+data+"})")
+    }
+
+    // Request information of webview that request this webview to load
+    weak var loadRequestWV: SpatialWebView?
+    var loadRequestID = -1
+    var resourceID = ""
+    // A load request of a child webview was loaded
+    func didLoadChild(loadRequestID: Int, resourceID: String) {
+        completeEvent(requestID: loadRequestID, data: "{createdID: '"+resourceID+"'}")
+    }
+
+    func didStartLoadPage() {
+        let keys = childResources.map { $0.key }
+        for k in keys {
+            _ = childResources[k]!.destroy()
+        }
+        childResources = [String: SpatialResource]()
+        spawnedNativeWebviews = [String: WebViewNative]()
+
+        let wgkeys = childWindowGroups.map { $0.key }
+        for k in wgkeys {
+            wgManager.getWindowGroup(windowGroup: k).closeWindowData.send(childWindowGroups[k]!)
+        }
+        let url = webViewNative?.webViewHolder.appleWebView?.url
+        webViewNative!.url = url!
+
+        // Mark that we havn't gotten a style update
+        gotStyle = false
+        isLoading = true
+        loadingStyles = LoadingStyles()
+    }
+
+    func didSpawnWebView(wv: WebViewNative) {
+        let uuid = UUID().uuidString
+        wv.webViewHolder.appleWebView!.evaluateJavaScript("window._webSpatialID = '"+uuid+"'")
+        spawnedNativeWebviews[uuid] = wv
+    }
+
+    func didStartReceivePageContent() {}
+
+    func didFinishLoadPage() {
+        glassEffect = loadingStyles.glassEffect
+        transparentEffect = loadingStyles.transparentEffect
+        cornerRadius = loadingStyles.cornerRadius
+        materialThickness = loadingStyles.materialThickness
+        useMaterialThickness = loadingStyles.useMaterialThickness
+
+        if root {
+            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
+            wg.setSize.send(loadingStyles.windowGroupSize)
+        }
+        if !gotStyle {
+            // We didn't get a style update in time (might result in FOUC)
+            // Set default style
+            //   print("Didn't get SwiftUI styles prior to page finish load")
+        }
+        isLoading = false
+    }
+
+    func onJSScriptMessage(json: JsonParser) {
+        if let command: String = json.getValue(lookup: ["command"]) {
+            if command == "ping" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
+                }
+            } else if command == "getStats" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    completeEvent(requestID: cmdInfo.requestID, data: "{totalRefs: '"+String(wgManager.allResources.count)+"',webViewRefs: '"+String(wgManager.wvActiveInstances)+"'}")
+                }
+            } else if command == "setComponent" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    if let c = childResources[cmdInfo.resourceID] {
+                        let e = childResources[cmdInfo.entityID]!
+
+                        if c.resourceType == "ModelUIComponent" {
+                            e.modelUIComponent = c.modelUIComponent
+                        } else if c.resourceType == "ModelComponent" {
+                            e.modelEntity.model = c.modelComponent
+                        } else if c.resourceType == "SpatialWebView" {
+                            e.spatialWebView = c.spatialWebView
+                        } else if c.resourceType == "InputComponent" {
+                            e.inputComponent = c.inputComponent
+                            e.modelEntity.generateCollisionShapes(recursive: false)
+                            e.modelEntity.components.set(c.inputComponent!.itc)
+                            e.modelEntity.components.set(e)
+                        }
+                    } else {
+                        print("missing resource, event not processed")
+                    }
+                }
+            } else if command == "createResource" {
+                if let cmdInfo = getCommandInfo(json: json),
+                   let type: String = json.getValue(lookup: ["data", "type"])
+                {
+                    let sr = SpatialResource(resourceType: type, mngr: wgManager, windowGroupID: cmdInfo.windowGroupID, owner: self)
+                    if type == "Entity" {
+                        sr.modelEntity.model = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                    } else if type == "InputComponent" {
+                        sr.inputComponent = InputComponent()
+                        sr.inputComponent?.wv = self
+                        sr.inputComponent?.resourceID = sr.id
+                    } else if type == "MeshResource" {
+                        if let shape: String = json.getValue(lookup: ["data", "params", "shape"]) {
+                            if shape == "sphere" {
+                                sr.meshResource = .generateSphere(radius: 0.5)
+                            } else {
+                                sr.meshResource = .generateBox(size: 1.0)
+                            }
+                        }
+                    } else if type == "PhysicallyBasedMaterial" {
+                        sr.physicallyBasedMaterial = PhysicallyBasedMaterial()
+                    } else if type == "SpatialWebView" {
+                        sr.spatialWebView = SpatialWebView(parentWindowGroupID: cmdInfo.windowGroupID)
+                        sr.spatialWebView?.parentWebviewID = resourceID
+                        sr.spatialWebView?.resourceID = sr.id
+                    } else if type == "ModelUIComponent" {
+                        sr.modelUIComponent = ModelUIComponent()
+                    } else if type == "ModelComponent" {
+                        if var modelURL: String = json.getValue(lookup: ["data", "params", "modelURL"]) {
+                            modelURL = parseURL(url: modelURL)
+                            // Create download task for the url
+                            let url = URL(string: modelURL)!
+                            let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
+                            let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
+                                // Copy temp file to documentes directory
+                                let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
+                                do {
+                                    let fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
+                                    try FileManager.default.copyItem(at: a!, to: fileURL)
+                                    print("Downloaded and copied model")
+                                } catch {
+                                    print("Model already exists")
+                                }
+
+                                Task {
+                                    do {
+                                        let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent(fileStr))
+                                        sr.modelComponent = await m.model!
+                                        Task.detached { @MainActor in
+                                            // Update state on main thread
+                                            self.completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
+                                            self.childResources[sr.id] = sr
+                                            print("Model load success!")
+                                        }
+                                    } catch {
+                                        print("failed to load model: "+error.localizedDescription)
+                                    }
+                                }
+
+                            })
+                            downloadTask.resume()
+                            return
+                        } else {
+                            sr.modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
+                        }
+                    }
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+sr.id+"'}")
+                    childResources[sr.id] = sr
+                }
+            } else if command == "destroyResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    _ = childResources[cmdInfo.resourceID]?.destroy()
+                }
+            } else if command == "updateResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    var delayComplete = false
+                    if wgManager.allResources[cmdInfo.resourceID] == nil {
+                        print("Missing resource")
+                        return
+                    }
+                    let sr = wgManager.allResources[cmdInfo.resourceID]!
+                    if sr.resourceType == "Entity" {
+                        if var setParentID: String = json.getValue(lookup: ["data", "update", "setParent"]) {
+                            if setParentID.isEmpty {
+                                sr.setParent(parentEnt: nil)
+                            } else {
+                                sr.setParent(parentEnt: wgManager.allResources[setParentID]!)
+                            }
+                        }
+
+                        if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
+                            newParentID = readWinodwGroupID(id: newParentID)
+                            let wg = wgManager.getWindowGroup(windowGroup: newParentID)
+                            sr.setParentWindowGroup(wg: wg)
+                        }
+
+                        if let x: Double = json.getValue(lookup: ["data", "update", "position", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "position", "y"]),
+                           let z: Double = json.getValue(lookup: ["data", "update", "position", "z"]),
+                           let scalex: Double = json.getValue(lookup: ["data", "update", "scale", "x"]),
+                           let scaley: Double = json.getValue(lookup: ["data", "update", "scale", "y"]),
+                           let scalez: Double = json.getValue(lookup: ["data", "update", "scale", "z"]),
+                           let orientationx: Double = json.getValue(lookup: ["data", "update", "orientation", "x"]),
+                           let orientationy: Double = json.getValue(lookup: ["data", "update", "orientation", "y"]),
+                           let orientationz: Double = json.getValue(lookup: ["data", "update", "orientation", "z"]),
+                           let orientationw: Double = json.getValue(lookup: ["data", "update", "orientation", "w"])
+                        {
+                            if let e = childResources[cmdInfo.resourceID] {
+                                e.modelEntity.position.x = Float(x)
+                                e.modelEntity.position.y = Float(y)
+                                e.modelEntity.position.z = Float(z)
+                                e.modelEntity.scale.x = Float(scalex)
+                                e.modelEntity.scale.y = Float(scaley)
+                                e.modelEntity.scale.z = Float(scalez)
+                                e.modelEntity.orientation.vector.x = Float(orientationx)
+                                e.modelEntity.orientation.vector.y = Float(orientationy)
+                                e.modelEntity.orientation.vector.z = Float(orientationz)
+                                e.modelEntity.orientation.vector.w = Float(orientationw)
+                                e.forceUpdate = !e.forceUpdate
+                            }
+                        }
+                    } else if sr.resourceType == "MeshResource" {
+                    } else if sr.resourceType == "PhysicallyBasedMaterial" {
+                        if let r: Double = json.getValue(lookup: ["data", "update", "baseColor", "r"]),
+                           let g: Double = json.getValue(lookup: ["data", "update", "baseColor", "g"]),
+                           let b: Double = json.getValue(lookup: ["data", "update", "baseColor", "b"]),
+                           let a: Double = json.getValue(lookup: ["data", "update", "baseColor", "a"])
+                        {
+                            sr.physicallyBasedMaterial!.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: r, green: g, blue: b, alpha: a))
+                        }
+
+                        if let roughness: Double = json.getValue(lookup: ["data", "update", "roughness", "value"]) {
+                            sr.physicallyBasedMaterial!.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: Float(roughness))
+                        }
+
+                        if let metallic: Double = json.getValue(lookup: ["data", "update", "metallic", "value"]) {
+                            sr.physicallyBasedMaterial!.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
+                        }
+
+                    } else if sr.resourceType == "ModelUIComponent" {
+                        if var url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                            url = parseURL(url: url)
+                            sr.modelUIComponent?.url = URL(string: url)!
+                        }
+                        if let aspectRatio: String = json.getValue(lookup: ["data", "update", "aspectRatio"]) {
+                            sr.modelUIComponent?.aspectRatio = aspectRatio
+                        }
+                        if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
+                        {
+                            sr.modelUIComponent?.resolutionX = x
+                            sr.modelUIComponent?.resolutionY = y
+                        }
+
+                    } else if sr.resourceType == "ModelComponent" {
+                        if let meshResource: String = json.getValue(lookup: ["data", "update", "meshResource"]) {
+                            sr.modelComponent!.mesh = childResources[meshResource]!.meshResource!
+                        }
+
+                        if let materials: [String] = json.getValue(lookup: ["data", "update", "materials"]) {
+                            sr.modelComponent!.materials = []
+                            for matID in materials {
+                                sr.modelComponent!.materials.append(childResources[matID]!.physicallyBasedMaterial!)
+                            }
+                        }
+                    } else if sr.resourceType == "SpatialWebView" {
+                        if let _: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
+                            completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+sr.spatialWebView!.parentWebviewID+"'}")
+                            return
+                        }
+
+                        if let sendContent: String = json.getValue(lookup: ["data", "update", "sendContent"]) {
+                            sr.spatialWebView?.webViewNative?.webViewHolder.appleWebView!.evaluateJavaScript("window.updatePanelContent(`"+sendContent+"`)")
+                        }
+
+                        if let scrollEnabled: Bool = json.getValue(lookup: ["data", "update", "scrollEnabled"]) {
+                            if !scrollEnabled {
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = false
+                            } else {
+                                sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
+                            }
+                        }
+
+                        if let inline: Bool = json.getValue(lookup: ["data", "update", "inline"]) {
+                            sr.spatialWebView!.inline = inline
+                        }
+
+                        if let scrollWithParent: Bool = json.getValue(lookup: ["data", "update", "scrollWithParent"]) {
+                            sr.spatialWebView!.scrollWithParent = scrollWithParent
+                        }
+
+                        if let windowID: String = json.getValue(lookup: ["data", "update", "windowID"]) {
+                            if let spawnedWebView = spawnedNativeWebviews.removeValue(forKey: windowID) {
+                                sr.spatialWebView!.webViewNative!.destroy()
+                                sr.spatialWebView!.webViewNative = spawnedWebView
+                                sr.spatialWebView!.webViewNative!.webViewRef = sr.spatialWebView
+                            }
+                        }
+
+                        if let url: String = json.getValue(lookup: ["data", "update", "url"]) {
+                            // Compute target url depending if the url is relative or not
+                            let targetUrl = parseURL(url: url)
+
+                            delayComplete = true
+                            if sr.spatialWebView!.loadRequestID == -1 {
+                                sr.spatialWebView!.loadRequestID = cmdInfo.requestID
+                                sr.spatialWebView!.loadRequestWV = self
+                                sr.spatialWebView!.webViewNative!.url = URL(string: targetUrl)!
+                                sr.spatialWebView!.webViewNative!.initialLoad()
+                            } else {
+                                failEvent(requestID: cmdInfo.requestID)
+                            }
+                        }
+
+                        if let isRoot: Bool = json.getValue(lookup: ["data", "update", "setRoot"]) {
+                            sr.spatialWebView!.root = isRoot
+                            sr.spatialWebView!.full = isRoot
+                        }
+
+                        if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
+                           let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
+                        {
+                            sr.spatialWebView!.resolutionX = x
+                            sr.spatialWebView!.resolutionY = y
+                        }
+
+                        if let materialThickness: String = json.getValue(lookup: ["data", "update", "style", "materialThickness"]) {
+                            let mat = stringToThickness(str: materialThickness)
+                            if mat != nil {
+                                if isLoading {
+                                    loadingStyles.useMaterialThickness = true
+                                    loadingStyles.materialThickness = mat!
+                                }
+                                sr.spatialWebView?.useMaterialThickness = true
+                                sr.spatialWebView?.materialThickness = mat!
+                            } else {
+                                if isLoading {
+                                    loadingStyles.useMaterialThickness = false
+                                }
+                                sr.spatialWebView?.useMaterialThickness = false
+                            }
+                        }
+
+                        if let glassEffect: Bool = json.getValue(lookup: ["data", "update", "style", "glassEffect"]) {
+                            if isLoading {
+                                loadingStyles.glassEffect = glassEffect
+                            }
+                            sr.spatialWebView?.glassEffect = glassEffect
+                        }
+                        if let transparentEffect: Bool = json.getValue(lookup: ["data", "update", "style", "transparentEffect"]) {
+                            if isLoading {
+                                loadingStyles.transparentEffect = transparentEffect
+                            }
+                            sr.spatialWebView?.transparentEffect = transparentEffect
+                        }
+                        if let cornerRadius: Double = json.getValue(lookup: ["data", "update", "style", "cornerRadius"]) {
+                            if isLoading {
+                                loadingStyles.cornerRadius = CGFloat(cornerRadius)
+                            }
+                            sr.spatialWebView!.cornerRadius = CGFloat(cornerRadius)
+                        }
+                        sr.spatialWebView!.gotStyle = true
+                    }
+                    if !delayComplete {
+                        completeEvent(requestID: cmdInfo.requestID)
+                    }
+                }
+
+            } else if command == "createWindowGroup" {
+                if let cmdInfo = getCommandInfo(json: json),
+                   let windowStyle: String = json.getValue(lookup: ["data", "windowStyle"])
+                {
+                    let uuid = UUID().uuidString
+                    let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
+
+                    wgManager.getWindowGroup(windowGroup: "root").openWindowData.send(wgd)
+                    childWindowGroups[uuid] = wgd
+                    completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
+                }
+            } else if command == "updateWindowGroup" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    let wg = wgManager.getWindowGroup(windowGroup: cmdInfo.windowGroupID)
+                    if let x: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "x"]),
+                       let y: Double = json.getValue(lookup: ["data", "update", "style", "dimensions", "y"])
+                    {
+                        loadingStyles.windowGroupSize = CGSize(width: x, height: y)
+                        wg.setSize.send(loadingStyles.windowGroupSize)
+                    }
+
+                    completeEvent(requestID: cmdInfo.requestID)
+                }
+            } else if command == "openImmersiveSpace" {
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace.send(true)
+            } else if command == "dismissImmersiveSpace" {
+                wgManager.getWindowGroup(windowGroup: "root").toggleImmersiveSpace.send(false)
+            } else if command == "log" {
+                if let logStringArr: [String] = json.getValue(lookup: ["data", "logString"]), let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
+                    let log = Logger.getLogger()
+                    let logString = logStringArr.joined()
+                    switch logLevel {
+                    case "TRACE":
+                        log.verbose(logString)
+
+                    case "DEBUG":
+                        log.debug(logString)
+
+                    case "INFO":
+                        log.info(logString)
+
+                    case "WARN":
+                        log.warning(logString)
+
+                    case "ERROR":
+                        log.error(logString)
+
+                    default:
+                        print(logString)
+                    }
+                }
+            } else if command == "setLogLevel" {
+                if let logLevel: String = json.getValue(lookup: ["data", "logLevel"]) {
+                    let levelDict = [
+                        "DEBUG": SwiftyBeaver.Level.debug,
+                        "ERROR": SwiftyBeaver.Level.error,
+                        "TRACE": SwiftyBeaver.Level.verbose,
+                        "WARN": SwiftyBeaver.Level.warning,
+                        "INFO": SwiftyBeaver.Level.info,
+                    ]
+                    if let level = levelDict[logLevel] {
+                        for destination in SwiftyBeaver.destinations {
+                            destination.minLevel = level
+                        }
+                    }
+                }
+            } else if command == "animateResource" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
+                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
+                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
+                        {
+                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
+                            if let modelUIComponent = sr.modelUIComponent {
+                                modelUIComponent.triggerAnimation(animationDesc)
+                            }
+                        }
+                    }
+
+                    // TODO: consider completeEvent after finish animation
+                    completeEvent(requestID: cmdInfo.requestID)
+                }
+            }
+        }
+    }
+}
