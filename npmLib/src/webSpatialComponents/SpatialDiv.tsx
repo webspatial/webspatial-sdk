@@ -39,6 +39,7 @@ function useAsyncInstances<T>(
 function getInheritedStyleProps(from: HTMLElement): any {
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
+        "margin",
         "azimuth",
         "borderCollapse",
         "borderSpacing",
