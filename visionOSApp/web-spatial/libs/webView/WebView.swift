@@ -493,6 +493,7 @@ class SpatialWebView {
                                 sr.spatialWebView!.webViewNative!.destroy()
                                 sr.spatialWebView!.webViewNative = spawnedWebView
                                 sr.spatialWebView!.webViewNative!.webViewRef = sr.spatialWebView
+                                sr.spatialWebView!.webViewNative!.webViewHolder.webViewCoordinator!.webViewRef = sr.spatialWebView
                             }
                         }
 
