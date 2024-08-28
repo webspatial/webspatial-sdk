@@ -3,7 +3,7 @@ import { initializeSpatialOffset } from './utils'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { SpatialIFrameManager } from './SpatialIFrameManager'
 import { SpatialIFrameComponent } from '..'
-import { spatial } from './getSessionAsync'
+import { spatial } from './getSession'
 import { vecType } from './types'
 
 // React components
