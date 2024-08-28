@@ -7,6 +7,7 @@
 ## Classes
 
 - [Spatial](classes/Spatial.md)
+- [SpatialComponent](classes/SpatialComponent.md)
 - [SpatialEntity](classes/SpatialEntity.md)
 - [SpatialIFrameComponent](classes/SpatialIFrameComponent.md)
 - [SpatialInputComponent](classes/SpatialInputComponent.md)
@@ -14,11 +15,10 @@
 - [SpatialModelComponent](classes/SpatialModelComponent.md)
 - [SpatialModelUIComponent](classes/SpatialModelUIComponent.md)
 - [SpatialPhysicallyBasedMaterial](classes/SpatialPhysicallyBasedMaterial.md)
-- [SpatialResource](classes/SpatialResource.md)
 - [SpatialSession](classes/SpatialSession.md)
 - [SpatialTransform](classes/SpatialTransform.md)
 - [SpatialWindowGroup](classes/SpatialWindowGroup.md)
 
-## Variables
+## Type Aliases
 
-- [WebSpatialLogger](variables/WebSpatialLogger.md)
+- [WindowStyle](type-aliases/WindowStyle.md)

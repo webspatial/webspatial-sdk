@@ -2,13 +2,20 @@
 
 ***
 
-[web-spatial](../globals.md) / SpatialMeshResource
+[web-spatial](../globals.md) / SpatialComponent
 
-# Class: SpatialMeshResource
+# Class: SpatialComponent
 
 ## Extends
 
 - `SpatialResource`
+
+## Extended by
+
+- [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
+- [`SpatialInputComponent`](SpatialInputComponent.md)
+- [`SpatialModelComponent`](SpatialModelComponent.md)
+- [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
 
 ## Methods
 
