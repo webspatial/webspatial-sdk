@@ -39,14 +39,6 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 
   /**
-   * Sends a message to the iframe telling it to display the content string
-   * @param content Content to be displayed
-   */
-  async sendContent(content: string) {
-    await WebSpatial.updateResource(this._resource, { sendContent: content })
-  }
-
-  /**
    * Sets the style that should be applied to the iframe
    * @param options style options
    */
