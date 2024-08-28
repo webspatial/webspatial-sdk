@@ -10,7 +10,7 @@ PBR material which can be set on a SpatialModelComponent
 
 ## Extends
 
-- [`SpatialResource`](SpatialResource.md)
+- `SpatialResource`
 
 ## Properties
 
@@ -36,7 +36,7 @@ PBR material which can be set on a SpatialModelComponent
 
 #### Defined in
 
-SpatialResource/SpatialPhysicallyBasedMaterial.ts:8
+asset/SpatialPhysicallyBasedMaterial.ts:8
 
 ***
 
@@ -50,7 +50,7 @@ SpatialResource/SpatialPhysicallyBasedMaterial.ts:8
 
 #### Defined in
 
-SpatialResource/SpatialPhysicallyBasedMaterial.ts:9
+asset/SpatialPhysicallyBasedMaterial.ts:9
 
 ***
 
@@ -64,7 +64,7 @@ SpatialResource/SpatialPhysicallyBasedMaterial.ts:9
 
 #### Defined in
 
-SpatialResource/SpatialPhysicallyBasedMaterial.ts:10
+asset/SpatialPhysicallyBasedMaterial.ts:10
 
 ## Methods
 
@@ -80,11 +80,11 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+`SpatialResource.destroy`
 
 #### Defined in
 
-SpatialResource/SpatialResource.ts:15
+SpatialResource.ts:15
 
 ***
 
@@ -100,4 +100,4 @@ Syncs state of color, metallic, roupghness to the renderer
 
 #### Defined in
 
-SpatialResource/SpatialPhysicallyBasedMaterial.ts:15
+asset/SpatialPhysicallyBasedMaterial.ts:15
