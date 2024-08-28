@@ -5,7 +5,7 @@ import { SpatialSession } from "../SpatialSession"
 let spatial = new Spatial()
 let _currentSession = null as SpatialSession | null
 /** @hidden */
-export function getSessionAsync() {
+export function getSession() {
     if (!spatial.isSupported()) {
         return null
     }
@@ -16,4 +16,4 @@ export function getSessionAsync() {
     return _currentSession
 }
 
-export {spatial}
+export { spatial }

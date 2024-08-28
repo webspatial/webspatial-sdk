@@ -1,9 +1,9 @@
-import { SpatialDiv,  getSessionAsync } from './webSpatialComponents'
+import { SpatialDiv, getSession } from './webSpatialComponents'
 import r2wc from "@r2wc/react-to-web-component"
 
 export class WebSpatialHydrate {
     static Hydrate() {
-        let session = getSessionAsync()
+        let session = getSession()
         if (session) {
             // Set styles
             let documentSpatialStyle = document.documentElement.attributes['spatial-style' as any]
