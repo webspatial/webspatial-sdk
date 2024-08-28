@@ -1,7 +1,7 @@
 
 import { SpatialEntity } from '../SpatialEntity';
 import { SpatialModelUIComponent } from '../SpatialResource/SpatialModelUIComponent';
-import { getSessionAsync } from './getSessionAsync';
+import { getSession } from './getSession';
 import { vecType } from './types';
 
 export class SpatialModelUIManager {
@@ -10,9 +10,9 @@ export class SpatialModelUIManager {
     modelComponent?: SpatialModelUIComponent
 
     async initInternal(url: string) {
-        this.entity = await (await getSessionAsync()!).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
-        this.modelComponent = await (await getSessionAsync()!).createModelUIComponent()
+        this.entity = await (await getSession()!).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSession()!).getCurrentWindowGroup())
+        this.modelComponent = await (await getSession()!).createModelUIComponent()
         await this.modelComponent.setURL(url)
         await this.entity.setComponent(this.modelComponent)
     }
