@@ -4,6 +4,14 @@
 
 # web-spatial
 
+## Classes
+
+- [AnimationBuilder](classes/AnimationBuilder.md)
+
+## Type Aliases
+
+- [ModelRef](type-aliases/ModelRef.md)
+
 ## Functions
 
 - [Model](functions/Model.md)

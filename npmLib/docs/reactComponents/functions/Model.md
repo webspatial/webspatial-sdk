@@ -6,7 +6,7 @@
 
 # Function: Model()
 
-> **Model**(`props`): `Element`
+> **Model**(`props`): `ReactNode`
 
 Allows embedding 3D graphical content inline within the webpage. Behaves similar to an img element but displays a 3D model instead
 
@@ -14,24 +14,12 @@ Intended to behave similar to https://immersive-web.github.io/model-element/
 
 ## Parameters
 
-• **props**
-
-• **props.children**: `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\>[]
-
-• **props.className**: `string`
-
-• **props.spatialOffset?**
-
-• **props.spatialOffset.x?**: `number`
-
-• **props.spatialOffset.y?**: `number`
-
-• **props.spatialOffset.z?**: `number`
+• **props**: `ModelProps` & `RefAttributes`\<`object`\>
 
 ## Returns
 
-`Element`
+`ReactNode`
 
 ## Defined in
 
-Model.tsx:21
+src/spatial-react-components/Model.tsx:34

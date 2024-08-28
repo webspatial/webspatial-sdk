@@ -34,7 +34,7 @@ Entity
 
 #### Defined in
 
-SpatialSession.ts:49
+SpatialSession.ts:50
 
 ***
 
@@ -56,7 +56,7 @@ IFrameComponent
 
 #### Defined in
 
-SpatialSession.ts:58
+SpatialSession.ts:59
 
 ***
 
@@ -74,7 +74,7 @@ InputComponent
 
 #### Defined in
 
-SpatialSession.ts:89
+SpatialSession.ts:90
 
 ***
 
@@ -96,7 +96,7 @@ MeshResource
 
 #### Defined in
 
-SpatialSession.ts:100
+SpatialSession.ts:101
 
 ***
 
@@ -120,7 +120,7 @@ ModelComponent
 
 #### Defined in
 
-SpatialSession.ts:76
+SpatialSession.ts:77
 
 ***
 
@@ -142,7 +142,7 @@ ModelUIComponent
 
 #### Defined in
 
-SpatialSession.ts:67
+SpatialSession.ts:68
 
 ***
 
@@ -164,7 +164,7 @@ PhysicallyBasedMaterial
 
 #### Defined in
 
-SpatialSession.ts:109
+SpatialSession.ts:110
 
 ***
 
@@ -176,7 +176,7 @@ Creates a WindowGroup
 
 #### Parameters
 
-• **style**: `WindowStyle` = `"Plain"`
+• **style**: [`WindowStyle`](../type-aliases/WindowStyle.md) = `"Plain"`
 
 #### Returns
 
@@ -186,7 +186,7 @@ WindowGroup
 
 #### Defined in
 
-SpatialSession.ts:118
+SpatialSession.ts:119
 
 ***
 
@@ -204,7 +204,7 @@ SpatialSession.ts:118
 
 #### Defined in
 
-SpatialSession.ts:161
+SpatialSession.ts:162
 
 ***
 
@@ -220,7 +220,7 @@ Closes the immersive space
 
 #### Defined in
 
-SpatialSession.ts:186
+SpatialSession.ts:195
 
 ***
 
@@ -238,7 +238,7 @@ SpatialSession.ts:186
 
 #### Defined in
 
-SpatialSession.ts:165
+SpatialSession.ts:166
 
 ***
 
@@ -256,7 +256,7 @@ the iframe component corresponding to the js running on this page
 
 #### Defined in
 
-SpatialSession.ts:126
+SpatialSession.ts:127
 
 ***
 
@@ -270,7 +270,7 @@ SpatialSession.ts:126
 
 #### Defined in
 
-SpatialSession.ts:196
+SpatialSession.ts:205
 
 ***
 
@@ -284,7 +284,7 @@ SpatialSession.ts:196
 
 #### Defined in
 
-SpatialSession.ts:191
+SpatialSession.ts:200
 
 ***
 
@@ -302,7 +302,25 @@ the iframe component or null
 
 #### Defined in
 
-SpatialSession.ts:134
+SpatialSession.ts:135
+
+***
+
+### getStats()
+
+> **getStats**(): `Promise`\<`any`\>
+
+Debugging to get internal state from native code
+
+#### Returns
+
+`Promise`\<`any`\>
+
+data as a js object
+
+#### Defined in
+
+SpatialSession.ts:185
 
 ***
 
@@ -320,7 +338,7 @@ SpatialSession.ts:134
 
 #### Defined in
 
-SpatialSession.ts:153
+SpatialSession.ts:154
 
 ***
 
@@ -338,7 +356,7 @@ SpatialSession.ts:153
 
 #### Defined in
 
-SpatialSession.ts:149
+SpatialSession.ts:150
 
 ***
 
@@ -354,7 +372,7 @@ Opens the immersive space
 
 #### Defined in
 
-SpatialSession.ts:181
+SpatialSession.ts:190
 
 ***
 
@@ -374,7 +392,7 @@ Debugging only, used to ping the native renderer
 
 #### Defined in
 
-SpatialSession.ts:176
+SpatialSession.ts:177
 
 ***
 
@@ -396,7 +414,7 @@ callback to be called before next render update
 
 #### Defined in
 
-SpatialSession.ts:30
+SpatialSession.ts:31
 
 ***
 
@@ -414,7 +432,7 @@ SpatialSession.ts:30
 
 #### Defined in
 
-SpatialSession.ts:145
+SpatialSession.ts:146
 
 ***
 
@@ -432,7 +450,7 @@ SpatialSession.ts:145
 
 #### Defined in
 
-SpatialSession.ts:169
+SpatialSession.ts:170
 
 ***
 
@@ -450,4 +468,4 @@ SpatialSession.ts:169
 
 #### Defined in
 
-SpatialSession.ts:157
+SpatialSession.ts:158

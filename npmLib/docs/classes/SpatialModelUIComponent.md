@@ -11,9 +11,27 @@ Positioning behaves the same as a spatial iframe marked as inline
 
 ## Extends
 
-- [`SpatialResource`](SpatialResource.md)
+- [`SpatialComponent`](SpatialComponent.md)
 
 ## Methods
+
+### applyAnimationToResource()
+
+> **applyAnimationToResource**(`animationBuilder`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **animationBuilder**: `AnimationBuilder`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+component/SpatialModelUIComponent.ts:29
+
+***
 
 ### destroy()
 
@@ -27,11 +45,11 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+[`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
 
 #### Defined in
 
-SpatialResource/SpatialResource.ts:15
+SpatialResource.ts:15
 
 ***
 
@@ -49,7 +67,7 @@ SpatialResource/SpatialResource.ts:15
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:16
+component/SpatialModelUIComponent.ts:17
 
 ***
 
@@ -75,7 +93,7 @@ resolution in pixels
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:24
+component/SpatialModelUIComponent.ts:25
 
 ***
 
@@ -97,4 +115,4 @@ url of the model to load
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:13
+component/SpatialModelUIComponent.ts:14
