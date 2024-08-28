@@ -10,7 +10,7 @@ Used to position a model in 3D space, made up of a mesh and materials to be appl
 
 ## Extends
 
-- [`SpatialResource`](SpatialResource.md)
+- [`SpatialComponent`](SpatialComponent.md)
 
 ## Methods
 
@@ -26,11 +26,11 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+[`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
 
 #### Defined in
 
-SpatialResource/SpatialResource.ts:15
+SpatialResource.ts:15
 
 ***
 
@@ -52,7 +52,7 @@ array of materials to set
 
 #### Defined in
 
-SpatialResource/SpatialModelComponent.ts:23
+component/SpatialModelComponent.ts:23
 
 ***
 
@@ -74,4 +74,4 @@ mesh to set
 
 #### Defined in
 
-SpatialResource/SpatialModelComponent.ts:15
+component/SpatialModelComponent.ts:15

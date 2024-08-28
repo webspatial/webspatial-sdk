@@ -6,7 +6,7 @@
 
 # Function: SpatialDiv()
 
-> **SpatialDiv**(`props`): `undefined` \| `Element`
+> **SpatialDiv**(`props`): `ReactNode`
 
 Component that extends the div tag that allows the inner contents to be posisioned in 3D space
 
@@ -14,20 +14,12 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 ## Parameters
 
-• **props**
-
-• **props.children?**: `ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `Element` \| (`ReactElement`\<`any`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `Element`)[]
-
-• **props.className?**: `string`
-
-• **props.spatialStyle?**: `Partial`\<`spatialStyleDef`\>
-
-• **props.style?**: `CSSProperties`
+• **props**: `SpatialDivProps` & `RefAttributes`\<`object`\>
 
 ## Returns
 
-`undefined` \| `Element`
+`ReactNode`
 
 ## Defined in
 
-SpatialDiv.tsx:42
+src/spatial-react-components/SpatialDiv.tsx:117

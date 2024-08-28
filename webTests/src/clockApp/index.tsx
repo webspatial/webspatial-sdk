@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialSession } from 'web-spatial/src/index';
-import { SpatialIFrame } from 'web-spatial/src/webSpatialComponents';
+import { SpatialIFrame } from 'web-spatial';
 
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
