@@ -1,8 +1,6 @@
 import React, {   useRef,   } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from "web-spatial/src"
-import { ModelRef } from 'web-spatial/src/webSpatialComponents/Model';
-import { AnimationBuilder, Model,   } from 'web-spatial/src/webSpatialComponents';
+import { Spatial, AnimationBuilder, Model, ModelRef } from 'web-spatial';
 
 const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()

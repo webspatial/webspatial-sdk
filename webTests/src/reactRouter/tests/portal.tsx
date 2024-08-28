@@ -1,4 +1,4 @@
-import { SpatialDiv } from "web-spatial/src/webSpatialComponents"
+import { SpatialDiv } from "web-spatial"
 
 export function PortalTest() {
     return <>

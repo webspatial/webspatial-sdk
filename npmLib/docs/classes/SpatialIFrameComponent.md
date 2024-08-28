@@ -10,7 +10,7 @@ Used to position an iframe in 3D space
 
 ## Extends
 
-- [`SpatialResource`](SpatialResource.md)
+- [`SpatialComponent`](SpatialComponent.md)
 
 ## Methods
 
@@ -26,11 +26,11 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+[`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
 
 #### Defined in
 
-SpatialResource/SpatialResource.ts:15
+SpatialResource.ts:15
 
 ***
 
@@ -52,7 +52,7 @@ url to load
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:12
+component/SpatialIFrameComponent.ts:12
 
 ***
 
@@ -74,7 +74,7 @@ Content to be displayed
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:45
+component/SpatialIFrameComponent.ts:45
 
 ***
 
@@ -96,7 +96,7 @@ sets if this should be root or not
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:27
+component/SpatialIFrameComponent.ts:27
 
 ***
 
@@ -114,7 +114,7 @@ SpatialResource/SpatialIFrameComponent.ts:27
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:16
+component/SpatialIFrameComponent.ts:16
 
 ***
 
@@ -138,7 +138,7 @@ value to set
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:71
+component/SpatialIFrameComponent.ts:71
 
 ***
 
@@ -165,7 +165,7 @@ height in pixels
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:37
+component/SpatialIFrameComponent.ts:37
 
 ***
 
@@ -187,7 +187,29 @@ value to set
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:61
+component/SpatialIFrameComponent.ts:61
+
+***
+
+### setScrollWithParent()
+
+> **setScrollWithParent**(`scrollWithParent`): `Promise`\<`void`\>
+
+Defaults to false. If set to true, scrolling the parent page will also scroll this window with it like other dom elements
+
+#### Parameters
+
+• **scrollWithParent**: `boolean`
+
+value to set
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+component/SpatialIFrameComponent.ts:79
 
 ***
 
@@ -209,4 +231,4 @@ style options
 
 #### Defined in
 
-SpatialResource/SpatialIFrameComponent.ts:53
+component/SpatialIFrameComponent.ts:53

@@ -1,5 +1,5 @@
 import { Euler, Quaternion, Vector3 } from 'three';
-import { Spatial, SpatialEntity } from "web-spatial/src/index.ts"
+import { Spatial, SpatialEntity } from "web-spatial"
 
 
 var main = async () => {
