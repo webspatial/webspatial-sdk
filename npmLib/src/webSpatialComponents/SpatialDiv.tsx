@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactElement, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
-import { getSessionAsync } from './getSessionAsync'
+import { getSession } from './getSession'
 import { SpatialIFrameManager } from './SpatialIFrameManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 
@@ -129,7 +129,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
 
     let mode = "none"
-    let session = getSessionAsync()
+    let session = getSession()
     if (session) {
         mode = "spatial"
     }

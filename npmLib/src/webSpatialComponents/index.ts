@@ -1,5 +1,5 @@
-export {Model} from './Model';
-export {SpatialDiv} from './SpatialDiv';
-export {SpatialIFrame} from './SpatialIFrame';
-export {getSessionAsync} from './getSessionAsync'
-export {AnimationBuilder} from './AnimationBuilder'
+export { Model } from './Model';
+export { SpatialDiv } from './SpatialDiv';
+export { SpatialIFrame } from './SpatialIFrame';
+export { getSession } from './getSession'
+export { AnimationBuilder } from './AnimationBuilder'
