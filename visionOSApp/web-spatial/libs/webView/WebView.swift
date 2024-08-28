@@ -467,10 +467,6 @@ class SpatialWebView {
                             return
                         }
 
-                        if let sendContent: String = json.getValue(lookup: ["data", "update", "sendContent"]) {
-                            sr.spatialWebView?.webViewNative?.webViewHolder.appleWebView!.evaluateJavaScript("window.updatePanelContent(`"+sendContent+"`)")
-                        }
-
                         if let scrollEnabled: Bool = json.getValue(lookup: ["data", "update", "scrollEnabled"]) {
                             if !scrollEnabled {
                                 sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
