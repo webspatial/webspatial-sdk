@@ -16,7 +16,7 @@ if (spatial) {
 var pageName = (new URLSearchParams(window.location.search)).get("pageName");
 var transparent = (new URLSearchParams(window.location.search)).get("transparent");
 if (session) {
-    session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+    session.getCurrentWindowComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
     if (!pageName) {
         session.getCurrentWindowGroup().setStyle({ dimensions: { x: 880, y: 200 } })
     }
@@ -146,7 +146,7 @@ function App() {
                         ent.transform.position.z = 0
                         await ent.updateTransform()
 
-                        var i = await session.createIFrameComponent(wg)
+                        var i = await session.createWindowComponent(wg)
                         await i.setResolution(300, 300)
                         await i.loadURL("index.html?pageName=Settings")
                         await i.setAsRoot(true)

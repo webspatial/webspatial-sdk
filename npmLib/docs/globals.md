@@ -6,17 +6,18 @@
 
 ## Classes
 
+- [AnimationBuilder](classes/AnimationBuilder.md)
 - [Spatial](classes/Spatial.md)
 - [SpatialComponent](classes/SpatialComponent.md)
 - [SpatialEntity](classes/SpatialEntity.md)
-- [SpatialIFrameComponent](classes/SpatialIFrameComponent.md)
 - [SpatialInputComponent](classes/SpatialInputComponent.md)
-- [SpatialMeshResource](classes/SpatialMeshResource.md)
+- [SpatialMesh](classes/SpatialMesh.md)
 - [SpatialModelComponent](classes/SpatialModelComponent.md)
 - [SpatialModelUIComponent](classes/SpatialModelUIComponent.md)
 - [SpatialPhysicallyBasedMaterial](classes/SpatialPhysicallyBasedMaterial.md)
 - [SpatialSession](classes/SpatialSession.md)
 - [SpatialTransform](classes/SpatialTransform.md)
+- [SpatialWindowComponent](classes/SpatialWindowComponent.md)
 - [SpatialWindowGroup](classes/SpatialWindowGroup.md)
 
 ## Type Aliases

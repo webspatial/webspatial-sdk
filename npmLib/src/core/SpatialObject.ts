@@ -1,7 +1,7 @@
 import { WebSpatial } from "./private/WebSpatial";
 import { WebSpatialResource } from "./private/WebSpatial";
 
-export class SpatialResource {
+export class SpatialObject {
     /** @hidden */
     constructor(
       /** @hidden */

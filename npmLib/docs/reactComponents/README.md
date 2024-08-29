@@ -45,7 +45,7 @@ await e.updateTransform()
 await e.setParentWindowGroup(currentWindowGroup)
 
 // Load a spatial iframe element and attach to entity
-let i = await session.createIFrameComponent()
+let i = await session.createWindowComponent()
 await Promise.all([
     i.loadURL("/loadTsx.html?pageName=reactDemo/basic.tsx"),
     i.setResolution(300, 300),

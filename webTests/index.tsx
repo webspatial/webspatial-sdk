@@ -15,7 +15,7 @@ if (spatial) {
 
 var transparent = (new URLSearchParams(window.location.search)).get("transparent");
 if (session) {
-    session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+    session.getCurrentWindowComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
 } else {
     console.log("not supported")
 }
@@ -170,6 +170,7 @@ function App() {
                 <a href="/" className='font-bold'>WebSpatial</a>
                 <a href="/">Docs</a>
                 <a href="/src/jsApiTestPages/testList.html">Examples</a>
+                <a href="/src/CITest/index.html">Run CI</a>
                 <a href="/">Github</a>
             </div>
             <div className='m-5 flex flex-row flex-wrap text-white'>

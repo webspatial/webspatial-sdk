@@ -1,10 +1,9 @@
 import React, { ReactElement, useEffect, useRef, forwardRef, useImperativeHandle, Ref } from 'react'
+import { AnimationBuilder } from '../core'
 import { initializeSpatialOffset } from './utils'
 import { SpatialModelUIManager } from './SpatialModelUIManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { vecType } from './types'
-import { AnimationBuilder } from './AnimationBuilder'
-
 
 // 定义子组件的 props 类型
 interface ModelProps {
