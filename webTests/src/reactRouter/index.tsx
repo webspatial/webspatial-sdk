@@ -11,6 +11,13 @@ function HomePage() {
     </>
 }
 
+var testPages = [
+    HomePage,
+    PortalTest,
+    NestedDivsTest,
+]
+
+
 // Create react root
 var root = document.createElement("div")
 document.body.appendChild(root)
@@ -24,15 +31,21 @@ ReactDOM.createRoot(root).render(
                 <div className="flex-none">
                     <ul className="menu menu-horizontal px-1">
                         <li><a href="/src/jsApiTestPages/testList.html">FullTestList</a></li>
-                        <li><Link to="/portalTest"><div>Portal</div></Link></li>
-                        <li><Link to="/nestedDivsTest"><div>Nested Divs</div></Link></li>
+                        {testPages.map((page, i) => {
+                            return (
+                                <li><Link to={"/" + page.name}><div>{page.name}</div></Link></li>
+                            );
+                        })}
                     </ul>
                 </div>
             </div>
             <Routes>
-                <Route path="/" element={<HomePage />}></Route>
-                <Route path="/portalTest" element={<PortalTest />}></Route>
-                <Route path="/nestedDivsTest" element={<NestedDivsTest />}></Route>
+                {testPages.map((page, i) => {
+                    var MyTag = page
+                    return (
+                        <Route path={"/" + page.name} element={<MyTag />}></Route>
+                    );
+                })}
             </Routes>
         </HashRouter>
     </React.StrictMode>
