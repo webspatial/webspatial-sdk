@@ -36,7 +36,7 @@
 
 #### Defined in
 
-src/spatial-react-components/AnimationBuilder.ts:19
+component/SpatialModelUIComponent.ts:22
 
 ***
 
@@ -54,7 +54,7 @@ src/spatial-react-components/AnimationBuilder.ts:19
 
 #### Defined in
 
-src/spatial-react-components/AnimationBuilder.ts:14
+component/SpatialModelUIComponent.ts:17
 
 ***
 
@@ -72,4 +72,4 @@ src/spatial-react-components/AnimationBuilder.ts:14
 
 #### Defined in
 
-src/spatial-react-components/AnimationBuilder.ts:9
+component/SpatialModelUIComponent.ts:12

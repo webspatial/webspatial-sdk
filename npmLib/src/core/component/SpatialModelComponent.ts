@@ -1,6 +1,6 @@
 
-import { SpatialMeshResource } from "../asset/SpatialMeshResource"
-import { SpatialPhysicallyBasedMaterial } from "../asset/SpatialPhysicallyBasedMaterial"
+import { SpatialMesh } from "../resource/SpatialMesh"
+import { SpatialPhysicallyBasedMaterial } from "../resource/SpatialPhysicallyBasedMaterial"
 import { SpatialComponent } from "./SpatialComponent"
 import { WebSpatial } from "../private/WebSpatial"
 
@@ -12,7 +12,7 @@ export class SpatialModelComponent extends SpatialComponent {
      * Sets the mesh to be displayed by the component
      * @param mesh mesh to set
      */
-    async setMesh(mesh: SpatialMeshResource) {
+    async setMesh(mesh: SpatialMesh) {
       await WebSpatial.updateResource(this._resource, { meshResource: mesh._resource.id })
     }
   

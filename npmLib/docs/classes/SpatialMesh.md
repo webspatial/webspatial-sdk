@@ -2,13 +2,13 @@
 
 ***
 
-[web-spatial](../globals.md) / SpatialMeshResource
+[web-spatial](../globals.md) / SpatialMesh
 
-# Class: SpatialMeshResource
+# Class: SpatialMesh
 
 ## Extends
 
-- `SpatialResource`
+- `SpatialObject`
 
 ## Methods
 
@@ -24,8 +24,8 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-`SpatialResource.destroy`
+`SpatialObject.destroy`
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialObject.ts:15

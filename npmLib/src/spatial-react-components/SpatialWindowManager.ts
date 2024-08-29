@@ -1,21 +1,21 @@
 
-import { SpatialEntity } from '../core/SpatialEntity';
-import { SpatialIFrameComponent } from '../core/component/SpatialIFrameComponent';
-import { getSessionAsync } from '../utils/getSessionAsync';
+ 
+import { SpatialEntity, SpatialWindowComponent } from '../core';
+import { getSession } from '../utils';
 import { vecType, quatType } from './types';
 
 
 // Manager classes to handle resource creation/deletion
-export class SpatialIFrameManager {
+export class SpatialWindowManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
-    webview?: SpatialIFrameComponent
+    webview?: SpatialWindowComponent
     window?: WindowProxy
 
     async initInternal(url: string) {
-        this.entity = await (await getSessionAsync()!).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
-        this.webview = await (await getSessionAsync()!).createIFrameComponent()
+        this.entity = await (getSession()!).createEntity()
+        await this.entity.setParentWindowGroup(await (getSession()!).getCurrentWindowGroup())
+        this.webview = await (getSession()!).createWindowComponent()
         await this.webview.loadURL(url)
         await this.webview.setInline(true);
         await this.webview.setScrollWithParent(true);
@@ -23,9 +23,9 @@ export class SpatialIFrameManager {
         await this.entity.setComponent(this.webview)
     }
     async initInternalFromWindow(w: any) {
-        this.entity = await (await getSessionAsync()!).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
-        this.webview = await (await getSessionAsync()!).createIFrameComponent()
+        this.entity = await (getSession()!).createEntity()
+        await this.entity.setParentWindowGroup(await (getSession()!).getCurrentWindowGroup())
+        this.webview = await (getSession()!).createWindowComponent()
         await this.webview.setFromWindow(w)
         await this.webview.setInline(true);
         await this.webview.setScrollWithParent(true);

@@ -1,18 +1,17 @@
+import { SpatialEntity, SpatialModelUIComponent } from "../core"
+import { getSession } from "../utils"
+import { vecType } from "./types"
 
-import { SpatialEntity } from '../core/SpatialEntity';
-import { SpatialModelUIComponent } from '../core/component/SpatialModelUIComponent';
-import { getSessionAsync } from '../utils/getSessionAsync';
-import { vecType } from './types';
-
+ 
 export class SpatialModelUIManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
     modelComponent?: SpatialModelUIComponent
 
     async initInternal(url: string) {
-        this.entity = await (await getSessionAsync()!).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSessionAsync()!).getCurrentWindowGroup())
-        this.modelComponent = await (await getSessionAsync()!).createModelUIComponent()
+        this.entity = await (await getSession()!).createEntity()
+        await this.entity.setParentWindowGroup(await (await getSession()!).getCurrentWindowGroup())
+        this.modelComponent = await (await getSession()!).createModelUIComponent()
         await this.modelComponent.setURL(url)
         await this.entity.setComponent(this.modelComponent)
     }
