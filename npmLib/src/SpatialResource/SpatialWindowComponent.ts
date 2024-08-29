@@ -2,11 +2,11 @@ import { SpatialResource } from "./SpatialResource"
 import { WebSpatial } from "../webSpatialPrivate"
 
 /**
-* Used to position an iframe in 3D space
+* Used to position an web window in 3D space
 */
-export class SpatialIFrameComponent extends SpatialResource {
+export class SpatialWindowComponent extends SpatialResource {
   /**
-   * Loads a url page in the iframe
+   * Loads a url page in the window
    * @param url url to load
    */
   async loadURL(url: string) {
@@ -21,7 +21,7 @@ export class SpatialIFrameComponent extends SpatialResource {
     }
   }
   /**
-   * Sets if this IFrame can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
+   * Sets if this window can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
    * @param makeRoot sets if this should be root or not
    */
   async setAsRoot(makeRoot: boolean) {
@@ -29,7 +29,7 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 
   /**
-   * Sets the resolution of the IFrame, the resulting dimensions when rendered will be equal to 1/1360 units
+   * Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
    * eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
    * @param x width in pixels
    * @param y height in pixels
@@ -39,7 +39,7 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 
   /**
-   * Sets the style that should be applied to the iframe
+   * Sets the style that should be applied to the window
    * @param options style options
    */
   async setStyle(options: any) {
@@ -47,7 +47,7 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 
   /**
-   * Enable/Disable scrolling in the iframe (defaults to enabled), if disabled, scrolling will be applied to the root page
+   * Enable/Disable scrolling in the window (defaults to enabled), if disabled, scrolling will be applied to the root page
    * @param enabled value to set
    */
   async setScrollEnabled(enabled: boolean) {
@@ -55,8 +55,8 @@ export class SpatialIFrameComponent extends SpatialResource {
   }
 
   /**
-   * Sets how the iframe should be rendered. 
-   * If inline, position will be relative to root webpage (0,0,0) will place the center of the iframe at the top left of the page and coordinate space will be in pixels.
+   * Sets how the window should be rendered. 
+   * If inline, position will be relative to root webpage (0,0,0) will place the center of the window at the top left of the page and coordinate space will be in pixels.
    * If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
    * @param isInline value to set
    */
