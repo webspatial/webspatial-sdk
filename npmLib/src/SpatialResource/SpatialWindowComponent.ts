@@ -40,6 +40,16 @@ export class SpatialWindowComponent extends SpatialResource {
   }
 
   /**
+   * Modifies the amount the spatial window can be scrolled
+   * Should only be used internally
+   * See https://developer.apple.com/documentation/uikit/1624475-uiedgeinsetsmake?language=objc
+   * @param insets margin to modify scroll distances by
+   */
+  async setScrollEdgeInsets(insets: { top: number, left: number, bottom: number, right: number }) {
+    await WebSpatial.updateResource(this._resource, { setScrollEdgeInsets: insets })
+  }
+
+  /**
    * Enable/Disable scrolling in the window (defaults to enabled), if disabled, scrolling will be applied to the root page
    * @param enabled value to set
    */

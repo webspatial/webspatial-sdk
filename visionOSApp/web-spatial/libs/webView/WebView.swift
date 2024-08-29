@@ -484,6 +484,14 @@ class SpatialWebView {
                             }
                         }
 
+                        if let top: Double = json.getValue(lookup: ["data", "update", "setScrollEdgeInsets", "top"]),
+                           let left: Double = json.getValue(lookup: ["data", "update", "setScrollEdgeInsets", "left"]),
+                           let bottom: Double = json.getValue(lookup: ["data", "update", "setScrollEdgeInsets", "bottom"]),
+                           let right: Double = json.getValue(lookup: ["data", "update", "setScrollEdgeInsets", "right"])
+                        {
+                            sr.spatialWebView!.webViewNative!.webViewHolder.appleWebView!.scrollView.contentInset = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+                        }
+
                         if let scrollWithParent: Bool = json.getValue(lookup: ["data", "update", "scrollWithParent"]) {
                             sr.spatialWebView!.scrollWithParent = scrollWithParent
                         }
