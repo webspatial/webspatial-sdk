@@ -7,6 +7,7 @@
 ## Type Aliases
 
 - [ModelRef](type-aliases/ModelRef.md)
+- [SpatialDivRef](type-aliases/SpatialDivRef.md)
 
 ## Functions
 
