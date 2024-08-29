@@ -1,7 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-
-import { Model, SpatialIFrame, getSessionAsync, SpatialEntity } from 'web-spatial'
+import { Model, SpatialIFrame, getSession, SpatialEntity } from 'web-spatial'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
@@ -43,7 +42,7 @@ function App() {
           <h1>Toggle Immersive</h1>
           <label className="inline-flex items-center cursor-pointer">
             <input type="checkbox" value="" className="sr-only peer" onChange={async (e) => {
-              var session = await getSessionAsync()
+              var session = await getSession()
               if (e.target.checked) {
                 session!.openImmersiveSpace();
                 if (!created) {
@@ -70,7 +69,7 @@ function App() {
           <h1>Open Volumetric</h1>
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
-              var session = await getSessionAsync()
+              var session = await getSession()
               var wg = await session!.createWindowGroup("Volumetric")
 
               var ent = await session!.createEntity()
@@ -81,7 +80,7 @@ function App() {
               await ent.setParentWindowGroup(wg)
               volumePanelEnt = ent
 
-              var i = await session!.createIFrameComponent()
+              var i = await session!.createWindowComponent()
               await i.setResolution(300, 300)
               await i.loadURL("/src/embed/basic.html")
               await ent.setComponent(i)
@@ -117,7 +116,7 @@ function App() {
           <button className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async (e) => {
 
-              var session = await getSessionAsync()
+              var session = await getSession()
               var wg = await session!.createWindowGroup("Plain")
 
               var ent = await session!.createEntity()
@@ -128,7 +127,7 @@ function App() {
 
               volumePanelEnt = ent
 
-              var i = await session!.createIFrameComponent(wg)
+              var i = await session!.createWindowComponent(wg)
               await i.setResolution(300, 300)
               await i.loadURL("/src/jsApiTestPages/testList.html")
               await i.setAsRoot(true)
@@ -205,9 +204,9 @@ function App() {
   )
 }
 
-var session = getSessionAsync();
+var session = getSession();
 if (session) {
-  session!.getCurrentIFrameComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
+  session!.getCurrentWindowComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
   document.documentElement.style.backgroundColor = "transparent";
   document.body.style.backgroundColor = "transparent"
 } else {

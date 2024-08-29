@@ -1,10 +1,10 @@
 import { SpatialDiv } from './spatial-react-components'
 import r2wc from "@r2wc/react-to-web-component"
-import { getSessionAsync } from './utils'
+import { getSession } from './utils'
 
 export class WebSpatialHydrate {
     static Hydrate() {
-        let session = getSessionAsync()
+        let session = getSession()
         if (session) {
             // Set styles
             let documentSpatialStyle = document.documentElement.attributes['spatial-style' as any]
@@ -17,7 +17,7 @@ export class WebSpatialHydrate {
                         let key = keyVal[0].trim()
                         let val = keyVal[1].trim()
                         if (key == "glassEffect" && val == "true") {
-                            session.getCurrentIFrameComponent().setStyle({ glassEffect: true })
+                            session.getCurrentWindowComponent().setStyle({ glassEffect: true })
                         }
                     }
                 }

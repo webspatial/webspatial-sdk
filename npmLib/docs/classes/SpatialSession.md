@@ -34,29 +34,7 @@ Entity
 
 #### Defined in
 
-SpatialSession.ts:50
-
-***
-
-### createIFrameComponent()
-
-> **createIFrameComponent**(`wg`?): `Promise`\<[`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
-
-Creates a IFrameComponent
-
-#### Parameters
-
-• **wg?**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
-
-#### Returns
-
-`Promise`\<[`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
-
-IFrameComponent
-
-#### Defined in
-
-SpatialSession.ts:59
+SpatialSession.ts:52
 
 ***
 
@@ -74,13 +52,13 @@ InputComponent
 
 #### Defined in
 
-SpatialSession.ts:90
+SpatialSession.ts:92
 
 ***
 
 ### createMeshResource()
 
-> **createMeshResource**(`options`?): `Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
+> **createMeshResource**(`options`?): `Promise`\<[`SpatialMesh`](SpatialMesh.md)\>
 
 Creates a MeshResource
 
@@ -90,13 +68,13 @@ Creates a MeshResource
 
 #### Returns
 
-`Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
+`Promise`\<[`SpatialMesh`](SpatialMesh.md)\>
 
 MeshResource
 
 #### Defined in
 
-SpatialSession.ts:101
+SpatialSession.ts:103
 
 ***
 
@@ -120,7 +98,7 @@ ModelComponent
 
 #### Defined in
 
-SpatialSession.ts:77
+SpatialSession.ts:79
 
 ***
 
@@ -142,7 +120,7 @@ ModelUIComponent
 
 #### Defined in
 
-SpatialSession.ts:68
+SpatialSession.ts:70
 
 ***
 
@@ -164,7 +142,29 @@ PhysicallyBasedMaterial
 
 #### Defined in
 
-SpatialSession.ts:110
+SpatialSession.ts:112
+
+***
+
+### createWindowComponent()
+
+> **createWindowComponent**(`wg`?): `Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+Creates a WindowComponent
+
+#### Parameters
+
+• **wg?**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
+
+#### Returns
+
+`Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+WindowComponent
+
+#### Defined in
+
+SpatialSession.ts:61
 
 ***
 
@@ -186,7 +186,7 @@ WindowGroup
 
 #### Defined in
 
-SpatialSession.ts:119
+SpatialSession.ts:121
 
 ***
 
@@ -204,7 +204,7 @@ SpatialSession.ts:119
 
 #### Defined in
 
-SpatialSession.ts:162
+SpatialSession.ts:164
 
 ***
 
@@ -220,7 +220,7 @@ Closes the immersive space
 
 #### Defined in
 
-SpatialSession.ts:195
+SpatialSession.ts:197
 
 ***
 
@@ -238,25 +238,25 @@ SpatialSession.ts:195
 
 #### Defined in
 
-SpatialSession.ts:166
+SpatialSession.ts:168
 
 ***
 
-### getCurrentIFrameComponent()
+### getCurrentWindowComponent()
 
-> **getCurrentIFrameComponent**(): [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
+> **getCurrentWindowComponent**(): [`SpatialWindowComponent`](SpatialWindowComponent.md)
 
-Retrieves the iframe for this page
+Retrieves the window for this page
 
 #### Returns
 
-[`SpatialIFrameComponent`](SpatialIFrameComponent.md)
+[`SpatialWindowComponent`](SpatialWindowComponent.md)
 
-the iframe component corresponding to the js running on this page
+the window component corresponding to the js running on this page
 
 #### Defined in
 
-SpatialSession.ts:127
+SpatialSession.ts:129
 
 ***
 
@@ -270,7 +270,7 @@ SpatialSession.ts:127
 
 #### Defined in
 
-SpatialSession.ts:205
+SpatialSession.ts:207
 
 ***
 
@@ -284,25 +284,25 @@ SpatialSession.ts:205
 
 #### Defined in
 
-SpatialSession.ts:200
+SpatialSession.ts:202
 
 ***
 
-### getParentIFrameComponent()
+### getParentWindowComponent()
 
-> **getParentIFrameComponent**(): `Promise`\<`null` \| [`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
+> **getParentWindowComponent**(): `Promise`\<`null` \| [`SpatialWindowComponent`](SpatialWindowComponent.md)\>
 
-Retrieves the parent iframe for this page or null if this is the root page
+Retrieves the parent window for this page or null if this is the root page
 
 #### Returns
 
-`Promise`\<`null` \| [`SpatialIFrameComponent`](SpatialIFrameComponent.md)\>
+`Promise`\<`null` \| [`SpatialWindowComponent`](SpatialWindowComponent.md)\>
 
-the iframe component or null
+the window component or null
 
 #### Defined in
 
-SpatialSession.ts:135
+SpatialSession.ts:137
 
 ***
 
@@ -320,7 +320,7 @@ data as a js object
 
 #### Defined in
 
-SpatialSession.ts:185
+SpatialSession.ts:187
 
 ***
 
@@ -338,7 +338,7 @@ SpatialSession.ts:185
 
 #### Defined in
 
-SpatialSession.ts:154
+SpatialSession.ts:156
 
 ***
 
@@ -356,7 +356,7 @@ SpatialSession.ts:154
 
 #### Defined in
 
-SpatialSession.ts:150
+SpatialSession.ts:152
 
 ***
 
@@ -372,7 +372,7 @@ Opens the immersive space
 
 #### Defined in
 
-SpatialSession.ts:190
+SpatialSession.ts:192
 
 ***
 
@@ -392,7 +392,7 @@ Debugging only, used to ping the native renderer
 
 #### Defined in
 
-SpatialSession.ts:177
+SpatialSession.ts:179
 
 ***
 
@@ -414,7 +414,7 @@ callback to be called before next render update
 
 #### Defined in
 
-SpatialSession.ts:31
+SpatialSession.ts:33
 
 ***
 
@@ -432,7 +432,7 @@ SpatialSession.ts:31
 
 #### Defined in
 
-SpatialSession.ts:146
+SpatialSession.ts:148
 
 ***
 
@@ -450,7 +450,7 @@ SpatialSession.ts:146
 
 #### Defined in
 
-SpatialSession.ts:170
+SpatialSession.ts:172
 
 ***
 
@@ -468,4 +468,4 @@ SpatialSession.ts:170
 
 #### Defined in
 
-SpatialSession.ts:158
+SpatialSession.ts:160

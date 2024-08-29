@@ -33,7 +33,7 @@ function App() {
 
 if ((new Spatial()).isSupported()) {
     var session = (new Spatial()).requestSession();
-    (session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+    (session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
 }
 
 // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())

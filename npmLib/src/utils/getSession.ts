@@ -1,11 +1,10 @@
-import { Spatial } from "../core/Spatial"
-import { SpatialSession } from "../core/SpatialSession"
+import { Spatial, SpatialSession } from "../core"
 
 // Create the default Spatial session for the app
 let spatial = new Spatial()
 let _currentSession = null as SpatialSession | null
 /** @hidden */
-export function getSessionAsync() {
+export function getSession() {
     if (!spatial.isSupported()) {
         return null
     }
