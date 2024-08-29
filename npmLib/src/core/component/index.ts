@@ -1,5 +1,5 @@
 export { SpatialComponent } from './SpatialComponent'
-export { SpatialIFrameComponent } from './SpatialIFrameComponent'
+export { SpatialWindowComponent } from './SpatialWindowComponent'
 export { SpatialInputComponent } from './SpatialInputComponent'
 export { SpatialModelComponent } from './SpatialModelComponent'
-export { SpatialModelUIComponent } from './SpatialModelUIComponent'
+export { SpatialModelUIComponent, AnimationBuilder } from './SpatialModelUIComponent'

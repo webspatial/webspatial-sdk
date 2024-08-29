@@ -8,11 +8,11 @@
 
 ## Extends
 
-- `SpatialResource`
+- `SpatialObject`
 
 ## Extended by
 
-- [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
+- [`SpatialWindowComponent`](SpatialWindowComponent.md)
 - [`SpatialInputComponent`](SpatialInputComponent.md)
 - [`SpatialModelComponent`](SpatialModelComponent.md)
 - [`SpatialModelUIComponent`](SpatialModelUIComponent.md)
@@ -31,8 +31,8 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-`SpatialResource.destroy`
+`SpatialObject.destroy`
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialObject.ts:15

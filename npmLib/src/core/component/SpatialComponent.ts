@@ -1,3 +1,3 @@
-import { SpatialResource } from "../SpatialResource"
-export class SpatialComponent extends SpatialResource { 
+import { SpatialObject } from "../SpatialObject"
+export class SpatialComponent extends SpatialObject { 
 }
