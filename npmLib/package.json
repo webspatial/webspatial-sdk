@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
+    "start": "tsc  --watch",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts && typedoc --plugin typedoc-plugin-markdown src/spatial-react-components/index.ts --out docs/reactComponents"
   },
   "author": "",
