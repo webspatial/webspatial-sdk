@@ -1,1 +1,1 @@
-export { getSessionAsync } from './getSessionAsync';
+export { getSession } from './getSession';

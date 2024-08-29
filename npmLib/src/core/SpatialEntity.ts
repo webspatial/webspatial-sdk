@@ -1,4 +1,4 @@
-import { SpatialResource } from "./SpatialResource"
+import { SpatialObject } from "./SpatialObject"
 import { SpatialTransform } from "./SpatialTransform"
 import { SpatialWindowGroup } from "./SpatialWindowGroup"
 import { WebSpatial } from './private/WebSpatial'
@@ -7,7 +7,7 @@ import { SpatialComponent } from "./component"
 /**
  * Entity used to describe an object that can be added to the scene
  */
-export class SpatialEntity extends SpatialResource {
+export class SpatialEntity extends SpatialObject {
   transform = new SpatialTransform()
 
   /** @hidden */

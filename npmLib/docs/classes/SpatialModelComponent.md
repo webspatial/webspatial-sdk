@@ -30,7 +30,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialObject.ts:15
 
 ***
 
@@ -64,7 +64,7 @@ Sets the mesh to be displayed by the component
 
 #### Parameters
 
-• **mesh**: [`SpatialMeshResource`](SpatialMeshResource.md)
+• **mesh**: [`SpatialMesh`](SpatialMesh.md)
 
 mesh to set
 

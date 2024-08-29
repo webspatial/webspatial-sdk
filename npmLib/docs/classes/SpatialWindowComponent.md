@@ -2,11 +2,11 @@
 
 ***
 
-[web-spatial](../globals.md) / SpatialIFrameComponent
+[web-spatial](../globals.md) / SpatialWindowComponent
 
-# Class: SpatialIFrameComponent
+# Class: SpatialWindowComponent
 
-Used to position an iframe in 3D space
+Used to position an web window in 3D space
 
 ## Extends
 
@@ -30,7 +30,7 @@ Marks resource to be released (it should no longer be used)
 
 #### Defined in
 
-SpatialResource.ts:15
+SpatialObject.ts:15
 
 ***
 
@@ -38,7 +38,7 @@ SpatialResource.ts:15
 
 > **loadURL**(`url`): `Promise`\<`void`\>
 
-Loads a url page in the iframe
+Loads a url page in the window
 
 #### Parameters
 
@@ -52,29 +52,7 @@ url to load
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:12
-
-***
-
-### sendContent()
-
-> **sendContent**(`content`): `Promise`\<`void`\>
-
-Sends a message to the iframe telling it to display the content string
-
-#### Parameters
-
-• **content**: `string`
-
-Content to be displayed
-
-#### Returns
-
-`Promise`\<`void`\>
-
-#### Defined in
-
-component/SpatialIFrameComponent.ts:45
+component/SpatialWindowComponent.ts:12
 
 ***
 
@@ -82,7 +60,7 @@ component/SpatialIFrameComponent.ts:45
 
 > **setAsRoot**(`makeRoot`): `Promise`\<`void`\>
 
-Sets if this IFrame can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
+Sets if this window can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
 
 #### Parameters
 
@@ -96,7 +74,7 @@ sets if this should be root or not
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:27
+component/SpatialWindowComponent.ts:27
 
 ***
 
@@ -114,7 +92,7 @@ component/SpatialIFrameComponent.ts:27
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:16
+component/SpatialWindowComponent.ts:16
 
 ***
 
@@ -122,8 +100,8 @@ component/SpatialIFrameComponent.ts:16
 
 > **setInline**(`isInline`): `Promise`\<`void`\>
 
-Sets how the iframe should be rendered. 
-If inline, position will be relative to root webpage (0,0,0) will place the center of the iframe at the top left of the page and coordinate space will be in pixels.
+Sets how the window should be rendered. 
+If inline, position will be relative to root webpage (0,0,0) will place the center of the window at the top left of the page and coordinate space will be in pixels.
 If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
 
 #### Parameters
@@ -138,7 +116,7 @@ value to set
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:71
+component/SpatialWindowComponent.ts:63
 
 ***
 
@@ -146,7 +124,7 @@ component/SpatialIFrameComponent.ts:71
 
 > **setResolution**(`x`, `y`): `Promise`\<`void`\>
 
-Sets the resolution of the IFrame, the resulting dimensions when rendered will be equal to 1/1360 units
+Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
 eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
 
 #### Parameters
@@ -165,7 +143,7 @@ height in pixels
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:37
+component/SpatialWindowComponent.ts:37
 
 ***
 
@@ -173,7 +151,7 @@ component/SpatialIFrameComponent.ts:37
 
 > **setScrollEnabled**(`enabled`): `Promise`\<`void`\>
 
-Enable/Disable scrolling in the iframe (defaults to enabled), if disabled, scrolling will be applied to the root page
+Enable/Disable scrolling in the window (defaults to enabled), if disabled, scrolling will be applied to the root page
 
 #### Parameters
 
@@ -187,7 +165,7 @@ value to set
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:61
+component/SpatialWindowComponent.ts:53
 
 ***
 
@@ -209,7 +187,7 @@ value to set
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:79
+component/SpatialWindowComponent.ts:71
 
 ***
 
@@ -217,7 +195,7 @@ component/SpatialIFrameComponent.ts:79
 
 > **setStyle**(`options`): `Promise`\<`void`\>
 
-Sets the style that should be applied to the iframe
+Sets the style that should be applied to the window
 
 #### Parameters
 
@@ -231,4 +209,4 @@ style options
 
 #### Defined in
 
-component/SpatialIFrameComponent.ts:53
+component/SpatialWindowComponent.ts:45

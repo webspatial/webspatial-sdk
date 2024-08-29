@@ -1,5 +1,5 @@
 export * from './component'
-export * from './asset'
+export * from './resource'
 export { SpatialEntity } from './SpatialEntity'
 export { SpatialSession } from './SpatialSession'
 export { Spatial } from './Spatial'

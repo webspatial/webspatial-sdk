@@ -10,7 +10,7 @@ Entity used to describe an object that can be added to the scene
 
 ## Extends
 
-- `SpatialResource`
+- `SpatialObject`
 
 ## Properties
 
@@ -36,7 +36,7 @@ Removes a reference to the entity by the renderer and this object should no long
 
 #### Overrides
 
-`SpatialResource.destroy`
+`SpatialObject.destroy`
 
 #### Defined in
 

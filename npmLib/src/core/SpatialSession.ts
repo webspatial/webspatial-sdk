@@ -1,9 +1,11 @@
 import { LoggerLevel } from "./private/log"
 import { SpatialEntity } from "./SpatialEntity"
-import { SpatialIFrameComponent, SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialMeshResource, SpatialPhysicallyBasedMaterial } from "."
 import { SpatialWindowGroup } from "./SpatialWindowGroup"
 import { WebSpatial, WebSpatialResource } from "./private/WebSpatial"
 import { WindowStyle } from './types'
+
+import { SpatialMesh, SpatialPhysicallyBasedMaterial } from "./resource"
+import { SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialWindowComponent } from "./component"
 
 class SpatialFrame {
 
@@ -53,12 +55,12 @@ export class SpatialSession {
   }
 
   /**
-   * Creates a IFrameComponent
-   * @returns IFrameComponent
+   * Creates a WindowComponent
+   * @returns WindowComponent
    */
-  async createIFrameComponent(wg?: SpatialWindowGroup) {
+  async createWindowComponent(wg?: SpatialWindowGroup) {
     let entity = await WebSpatial.createResource("SpatialWebView", wg ? wg._wg : WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
-    return new SpatialIFrameComponent(entity)
+    return new SpatialWindowComponent(entity)
   }
 
   /**
@@ -100,7 +102,7 @@ export class SpatialSession {
    */
   async createMeshResource(options?: any) {
     let entity = await WebSpatial.createResource("MeshResource", WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel(), options);
-    return new SpatialMeshResource(entity)
+    return new SpatialMesh(entity)
   }
 
   /**
@@ -121,25 +123,25 @@ export class SpatialSession {
   }
 
   /**
-   * Retrieves the iframe for this page
-   * @returns the iframe component corresponding to the js running on this page
+   * Retrieves the window for this page
+   * @returns the window component corresponding to the js running on this page
    */
-  getCurrentIFrameComponent() {
-    return new SpatialIFrameComponent(WebSpatial.getCurrentWebPanel())
+  getCurrentWindowComponent() {
+    return new SpatialWindowComponent(WebSpatial.getCurrentWebPanel())
   }
 
   /**
-   * Retrieves the parent iframe for this page or null if this is the root page
-   * @returns the iframe component or null
+   * Retrieves the parent window for this page or null if this is the root page
+   * @returns the window component or null
    */
-  async getParentIFrameComponent() {
+  async getParentWindowComponent() {
     let parentResp: any = await WebSpatial.updateResource(WebSpatial.getCurrentWebPanel(), { getParentID: "" })
     if (parentResp.data.parentID === "") {
-      return new Promise<SpatialIFrameComponent | null>((res, rej) => { res(null) })
+      return new Promise<SpatialWindowComponent | null>((res, rej) => { res(null) })
     } else {
       var res = new WebSpatialResource()
       res.id = parentResp.data.parentID
-      return new SpatialIFrameComponent(res)
+      return new SpatialWindowComponent(res)
     }
   }
 

@@ -16,7 +16,7 @@
 
 #### Parameters
 
-• **animationBuilder**: [`AnimationBuilder`](../classes/AnimationBuilder.md)
+• **animationBuilder**: `AnimationBuilder`
 
 #### Returns
 
@@ -32,4 +32,4 @@
 
 ## Defined in
 
-src/spatial-react-components/Model.tsx:16
+src/spatial-react-components/Model.tsx:15
