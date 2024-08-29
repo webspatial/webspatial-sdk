@@ -1,21 +1,21 @@
 
 import { SpatialEntity } from '../SpatialEntity';
-import { SpatialIFrameComponent } from '../SpatialResource/SpatialIFrameComponent';
+import { SpatialWindowComponent } from '../SpatialResource/SpatialWindowComponent';
 import { getSession } from './getSession';
 import { vecType, quatType } from './types';
 
 
 // Manager classes to handle resource creation/deletion
-export class SpatialIFrameManager {
+export class SpatialWindowManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
-    webview?: SpatialIFrameComponent
+    webview?: SpatialWindowComponent
     window?: WindowProxy
 
     async initInternal(url: string) {
         this.entity = await (getSession()!).createEntity()
         await this.entity.setParentWindowGroup(await (getSession()!).getCurrentWindowGroup())
-        this.webview = await (getSession()!).createIFrameComponent()
+        this.webview = await (getSession()!).createWindowComponent()
         await this.webview.loadURL(url)
         await this.webview.setInline(true);
         await this.webview.setScrollWithParent(true);
@@ -25,7 +25,7 @@ export class SpatialIFrameManager {
     async initInternalFromWindow(w: any) {
         this.entity = await (getSession()!).createEntity()
         await this.entity.setParentWindowGroup(await (getSession()!).getCurrentWindowGroup())
-        this.webview = await (getSession()!).createIFrameComponent()
+        this.webview = await (getSession()!).createWindowComponent()
         await this.webview.setFromWindow(w)
         await this.webview.setInline(true);
         await this.webview.setScrollWithParent(true);

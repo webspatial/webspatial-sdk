@@ -16,7 +16,7 @@ export class WebSpatialHydrate {
                         let key = keyVal[0].trim()
                         let val = keyVal[1].trim()
                         if (key == "glassEffect" && val == "true") {
-                            session.getCurrentIFrameComponent().setStyle({ glassEffect: true })
+                            session.getCurrentWindowComponent().setStyle({ glassEffect: true })
                         }
                     }
                 }

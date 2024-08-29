@@ -44,15 +44,15 @@ async function createWebViewJSAPI() {
         await e.setParentWindowGroup(await session.getCurrentWindowGroup())
         await e.updateTransform()
 
-        //create an iframe
-        let i = await session.createIFrameComponent()
+        //create an window
+        let i = await session.createWindowComponent()
         await Promise.all([
             i.loadURL("/src/embed/basic.html"),
             i.setScrollEnabled(false),
             i.setInline(true),
             i.setResolution(300, 300),
         ])
-        //bind iframe to entity
+        //bind window to entity
         await e.setComponent(i)
 
         //position update
@@ -86,7 +86,7 @@ async function changeWebViewStyle() {
     if (!spatial.isSupported()) {
         return testResult = ["WebView JS API", false, ""]
     }
-    await (await session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+    await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
     document.documentElement.style.backgroundColor = "transparent";
     document.body.style.backgroundColor = "transparent"
 

@@ -84,7 +84,7 @@ function App() {
               await ent.setParentWindowGroup(wg)
               volumePanelEnt = ent
 
-              var i = await session!.createIFrameComponent()
+              var i = await session!.createWindowComponent()
               await i.setResolution(300, 300)
               await i.loadURL("/src/embed/basic.html")
               await ent.setComponent(i)
@@ -131,7 +131,7 @@ function App() {
 
               volumePanelEnt = ent
 
-              var i = await session!.createIFrameComponent(wg)
+              var i = await session!.createWindowComponent(wg)
               await i.setResolution(300, 300)
               await i.loadURL("/src/jsApiTestPages/testList.html")
               await i.setAsRoot(true)
@@ -210,7 +210,7 @@ function App() {
 
 var session = getSession();
 if (session) {
-  session!.getCurrentIFrameComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
+  session!.getCurrentWindowComponent().setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
   document.documentElement.style.backgroundColor = "transparent";
   document.body.style.backgroundColor = "transparent"
 } else {
