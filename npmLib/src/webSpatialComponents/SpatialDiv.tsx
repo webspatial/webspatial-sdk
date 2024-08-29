@@ -2,10 +2,10 @@ import React, { CSSProperties, ReactElement, useEffect, useRef, useState, forwar
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSession } from './getSession'
-import { SpatialIFrameManager } from './SpatialIFrameManager'
+import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 
-const SpatialDivContext = createContext(null as null | SpatialIFrameManager);
+const SpatialDivContext = createContext(null as null | SpatialWindowManager);
 
 /**
  * Hook to manage multiple instances of objects that could be initialized as async
@@ -213,7 +213,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
             viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
         }
 
-        let iframeInstance = useAsyncInstances(() => {
+        let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialDiv !== null ? "hasParent" : "NoParent"))
             if (getInheritedStyleProps(isVisibleRef.current!).visibility == "hidden") {
                 return null
@@ -261,26 +261,26 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
                 setPortalEl(openedWindow!.document.body)
             }
 
-            // Create spatial iframe
-            let iframeMngr = new SpatialIFrameManager()
-            iframeMngr.initFromWidow(openedWindow!).then(async () => {
+            // Create spatial window
+            let windowMngr = new SpatialWindowManager()
+            windowMngr.initFromWidow(openedWindow!).then(async () => {
                 if (parentSpatialDiv !== null) {
                     await parentSpatialDiv.initPromise
-                    iframeMngr.entity!.setParent(parentSpatialDiv.entity!)
+                    windowMngr.entity!.setParent(parentSpatialDiv.entity!)
                 }
                 // Set style
-                await iframeMngr.webview?.setStyle({
+                await windowMngr.webview?.setStyle({
                     transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
                     glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect,
                     cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius,
                     materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
                 })
                 await resizeSpatial()
-                await iframeMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
-                await iframeMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
+                await windowMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
+                await windowMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
             })
 
-            return iframeMngr
+            return windowMngr
         }, (instance) => {
             if (instance) {
                 instance.destroy()
@@ -290,7 +290,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
         // Handle resizing
         let resizeSpatial = async () => {
-            var ins = iframeInstance.getActiveInstance()
+            var ins = windowInstance.getActiveInstance()
             if (ins) {
                 let rect = childrenSizeRef.current!.getBoundingClientRect()
                 if (customElEnabled) {
@@ -309,7 +309,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
         }
         useEffect(() => {
             (async () => {
-                var ins = iframeInstance.getActiveInstance()
+                var ins = windowInstance.getActiveInstance()
                 if (ins) {
                     await ins.webview?.setStyle({
                         transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
@@ -339,7 +339,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
 
 
         return <>
-            <SpatialDivContext.Provider value={iframeInstance.getActiveInstance()}>
+            <SpatialDivContext.Provider value={windowInstance.getActiveInstance()}>
                 <div ref={isVisibleRef}></div>
                 <div ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                     {props.children}

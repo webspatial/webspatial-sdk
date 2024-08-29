@@ -16,7 +16,7 @@ if (spatial) {
 
 var transparent = (new URLSearchParams(window.location.search)).get("transparent");
 if (session) {
-    session.getCurrentIFrameComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+    session.getCurrentWindowComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
 } else {
     console.log("not supported")
 }

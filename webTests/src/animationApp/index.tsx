@@ -1,15 +1,15 @@
-import React, {   useRef,   } from 'react'
+import React, { useRef, } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from "web-spatial/src"
 import { ModelRef } from 'web-spatial/src/webSpatialComponents/Model';
-import { AnimationBuilder, Model,   } from 'web-spatial/src/webSpatialComponents';
+import { AnimationBuilder, Model, } from 'web-spatial/src/webSpatialComponents';
 
 const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
     var session = (new Spatial()).requestSession();
-    (session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+    (session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
 }
 
 
@@ -17,7 +17,7 @@ if (spatialSupported) {
 function App() {
     const myDiv = useRef(null);
 
-    const modelRef: ModelRef= useRef(null);
+    const modelRef: ModelRef = useRef(null);
     const onAnimateModelFadeIn = () => {
         const animationBuilder = new AnimationBuilder();
         animationBuilder.fadeOut(false);
@@ -41,19 +41,19 @@ function App() {
                 </ul>
             </div>
             <div className="flex-1">
-                    {spatialSupported ?
-                        <div className='w-full h-52'>
-                            <Model ref={modelRef} className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                                <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
-                            </Model>
+                {spatialSupported ?
+                    <div className='w-full h-52'>
+                        <Model ref={modelRef} className="w-full h-full bg-white bg-opacity-25 rounded-xl">
+                            <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+                        </Model>
+                    </div>
+                    :
+                    <div className='w-full h-52'>
+                        <div className="w-full h-full bg-white bg-opacity-25 rounded-xl">
+                            Model goes here
                         </div>
-                        :
-                        <div className='w-full h-52'>
-                            <div className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                                Model goes here
-                            </div>
-                        </div>
-                    }
+                    </div>
+                }
             </div>
         </div>
     )

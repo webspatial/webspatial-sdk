@@ -24,7 +24,7 @@ var main = async () => {
             await e.setParentWindowGroup(await session.getCurrentWindowGroup())
 
             await e.updateTransform()
-            let i = await session.createIFrameComponent()
+            let i = await session.createWindowComponent()
             await Promise.all([
                 i.loadURL("/src/embed/basic.html"),
                 i.setScrollEnabled(false),
@@ -54,7 +54,7 @@ var main = async () => {
             return
         }
     } else if (page == "glassBackground") {
-        await (await session.getCurrentIFrameComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
+        await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
         // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"
@@ -187,7 +187,7 @@ var main = async () => {
                 await e.setParentWindowGroup(await session.getCurrentWindowGroup())
 
                 await e.updateTransform()
-                let i = await session.createIFrameComponent()
+                let i = await session.createWindowComponent()
                 x.document.documentElement.style.backgroundColor = "transparent";
                 x.document.documentElement.style.color = "white"
                 x.document.documentElement.style.fontSize = "5em"
