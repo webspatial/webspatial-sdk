@@ -7,13 +7,31 @@
 # Class: SpatialModelUIComponent
 
 Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
-Positioning behaves the same as a spatial iframe marked as inline
+Positioning behaves the same as a spatial window marked as dom space
 
 ## Extends
 
 - [`SpatialResource`](SpatialResource.md)
 
 ## Methods
+
+### applyAnimationToResource()
+
+> **applyAnimationToResource**(`animationBuilder`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **animationBuilder**: `AnimationBuilder`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+SpatialResource/SpatialModelUIComponent.ts:29
+
+***
 
 ### destroy()
 
@@ -49,7 +67,7 @@ SpatialResource/SpatialResource.ts:15
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:16
+SpatialResource/SpatialModelUIComponent.ts:17
 
 ***
 
@@ -57,7 +75,7 @@ SpatialResource/SpatialModelUIComponent.ts:16
 
 > **setResolution**(`x`, `y`): `Promise`\<`void`\>
 
-Sets the resolution of the component to be displayed (behaves the same as inline iframe)
+Sets the resolution of the component to be displayed (behaves the same as inline window)
 
 #### Parameters
 
@@ -75,7 +93,7 @@ resolution in pixels
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:24
+SpatialResource/SpatialModelUIComponent.ts:25
 
 ***
 
@@ -97,4 +115,4 @@ url of the model to load
 
 #### Defined in
 
-SpatialResource/SpatialModelUIComponent.ts:13
+SpatialResource/SpatialModelUIComponent.ts:14
