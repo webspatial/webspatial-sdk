@@ -206,11 +206,12 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
         </>
     } else if (mode === "spatial") { // Behavior on spatial
 
-        function setViewport(openedWindow?: WindowProxy) {
+        async function setViewport(openedWindow?: WindowProxy) {
             if (!openedWindow) return;
             const bodyWidth = document.body.getBoundingClientRect().width;
             const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
             viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
+            await windowInstance.getActiveInstance()?.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
         }
 
         let windowInstance = useAsyncInstances(() => {
@@ -301,7 +302,7 @@ export const SpatialDiv = forwardRef((props: SpatialDivProps, ref: SpatialDivRef
                 }
                 await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
-                setViewport(ins.window)
+                await setViewport(ins.window)
 
                 setElWidth(childrenSizeRef.current?.clientWidth!)
                 setElHeight(childrenSizeRef.current?.clientHeight!)
