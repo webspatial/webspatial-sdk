@@ -8,7 +8,7 @@
 
 ## Extended by
 
-- [`SpatialIFrameComponent`](SpatialIFrameComponent.md)
+- [`SpatialWindowComponent`](SpatialWindowComponent.md)
 - [`SpatialInputComponent`](SpatialInputComponent.md)
 - [`SpatialMeshResource`](SpatialMeshResource.md)
 - [`SpatialModelComponent`](SpatialModelComponent.md)
