@@ -58,12 +58,10 @@ struct web_spatialApp: App {
             let rootEnt = SpatialResource(resourceType: "Entity", mngr: wgManager, windowGroupID: "root", owner: nil)
             let sr = SpatialResource(resourceType: "SpatialWebView", mngr: wgManager, windowGroupID: "root", owner: nil)
             root = SpatialWebView(parentWindowGroupID: "root", url: fileUrl)
-            root!.root = true
+            rootEnt.coordinateSpace = CoordinateSpaceMode.ROOT
             root!.resourceID = sr.id
             sr.spatialWebView = root
             rootEnt.spatialWebView = root
-            rootEnt.spatialWebView?.inline = true
-            root!.full = true
             root!.visible = true
             rootWGD.childEntities[rootEnt.id] = rootEnt
             rootEnt.parentWindowGroup = rootWGD
