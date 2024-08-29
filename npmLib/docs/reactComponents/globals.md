@@ -4,6 +4,10 @@
 
 # web-spatial
 
+## Classes
+
+- [AnimationBuilder](classes/AnimationBuilder.md)
+
 ## Functions
 
 - [Model](functions/Model.md)
