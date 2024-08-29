@@ -49,6 +49,10 @@ export class SpatialEntity {
     await WebSpatial.updateResource(this._entity, { setParent: e ? e._entity.id : "" })
   }
 
+  async setCoordinateSpace(space: "App" | "Dom" | "Root") {
+    await WebSpatial.updateResource(this._entity, { setCoordinateSpace: space })
+  }
+
   /**
   * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
   */
