@@ -37,11 +37,8 @@ struct LoadingStyles {
 class SpatialWebView {
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
-    var full = false
-    var root = false
     var resolutionX: Double = 0
     var resolutionY: Double = 0
-    var inline = false
     var scrollWithParent = false
 
     // ID of the webview that created this or empty if its root
@@ -247,10 +244,10 @@ class SpatialWebView {
         materialThickness = loadingStyles.materialThickness
         useMaterialThickness = loadingStyles.useMaterialThickness
 
-        if root {
-            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
-            wg.setSize.send(loadingStyles.windowGroupSize)
-        }
+//        if root {
+//            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
+//            wg.setSize.send(loadingStyles.windowGroupSize)
+//        }
         if !gotStyle {
             // We didn't get a style update in time (might result in FOUC)
             // Set default style
@@ -386,6 +383,17 @@ class SpatialWebView {
                             }
                         }
 
+                        if var space: String = json.getValue(lookup: ["data", "update", "setCoordinateSpace"]) {
+                            sr.coordinateSpace = .APP
+                            if space == "Root" {
+                                sr.coordinateSpace = .ROOT
+                            }
+
+                            if space == "Dom" {
+                                sr.coordinateSpace = .DOM
+                            }
+                        }
+
                         if var newParentID: String = json.getValue(lookup: ["data", "update", "setParentWindowGroupID"]) {
                             newParentID = readWinodwGroupID(id: newParentID)
                             let wg = wgManager.getWindowGroup(windowGroup: newParentID)
@@ -476,10 +484,6 @@ class SpatialWebView {
                             }
                         }
 
-                        if let inline: Bool = json.getValue(lookup: ["data", "update", "inline"]) {
-                            sr.spatialWebView!.inline = inline
-                        }
-
                         if let scrollWithParent: Bool = json.getValue(lookup: ["data", "update", "scrollWithParent"]) {
                             sr.spatialWebView!.scrollWithParent = scrollWithParent
                         }
@@ -506,11 +510,6 @@ class SpatialWebView {
                             } else {
                                 failEvent(requestID: cmdInfo.requestID)
                             }
-                        }
-
-                        if let isRoot: Bool = json.getValue(lookup: ["data", "update", "setRoot"]) {
-                            sr.spatialWebView!.root = isRoot
-                            sr.spatialWebView!.full = isRoot
                         }
 
                         if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),

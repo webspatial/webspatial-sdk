@@ -49,7 +49,7 @@ async function createWebViewJSAPI() {
         await Promise.all([
             i.loadURL("/src/embed/basic.html"),
             i.setScrollEnabled(false),
-            i.setInline(true),
+            e.setCoordinateSpace("Dom"),
             i.setResolution(300, 300),
         ])
         //bind window to entity

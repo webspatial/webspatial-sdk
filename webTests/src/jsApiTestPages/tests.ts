@@ -28,7 +28,7 @@ var main = async () => {
             await Promise.all([
                 i.loadURL("/src/embed/basic.html"),
                 i.setScrollEnabled(false),
-                i.setInline(true),
+                e.setCoordinateSpace("Dom"),
                 i.setResolution(300, 300),
             ])
             await e.setComponent(i)
@@ -195,7 +195,7 @@ var main = async () => {
                 await Promise.all([
                     i.setFromWindow(x),
                     i.setScrollEnabled(false),
-                    i.setInline(true),
+                    e.setCoordinateSpace("Dom"),
                     i.setResolution(300, 300),
                 ])
                 await e.setComponent(i)
