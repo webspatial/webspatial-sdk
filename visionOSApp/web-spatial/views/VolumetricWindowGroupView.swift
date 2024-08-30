@@ -32,7 +32,7 @@ struct VolumetricWindowGroupView: View {
 
             for key in Array(windowGroupContent.childEntities.keys) {
                 let e = windowGroupContent.childEntities[key]!
-                if e.spatialWebView != nil && !e.spatialWebView!.inline {
+                if e.spatialWebView != nil && e.coordinateSpace == .APP {
                     if let glassCubeAttachment = attachments.entity(for: key) {
                         //   glassCubeAttachment.position = e.modelEntity.position
                         if e.modelEntity.children.count == 0 {
@@ -44,7 +44,7 @@ struct VolumetricWindowGroupView: View {
         } attachments: {
             ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                 let e = windowGroupContent.childEntities[key]!
-                if e.spatialWebView != nil && !e.spatialWebView!.inline {
+                if e.spatialWebView != nil && e.coordinateSpace == .APP {
                     Attachment(id: key) {
                         let wv = e.spatialWebView!
                         wv.getView().background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
