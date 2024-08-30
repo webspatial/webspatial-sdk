@@ -10,7 +10,7 @@ Used to handle input events on an entity
 
 ## Extends
 
-- [`SpatialResource`](SpatialResource.md)
+- [`SpatialComponent`](SpatialComponent.md)
 
 ## Methods
 
@@ -28,7 +28,7 @@ Used to handle input events on an entity
 
 #### Defined in
 
-SpatialResource/SpatialInputComponent.ts:7
+component/SpatialInputComponent.ts:7
 
 ***
 
@@ -44,11 +44,11 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
-[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+[`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
 
 #### Defined in
 
-SpatialResource/SpatialResource.ts:15
+SpatialObject.ts:15
 
 ***
 
@@ -66,4 +66,4 @@ SpatialResource/SpatialResource.ts:15
 
 #### Defined in
 
-SpatialResource/SpatialInputComponent.ts:10
+component/SpatialInputComponent.ts:10
