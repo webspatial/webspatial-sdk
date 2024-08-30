@@ -1,0 +1,14 @@
+{
+  "name": "web-spatial",
+  "version": "1.0.0",
+  "description": "#### Spatial 3D library for the web",
+  "main": "index.js",
+  "scripts": {
+    "installPackages": "cd npmLib/ && yarn install && npm run build && yarn link && cd .. && cd webTests/ && yarn install && yarn link web-spatial",
+    "webTests": "cd webTests/ && npm run dev -- --host",
+    "genDocs": "cd npmLib/ && npm run genDocs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
