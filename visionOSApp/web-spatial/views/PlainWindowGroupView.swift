@@ -9,7 +9,7 @@ import RealityKit
 import SwiftUI
 
 struct SpatialWebViewUI: View {
-    @Environment(SpatialResource.self) var ent: SpatialResource
+    var ent: SpatialResource
     var body: some View {
         if let wv = ent.spatialWebView {
             wv.getView()
