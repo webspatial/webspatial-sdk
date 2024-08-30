@@ -21,11 +21,7 @@ Positioning behaves the same as a spatial window marked as dom space
 
 #### Parameters
 
-<<<<<<< HEAD
 • **animationBuilder**: [`AnimationBuilder`](AnimationBuilder.md)
-=======
-• **animationBuilder**: `AnimationBuilder`
->>>>>>> main
 
 #### Returns
 
@@ -33,11 +29,7 @@ Positioning behaves the same as a spatial window marked as dom space
 
 #### Defined in
 
-<<<<<<< HEAD
 component/SpatialModelUIComponent.ts:54
-=======
-SpatialResource/SpatialModelUIComponent.ts:29
->>>>>>> main
 
 ***
 
@@ -75,11 +67,7 @@ SpatialObject.ts:15
 
 #### Defined in
 
-<<<<<<< HEAD
 component/SpatialModelUIComponent.ts:42
-=======
-SpatialResource/SpatialModelUIComponent.ts:17
->>>>>>> main
 
 ***
 
@@ -105,11 +93,7 @@ resolution in pixels
 
 #### Defined in
 
-<<<<<<< HEAD
 component/SpatialModelUIComponent.ts:50
-=======
-SpatialResource/SpatialModelUIComponent.ts:25
->>>>>>> main
 
 ***
 
@@ -131,8 +115,4 @@ url of the model to load
 
 #### Defined in
 
-<<<<<<< HEAD
 component/SpatialModelUIComponent.ts:39
-=======
-SpatialResource/SpatialModelUIComponent.ts:14
->>>>>>> main
