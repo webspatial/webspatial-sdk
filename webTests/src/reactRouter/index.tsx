@@ -4,6 +4,7 @@ import { HashRouter, Link, Route, Routes } from 'react-router-dom'
 import { SpatialDiv } from 'web-spatial/src/webSpatialComponents'
 import { PortalTest } from './tests/portal'
 import { NestedDivsTest } from './tests/nestedDivs'
+import { ToolbarTest } from './tests/toolbar'
 
 function HomePage() {
     return <>
@@ -15,6 +16,7 @@ var testPages = [
     HomePage,
     PortalTest,
     NestedDivsTest,
+    ToolbarTest,
 ]
 
 
