@@ -22,4 +22,8 @@ Intended to behave similar to https://immersive-web.github.io/model-element/
 
 ## Defined in
 
+<<<<<<< HEAD
 src/spatial-react-components/Model.tsx:33
+=======
+src/webSpatialComponents/Model.tsx:34
+>>>>>>> main

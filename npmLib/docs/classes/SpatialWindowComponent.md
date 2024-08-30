@@ -10,7 +10,11 @@ Used to position an web window in 3D space
 
 ## Extends
 
+<<<<<<< HEAD
 - [`SpatialComponent`](SpatialComponent.md)
+=======
+- [`SpatialResource`](SpatialResource.md)
+>>>>>>> main
 
 ## Methods
 
@@ -26,11 +30,19 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
+<<<<<<< HEAD
 [`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
 
 #### Defined in
 
 SpatialObject.ts:15
+=======
+[`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
+
+#### Defined in
+
+SpatialResource/SpatialResource.ts:15
+>>>>>>> main
 
 ***
 
@@ -52,6 +64,7 @@ url to load
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:12
 
 ***
@@ -75,6 +88,9 @@ sets if this should be root or not
 #### Defined in
 
 component/SpatialWindowComponent.ts:27
+=======
+SpatialResource/SpatialWindowComponent.ts:12
+>>>>>>> main
 
 ***
 
@@ -92,6 +108,7 @@ component/SpatialWindowComponent.ts:27
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:16
 
 ***
@@ -117,6 +134,9 @@ value to set
 #### Defined in
 
 component/SpatialWindowComponent.ts:63
+=======
+SpatialResource/SpatialWindowComponent.ts:16
+>>>>>>> main
 
 ***
 
@@ -143,7 +163,11 @@ height in pixels
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:37
+=======
+SpatialResource/SpatialWindowComponent.ts:30
+>>>>>>> main
 
 ***
 
@@ -165,7 +189,11 @@ value to set
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:53
+=======
+SpatialResource/SpatialWindowComponent.ts:46
+>>>>>>> main
 
 ***
 
@@ -187,7 +215,11 @@ value to set
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:71
+=======
+SpatialResource/SpatialWindowComponent.ts:54
+>>>>>>> main
 
 ***
 
@@ -209,4 +241,8 @@ style options
 
 #### Defined in
 
+<<<<<<< HEAD
 component/SpatialWindowComponent.ts:45
+=======
+SpatialResource/SpatialWindowComponent.ts:38
+>>>>>>> main
