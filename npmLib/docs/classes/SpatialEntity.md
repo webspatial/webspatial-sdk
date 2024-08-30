@@ -8,6 +8,10 @@
 
 Entity used to describe an object that can be added to the scene
 
+## Extends
+
+- `SpatialObject`
+
 ## Properties
 
 ### transform
@@ -16,7 +20,7 @@ Entity used to describe an object that can be added to the scene
 
 #### Defined in
 
-SpatialEntity.ts:10
+SpatialEntity.ts:11
 
 ## Methods
 
@@ -30,9 +34,17 @@ Removes a reference to the entity by the renderer and this object should no long
 
 `Promise`\<`void`\>
 
+#### Overrides
+
+`SpatialObject.destroy`
+
 #### Defined in
 
+<<<<<<< HEAD
+SpatialEntity.ts:53
+=======
 SpatialEntity.ts:59
+>>>>>>> main
 
 ***
 
@@ -48,7 +60,11 @@ Check if destroy has been called
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialEntity.ts:62
+=======
 SpatialEntity.ts:68
+>>>>>>> main
 
 ***
 
@@ -60,7 +76,7 @@ Attaches a component to the entity to be displayed
 
 #### Parameters
 
-• **component**: [`SpatialResource`](SpatialResource.md)
+• **component**: [`SpatialComponent`](SpatialComponent.md)
 
 #### Returns
 
@@ -68,7 +84,29 @@ Attaches a component to the entity to be displayed
 
 #### Defined in
 
-SpatialEntity.ts:32
+SpatialEntity.ts:30
+
+***
+
+### setParent()
+
+> **setParent**(`e`): `Promise`\<`void`\>
+
+Sets a parent entity, if that entity or its parents are attached to a window group, this entity will be displayed
+
+#### Parameters
+
+• **e**: `null` \| [`SpatialEntity`](SpatialEntity.md)
+
+parent entity or null to remove current parent
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+SpatialEntity.ts:46
 
 ***
 
@@ -130,7 +168,7 @@ the window group that should render this entity
 
 #### Defined in
 
-SpatialEntity.ts:40
+SpatialEntity.ts:38
 
 ***
 
@@ -146,4 +184,4 @@ Syncs the transform with the renderer, must be called to observe updates
 
 #### Defined in
 
-SpatialEntity.ts:25
+SpatialEntity.ts:23

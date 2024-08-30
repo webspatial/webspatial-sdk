@@ -1,16 +1,9 @@
-export { Spatial } from './Spatial'
-export {SpatialEntity} from './SpatialEntity'
-export {SpatialSession} from './SpatialSession'
-export {SpatialTransform} from './SpatialTransform'
-export {SpatialWindowGroup} from './SpatialWindowGroup'
-export * from './SpatialResource'
 
-import { WebSpatial } from './webSpatialPrivate'
+export * from './core' 
+export * from './spatial-react-components'
+export * from './utils'
+export { WebSpatialHydrate } from './webSpatialHydrate'
+
+// expose WebSpatialLogger for temp use, should be deleted later
+import { WebSpatial } from './core/private/WebSpatial'
 export const WebSpatialLogger = WebSpatial.logger
-
-
-
-
-
-
- 
