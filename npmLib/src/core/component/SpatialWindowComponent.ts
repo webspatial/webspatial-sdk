@@ -20,13 +20,6 @@ export class SpatialWindowComponent extends SpatialComponent {
       await WebSpatial.logger.error("failed to call setFromWindow, window provided is not valid")
     }
   }
-  /**
-   * Sets if this window can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
-   * @param makeRoot sets if this should be root or not
-   */
-  async setAsRoot(makeRoot: boolean) {
-    await WebSpatial.updateResource(this._resource, { setRoot: makeRoot })
-  }
 
   /**
    * Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
@@ -47,21 +40,21 @@ export class SpatialWindowComponent extends SpatialComponent {
   }
 
   /**
+   * Modifies the amount the spatial window can be scrolled
+   * Should only be used internally
+   * See https://developer.apple.com/documentation/uikit/1624475-uiedgeinsetsmake?language=objc
+   * @param insets margin to modify scroll distances by
+   */
+  async setScrollEdgeInsets(insets: { top: number, left: number, bottom: number, right: number }) {
+    await WebSpatial.updateResource(this._resource, { setScrollEdgeInsets: insets })
+  }
+
+  /**
    * Enable/Disable scrolling in the window (defaults to enabled), if disabled, scrolling will be applied to the root page
    * @param enabled value to set
    */
   async setScrollEnabled(enabled: boolean) {
     await WebSpatial.updateResource(this._resource, { scrollEnabled: enabled })
-  }
-
-  /**
-   * Sets how the window should be rendered. 
-   * If inline, position will be relative to root webpage (0,0,0) will place the center of the window at the top left of the page and coordinate space will be in pixels.
-   * If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
-   * @param isInline value to set
-   */
-  async setInline(isInline: boolean) {
-    await WebSpatial.updateResource(this._resource, { inline: isInline })
   }
 
   /**

@@ -149,8 +149,7 @@ function App() {
                         var i = await session.createWindowComponent(wg)
                         await i.setResolution(300, 300)
                         await i.loadURL("index.html?pageName=Settings")
-                        await i.setAsRoot(true)
-                        await i.setInline(true)
+                        await ent.setCoordinateSpace("Root")
                         await ent.setComponent(i)
 
                         await ent.setParentWindowGroup(wg)

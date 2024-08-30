@@ -130,8 +130,7 @@ function App() {
               var i = await session!.createWindowComponent(wg)
               await i.setResolution(300, 300)
               await i.loadURL("/src/jsApiTestPages/testList.html")
-              await i.setAsRoot(true)
-              await i.setInline(true)
+              await ent.setCoordinateSpace("Root")
               await ent.setComponent(i)
 
 
