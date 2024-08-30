@@ -10,7 +10,11 @@ Used to position an web window in 3D space
 
 ## Extends
 
+<<<<<<< HEAD
+- [`SpatialComponent`](SpatialComponent.md)
+=======
 - [`SpatialResource`](SpatialResource.md)
+>>>>>>> main
 
 ## Methods
 
@@ -26,11 +30,19 @@ Marks resource to be released (it should no longer be used)
 
 #### Inherited from
 
+<<<<<<< HEAD
+[`SpatialComponent`](SpatialComponent.md).[`destroy`](SpatialComponent.md#destroy)
+
+#### Defined in
+
+SpatialObject.ts:15
+=======
 [`SpatialResource`](SpatialResource.md).[`destroy`](SpatialResource.md#destroy)
 
 #### Defined in
 
 SpatialResource/SpatialResource.ts:15
+>>>>>>> main
 
 ***
 
@@ -52,7 +64,33 @@ url to load
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:12
+
+***
+
+### setAsRoot()
+
+> **setAsRoot**(`makeRoot`): `Promise`\<`void`\>
+
+Sets if this window can be used as the root element of a Plain window group. If set, this can be resized by the OS and its resolution will be set to full
+
+#### Parameters
+
+• **makeRoot**: `boolean`
+
+sets if this should be root or not
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+component/SpatialWindowComponent.ts:27
+=======
 SpatialResource/SpatialWindowComponent.ts:12
+>>>>>>> main
 
 ***
 
@@ -70,7 +108,35 @@ SpatialResource/SpatialWindowComponent.ts:12
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:16
+
+***
+
+### setInline()
+
+> **setInline**(`isInline`): `Promise`\<`void`\>
+
+Sets how the window should be rendered. 
+If inline, position will be relative to root webpage (0,0,0) will place the center of the window at the top left of the page and coordinate space will be in pixels.
+If not inline, position will be relative to the window group origin, (0,0,0) will be the center of the window group and units will be in units of the window group (eg. meters for immersive window group)
+
+#### Parameters
+
+• **isInline**: `boolean`
+
+value to set
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+component/SpatialWindowComponent.ts:63
+=======
 SpatialResource/SpatialWindowComponent.ts:16
+>>>>>>> main
 
 ***
 
@@ -97,7 +163,11 @@ height in pixels
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:37
+=======
 SpatialResource/SpatialWindowComponent.ts:30
+>>>>>>> main
 
 ***
 
@@ -119,7 +189,11 @@ value to set
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:53
+=======
 SpatialResource/SpatialWindowComponent.ts:46
+>>>>>>> main
 
 ***
 
@@ -141,7 +215,11 @@ value to set
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:71
+=======
 SpatialResource/SpatialWindowComponent.ts:54
+>>>>>>> main
 
 ***
 
@@ -163,4 +241,8 @@ style options
 
 #### Defined in
 
+<<<<<<< HEAD
+component/SpatialWindowComponent.ts:45
+=======
 SpatialResource/SpatialWindowComponent.ts:38
+>>>>>>> main
