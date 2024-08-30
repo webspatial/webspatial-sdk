@@ -11,6 +11,13 @@ import RealityKit
 import typealias RealityKit.Entity
 import SwiftUI
 
+enum CoordinateSpaceMode {
+    case
+        APP,
+        DOM,
+        ROOT
+}
+
 /**
  * Resource created from JS. Can be an entity or object that is attached to an entity like a mesh
  */
@@ -30,6 +37,7 @@ class SpatialResource: Component {
     var forceUpdate = false
 
     // Entity
+    var coordinateSpace = CoordinateSpaceMode.APP
     let modelEntity = ModelEntity()
     // Entity can have a child/parent relationship
     var childEntities = [String: SpatialResource]()

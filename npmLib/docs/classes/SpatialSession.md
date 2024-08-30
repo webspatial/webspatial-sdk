@@ -34,7 +34,11 @@ Entity
 
 #### Defined in
 
+<<<<<<< HEAD
 SpatialSession.ts:52
+=======
+SpatialSession.ts:49
+>>>>>>> main
 
 ***
 
@@ -168,6 +172,28 @@ SpatialSession.ts:61
 
 ***
 
+### createWindowComponent()
+
+> **createWindowComponent**(`wg`?): `Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+Creates a WindowComponent
+
+#### Parameters
+
+• **wg?**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
+
+#### Returns
+
+`Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+WindowComponent
+
+#### Defined in
+
+SpatialSession.ts:58
+
+***
+
 ### createWindowGroup()
 
 > **createWindowGroup**(`style`): `Promise`\<[`SpatialWindowGroup`](SpatialWindowGroup.md)\>
@@ -220,7 +246,11 @@ Closes the immersive space
 
 #### Defined in
 
+<<<<<<< HEAD
 SpatialSession.ts:197
+=======
+SpatialSession.ts:194
+>>>>>>> main
 
 ***
 
@@ -270,7 +300,11 @@ SpatialSession.ts:129
 
 #### Defined in
 
+<<<<<<< HEAD
 SpatialSession.ts:207
+=======
+SpatialSession.ts:204
+>>>>>>> main
 
 ***
 
@@ -284,7 +318,11 @@ SpatialSession.ts:207
 
 #### Defined in
 
+<<<<<<< HEAD
 SpatialSession.ts:202
+=======
+SpatialSession.ts:199
+>>>>>>> main
 
 ***
 
@@ -321,6 +359,24 @@ data as a js object
 #### Defined in
 
 SpatialSession.ts:187
+
+***
+
+### getStats()
+
+> **getStats**(): `Promise`\<`any`\>
+
+Debugging to get internal state from native code
+
+#### Returns
+
+`Promise`\<`any`\>
+
+data as a js object
+
+#### Defined in
+
+SpatialSession.ts:184
 
 ***
 
@@ -372,7 +428,11 @@ Opens the immersive space
 
 #### Defined in
 
+<<<<<<< HEAD
 SpatialSession.ts:192
+=======
+SpatialSession.ts:189
+>>>>>>> main
 
 ***
 

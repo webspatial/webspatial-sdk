@@ -62,13 +62,19 @@ session.requestAnimationFrame(loop)
 ```
 
 ### Contribute/Build locally
+
+###### Get dependencies
+ - [NodeJS](https://nodejs.org/en/download/package-manager) to run local test website
+ - Yarn to install nodeJS dependencies
+   - `npm install yarn -g`
+ - [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
+
 ###### Build and link web library
-`cd npmLib/ && npm run build`
-`cd npmLib/ && yarn link`
+`cd npmLib/ && yarn install && npm run build && yarn link && cd..`
 
 ###### Build and run example website
 Build and link the web library (instructions above)
-`cd webTests/ && yarn link web-spatial` // Add link to web library
+`cd webTests/ && yarn install && yarn link web-spatial && cd ..` // Add link to web library
 `cd webTests/ && npm run dev -- --host` // Start web server
 `http://localhost:5173/` // Observe homepage loads (note 3D content can only be displayed in app at the moment)
 

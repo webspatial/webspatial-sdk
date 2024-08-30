@@ -25,7 +25,7 @@ struct SpatialWebViewUI: View {
                 if let e = ent.childEntities[key] {
                     let _ = e.forceUpdate ? 0 : 0
                     let parentYOffset = Float(wv.scrollOffset.y)
-                    if e.spatialWebView != nil && e.spatialWebView!.inline {
+                    if e.spatialWebView != nil && e.coordinateSpace == .DOM {
                         let view = e.spatialWebView!
                         let x = CGFloat(e.modelEntity.position.x)
                         let y = CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
@@ -97,7 +97,7 @@ struct PlainWindowGroupView: View {
     
     var body: some View {
         let rootWebview = windowGroupContent.childEntities.filter {
-            $0.value.spatialWebView != nil && $0.value.spatialWebView?.root == true
+            $0.value.spatialWebView != nil && $0.value.coordinateSpace == .ROOT
         }.first?.value.spatialWebView
         
         OpenDismissHandlerUI().environment(windowGroupContent)
@@ -128,16 +128,16 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         if let e = windowGroupContent.childEntities[key] {
                             let _ = e.forceUpdate ? 0 : 0
-                            if e.spatialWebView != nil && e.spatialWebView!.inline {
+                            if e.spatialWebView != nil && (e.coordinateSpace == .DOM || e.coordinateSpace == .ROOT) {
                                 let view = e.spatialWebView!
                                 //                                WatchObj(toWatch: [e, view]) {
-                                let x = view.full ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
-                                let y = view.full ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
+                                let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
+                                let y = e.coordinateSpace == .ROOT ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
                                 let z = CGFloat(e.modelEntity.position.z)
-                                let width = view.full ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                                let height = view.full ? (proxy3D.size.height) : CGFloat(view.resolutionY)
+                                let width = e.coordinateSpace == .ROOT ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                                let height = e.coordinateSpace == .ROOT ? (proxy3D.size.height) : CGFloat(view.resolutionY)
                                 
-                                if windowResizeInProgress && view.full {
+                                if windowResizeInProgress && e.coordinateSpace == .ROOT {
                                     VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
                                         .position(x: x, y: y)
                                         .offset(z: z)
