@@ -1,6 +1,6 @@
-import React, { ReactElement, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity } from "../../../npmLib/src/index"
+import { Spatial } from "web-spatial"
 
 //(window as any).wx = WebSpatial
 

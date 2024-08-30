@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter, Link, Route, Routes } from 'react-router-dom'
-import { SpatialDiv } from 'web-spatial/src/webSpatialComponents'
 import { PortalTest } from './tests/portal'
 import { NestedDivsTest } from './tests/nestedDivs'
 import { ToolbarTest } from './tests/toolbar'
