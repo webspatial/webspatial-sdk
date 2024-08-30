@@ -40,11 +40,7 @@ Removes a reference to the entity by the renderer and this object should no long
 
 #### Defined in
 
-<<<<<<< HEAD
-SpatialEntity.ts:53
-=======
-SpatialEntity.ts:59
->>>>>>> main
+SpatialEntity.ts:57
 
 ***
 
@@ -60,11 +56,7 @@ Check if destroy has been called
 
 #### Defined in
 
-<<<<<<< HEAD
-SpatialEntity.ts:62
-=======
-SpatialEntity.ts:68
->>>>>>> main
+SpatialEntity.ts:66
 
 ***
 
@@ -88,6 +80,24 @@ SpatialEntity.ts:30
 
 ***
 
+### setCoordinateSpace()
+
+> **setCoordinateSpace**(`space`): `Promise`\<`void`\>
+
+#### Parameters
+
+• **space**: `"App"` \| `"Dom"` \| `"Root"`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+SpatialEntity.ts:50
+
+***
+
 ### setParent()
 
 > **setParent**(`e`): `Promise`\<`void`\>
@@ -107,46 +117,6 @@ parent entity or null to remove current parent
 #### Defined in
 
 SpatialEntity.ts:46
-
-***
-
-### setCoordinateSpace()
-
-> **setCoordinateSpace**(`space`): `Promise`\<`void`\>
-
-#### Parameters
-
-• **space**: `"App"` \| `"Dom"` \| `"Root"`
-
-#### Returns
-
-`Promise`\<`void`\>
-
-#### Defined in
-
-SpatialEntity.ts:52
-
-***
-
-### setParent()
-
-> **setParent**(`e`): `Promise`\<`void`\>
-
-Sets a parent entity, if that entity or its parents are attached to a window group, this entity will be displayed
-
-#### Parameters
-
-• **e**: `null` \| [`SpatialEntity`](SpatialEntity.md)
-
-parent entity or null to remove current parent
-
-#### Returns
-
-`Promise`\<`void`\>
-
-#### Defined in
-
-SpatialEntity.ts:48
 
 ***
 
