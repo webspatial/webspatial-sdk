@@ -34,7 +34,11 @@ Entity
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialSession.ts:52
+=======
 SpatialSession.ts:49
+>>>>>>> main
 
 ***
 
@@ -52,13 +56,13 @@ InputComponent
 
 #### Defined in
 
-SpatialSession.ts:89
+SpatialSession.ts:92
 
 ***
 
 ### createMeshResource()
 
-> **createMeshResource**(`options`?): `Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
+> **createMeshResource**(`options`?): `Promise`\<[`SpatialMesh`](SpatialMesh.md)\>
 
 Creates a MeshResource
 
@@ -68,13 +72,13 @@ Creates a MeshResource
 
 #### Returns
 
-`Promise`\<[`SpatialMeshResource`](SpatialMeshResource.md)\>
+`Promise`\<[`SpatialMesh`](SpatialMesh.md)\>
 
 MeshResource
 
 #### Defined in
 
-SpatialSession.ts:100
+SpatialSession.ts:103
 
 ***
 
@@ -98,7 +102,7 @@ ModelComponent
 
 #### Defined in
 
-SpatialSession.ts:76
+SpatialSession.ts:79
 
 ***
 
@@ -120,7 +124,7 @@ ModelUIComponent
 
 #### Defined in
 
-SpatialSession.ts:67
+SpatialSession.ts:70
 
 ***
 
@@ -142,7 +146,29 @@ PhysicallyBasedMaterial
 
 #### Defined in
 
-SpatialSession.ts:109
+SpatialSession.ts:112
+
+***
+
+### createWindowComponent()
+
+> **createWindowComponent**(`wg`?): `Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+Creates a WindowComponent
+
+#### Parameters
+
+• **wg?**: [`SpatialWindowGroup`](SpatialWindowGroup.md)
+
+#### Returns
+
+`Promise`\<[`SpatialWindowComponent`](SpatialWindowComponent.md)\>
+
+WindowComponent
+
+#### Defined in
+
+SpatialSession.ts:61
 
 ***
 
@@ -176,7 +202,7 @@ Creates a WindowGroup
 
 #### Parameters
 
-• **style**: `WindowStyle` = `"Plain"`
+• **style**: [`WindowStyle`](../type-aliases/WindowStyle.md) = `"Plain"`
 
 #### Returns
 
@@ -186,7 +212,7 @@ WindowGroup
 
 #### Defined in
 
-SpatialSession.ts:118
+SpatialSession.ts:121
 
 ***
 
@@ -204,7 +230,7 @@ SpatialSession.ts:118
 
 #### Defined in
 
-SpatialSession.ts:161
+SpatialSession.ts:164
 
 ***
 
@@ -220,7 +246,11 @@ Closes the immersive space
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialSession.ts:197
+=======
 SpatialSession.ts:194
+>>>>>>> main
 
 ***
 
@@ -238,7 +268,7 @@ SpatialSession.ts:194
 
 #### Defined in
 
-SpatialSession.ts:165
+SpatialSession.ts:168
 
 ***
 
@@ -256,7 +286,7 @@ the window component corresponding to the js running on this page
 
 #### Defined in
 
-SpatialSession.ts:126
+SpatialSession.ts:129
 
 ***
 
@@ -270,7 +300,11 @@ SpatialSession.ts:126
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialSession.ts:207
+=======
 SpatialSession.ts:204
+>>>>>>> main
 
 ***
 
@@ -284,7 +318,11 @@ SpatialSession.ts:204
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialSession.ts:202
+=======
 SpatialSession.ts:199
+>>>>>>> main
 
 ***
 
@@ -302,7 +340,25 @@ the window component or null
 
 #### Defined in
 
-SpatialSession.ts:134
+SpatialSession.ts:137
+
+***
+
+### getStats()
+
+> **getStats**(): `Promise`\<`any`\>
+
+Debugging to get internal state from native code
+
+#### Returns
+
+`Promise`\<`any`\>
+
+data as a js object
+
+#### Defined in
+
+SpatialSession.ts:187
 
 ***
 
@@ -338,7 +394,7 @@ SpatialSession.ts:184
 
 #### Defined in
 
-SpatialSession.ts:153
+SpatialSession.ts:156
 
 ***
 
@@ -356,7 +412,7 @@ SpatialSession.ts:153
 
 #### Defined in
 
-SpatialSession.ts:149
+SpatialSession.ts:152
 
 ***
 
@@ -372,7 +428,11 @@ Opens the immersive space
 
 #### Defined in
 
+<<<<<<< HEAD
+SpatialSession.ts:192
+=======
 SpatialSession.ts:189
+>>>>>>> main
 
 ***
 
@@ -392,7 +452,7 @@ Debugging only, used to ping the native renderer
 
 #### Defined in
 
-SpatialSession.ts:176
+SpatialSession.ts:179
 
 ***
 
@@ -414,7 +474,7 @@ callback to be called before next render update
 
 #### Defined in
 
-SpatialSession.ts:30
+SpatialSession.ts:33
 
 ***
 
@@ -432,7 +492,7 @@ SpatialSession.ts:30
 
 #### Defined in
 
-SpatialSession.ts:145
+SpatialSession.ts:148
 
 ***
 
@@ -450,7 +510,7 @@ SpatialSession.ts:145
 
 #### Defined in
 
-SpatialSession.ts:169
+SpatialSession.ts:172
 
 ***
 
@@ -468,4 +528,4 @@ SpatialSession.ts:169
 
 #### Defined in
 
-SpatialSession.ts:157
+SpatialSession.ts:160

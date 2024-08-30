@@ -1,3 +1,3 @@
-import { WebSpatialHydrate } from "web-spatial/src/webSpatialHydrate"
+import { WebSpatialHydrate } from "web-spatial"
 
 (window as any).WebSpatialHydrate = WebSpatialHydrate

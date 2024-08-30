@@ -1,4 +1,4 @@
-import { SpatialDiv } from "web-spatial/src/webSpatialComponents"
+import { SpatialDiv } from "web-spatial/src/spatial-react-components"
 
 export function ToolbarTest() {
     return <>

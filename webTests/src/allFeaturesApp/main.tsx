@@ -1,15 +1,11 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-
-import { Model, SpatialIFrame, getSession } from 'web-spatial/src/webSpatialComponents'
-
-
+import { Model, SpatialIFrame, getSession, SpatialEntity } from 'web-spatial'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';
 import { useDispatch, useSelector } from "react-redux";
 import store, { increment } from "./store.ts"
-import { SpatialEntity } from 'web-spatial/src/index.ts'
 initMessageListener(store);
 
 function App() {
