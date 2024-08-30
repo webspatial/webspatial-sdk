@@ -22,8 +22,4 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 ## Defined in
 
-<<<<<<< HEAD
 src/spatial-react-components/SpatialDiv.tsx:117
-=======
-src/webSpatialComponents/SpatialDiv.tsx:117
->>>>>>> main
