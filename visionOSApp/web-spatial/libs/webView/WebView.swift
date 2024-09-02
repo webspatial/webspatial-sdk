@@ -451,6 +451,11 @@ class SpatialWebView {
                         if let aspectRatio: String = json.getValue(lookup: ["data", "update", "aspectRatio"]) {
                             sr.modelUIComponent?.aspectRatio = aspectRatio
                         }
+                        if let opacity: Double = json.getValue(
+                            lookup: ["data", "update", "opacity"]
+                        ) {
+                            sr.modelUIComponent?.opacity = opacity
+                        }
                         if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
                            let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
                         {
@@ -635,23 +640,24 @@ class SpatialWebView {
                         }
                     }
                 }
-            } else if command == "animateResource" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
-                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
-                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
-                        {
-                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
-                            if let modelUIComponent = sr.modelUIComponent {
-                                modelUIComponent.triggerAnimation(animationDesc)
-                            }
-                        }
-                    }
-
-                    // TODO: consider completeEvent after finish animation
-                    completeEvent(requestID: cmdInfo.requestID)
-                }
             }
+//            else if command == "animateResource" {
+//                if let cmdInfo = getCommandInfo(json: json) {
+//                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
+//                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
+//                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
+//                        {
+//                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
+//                            if let modelUIComponent = sr.modelUIComponent {
+//                                modelUIComponent.triggerAnimation(animationDesc)
+//                            }
+//                        }
+//                    }
+//
+//                    // TODO: consider completeEvent after finish animation
+//                    completeEvent(requestID: cmdInfo.requestID)
+//                }
+//            }
         }
     }
 }
