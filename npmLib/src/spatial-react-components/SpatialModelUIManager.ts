@@ -37,6 +37,14 @@ export class SpatialModelUIManager {
 
         await modelComponent.setAspectRatio("fit");
     }
+
+    async setOpacity(opacity: number) {
+        if (!this.modelComponent) {
+            return
+        }
+        return this.modelComponent.setOpacity(opacity);
+    }
+
     async destroy() {
         if (this.initPromise) {
             await this.initPromise
