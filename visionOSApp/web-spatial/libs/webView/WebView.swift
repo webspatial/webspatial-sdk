@@ -475,6 +475,12 @@ class SpatialWebView {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
+                        if let _: String = json.getValue(lookup: ["data", "update", "getEntityID"]) {
+                            let id = sr.componentEntity!.id
+                            completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+id+"'}")
+                            return
+                        }
+
                         if let _: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
                             completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+sr.spatialWebView!.parentWebviewID+"'}")
                             return
