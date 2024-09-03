@@ -35,6 +35,7 @@ class SpatialResource: Component {
     var inputComponent: InputComponent?
     var spatialWebView: SpatialWebView?
     var forceUpdate = false
+    weak var componentEntity: SpatialResource? = nil
 
     // Entity
     var coordinateSpace = CoordinateSpaceMode.APP
