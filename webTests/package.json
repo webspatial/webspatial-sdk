@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.4",
     "@types/three": "^0.164.0",
+    "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
     "esbuild": "^0.23.0",
     "livereload": "^0.9.3",
@@ -28,6 +29,7 @@
     "tiny-glob": "^0.2.9"
   },
   "devDependencies": {
+    "@types/animejs": "^3.1.12",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@types/redux": "^3.6.0",

@@ -91,7 +91,7 @@ function getInheritedStyleProps(from: HTMLElement): any {
     return props
 }
 
-interface SpatialDivProps {
+export interface SpatialDivProps {
     allowScroll?: boolean,
     scrollWithParent?: boolean,
     spatialStyle?: Partial<spatialStyleDef>,
