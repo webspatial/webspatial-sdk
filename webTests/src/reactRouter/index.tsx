@@ -34,17 +34,18 @@ ReactDOM.createRoot(root).render(
                         <li><a href="/src/jsApiTestPages/testList.html">FullTestList</a></li>
                         {testPages.map((page, i) => {
                             return (
-                                <li><Link to={"/" + page.name}><div>{page.name}</div></Link></li>
+                                <li key={i}><Link to={"/" + page.name}><div>{page.name}</div></Link></li>
                             );
                         })}
                     </ul>
                 </div>
             </div>
             <Routes>
+                <Route path={"/"} element={<div />}></Route>
                 {testPages.map((page, i) => {
                     var MyTag = page
                     return (
-                        <Route path={"/" + page.name} element={<MyTag />}></Route>
+                        <Route key={i} path={"/" + page.name} element={<MyTag />}></Route>
                     );
                 })}
             </Routes>
