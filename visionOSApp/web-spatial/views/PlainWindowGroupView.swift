@@ -202,21 +202,20 @@ struct PlainWindowGroupView: View {
                             .position(x: x, y: y)
                             .offset(z: z)
                             .padding3D(.front, -100000)
-                            .opacity(windowResizeInProgress || (modelUIComponent.opacity)
-                                ? 0 : 1)
-                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
-                                var baseAnimation: Animation
-                                switch animationDescription.animationEaseFn {
-                                case .easeIn:
-                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
-                                default:
-                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
-                                }
-                                
-                                withAnimation(baseAnimation) {
-                                    modelUIComponent.onAnimation(animationDescription)
-                                }
-                            }
+                            .opacity(windowResizeInProgress ? 0 : (modelUIComponent.opacity))
+//                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
+//                                var baseAnimation: Animation
+//                                switch animationDescription.animationEaseFn {
+//                                case .easeIn:
+//                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
+//                                default:
+//                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
+//                                }
+//
+//                                withAnimation(baseAnimation) {
+//                                    modelUIComponent.onAnimation(animationDescription)
+//                                }
+//                            }
                             //                                }
                             //                            }
                         }

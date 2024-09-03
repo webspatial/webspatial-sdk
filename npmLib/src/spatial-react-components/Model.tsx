@@ -1,19 +1,21 @@
 import React, { ReactElement, useEffect, useRef, forwardRef, useImperativeHandle, Ref } from 'react'
-import { AnimationBuilder } from '../core'
+// import { AnimationBuilder } from '../core'
 import { initializeSpatialOffset } from './utils'
 import { SpatialModelUIManager } from './SpatialModelUIManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { vecType } from './types'
+import { getSession } from '../utils';
 
 // 定义子组件的 props 类型
-interface ModelProps {
+export interface ModelProps {
     className: string,
     children: ReactElement | Array<ReactElement>,
-    spatialOffset?: { x?: number, y?: number, z?: number }
+    spatialOffset?: { x?: number, y?: number, z?: number },
+    opacity?: number
 }
 
 export type ModelRef = Ref<{ 
-    animate :(animationBuilder: AnimationBuilder) => void,
+    // animate :(animationBuilder: AnimationBuilder) => void,
     getBoundingClientRect: () => DOMRect
  }>
 
@@ -34,13 +36,20 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
     props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
     initializeSpatialOffset(props.spatialOffset!);
 
-    const animate = (animationBuilder: AnimationBuilder) => {
-        const spatialModelUIManager = instanceState.current[currentInstanceID.current];
-        spatialModelUIManager.modelComponent?.applyAnimationToResource(animationBuilder)
+    const opacity = props.opacity ?? 1;
+
+    let session = getSession()
+    if (!session) {
+        return <div className={props.className} > model can display in AVP only</div>
     }
 
+    // const animate = (animationBuilder: AnimationBuilder) => {
+    //     const spatialModelUIManager = instanceState.current[currentInstanceID.current];
+    //     spatialModelUIManager.modelComponent?.applyAnimationToResource(animationBuilder)
+    // }
+
     useImperativeHandle(ref, () => ({
-        animate,
+        // animate,
         getBoundingClientRect() {
             return (myDiv.current! as HTMLElement).getBoundingClientRect();
         }
@@ -58,6 +67,10 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
         await resizeDiv();
     }
 
+    async function setOpacity(opacity: number) {
+        await instanceState.current[currentInstanceID.current]?.setOpacity(opacity);
+    }
+
     useEffect(() => {
         // Created
         currentInstanceID.current = _incSpatialUIInstanceIDCounter()
@@ -69,7 +82,8 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
             React.Children.forEach(props.children, async (element) => {
                 srcAr.push(element.props.src);
             });
-            setContent(savedId, srcAr[0])
+            await setContent(savedId, srcAr[0])
+            await setOpacity(opacity);
         })()
         return () => {
             // destroyed
@@ -87,6 +101,10 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
         return () => {
         }
     }, [props.spatialOffset])
+
+    useEffect(() => {
+        setOpacity(opacity)
+    }, [opacity])
 
     return (
         <div ref={myDiv} className={props.className} />
