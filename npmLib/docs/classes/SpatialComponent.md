@@ -36,3 +36,17 @@ Marks resource to be released (it should no longer be used)
 #### Defined in
 
 SpatialObject.ts:15
+
+***
+
+### getEntity()
+
+> **getEntity**(): `Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Returns
+
+`Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Defined in
+
+component/SpatialComponent.ts:5
