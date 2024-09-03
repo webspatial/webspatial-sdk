@@ -39,6 +39,32 @@ struct SpatialWebViewUI: View {
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { gesture in
+                                        let scrollEnabled = view.isScrollEnabled()
+                                        if !scrollEnabled {
+                                            if !view.dragStarted {
+                                                view.dragStarted = true
+                                                view.dragStart = (gesture.translation.height)
+                                            }
+                                            
+                                            // TODO: this should have velocity
+                                            let delta = view.dragStart - gesture.translation.height
+                                            view.dragStart = gesture.translation.height
+                                            wv.updateScrollOffset(delta: delta)
+                                        }
+                                    }
+                                    .onEnded { _ in
+                                        let scrollEnabled = view.isScrollEnabled()
+                                        if !scrollEnabled {
+                                            view.dragStarted = false
+                                            view.dragStart = 0
+                                            
+                                            wv.stopScrolling()
+                                        }
+                                    }
+                            )
                     }
                 }
             }
@@ -192,32 +218,8 @@ struct PlainWindowGroupView: View {
                                         .frame(width: width, height: height).padding3D(.front, -100000)
                                         .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                                         .position(x: x, y: y)
-                                        .offset(z: z).gesture(
-                                            DragGesture()
-                                                .onChanged { gesture in
-                                                    let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
-                                                        if !view.dragStarted {
-                                                            view.dragStarted = true
-                                                            view.dragStart = (gesture.translation.height)
-                                                        }
-                                                        
-                                                        // TODO: this should have velocity
-                                                        let delta = view.dragStart - gesture.translation.height
-                                                        view.dragStart = gesture.translation.height
-                                                        wv.updateScrollOffset(delta: delta)
-                                                    }
-                                                }
-                                                .onEnded { _ in
-                                                    let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
-                                                        view.dragStarted = false
-                                                        view.dragStart = 0
-                                                        
-                                                        wv.stopScrolling()
-                                                    }
-                                                }
-                                        ).opacity(windowResizeInProgress ? 0 : 1)
+                                        .offset(z: z)
+                                        .opacity(windowResizeInProgress ? 0 : 1)
                                 }
                             }
                         }
