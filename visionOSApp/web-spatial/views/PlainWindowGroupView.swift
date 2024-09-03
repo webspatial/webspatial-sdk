@@ -128,7 +128,7 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         if let e = windowGroupContent.childEntities[key] {
                             let _ = e.forceUpdate ? 0 : 0
-                            if e.spatialWebView != nil && (e.coordinateSpace == .DOM || e.coordinateSpace == .ROOT) {
+                            if e.spatialWebView != nil && (e.coordinateSpace == .ROOT) {
                                 let view = e.spatialWebView!
                                 //                                WatchObj(toWatch: [e, view]) {
                                 let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
