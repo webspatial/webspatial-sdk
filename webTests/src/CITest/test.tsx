@@ -1,4 +1,4 @@
-import { Spatial } from 'web-spatial';
+import { Spatial } from 'web-spatial/src/index';
 
 import React, { useEffect, useRef, useState, } from 'react'
 import ReactDOM from 'react-dom/client'
