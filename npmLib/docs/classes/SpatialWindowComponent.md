@@ -34,6 +34,24 @@ SpatialObject.ts:15
 
 ***
 
+### getEntity()
+
+> **getEntity**(): `Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Returns
+
+`Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Inherited from
+
+[`SpatialComponent`](SpatialComponent.md).[`getEntity`](SpatialComponent.md#getentity)
+
+#### Defined in
+
+component/SpatialComponent.ts:5
+
+***
+
 ### loadURL()
 
 > **loadURL**(`url`): `Promise`\<`void`\>

@@ -10,18 +10,6 @@
 
 ## Type declaration
 
-### animate()
-
-> **animate**: (`animationBuilder`) => `void`
-
-#### Parameters
-
-• **animationBuilder**: `AnimationBuilder`
-
-#### Returns
-
-`void`
-
 ### getBoundingClientRect()
 
 > **getBoundingClientRect**: () => `DOMRect`
@@ -32,4 +20,4 @@
 
 ## Defined in
 
-src/spatial-react-components/Model.tsx:15
+src/spatial-react-components/Model.tsx:17
