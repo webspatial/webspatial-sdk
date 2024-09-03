@@ -45,44 +45,45 @@ struct SpatialWebViewUI: View {
 
             // Mode3D content
             ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-                let e = ent.childEntities[key]!
-                //                        WatchObj(toWatch: [e]) {
-                if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
-                    //                                WatchObj(toWatch: [e, modelUIComponent]) {
-                    let x = CGFloat(e.modelEntity.position.x)
-                    let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                    let z = CGFloat(e.modelEntity.position.z)
-                    
-                    let scaleX = e.modelEntity.scale.x
-                    let scaleY = e.modelEntity.scale.y
-                    
-                    let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
-                    let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
-                    Model3D(url: modelUrl) { model in
-                        model.model?
-                            .resizable()
-                            .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                if let e = ent.childEntities[key] {
+                    //                        WatchObj(toWatch: [e]) {
+                    if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
+                        //                                WatchObj(toWatch: [e, modelUIComponent]) {
+                        let x = CGFloat(e.modelEntity.position.x)
+                        let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                        let z = CGFloat(e.modelEntity.position.z)
+                        
+                        let scaleX = e.modelEntity.scale.x
+                        let scaleY = e.modelEntity.scale.y
+                        
+                        let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
+                        let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
+                        Model3D(url: modelUrl) { model in
+                            model.model?
+                                .resizable()
+                                .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                        }
+                        .frame(width: width, height: height)
+                        .position(x: x, y: y)
+                        .offset(z: z)
+                        .padding3D(.front, -100000)
+                        .opacity(modelUIComponent.opacity)
+                        //                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
+                        //                                var baseAnimation: Animation
+                        //                                switch animationDescription.animationEaseFn {
+                        //                                case .easeIn:
+                        //                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
+                        //                                default:
+                        //                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
+                        //                                }
+                        //
+                        //                                withAnimation(baseAnimation) {
+                        //                                    modelUIComponent.onAnimation(animationDescription)
+                        //                                }
+                        //                            }
+                        //                                }
+                        //                            }
                     }
-                    .frame(width: width, height: height)
-                    .position(x: x, y: y)
-                    .offset(z: z)
-                    .padding3D(.front, -100000)
-                    .opacity(modelUIComponent.opacity)
-//                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
-//                                var baseAnimation: Animation
-//                                switch animationDescription.animationEaseFn {
-//                                case .easeIn:
-//                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
-//                                default:
-//                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
-//                                }
-//
-//                                withAnimation(baseAnimation) {
-//                                    modelUIComponent.onAnimation(animationDescription)
-//                                }
-//                            }
-                    //                                }
-                    //                            }
                 }
             }
         }
@@ -221,8 +222,6 @@ struct PlainWindowGroupView: View {
                             }
                         }
                     }
-
-                    
                 }
             }
             .onReceive(windowGroupContent.setSize) { newSize in
