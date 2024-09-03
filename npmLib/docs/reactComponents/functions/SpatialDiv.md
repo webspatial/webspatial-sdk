@@ -14,7 +14,7 @@ Note: Inner html will actually be placed within a separate window element so dir
 
 ## Parameters
 
-• **props**: `SpatialDivProps` & `RefAttributes`\<`object`\>
+• **props**: [`SpatialDivProps`](../interfaces/SpatialDivProps.md) & `RefAttributes`\<`object`\>
 
 ## Returns
 
