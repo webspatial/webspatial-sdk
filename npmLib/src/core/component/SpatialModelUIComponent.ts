@@ -1,31 +1,31 @@
 import { SpatialComponent } from "./SpatialComponent"
 import { WebSpatial } from "../private/WebSpatial"
 
-export enum ModelAnimateOpacityEaseFn {
-  easeInOut = 'easeInOut'
-}
+// export enum ModelAnimateOpacityEaseFn {
+//   easeInOut = 'easeInOut'
+// }
 
-export class AnimationBuilder {
-  private _fadeOut = false
-  private _fadeDuration = 1;
+// export class AnimationBuilder {
+//   private _fadeOut = false
+//   private _fadeDuration = 1;
 
-  fadeOut(v: boolean) {
-      this._fadeOut = v;
-      return this
-  }
+//   fadeOut(v: boolean) {
+//       this._fadeOut = v;
+//       return this
+//   }
 
-  fadeDuration(v: number) {
-      this._fadeDuration = v;
-      return this
-  }
+//   fadeDuration(v: number) {
+//       this._fadeDuration = v;
+//       return this
+//   }
 
-  build() {
-      return {
-          fadeOut: this._fadeOut,
-          fadeDuration: this._fadeDuration
-      }
-  }
-}
+//   build() {
+//       return {
+//           fadeOut: this._fadeOut,
+//           fadeDuration: this._fadeDuration
+//       }
+//   }
+// }
 
 /**
 * Used to position a model in 3D space inline to the webpage (Maps to Model3D tag)
@@ -51,8 +51,16 @@ export class SpatialModelUIComponent extends SpatialComponent {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
 
-  async applyAnimationToResource(animationBuilder: AnimationBuilder) {
-    const animationDescription = animationBuilder.build();
-    await WebSpatial.applyAnimationToResource(this._resource, animationDescription)
+  /**
+   * Sets the opacity of the model
+   * @param opacity model opacity
+   */
+  async setOpacity(opacity: number) {
+    await WebSpatial.updateResource(this._resource, { opacity })
   }
+
+  // async applyAnimationToResource(animationBuilder: AnimationBuilder) {
+  //   const animationDescription = animationBuilder.build();
+  //   await WebSpatial.applyAnimationToResource(this._resource, animationDescription)
+  // }
 }
