@@ -276,7 +276,7 @@ class SpatialWebView {
                 if let cmdInfo = getCommandInfo(json: json) {
                     if let c = childResources[cmdInfo.resourceID] {
                         let e = childResources[cmdInfo.entityID]!
-
+                         c.componentEntity = e
                         if c.resourceType == "ModelUIComponent" {
                             e.modelUIComponent = c.modelUIComponent
                         } else if c.resourceType == "ModelComponent" {

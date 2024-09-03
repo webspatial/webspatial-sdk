@@ -23,7 +23,7 @@ export class SpatialWindowManager {
 
         var wc = (await (getSession()!).getCurrentWindowComponent())
         var ent = await wc.getEntity()
-        this.entity.setParent(ent!)
+        await this.entity.setParent(ent!)
     }
     async initInternalFromWindow(w: any) {
         this.entity = await (getSession()!).createEntity()
@@ -36,7 +36,7 @@ export class SpatialWindowManager {
 
         var wc = (await (getSession()!).getCurrentWindowComponent())
         var ent = await wc.getEntity()
-        this.entity.setParent(ent!)
+        await this.entity.setParent(ent!)
     }
     async init(url: string) {
         this.initPromise = this.initInternal(url)
