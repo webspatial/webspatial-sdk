@@ -41,7 +41,9 @@ async function createWebViewJSAPI() {
         e.transform.position.x = 500
         e.transform.position.y = 300
         e.transform.position.z = 300
-        await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
         await e.updateTransform()
 
         //create an window
@@ -67,7 +69,7 @@ async function createWebViewJSAPI() {
         session.requestAnimationFrame(loop)
 
         //destory
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await e.destroy()
         await i.destroy()
         await session.log("destroy complete")
@@ -102,19 +104,40 @@ async function changeWebViewStyle() {
 
 var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle]
 
-function App() {
-    const [testResults, setTestResults] = useState([] as Array<any>)
-    useEffect(() => {
+class TestRunner {
+    _started = false
+    start() {
+        this._started = true;
         (async () => {
-            let allResults = [] as Array<any>
             for (let test of allTests) {
                 var result = await test()
-                allResults.push({ name: result[0], result: result[1] ? "Pass" : "Fail", reason: result[2] })
+                this._onTestCompleteInternal({ name: result[0], result: result[1] ? "Pass" : "Fail", reason: result[2] })
             }
-            setTestResults(allResults)
         })();
+    }
+    stop() {
+        this._started = false
+    }
+    _onTestCompleteInternal = (tr: any) => {
+        if (this._started) {
+            this.onTestComplete(tr)
+        }
 
+    }
+    onTestComplete = (tr: any) => { }
+}
+
+function App() {
+    const [testResults, setTestResults] = useState([] as Array<any>)
+
+    useEffect(() => {
+        let tr = new TestRunner()
+        tr.onTestComplete = (testResult) => {
+            setTestResults((ol) => [...ol, testResult])
+        }
+        tr.start();
         return () => {
+            tr.stop()
         }
     }, [])
     //console.log(testResults)
