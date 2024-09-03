@@ -134,20 +134,20 @@ class ModelUIComponent {
     var resolutionX: Double = 0
     var resolutionY: Double = 0
 
-    var opacity = false
+    var opacity: Double = 1
 
-    //  animation related function and props
-    //    var animationEaseFn: AnimationEaseStyle  = .easeInOut
-    var animateSubject = PassthroughSubject<AnimationDescription, Never>()
-
-    func triggerAnimation(_ animationDesc: AnimationDescription) {
-        animateSubject.send(animationDesc)
-    }
-
-    // called by PlainWindowGroupView
-    func onAnimation(_ animationDesc: AnimationDescription) {
-        opacity = animationDesc.fadeOut
-    }
+//    //  animation related function and props
+//    //    var animationEaseFn: AnimationEaseStyle  = .easeInOut
+//    var animateSubject = PassthroughSubject<AnimationDescription, Never>()
+//
+//    func triggerAnimation(_ animationDesc: AnimationDescription) {
+//        animateSubject.send(animationDesc)
+//    }
+//
+//    // called by PlainWindowGroupView
+//    func onAnimation(_ animationDesc: AnimationDescription) {
+    ////        opacity = animationDesc.fadeOut
+//    }
 }
 
 @Observable
