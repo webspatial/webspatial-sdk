@@ -6,6 +6,8 @@
   "scripts": {
     "installPackages": "cd npmLib/ && yarn install && npm run build && yarn link && cd .. && cd webTests/ && yarn install && yarn link web-spatial",
     "webTests": "cd webTests/ && npm run dev -- --host",
+    "devNPM": "cd npmLib/ && npm run start",
+    "dev": "concurrently \"npm run webTests\" \"npm run devNPM\"",
     "genDocs": "cd npmLib/ && npm run genDocs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
