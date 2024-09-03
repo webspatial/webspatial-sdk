@@ -15,24 +15,6 @@ Positioning behaves the same as a spatial window marked as dom space
 
 ## Methods
 
-### applyAnimationToResource()
-
-> **applyAnimationToResource**(`animationBuilder`): `Promise`\<`void`\>
-
-#### Parameters
-
-• **animationBuilder**: [`AnimationBuilder`](AnimationBuilder.md)
-
-#### Returns
-
-`Promise`\<`void`\>
-
-#### Defined in
-
-component/SpatialModelUIComponent.ts:54
-
-***
-
 ### destroy()
 
 > **destroy**(): `Promise`\<`void`\>
@@ -53,6 +35,24 @@ SpatialObject.ts:15
 
 ***
 
+### getEntity()
+
+> **getEntity**(): `Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Returns
+
+`Promise`\<`null` \| [`SpatialEntity`](SpatialEntity.md)\>
+
+#### Inherited from
+
+[`SpatialComponent`](SpatialComponent.md).[`getEntity`](SpatialComponent.md#getentity)
+
+#### Defined in
+
+component/SpatialComponent.ts:5
+
+***
+
 ### setAspectRatio()
 
 > **setAspectRatio**(`aspectRatio`): `Promise`\<`void`\>
@@ -68,6 +68,28 @@ SpatialObject.ts:15
 #### Defined in
 
 component/SpatialModelUIComponent.ts:42
+
+***
+
+### setOpacity()
+
+> **setOpacity**(`opacity`): `Promise`\<`void`\>
+
+Sets the opacity of the model
+
+#### Parameters
+
+• **opacity**: `number`
+
+model opacity
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+component/SpatialModelUIComponent.ts:58
 
 ***
 
