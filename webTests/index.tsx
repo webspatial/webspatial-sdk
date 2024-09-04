@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Model, SpatialIFrame, Spatial, SpatialEntity } from 'web-spatial/src/index';
+import { Model, SpatialIFrame, Spatial, SpatialEntity } from 'web-spatial';
 
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
