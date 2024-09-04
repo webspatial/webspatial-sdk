@@ -141,10 +141,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         mode = "spatial"
     }
 
-    console.log('El', El)
-
-    // return <El>hello</El>
-
     useImperativeHandle(ref, () => ({
         getBoundingClientRect() {
             return (childrenSizeRef.current! as HTMLElement).getBoundingClientRect();
