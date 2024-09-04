@@ -276,7 +276,7 @@ class SpatialWebView {
                 if let cmdInfo = getCommandInfo(json: json) {
                     if let c = childResources[cmdInfo.resourceID] {
                         let e = childResources[cmdInfo.entityID]!
-                         c.componentEntity = e
+                        c.componentEntity = e
                         if c.resourceType == "ModelUIComponent" {
                             e.modelUIComponent = c.modelUIComponent
                         } else if c.resourceType == "ModelComponent" {
@@ -647,23 +647,6 @@ class SpatialWebView {
                     }
                 }
             }
-//            else if command == "animateResource" {
-//                if let cmdInfo = getCommandInfo(json: json) {
-//                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
-//                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
-//                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
-//                        {
-//                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
-//                            if let modelUIComponent = sr.modelUIComponent {
-//                                modelUIComponent.triggerAnimation(animationDesc)
-//                            }
-//                        }
-//                    }
-//
-//                    // TODO: consider completeEvent after finish animation
-//                    completeEvent(requestID: cmdInfo.requestID)
-//                }
-//            }
         }
     }
 }

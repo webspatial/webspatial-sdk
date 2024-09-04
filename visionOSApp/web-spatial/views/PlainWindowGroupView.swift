@@ -72,9 +72,7 @@ struct SpatialWebViewUI: View {
             // Mode3D content
             ForEach(Array(ent.childEntities.keys), id: \.self) { key in
                 if let e = ent.childEntities[key] {
-                    //                        WatchObj(toWatch: [e]) {
                     if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
-                        //                                WatchObj(toWatch: [e, modelUIComponent]) {
                         let x = CGFloat(e.modelEntity.position.x)
                         let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                         let z = CGFloat(e.modelEntity.position.z)
@@ -94,21 +92,6 @@ struct SpatialWebViewUI: View {
                         .offset(z: z)
                         .padding3D(.front, -100000)
                         .opacity(modelUIComponent.opacity)
-                        //                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
-                        //                                var baseAnimation: Animation
-                        //                                switch animationDescription.animationEaseFn {
-                        //                                case .easeIn:
-                        //                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
-                        //                                default:
-                        //                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
-                        //                                }
-                        //
-                        //                                withAnimation(baseAnimation) {
-                        //                                    modelUIComponent.onAnimation(animationDescription)
-                        //                                }
-                        //                            }
-                        //                                }
-                        //                            }
                     }
                 }
             }
@@ -126,11 +109,6 @@ struct PlainWindowGroupView: View {
     
     @State var windowResizeInProgress = false
     @State var timer: Timer?
-    
-//    init(windowGroupContent: WindowGroupContentDictionary) {
-//        //        self.windowGroupContent = windowGroupContent
-//        // UpdateWebViewSystem.registerSystem()
-//    }
     
     public func setSize(size: CGSize) {
         sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
@@ -201,7 +179,6 @@ struct PlainWindowGroupView: View {
                             let _ = e.forceUpdate ? 0 : 0
                             if e.spatialWebView != nil && (e.coordinateSpace == .ROOT) {
                                 let view = e.spatialWebView!
-                                //                                WatchObj(toWatch: [e, view]) {
                                 let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
                                 let y = e.coordinateSpace == .ROOT ? (proxy3D.size.height/2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
                                 let z = CGFloat(e.modelEntity.position.z)
