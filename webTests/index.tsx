@@ -172,6 +172,7 @@ function App() {
                 <a href="/src/jsApiTestPages/testList.html">Examples</a>
                 <a href="/src/CITest/index.html">Run CI</a>
                 <a href="/">Github</a>
+                <a href="/src/template/index.html">Template</a>
             </div>
             <div className='m-5 flex flex-row flex-wrap text-white'>
                 <div className='grow flex flex-col  items-center justify-center p-20'>
