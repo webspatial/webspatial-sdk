@@ -328,6 +328,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 setElHeight(height)
             }
         }
+
+        // Sync prop updates
         useEffect(() => {
             (async () => {
                 var ins = windowInstance.getActiveInstance()
@@ -346,6 +348,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             resizeSpatial()
         }, [props.spatialStyle, props.allowScroll, props.scrollWithParent])
 
+        // Trigger native resize on web resize events
         useEffect(() => {
             let ro = new ResizeObserver((elements) => {
                 resizeSpatial()
@@ -361,16 +364,16 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
 
         const renderStandardInstance = () => (
-                <El ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
-                    {props.children}
-                </El>
+            <El ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
+                {props.children}
+            </El>
         );
         const renderWrappedStandardInstance = () => (
-                <div ref={childrenSizeRef}  style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
-                    <El className={props.className} style={{ ...props.style }}  >
-                        {props.children}
-                    </El>
-                </div>
+            <div ref={childrenSizeRef} style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
+                <El className={props.className} style={{ ...props.style }}  >
+                    {props.children}
+                </El>
+            </div>
         );
 
         return <>
