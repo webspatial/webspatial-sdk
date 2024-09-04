@@ -61,6 +61,7 @@ struct web_spatialApp: App {
             rootEnt.coordinateSpace = CoordinateSpaceMode.ROOT
             root!.resourceID = sr.id
             sr.spatialWebView = root
+            sr.componentEntity = rootEnt
             rootEnt.spatialWebView = root
             root!.visible = true
             rootWGD.childEntities[rootEnt.id] = rootEnt

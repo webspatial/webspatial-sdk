@@ -276,7 +276,7 @@ class SpatialWebView {
                 if let cmdInfo = getCommandInfo(json: json) {
                     if let c = childResources[cmdInfo.resourceID] {
                         let e = childResources[cmdInfo.entityID]!
-
+                         c.componentEntity = e
                         if c.resourceType == "ModelUIComponent" {
                             e.modelUIComponent = c.modelUIComponent
                         } else if c.resourceType == "ModelComponent" {
@@ -451,6 +451,11 @@ class SpatialWebView {
                         if let aspectRatio: String = json.getValue(lookup: ["data", "update", "aspectRatio"]) {
                             sr.modelUIComponent?.aspectRatio = aspectRatio
                         }
+                        if let opacity: Double = json.getValue(
+                            lookup: ["data", "update", "opacity"]
+                        ) {
+                            sr.modelUIComponent?.opacity = opacity
+                        }
                         if let x: Double = json.getValue(lookup: ["data", "update", "resolution", "x"]),
                            let y: Double = json.getValue(lookup: ["data", "update", "resolution", "y"])
                         {
@@ -470,6 +475,12 @@ class SpatialWebView {
                             }
                         }
                     } else if sr.resourceType == "SpatialWebView" {
+                        if let _: String = json.getValue(lookup: ["data", "update", "getEntityID"]) {
+                            let id = sr.componentEntity!.id
+                            completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+id+"'}")
+                            return
+                        }
+
                         if let _: String = json.getValue(lookup: ["data", "update", "getParentID"]) {
                             completeEvent(requestID: cmdInfo.requestID, data: "{parentID:'"+sr.spatialWebView!.parentWebviewID+"'}")
                             return
@@ -635,23 +646,24 @@ class SpatialWebView {
                         }
                     }
                 }
-            } else if command == "animateResource" {
-                if let cmdInfo = getCommandInfo(json: json) {
-                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
-                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
-                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
-                        {
-                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
-                            if let modelUIComponent = sr.modelUIComponent {
-                                modelUIComponent.triggerAnimation(animationDesc)
-                            }
-                        }
-                    }
-
-                    // TODO: consider completeEvent after finish animation
-                    completeEvent(requestID: cmdInfo.requestID)
-                }
             }
+//            else if command == "animateResource" {
+//                if let cmdInfo = getCommandInfo(json: json) {
+//                    if let sr = wgManager.allResources[cmdInfo.resourceID] {
+//                        if let fadeOut: Bool = json.getValue(lookup: ["data", "animation", "fadeOut"]),
+//                           let fadeDuration: Double = json.getValue(lookup: ["data", "animation", "fadeDuration"])
+//                        {
+//                            let animationDesc = AnimationDescription(fadeOut: fadeOut, fadeDuration: fadeDuration)
+//                            if let modelUIComponent = sr.modelUIComponent {
+//                                modelUIComponent.triggerAnimation(animationDesc)
+//                            }
+//                        }
+//                    }
+//
+//                    // TODO: consider completeEvent after finish animation
+//                    completeEvent(requestID: cmdInfo.requestID)
+//                }
+//            }
         }
     }
 }
