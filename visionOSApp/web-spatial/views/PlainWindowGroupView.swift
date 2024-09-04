@@ -21,10 +21,11 @@ struct SpatialWebViewUI: View {
                 .cornerRadius(wv.cornerRadius)
                 .opacity(wv.visible ? 1 : 0)
             
+            let parentYOffset = Float(wv.scrollOffset.y)
+
             ForEach(Array(ent.childEntities.keys), id: \.self) { key in
                 if let e = ent.childEntities[key] {
                     let _ = e.forceUpdate ? 0 : 0
-                    let parentYOffset = Float(wv.scrollOffset.y)
                     if e.spatialWebView != nil && e.coordinateSpace == .DOM {
                         let view = e.spatialWebView!
                         let x = CGFloat(e.modelEntity.position.x)
@@ -38,6 +39,76 @@ struct SpatialWebViewUI: View {
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { gesture in
+                                        let scrollEnabled = view.isScrollEnabled()
+                                        if !scrollEnabled {
+                                            if !view.dragStarted {
+                                                view.dragStarted = true
+                                                view.dragStart = (gesture.translation.height)
+                                            }
+                                            
+                                            // TODO: this should have velocity
+                                            let delta = view.dragStart - gesture.translation.height
+                                            view.dragStart = gesture.translation.height
+                                            wv.updateScrollOffset(delta: delta)
+                                        }
+                                    }
+                                    .onEnded { _ in
+                                        let scrollEnabled = view.isScrollEnabled()
+                                        if !scrollEnabled {
+                                            view.dragStarted = false
+                                            view.dragStart = 0
+                                            
+                                            wv.stopScrolling()
+                                        }
+                                    }
+                            )
+                    }
+                }
+            }
+
+            // Mode3D content
+            ForEach(Array(ent.childEntities.keys), id: \.self) { key in
+                if let e = ent.childEntities[key] {
+                    //                        WatchObj(toWatch: [e]) {
+                    if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
+                        //                                WatchObj(toWatch: [e, modelUIComponent]) {
+                        let x = CGFloat(e.modelEntity.position.x)
+                        let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                        let z = CGFloat(e.modelEntity.position.z)
+                        
+                        let scaleX = e.modelEntity.scale.x
+                        let scaleY = e.modelEntity.scale.y
+                        
+                        let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
+                        let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
+                        Model3D(url: modelUrl) { model in
+                            model.model?
+                                .resizable()
+                                .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
+                        }
+                        .frame(width: width, height: height)
+                        .position(x: x, y: y)
+                        .offset(z: z)
+                        .padding3D(.front, -100000)
+                        .opacity(modelUIComponent.opacity)
+                        //                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
+                        //                                var baseAnimation: Animation
+                        //                                switch animationDescription.animationEaseFn {
+                        //                                case .easeIn:
+                        //                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
+                        //                                default:
+                        //                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
+                        //                                }
+                        //
+                        //                                withAnimation(baseAnimation) {
+                        //                                    modelUIComponent.onAnimation(animationDescription)
+                        //                                }
+                        //                            }
+                        //                                }
+                        //                            }
                     }
                 }
             }
@@ -128,7 +199,7 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         if let e = windowGroupContent.childEntities[key] {
                             let _ = e.forceUpdate ? 0 : 0
-                            if e.spatialWebView != nil && (e.coordinateSpace == .DOM || e.coordinateSpace == .ROOT) {
+                            if e.spatialWebView != nil && (e.coordinateSpace == .ROOT) {
                                 let view = e.spatialWebView!
                                 //                                WatchObj(toWatch: [e, view]) {
                                 let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width/2) : CGFloat(e.modelEntity.position.x)
@@ -147,78 +218,10 @@ struct PlainWindowGroupView: View {
                                         .frame(width: width, height: height).padding3D(.front, -100000)
                                         .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                                         .position(x: x, y: y)
-                                        .offset(z: z).gesture(
-                                            DragGesture()
-                                                .onChanged { gesture in
-                                                    let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
-                                                        if !view.dragStarted {
-                                                            view.dragStarted = true
-                                                            view.dragStart = (gesture.translation.height)
-                                                        }
-                                                        
-                                                        // TODO: this should have velocity
-                                                        let delta = view.dragStart - gesture.translation.height
-                                                        view.dragStart = gesture.translation.height
-                                                        wv.updateScrollOffset(delta: delta)
-                                                    }
-                                                }
-                                                .onEnded { _ in
-                                                    let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
-                                                        view.dragStarted = false
-                                                        view.dragStart = 0
-                                                        
-                                                        wv.stopScrolling()
-                                                    }
-                                                }
-                                        ).opacity(windowResizeInProgress ? 0 : 1)
+                                        .offset(z: z)
+                                        .opacity(windowResizeInProgress ? 0 : 1)
                                 }
                             }
-                        }
-                    }
-                    
-                    // Mode3D content
-                    ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                        let e = windowGroupContent.childEntities[key]!
-                        //                        WatchObj(toWatch: [e]) {
-                        if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
-                            //                                WatchObj(toWatch: [e, modelUIComponent]) {
-                            let x = CGFloat(e.modelEntity.position.x)
-                            let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                            let z = CGFloat(e.modelEntity.position.z)
-                            
-                            let scaleX = e.modelEntity.scale.x
-                            let scaleY = e.modelEntity.scale.y
-                            
-                            let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
-                            let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
-                            Model3D(url: modelUrl) { model in
-                                model.model?
-                                    .resizable()
-                                    .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                            }
-                            .frame(width: width, height: height)
-                            .position(x: x, y: y)
-                            .offset(z: z)
-                            .padding3D(.front, -100000)
-                            .opacity(windowResizeInProgress || (modelUIComponent.opacity)
-                                ? 0 : 1)
-                            .onReceive(modelUIComponent.animateSubject) { animationDescription in
-                                var baseAnimation: Animation
-                                switch animationDescription.animationEaseFn {
-                                case .easeIn:
-                                    baseAnimation = Animation.easeIn(duration: animationDescription.fadeDuration)
-                                default:
-                                    baseAnimation = Animation.easeInOut(duration: animationDescription.fadeDuration)
-                                }
-                                
-                                withAnimation(baseAnimation) {
-                                    modelUIComponent.onAnimation(animationDescription)
-                                }
-                            }
-                            //                                }
-                            //                            }
                         }
                     }
                 }

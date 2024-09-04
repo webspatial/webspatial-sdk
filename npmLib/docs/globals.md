@@ -6,7 +6,6 @@
 
 ## Classes
 
-- [AnimationBuilder](classes/AnimationBuilder.md)
 - [Spatial](classes/Spatial.md)
 - [SpatialComponent](classes/SpatialComponent.md)
 - [SpatialEntity](classes/SpatialEntity.md)

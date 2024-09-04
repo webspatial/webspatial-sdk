@@ -21,7 +21,10 @@ var main = async () => {
             e.transform.position.x = 500
             e.transform.position.y = 300
             e.transform.position.z = 300
-            await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+            var wc = (await session.getCurrentWindowComponent())
+            var ent = await wc.getEntity()
+            await e.setParent(ent!)
 
             await e.updateTransform()
             let i = await session.createWindowComponent()
@@ -65,7 +68,11 @@ var main = async () => {
         e.transform.position.y = 300
         e.transform.position.z = 50
         await e.updateTransform()
-        await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
+
         let i = await session.createModelUIComponent()
         await Promise.all([
             i.setURL("/src/assets/FlightHelmet.usdz"), // 
@@ -184,7 +191,10 @@ var main = async () => {
                 e.transform.position.x = 500
                 e.transform.position.y = 300
                 e.transform.position.z = 300
-                await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+                var wc = (await session.getCurrentWindowComponent())
+                var ent = await wc.getEntity()
+                await e.setParent(ent!)
 
                 await e.updateTransform()
                 let i = await session.createWindowComponent()
