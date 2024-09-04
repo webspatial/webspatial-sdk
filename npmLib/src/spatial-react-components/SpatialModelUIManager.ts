@@ -2,7 +2,7 @@ import { SpatialEntity, SpatialModelUIComponent } from "../core"
 import { getSession } from "../utils"
 import { vecType } from "./types"
 
- 
+
 export class SpatialModelUIManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
@@ -10,7 +10,11 @@ export class SpatialModelUIManager {
 
     async initInternal(url: string) {
         this.entity = await (await getSession()!).createEntity()
-        await this.entity.setParentWindowGroup(await (await getSession()!).getCurrentWindowGroup())
+
+        var wc = (await getSession()!.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await this.entity.setParent(ent!)
+
         this.modelComponent = await (await getSession()!).createModelUIComponent()
         await this.modelComponent.setURL(url)
         await this.entity.setComponent(this.modelComponent)
@@ -37,6 +41,14 @@ export class SpatialModelUIManager {
 
         await modelComponent.setAspectRatio("fit");
     }
+
+    async setOpacity(opacity: number) {
+        if (!this.modelComponent) {
+            return
+        }
+        return this.modelComponent.setOpacity(opacity);
+    }
+
     async destroy() {
         if (this.initPromise) {
             await this.initPromise

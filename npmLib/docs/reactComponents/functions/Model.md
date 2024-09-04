@@ -14,7 +14,7 @@ Intended to behave similar to https://immersive-web.github.io/model-element/
 
 ## Parameters
 
-• **props**: `ModelProps` & `RefAttributes`\<`object`\>
+• **props**: [`ModelProps`](../interfaces/ModelProps.md) & `RefAttributes`\<`object`\>
 
 ## Returns
 
@@ -22,4 +22,4 @@ Intended to behave similar to https://immersive-web.github.io/model-element/
 
 ## Defined in
 
-src/spatial-react-components/Model.tsx:33
+src/spatial-react-components/Model.tsx:35
