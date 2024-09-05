@@ -102,7 +102,7 @@ async function changeWebViewStyle() {
     }
 }
 
-async function webViewMemoryLeakTest(){
+async function webViewMemoryLeakTest() {
     var testResult = []
     var failure_reasons = ""
     var spatial = new Spatial()
@@ -111,100 +111,100 @@ async function webViewMemoryLeakTest(){
         return testResult = ["WebView JS API", false, ""]
     }
 
-        await session.log("Trying to load webview")
-        if (!spatial.isSupported()) {
-            return testResult = ["WebView JS API", false, ""]
-        }
+    await session.log("Trying to load webview")
+    if (!spatial.isSupported()) {
+        return testResult = ["WebView JS API", false, ""]
+    }
 
-        //creating webview 1 and get memory stats
-        try {
-            await session.log("Trying to load webview 1")
-    
-            console.log('a')
-            console.log(session)
-            var e = await session.createEntity()
-            console.log('b')
-            e.transform.position.x = 500
-            e.transform.position.y = 300
-            e.transform.position.z = 300
-            var wc = (await session.getCurrentWindowComponent())
-            var ent = await wc.getEntity()
-            await e.setParent(ent!)
-            await e.updateTransform()
-    
-            //create an window
-            let i = await session.createWindowComponent()
-            await Promise.all([
-                i.loadURL("/src/embed/basic.html"),
-                i.setScrollEnabled(false),
-                e.setCoordinateSpace("Dom"),
-                i.setResolution(300, 300),
-            ])
-            //bind window to entity
-            await e.setComponent(i)
-            var webview1 = await session.getStats()
-            session.log("Webview 1 Stats: " + JSON.stringify(webview1))
-            session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
-            if(webview1.data.webViewRefs > 1){
-                failure_reasons += "WebView 1 webViewRefs is greater 1\n"
-            }
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await e.destroy()
-            await i.destroy()
-            await session.log("WebView 1 destroy complete")
-        }catch (e) {
-            testResult = ["Error Creating Webview 1 During Mem Leak Test", false, e]
-            return testResult
-        }
+    //creating webview 1 and get memory stats
+    try {
+        await session.log("Trying to load webview 1")
 
-        //creating webview 2 and get memory stats
-        try {
-            await session.log("Trying to load webview 2")
-    
-            console.log('a')
-            console.log(session)
-            var e = await session.createEntity()
-            console.log('b')
-            e.transform.position.x = 500
-            e.transform.position.y = 300
-            e.transform.position.z = 300
-            var wc = (await session.getCurrentWindowComponent())
-            var ent = await wc.getEntity()
-            await e.setParent(ent!)
-            await e.updateTransform()
-    
-            //create an window
-            let i = await session.createWindowComponent()
-            await Promise.all([
-                i.loadURL("/src/embed/basic.html"),
-                i.setScrollEnabled(false),
-                e.setCoordinateSpace("Dom"),
-                i.setResolution(300, 300),
-            ])
-            //bind window to entity
-            await e.setComponent(i)
-            var webview2 = await session.getStats()
-            session.log("Webview 2 Stats: " + JSON.stringify(webview2))
-            session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
-            if(webview1.data.webViewRefs > 1){
-                failure_reasons += "WebView 2 webViewRefs is greater 1\n"
-            }
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await e.destroy()
-            await i.destroy()
-            await session.log("WebView 2 destroy complete")
-        }catch (e) {
-            testResult = ["Error Creating Webview 2 During Mem Leak Test", false, e]
-            return testResult
+        console.log('a')
+        console.log(session)
+        var e = await session.createEntity()
+        console.log('b')
+        e.transform.position.x = 500
+        e.transform.position.y = 300
+        e.transform.position.z = 300
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
+        await e.updateTransform()
+
+        //create an window
+        let i = await session.createWindowComponent()
+        await Promise.all([
+            i.loadURL("/src/embed/basic.html"),
+            i.setScrollEnabled(false),
+            e.setCoordinateSpace("Dom"),
+            i.setResolution(300, 300),
+        ])
+        //bind window to entity
+        await e.setComponent(i)
+        var webview1 = await session.getStats()
+        session.log("Webview 1 Stats: " + JSON.stringify(webview1))
+        session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
+        if (webview1.data.webViewRefs != 2) {
+            failure_reasons += "WebView 1 webViewRefs not equal to 2 got " + webview1.data.webViewRefs + "\n"
         }
-        if(failure_reasons){
-            testResult = ["WebView Memory Leak Test", false, failure_reasons]
-            return testResult
-        }else{
-            testResult = ["WebView Memory Leak Test", true, ""]
-            return testResult
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await e.destroy()
+        await i.destroy()
+        await session.log("WebView 1 destroy complete")
+    } catch (e) {
+        testResult = ["Error Creating Webview 1 During Mem Leak Test", false, e]
+        return testResult
+    }
+
+    //creating webview 2 and get memory stats
+    try {
+        await session.log("Trying to load webview 2")
+
+        console.log('a')
+        console.log(session)
+        var e = await session.createEntity()
+        console.log('b')
+        e.transform.position.x = 500
+        e.transform.position.y = 300
+        e.transform.position.z = 300
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
+        await e.updateTransform()
+
+        //create an window
+        let i = await session.createWindowComponent()
+        await Promise.all([
+            i.loadURL("/src/embed/basic.html"),
+            i.setScrollEnabled(false),
+            e.setCoordinateSpace("Dom"),
+            i.setResolution(300, 300),
+        ])
+        //bind window to entity
+        await e.setComponent(i)
+        var webview2 = await session.getStats()
+        session.log("Webview 2 Stats: " + JSON.stringify(webview2))
+        session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
+        if (webview1.data.webViewRefs != 2) {
+            failure_reasons += "WebView 2 webViewRefs not equal to 2\n"
         }
-    } 
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await e.destroy()
+        await i.destroy()
+        await session.log("WebView 2 destroy complete")
+    } catch (e) {
+        testResult = ["Error Creating Webview 2 During Mem Leak Test", false, e]
+        return testResult
+    }
+    if (failure_reasons) {
+        testResult = ["WebView Memory Leak Test", false, failure_reasons]
+        return testResult
+    } else {
+        testResult = ["WebView Memory Leak Test", true, ""]
+        return testResult
+    }
+}
 
 var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest]
 
@@ -266,8 +266,6 @@ function App() {
 var root = document.createElement('div');
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode >,
+    <App />
 )
 
