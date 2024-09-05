@@ -99,6 +99,7 @@ class SpatialResource: Component {
                 }
             }
 
+            setParent(parentEnt: nil)
             let keys = childEntities.map { $0.key }
             for k in keys {
                 childEntities[k]!.setParent(parentEnt: nil)
@@ -111,7 +112,7 @@ class SpatialResource: Component {
                 removed = true
             }
         }
-
+        
         meshResource = nil
         physicallyBasedMaterial = nil
         modelComponent = nil
