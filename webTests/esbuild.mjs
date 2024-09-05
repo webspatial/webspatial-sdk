@@ -25,6 +25,8 @@ var ctx = await esbuild.context({
         alias: {
             react: path.resolve('node_modules/react'),
             "react-dom": path.resolve('node_modules/react-dom'),
+            'web-spatial': path.resolve('../npmLib/src'),
+            'spatial-runtime': path.resolve('../runtime')
         }
 });
 ctx.watch()
