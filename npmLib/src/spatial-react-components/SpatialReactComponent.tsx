@@ -227,7 +227,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             const bodyWidth = document.body.getBoundingClientRect().width;
             const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
             viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
-            await windowInstance.getActiveInstance()?.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
+            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
         }
 
         let windowInstance = useAsyncInstances(() => {
@@ -264,11 +264,15 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             };
 
             // Synchronize head of parent page to this page to ensure styles are in sync
-            document.head.addEventListener("DOMNodeInserted", () => {
-                openedWindow!.document.head.innerHTML = document.head.innerHTML
+            let headObserver = new MutationObserver((mutations) => {
+                if (openedWindow) {
+                    openedWindow.document.head.innerHTML = document.head.innerHTML
 
-                setViewport(openedWindow!);
+                    setViewport(openedWindow);
+                }
             })
+            headObserver.observe(document.head, { childList: true })
+
             openedWindow!.document.head.innerHTML = document.head.innerHTML
 
             if (customElEnabled) {
@@ -297,17 +301,19 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 await windowMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
             })
 
-            return windowMngr
+            return { mnger: windowMngr, headObserver: headObserver }
         }, (instance) => {
             if (instance) {
-                instance.destroy()
+                instance.headObserver.disconnect()
+                instance.mnger.destroy()
             }
         }, [])
 
 
         // Handle resizing
         let resizeSpatial = async () => {
-            var ins = windowInstance.getActiveInstance()
+
+            var ins = windowInstance.getActiveInstance()?.mnger
             if (ins) {
                 let rect = childrenSizeRef.current!.getBoundingClientRect()
                 if (customElEnabled) {
@@ -332,7 +338,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         // Sync prop updates
         useEffect(() => {
             (async () => {
-                var ins = windowInstance.getActiveInstance()
+                var ins = windowInstance.getActiveInstance()?.mnger
                 if (ins) {
                     await ins.webview?.setStyle({
                         transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
@@ -377,7 +383,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         );
 
         return <>
-            <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()}>
+            <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
                 <div ref={isVisibleRef}></div>
                 {
                     isPrimiveEl
