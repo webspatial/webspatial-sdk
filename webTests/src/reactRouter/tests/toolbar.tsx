@@ -11,7 +11,7 @@ export function ToolbarTest() {
                     <button>😇</button>
                     <button>💘</button>
                 </SpatialDiv>
-                <SpatialDiv allowScroll={true} spatialStyle={{ position: { z: 1, x: 0, y: 0 }, glassEffect: true }} style={{ height: "100%", margin: "0px", flexGrow: "1", fontSize: "3em", marginLeft: "25px", marginRight: "25px", backgroundColor: "#FF00F000", overflow: "scroll" }}>
+                <SpatialDiv spatialStyle={{ position: { z: 1, x: 0, y: 0 }, glassEffect: true }} style={{ height: "100%", margin: "0px", flexGrow: "1", fontSize: "3em", marginLeft: "25px", marginRight: "25px", backgroundColor: "#FF00F000", overflow: "scroll" }}>
                     <SpatialDiv spatialStyle={{ position: { z: 20 }, glassEffect: true }} style={{ width: "50%", backgroundColor: "#FFF0F000" }}>
                         <p>Test</p>
                     </SpatialDiv>

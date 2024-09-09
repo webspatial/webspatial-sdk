@@ -121,6 +121,11 @@ export type SpatialReactComponentRef = Ref<{
 export const SpatialReactComponent = forwardRef((props: SpatialReactComponentProps, ref: SpatialReactComponentRef) => {
     const parentSpatialReactComponent = useContext(SpatialReactComponentContext)
 
+    var getAllowScroll = () => {
+        return props.allowScroll || (props.style?.overflow == "scroll")
+    }
+
+
     let isVisibleRef = useRef(null as null | HTMLDivElement)
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     const [elWidth, setElWidth] = useState(0)
@@ -297,7 +302,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
                 })
                 await resizeSpatial()
-                await windowMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
+                await windowMngr.webview!.setScrollEnabled(getAllowScroll())
                 await windowMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
             })
 
@@ -347,7 +352,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                         materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
                     })
 
-                    await ins.webview?.setScrollEnabled(props.allowScroll ? true : false)
+                    await ins.webview?.setScrollEnabled(getAllowScroll())
                     await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
                 }
             })();
