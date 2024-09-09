@@ -125,6 +125,10 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         return props.allowScroll || (props.style?.overflow == "scroll")
     }
 
+    var getIsFixed = () => {
+        return (props.scrollWithParent == false) || (props.style?.position == "fixed")
+    }
+
 
     let isVisibleRef = useRef(null as null | HTMLDivElement)
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
@@ -303,7 +307,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 })
                 await resizeSpatial()
                 await windowMngr.webview!.setScrollEnabled(getAllowScroll())
-                await windowMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
+                await windowMngr.webview!.setScrollWithParent(!getIsFixed())
             })
 
             return { mnger: windowMngr, headObserver: headObserver }
@@ -353,7 +357,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     })
 
                     await ins.webview?.setScrollEnabled(getAllowScroll())
-                    await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
+                    await ins.webview?.setScrollWithParent(!getIsFixed())
                 }
             })();
             resizeSpatial()
