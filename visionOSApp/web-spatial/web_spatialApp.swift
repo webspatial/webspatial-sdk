@@ -15,7 +15,7 @@ import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
 // To load a local path, remove http:// eg.  "static-web/"
-let initialPageToLoad = "http://localhost:5174/src/spatialStyleTest/avp.html"
+let initialPageToLoad = "http://localhost:5173"
 
 struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowStyle: String
