@@ -231,6 +231,22 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         </>
     } else if (mode === "spatial") { // Behavior on spatial
 
+        function syncParentHeadToChild(childWindow: WindowProxy) {
+            for (let i = document.head.children.length - 1; i >= 0; i--) {
+                let n = document.head.children[i].cloneNode()
+                if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
+                    // Safari seems to have a bug where 
+                    // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
+                    // the second load request never is fired resulting in css not to be applied. 
+                    // Workaround this by making the css stylesheet request unique
+                    (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
+                    childWindow.document.head.appendChild(n)
+                } else {
+                    childWindow.document.head.appendChild(n)
+                }
+            }
+        }
+
         async function setViewport(openedWindow?: WindowProxy) {
             if (!openedWindow) return;
             const bodyWidth = document.body.getBoundingClientRect().width;
@@ -275,14 +291,13 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             // Synchronize head of parent page to this page to ensure styles are in sync
             let headObserver = new MutationObserver((mutations) => {
                 if (openedWindow) {
-                    openedWindow.document.head.innerHTML = document.head.innerHTML
-
+                    syncParentHeadToChild(openedWindow)
                     setViewport(openedWindow);
                 }
             })
             headObserver.observe(document.head, { childList: true })
 
-            openedWindow!.document.head.innerHTML = document.head.innerHTML
+            syncParentHeadToChild(openedWindow!)
 
             if (customElEnabled) {
                 openedWindow!.document.body.appendChild(customElements!)
