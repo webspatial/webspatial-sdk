@@ -13,7 +13,7 @@ struct OpenDismissHandlerUI: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
 
-    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
+    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
 
     var body: some View {
         VStack {}
