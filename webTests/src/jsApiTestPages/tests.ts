@@ -155,7 +155,6 @@ var main = async () => {
 
     } else if (page == "pingNativePerf") {
         session.log("Attempt ping start")
-        var startTime = Date.now()
         var pingCount = 100
         var charCount = 10000;
         var str = ''
@@ -163,12 +162,31 @@ var main = async () => {
             str += 'x'
         }
         for (let i = 0; i < pingCount; i++) {
-            await session.ping(str)
+            if (i == pingCount - 1) {
+                await session.ping(str)
+            } else {
+                session.ping(str)
+            }
         }
-        var delta = Date.now() - startTime;
         let b = document.createElement("h1")
-        b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms"
         document.body.appendChild(b)
+
+        var counter = 0
+        let loop = async (time: DOMHighResTimeStamp) => {
+            var startTime = Date.now()
+            for (let i = 0; i < pingCount; i++) {
+                if (i == pingCount - 1) {
+                    await session.ping(str)
+                } else {
+                    await session.ping(str)
+                }
+            }
+            var delta = Date.now() - startTime;
+            b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms\nTotal time: " + (delta) + "ms Counter:" + (counter++)
+            session.requestAnimationFrame(loop)
+        }
+        session.requestAnimationFrame(loop)
+
         session.log("Got response")
     } else if (page == "winodwInnerHTML") {
         if (!spatial.isSupported()) {
