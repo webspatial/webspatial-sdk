@@ -8,129 +8,13 @@
 import RealityKit
 import SwiftUI
 
-// Using scrollview has some side effects so only use it on elements we want to clip the edges of
-// Seems only scrollview has this clipping property so far on visionOS otherwise we would use ZStack
-struct OptionalClip<Content: View>: View {
-    var clipEnabled = true
-    let viewBuilder: () -> Content
-
-    var body: some View {
-        if clipEnabled {
-            ScrollView {
-                viewBuilder()
-            }.offset(z: CGFloat(0)).frame(maxWidth: .infinity, maxHeight: .infinity).scrollDisabled(true)
-        } else {
-            viewBuilder()
-        }
-    }
-}
-
-struct SpatialWebViewUI: View {
-    @Environment(SpatialResource.self) var ent: SpatialResource
-    var body: some View {
-        if let wv = ent.spatialWebView {
-            let parentYOffset = Float(wv.scrollOffset.y)
-
-            // Display child entities of the webview
-            OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
-                ZStack {
-                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-                        if let e = ent.childEntities[key] {
-                            let _ = e.forceUpdate ? 0 : 0
-                            if e.spatialWebView != nil && e.coordinateSpace == .DOM {
-                                let view = e.spatialWebView!
-                                let x = CGFloat(e.modelEntity.position.x)
-                                let y = CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
-                                let z = CGFloat(e.modelEntity.position.z)
-                                let width = CGFloat(view.resolutionX)
-                                let height = CGFloat(view.resolutionY)
-
-                                SpatialWebViewUI().environment(e)
-                                    .frame(width: width, height: height)
-                                    .frame(depth: 0, alignment: .back)
-                                    .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
-                                    .position(x: x, y: y)
-                                    .offset(z: z)
-                                    .gesture(
-                                        DragGesture()
-                                            .onChanged { gesture in
-                                                let scrollEnabled = view.isScrollEnabled()
-                                                if !scrollEnabled {
-                                                    if !view.dragStarted {
-                                                        view.dragStarted = true
-                                                        view.dragStart = (gesture.translation.height)
-                                                    }
-
-                                                    // TODO: this should have velocity
-                                                    let delta = view.dragStart - gesture.translation.height
-                                                    view.dragStart = gesture.translation.height
-                                                    wv.updateScrollOffset(delta: delta)
-                                                }
-                                            }
-                                            .onEnded { _ in
-                                                let scrollEnabled = view.isScrollEnabled()
-                                                if !scrollEnabled {
-                                                    view.dragStarted = false
-                                                    view.dragStart = 0
-
-                                                    wv.stopScrolling()
-                                                }
-                                            }
-                                    )
-                            }
-                        }
-                    }
-
-                    // Mode3D content
-                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-                        if let e = ent.childEntities[key] {
-                            if let modelUIComponent = e.modelUIComponent, let modelUrl = e.modelUIComponent?.url {
-                                let x = CGFloat(e.modelEntity.position.x)
-                                let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                                let z = CGFloat(e.modelEntity.position.z)
-
-                                let scaleX = e.modelEntity.scale.x
-                                let scaleY = e.modelEntity.scale.y
-
-                                let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
-                                let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
-                                Model3D(url: modelUrl) { model in
-                                    model.model?
-                                        .resizable()
-                                        .aspectRatio(contentMode: e.modelUIComponent?.aspectRatio == "fit" ? .fit : .fill)
-                                }
-                                .frame(width: width, height: height)
-                                .position(x: x, y: y)
-                                .offset(z: z)
-                                .padding3D(.front, -100000)
-                                .opacity(modelUIComponent.opacity)
-                            }
-                        }
-                    }
-                }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
-            }
-
-            // Display the main webview
-            wv.getView()
-                .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
-                .background(
-                    wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
-                )
-                .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
-                .cornerRadius(wv.cornerRadius)
-                .opacity(wv.visible ? 1 : 0)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-    }
-}
-
 struct PlainWindowGroupView: View {
     @EnvironmentObject private var sceneDelegate: SceneDelegate
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
-    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
+    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
 
     @State var windowResizeInProgress = false
     @State var timer: Timer?
@@ -149,30 +33,38 @@ struct PlainWindowGroupView: View {
             .onChanged { value in
                 let startPos = value.convert(value.startLocation3D, from: .local, to: .scene)
                 let translate = value.convert(value.location3D, from: .local, to: .scene)
-                let ic = value.entity.components[SpatialResource.self]!.inputComponent!
+//                let ic = value.entity.components[SpatialResource.self]!.inputComponent!
+                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
+                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
+
                 if !ic.isDragging {
                     ic.isDragging = true
                     ic.trackedPosition = startPos
                     let delta = translate - ic.trackedPosition
                     ic.trackedPosition = translate
 
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.resourceID, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
                 } else {
                     let delta = translate - ic.trackedPosition
                     ic.trackedPosition = translate
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.resourceID, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
                 }
             }
             .onEnded { value in
-                value.entity.components[SpatialResource.self]!.inputComponent!.wv!.fireGestureEvent(inputComponentID: value.entity.components[SpatialResource.self]!.inputComponent!.resourceID, data: "{eventType: 'dragend'}")
-                value.entity.components[SpatialResource.self]!.inputComponent!.isDragging = false
+                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
+                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
+                ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragend'}")
+                ic.isDragging = false
+
+//                value.entity.components[SpatialResource.self]!.inputComponent!.wv!.fireGestureEvent(inputComponentID: value.entity.components[SpatialResource.self]!.inputComponent!.resourceID, data: "{eventType: 'dragend'}")
+//                value.entity.components[SpatialResource.self]!.inputComponent!.isDragging = false
             }
     }
 
     var body: some View {
         let rootWebview = windowGroupContent.childEntities.filter {
-            $0.value.spatialWebView != nil && $0.value.coordinateSpace == .ROOT
-        }.first?.value.spatialWebView
+            $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
+        }.first?.value.getComponent(SpatialWindowComponent.self)
 
         OpenDismissHandlerUI().environment(windowGroupContent)
 
@@ -202,26 +94,27 @@ struct PlainWindowGroupView: View {
                     ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
                         if let e = windowGroupContent.childEntities[key] {
                             let _ = e.forceUpdate ? 0 : 0
-                            if e.spatialWebView != nil && (e.coordinateSpace == .ROOT) {
-                                let view = e.spatialWebView!
-                                let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width / 2) : CGFloat(e.modelEntity.position.x)
-                                let y = e.coordinateSpace == .ROOT ? (proxy3D.size.height / 2) : CGFloat(e.modelEntity.position.y - (e.spatialWebView!.scrollWithParent ? parentYOffset : 0))
-                                let z = CGFloat(e.modelEntity.position.z)
-                                let width = e.coordinateSpace == .ROOT ? (proxy3D.size.width) : CGFloat(view.resolutionX)
-                                let height = e.coordinateSpace == .ROOT ? (proxy3D.size.height) : CGFloat(view.resolutionY)
+                            if let view = e.getComponent(SpatialWindowComponent.self) {
+                                if e.coordinateSpace == .ROOT {
+                                    let x = e.coordinateSpace == .ROOT ? (proxy3D.size.width / 2) : CGFloat(e.modelEntity.position.x)
+                                    let y = e.coordinateSpace == .ROOT ? (proxy3D.size.height / 2) : CGFloat(e.modelEntity.position.y - (view.scrollWithParent ? parentYOffset : 0))
+                                    let z = CGFloat(e.modelEntity.position.z)
+                                    let width = e.coordinateSpace == .ROOT ? (proxy3D.size.width) : CGFloat(view.resolutionX)
+                                    let height = e.coordinateSpace == .ROOT ? (proxy3D.size.height) : CGFloat(view.resolutionY)
 
-                                if windowResizeInProgress && e.coordinateSpace == .ROOT {
-                                    VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
-                                        .position(x: x, y: y)
-                                        .offset(z: z)
-                                }
-                                if !windowResizeInProgress {
-                                    SpatialWebViewUI().environment(e)
-                                        .frame(width: width, height: height).padding3D(.front, -100000)
-                                        .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
-                                        .position(x: x, y: y)
-                                        .offset(z: z)
-                                        .opacity(windowResizeInProgress ? 0 : 1)
+                                    if windowResizeInProgress && e.coordinateSpace == .ROOT {
+                                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
+                                            .position(x: x, y: y)
+                                            .offset(z: z)
+                                    }
+                                    if !windowResizeInProgress {
+                                        SpatialWebViewUI().environment(e)
+                                            .frame(width: width, height: height).padding3D(.front, -100000)
+                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                            .position(x: x, y: y)
+                                            .offset(z: z)
+                                            .opacity(windowResizeInProgress ? 0 : 1)
+                                    }
                                 }
                             }
                         }
