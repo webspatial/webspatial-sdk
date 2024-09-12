@@ -18,4 +18,8 @@ class SpatialModelComponent: SpatialComponent {
 
         super.init()
     }
+
+    override func onAddToEntity() {
+        entity?.modelEntity.model = modelComponent
+    }
 }
