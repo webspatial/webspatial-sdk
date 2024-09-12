@@ -29,7 +29,6 @@
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 		2BDBF9BA2C73F33600D269D7 /* SpatialResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B92C73F33600D269D7 /* SpatialResource.swift */; };
 		2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */; };
-		2BE1E8FD2C90345D00EAE76A /* SpatialObjectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8FC2C90345D00EAE76A /* SpatialObjectManager.swift */; };
 		2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */; };
 		2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */; };
 		2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */; };
@@ -78,7 +77,6 @@
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 		2BDBF9B92C73F33600D269D7 /* SpatialResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialResource.swift; sourceTree = "<group>"; };
 		2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
-		2BE1E8FC2C90345D00EAE76A /* SpatialObjectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObjectManager.swift; sourceTree = "<group>"; };
 		2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialEntity.swift; sourceTree = "<group>"; };
 		2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialComponent.swift; sourceTree = "<group>"; };
 		2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialInputComponent.swift; sourceTree = "<group>"; };
@@ -193,7 +191,6 @@
 				2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */,
 				2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */,
 				2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */,
-				2BE1E8FC2C90345D00EAE76A /* SpatialObjectManager.swift */,
 				2BDBF9B82C73F2E900D269D7 /* spatialResource */,
 				2B0B1C0E2C494E4100E644F9 /* Utils */,
 				2B9909912C360594004826D1 /* uiKitDelegate */,
@@ -381,7 +378,6 @@
 				2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */,
 				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
-				2BE1E8FD2C90345D00EAE76A /* SpatialObjectManager.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
 				2BA52EB62C6C8D1300C24DED /* AnimationDescription.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
