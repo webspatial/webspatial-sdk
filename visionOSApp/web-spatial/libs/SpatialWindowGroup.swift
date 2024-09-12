@@ -12,20 +12,17 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowGroup: SpatialObject {
-    static var windowGroups = [String: SpatialWindowGroup]()
     static func getSpatialWindowGroup(_ name: String) -> SpatialWindowGroup? {
-        return windowGroups[name]
+        return SpatialObject.get(name) as? SpatialWindowGroup
     }
 
     static func getOrCreateSpatialWindowGroup(_ name: String) -> SpatialWindowGroup? {
-        if let windowGroup = windowGroups[name] {
+        if let windowGroup = getSpatialWindowGroup(name) {
             return windowGroup
         }
         let newWindowGroup = SpatialWindowGroup(name)
         return newWindowGroup
     }
-
-    let name: String
 
     // Resources
     var childEntities = [String: SpatialEntity]()
@@ -39,15 +36,22 @@ class SpatialWindowGroup: SpatialObject {
     var openWindowData = PassthroughSubject<WindowGroupData, Never>()
     var closeWindowData = PassthroughSubject<WindowGroupData, Never>()
 
-    init(_ name: String) {
-        self.name = name
-        super.init()
-
-        SpatialWindowGroup.windowGroups[name] = self
+    override func onDestroy() {
+        childEntities.forEach { $0.value.destroy() }
+        childEntities = [:]
     }
 
-    deinit {
-        SpatialWindowGroup.windowGroups.removeValue(forKey: name)
+    override func inspect() -> [String: Any] {
+        let childEntitiesInfo = childEntities.mapValues { entity in
+            entity.inspect()
+        }
+
+        let baseInspectInfo = super.inspect()
+        var inspectInfo: [String: Any] = ["childEntities": childEntitiesInfo]
+        for (key, value) in baseInspectInfo {
+            inspectInfo[key] = value
+        }
+        return inspectInfo
     }
 }
 

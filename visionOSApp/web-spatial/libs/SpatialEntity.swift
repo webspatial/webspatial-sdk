@@ -15,6 +15,17 @@ enum CoordinateSpaceMode {
         APP,
         DOM,
         ROOT
+
+    var description: String {
+        switch self {
+        case .APP:
+            return "APP"
+        case .DOM:
+            return "DOM"
+        case .ROOT:
+            return "ROOT"
+        }
+    }
 }
 
 // temp use SpatialBridgeComponent,
@@ -56,6 +67,11 @@ class SpatialEntity: SpatialObject {
         if let g = parentWindowGroup {
             g.childEntities[id] = self
         }
+
+        // @Trevor: I add this code to process parent
+        //          I think an entity can be either child of WindowGroup or SpatialEntity
+        parent?.childEntities.removeValue(forKey: id)
+        parent = nil
     }
 
     public func addChild(child: SpatialEntity) {
@@ -65,6 +81,7 @@ class SpatialEntity: SpatialObject {
     public func setParent(parentEnt: SpatialEntity?) {
         // Remove parent windowGroup
         parentWindowGroup?.childEntities.removeValue(forKey: id)
+        parentWindowGroup = nil
 
         // Remove from existing parent
         parent?.childEntities.removeValue(forKey: id)
@@ -102,10 +119,18 @@ class SpatialEntity: SpatialObject {
         return nil
     }
 
+    public func hasComponent<T: SpatialComponent>(_ type: T.Type) -> Bool {
+        return getComponent(type) != nil
+    }
+
     override func onDestroy() {
         if let wg = parentWindowGroup {
             wg.childEntities.removeValue(forKey: id)
         }
+
+        // handle components destroy
+        components.forEach { $0.destroy() }
+        components = []
 
         setParent(parentEnt: nil)
         let keys = childEntities.map { $0.key }
@@ -116,5 +141,26 @@ class SpatialEntity: SpatialObject {
 
         modelEntity.removeFromParent()
         modelEntity.components.removeAll()
+    }
+
+    override func inspect() -> [String: Any] {
+        let childEntitiesInfo = childEntities.mapValues { entity in
+            entity.inspect()
+        }
+        let componentsInfo = components.map { $0.inspect() }
+
+        var inspectInfo: [String: Any] = [
+            "childEntities": childEntitiesInfo,
+            "coordinateSpace": coordinateSpace.description,
+            "parent": parent?.id,
+            "parentWindowGroup": parentWindowGroup?.id,
+            "components": componentsInfo
+        ]
+
+        let baseInspectInfo = super.inspect()
+        for (key, value) in baseInspectInfo {
+            inspectInfo[key] = value
+        }
+        return inspectInfo
     }
 }

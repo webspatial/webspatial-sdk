@@ -28,6 +28,8 @@ struct web_spatialApp: App {
     @State var root: SpatialWindowComponent? = nil
     @State var rootWGD: SpatialWindowGroup
 
+    @Environment(\.scenePhase) private var scenePhase
+
     init() {
         print("WebSpatial App Started --------")
 
@@ -58,7 +60,7 @@ struct web_spatialApp: App {
             // Create a default entity with webview resource
             let rootEntity = SpatialEntity()
             rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
-            let windowComponent = SpatialWindowComponent(parentWindowGroupID: rootWGD.name, url: fileUrl)
+            let windowComponent = SpatialWindowComponent(parentWindowGroupID: rootWGD.id, url: fileUrl)
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowGroup(wg: rootWGD)
 
