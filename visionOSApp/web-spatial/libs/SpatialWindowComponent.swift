@@ -38,6 +38,29 @@ struct LoadingStyles {
 
 @Observable
 class SpatialWindowComponent: SpatialComponent {
+    override func inspect() -> [String: Any] {
+        let childEntitiesInfo = childResources.mapValues { spatialObject in
+            spatialObject.inspect()
+        }
+
+        var inspectInfo: [String: Any] = [
+            "scrollWithParent": scrollWithParent,
+            "resolutionX": resolutionX,
+            "resolutionY": resolutionY,
+            "parentWebviewID": parentWebviewID,
+            "parentWindowGroupID": parentWindowGroupID,
+            "childWindowGroups": childWindowGroups,
+            "spawnedNativeWebviewsCount": spawnedNativeWebviews.count,
+            "childResources": childEntitiesInfo,
+        ]
+
+        let baseInspectInfo = super.inspect()
+        for (key, value) in baseInspectInfo {
+            inspectInfo[key] = value
+        }
+        return inspectInfo
+    }
+
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
     var resolutionX: Double = 0
@@ -291,16 +314,44 @@ class SpatialWindowComponent: SpatialComponent {
                 if let cmdInfo = getCommandInfo(json: json) {
                     completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
                 }
+            } else if command == "inspect" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    if let spatialObject = SpatialObject.getRefObject(cmdInfo.resourceID) {
+                        let inspectInfo = spatialObject.inspect()
+                        let isValidJSON = JSONSerialization.isValidJSONObject(inspectInfo)
+                        if isValidJSON {
+                            do {
+                                let jsonData = try JSONSerialization.data(withJSONObject: inspectInfo, options: [])
+                                let jsonString = String(data: jsonData, encoding: .utf8)
+                                completeEvent(requestID: cmdInfo.requestID, data: jsonString ?? "Conver failed")
+                            } catch {
+                                print("Error: \(error.localizedDescription)")
+                                completeEvent(requestID: cmdInfo.requestID, data: """
+                                error: \(error.localizedDescription)
+                                """)
+                            }
+
+                        } else {
+                            print(inspectInfo)
+                        }
+                    } else {
+                        print("Missing spatialObject resource")
+                        return
+                    }
+                }
             } else if command == "getStats" {
                 if let cmdInfo = getCommandInfo(json: json) {
-                    let statsInfo = gSpatialObjectManager.stats()
-                    completeEvent(requestID: cmdInfo.requestID, data: """
-                    {
-                        totalRefs: \(String(statsInfo.spatialObjectCount)),
-                        activeSpatialResources: \(String(statsInfo.destroyedObjectCount)),
-                        webViewRefs: \(String(statsInfo.webviewCount))
+                    let statsInfo = SpatialObject.stats()
+                    do {
+                        let jsonData = try JSONEncoder().encode(statsInfo)
+                        let jsonString = String(data: jsonData, encoding: .utf8)
+                        completeEvent(requestID: cmdInfo.requestID, data: jsonString ?? "Conver failed")
+                    } catch {
+                        print("Error: \(error.localizedDescription)")
+                        completeEvent(requestID: cmdInfo.requestID, data: """
+                        error: \(error.localizedDescription)
+                        """)
                     }
-                    """)
                 }
             } else if command == "setComponent" {
                 if let cmdInfo = getCommandInfo(json: json) {
@@ -394,17 +445,17 @@ class SpatialWindowComponent: SpatialComponent {
             } else if command == "updateResource" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     var delayComplete = false
-                    if gSpatialObjectManager.get(cmdInfo.resourceID) == nil {
+                    if SpatialObject.get(cmdInfo.resourceID) == nil {
                         print("Missing resource")
                         return
                     }
-                    let sr = gSpatialObjectManager.get(cmdInfo.resourceID)!
+                    let sr = SpatialObject.get(cmdInfo.resourceID)!
                     if let entity = sr as? SpatialEntity {
                         if let setParentID: String = json.getValue(lookup: ["data", "update", "setParent"]) {
                             if setParentID.isEmpty {
                                 entity.setParent(parentEnt: nil)
                             } else {
-                                if let parentEntity = gSpatialObjectManager.get(setParentID) as? SpatialEntity {
+                                if let parentEntity = SpatialObject.get(setParentID) as? SpatialEntity {
                                     entity.setParent(parentEnt: parentEntity)
                                 } else {
                                     print("Invalid setParentID", setParentID)
@@ -412,7 +463,7 @@ class SpatialWindowComponent: SpatialComponent {
                             }
                         }
 
-                        if var space: String = json.getValue(lookup: ["data", "update", "setCoordinateSpace"]) {
+                        if let space: String = json.getValue(lookup: ["data", "update", "setCoordinateSpace"]) {
                             entity.coordinateSpace = .APP
                             if space == "Root" {
                                 entity.coordinateSpace = .ROOT
@@ -440,19 +491,17 @@ class SpatialWindowComponent: SpatialComponent {
                            let orientationz: Double = json.getValue(lookup: ["data", "update", "orientation", "z"]),
                            let orientationw: Double = json.getValue(lookup: ["data", "update", "orientation", "w"])
                         {
-                            if let e = childResources[cmdInfo.resourceID] {
-                                entity.modelEntity.position.x = Float(x)
-                                entity.modelEntity.position.y = Float(y)
-                                entity.modelEntity.position.z = Float(z)
-                                entity.modelEntity.scale.x = Float(scalex)
-                                entity.modelEntity.scale.y = Float(scaley)
-                                entity.modelEntity.scale.z = Float(scalez)
-                                entity.modelEntity.orientation.vector.x = Float(orientationx)
-                                entity.modelEntity.orientation.vector.y = Float(orientationy)
-                                entity.modelEntity.orientation.vector.z = Float(orientationz)
-                                entity.modelEntity.orientation.vector.w = Float(orientationw)
-                                entity.forceUpdate = !entity.forceUpdate
-                            }
+                            entity.modelEntity.position.x = Float(x)
+                            entity.modelEntity.position.y = Float(y)
+                            entity.modelEntity.position.z = Float(z)
+                            entity.modelEntity.scale.x = Float(scalex)
+                            entity.modelEntity.scale.y = Float(scaley)
+                            entity.modelEntity.scale.z = Float(scalez)
+                            entity.modelEntity.orientation.vector.x = Float(orientationx)
+                            entity.modelEntity.orientation.vector.y = Float(orientationy)
+                            entity.modelEntity.orientation.vector.z = Float(orientationz)
+                            entity.modelEntity.orientation.vector.w = Float(orientationw)
+                            entity.forceUpdate = !entity.forceUpdate
                         }
                     } else if sr is SpatialMeshResource {
                     } else if let spatialPhysicallyBasedMaterial = sr as? SpatialPhysicallyBasedMaterial {

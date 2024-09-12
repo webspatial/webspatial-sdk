@@ -6,6 +6,7 @@ import { WindowStyle } from './types'
 
 import { SpatialMesh, SpatialPhysicallyBasedMaterial } from "./resource"
 import { SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialWindowComponent } from "./component"
+import { SpatialObject } from "./SpatialObject"
 
 class SpatialFrame {
 
@@ -186,6 +187,14 @@ export class SpatialSession {
    */
   async getStats() {
     return (await WebSpatial.getStats() as any)
+  }
+
+  async inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
+    return WebSpatial.inspect(spatialObjectId)
+  }
+
+  async inspectRootWindowGroup() {
+    return WebSpatial.inspectRootWindowGroup()
   }
 
   /** Opens the immersive space */
