@@ -13,37 +13,45 @@ export function NestedDivsTest() {
                 setDepth(Number(e.target.value) + 0.01)
             }} />
 
-        <SpatialDiv
-            debugName="PARENT A ROOT"
-            spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
-            style={{ width: 500, height: 300, backgroundColor: redCol }}>
-            <p>Hello world A</p>
+        <div className="grid grid-cols-4 gap-4">
             <SpatialDiv
-                debugName="CHILD A1"
-                spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
-                style={{ width: 200, height: 100, backgroundColor: blueCol }}>
-                <p>Hello world B</p>
-            </SpatialDiv>
-        </SpatialDiv>
-
-
-        <SpatialDiv
-            debugName="PARENT B ROOT"
-            spatialStyle={{ position: { z: depth * 10, x: 0, y: 15 }, glassEffect: true }}
-            style={{ width: 500, height: 300, backgroundColor: redCol }}>
-            <p>Hello world A</p>
-            <SpatialDiv
-                debugName="CHILD B1"
-                spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
-                style={{ width: 200, height: 100, backgroundColor: blueCol }}>
-                <p>Hello world B</p>
+                debugName="PARENT A ROOT"
+                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
+                style={{ height: 300, backgroundColor: redCol }}>
+                <p>Hello world A</p>
                 <SpatialDiv
-                    debugName="CHILD B2"
+                    debugName="CHILD A1"
                     spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
-                    style={{ width: 200, height: 100, backgroundColor: greenCol }}>
+                    style={{ height: 100, backgroundColor: blueCol }}>
                     <p>Hello world B</p>
                 </SpatialDiv>
             </SpatialDiv>
-        </SpatialDiv>
+            <SpatialDiv
+                debugName="PARENT B ROOT"
+                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
+                style={{ height: 300, backgroundColor: redCol }}>
+                <p>Hello world A</p>
+                <SpatialDiv
+                    debugName="CHILD B1"
+                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                    style={{ height: 100, backgroundColor: blueCol }}>
+                    <p>Hello world B</p>
+                    <SpatialDiv
+                        debugName="CHILD B2"
+                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                        style={{ height: 100, backgroundColor: greenCol }}>
+                        <p>Hello world B</p>
+                    </SpatialDiv>
+                </SpatialDiv>
+            </SpatialDiv>
+            <div style={{ backgroundColor: redCol, height: "50px" }}>02</div>
+            <div style={{ backgroundColor: redCol, height: "50px" }}>02</div>
+            <div style={{ backgroundColor: redCol, height: "50px" }}>02</div>
+            <div style={{ backgroundColor: redCol, height: "50px" }}>02</div>
+            <div style={{ backgroundColor: redCol, height: "50px" }}>09</div>
+        </div>
+
+
+
     </>
 }
