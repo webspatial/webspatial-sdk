@@ -93,7 +93,6 @@ function getInheritedStyleProps(from: HTMLElement): any {
 }
 
 export interface SpatialReactComponentProps {
-    _isStandardInstance?: boolean // Spatial components render both a standard (hidden) and spatial instance (displayed), this prop lets us know which context we are in
     allowScroll?: boolean,
     scrollWithParent?: boolean,
     spatialStyle?: Partial<spatialStyleDef>,
@@ -131,6 +130,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     }
 
 
+    let isVisibleRef = useRef(null as null | HTMLDivElement)
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     const [elWidth, setElWidth] = useState(0)
     const [elHeight, setElHeight] = useState(0)
@@ -257,7 +257,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
         let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
-            if (props._isStandardInstance === true) {
+            if (getInheritedStyleProps(isVisibleRef.current!).visibility == "hidden") {
                 return null
             }
             // Open window and set style
@@ -394,13 +394,13 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
 
         const renderStandardInstance = () => (
-            <El _isStandardInstance={true} ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
+            <El ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </El>
         );
         const renderWrappedStandardInstance = () => (
             <div ref={childrenSizeRef} style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
-                <El _isStandardInstance={true} className={props.className} style={{ ...props.style }}  >
+                <El className={props.className} style={{ ...props.style }}  >
                     {props.children}
                 </El>
             </div>
@@ -408,13 +408,14 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
         return <>
             <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
+                <div ref={isVisibleRef}></div>
                 {
                     isPrimiveEl
                         ? renderStandardInstance()
                         : renderWrappedStandardInstance()
                 }
 
-                {!isCustomElement && portalEl && (props._isStandardInstance !== false) ? <>
+                {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
                     {createPortal(<El className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
