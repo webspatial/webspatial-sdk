@@ -1,5 +1,5 @@
 //
-//  SpatialObject.swift
+//  SpatialMeshResource.swift
 //  web-spatial
 //
 //  Created by ByteDance on 9/10/24.
