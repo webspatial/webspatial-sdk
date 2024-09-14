@@ -25,7 +25,19 @@ class SpatialWindowGroup: SpatialObject {
     }
 
     // Resources
-    var childEntities = [String: SpatialEntity]()
+    private var childEntities = [String: SpatialEntity]()
+
+    public func getEntities() -> [String: SpatialEntity] {
+        return childEntities
+    }
+
+    public func addEntity(_ spatialEntity: SpatialEntity) {
+        childEntities[spatialEntity.id] = spatialEntity
+    }
+
+    public func removeEntity(_ spatialEntity: SpatialEntity) {
+        childEntities.removeValue(forKey: spatialEntity.id)
+    }
 
     // Global state
     var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
