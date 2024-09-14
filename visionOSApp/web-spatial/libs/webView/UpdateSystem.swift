@@ -9,7 +9,7 @@ import Foundation
 import RealityKit
 
 struct UpdateWebViewComponent: Component {
-    var webView: SpatialWebView?
+    var webView: SpatialWindowComponent?
     init() {}
 }
 
