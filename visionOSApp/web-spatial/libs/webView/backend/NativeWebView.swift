@@ -13,7 +13,7 @@ import SwiftUI
 
 import WebKit
 
-var wgManager = WindowGroupManager()
+// var wgManager = WindowGroupManager()
 
 class WebViewHolder {
     var needsUpdate = false
@@ -32,7 +32,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
     deinit {}
     
-    weak var webViewRef: SpatialWebView? = nil
+    weak var webViewRef: SpatialWindowComponent? = nil
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
         webViewRef?.didStartLoadPage()
@@ -46,7 +46,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, resourceID: webViewRef!.resourceID)
+        webViewRef?.loadRequestWV?.didLoadChild(loadRequestID: webViewRef!.loadRequestID, resourceID: webViewRef!.id)
         webViewRef?.loadRequestID = -1
         webViewRef?.didFinishLoadPage()
     }
@@ -90,14 +90,14 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
         if webViewRef != nil {
-            let wg = wgManager.getWindowGroup(windowGroup: webViewRef!.parentWindowGroupID)
+            let wg = SpatialWindowGroup.getSpatialWindowGroup(webViewRef!.parentWindowGroupID)!
             wg.updateFrame = !(wg.updateFrame)
         }
     }
 }
 
 struct WebViewNative: UIViewRepresentable {
-    weak var webViewRef: SpatialWebView? = nil
+    weak var webViewRef: SpatialWindowComponent? = nil
     var url: URL = .init(filePath: "/")
     var webViewHolder = WebViewHolder()
     
