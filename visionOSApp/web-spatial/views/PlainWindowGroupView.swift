@@ -62,7 +62,7 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        let rootWebview = windowGroupContent.childEntities.filter {
+        let rootWebview = windowGroupContent.getEntities().filter {
             $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
         }.first?.value.getComponent(SpatialWindowComponent.self)
 
@@ -81,7 +81,7 @@ struct PlainWindowGroupView: View {
                     // content.add(cube)
 
                 } update: { content in
-                    for (_, entity) in windowGroupContent.childEntities {
+                    for (_, entity) in windowGroupContent.getEntities() {
                         content.add(entity.modelEntity)
                     }
                 }.opacity(windowResizeInProgress ? 0 : 1)
@@ -91,8 +91,9 @@ struct PlainWindowGroupView: View {
                     let parentYOffset = Float(wv.scrollOffset.y)
 
                     // Webview content
-                    ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                        if let e = windowGroupContent.childEntities[key] {
+                    let entities = windowGroupContent.getEntities()
+                    ForEach(Array(entities.keys), id: \.self) { key in
+                        if let e = entities[key] {
                             let _ = e.forceUpdate ? 0 : 0
                             if let view = e.getComponent(SpatialWindowComponent.self) {
                                 if e.coordinateSpace == .ROOT {
