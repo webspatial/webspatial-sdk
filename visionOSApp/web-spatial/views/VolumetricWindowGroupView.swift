@@ -18,21 +18,24 @@ struct VolumetricWindowGroupView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
-    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
+    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
 
     var body: some View {
         OpenDismissHandlerUI().environment(windowGroupContent)
 
         RealityView { _, _ in
-        } update: { content, attachments in
-
-            for (_, entity) in windowGroupContent.childEntities {
+//            print("gu")
+        }
+        update: { content, attachments in
+            let entities = windowGroupContent.getEntities()
+            for (_, entity) in entities {
                 content.add(entity.modelEntity)
             }
 
-            for key in Array(windowGroupContent.childEntities.keys) {
-                let e = windowGroupContent.childEntities[key]!
-                if e.spatialWebView != nil && e.coordinateSpace == .APP {
+            for key in Array(entities.keys) {
+                let e = entities[key]!
+                let windowComponent = e.getComponent(SpatialWindowComponent.self)
+                if windowComponent != nil && e.coordinateSpace == .APP {
                     if let glassCubeAttachment = attachments.entity(for: key) {
                         //   glassCubeAttachment.position = e.modelEntity.position
                         if e.modelEntity.children.count == 0 {
@@ -41,16 +44,20 @@ struct VolumetricWindowGroupView: View {
                     }
                 }
             }
-        } attachments: {
-            ForEach(Array(windowGroupContent.childEntities.keys), id: \.self) { key in
-                let e = windowGroupContent.childEntities[key]!
-                if e.spatialWebView != nil && e.coordinateSpace == .APP {
-                    Attachment(id: key) {
-                        let wv = e.spatialWebView!
-                        wv.getView().background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
-                            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
-                            .cornerRadius(wv.cornerRadius).frame(width: wv.resolutionX, height: wv.resolutionY)
-                    }
+        }
+        attachments: {
+            let entities = windowGroupContent.getEntities().filter { _, entity in
+                entity.coordinateSpace == .APP && entity.hasComponent(SpatialWindowComponent.self)
+            }
+
+            ForEach(Array(entities.keys), id: \.self) { key in
+                let entity = entities[key]!
+                let wv = entity.getComponent(SpatialWindowComponent.self)!
+                Attachment(id: key) {
+                    wv.getView()
+                        .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
+                        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
+                        .cornerRadius(wv.cornerRadius).frame(width: wv.resolutionX, height: wv.resolutionY)
                 }
             }
         }
