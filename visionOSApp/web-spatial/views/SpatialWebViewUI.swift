@@ -1,0 +1,129 @@
+//
+//  SpatialWebViewUI.swift
+//  web-spatial
+//
+//  Created by ByteDance on 5/9/24.
+//
+
+import RealityKit
+import SwiftUI
+
+// Using scrollview has some side effects so only use it on elements we want to clip the edges of
+// Seems only scrollview has this clipping property so far on visionOS otherwise we would use ZStack
+struct OptionalClip<Content: View>: View {
+    var clipEnabled = true
+    let viewBuilder: () -> Content
+
+    var body: some View {
+        if clipEnabled {
+            ScrollView {
+                viewBuilder()
+            }.offset(z: CGFloat(0)).frame(maxWidth: .infinity, maxHeight: .infinity).scrollDisabled(true)
+        } else {
+            viewBuilder()
+        }
+    }
+}
+
+struct SpatialWebViewUI: View {
+    @Environment(SpatialEntity.self) var ent: SpatialEntity
+    var body: some View {
+        if let wv = ent.getComponent(SpatialWindowComponent.self) {
+            let parentYOffset = Float(wv.scrollOffset.y)
+
+            // Display child entities of the webview
+            OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
+                ZStack {
+                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
+                        if let e = ent.childEntities[key] {
+                            let _ = e.forceUpdate ? 0 : 0
+                            if let childWindowcomponent = e.getComponent(SpatialWindowComponent.self) {
+                                if e.coordinateSpace == .DOM {
+                                    let view = childWindowcomponent
+                                    let x = CGFloat(e.modelEntity.position.x)
+                                    let y = CGFloat(e.modelEntity.position.y - (view.scrollWithParent ? parentYOffset : 0))
+                                    let z = CGFloat(e.modelEntity.position.z)
+                                    let width = CGFloat(view.resolutionX)
+                                    let height = CGFloat(view.resolutionY)
+
+                                    SpatialWebViewUI().environment(e)
+                                        .frame(width: width, height: height)
+                                        .frame(depth: 0, alignment: .back)
+                                        .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                        .position(x: x, y: y)
+                                        .offset(z: z)
+                                        .gesture(
+                                            DragGesture()
+                                                .onChanged { gesture in
+                                                    let scrollEnabled = view.isScrollEnabled()
+                                                    if !scrollEnabled {
+                                                        if !view.dragStarted {
+                                                            view.dragStarted = true
+                                                            view.dragStart = (gesture.translation.height)
+                                                        }
+
+                                                        // TODO: this should have velocity
+                                                        let delta = view.dragStart - gesture.translation.height
+                                                        view.dragStart = gesture.translation.height
+                                                        wv.updateScrollOffset(delta: delta)
+                                                    }
+                                                }
+                                                .onEnded { _ in
+                                                    let scrollEnabled = view.isScrollEnabled()
+                                                    if !scrollEnabled {
+                                                        view.dragStarted = false
+                                                        view.dragStart = 0
+
+                                                        wv.stopScrolling()
+                                                    }
+                                                }
+                                        )
+                                }
+                            }
+                        }
+                    }
+
+                    // Mode3D content
+                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
+                        if let e = ent.childEntities[key] {
+                            if let modelUIComponent = e.getComponent(SpatialModelUIComponent.self) {
+                                if let modelUrl = modelUIComponent.url {
+                                    let x = CGFloat(e.modelEntity.position.x)
+                                    let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                                    let z = CGFloat(e.modelEntity.position.z)
+
+                                    let scaleX = e.modelEntity.scale.x
+                                    let scaleY = e.modelEntity.scale.y
+
+                                    let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
+                                    let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
+                                    Model3D(url: modelUrl) { model in
+                                        model.model?
+                                            .resizable()
+                                            .aspectRatio(contentMode: modelUIComponent.aspectRatio == "fit" ? .fit : .fill)
+                                    }
+                                    .frame(width: width, height: height)
+                                    .position(x: x, y: y)
+                                    .offset(z: z)
+                                    .padding3D(.front, -100000)
+                                    .opacity(modelUIComponent.opacity)
+                                }
+                            }
+                        }
+                    }
+                }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
+            }
+
+            // Display the main webview
+            wv.getView()
+                .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
+                .background(
+                    wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
+                )
+                .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
+                .cornerRadius(wv.cornerRadius)
+                .opacity(wv.visible ? 1 : 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}

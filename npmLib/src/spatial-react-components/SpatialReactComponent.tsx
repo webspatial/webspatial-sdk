@@ -6,6 +6,7 @@ import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
+const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
 
 /**
  * Hook to manage multiple instances of objects that could be initialized as async
@@ -120,8 +121,17 @@ export type SpatialReactComponentRef = Ref<{
  */
 export const SpatialReactComponent = forwardRef((props: SpatialReactComponentProps, ref: SpatialReactComponentRef) => {
     const parentSpatialReactComponent = useContext(SpatialReactComponentContext)
+    const isStandard = useContext(SpatialIsStandardInstanceContext) // Spatial components render both a standard (hidden) and spatial instance (displayed), this prop lets us know which context we are in
 
-    let isVisibleRef = useRef(null as null | HTMLDivElement)
+    var getAllowScroll = () => {
+        return props.allowScroll || (props.style?.overflow == "scroll")
+    }
+
+    var getIsFixed = () => {
+        return (props.scrollWithParent == false) || (props.style?.position == "fixed")
+    }
+
+
     let childrenSizeRef = useRef(null as null | HTMLDivElement)
     const [elWidth, setElWidth] = useState(0)
     const [elHeight, setElHeight] = useState(0)
@@ -222,17 +232,33 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         </>
     } else if (mode === "spatial") { // Behavior on spatial
 
+        function syncParentHeadToChild(childWindow: WindowProxy) {
+            for (let i = document.head.children.length - 1; i >= 0; i--) {
+                let n = document.head.children[i].cloneNode()
+                if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
+                    // Safari seems to have a bug where 
+                    // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
+                    // the second load request never is fired resulting in css not to be applied. 
+                    // Workaround this by making the css stylesheet request unique
+                    (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
+                    childWindow.document.head.appendChild(n)
+                } else {
+                    childWindow.document.head.appendChild(n)
+                }
+            }
+        }
+
         async function setViewport(openedWindow?: WindowProxy) {
             if (!openedWindow) return;
             const bodyWidth = document.body.getBoundingClientRect().width;
             const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
             viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
-            await windowInstance.getActiveInstance()?.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
+            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
         }
 
         let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
-            if (getInheritedStyleProps(isVisibleRef.current!).visibility == "hidden") {
+            if (isStandard === true) {
                 return null
             }
             // Open window and set style
@@ -264,12 +290,15 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             };
 
             // Synchronize head of parent page to this page to ensure styles are in sync
-            document.head.addEventListener("DOMNodeInserted", () => {
-                openedWindow!.document.head.innerHTML = document.head.innerHTML
-
-                setViewport(openedWindow!);
+            let headObserver = new MutationObserver((mutations) => {
+                if (openedWindow) {
+                    syncParentHeadToChild(openedWindow)
+                    setViewport(openedWindow);
+                }
             })
-            openedWindow!.document.head.innerHTML = document.head.innerHTML
+            headObserver.observe(document.head, { childList: true })
+
+            syncParentHeadToChild(openedWindow!)
 
             if (customElEnabled) {
                 openedWindow!.document.body.appendChild(customElements!)
@@ -293,21 +322,23 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
                 })
                 await resizeSpatial()
-                await windowMngr.webview!.setScrollEnabled(props.allowScroll ? true : false)
-                await windowMngr.webview!.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
+                await windowMngr.webview!.setScrollEnabled(getAllowScroll())
+                await windowMngr.webview!.setScrollWithParent(!getIsFixed())
             })
 
-            return windowMngr
+            return { mnger: windowMngr, headObserver: headObserver }
         }, (instance) => {
             if (instance) {
-                instance.destroy()
+                instance.headObserver.disconnect()
+                instance.mnger.destroy()
             }
         }, [])
 
 
         // Handle resizing
         let resizeSpatial = async () => {
-            var ins = windowInstance.getActiveInstance()
+
+            var ins = windowInstance.getActiveInstance()?.mnger
             if (ins) {
                 let rect = childrenSizeRef.current!.getBoundingClientRect()
                 if (customElEnabled) {
@@ -332,7 +363,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         // Sync prop updates
         useEffect(() => {
             (async () => {
-                var ins = windowInstance.getActiveInstance()
+                var ins = windowInstance.getActiveInstance()?.mnger
                 if (ins) {
                     await ins.webview?.setStyle({
                         transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
@@ -341,8 +372,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                         materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
                     })
 
-                    await ins.webview?.setScrollEnabled(props.allowScroll ? true : false)
-                    await ins.webview?.setScrollWithParent(props.scrollWithParent === undefined ? true : props.scrollWithParent)
+                    await ins.webview?.setScrollEnabled(getAllowScroll())
+                    await ins.webview?.setScrollWithParent(!getIsFixed())
                 }
             })();
             resizeSpatial()
@@ -377,15 +408,16 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         );
 
         return <>
-            <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()}>
-                <div ref={isVisibleRef}></div>
-                {
-                    isPrimiveEl
-                        ? renderStandardInstance()
-                        : renderWrappedStandardInstance()
-                }
+            <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
+                <SpatialIsStandardInstanceContext.Provider value={true}>
+                    {
+                        isPrimiveEl
+                            ? renderStandardInstance()
+                            : renderWrappedStandardInstance()
+                    }
+                </SpatialIsStandardInstanceContext.Provider>
 
-                {!isCustomElement && portalEl && (getInheritedStyleProps(isVisibleRef.current!).visibility != "hidden") ? <>
+                {!isCustomElement && portalEl && (isStandard !== true) ? <>
                     {createPortal(<El className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
