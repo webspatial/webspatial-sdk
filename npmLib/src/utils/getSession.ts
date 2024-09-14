@@ -18,19 +18,19 @@ export function getSession() {
     return _currentSession
 }
 
-(window as any).getSession = getSession;
+// (window as any).getSession = getSession;
 
-    (window as any).getStat = async () => {
-        const statsInfo = await getSession()!.getStats();
+//     (window as any).getStat = async () => {
+//         const statsInfo = await getSession()!.getStats();
          
-        return statsInfo
-    };
+//         return statsInfo
+//     };
  
 
-    (window as any).inspectRootWindowGroup = async () => {
-        const rootWindowGroupInfo = await getSession()!.inspectRootWindowGroup();
-        console.log(rootWindowGroupInfo)
-        return rootWindowGroupInfo
-    };
+//     (window as any).inspectRootWindowGroup = async () => {
+//         const rootWindowGroupInfo = await getSession()!.inspectRootWindowGroup();
+//         console.log(rootWindowGroupInfo)
+//         return rootWindowGroupInfo
+//     };
 
 export { spatial }
