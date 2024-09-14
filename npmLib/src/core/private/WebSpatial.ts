@@ -128,7 +128,24 @@ export class WebSpatial {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
             WebSpatial.sendCommand(cmd)
         })
-        return result
+        return (result as any).data
+    }
+
+    static async inspect(spatialObjectId: string) {
+        var cmd = new RemoteCommand("inspect", {
+            resourceID: spatialObjectId
+        })
+
+        var result = await new Promise((res, rej) => {
+            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+            WebSpatial.sendCommand(cmd)
+        })
+        
+        return (result as any).data
+    }
+
+    static async inspectRootWindowGroup() {
+        return this.inspect('root')
     }
 
     static async setComponent(entity: WebSpatialResource, resource: WebSpatialResource) {

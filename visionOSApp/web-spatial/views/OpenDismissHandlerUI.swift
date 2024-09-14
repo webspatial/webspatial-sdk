@@ -13,7 +13,9 @@ struct OpenDismissHandlerUI: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
 
-    @Environment(WindowGroupContentDictionary.self) var windowGroupContent: WindowGroupContentDictionary
+    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
+
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack {}
@@ -34,6 +36,13 @@ struct OpenDismissHandlerUI: View {
             }
             .onReceive(windowGroupContent.closeWindowData) { wd in
                 dismissWindow(id: wd.windowStyle, value: wd)
+            }
+
+            .onChange(of: scenePhase) { oldValue, newValue in
+                print("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
+                if newValue == .background {
+//                    windowGroupContent.destroy()
+                }
             }
     }
 }
