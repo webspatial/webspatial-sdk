@@ -61,11 +61,12 @@ class SpatialEntity: SpatialObject {
     weak var parentWindowGroup: SpatialWindowGroup?
     public func setParentWindowGroup(wg: SpatialWindowGroup?) {
         if let g = parentWindowGroup {
-            g.childEntities.removeValue(forKey: id)
+            g.removeEntity(self)
+            parentWindowGroup = nil
         }
         parentWindowGroup = wg
         if let g = parentWindowGroup {
-            g.childEntities[id] = self
+            g.addEntity(self)
         }
 
         // @Trevor: I add this code to process parent
@@ -80,7 +81,7 @@ class SpatialEntity: SpatialObject {
 
     public func setParent(parentEnt: SpatialEntity?) {
         // Remove parent windowGroup
-        parentWindowGroup?.childEntities.removeValue(forKey: id)
+        parentWindowGroup?.removeEntity(self)
         parentWindowGroup = nil
 
         // Remove from existing parent
@@ -125,7 +126,7 @@ class SpatialEntity: SpatialObject {
 
     override func onDestroy() {
         if let wg = parentWindowGroup {
-            wg.childEntities.removeValue(forKey: id)
+            wg.removeEntity(self)
         }
 
         // handle components destroy
