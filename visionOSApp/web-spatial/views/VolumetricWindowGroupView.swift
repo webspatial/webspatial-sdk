@@ -27,12 +27,13 @@ struct VolumetricWindowGroupView: View {
 //            print("gu")
         }
         update: { content, attachments in
-            for (_, entity) in windowGroupContent.childEntities {
+            let entities = windowGroupContent.getEntities()
+            for (_, entity) in entities {
                 content.add(entity.modelEntity)
             }
 
-            for key in Array(windowGroupContent.childEntities.keys) {
-                let e = windowGroupContent.childEntities[key]!
+            for key in Array(entities.keys) {
+                let e = entities[key]!
                 let windowComponent = e.getComponent(SpatialWindowComponent.self)
                 if windowComponent != nil && e.coordinateSpace == .APP {
                     if let glassCubeAttachment = attachments.entity(for: key) {
@@ -45,7 +46,7 @@ struct VolumetricWindowGroupView: View {
             }
         }
         attachments: {
-            let entities = windowGroupContent.childEntities.filter { _, entity in
+            let entities = windowGroupContent.getEntities().filter { _, entity in
                 entity.coordinateSpace == .APP && entity.hasComponent(SpatialWindowComponent.self)
             }
 
