@@ -156,7 +156,7 @@ var main = async () => {
     } else if (page == "pingNativePerf") {
         session.log("Attempt ping start")
         var pingCount = 100
-        var charCount = 10000;
+        var charCount = 300;
         var str = ''
         for (let i = 0; i < charCount; i++) {
             str += 'x'
@@ -173,16 +173,32 @@ var main = async () => {
 
         var counter = 0
         let loop = async (time: DOMHighResTimeStamp) => {
+            var results = ""
+
+            // With transactions
+            var startTime = Date.now()
+            await session.transaction(() => {
+                for (let i = 0; i < pingCount; i++) {
+                    session.ping(str)
+                }
+            })
+            var delta = Date.now() - startTime;
+            results += "[Without transactions]<br> Average ping time: " + (delta / pingCount) + "ms\nTotal time: " + (delta) + "ms Counter:" + (counter++) + "<br><br>\n\n"
+
+            // Without transactions
             var startTime = Date.now()
             for (let i = 0; i < pingCount; i++) {
                 if (i == pingCount - 1) {
                     await session.ping(str)
                 } else {
-                    await session.ping(str)
+                    session.ping(str)
                 }
             }
             var delta = Date.now() - startTime;
-            b.innerHTML = "Average ping time: " + (delta / pingCount) + "ms\nTotal time: " + (delta) + "ms Counter:" + (counter++)
+            results += "[Without transactions]<br> Average ping time: " + (delta / pingCount) + "ms\nTotal time: " + (delta) + "ms Counter:" + (counter++) + "\n"
+
+            // Populate results and request animation frame
+            b.innerHTML = results
             session.requestAnimationFrame(loop)
         }
         session.requestAnimationFrame(loop)
