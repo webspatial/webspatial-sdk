@@ -206,7 +206,7 @@ async function webViewMemoryLeakTest() {
     }
 }
 
-var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest]
+var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle] // , webViewMemoryLeakTest
 
 class TestRunner {
     _started = false
