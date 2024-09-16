@@ -75,11 +75,12 @@ export class WebSpatial {
 
         var msg = JSON.stringify(cmd);
 
-        // Android testing
-        // (window as any).Android.nativeMessage(msg)
-        // return
-
-        (window as any).webkit.messageHandlers.bridge.postMessage(msg)
+        if ((window as any).Android) {
+            (window as any).Android.nativeMessage(msg)
+            return
+        } else {
+            (window as any).webkit.messageHandlers.bridge.postMessage(msg)
+        }
     }
 
     static logger: Logger = (window as any).WebSpatailEnabled ? new NativeLogger(this.sendCommand) : new WebLogger('WebSpatial');
