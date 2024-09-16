@@ -30,6 +30,8 @@ export class WebSpatial {
     public static eventPromises: any = {}
     public static inputComponents: { [key: string]: SpatialInputComponent; } = {}
 
+    public static transactionStarted = false
+    public static transactionCommands = Array<RemoteCommand>()
 
     static init() {
         (window as any).__SpatialWebEvent = (e: any) => {
@@ -49,7 +51,28 @@ export class WebSpatial {
         }
     }
 
+    static startTransaction() {
+        WebSpatial.transactionStarted = true
+        WebSpatial.transactionCommands = []
+    }
+
+    static async sendTransaction() {
+        WebSpatial.transactionStarted = false
+        var cmd = new RemoteCommand("multiCommand", { commandList: WebSpatial.transactionCommands })
+
+        var result = await new Promise((res, rej) => {
+            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+            WebSpatial.sendCommand(cmd)
+        })
+        return result
+    }
+
     static async sendCommand(cmd: RemoteCommand) {
+        if (WebSpatial.transactionStarted) {
+            WebSpatial.transactionCommands.push(cmd as any)
+            return
+        }
+
         var msg = JSON.stringify(cmd);
 
         // Android testing
@@ -140,7 +163,7 @@ export class WebSpatial {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
             WebSpatial.sendCommand(cmd)
         })
-        
+
         return (result as any).data
     }
 
