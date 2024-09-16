@@ -216,4 +216,13 @@ export class SpatialSession {
   getCurrentWindowGroup() {
     return new SpatialWindowGroup(WebSpatial.getCurrentWindowGroup())
   }
+
+  // Start a transaction that queues up commands to submit them all at once to reduce ipc overhead
+  transaction(fn: Function) {
+    WebSpatial.startTransaction()
+    fn()
+    return WebSpatial.sendTransaction()
+  }
+
+
 }
