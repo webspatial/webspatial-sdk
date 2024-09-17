@@ -135,11 +135,16 @@ export class WebSpatial {
             message: msg
         })
 
-        var result = await new Promise((res, rej) => {
-            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        if (WebSpatial.transactionStarted) {
             WebSpatial.sendCommand(cmd)
-        })
-        return result
+            return null
+        } else {
+            var result = await new Promise((res, rej) => {
+                WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+                WebSpatial.sendCommand(cmd)
+            })
+            return result
+        }
     }
 
     static async getStats() {
