@@ -208,13 +208,25 @@ export class SpatialSession {
   }
 
   // Retreives the windowgroup corresponding to the Immersive space
+  private static _immersiveWindowGroup = null as (null | SpatialWindowGroup)
   async getImmersiveWindowGroup() {
-    return new SpatialWindowGroup(WebSpatial.getImmersiveWindowGroup())
+    if (SpatialSession._immersiveWindowGroup) {
+      return SpatialSession._immersiveWindowGroup
+    } else {
+      SpatialSession._immersiveWindowGroup = new SpatialWindowGroup(WebSpatial.getImmersiveWindowGroup())
+      return SpatialSession._immersiveWindowGroup
+    }
   }
 
   // Retreives the window group that is the parent to this spatial web page
+  private static _currentWindowGroup = null as (null | SpatialWindowGroup)
   getCurrentWindowGroup() {
-    return new SpatialWindowGroup(WebSpatial.getCurrentWindowGroup())
+    if (SpatialSession._currentWindowGroup) {
+      return SpatialSession._currentWindowGroup
+    } else {
+      SpatialSession._currentWindowGroup = new SpatialWindowGroup(WebSpatial.getCurrentWindowGroup())
+      return SpatialSession._currentWindowGroup
+    }
   }
 
   // Start a transaction that queues up commands to submit them all at once to reduce ipc overhead
