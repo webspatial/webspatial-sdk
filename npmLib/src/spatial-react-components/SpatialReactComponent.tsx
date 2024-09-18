@@ -113,6 +113,29 @@ export type SpatialReactComponentRef = Ref<{
     getBoundingClientRect: () => DOMRect
 }>
 
+function syncParentHeadToChild(childWindow: WindowProxy) {
+    for (let i = document.head.children.length - 1; i >= 0; i--) {
+        let n = document.head.children[i].cloneNode()
+        if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
+            // Safari seems to have a bug where 
+            // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
+            // the second load request never is fired resulting in css not to be applied. 
+            // Workaround this by making the css stylesheet request unique
+            (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
+            childWindow.document.head.appendChild(n)
+        } else {
+            childWindow.document.head.appendChild(n)
+        }
+    }
+}
+
+async function setViewport(windowInstance: any, elWidth: number, openedWindow?: WindowProxy, ) {
+    if (!openedWindow) return;
+    const bodyWidth = document.body.getBoundingClientRect().width;
+    const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
+    viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
+    await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
+}
 
 /**
  * Component that extends the div tag that allows the inner contents to be posisioned in 3D space
@@ -202,7 +225,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             i.contentWindow!.document.documentElement.style.backgroundColor = "transparent"
             // Copy styles
             var links = document.getElementsByTagName("link")
-            for (var l of links) {
+            const linksArray = Array.from(links);
+            for (var l of linksArray) {
                 if (l.rel == "stylesheet") {
                     var styleEl = l.cloneNode(true)
                     i.contentWindow!.document.head.appendChild(styleEl)
@@ -232,29 +256,9 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         </>
     } else if (mode === "spatial") { // Behavior on spatial
 
-        function syncParentHeadToChild(childWindow: WindowProxy) {
-            for (let i = document.head.children.length - 1; i >= 0; i--) {
-                let n = document.head.children[i].cloneNode()
-                if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
-                    // Safari seems to have a bug where 
-                    // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
-                    // the second load request never is fired resulting in css not to be applied. 
-                    // Workaround this by making the css stylesheet request unique
-                    (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
-                    childWindow.document.head.appendChild(n)
-                } else {
-                    childWindow.document.head.appendChild(n)
-                }
-            }
-        }
+        
 
-        async function setViewport(openedWindow?: WindowProxy) {
-            if (!openedWindow) return;
-            const bodyWidth = document.body.getBoundingClientRect().width;
-            const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
-            viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
-            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
-        }
+        
 
         let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
@@ -293,7 +297,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let headObserver = new MutationObserver((mutations) => {
                 if (openedWindow) {
                     syncParentHeadToChild(openedWindow)
-                    setViewport(openedWindow);
+                    setViewport(windowInstance, elWidth, openedWindow);
                 }
             })
             headObserver.observe(document.head, { childList: true })
@@ -349,7 +353,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 }
                 await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
-                await setViewport(ins.window)
+                await setViewport(windowInstance, elWidth ,ins.window)
 
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
                 const computedStyle = getComputedStyle(childrenSizeRef.current!);
