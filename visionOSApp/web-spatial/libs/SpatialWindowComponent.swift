@@ -310,7 +310,20 @@ class SpatialWindowComponent: SpatialComponent {
 
     func onJSScriptMessage(json: JsonParser) {
         if let command: String = json.getValue(lookup: ["command"]) {
-            if command == "ping" {
+            if command == "multiCommand" {
+                if let cmdInfo = getCommandInfo(json: json) {
+                    if let commandList = ((json.json as AnyObject)["data"] as AnyObject)["commandList"] as? [AnyObject] {
+                        for subCommand in commandList {
+                            if let obj = subCommand as? [String: AnyObject] {
+                                let jp = JsonParser(str: nil)
+                                jp.json = obj
+                                onJSScriptMessage(json: jp)
+                            }
+                        }
+                    }
+                    completeEvent(requestID: cmdInfo.requestID, data: "{}")
+                }
+            } else if command == "ping" {
                 if let cmdInfo = getCommandInfo(json: json) {
                     completeEvent(requestID: cmdInfo.requestID, data: "{ping: 'Complete'}")
                 }
