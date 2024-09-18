@@ -144,8 +144,9 @@ async function webViewMemoryLeakTest() {
         await e.setComponent(i)
         var webview1 = await session.getStats()
         session.log("Webview 1 Stats: " + JSON.stringify(webview1))
-        session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
-        if (webview1.data.webViewRefs != 2) {
+        const windowArrayLength = webview1.refObjects.windowArray.length
+        session.log("Webview Ref Counts: " + windowArrayLength)
+        if (windowArrayLength != 2) {
             failure_reasons += "WebView 1 webViewRefs not equal to 2 got " + webview1.data.webViewRefs + "\n"
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -184,9 +185,10 @@ async function webViewMemoryLeakTest() {
         //bind window to entity
         await e.setComponent(i)
         var webview2 = await session.getStats()
+        const windowArrayLength = webview1.refObjects.windowArray.length
         session.log("Webview 2 Stats: " + JSON.stringify(webview2))
-        session.log("Webview Ref Counts: " + webview1.data.webViewRefs)
-        if (webview1.data.webViewRefs != 2) {
+        session.log("Webview Ref Counts: " + windowArrayLength)
+        if (windowArrayLength != 2) {
             failure_reasons += "WebView 2 webViewRefs not equal to 2\n"
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -206,7 +208,7 @@ async function webViewMemoryLeakTest() {
     }
 }
 
-var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest]
+var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest] 
 
 class TestRunner {
     _started = false
