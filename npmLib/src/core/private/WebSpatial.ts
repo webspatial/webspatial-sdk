@@ -30,6 +30,8 @@ export class WebSpatial {
     public static eventPromises: any = {}
     public static inputComponents: { [key: string]: SpatialInputComponent; } = {}
 
+    public static transactionStarted = false
+    public static transactionCommands = Array<RemoteCommand>()
 
     static init() {
         (window as any).__SpatialWebEvent = (e: any) => {
@@ -49,14 +51,36 @@ export class WebSpatial {
         }
     }
 
+    static startTransaction() {
+        WebSpatial.transactionStarted = true
+        WebSpatial.transactionCommands = []
+    }
+
+    static async sendTransaction() {
+        WebSpatial.transactionStarted = false
+        var cmd = new RemoteCommand("multiCommand", { commandList: WebSpatial.transactionCommands })
+
+        var result = await new Promise((res, rej) => {
+            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+            WebSpatial.sendCommand(cmd)
+        })
+        return result
+    }
+
     static async sendCommand(cmd: RemoteCommand) {
+        if (WebSpatial.transactionStarted) {
+            WebSpatial.transactionCommands.push(cmd as any)
+            return
+        }
+
         var msg = JSON.stringify(cmd);
 
-        // Android testing
-        // (window as any).Android.nativeMessage(msg)
-        // return
-
-        (window as any).webkit.messageHandlers.bridge.postMessage(msg)
+        if ((window as any).Android) {
+            (window as any).Android.nativeMessage(msg)
+            return
+        } else {
+            (window as any).webkit.messageHandlers.bridge.postMessage(msg)
+        }
     }
 
     static logger: Logger = (window as any).WebSpatailEnabled ? new NativeLogger(this.sendCommand) : new WebLogger('WebSpatial');
@@ -111,11 +135,16 @@ export class WebSpatial {
             message: msg
         })
 
-        var result = await new Promise((res, rej) => {
-            WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        if (WebSpatial.transactionStarted) {
             WebSpatial.sendCommand(cmd)
-        })
-        return result
+            return null
+        } else {
+            var result = await new Promise((res, rej) => {
+                WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+                WebSpatial.sendCommand(cmd)
+            })
+            return result
+        }
     }
 
     static async getStats() {
@@ -140,7 +169,7 @@ export class WebSpatial {
             WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
             WebSpatial.sendCommand(cmd)
         })
-        
+
         return (result as any).data
     }
 
