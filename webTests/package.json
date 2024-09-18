@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node esbuild.mjs",
-    "build": "node esbuild.mjs",
+    "dev": "npm run dev:web & npm run dev:avp",
+    "dev:web": "node esbuild.mjs",
+    "dev:avp": "target=avp node esbuild.mjs",
+    "build": "npm run dev",
     "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
@@ -14,7 +16,6 @@
     "@types/three": "^0.164.0",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
-    "esbuild": "^0.23.0",
     "livereload": "^0.9.3",
     "loglevel": "^1.9.1",
     "postcss": "^8.4.38",
@@ -24,6 +25,7 @@
     "react-router-dom": "^6.25.1",
     "redux": "^5.0.1",
     "redux-state-sync": "^3.1.4",
+    "styled-components": "^6.1.13",
     "tailwindcss": "^3.4.3",
     "three": "^0.164.1",
     "tiny-glob": "^0.2.9"
@@ -39,6 +41,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^8.2.2",
     "daisyui": "^4.12.10",
+    "esbuild": "^0.23.1",
+    "esbuild-css-modules-plugin": "^3.1.2",
     "esbuild-plugin-tailwindcss": "^1.2.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
