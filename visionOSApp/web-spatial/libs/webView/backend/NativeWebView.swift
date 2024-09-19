@@ -6,14 +6,10 @@
 //
 
 import Foundation
-
 import RealityKit
 import RealityKitContent
 import SwiftUI
-
 import WebKit
-
-// var wgManager = WindowGroupManager()
 
 class WebViewHolder {
     var needsUpdate = false
