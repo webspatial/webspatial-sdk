@@ -31,11 +31,13 @@ struct SpatialWebViewUI: View {
         if let wv = ent.getComponent(SpatialWindowComponent.self) {
             let parentYOffset = Float(wv.scrollOffset.y)
 
+            let childEntities = ent.getEntities()
+
             // Display child entities of the webview
             OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                 ZStack {
-                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-                        if let e = ent.childEntities[key] {
+                    ForEach(Array(childEntities.keys), id: \.self) { key in
+                        if let e = childEntities[key] {
                             let _ = e.forceUpdate ? 0 : 0
                             if let childWindowcomponent = e.getComponent(SpatialWindowComponent.self) {
                                 if e.coordinateSpace == .DOM {
@@ -84,8 +86,8 @@ struct SpatialWebViewUI: View {
                     }
 
                     // Mode3D content
-                    ForEach(Array(ent.childEntities.keys), id: \.self) { key in
-                        if let e = ent.childEntities[key] {
+                    ForEach(Array(childEntities.keys), id: \.self) { key in
+                        if let e = childEntities[key] {
                             if let modelUIComponent = e.getComponent(SpatialModelUIComponent.self) {
                                 if let modelUrl = modelUIComponent.url {
                                     let x = CGFloat(e.modelEntity.position.x)
