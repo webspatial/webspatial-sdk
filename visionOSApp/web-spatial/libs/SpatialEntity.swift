@@ -54,8 +54,12 @@ class SpatialEntity: SpatialObject {
     }
 
     // Entity can have a child/parent relationship
-    var childEntities = [String: SpatialEntity]()
+    private var childEntities = [String: SpatialEntity]()
     weak var parent: SpatialEntity? = nil
+
+    public func getEntities() -> [String: SpatialEntity] {
+        return childEntities
+    }
 
     // Window group that this entity will be displayed in (not related to resource ownership)
     weak var parentWindowGroup: SpatialWindowGroup?
