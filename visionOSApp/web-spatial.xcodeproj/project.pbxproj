@@ -11,19 +11,16 @@
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */; };
-		2B2F1D6D2BEBFAAA006897EE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6C2BEBFAAA006897EE /* ContentView.swift */; };
 		2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
 		2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */; };
 		2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */; };
 		2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D902BED61A8006897EE /* NativeWebView.swift */; };
-		2B2F1D962BED8E6C006897EE /* WindowGroupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D952BED8E6C006897EE /* WindowGroupManager.swift */; };
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
 		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
-		2BA52EB62C6C8D1300C24DED /* AnimationDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA52EB52C6C8D0C00C24DED /* AnimationDescription.swift */; };
 		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 		2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */; };
@@ -55,7 +52,6 @@
 		2B2F1D632BEBFAAA006897EE /* web-spatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web-spatial.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialApp.swift; sourceTree = "<group>"; };
-		2B2F1D6C2BEBFAAA006897EE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -64,12 +60,10 @@
 		2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialTests.swift; sourceTree = "<group>"; };
 		2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JsonParser.swift; sourceTree = "<group>"; };
 		2B2F1D902BED61A8006897EE /* NativeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebView.swift; sourceTree = "<group>"; };
-		2B2F1D952BED8E6C006897EE /* WindowGroupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupManager.swift; sourceTree = "<group>"; };
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
 		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
-		2BA52EB52C6C8D0C00C24DED /* AnimationDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationDescription.swift; sourceTree = "<group>"; };
 		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 		2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
@@ -140,8 +134,6 @@
 				2B2F1D972BEDA8BD006897EE /* views */,
 				2B2F1D8A2BED4CD0006897EE /* libs */,
 				2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */,
-				2B2F1D6C2BEBFAAA006897EE /* ContentView.swift */,
-				2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */,
 				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
 				2B2F1D752BEBFAAC006897EE /* Info.plist */,
 				2B2F1D722BEBFAAC006897EE /* Preview Content */,
@@ -189,7 +181,6 @@
 				2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */,
 				2B0B1C0E2C494E4100E644F9 /* Utils */,
 				2B9909912C360594004826D1 /* uiKitDelegate */,
-				2B2F1D942BED8E26006897EE /* windowGroupManager */,
 				2B2F1D8C2BED4CE7006897EE /* json */,
 				2B2F1D8B2BED4CDA006897EE /* webView */,
 			);
@@ -221,21 +212,13 @@
 			path = backend;
 			sourceTree = "<group>";
 		};
-		2B2F1D942BED8E26006897EE /* windowGroupManager */ = {
-			isa = PBXGroup;
-			children = (
-				2B2F1D952BED8E6C006897EE /* WindowGroupManager.swift */,
-				2BA52EB52C6C8D0C00C24DED /* AnimationDescription.swift */,
-			);
-			path = windowGroupManager;
-			sourceTree = "<group>";
-		};
 		2B2F1D972BEDA8BD006897EE /* views */ = {
 			isa = PBXGroup;
 			children = (
 				2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */,
 				2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */,
 				2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */,
+				2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */,
 				2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */,
 			);
 			path = views;
@@ -357,7 +340,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2B2F1D6D2BEBFAAA006897EE /* ContentView.swift in Sources */,
 				2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */,
 				2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */,
 				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
@@ -365,10 +347,8 @@
 				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
-				2BA52EB62C6C8D1300C24DED /* AnimationDescription.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
 				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
-				2B2F1D962BED8E6C006897EE /* WindowGroupManager.swift in Sources */,
 				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
 				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
 				2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */,
