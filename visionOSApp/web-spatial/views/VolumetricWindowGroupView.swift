@@ -15,9 +15,6 @@ import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
 struct VolumetricWindowGroupView: View {
-    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
-    @Environment(\.openWindow) private var openWindow
     @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
 
     var body: some View {
