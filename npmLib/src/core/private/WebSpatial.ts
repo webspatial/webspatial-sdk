@@ -264,7 +264,7 @@ export class WebSpatial {
         var loop = () => {
             setTimeout(() => {
                 loop()
-            }, 1000 / 90);
+            }, 1000 / 60);
             var curTime = window.performance.now()
             fn(curTime, curTime - lastTime)
             lastTime = curTime
