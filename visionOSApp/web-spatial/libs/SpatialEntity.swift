@@ -155,6 +155,8 @@ class SpatialEntity: SpatialObject {
         let componentsInfo = components.map { $0.inspect() }
 
         var inspectInfo: [String: Any] = [
+            "position": modelEntity.position.description,
+            "scale": modelEntity.scale.description,
             "childEntities": childEntitiesInfo,
             "coordinateSpace": coordinateSpace.description,
             "parent": parent?.id,

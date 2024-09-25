@@ -1,68 +1,68 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { SpatialStyleComponent } from './SpatialStyleComponent';
-import styled from 'styled-components';
 import { CSSModelSample } from './CSSModelSample';
+import { StyledTitle, StyledTitle2, StyledTitleComponent } from './StyledTitle';
+
+import { monitorGlobalStyles } from 'web-spatial'
 
 const JackComponent = (props: any) => {
+    const [isPrimary, setIsPrimary] = useState(true)
+    const onClick = () => {
+        setIsPrimary(v => !v)
+    }
+
+    useEffect(() => {
+        console.log('dbg begin JackComponent')
+        return () => {
+            console.log('dbg end JackComponent')
+        }
+    }, [])
+
     const style = {
-        back: 23
+        // background: 'blue',
+        color: isPrimary ? 'red' : 'green'
     }
-    const style2 = {
-        back: 13
-    }
-    return <div   className='text-blue bg-base-200	bg-clip-border px-6 py-6 '>
+
+    return <div style={style} onClick={onClick} className='text-blue bg-base-200	bg-clip-border px-6 py-6 '>
         this is JackComponent
-        <p    > no!! </p>
+        <p> no!! </p>
 
         {props.children}
 
     </div>
 }
 
-const Title = styled.h1`
-  font-size: 1.5em;
-  text-align: center;
-  color: #BF4F74;
-  back: 122
-`;
 
-const Title2 = styled.h1`
-  font-size: 1.5em;
-  text-align: center;
-  color: #BF4F74;
-  back: 10
-`;
+
+
 
 function App() {
-    const style = {
-        background: 'yellow',
-        back: 72
-    }
-
-    const style2 = {
-        back: 52
-    }
+    console.log('dbg in App')
 
     return (
-        <div   className='w-screen h-screen flex flex-row base-200' >
-            {/* <div> number one </div>
-            <div> number two </div> */}
-            <Title style={style}  > this is style component </Title>
-            {/* <Title2> this is another style component </Title2> */}
-            <CSSModelSample />
+        <div className='w-screen h-screen flex flex-row base-200' >
+            <StyledTitleComponent></StyledTitleComponent>
+            {/* <StyledTitle  onClick={onClick}  $primary={isPrimary} style={style} > this is style component </StyledTitle> */}
+
+            {/* <StyledTitle  onClick={onClick}  $primary={isPrimary} > this is second style component </StyledTitle> */}
+
+            {/* <CSSModelSample /> */}
 
             {/* <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
                 <a href="#" onClick={() => history.go(-1)}>Go Back</a>
-            </div>
-            <div className="flex flex-col flex-1">
+            </div> */}
+
+            {/* <div className="flex flex-col flex-1">
                 <SpatialStyleComponent />
             </div> */}
-            why it
-            {/* <JackComponent style = {style} > good luck < /JackComponent> */}
+
+            {/* <JackComponent  > good luck < /JackComponent> */}
         </div>
     )
 }
+
+monitorGlobalStyles()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

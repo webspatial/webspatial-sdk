@@ -3,6 +3,7 @@ export { SpatialIFrame } from './SpatialIFrame';
 export { SpatialPrimitive, withSpatial } from './SpatialPrimitive';
 export { type SpatialReactComponentProps, type SpatialReactComponentRef } from './SpatialReactComponent';
 
+export { monitorGlobalStyles } from './useSpatialStyle';
 
 // for compatibility
 export { SpatialDiv } from './SpatialPrimitive';
