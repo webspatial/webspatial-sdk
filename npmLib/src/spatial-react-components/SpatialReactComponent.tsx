@@ -4,6 +4,7 @@ import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
+import { useSpatialClassWatcher } from './useSpatialStyle';
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
@@ -37,7 +38,10 @@ function useAsyncInstances<T>(
 }
 
 
-function getInheritedStyleProps(from: HTMLElement): any {
+function getInheritedStyleProps(from: HTMLElement | undefined): any {
+    if (from === undefined) {
+        return {}
+    }
 
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
@@ -115,7 +119,7 @@ export type SpatialReactComponentRef = Ref<{
 
 function syncParentHeadToChild(childWindow: WindowProxy) {
     for (let i = document.head.children.length - 1; i >= 0; i--) {
-        let n = document.head.children[i].cloneNode()
+        let n = document.head.children[i].cloneNode(true)
         if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
             // Safari seems to have a bug where 
             // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
@@ -129,7 +133,7 @@ function syncParentHeadToChild(childWindow: WindowProxy) {
     }
 }
 
-async function setViewport(windowInstance: any, elWidth: number, openedWindow?: WindowProxy, ) {
+async function setViewport(windowInstance: any, elWidth: number, openedWindow?: WindowProxy,) {
     if (!openedWindow) return;
     const bodyWidth = document.body.getBoundingClientRect().width;
     const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
@@ -164,9 +168,9 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     let customElEnabled = false
     let customElements = null as null | HTMLElement
 
-    const El = props.component ? props.component : 'div';
-    const isPrimiveEl = typeof El === 'string';
-
+    const { className, style, component, ...otherProps } = props;
+    const El = component ? component : 'div';
+    const isPrimitiveEl = typeof El === 'string';
 
     let mode = "none"
     let session = getSession()
@@ -174,9 +178,13 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         mode = "spatial"
     }
 
+    function getTargetStandardNode() {
+        return isPrimitiveEl ? childrenSizeRef.current : childrenSizeRef.current?.firstElementChild
+    }
+
     useImperativeHandle(ref, () => ({
         getBoundingClientRect() {
-            return (childrenSizeRef.current! as HTMLElement).getBoundingClientRect();
+            return (getTargetStandardNode() as HTMLElement).getBoundingClientRect();
         }
     }));
 
@@ -203,20 +211,20 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     }, []);
 
     if (mode === "none") { // Used for debugging purposes
-        const renderPrimiveComponent = () => (<El className={props.className} style={props.style} ref={childrenSizeRef} >
+        const renderPrimiveComponent = () => (<El className={props.className} style={props.style} ref={childrenSizeRef}  {...otherProps} >
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
         </El>);
         const renderWrappedComponent = () => (<div ref={childrenSizeRef}>
-            <El className={props.className} style={props.style}  >
+            <El className={props.className} style={props.style}  {...otherProps}  >
                 {!isCustomElement ? <>
                     {props.children}
                 </> : <slot></slot>}
             </El>
         </div>);
 
-        return isPrimiveEl ? renderPrimiveComponent() : renderWrappedComponent()
+        return isPrimitiveEl ? renderPrimiveComponent() : renderWrappedComponent()
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
             let i = iframeRef.current! as HTMLIFrameElement;
@@ -255,11 +263,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             </> : <></>}
         </>
     } else if (mode === "spatial") { // Behavior on spatial
-
-        
-
-        
-
         let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
             if (isStandard === true) {
@@ -300,7 +303,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     setViewport(windowInstance, elWidth, openedWindow);
                 }
             })
-            headObserver.observe(document.head, { childList: true })
+            headObserver.observe(document.head, { childList: true, subtree: true, })
 
             syncParentHeadToChild(openedWindow!)
 
@@ -338,25 +341,41 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }, [])
 
+        // Watch primitive className changes
+        const updateZOffset = (zOffset: number) => {
+            var ins = windowInstance.getActiveInstance()?.mnger
+            if (ins && zOffset !== undefined) {
+                ins.setZOffset(zOffset as number)
+            }
+        };
+        const [spatialStyle] = useSpatialClassWatcher(getTargetStandardNode, updateZOffset);
+
 
         // Handle resizing
         let resizeSpatial = async () => {
 
             var ins = windowInstance.getActiveInstance()?.mnger
             if (ins) {
-                let rect = childrenSizeRef.current!.getBoundingClientRect()
+                const targetStandardNode = getTargetStandardNode()
+                let rect = targetStandardNode!.getBoundingClientRect()
                 if (customElEnabled) {
                     let p = customElements!.parentElement!
                     childrenSizeRef.current!.appendChild(customElements!)
                     rect = childrenSizeRef.current!.getBoundingClientRect()
                     p.appendChild(customElements!)
                 }
-                await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
-                await setViewport(windowInstance, elWidth ,ins.window)
+                let offset = { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }
+                if (spatialStyle?.current.zOffset !== undefined) {
+                    offset.z = spatialStyle.current.zOffset
+                }
+
+                await ins.resize(rect, offset, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
+
+                await setViewport(windowInstance, elWidth, ins.window)
 
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
-                const computedStyle = getComputedStyle(childrenSizeRef.current!);
+                const computedStyle = getComputedStyle(targetStandardNode!);
                 const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0
                 const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.width) : 0
                 setElWidth(width)
@@ -380,6 +399,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     await ins.webview?.setScrollWithParent(!getIsFixed())
                 }
             })();
+
             resizeSpatial()
         }, [props.spatialStyle, props.allowScroll, props.scrollWithParent])
 
@@ -388,7 +408,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let ro = new ResizeObserver((elements) => {
                 resizeSpatial()
             })
-            ro.observe(childrenSizeRef.current!)
+            const targetStandardNode = getTargetStandardNode()
+            ro.observe(targetStandardNode!)
             window.addEventListener("resize", resizeSpatial);
             return () => {
                 window.removeEventListener("resize", resizeSpatial);
@@ -396,33 +417,33 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }, [])
 
-
-
         const renderStandardInstance = () => (
-            <El ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
+            <El ref={childrenSizeRef}  {...otherProps} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </El>
         );
         const renderWrappedStandardInstance = () => (
             <div ref={childrenSizeRef} style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
-                <El className={props.className} style={{ ...props.style }}  >
+                <El className={props.className} {...otherProps} style={{ ...props.style }}  >
                     {props.children}
                 </El>
             </div>
         );
 
+        const nodeToCopyStyleFrom = getTargetStandardNode() as HTMLElement
+
         return <>
             <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
                 <SpatialIsStandardInstanceContext.Provider value={true}>
                     {
-                        isPrimiveEl
+                        isPrimitiveEl
                             ? renderStandardInstance()
                             : renderWrappedStandardInstance()
                     }
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
+                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
                 </> : <></>}
@@ -432,3 +453,4 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
 })
 
+SpatialReactComponent.displayName = 'SpatialReactComponent'
