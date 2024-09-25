@@ -1,8 +1,6 @@
 import * as esbuild from "esbuild";
 import { tailwindPlugin } from "esbuild-plugin-tailwindcss";
 import cssModulesPlugin from 'esbuild-css-modules-plugin'
-import spatialTransformPlugin from "../compiler-plugin/esbuild-plugin-spatial.js";
-
 import glob from "tiny-glob";
 import path from "path";
 import livereload from "livereload";
@@ -13,7 +11,7 @@ entryPoints = entryPoints.concat(await glob("./src/**/*.ts"))
 entryPoints.push('index.tsx')
 entryPoints.push( 'src/index.css')
 
-var plugins = targetAVP ? [ spatialTransformPlugin({})]: [];
+var plugins = []
 plugins.push(cssModulesPlugin())
 plugins.push(tailwindPlugin())
 
