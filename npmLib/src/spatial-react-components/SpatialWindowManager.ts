@@ -33,10 +33,6 @@ export class SpatialWindowManager {
         await this.webview.setScrollWithParent(true);
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
-
-        var wc = (await (getSession()!).getCurrentWindowComponent())
-        var ent = await wc.getEntity()
-        await this.entity.setParent(ent!)
     }
     async init(url: string) {
         this.initPromise = this.initInternal(url)

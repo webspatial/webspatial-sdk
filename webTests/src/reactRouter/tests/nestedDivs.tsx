@@ -40,8 +40,33 @@ export function NestedDivsTest() {
                         debugName="CHILD B2"
                         spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
                         style={{ height: 100, backgroundColor: greenCol }}>
-                        <p>Hello world B</p>
+                        <p>Hello world C</p>
+                        <SpatialDiv
+                            debugName="CHILD B3"
+                            spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                            style={{ height: 100, backgroundColor: blueCol }}>
+                            <p>Hello world D</p>
+                            <SpatialDiv
+                                debugName="CHILD B3"
+                                spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                                style={{ height: 100, backgroundColor: redCol }}>
+                                <p>Hello world E</p>
+                                <SpatialDiv
+                                    debugName="CHILD B3"
+                                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                                    style={{ height: 100, backgroundColor: blueCol }}>
+                                    <p>Hello world F</p>
+                                    <SpatialDiv
+                                        debugName="CHILD B3"
+                                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                                        style={{ height: 100, backgroundColor: greenCol }}>
+                                        <p>Hello world G</p>
+                                    </SpatialDiv>
+                                </SpatialDiv>
+                            </SpatialDiv>
+                        </SpatialDiv>
                     </SpatialDiv>
+
                 </SpatialDiv>
             </SpatialDiv>
             <div style={{ backgroundColor: redCol, height: "50px" }}>02</div>
