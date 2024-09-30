@@ -311,8 +311,14 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let windowMngr = new SpatialWindowManager()
             windowMngr.initFromWidow(openedWindow!).then(async () => {
                 if (parentSpatialReactComponent !== null) {
+                    // Add as a child of the parent
                     await parentSpatialReactComponent.initPromise
                     windowMngr.entity!.setParent(parentSpatialReactComponent.entity!)
+                } else {
+                    // Add as a child of the current page
+                    var wc = (await (getSession()!).getCurrentWindowComponent())
+                    var ent = await wc.getEntity()
+                    await windowMngr.entity!.setParent(ent!)
                 }
                 // Set style
                 await windowMngr.webview?.setStyle({
