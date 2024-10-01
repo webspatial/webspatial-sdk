@@ -684,6 +684,9 @@ class SpatialWindowComponent: SpatialComponent {
                     let uuid = UUID().uuidString
                     let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
+                    // Force window group creation to happen now so it can be accessed after complete event returns
+                    let _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+
                     SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
                     childWindowGroups[uuid] = wgd
                     completeEvent(requestID: cmdInfo.requestID, data: "{createdID: '"+uuid+"'}")
