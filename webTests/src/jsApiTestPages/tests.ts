@@ -62,6 +62,17 @@ var main = async () => {
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"
         await session.log("set to glass background")
+
+        var b = document.createElement("button")
+        b.innerHTML = "Click me"
+        document.body.appendChild(b)
+
+        var wc = await session.getCurrentWindowComponent()
+        var glassState = true
+        b.onclick = async () => {
+            glassState = !glassState
+            await (wc).setStyle({ glassEffect: glassState, cornerRadius: 50 })
+        }
     } else if (page == "modelUI") {
         var e = await session.createEntity()
         e.transform.position.x = 500
