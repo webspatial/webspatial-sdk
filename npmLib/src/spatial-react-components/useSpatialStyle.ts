@@ -1,3 +1,4 @@
+import { debug } from "loglevel";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 
 function extractClassAndSpatialStyle(cssText: string) {
@@ -13,8 +14,15 @@ function extractClassAndSpatialStyle(cssText: string) {
 
   return result;
 }
+ 
+// dynamic 
+// static css style 
+// third cdn css
+// compile css plugin -> 
 
-// const SpatialStyleInfoUpdateEvent = "SpatialStyleInfoUpdateEvent";
+// <link ref: sfsdf >
+
+
 
 export const gSpatialStyleInfo: Record<string, any> = {};
 
@@ -106,13 +114,13 @@ export function useSpatialClassWatcher(
       for (let mutation of mutationsList) {
         if (mutation.type === "attributes") {
           if (mutation.attributeName === "class") {
-            // console.log("class 属性发生变化:", mutation.target.nodeValue);
+            console.log("class 属性发生变化:", mutation.target.nodeValue);
             if (mutation.target === targetNode) {
               checkClassAndUpdateZOffset();
             }
           }
           if (mutation.attributeName === "style") {
-            // console.log("style 属性发生变化:", mutation.target.nodeValue);
+            console.log("style 属性发生变化:", mutation.target.nodeValue);
           }
         }
       }
@@ -137,3 +145,5 @@ export function useSpatialClassWatcher(
 
   return [spatialStyle];
 }
+
+

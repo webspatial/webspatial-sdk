@@ -4,7 +4,7 @@ import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
-import { useSpatialClassWatcher } from './useSpatialStyle';
+import { useSpatialContentStyle } from './useSpatialContentStyle';
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
@@ -168,7 +168,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     let customElEnabled = false
     let customElements = null as null | HTMLElement
 
-    const { className, style, component, ...otherProps } = props;
+    const { className, component, allowScroll, spatialStyle, debugName, scrollWithParent, disableSpatial, ...otherProps } = props;
     const El = component ? component : 'div';
     const isPrimitiveEl = typeof El === 'string';
 
@@ -179,7 +179,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     }
 
     function getTargetStandardNode() {
-        return isPrimitiveEl ? childrenSizeRef.current : childrenSizeRef.current?.firstElementChild
+        return isPrimitiveEl ? childrenSizeRef.current : childrenSizeRef.current?.firstElementChild as HTMLElement
     }
 
     useImperativeHandle(ref, () => ({
@@ -341,16 +341,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }, [])
 
-        // Watch primitive className changes
-        const updateZOffset = (zOffset: number) => {
-            var ins = windowInstance.getActiveInstance()?.mnger
-            if (ins && zOffset !== undefined) {
-                ins.setZOffset(zOffset as number)
-            }
-        };
-        const [spatialStyle] = useSpatialClassWatcher(getTargetStandardNode, updateZOffset);
-
-
         // Handle resizing
         let resizeSpatial = async () => {
 
@@ -370,6 +360,14 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     offset.z = spatialStyle.current.zOffset
                 }
 
+
+                if ((targetStandardNode?.style as any).back !== undefined) {
+                    // inline-style have high priority than global style
+                    // parse style.back
+                    let back = parseFloat((targetStandardNode?.style as any).back)
+                    offset.z = back;
+                }
+
                 await ins.resize(rect, offset, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
                 await setViewport(windowInstance, elWidth, ins.window)
@@ -382,6 +380,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 setElHeight(height)
             }
         }
+
+        const spatialStyle = useSpatialContentStyle(getTargetStandardNode, resizeSpatial);
 
         // Sync prop updates
         useEffect(() => {
@@ -443,7 +443,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
+                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "0px", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
                 </> : <></>}
