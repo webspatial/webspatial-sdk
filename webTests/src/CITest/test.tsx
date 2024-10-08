@@ -221,10 +221,17 @@ async function nestedDivsTest() {
         <NestedDivRender />
     )
     await getSession()
-    await timeout(2000)
-    var sessionStats = await session.getStats()
-    await session.log(sessionStats)
-    var entityCount = sessionStats.objects.entityArray.length  
+    var entityCount = 0
+    var retry = 0
+    while (entityCount != 7) {
+        await timeout(50)
+        var sessionStats = await session.getStats()
+        entityCount = sessionStats.objects.entityArray.length
+        retry++
+        if (retry > 50) {
+            break;
+        }
+    }
     await session.log("nestedDivs Stats: " + JSON.stringify(entityCount))
     if (entityCount == 7) {
         testResult = ["NestedDivsTest", true, ""]
