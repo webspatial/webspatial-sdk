@@ -228,10 +228,10 @@ async function nestedDivsTest() {
         var sessionStats = await session.getStats()
         entityCount = sessionStats.objects.entityArray.length
         retry++
-        if (retry > 50) {
+        if (retry > 40) {
             break;
         }
-    }
+    }  
     await session.log("nestedDivs Stats: " + JSON.stringify(entityCount))
     if (entityCount == 7) {
         testResult = ["NestedDivsTest", true, ""]
