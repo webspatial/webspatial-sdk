@@ -11,24 +11,26 @@ let i = 0;
 const cachedWithSpatialType = new Map()
 
 function replaceToSpatialPrimitiveType(type, props) {
-  if (props.style?.back !== undefined) {
-    const backValue = props.style?.back 
-    delete props.style?.back;
+  // if (props.style?.back !== undefined) {
+  //   const backValue = props.style?.back 
+  //   delete props.style?.back;
 
-    if (typeof type === "string" && SpatialPrimitive[type]) {
-      type = SpatialPrimitive[type]
-    } else {
-      type = withSpatial(type)
-    }
+  //   if (typeof type === "string" && SpatialPrimitive[type]) {
+  //     type = SpatialPrimitive[type]
+  //   } if (cachedWithSpatialType.has(type)){
+  //     type = cachedWithSpatialType.get(type)
+  //   } else {
+  //     const oldType = type;
+  //     type = withSpatial(type)
+  //     cachedWithSpatialType.set(oldType, type)
+  //   }
 
-    props.spatialStyle = {position: {x: 0, y: 0, z: backValue}}
-  } else {
+  //   props.spatialStyle = {position: {x: 0, y: 0, z: backValue}}
+  // } else {
     const specialFlag = 'isspatial';
     if (specialFlag in props) {
       delete props.isspatial;
       // to handle spatial
-      // console.log('dbg type.componentStyle.rules', type.componentStyle.rules)
-  
       if (typeof type === "string" && SpatialPrimitive[type]) {
         type = SpatialPrimitive[type]
       } else if (cachedWithSpatialType.has(type)){
@@ -38,7 +40,7 @@ function replaceToSpatialPrimitiveType(type, props) {
         type = withSpatial(type)
         cachedWithSpatialType.set(oldType, type)
       }
-    }
+    // }
   }
 
   return type;
