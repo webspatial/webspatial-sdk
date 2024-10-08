@@ -1,11 +1,13 @@
-import { Spatial } from 'web-spatial';
+import { Spatial, SpatialEntity, SpatialDiv, getSession } from 'web-spatial';
 
 import React, { useEffect, useRef, useState, } from 'react'
 import ReactDOM from 'react-dom/client'
+import { BlurShaderUtils } from 'three/examples/jsm/Addons.js';
+import { NestedDivsTest } from '../reactRouter/tests/nestedDivs';
 
 // document.body.style.background = 'red';
-
 async function createSession() {
+
     var testResult = []
     var spatial: Spatial | null = new Spatial();
     if (!spatial.isSupported()) {
@@ -86,7 +88,7 @@ async function changeWebViewStyle() {
     var spatial = new Spatial()
     let session = await spatial.requestSession()
     if (!spatial.isSupported()) {
-        return testResult = ["WebView JS API", false, ""]
+        return testResult = ["SetGlassBackground", false, ""]
     }
     await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
     document.documentElement.style.backgroundColor = "transparent";
@@ -208,7 +210,34 @@ async function webViewMemoryLeakTest() {
     }
 }
 
-var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest] 
+async function nestedDivsTest() {
+    console.log("NestedDivsTest")
+    var testResult = []
+    var spatial = new Spatial()
+    let session = await spatial.requestSession()
+    var root = document.createElement('div');
+    document.body.appendChild(root)
+    ReactDOM.createRoot(root).render(
+        <NestedDivRender />
+    )
+    await getSession()
+    await timeout(2000)
+    var sessionStats = await session.getStats()
+    var entityCount = sessionStats.data.objects.entityArray.length  
+    await session.log("nestedDivs Stats: " + JSON.stringify(entityCount))
+    if (entityCount == 7) {
+        testResult = ["NestedDivsTest", true, ""]
+    }
+    else {
+        testResult = ["NestedDivsTest", false, "Expected 7 entity created, got " + entityCount]
+    }
+    await session.log(testResult)
+    document.body.removeChild(root)
+    
+    return testResult
+}
+
+var allTests = [createSession, createWebViewJSAPI,changeWebViewStyle, webViewMemoryLeakTest, nestedDivsTest]
 
 class TestRunner {
     _started = false
@@ -233,7 +262,57 @@ class TestRunner {
     onTestComplete = (tr: any) => { }
 }
 
-function App() {
+function timeout(delay: number) {
+    return new Promise( res => setTimeout(res, delay) );
+}
+
+function NestedDivRender(){
+    const [depth, setDepth] = useState(1)
+    var redCol = "#cc111144"
+    var greenCol = "#11cc1144"
+    var blueCol = "#1111cc44"
+
+    return (<>
+        <SpatialDiv
+                debugName="PARENT A ROOT"
+                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: false }}
+                style={{ height: 300, backgroundColor: redCol }}>
+                <p>Hello world A</p>
+                <SpatialDiv
+                    debugName="CHILD A1"
+                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: false }}
+                    style={{ height: 100, backgroundColor: blueCol }}>
+                    <p>Hello world B</p>
+                </SpatialDiv>
+            </SpatialDiv>
+            <SpatialDiv
+                debugName="PARENT B ROOT"
+                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
+                style={{ height: 300, backgroundColor: redCol }}>
+                <p>Hello world A</p>
+                <SpatialDiv
+                    debugName="CHILD B1"
+                    spatialStyle={{ position: { z: depth * 20, x: 0, y: 0 }, glassEffect: true }}
+                    style={{ height: 100, backgroundColor: blueCol }}>
+                    <p>Hello world B</p>
+                    <SpatialDiv
+                        debugName="CHILD B2"
+                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                        style={{ height: 100, backgroundColor: greenCol }}>
+                        <p>Hello world C</p>
+                    </SpatialDiv>
+                    <SpatialDiv
+                        debugName="CHILD B3"
+                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                        style={{ height: 100, backgroundColor: redCol }}>
+                        <p>Hello world C</p>
+                    </SpatialDiv>
+                </SpatialDiv>
+            </SpatialDiv>
+    </>)
+}
+
+function AllTests() {
     const [testResults, setTestResults] = useState([] as Array<any>)
 
     useEffect(() => {
@@ -268,6 +347,6 @@ function App() {
 var root = document.createElement('div');
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
-    <App />
+    <AllTests />
 )
 
