@@ -5,9 +5,9 @@ export const StyledTitle = styled.h1<{ $primary?: boolean; }>`
   font-size: 1.5em;
   text-align: center;
   position: absolute;
-  left: ${props => props.$primary ? '20px' : '150px'};
+  top: ${props => props.$primary ? '20px' : '50px'};
   color: ${props => props.$primary ? "blue" : "red"};
-  back: ${props => props.$primary ? 120 : 150};
+   
   background: #fff;
 `;
 
@@ -40,12 +40,13 @@ export const StyledTitleComponent = () => {
   // }
 
   const style = isPrimary ? {
-    back: 31
+    // back: 31
   }: {
-    back: 42  
+    // back: 42  
   }
 
-  return <StyledTitle isspatial style={style} onClick={onClick} $primary={isPrimary}   > this is style component </StyledTitle>
+  return ( 
+    <StyledTitle  isspatial style={style} onClick={onClick} $primary={isPrimary}   > this is style component </StyledTitle>)
  
   // return <SimpleComponent isspatial onClick={onClick} style={style} />
   // return <div isspatial onClick={onClick} style={style} > helo </div> 

@@ -1,8 +1,8 @@
-export function encodeSpatialStyle(spatialStyle) {
+export function encodeSpatialStyle(spatialStyle: any) {
     return `spatial=back: ${spatialStyle.back};`;
   }
   
-  export function decodeSpatialStyle(inputString) {
+  export function decodeSpatialStyle(inputString: string) {
     // 定义正则表达式，匹配外部引号和内容
     const pattern = /"spatial=(\w+):\s*(\d+);"/;
     // 使用exec方法查找匹配
@@ -17,4 +17,9 @@ export function encodeSpatialStyle(spatialStyle) {
     return null;
   }
 
-export const SpatialStyleInfoUpdateEvent = "SpatialStyleInfoUpdateEvent";
+export enum SpatialStyleInfoUpdateEvent {
+  standInstanceLayout = 'standInstanceLayout',
+  portalInstanceProps = 'portalInstanceProps',
+}
+
+export const SpatialCustomVar = "--spatialCustomVar";
