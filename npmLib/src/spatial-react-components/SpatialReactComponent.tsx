@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext, ReactNode } from 'react'
+import React, { CSSProperties, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext, ReactNode, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
@@ -96,7 +96,6 @@ function getInheritedStyleProps(from: HTMLElement | undefined): any {
     }
     return props
 }
-
 export interface SpatialReactComponentProps {
     allowScroll?: boolean,
     scrollWithParent?: boolean,
@@ -177,7 +176,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     if (session) {
         mode = "spatial"
     }
-
     function getTargetStandardNode() {
         return isPrimitiveEl ? childrenSizeRef.current : childrenSizeRef.current?.firstElementChild as HTMLElement
     }
@@ -375,7 +373,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
                 const computedStyle = getComputedStyle(targetStandardNode!);
                 const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0
-                const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.width) : 0
+                const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0
+
                 setElWidth(width)
                 setElHeight(height)
             }
@@ -443,7 +442,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "0px", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
+                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
                 </> : <></>}
