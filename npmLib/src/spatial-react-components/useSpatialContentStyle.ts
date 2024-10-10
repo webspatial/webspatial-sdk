@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { decodeSpatialStyle, SpatialStyleInfoUpdateEvent } from "./common";
+import { decodeSpatialStyle, SpatialCustomVar, SpatialStyleInfoUpdateEvent } from "./common";
 
 function useForceUpdate() {
   const [, setToggle] = useState(false);
@@ -11,11 +11,13 @@ function checkClassAndUpdateZOffset(
   updateZOffset: (zOffset: number) => void,
 ) {
   const computedStyle = getComputedStyle(targetNode);
-  const content = computedStyle.getPropertyValue("content");
+  const content = computedStyle.getPropertyValue(SpatialCustomVar);
   // try to decode content
   const spatialStyle = decodeSpatialStyle(content);
   if (spatialStyle) {
     updateZOffset(spatialStyle.back);
+  } else {
+    updateZOffset(0.000001)
   }
 }
 
@@ -60,13 +62,13 @@ function useMonitorGlobalStyles(
     };
 
     document.addEventListener(
-      SpatialStyleInfoUpdateEvent,
+      SpatialStyleInfoUpdateEvent.standInstanceLayout,
       onSpatialStyleInfoUpdateEvent
     );
 
     return () => {
       document.removeEventListener(
-        SpatialStyleInfoUpdateEvent,
+        SpatialStyleInfoUpdateEvent.standInstanceLayout,
         onSpatialStyleInfoUpdateEvent
       );
     };

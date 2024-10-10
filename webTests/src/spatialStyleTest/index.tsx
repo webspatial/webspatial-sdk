@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { SpatialStyleComponent } from './SpatialStyleComponent';
 import { CSSModelSample } from './CSSModelSample';
 import { StyledTitle, StyledTitle2, StyledTitleComponent } from './StyledTitle';
+import { FpsView } from 'react-fps';
 
-import { monitorGlobalStyles, injectWebSpatialCapability } from 'web-spatial'
+import { injectWebSpatialCapability, useMonitorDocumentChange, SpatialMonitor } from 'web-spatial'
 
 const JackComponent = (props: any) => {
     const [isPrimary, setIsPrimary] = useState(true)
@@ -37,9 +38,17 @@ const JackComponent = (props: any) => {
 function App() {
     console.log('dbg in App')
 
+    useMonitorDocumentChange()
+
+    const array1To100 = Array(1).fill(0).map((_, index) => index + 1);
+// console.log(array1To100);
+ 
     return (
-        <div className='w-screen h-screen flex flex-row base-200' >
-            <StyledTitleComponent></StyledTitleComponent>
+        <>
+        <FpsView width={240} height={80} bottom={60} right={80}/>
+        <SpatialMonitor className='w-screen h-screen columns-3 gap-4' >
+            {array1To100.map(i => <StyledTitleComponent key={i} ></StyledTitleComponent>)}
+            
             {/* <JackComponent isSpatial />  */}
             {/* <StyledTitle  onClick={onClick}  $primary={isPrimary} style={style} > this is style component </StyledTitle> */}
 
@@ -56,11 +65,13 @@ function App() {
             </div> */}
 
             {/* <JackComponent  > good luck < /JackComponent> */}
-        </div>
+        </SpatialMonitor>
+        </>
+        
     )
 }
 
-monitorGlobalStyles()
+// monitorGlobalStyles()
 injectWebSpatialCapability()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
