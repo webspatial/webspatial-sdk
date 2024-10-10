@@ -1,7 +1,6 @@
 import { forwardRef, Ref } from "react";
 import { SpatialReactComponent } from "./SpatialReactComponent";
 import { primitives } from "./primitives";
-import { debug } from "loglevel";
 
 
 export function withSpatial(Component: any) {

@@ -1,5 +1,33 @@
 // this is for the solution of process before style is added to document
-import {encodeSpatialStyle, SpatialStyleInfoUpdateEvent} from './common'
+import {encodeSpatialStyle, SpatialStyleInfoUpdateEvent, SpatialCustomVar} from './common'
+import { useEffect } from "react";
+
+let idleCallback;
+export function notifyUpdateStandInstanceLayout() {
+  if (!idleCallback) {
+    idleCallback = requestAnimationFrame(() => {
+      console.log('dbg notifyUpdateStandInstanceLayout')
+      document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.standInstanceLayout, {
+        detail: {
+         },
+      }));
+      idleCallback = undefined
+    });
+  }
+}
+
+function notifyUpdateSpatialStyle() {
+  if (!idleCallback) {
+    idleCallback = requestAnimationFrame(() => {
+      console.log('dbg notifyUpdateSpatialStyle')
+      document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.portalInstanceProps, {
+        detail: {
+         },
+      }));
+      idleCallback = undefined
+    });
+  }
+}
 
 function handleTextNode(node) {
   const styleSheet = node.textContent;
@@ -20,20 +48,14 @@ function handleTextNode(node) {
   let needUpdateStyleSheet = false;
   selectorRules.forEach((selectorRule) => {
     const { selector, styleRules } = selectorRule;
-    const hasContent = /content:\s*[^;]+;?/.test(styleRules);
-    if (hasContent) {
-      // 不能处理content属性
-      return;
-    }
     // 使用正则表达式提取 back 值
     const spatialStyleRegex = /back:\s*([^;]+)/;
     const match = spatialStyleRegex.exec(styleRules);
     if (match) {
-      const backValue = match[1].trim(); // 提取并去除空格
-      console.log(backValue); // 输出: 12
+      const backValue = match[1].trim();
       const encodedString = encodeSpatialStyle({ back: backValue });
       // add content: "encodedString"
-      selectorRule.styleRules += ` content: "${encodedString}";`;
+      selectorRule.styleRules += ` ${SpatialCustomVar}: "${encodedString}";`;
       needUpdateStyleSheet = true;
     } else {
       console.log("未找到 back 值");
@@ -51,46 +73,44 @@ function handleTextNode(node) {
 
     node.textContent = updatedTextContent;
     console.log('dbg updatedTextContent:', updatedTextContent)
-
-    requestAnimationFrame(  () => {
-      // to avoid react warning
-      document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent, {
-        detail: {
-         },
-      }));
-    });
+    notifyUpdateSpatialStyle();
   }
 }
 
-function makeStyleObjectProxy(styleObject) {
-  const originalInsertBefore = styleObject.insertBefore.bind(styleObject);
-  styleObject.insertBefore = function (node) {
-    console.log("dbg process insertBefore node", node);
-    if (node.nodeType === Node.TEXT_NODE) {
-      // handle node.textContent
-      handleTextNode(node);
+function injectStyleElement() {
+  const originalFn = HTMLStyleElement.prototype.insertBefore;
+  HTMLStyleElement.prototype.insertBefore = function (newNode, referenceNode) {
+    if (newNode.nodeType === Node.TEXT_NODE) {
+      handleTextNode(newNode);
     }
-    originalInsertBefore(...arguments);
+
+    return originalFn.apply(this, arguments);
   };
-
-  return styleObject;
-}
-
-// function proxy createElement style
-function proxyDocument() {
-  const originalCreateElement = document.createElement.bind(document);
-
-  const hackedCreateElement = function (tag) {
-    const retElement = originalCreateElement(...arguments);
-    if (tag === "style") {
-      return makeStyleObjectProxy(retElement);
-    } else {
-      return retElement;
-    }
-  };
-  document.createElement = hackedCreateElement;
 }
 
 export function injectWebSpatialCapability() {
-  proxyDocument();
+  // proxyDocument();
+  injectStyleElement();
+}
+
+export function useMonitorDocumentChange() {
+  useEffect(() => {
+    const observer = new MutationObserver((mutationsList) => {
+      console.log('dbg MutationObserver', mutationsList)
+      notifyUpdateStandInstanceLayout();
+    });
+
+    const config = {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      // attributeFilter: ["style", "class"],
+    };
+
+    observer.observe(document.head, config);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 }
