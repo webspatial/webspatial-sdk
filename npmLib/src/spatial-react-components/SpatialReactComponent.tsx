@@ -251,9 +251,10 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         async function setViewport(openedWindow?: WindowProxy) {
             if (!openedWindow) return;
             const bodyWidth = document.body.getBoundingClientRect().width;
+            const bodyHeight = document.body.getBoundingClientRect().height;
             const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
-            viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
-            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
+            viewport?.setAttribute('content', `width=${bodyWidth}, height=${bodyHeight} initial-scale=1.0 user-scalable=no`)
+            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: elHeight - bodyHeight, right: elWidth - bodyWidth })
         }
 
         let windowInstance = useAsyncInstances(() => {
@@ -360,7 +361,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
                 const computedStyle = getComputedStyle(childrenSizeRef.current!);
                 const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0
-                const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.width) : 0
+                const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0
                 setElWidth(width)
                 setElHeight(height)
             }
