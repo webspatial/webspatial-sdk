@@ -23,8 +23,9 @@ export function PopupTest() {
     }, []);
 
     return <>
+        <a href="https://picsum.photos/200/300">click me</a>
         {popupEnabled ?
-            <div style={{ backgroundColor: "#110000aa", width: "100%", height: "100%", position: "absolute", top: "0px", padding: "0px", zIndex: "100", display: "flex", flexDirection: "row", alignItems: "center" }}>
+            <div className="trevor" id="tester" style={{ backgroundColor: "#110000aa", width: "100%", height: "100%", position: "absolute", top: "0px", padding: "0px", zIndex: "100", display: "flex", flexDirection: "row", alignItems: "center", custonCss: "3" } as any}>
                 <SpatialDiv spatialStyle={{ position: { z: x }, glassEffect: true, cornerRadius: 70 }} style={{ backgroundColor: "#FFFF0000", width: "50%", height: "50%", margin: "auto", overflow: "scroll" }}>
                     <div className="card shadow-xl" style={{ width: "100%", height: "100%" }}>
                         <figure className="px-10 pt-10">
@@ -32,6 +33,10 @@ export function PopupTest() {
                                 src="/src/assets/react.svg"
                                 alt="Shoes"
                                 className="rounded-xl" width={100} />
+                            <img
+                                src="http://picsum.photos/200/300"
+                                alt="Shoes"
+                                className="rounded-xl" width={100} height={300} />
                         </figure>
                         <div className="card-body items-center text-center">
                             <h2 className="card-title">PopUp!</h2>
