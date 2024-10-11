@@ -62,6 +62,17 @@ var main = async () => {
         document.documentElement.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent"
         await session.log("set to glass background")
+
+        var b = document.createElement("button")
+        b.innerHTML = "Click me"
+        document.body.appendChild(b)
+
+        var wc = await session.getCurrentWindowComponent()
+        var glassState = true
+        b.onclick = async () => {
+            glassState = !glassState
+            await (wc).setStyle({ glassEffect: glassState, cornerRadius: 50 })
+        }
     } else if (page == "modelUI") {
         var e = await session.createEntity()
         e.transform.position.x = 500
@@ -122,27 +133,29 @@ var main = async () => {
 
             var dt = 0
             var curTime = Date.now()
-            var loop = (time: DOMHighResTimeStamp) => {
+            let loop = async (time: DOMHighResTimeStamp) => {
                 session.requestAnimationFrame(loop)
                 dt = Date.now() - curTime
                 curTime = Date.now()
                 var floor = -0.10
-                for (var i = 0; i < entities.length; i++) {
-                    var entity = entities[i].e
-                    entities[i].v -= 5 * (dt / 1000)
-                    entity.transform.position.y += (dt / 1000) * entities[i].v
-                    if (entity.transform.position.y < floor) {
-                        entity.transform.position.y = floor
-                        entities[i].v = -entities[i].v * 0.5
+                await session.transaction(() => {
+                    for (var i = 0; i < entities.length; i++) {
+                        var entity = entities[i].e
+                        entities[i].v -= 5 * (dt / 1000)
+                        entity.transform.position.y += (dt / 1000) * entities[i].v
+                        if (entity.transform.position.y < floor) {
+                            entity.transform.position.y = floor
+                            entities[i].v = -entities[i].v * 0.5
+                        }
+                        q.setFromEuler(new Euler(0, time / 1000, 0))
+                        entity.transform.orientation.x = q.x
+                        entity.transform.orientation.y = q.y
+                        entity.transform.orientation.z = q.z
+                        entity.transform.orientation.w = q.w
+                        entity.transform.scale.y = (Math.pow(((Math.sin(time / 100) + 1) / 2), 5) * 0.02) + 0.07 // 0.07 * (Math.abs((entities[i].v / 2)) + 1)
+                        entity.updateTransform()
                     }
-                    q.setFromEuler(new Euler(0, time / 1000, 0))
-                    entity.transform.orientation.x = q.x
-                    entity.transform.orientation.y = q.y
-                    entity.transform.orientation.z = q.z
-                    entity.transform.orientation.w = q.w
-                    entity.transform.scale.y = (Math.pow(((Math.sin(time / 100) + 1) / 2), 5) * 0.02) + 0.07 // 0.07 * (Math.abs((entities[i].v / 2)) + 1)
-                    entity.updateTransform()
-                }
+                })
             }
             session.requestAnimationFrame(loop)
 
