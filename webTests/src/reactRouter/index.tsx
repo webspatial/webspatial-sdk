@@ -4,6 +4,8 @@ import { HashRouter, Link, Route, Routes } from 'react-router-dom'
 import { PortalTest } from './tests/portal'
 import { NestedDivsTest } from './tests/nestedDivs'
 import { ToolbarTest } from './tests/toolbar'
+import { PopupTest } from './tests/popup'
+import { ManyPanelTest } from './tests/manyPanels'
 
 function HomePage() {
     return <>
@@ -16,6 +18,8 @@ var testPages = [
     PortalTest,
     NestedDivsTest,
     ToolbarTest,
+    PopupTest,
+    ManyPanelTest
 ]
 
 
