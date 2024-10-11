@@ -58,7 +58,7 @@ struct SpatialWebViewUI: View {
                                             DragGesture()
                                                 .onChanged { gesture in
                                                     let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
+                                                    if !scrollEnabled, wv.isScrollEnabled() {
                                                         if !view.dragStarted {
                                                             view.dragStarted = true
                                                             view.dragStart = (gesture.translation.height)
@@ -72,7 +72,7 @@ struct SpatialWebViewUI: View {
                                                 }
                                                 .onEnded { _ in
                                                     let scrollEnabled = view.isScrollEnabled()
-                                                    if !scrollEnabled {
+                                                    if !scrollEnabled, wv.isScrollEnabled() {
                                                         view.dragStarted = false
                                                         view.dragStart = 0
 
