@@ -60,6 +60,16 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         print("Navigation failed!!! " + error.localizedDescription)
     }
     
+    // Warning this should likeley be removed. There seems to be a bug with SSL loading on simulator https://stackoverflow.com/questions/27100540/allow-unverified-ssl-certificates-in-wkwebview
+    // NSAllowsArbitraryLoads should also be removed from Info.plist if shipping an app
+    // this is the workaround
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        guard let serverTrust = challenge.protectionSpace.serverTrust else { return completionHandler(.useCredential, nil) }
+        let exceptions = SecTrustCopyExceptions(serverTrust)
+        SecTrustSetExceptions(serverTrust, exceptions)
+        completionHandler(.useCredential, URLCredential(trust: serverTrust))
+    }
+    
     func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,

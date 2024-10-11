@@ -316,8 +316,14 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let windowMngr = new SpatialWindowManager()
             windowMngr.initFromWidow(openedWindow!).then(async () => {
                 if (parentSpatialReactComponent !== null) {
+                    // Add as a child of the parent
                     await parentSpatialReactComponent.initPromise
                     windowMngr.entity!.setParent(parentSpatialReactComponent.entity!)
+                } else {
+                    // Add as a child of the current page
+                    var wc = (await (getSession()!).getCurrentWindowComponent())
+                    var ent = await wc.getEntity()
+                    await windowMngr.entity!.setParent(ent!)
                 }
                 // Set style
                 await windowMngr.webview?.setStyle({
@@ -374,7 +380,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 const computedStyle = getComputedStyle(targetStandardNode!);
                 const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0
                 const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0
-
                 setElWidth(width)
                 setElHeight(height)
             }
