@@ -4,7 +4,7 @@ import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
-import { useSpatialContentStyle } from './hooks/useSpatialStyle';
+import { useSpatialStyle } from './hooks/useSpatialStyle';
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
@@ -385,7 +385,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }
 
-        const spatialStyle = useSpatialContentStyle(getTargetStandardNode, resizeSpatial);
+        const spatialStyle = useSpatialStyle(getTargetStandardNode, resizeSpatial);
 
         // Sync prop updates
         useEffect(() => {
