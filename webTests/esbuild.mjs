@@ -16,7 +16,7 @@ plugins.push(tailwindPlugin())
 
 var outdir = "dist";
 var port = 5173
-var liveReloadServerPort = 35728
+var liveReloadServerPort = 35729
 
 var ctx = await esbuild.context({
   entryPoints: entryPoints,
