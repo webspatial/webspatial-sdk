@@ -75,7 +75,7 @@ function useMonitorGlobalStyles(
   }, []);
 }
 
-export function useSpatialContentStyle(
+export function useSpatialStyle(
   targetStandardNodeGetter: () => Element | null | undefined,
   resizeSpatial:  () => Promise<void>
 ) {
