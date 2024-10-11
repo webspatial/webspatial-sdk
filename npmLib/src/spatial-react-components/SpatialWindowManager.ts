@@ -68,14 +68,6 @@ export class SpatialWindowManager {
         await webview.setResolution(rect.width, rect.height);
     }
 
-    async setZOffset(z: number) {
-        var entity = this.entity
-        if (entity) {
-            entity.transform.position.z = z
-            await entity.updateTransform()
-        }
-    }
-
     async destroy() {
         if (this.initPromise) {
             await this.initPromise
