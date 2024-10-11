@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { decodeSpatialStyle, SpatialCustomVar, SpatialStyleInfoUpdateEvent } from "./common";
+import { decodeSpatialStyle, SpatialCustomVar, SpatialStyleInfoUpdateEvent } from "../common";
 
 function useForceUpdate() {
   const [, setToggle] = useState(false);

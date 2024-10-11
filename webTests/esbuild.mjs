@@ -5,7 +5,6 @@ import glob from "tiny-glob";
 import path from "path";
 import livereload from "livereload";
 
-var targetAVP = (process.env.target === 'avp');
 var entryPoints = await glob("./src/**/*.tsx");
 entryPoints = entryPoints.concat(await glob("./src/**/*.ts"))
 entryPoints.push('index.tsx')
@@ -15,9 +14,9 @@ var plugins = []
 plugins.push(cssModulesPlugin())
 plugins.push(tailwindPlugin())
 
-var outdir = targetAVP ? "dist-avp": "dist";
-var port = targetAVP ? 5174: 5173;
-var liveReloadServerPort = targetAVP ? 35729: 35730;
+var outdir = "dist";
+var port = 5173
+var liveReloadServerPort = 35728
 
 var ctx = await esbuild.context({
   entryPoints: entryPoints,

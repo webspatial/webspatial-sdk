@@ -45,7 +45,7 @@ function App() {
  
     return (
         <>
-        <FpsView width={240} height={80} bottom={60} right={80}/>
+        {/* <FpsView width={240} height={80} bottom={60} right={80}/> */}
         <SpatialMonitor className='w-screen h-screen columns-3 gap-4' >
             {array1To100.map(i => <StyledTitleComponent key={i} ></StyledTitleComponent>)}
             
