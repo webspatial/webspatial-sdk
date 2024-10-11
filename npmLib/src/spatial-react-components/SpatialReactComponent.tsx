@@ -4,7 +4,7 @@ import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
-import { useSpatialContentStyle } from './useSpatialContentStyle';
+import { useSpatialContentStyle } from './hooks/useSpatialStyle';
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);

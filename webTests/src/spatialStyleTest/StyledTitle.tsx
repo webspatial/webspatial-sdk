@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 
 export const StyledTitle = styled.h1<{ $primary?: boolean; }>`
@@ -24,9 +24,9 @@ export const StyledTitle2 = styled.h1`
 
 // const ExtStyledTitle2 = withSpatial(StyledTitle2)
 
-const SimpleComponent = (props: Object<any>) => {
-  return <div isspatial {...props}> hello </div>
-}
+// const SimpleComponent = (props: Object<any>) => {
+//   return <div isspatial {...props}> hello </div>
+// }
 
 export const StyledTitleComponent = () => {
   const [isPrimary, setIsPrimary] = useState(true)
@@ -56,8 +56,4 @@ export const StyledTitleComponent = () => {
   //   <SimpleComponent onClick={onClick} style={style}></SimpleComponent>
   // {/* <StyledTitle   onClick={onClick} $primary={isPrimary}   > this is style component </StyledTitle> */}
   //  </SpatialDiv>)
-  
 }
-
-//  isspatial 支持 pritimive tag
-
