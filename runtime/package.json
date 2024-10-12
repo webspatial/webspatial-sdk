@@ -1,7 +1,6 @@
 {
-  "name": "spatial-jsx-runtime",
+  "name": "css-support-jsx-runtime",
   "version": "1.0.0",
-  "main": "spatial-jsx-runtime.js",
   "scripts": {
     "start": "tsc  --watch",
     "build": "tsc"

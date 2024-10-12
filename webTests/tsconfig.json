@@ -14,7 +14,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "spatial-runtime",
+    "jsxImportSource": "css-support-runtime",
 
     /* Linting */
     "strict": true,

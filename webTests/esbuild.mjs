@@ -38,7 +38,7 @@ var ctx = await esbuild.context({
     react: path.resolve("node_modules/react"),
     "react-dom": path.resolve("node_modules/react-dom"),
     "web-spatial": path.resolve("../npmLib/src"),
-    "spatial-runtime": path.resolve("../runtime/src"),
+    "css-support-runtime": path.resolve("../runtime/src"),
   },
 });
 ctx.watch();
