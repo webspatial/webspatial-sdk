@@ -3,7 +3,7 @@ export { SpatialIFrame } from './SpatialIFrame';
 export { SpatialPrimitive, withSpatial } from './SpatialPrimitive';
 export { type SpatialReactComponentProps, type SpatialReactComponentRef } from './SpatialReactComponent';
 export {SpatialMonitor} from './SpatialMonitor';
-export {injectWebSpatialCapability, useMonitorDocumentChange} from './globalInject';
+export {notifyUpdateStandInstanceLayout} from './notifyUpdateStandInstanceLayout'
 
 // for compatibility
 export { SpatialDiv } from './SpatialPrimitive';
