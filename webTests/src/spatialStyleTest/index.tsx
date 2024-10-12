@@ -5,7 +5,7 @@ import { CSSModelSample } from './CSSModelSample';
 import { StyledTitle, StyledTitle2, StyledTitleComponent } from './StyledTitle';
 import { FpsView } from 'react-fps';
 
-import { injectWebSpatialCapability, useMonitorDocumentChange, SpatialMonitor } from 'web-spatial'
+import { SpatialMonitor } from 'web-spatial'
 
 const JackComponent = (props: any) => {
     const [isPrimary, setIsPrimary] = useState(true)
@@ -38,7 +38,7 @@ const JackComponent = (props: any) => {
 function App() {
     console.log('dbg in App')
 
-    useMonitorDocumentChange()
+     
 
     const array1To100 = Array(1).fill(0).map((_, index) => index + 1);
 // console.log(array1To100);
@@ -70,9 +70,6 @@ function App() {
         
     )
 }
-
-// monitorGlobalStyles()
-injectWebSpatialCapability()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
