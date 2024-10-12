@@ -1,18 +1,19 @@
 "use strict";
 
+import reactJSXRuntime from "react/jsx-runtime";
 import { SpatialPrimitive, withSpatial } from "web-spatial";
-import { initWebSpatialCSSSupportCapability } from "./initWebSpatialCSSSupportCapability.js";
-
-let originalExport = require("./react-jsx-runtime.development.js");
+import { initWebSpatialCSSSupportCapability } from "./initWebSpatialCSSSupportCapability";
 
 initWebSpatialCSSSupportCapability();
 
 const cachedWithSpatialType = new Map();
 
-function replaceToSpatialPrimitiveType(type, props) {
-  const specialFlag = "isspatial";
-  if (specialFlag in props) {
-    delete props.isspatial;
+const specialFlag = "isspatial";
+
+function replaceToSpatialPrimitiveType(type: React.ElementType, props: unknown) {
+  const propsObject =  (props as Object)
+  if (specialFlag in propsObject) {
+    delete propsObject.isspatial;
     if (typeof type === "string" && SpatialPrimitive[type]) {
       type = SpatialPrimitive[type];
     } else if (cachedWithSpatialType.has(type)) {
@@ -27,19 +28,18 @@ function replaceToSpatialPrimitiveType(type, props) {
   return type;
 }
 
-function jsxs(type, props, key) {
+function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props);
-  return originalExport.jsxs(type, props, key);
+  return reactJSXRuntime.jsxs(type, props, key);
 }
 
-function jsx(type, props, key) {
+function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props);
-  return originalExport.jsx(type, props, key);
+  return reactJSXRuntime.jsx(type, props, key);
 }
 
 module.exports = {
   jsxs: jsxs,
   jsx: jsx,
-  Fragment: originalExport.Fragment,
+  Fragment: reactJSXRuntime.Fragment,
 };
-
