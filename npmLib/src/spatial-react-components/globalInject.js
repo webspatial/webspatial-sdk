@@ -1,32 +1,15 @@
-// this is for the solution of process before style is added to document
 import {encodeSpatialStyle, SpatialStyleInfoUpdateEvent, SpatialCustomVar} from './common'
 import { useEffect } from "react";
 
-let idleCallback;
+/**
+ * notifyUpdateStandInstanceLayout is called when the document head changed 
+ * or when the monitored div changed (in both cases spatialDiv's layout may be changed, so we need to update the layout)
+ */
 export function notifyUpdateStandInstanceLayout() {
-  if (!idleCallback) {
-    idleCallback = requestAnimationFrame(() => {
-      console.log('dbg notifyUpdateStandInstanceLayout')
-      document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.standInstanceLayout, {
-        detail: {
-         },
-      }));
-      idleCallback = undefined
-    });
-  }
-}
-
-function notifyUpdateSpatialStyle() {
-  if (!idleCallback) {
-    idleCallback = requestAnimationFrame(() => {
-      console.log('dbg notifyUpdateSpatialStyle')
-      document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.portalInstanceProps, {
-        detail: {
-         },
-      }));
-      idleCallback = undefined
-    });
-  }
+  document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.standInstanceLayout, {
+    detail: {
+     },
+  }));
 }
 
 function handleTextNode(node) {
@@ -35,10 +18,9 @@ function handleTextNode(node) {
   const selectorRules = [];
   let match;
   while ((match = regex.exec(styleSheet)) !== null) {
-    const selector = match[1].trim(); // 提取选择器
-    const styleRules = match[2].trim(); // 提取样式规则
-    
-    // 处理样式规则
+    const selector = match[1].trim();
+    const styleRules = match[2].trim();
+
     selectorRules.push({
       selector,
       styleRules,
@@ -48,17 +30,14 @@ function handleTextNode(node) {
   let needUpdateStyleSheet = false;
   selectorRules.forEach((selectorRule) => {
     const { selector, styleRules } = selectorRule;
-    // 使用正则表达式提取 back 值
     const spatialStyleRegex = /back:\s*([^;]+)/;
     const match = spatialStyleRegex.exec(styleRules);
     if (match) {
       const backValue = match[1].trim();
       const encodedString = encodeSpatialStyle({ back: backValue });
-      // add content: "encodedString"
+      // add spatial style
       selectorRule.styleRules += ` ${SpatialCustomVar}: "${encodedString}";`;
       needUpdateStyleSheet = true;
-    } else {
-      console.log("未找到 back 值");
     }
   });
 
@@ -72,8 +51,6 @@ function handleTextNode(node) {
     );
 
     node.textContent = updatedTextContent;
-    console.log('dbg updatedTextContent:', updatedTextContent)
-    notifyUpdateSpatialStyle();
   }
 }
 
@@ -89,14 +66,12 @@ function injectStyleElement() {
 }
 
 export function injectWebSpatialCapability() {
-  // proxyDocument();
   injectStyleElement();
 }
 
 export function useMonitorDocumentChange() {
   useEffect(() => {
     const observer = new MutationObserver((mutationsList) => {
-      console.log('dbg MutationObserver', mutationsList)
       notifyUpdateStandInstanceLayout();
     });
 
@@ -104,7 +79,6 @@ export function useMonitorDocumentChange() {
       childList: true,
       subtree: true,
       attributes: true,
-      // attributeFilter: ["style", "class"],
     };
 
     observer.observe(document.head, config);
