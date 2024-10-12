@@ -38,11 +38,7 @@ function useAsyncInstances<T>(
 }
 
 
-function getInheritedStyleProps(from: HTMLElement | undefined): any {
-    if (from === undefined) {
-        return {}
-    }
-
+function getInheritedStyleProps(from: HTMLElement): any {
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
         "azimuth",
@@ -231,8 +227,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             i.contentWindow!.document.documentElement.style.backgroundColor = "transparent"
             // Copy styles
             var links = document.getElementsByTagName("link")
-            const linksArray = Array.from(links);
-            for (var l of linksArray) {
+            for (var l of links) {
                 if (l.rel == "stylesheet") {
                     var styleEl = l.cloneNode(true)
                     i.contentWindow!.document.head.appendChild(styleEl)
@@ -436,6 +431,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
         const nodeToCopyStyleFrom = getTargetStandardNode() as HTMLElement
 
+        const inheritedPortalStyle = nodeToCopyStyleFrom ? getInheritedStyleProps(nodeToCopyStyleFrom) : {}
+
         return <>
             <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
                 <SpatialIsStandardInstanceContext.Provider value={true}>
@@ -447,7 +444,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El {...otherProps} className={props.className} style={{ ...getInheritedStyleProps(nodeToCopyStyleFrom), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
+                    {createPortal(<El {...otherProps} className={props.className} style={{ ...inheritedPortalStyle, ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
                 </> : <></>}
