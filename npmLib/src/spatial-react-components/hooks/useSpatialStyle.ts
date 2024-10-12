@@ -57,7 +57,6 @@ function useMonitorGlobalStyles(
   useEffect(() => {
     const targetNode: HTMLElement = targetStandardNodeGetter() as HTMLElement;
     const onSpatialStyleInfoUpdateEvent = () => {
-      console.log("dbg onSpatialStyleInfoUpdateEvent");
       checkClassAndUpdateZOffset(targetNode, updateZOffset);
     };
 

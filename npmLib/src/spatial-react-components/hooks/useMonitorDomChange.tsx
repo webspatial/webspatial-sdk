@@ -6,7 +6,7 @@ export function useMonitorDomChange() {
 
     useEffect(() => {
       const observer = new MutationObserver((mutationsList) => {
-        console.log('dbg useMonitorDomChange MutationObserver', mutationsList)
+        // console.log('dbg useMonitorDomChange MutationObserver', mutationsList)
         notifyUpdateStandInstanceLayout();
       });
   
@@ -14,7 +14,6 @@ export function useMonitorDomChange() {
         childList: true,
         subtree: true,
         attributes: true,
-        // attributeFilter: ["style", "class"],
       };
   
       ref.current && observer.observe(ref.current, config);
