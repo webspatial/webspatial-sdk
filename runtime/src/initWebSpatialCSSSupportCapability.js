@@ -1,16 +1,6 @@
-import {encodeSpatialStyle, SpatialStyleInfoUpdateEvent, SpatialCustomVar} from './common'
-import { useEffect } from "react";
+import { encodeSpatialStyleRuleString } from "web-spatial/private";
+import { notifyUpdateStandInstanceLayout } from "web-spatial/";
 
-/**
- * notifyUpdateStandInstanceLayout is called when the document head changed 
- * or when the monitored div changed (in both cases spatialDiv's layout may be changed, so we need to update the layout)
- */
-export function notifyUpdateStandInstanceLayout() {
-  document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.standInstanceLayout, {
-    detail: {
-     },
-  }));
-}
 
 function handleTextNode(node) {
   const styleSheet = node.textContent;
@@ -33,10 +23,9 @@ function handleTextNode(node) {
     const spatialStyleRegex = /back:\s*([^;]+)/;
     const match = spatialStyleRegex.exec(styleRules);
     if (match) {
-      const backValue = match[1].trim();
-      const encodedString = encodeSpatialStyle({ back: backValue });
       // add spatial style
-      selectorRule.styleRules += ` ${SpatialCustomVar}: "${encodedString}";`;
+      const backValue = match[1].trim();
+      selectorRule.styleRules += encodeSpatialStyleRuleString({ back: backValue });
       needUpdateStyleSheet = true;
     }
   });
@@ -65,26 +54,22 @@ function injectStyleElement() {
   };
 }
 
-export function injectWebSpatialCapability() {
+function monitorDocumentHeadChange() {
+  const observer = new MutationObserver((mutationsList) => {
+    notifyUpdateStandInstanceLayout();
+  });
+
+  const config = {
+    childList: true,
+    subtree: true,
+    attributes: true,
+  };
+
+  observer.observe(document.head, config);
+}
+
+export function initWebSpatialCSSSupportCapability() {
   injectStyleElement();
+  monitorDocumentHeadChange();
 }
 
-export function useMonitorDocumentChange() {
-  useEffect(() => {
-    const observer = new MutationObserver((mutationsList) => {
-      notifyUpdateStandInstanceLayout();
-    });
-
-    const config = {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    };
-
-    observer.observe(document.head, config);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-}

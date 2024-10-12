@@ -1,8 +1,11 @@
 "use strict";
 
 import { SpatialPrimitive, withSpatial } from "web-spatial";
+import { initWebSpatialCSSSupportCapability } from "./initWebSpatialCSSSupportCapability.js";
 
 let originalExport = require("./react-jsx-runtime.development.js");
+
+initWebSpatialCSSSupportCapability();
 
 const cachedWithSpatialType = new Map();
 
@@ -39,3 +42,4 @@ module.exports = {
   jsx: jsx,
   Fragment: originalExport.Fragment,
 };
+
