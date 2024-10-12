@@ -1,9 +1,8 @@
 import { encodeSpatialStyleRuleString } from "web-spatial/private";
 import { notifyUpdateStandInstanceLayout } from "web-spatial/";
 
-
-function handleTextNode(node) {
-  const styleSheet = node.textContent;
+function handleTextNode(node: Node) {
+  const styleSheet = node.textContent || '';
   const regex = /([^{]+)\{\s*([^}]+)\s*\}/g;
   const selectorRules = [];
   let match;
@@ -45,12 +44,14 @@ function handleTextNode(node) {
 
 function injectStyleElement() {
   const originalFn = HTMLStyleElement.prototype.insertBefore;
-  HTMLStyleElement.prototype.insertBefore = function (newNode, referenceNode) {
-    if (newNode.nodeType === Node.TEXT_NODE) {
-      handleTextNode(newNode);
+ 
+
+  HTMLStyleElement.prototype.insertBefore = function insertBefore<T extends Node>(node: T, child: Node | null): T {
+    if (node.nodeType === Node.TEXT_NODE) {
+      handleTextNode(node);
     }
 
-    return originalFn.apply(this, arguments);
+    return originalFn.apply(this, [arguments[0], arguments[1]]) as T;
   };
 }
 
