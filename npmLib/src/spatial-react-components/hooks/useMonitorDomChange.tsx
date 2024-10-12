@@ -1,12 +1,11 @@
 import { useRef, useEffect } from "react";
-import { notifyUpdateStandInstanceLayout } from "../globalInject";
+import { notifyUpdateStandInstanceLayout } from "../notifyUpdateStandInstanceLayout";
 
 export function useMonitorDomChange() {
     const ref = useRef(undefined);
 
     useEffect(() => {
       const observer = new MutationObserver((mutationsList) => {
-        // console.log('dbg useMonitorDomChange MutationObserver', mutationsList)
         notifyUpdateStandInstanceLayout();
       });
   
