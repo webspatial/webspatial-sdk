@@ -6,46 +6,16 @@ import { StyledTitle, StyledTitle2, StyledTitleComponent } from './StyledTitle';
 import { FpsView } from 'react-fps';
 
 import { SpatialMonitor } from 'web-spatial'
+import { SimpleSpatialComponent } from './SimpleSpatialComponent';
 
-const JackComponent = (props: any) => {
-    const [isPrimary, setIsPrimary] = useState(true)
-    const onClick = () => {
-        setIsPrimary(v => !v)
-    }
-
-    useEffect(() => {
-        console.log('dbg begin JackComponent')
-        return () => {
-            console.log('dbg end JackComponent')
-        }
-    }, [])
-
-    const style = {
-        background: 'yellow',
-        color: isPrimary ? 'red' : 'green',
-        back: isPrimary ? 72 : 46
-    }
-
-    return <div style={style} onClick={onClick} className='text-blue bg-base-200	bg-clip-border px-6 py-6 '>
-        this is JackComponent
-        <p> no!! </p>
-
-        {props.children}
-
-    </div>
-}
-
-function App() {
-    console.log('dbg in App')
-
-     
-
+function App() { 
     const array1To100 = Array(1).fill(0).map((_, index) => index + 1);
 // console.log(array1To100);
  
     return (
         <>
         {/* <FpsView width={240} height={80} bottom={60} right={80}/> */}
+        <SimpleSpatialComponent></SimpleSpatialComponent>
         <SpatialMonitor className='w-screen h-screen  ' >
             {array1To100.map(i => <StyledTitleComponent key={i} ></StyledTitleComponent>)}
             

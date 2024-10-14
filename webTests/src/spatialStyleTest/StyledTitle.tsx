@@ -27,7 +27,7 @@ export const StyledTitleComponent = () => {
   }
 
   const style = isPrimary ? {
-    back: 31
+    back: 31,
   } : {
     back: 42
   }
