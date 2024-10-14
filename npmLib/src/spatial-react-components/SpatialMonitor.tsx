@@ -1,4 +1,5 @@
 import { useMonitorDomChange } from "./hooks/useMonitorDomChange";
+import { useMonitorDocumentHeaderChange } from "./hooks/useMonitorDocumentHeaderChange";
 
 /**
  * Component that add MutationObserver to monitor all dom changes including its children.
@@ -7,5 +8,7 @@ import { useMonitorDomChange } from "./hooks/useMonitorDomChange";
 export function SpatialMonitor(props: any) {
     const {children, ...otherProps} = props;
     const ref = useMonitorDomChange()
+    useMonitorDocumentHeaderChange()
+    
     return <div ref={ref} {...otherProps}> {children} </div>
 }
