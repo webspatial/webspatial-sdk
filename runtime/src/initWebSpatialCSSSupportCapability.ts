@@ -1,5 +1,4 @@
 import { encodeSpatialStyleRuleString } from "web-spatial/private";
-import { notifyUpdateStandInstanceLayout } from "web-spatial/";
 
 function handleTextNode(node: Node) {
   const styleSheet = node.textContent || '';
@@ -55,22 +54,7 @@ function injectStyleElement() {
   };
 }
 
-function monitorDocumentHeadChange() {
-  const observer = new MutationObserver((mutationsList) => {
-    notifyUpdateStandInstanceLayout();
-  });
-
-  const config = {
-    childList: true,
-    subtree: true,
-    attributes: true,
-  };
-
-  observer.observe(document.head, config);
-}
-
 export function initWebSpatialCSSSupportCapability() {
   injectStyleElement();
-  monitorDocumentHeadChange();
 }
 
