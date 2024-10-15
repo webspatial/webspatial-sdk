@@ -1,9 +1,10 @@
-import React, { CSSProperties, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext, ReactNode } from 'react'
+import React, { CSSProperties, useEffect, useRef, useState, forwardRef, Ref, useImperativeHandle, createContext, useContext, ReactNode, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
+import { useSpatialStyle } from './hooks/useSpatialStyle';
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
@@ -38,7 +39,6 @@ function useAsyncInstances<T>(
 
 
 function getInheritedStyleProps(from: HTMLElement): any {
-
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
         "azimuth",
@@ -92,7 +92,6 @@ function getInheritedStyleProps(from: HTMLElement): any {
     }
     return props
 }
-
 export interface SpatialReactComponentProps {
     allowScroll?: boolean,
     scrollWithParent?: boolean,
@@ -113,6 +112,29 @@ export type SpatialReactComponentRef = Ref<{
     getBoundingClientRect: () => DOMRect
 }>
 
+function syncParentHeadToChild(childWindow: WindowProxy) {
+    for (let i = document.head.children.length - 1; i >= 0; i--) {
+        let n = document.head.children[i].cloneNode(true)
+        if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
+            // Safari seems to have a bug where 
+            // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
+            // the second load request never is fired resulting in css not to be applied. 
+            // Workaround this by making the css stylesheet request unique
+            (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
+            childWindow.document.head.appendChild(n)
+        } else {
+            childWindow.document.head.appendChild(n)
+        }
+    }
+}
+
+async function setViewport(windowInstance: any, elWidth: number, openedWindow?: WindowProxy,) {
+    if (!openedWindow) return;
+    const bodyWidth = document.body.getBoundingClientRect().width;
+    const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
+    viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
+    await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
+}
 
 /**
  * Component that extends the div tag that allows the inner contents to be posisioned in 3D space
@@ -141,19 +163,22 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     let customElEnabled = false
     let customElements = null as null | HTMLElement
 
-    const El = props.component ? props.component : 'div';
-    const isPrimiveEl = typeof El === 'string';
-
+    const { className, component, allowScroll, spatialStyle, debugName, scrollWithParent, disableSpatial, ...otherProps } = props;
+    const El = component ? component : 'div';
+    const isPrimitiveEl = typeof El === 'string';
 
     let mode = "none"
     let session = getSession()
     if (session) {
         mode = "spatial"
     }
+    function getTargetStandardNode() {
+        return isPrimitiveEl ? childrenSizeRef.current : childrenSizeRef.current?.firstElementChild as HTMLElement
+    }
 
     useImperativeHandle(ref, () => ({
         getBoundingClientRect() {
-            return (childrenSizeRef.current! as HTMLElement).getBoundingClientRect();
+            return (getTargetStandardNode() as HTMLElement).getBoundingClientRect();
         }
     }));
 
@@ -180,20 +205,20 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     }, []);
 
     if (mode === "none") { // Used for debugging purposes
-        const renderPrimiveComponent = () => (<El className={props.className} style={props.style} ref={childrenSizeRef} >
+        const renderPrimiveComponent = () => (<El className={props.className} style={props.style} ref={childrenSizeRef}  {...otherProps} >
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
         </El>);
         const renderWrappedComponent = () => (<div ref={childrenSizeRef}>
-            <El className={props.className} style={props.style}  >
+            <El className={props.className} style={props.style}  {...otherProps}  >
                 {!isCustomElement ? <>
                     {props.children}
                 </> : <slot></slot>}
             </El>
         </div>);
 
-        return isPrimiveEl ? renderPrimiveComponent() : renderWrappedComponent()
+        return isPrimitiveEl ? renderPrimiveComponent() : renderWrappedComponent()
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
             let i = iframeRef.current! as HTMLIFrameElement;
@@ -231,32 +256,6 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             </> : <></>}
         </>
     } else if (mode === "spatial") { // Behavior on spatial
-
-        function syncParentHeadToChild(childWindow: WindowProxy) {
-            for (let i = document.head.children.length - 1; i >= 0; i--) {
-                let n = document.head.children[i].cloneNode()
-                if (n.nodeName == "LINK" && (n as HTMLLinkElement).rel == "stylesheet" && (n as HTMLLinkElement).href) {
-                    // Safari seems to have a bug where 
-                    // ~1/50 loads, if the same url is loaded very quickly in a window and a child window, 
-                    // the second load request never is fired resulting in css not to be applied. 
-                    // Workaround this by making the css stylesheet request unique
-                    (n as HTMLLinkElement).href += ("?uniqueURL=" + Math.random());
-                    childWindow.document.head.appendChild(n)
-                } else {
-                    childWindow.document.head.appendChild(n)
-                }
-            }
-        }
-
-        async function setViewport(openedWindow?: WindowProxy) {
-            if (!openedWindow) return;
-            const bodyWidth = document.body.getBoundingClientRect().width;
-            const bodyHeight = document.body.getBoundingClientRect().height;
-            const viewport = openedWindow?.document.querySelector('meta[name="viewport"]')
-            viewport?.setAttribute('content', `width=${bodyWidth}, height=${bodyHeight} initial-scale=1.0 user-scalable=no`)
-            await windowInstance.getActiveInstance()?.mnger.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: elHeight - bodyHeight, right: elWidth - bodyWidth })
-        }
-
         let windowInstance = useAsyncInstances(() => {
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
             if (isStandard === true) {
@@ -294,10 +293,10 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let headObserver = new MutationObserver((mutations) => {
                 if (openedWindow) {
                     syncParentHeadToChild(openedWindow)
-                    setViewport(openedWindow);
+                    setViewport(windowInstance, elWidth, openedWindow);
                 }
             })
-            headObserver.observe(document.head, { childList: true })
+            headObserver.observe(document.head, { childList: true, subtree: true, })
 
             syncParentHeadToChild(openedWindow!)
 
@@ -341,31 +340,47 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }, [])
 
-
         // Handle resizing
         let resizeSpatial = async () => {
 
             var ins = windowInstance.getActiveInstance()?.mnger
             if (ins) {
-                let rect = childrenSizeRef.current!.getBoundingClientRect()
+                const targetStandardNode = getTargetStandardNode()
+                let rect = targetStandardNode!.getBoundingClientRect()
                 if (customElEnabled) {
                     let p = customElements!.parentElement!
                     childrenSizeRef.current!.appendChild(customElements!)
                     rect = childrenSizeRef.current!.getBoundingClientRect()
                     p.appendChild(customElements!)
                 }
-                await ins.resize(rect, { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
-                await setViewport(ins.window)
+                let offset = { ...{ x: 0, y: 0, z: 1 }, ...props.spatialStyle?.position }
+                if (spatialStyle?.current.zOffset !== undefined) {
+                    offset.z = spatialStyle.current.zOffset
+                }
+
+
+                if ((targetStandardNode?.style as any).back !== undefined) {
+                    // inline-style have high priority than global style
+                    // parse style.back
+                    let back = parseFloat((targetStandardNode?.style as any).back)
+                    offset.z = back;
+                }
+
+                await ins.resize(rect, offset, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
+
+                await setViewport(windowInstance, elWidth, ins.window)
 
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
-                const computedStyle = getComputedStyle(childrenSizeRef.current!);
+                const computedStyle = getComputedStyle(targetStandardNode!);
                 const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0
                 const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0
                 setElWidth(width)
                 setElHeight(height)
             }
         }
+
+        const spatialStyle = useSpatialStyle(getTargetStandardNode, resizeSpatial);
 
         // Sync prop updates
         useEffect(() => {
@@ -383,6 +398,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     await ins.webview?.setScrollWithParent(!getIsFixed())
                 }
             })();
+
             resizeSpatial()
         }, [props.spatialStyle, props.allowScroll, props.scrollWithParent])
 
@@ -391,7 +407,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             let ro = new ResizeObserver((elements) => {
                 resizeSpatial()
             })
-            ro.observe(childrenSizeRef.current!)
+            const targetStandardNode = getTargetStandardNode()
+            ro.observe(targetStandardNode!)
             window.addEventListener("resize", resizeSpatial);
             return () => {
                 window.removeEventListener("resize", resizeSpatial);
@@ -399,33 +416,35 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             }
         }, [])
 
-
-
         const renderStandardInstance = () => (
-            <El ref={childrenSizeRef} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
+            <El ref={childrenSizeRef}  {...otherProps} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </El>
         );
         const renderWrappedStandardInstance = () => (
             <div ref={childrenSizeRef} style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
-                <El className={props.className} style={{ ...props.style }}  >
+                <El className={props.className} {...otherProps} style={{ ...props.style }}  >
                     {props.children}
                 </El>
             </div>
         );
 
+        const nodeToCopyStyleFrom = getTargetStandardNode() as HTMLElement
+
+        const inheritedPortalStyle = nodeToCopyStyleFrom ? getInheritedStyleProps(nodeToCopyStyleFrom) : {}
+
         return <>
             <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
                 <SpatialIsStandardInstanceContext.Provider value={true}>
                     {
-                        isPrimiveEl
+                        isPrimitiveEl
                             ? renderStandardInstance()
                             : renderWrappedStandardInstance()
                     }
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El className={props.className} style={{ ...getInheritedStyleProps(childrenSizeRef.current!), ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "", left: "", margin: "", marginLeft: "", marginRight: "", marginTop: "", marginBottom: "", overflow: "" } }}>
+                    {createPortal(<El {...otherProps} className={props.className} style={{ ...inheritedPortalStyle, ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
                         {props.children}
                     </El>, portalEl)}
                 </> : <></>}
@@ -435,3 +454,4 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
 })
 
+SpatialReactComponent.displayName = 'SpatialReactComponent'

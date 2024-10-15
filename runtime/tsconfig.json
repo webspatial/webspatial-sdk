@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
+    "target": "ES5",
     "useDefineForClassFields": true,
     "lib": [
-      "ES2023",
+      "ES2020",
       "DOM",
       "DOM.Iterable"
     ],
-    "module": "ESNext",
+    "module": "esnext",
     "skipLibCheck": true,
-    "allowJs": false,
     /* Bundler mode */
     "moduleResolution": "node",
     // "allowImportingTsExtensions": false,
