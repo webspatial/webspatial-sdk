@@ -46,7 +46,6 @@ export class SpatialWindowManager {
     async resize(domRect: DOMRect, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
         let rect = domRect
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
-
         // Adjust to get the page relative to document instead of viewport
         // This is needed as when you scroll down the page the rect.top moves but we dont want it to so we can offset that by adding scroll
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
@@ -68,6 +67,7 @@ export class SpatialWindowManager {
         var webview = this.webview!
         await webview.setResolution(rect.width, rect.height);
     }
+
     async destroy() {
         if (this.initPromise) {
             await this.initPromise
