@@ -1,5 +1,7 @@
 .DS_Store
 
+node_modules
+dist
 visionOSAPP/web-spatial/static-web
 visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
