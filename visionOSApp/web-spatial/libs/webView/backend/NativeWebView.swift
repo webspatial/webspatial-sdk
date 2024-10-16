@@ -87,9 +87,9 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
-        let json = JsonParser(str: message.body as? String)
+        let command = CommandManager.Instance.decode(jsonData: message.body as! String)
         if let wv = webViewRef {
-            wv.onJSScriptMessage(json: json)
+            CommandManager.Instance.doCommand(target: wv, jsb: command)
         }
     }
     
