@@ -27,6 +27,7 @@ function parseSpatialStyle(targetNode: HTMLElement) {
 
 function useMonitorNodeClassStyleChange(
   targetStandardNodeGetter: () => Element | null | undefined,
+  // when no spatial style detected, return undefined
   updateZOffset: (zOffset: number| undefined) => void,
 ) {
   useEffect(() => {
@@ -56,7 +57,7 @@ function useMonitorNodeClassStyleChange(
 
 function useMonitorGlobalStyles(
   targetStandardNodeGetter: () => Element | null | undefined,
-  updateZOffset: (zOffset: number) => void,
+  updateZOffset: (zOffset: number | undefined) => void,
 ) {
   useEffect(() => {
     const targetNode: HTMLElement = targetStandardNodeGetter() as HTMLElement;
