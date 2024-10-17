@@ -1,9 +1,11 @@
 import * as esbuild from "esbuild";
 import { tailwindPlugin } from "esbuild-plugin-tailwindcss";
-import cssModulesPlugin from 'esbuild-css-modules-plugin'
+import webSpatialPostCSSPlugin from '../postcss-plugin/webspatial-postcss-plugin.js'
+
 import glob from "tiny-glob";
 import path from "path";
 import livereload from "livereload";
+import {sassPlugin, postcssModules} from 'esbuild-sass-plugin'
 
 var entryPoints = await glob("./src/**/*.tsx");
 entryPoints = entryPoints.concat(await glob("./src/**/*.ts"))
@@ -11,8 +13,11 @@ entryPoints.push('index.tsx')
 entryPoints.push( 'src/index.css')
 
 var plugins = []
-plugins.push(cssModulesPlugin())
 plugins.push(tailwindPlugin())
+plugins.push(sassPlugin({
+  filter: /\.module\.scss$/,
+  transform: postcssModules({}, [webSpatialPostCSSPlugin])
+}))
 
 var outdir = "dist";
 var port = 5173
