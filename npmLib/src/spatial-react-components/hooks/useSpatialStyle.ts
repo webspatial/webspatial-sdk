@@ -9,21 +9,26 @@ function useForceUpdate() {
 
 function checkClassAndUpdateZOffset(
   targetNode: HTMLElement,
-  updateZOffset: (zOffset: number) => void,
+  updateZOffset: (zOffset: number | undefined) => void,
 ) {
-  const computedStyle = getComputedStyle(targetNode);
-  // try to decode content
-  const spatialStyle = decodeSpatialStyle(computedStyle);
+  const spatialStyle = parseSpatialStyle(targetNode);
   if (spatialStyle) {
     updateZOffset(spatialStyle.back);
   } else {
-    updateZOffset(0.000001)
+    updateZOffset(undefined)
   }
+}
+
+function parseSpatialStyle(targetNode: HTMLElement) {
+  const computedStyle = getComputedStyle(targetNode);
+  const spatialStyle = decodeSpatialStyle(computedStyle);
+  return spatialStyle
 }
 
 function useMonitorNodeClassStyleChange(
   targetStandardNodeGetter: () => Element | null | undefined,
-  updateZOffset: (zOffset: number) => void,
+  // when no spatial style detected, return undefined
+  updateZOffset: (zOffset: number| undefined) => void,
 ) {
   useEffect(() => {
     const targetNode: HTMLElement = targetStandardNodeGetter() as HTMLElement;
@@ -52,7 +57,7 @@ function useMonitorNodeClassStyleChange(
 
 function useMonitorGlobalStyles(
   targetStandardNodeGetter: () => Element | null | undefined,
-  updateZOffset: (zOffset: number) => void,
+  updateZOffset: (zOffset: number | undefined) => void,
 ) {
   useEffect(() => {
     const targetNode: HTMLElement = targetStandardNodeGetter() as HTMLElement;
@@ -83,7 +88,7 @@ export function useSpatialStyle(
   });
 
   const forceUpdate = useForceUpdate();
-  const innerUpdateZOffset = (zOffset: number) => {
+  const innerUpdateZOffset = (zOffset: number | undefined) => {
     spatialStyle.current.zOffset = zOffset
     resizeSpatial()
     forceUpdate()
@@ -91,7 +96,10 @@ export function useSpatialStyle(
   
   useEffect(() => {
     const targetNode: HTMLElement = targetStandardNodeGetter() as HTMLElement;
-    checkClassAndUpdateZOffset(targetNode, innerUpdateZOffset);
+    const spatialStyle = parseSpatialStyle(targetNode);
+    if (spatialStyle) {
+      innerUpdateZOffset(spatialStyle.back);
+    }
   }, []);
 
   useMonitorGlobalStyles(targetStandardNodeGetter, innerUpdateZOffset);
