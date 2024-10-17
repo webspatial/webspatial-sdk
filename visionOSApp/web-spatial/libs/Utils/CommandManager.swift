@@ -13,7 +13,31 @@ class CommandManager{
     static let Instance = CommandManager()
     
     private let decoder = JSONDecoder()
-    private init(){}
+    private var commandList:[String:(_ target:SpatialWindowComponent, _ jsb:JSBCommand) -> Void] = [:]
+    private init(){
+        let _ = registerCommand(name: "multiCommand", action: multiCommand)
+        let _ = registerCommand(name: "ping", action: ping)
+        let _ = registerCommand(name: "inspect", action: inspect)
+        let _ = registerCommand(name: "getStats", action: getStats)
+        let _ = registerCommand(name: "setComponent", action: setComponent)
+        let _ = registerCommand(name: "createResource", action: createResource)
+        let _ = registerCommand(name: "destroyResource", action: destroyResource)
+        let _ = registerCommand(name: "updateResource", action: updateResource)
+        let _ = registerCommand(name: "createWindowGroup", action: createWindowGroup)
+        let _ = registerCommand(name: "updateWindowGroup", action: updateWindowGroup)
+        let _ = registerCommand(name: "openImmersiveSpace", action: self.openImmersiveSpace)
+        let _ = registerCommand(name: "dismissImmersiveSpace", action: self.dismissImmersiveSpace)
+        let _ = registerCommand(name: "log", action: self.log)
+        let _ = registerCommand(name: "setLogLevel", action: setLogLevel)
+    }
+    
+    public func registerCommand(name:String, action:@escaping (_ target:SpatialWindowComponent, _ jsb:JSBCommand)->Void) -> Bool{
+        if(commandList[name] == nil) {
+            commandList[name] = action
+            return true
+        }
+        return true
+    }
     
     public func decode(jsonData:String) -> JSBCommand{
         var jsbCommand = JSBCommand(command: "", data: JSData(), requestID: 0)
@@ -27,23 +51,8 @@ class CommandManager{
     }
     
     public func doCommand(target:SpatialWindowComponent, jsb:JSBCommand){
-        switch jsb.command{
-            case "multiCommand": multiCommand(target:target, jsb:jsb); break
-            case "ping": ping(target:target, jsb:jsb); break
-            case "inspect": inspect(target:target, jsb:jsb); break
-            case "getStats": getStats(target:target, jsb:jsb); break
-            case "setComponent": setComponent(target:target, jsb:jsb); break
-            case "createResource": createResource(target:target, jsb:jsb); break
-            case "destroyResource": destroyResource(target:target, jsb:jsb); break
-            case "updateResource": updateResource(target:target, jsb:jsb); break
-            case "createWindowGroup": createWindowGroup(target:target, jsb:jsb); break
-            case "updateWindowGroup": updateWindowGroup(target:target, jsb:jsb); break
-            case "openImmersiveSpace": openImmersiveSpace(); break
-            case "dismissImmersiveSpace": dismissImmersiveSpace(); break
-            case "log": log(jsb:jsb); break
-            case "setLogLevel": setLogLevel(jsb:jsb); break
-        default:
-            return
+        if let action = commandList[jsb.command]{
+            action(target, jsb)
         }
     }
     
@@ -128,19 +137,19 @@ class CommandManager{
         CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
     }
     
-    private func openImmersiveSpace(){
+    private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand){
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(true)
     }
     
-    private func dismissImmersiveSpace(){
+    private func dismissImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand){
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(false)
     }
     
-    private func log(jsb:JSBCommand){
+    private func log(target:SpatialWindowComponent, jsb:JSBCommand){
         CommandDataManager.Instance.log(data: jsb.data)
     }
     
-    private func setLogLevel(jsb:JSBCommand){
+    private func setLogLevel(target:SpatialWindowComponent, jsb:JSBCommand){
         CommandDataManager.Instance.setLogLevel(data: jsb.data)
     }
 }
