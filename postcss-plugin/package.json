@@ -1,0 +1,15 @@
+{
+  "name": "postcss-plugin",
+  "version": "1.0.0",
+  "main": "webspatial-postcss-plugin.js",
+  "scripts": {
+    "test": "npx postcss styles.css -o dist/output.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "postcss": "^8.4.47",
+    "postcss-cli": "^11.0.0"
+  }
+}

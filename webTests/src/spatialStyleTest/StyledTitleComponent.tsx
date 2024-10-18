@@ -7,7 +7,7 @@ export const StyledTitle = styled.h1<{ $primary?: boolean; }>`
   position: absolute;
   bottom: ${props => props.$primary ? '-120px' : '-150px'};
   color: ${props => props.$primary ? "blue" : "red"};
-  back: ${props => props.$primary ? 120 : 150};
+  back: ${props => props.$primary ? 12 : 15};
   background: #fff;
 `;
 

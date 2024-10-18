@@ -43,9 +43,11 @@
     "esbuild": "^0.23.1",
     "esbuild-css-modules-plugin": "^3.1.2",
     "esbuild-plugin-tailwindcss": "^1.2.0",
+    "esbuild-sass-plugin": "^3.3.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "postcss-modules": "^6.0.0",
     "typescript": "^5.2.2"
   }
 }
