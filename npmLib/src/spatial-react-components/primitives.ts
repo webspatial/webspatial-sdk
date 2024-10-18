@@ -135,3 +135,20 @@ export const primitives: Primitives[] = [
   'text',
   'tspan',
 ]
+
+export const SelfClosingTags = [
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]
