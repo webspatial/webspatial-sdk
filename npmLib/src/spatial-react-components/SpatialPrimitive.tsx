@@ -1,11 +1,13 @@
 import { forwardRef, Ref } from "react";
 import { SpatialReactComponent } from "./SpatialReactComponent";
-import { primitives } from "./primitives";
-
+import { primitives, SelfClosingTags } from "./primitives";
 
 export function withSpatial(Component: any) {
     const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
         const { children, component: ignoreComponent, ...props } = givenProps;
+        if (SelfClosingTags.includes(Component)) {
+            return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
+        }
         return <SpatialReactComponent component={Component} {...props} ref={givenRef} > {children} </SpatialReactComponent>
     })
 
