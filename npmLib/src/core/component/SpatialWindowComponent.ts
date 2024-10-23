@@ -5,15 +5,34 @@ import { WebSpatial } from "../private/WebSpatial"
 * Used to position an web window in 3D space
 */
 export class SpatialWindowComponent extends SpatialComponent {
-   /**
-   * Loads a url page in the window
-   * @param url url to load
-   */
+  /**
+  * Loads a url page in the window
+  * @param url url to load
+  */
   async loadURL(url: string) {
     await WebSpatial.updateResource(this._resource, { url: url })
   }
 
   async setFromWindow(window: any) {
+    // Wait for webview id from the window to be populated by native
+    var counter = 0
+    var windowLoaded = new Promise<void>(async (res, rej) => {
+      let l = async () => {
+        if ((window)._webSpatialID != undefined) {
+          res()
+        } else {
+          counter++
+          if (counter < 100) {
+            setTimeout(l, 50);
+          } else {
+            res()
+          }
+        }
+      }
+      l()
+    })
+    await windowLoaded;
+
     if (window._webSpatialID) {
       await WebSpatial.updateResource(this._resource, { windowID: window._webSpatialID })
     } else {
