@@ -236,5 +236,13 @@ export class SpatialSession {
     return WebSpatial.sendTransaction()
   }
 
-
+  // Creates a window context object that is compatable with SpatialWindowComponent's setFromWindow API
+  createWindowContext() {
+    let openedWindow = window.open();
+    if (WebSpatial.getBackend() == "PICO") {
+      // Currently there is a bug with android webview which requires us to trigger a navigation before native code can interact with created webview
+      openedWindow!.location = "about:blank"
+    }
+    return openedWindow
+  }
 }
