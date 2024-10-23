@@ -67,6 +67,14 @@ export class WebSpatial {
         return result
     }
 
+    static getBackend() {
+        if ((window as any).Android) {
+            return "PICO"
+        } else {
+            return "AVP"
+        }
+    }
+
     static async sendCommand(cmd: RemoteCommand) {
         if (WebSpatial.transactionStarted) {
             WebSpatial.transactionCommands.push(cmd as any)
@@ -75,7 +83,7 @@ export class WebSpatial {
 
         var msg = JSON.stringify(cmd);
 
-        if ((window as any).Android) {
+        if (WebSpatial.getBackend() == "PICO") {
             (window as any).Android.nativeMessage(msg)
             return
         } else {
