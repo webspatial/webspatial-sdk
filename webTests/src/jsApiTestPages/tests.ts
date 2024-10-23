@@ -73,6 +73,39 @@ var main = async () => {
             glassState = !glassState
             await (wc).setStyle({ glassEffect: glassState, cornerRadius: 50 })
         }
+    } else if (page == "setFromWindow") {
+        // Open a new window
+        let openedWindow = session.createWindowContext()!
+
+        // Create entity
+        var entity = await (session).createEntity()
+        entity.transform.position.x = 500 + ((Math.random() * 200) - 100)
+        entity.transform.position.y = 300
+        entity.transform.position.z = 50
+        await entity.updateTransform()
+
+        // Add entity to the Spatial Group
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await entity.setParent(ent!)
+
+        // Create window component and set its content from the window
+        var webview = await (session).createWindowComponent();
+        await Promise.all([
+            webview.setFromWindow(openedWindow!.window),
+            webview.setScrollEnabled(false),
+            entity!.setCoordinateSpace("Dom"),
+            webview.setResolution(300, 300),
+        ])
+        openedWindow!.document.documentElement.style.backgroundColor = "red"
+        openedWindow!.window.document.body.innerHTML = "<p style='color:white;font-size:5em;'>hello world</p>"
+        await webview.setStyle({ glassEffect: true, cornerRadius: 0 })
+        await webview.setResolution(200, 200)
+
+        // Attach to entity
+        entity.setComponent(webview)
+
+        await session.log("page done done")
     } else if (page == "modelUI") {
         var e = await session.createEntity()
         e.transform.position.x = 500

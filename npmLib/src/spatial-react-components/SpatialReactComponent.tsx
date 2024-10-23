@@ -262,32 +262,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 return null
             }
             // Open window and set style
-            let openedWindow = window.open();
-            openedWindow!.document.documentElement.style.backgroundColor = "transparent"
-            openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
-            openedWindow!.document.body.style.margin = "0px"
-
-            // Overwrite link href to navigate the parents page
-            openedWindow!.document.onclick = function (e) {
-                let element = (e.target) as HTMLElement | null;
-                let found = false
-
-                // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
-                while (!found) {
-                    if (element && (element).tagName == 'A') {
-                        // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
-                        if (!element.onclick) {
-                            window.location.href = (element as HTMLAnchorElement).href
-                        }
-                        return false; // prevent default action and stop event propagation
-                    }
-                    if (element && element.parentElement) {
-                        element = element.parentElement
-                    } else {
-                        break;
-                    }
-                }
-            };
+            let openedWindow = getSession()!.createWindowContext()
 
             // Synchronize head of parent page to this page to ensure styles are in sync
             let headObserver = new MutationObserver((mutations) => {
@@ -296,20 +271,48 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                     setViewport(windowInstance, elWidth, openedWindow);
                 }
             })
-            headObserver.observe(document.head, { childList: true, subtree: true, })
-
-            syncParentHeadToChild(openedWindow!)
-
-            if (customElEnabled) {
-                openedWindow!.document.body.appendChild(customElements!)
-            } else {
-                // Create portal
-                setPortalEl(openedWindow!.document.body)
-            }
 
             // Create spatial window
             let windowMngr = new SpatialWindowManager()
             windowMngr.initFromWidow(openedWindow!).then(async () => {
+
+                openedWindow!.document.documentElement.style.backgroundColor = "transparent"
+                openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
+                openedWindow!.document.body.style.margin = "0px"
+
+                // Overwrite link href to navigate the parents page
+                openedWindow!.document.onclick = function (e) {
+                    let element = (e.target) as HTMLElement | null;
+                    let found = false
+
+                    // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
+                    while (!found) {
+                        if (element && (element).tagName == 'A') {
+                            // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
+                            if (!element.onclick) {
+                                window.location.href = (element as HTMLAnchorElement).href
+                            }
+                            return false; // prevent default action and stop event propagation
+                        }
+                        if (element && element.parentElement) {
+                            element = element.parentElement
+                        } else {
+                            break;
+                        }
+                    }
+                };
+
+                headObserver.observe(document.head, { childList: true, subtree: true, })
+
+                syncParentHeadToChild(openedWindow!)
+
+                if (customElEnabled) {
+                    openedWindow!.document.body.appendChild(customElements!)
+                } else {
+                    // Create portal
+                    setPortalEl(openedWindow!.document.body)
+                }
+
                 if (parentSpatialReactComponent !== null) {
                     // Add as a child of the parent
                     await parentSpatialReactComponent.initPromise
