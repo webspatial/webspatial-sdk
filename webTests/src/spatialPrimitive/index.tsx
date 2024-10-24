@@ -13,7 +13,8 @@ if (spatialSupported) {
 
 const SpatialSimpleComponent =  withSpatial(SimpleComponent);
 
-console.log('dbg', SpatialSimpleComponent)
+const imgSrc = 'https://interactive-examples.mdn.mozilla.net/media/examples/firefox-logo.svg'
+
 function App() {
 
     const spatialStyle = {
@@ -46,6 +47,10 @@ function App() {
                 <div className='flex flex-row pt-5 gap-2'>
                     <a className={divCls}> this is a</a>
                     <SpatialPrimitive.a spatialStyle={spatialStyle} className={spaceCls} > this is spatial a</SpatialPrimitive.a >
+                </div>
+
+                <div className='flex flex-row pt-5 gap-2'>
+                    <SpatialPrimitive.img spatialStyle={spatialStyle} className={spaceCls}  src={imgSrc} width={200} />
                 </div>
 
                 <div className='flex flex-row pt-5 gap-2'>
