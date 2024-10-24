@@ -5,6 +5,7 @@ import { getSession } from '../utils';
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { useSpatialStyle } from './hooks/useSpatialStyle';
+import { SelfClosingTags } from "./primitives";
 
 const SpatialReactComponentContext = createContext(null as null | SpatialWindowManager);
 const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
@@ -104,7 +105,8 @@ export interface SpatialReactComponentProps {
 
     // TBF: when disableSpatial, display as normal div in current webview
     disableSpatial?: boolean,
-    debugName?: string
+    debugName?: string,
+    debugShowStandardInstance?: boolean
 }
 
 export type SpatialReactComponentRef = Ref<{
@@ -163,7 +165,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
     let customElEnabled = false
     let customElements = null as null | HTMLElement
 
-    const { className, component, allowScroll, spatialStyle, debugName, scrollWithParent, disableSpatial, ...otherProps } = props;
+    const { className, debugShowStandardInstance, component, allowScroll, spatialStyle, debugName, scrollWithParent, disableSpatial, ...otherProps } = props;
     const El = component ? component : 'div';
     const isPrimitiveEl = typeof El === 'string';
 
@@ -204,21 +206,26 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         }
     }, []);
 
+    const isSelfClosingTags = SelfClosingTags.includes(component as string)
+
     if (mode === "none") { // Used for debugging purposes
-        const renderPrimiveComponent = () => (<El className={props.className} style={props.style} ref={childrenSizeRef}  {...otherProps} >
+        const renderPrimitiveComponent = isSelfClosingTags ? () => <El className={props.className} style={props.style} ref={childrenSizeRef}  {...otherProps} /> 
+        : () => (<El className={props.className} style={props.style} ref={childrenSizeRef}  {...otherProps} >
             {!isCustomElement ? <>
                 {props.children}
             </> : <slot></slot>}
         </El>);
         const renderWrappedComponent = () => (<div ref={childrenSizeRef}>
-            <El className={props.className} style={props.style}  {...otherProps}  >
+            {isSelfClosingTags 
+            ? <El className={props.className} style={props.style}  {...otherProps} />
+            : <El className={props.className} style={props.style}  {...otherProps}  >
                 {!isCustomElement ? <>
                     {props.children}
                 </> : <slot></slot>}
-            </El>
+             </El>}
         </div>);
 
-        return isPrimitiveEl ? renderPrimiveComponent() : renderWrappedComponent()
+        return isPrimitiveEl ? renderPrimitiveComponent() : renderWrappedComponent()
     } else if (mode === "iframe") {  // Used to simulate behavior but without spatial (useful for debugging)
         useEffect(() => {
             let i = iframeRef.current! as HTMLIFrameElement;
@@ -420,21 +427,31 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
         }, [])
 
         const renderStandardInstance = () => (
-            <El ref={childrenSizeRef}  {...otherProps} className={props.className} style={{ ...props.style, ...{ visibility: props.disableSpatial ? "visible" : "hidden" } }}  >
+            isSelfClosingTags ? <El ref={childrenSizeRef}  {...otherProps} className={props.className} style={{ ...props.style, ...{ visibility: props.debugShowStandardInstance || props.disableSpatial ? "visible" : "hidden" } }}  />
+             :  <El ref={childrenSizeRef}  {...otherProps} className={props.className} style={{ ...props.style, ...{ visibility: props.debugShowStandardInstance || props.disableSpatial ? "visible" : "hidden" } }}  >
                 {props.children}
             </El>
         );
         const renderWrappedStandardInstance = () => (
-            <div ref={childrenSizeRef} style={{ visibility: props.disableSpatial ? "visible" : "hidden" }} >
-                <El className={props.className} {...otherProps} style={{ ...props.style }}  >
+            <div ref={childrenSizeRef} style={{ visibility: props.debugShowStandardInstance || props.disableSpatial ? "visible" : "hidden" }} >
+                {
+                isSelfClosingTags 
+                ? <El className={props.className} {...otherProps} style={{ ...props.style }}  /> 
+                : <El className={props.className} {...otherProps} style={{ ...props.style }}  >
                     {props.children}
                 </El>
+                }
             </div>
         );
 
         const nodeToCopyStyleFrom = getTargetStandardNode() as HTMLElement
 
         const inheritedPortalStyle = nodeToCopyStyleFrom ? getInheritedStyleProps(nodeToCopyStyleFrom) : {}
+
+        const PortalInstance =  isSelfClosingTags ? <El {...otherProps} className={props.className} style={{ ...inheritedPortalStyle, ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }} />
+         : (<El {...otherProps} className={props.className} style={{ ...inheritedPortalStyle, ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
+        {props.children}
+    </El>)
 
         return <>
             <SpatialReactComponentContext.Provider value={windowInstance.getActiveInstance()?.mnger || null}>
@@ -447,9 +464,7 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
                 </SpatialIsStandardInstanceContext.Provider>
 
                 {!isCustomElement && portalEl && (isStandard !== true) ? <>
-                    {createPortal(<El {...otherProps} className={props.className} style={{ ...inheritedPortalStyle, ...props.style, ...{ visibility: props.disableSpatial ? "hidden" : "visible", width: "" + elWidth + "px", height: "" + elHeight + "px", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" } }}>
-                        {props.children}
-                    </El>, portalEl)}
+                    {createPortal(PortalInstance, portalEl)}
                 </> : <></>}
             </SpatialReactComponentContext.Provider>
         </>
