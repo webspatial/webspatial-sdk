@@ -268,8 +268,9 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
             if (isStandard === true) {
                 return null
             }
-            // Open window and set style
-            let openedWindow = getSession()!.createWindowContext()
+
+            // Track opened window once created
+            let openedWindow: Window | null = null
 
             // Synchronize head of parent page to this page to ensure styles are in sync
             let headObserver = new MutationObserver((mutations) => {
@@ -281,7 +282,8 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
             // Create spatial window
             let windowMngr = new SpatialWindowManager()
-            windowMngr.initFromWidow(openedWindow!).then(async () => {
+            windowMngr.initFromWidow().then(async () => {
+                openedWindow = windowMngr.window
 
                 openedWindow!.document.documentElement.style.backgroundColor = "transparent"
                 openedWindow!.document.documentElement.style.cssText += document.documentElement.style.cssText
@@ -379,7 +381,9 @@ export const SpatialReactComponent = forwardRef((props: SpatialReactComponentPro
 
                 await ins.resize(rect, offset, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...props.spatialStyle?.rotation })
 
-                await setViewport(windowInstance, elWidth, ins.window)
+                if (ins.window) {
+                    await setViewport(windowInstance, elWidth, ins.window)
+                }
 
                 // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
                 const computedStyle = getComputedStyle(targetStandardNode!);
