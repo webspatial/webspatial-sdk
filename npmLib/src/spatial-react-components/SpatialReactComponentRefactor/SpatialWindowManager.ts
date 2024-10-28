@@ -1,8 +1,8 @@
 
 
-import { SpatialEntity, SpatialWindowComponent } from '../core';
-import { getSession } from '../utils';
-import { vecType, quatType } from './types';
+import { SpatialEntity, SpatialWindowComponent } from '../../core';
+import { getSession } from '../../utils';
+import { vecType, quatType } from '../types';
 
 
 // Manager classes to handle resource creation/deletion
@@ -12,7 +12,7 @@ export class SpatialWindowManager {
     webview?: SpatialWindowComponent
     window?: WindowProxy
 
-    async initInternal(url: string) {
+    private async initInternal(url: string) {
         this.entity = await (getSession()!).createEntity()
         this.webview = await (getSession()!).createWindowComponent()
         await this.webview.loadURL(url)
@@ -25,7 +25,7 @@ export class SpatialWindowManager {
         var ent = await wc.getEntity()
         await this.entity.setParent(ent!)
     }
-    async initInternalFromWindow(w: any) {
+    private async initInternalFromWindow(w: WindowProxy, parentSpatialWindowManager?: SpatialWindowManager | null) {
         this.entity = await (getSession()!).createEntity()
         this.webview = await (getSession()!).createWindowComponent()
         await this.webview.setFromWindow(w)
@@ -33,14 +33,27 @@ export class SpatialWindowManager {
         await this.webview.setScrollWithParent(true);
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
+
+        if (parentSpatialWindowManager !== undefined) {
+            if (parentSpatialWindowManager !== null) {
+                // Add as a child of the parent
+                await parentSpatialWindowManager.initPromise
+                this.entity!.setParent(parentSpatialWindowManager.entity!)
+            } else {
+                // Add as a child of the current page
+                var wc = (await (getSession()!).getCurrentWindowComponent())
+                var ent = await wc.getEntity()
+                await this.entity!.setParent(ent!)
+            }
+        }
     }
     async init(url: string) {
         this.initPromise = this.initInternal(url)
         await this.initPromise
     }
-    async initFromWidow(w: WindowProxy) {
+    async initFromWidow(w: WindowProxy, parentSpatialWindowManager?: SpatialWindowManager | null) {
         this.window = w;
-        this.initPromise = this.initInternalFromWindow(w)
+        this.initPromise = this.initInternalFromWindow(w, parentSpatialWindowManager)
         await this.initPromise
     }
     async resize(domRect: DOMRect, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
