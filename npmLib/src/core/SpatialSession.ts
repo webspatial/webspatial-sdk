@@ -257,6 +257,7 @@ export class SpatialSession {
       }
       (openedWindow! as any)._webSpatialID = (openedWindow!.window as any).testAPI.getWindowID()
     }
+    openedWindow!.document.head.innerHTML = '<meta name="viewport" content="width=device-width, initial-scale=1">'
     return openedWindow
   }
 }
