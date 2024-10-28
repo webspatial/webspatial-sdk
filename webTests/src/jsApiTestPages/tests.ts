@@ -112,7 +112,7 @@ var main = async () => {
                 webview.setResolution(200, 200),
             ])
             openedWindow!.document.documentElement.style.backgroundColor = color
-            openedWindow!.window.document.body.innerHTML = "<p style='color:white;font-size:5em;'>hello world</p>"
+            openedWindow!.window.document.body.innerHTML = "<p style='color:white;'>hello world</p>"
             await webview.setStyle({ glassEffect: true, cornerRadius: 0 })
 
             // Attach to entity
@@ -123,10 +123,10 @@ var main = async () => {
         await session.log("page start")
 
         await Promise.all([
-            createWin(100 + 300 * 0, "red"),
-            createWin(100 + 300 * 1, "blue"),
-            createWin(100 + 300 * 2, "green"),
-            createWin(100 + 300 * 3, "yellow")
+            createWin(100 + 200 * 0, "red"),
+            createWin(100 + 200 * 1, "blue"),
+            createWin(100 + 200 * 2, "green"),
+            createWin(100 + 200 * 3, "yellow")
         ])
 
         await session.log("page done done")
