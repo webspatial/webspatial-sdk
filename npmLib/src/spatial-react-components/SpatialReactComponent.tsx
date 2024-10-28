@@ -2,7 +2,7 @@ import React, { CSSProperties, useEffect, useRef, useState, forwardRef, Ref, use
 import { createPortal } from 'react-dom';
 import { spatialStyleDef } from './types'
 import { getSession } from '../utils';
-import { SpatialWindowManager } from './SpatialWindowManager'
+import { SpatialWindowManager } from './SpatialReactComponentRefactor/SpatialWindowManager'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { useSpatialStyle } from './hooks/useSpatialStyle';
 import { SelfClosingTags } from "./primitives";
