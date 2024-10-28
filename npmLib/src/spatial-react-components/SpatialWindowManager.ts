@@ -10,7 +10,7 @@ export class SpatialWindowManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
     webview?: SpatialWindowComponent
-    window?: WindowProxy
+    window: WindowProxy | null = null
 
     async initInternal(url: string) {
         this.entity = await (getSession()!).createEntity()
@@ -25,7 +25,9 @@ export class SpatialWindowManager {
         var ent = await wc.getEntity()
         await this.entity.setParent(ent!)
     }
-    async initInternalFromWindow(w: any) {
+    async initInternalFromWindow() {
+        var w = await getSession()!.createWindowContext()
+        this.window = w
         this.entity = await (getSession()!).createEntity()
         this.webview = await (getSession()!).createWindowComponent()
         await this.webview.setFromWindow(w)
@@ -34,13 +36,13 @@ export class SpatialWindowManager {
         await this.webview.setScrollEnabled(false);
         await this.entity.setComponent(this.webview)
     }
+
     async init(url: string) {
         this.initPromise = this.initInternal(url)
         await this.initPromise
     }
-    async initFromWidow(w: WindowProxy) {
-        this.window = w;
-        this.initPromise = this.initInternalFromWindow(w)
+    async initFromWidow() {
+        this.initPromise = this.initInternalFromWindow()
         await this.initPromise
     }
     async resize(domRect: DOMRect, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
@@ -73,7 +75,7 @@ export class SpatialWindowManager {
             await this.initPromise
             this.entity?.destroy()
             this.webview?.destroy()
-            this.window = undefined
+            this.window = null
         }
     }
 }
