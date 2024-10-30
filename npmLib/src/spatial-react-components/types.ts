@@ -8,3 +8,10 @@ export type spatialStyleDef = {
     materialThickness: "none" | "thick" | "regular" | "thin",
     cornerRadius: number
 }
+
+export type RectType = {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+}

@@ -43,7 +43,7 @@ interface StandardInstanceProps {
 export function StandardInstance(inProps: StandardInstanceProps) {
     const { El, isPrimitiveEl, isSelfClosingTags, children, style: inStyle, onDomRectChange, debugShowStandardInstance, ...props } = inProps;
     const extraStyle = { visibility: debugShowStandardInstance ? "visible" : "hidden" };
-    const style = { ...extraStyle, ...extraStyle }
+    const style = { ...inStyle, ...extraStyle }
 
     const ref = useDetectDomRectChange(onDomRectChange);
 

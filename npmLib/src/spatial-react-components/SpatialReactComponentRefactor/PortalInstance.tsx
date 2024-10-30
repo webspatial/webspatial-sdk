@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { usePortalContainer } from './usePortalContainer';
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext';
 import { SpatialWindowManager } from './SpatialWindowManager';
-import { spatialStyleDef } from '../types';
+import { RectType, spatialStyleDef, vecType } from '../types';
 import { getInheritedStyleProps } from './utils';
 
 interface PortalInstanceProps {
@@ -21,9 +21,9 @@ interface PortalInstanceProps {
     debugName?: string,
 }
 
-function renderJSXPortalInstance(inProps: PortalInstanceProps, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
-    const { El, isPrimitiveEl, isSelfClosingTags, children, debugName, ...props } = inProps;
-    const extraStyle = { position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
+function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'debugName' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
+    const { El, isPrimitiveEl, isSelfClosingTags, children, ...props } = inProps;
+    const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
         width: `${elWidth}px`,
         height: `${elHeight}px`,
@@ -88,8 +88,7 @@ function syncHeaderStyle(openedWindow: Window) {
     syncParentHeadToChild(openedWindow)
 
     const headObserver = new MutationObserver((mutations) => {
-        syncParentHeadToChild(openedWindow)
-        // setViewport(windowInstance, elWidth, openedWindow);
+        syncParentHeadToChild(openedWindow);
     })
 
     headObserver.observe(document.head, { childList: true, subtree: true, })
@@ -97,77 +96,98 @@ function syncHeaderStyle(openedWindow: Window) {
     return headObserver
 }
 
-function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, props: PortalInstanceProps) {
+function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
+    let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
+    let { position = { x: 0, y: 0, z: 0 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
+    let stylePosition = style?.position
+    let styleOverflow = style?.overflow
+
+    // fill default values for position
+    if (position.x === undefined) position.x = 0
+    if (position.y === undefined) position.y = 0
+    if (position.z === undefined) position.z = 0
+
     // Sync prop updates
     useEffect(() => {
-        async function asyncUpdateSpatialWindowComponent() {
-            const webview = spatialWindowManager!.webview!;
-            const scrollEnabled = props.allowScroll || (props.style?.overflow == "scroll")
-            const scrollWithParent = (props.scrollWithParent == false) && (props.style?.position == "fixed")
+        if (spatialWindowManager && spatialWindowManager.webview) {
+            const webview = spatialWindowManager.webview;
+            (async function () {
+                webview.setStyle({
+                    transparentEffect,
+                    glassEffect,
+                    cornerRadius,
+                    materialThickness
+                })
 
-            webview.setScrollEnabled(scrollEnabled)
-            webview.setScrollWithParent(scrollWithParent)
-
-            webview.setStyle({
-                transparentEffect: props.spatialStyle?.transparentEffect === undefined ? true : props.spatialStyle?.transparentEffect,
-                glassEffect: props.spatialStyle?.glassEffect === undefined ? false : props.spatialStyle?.glassEffect,
-                cornerRadius: props.spatialStyle?.cornerRadius === undefined ? 0 : props.spatialStyle?.cornerRadius,
-                materialThickness: props.spatialStyle?.materialThickness === undefined ? "none" : props.spatialStyle?.materialThickness
-            })
+            })()
         }
+    }, [spatialWindowManager, transparentEffect, glassEffect, cornerRadius, materialThickness]);
 
-        if (spatialWindowManager?.webview) {
-            asyncUpdateSpatialWindowComponent()
+    useEffect(() => {
+        if (spatialWindowManager && spatialWindowManager.webview) {
+            const webview = spatialWindowManager.webview;
+            (async function () {
+                webview.setScrollEnabled(allowScroll || (styleOverflow == "scroll"))
+                webview.setScrollWithParent(scrollWithParent == false && (stylePosition == "fixed"))
+            })()
         }
-    }, [spatialWindowManager,
-        props.spatialStyle?.transparentEffect,
-        props.spatialStyle?.glassEffect,
-        props.spatialStyle?.cornerRadius,
-        props.spatialStyle?.materialThickness,
-        props.allowScroll,
-        props.scrollWithParent])
+    }, [spatialWindowManager, allowScroll, scrollWithParent, stylePosition, styleOverflow]);
+
+
+    useEffect(() => {
+        if (spatialWindowManager && domRect.width) {
+            (async function () {
+                        // console.log('dbg syncSpatialProps for resize', domRect, position, rotation)
+
+                await spatialWindowManager.resize(domRect, position as vecType, rotation);
+            })()
+        }
+    }, [spatialWindowManager, domRect, position, rotation])
+
+    useEffect(() => {
+        // sync viewport
+        if (spatialWindowManager?.window && spatialWindowManager.webview) {
+            (async function () {
+                const bodyWidth = document.body.getBoundingClientRect().width;
+                const viewport = spatialWindowManager.window?.document.querySelector('meta[name="viewport"]')
+                viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
+                await spatialWindowManager.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: domRect.width - bodyWidth })
+            })()
+
+        }
+    }, [spatialWindowManager, domRect.width])
 }
 
-async function setViewport(windowInstance: SpatialWindowManager, elWidth: number) {
-    const bodyWidth = document.body.getBoundingClientRect().width;
-    const viewport = windowInstance.window?.document.querySelector('meta[name="viewport"]')
-    viewport?.setAttribute('content', `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`)
-    await windowInstance.webview?.setScrollEdgeInsets({ top: 0, left: 0, bottom: 0, right: elWidth - bodyWidth })
-}
+function useSyncDomRect() {
+    const [domRect, setDomRect] = useState({
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    });
 
-
-
-function useSyncDomRect(spatialWindowManager: SpatialWindowManager | null, spatialStyle: Partial<spatialStyleDef> | undefined) {
-    const [elWidth, setElWidth] = useState(0)
-    const [elHeight, setElHeight] = useState(0)
     const inheritedPortalStyleRef = useRef({})
 
     const syncDomRect = useCallback((dom: HTMLElement) => {
-        async function asyncSyncDomRect() {
-            let rect = dom.getBoundingClientRect()
-            let offset = { ...{ x: 0, y: 0, z: 1 }, ...spatialStyle?.position };
-            await spatialWindowManager?.resize(rect, offset, { ...{ x: 0, y: 0, z: 0, w: 1 }, ...spatialStyle?.rotation })
 
-            // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
-            const computedStyle = getComputedStyle(dom);
-            const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0;
-            const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0;
+        let domRect = dom!.getBoundingClientRect()
+        inheritedPortalStyleRef.current = getInheritedStyleProps(dom)
+        // TBD with Trevor: why need to set width and height with computedStyle.width instead of domRect.width and domRect.height ?
 
-            await setViewport(spatialWindowManager!, width);
+        // // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
+        // const computedStyle = getComputedStyle(dom);
+        // const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0;
+        // const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0;
 
-            inheritedPortalStyleRef.current = getInheritedStyleProps(dom)
+        // await setViewport(spatialWindowManager!, width);
 
-            setElWidth(width)
-            setElHeight(height)
-        }
+        // setElWidth(width)
+        // setElHeight(height)
 
-        if (spatialWindowManager) {
-            asyncSyncDomRect();
-        }
+        setDomRect({ x: domRect.x, y: domRect.y, width: domRect.width, height: domRect.height })
+    }, []);
 
-    }, [spatialWindowManager]);
-
-    return { syncDomRect, elWidth, elHeight, inheritedPortalStyle: inheritedPortalStyleRef.current }
+    return { syncDomRect, domRect, inheritedPortalStyle: inheritedPortalStyleRef.current }
 }
 
 export type PortalInstanceRef = Ref<{
@@ -175,6 +195,8 @@ export type PortalInstanceRef = Ref<{
 }>
 
 function PortalInstanceBase(inProps: PortalInstanceProps, ref: PortalInstanceRef) {
+    const { allowScroll, scrollWithParent, spatialStyle, debugName, ...props } = (inProps);
+
     const onContainerSpawned = useCallback(async (spatialWindowManager: SpatialWindowManager) => {
         const openWindow = spatialWindowManager.window!
         setOpenWindowStyle(openWindow)
@@ -196,15 +218,16 @@ function PortalInstanceBase(inProps: PortalInstanceProps, ref: PortalInstanceRef
 
     const [spatialWindowManager] = usePortalContainer({ onContainerSpawned, onContainerDestroyed });
 
-    useSyncSpatialProps(spatialWindowManager, inProps);
 
-    const { syncDomRect, elWidth, elHeight, inheritedPortalStyle } = useSyncDomRect(spatialWindowManager, inProps.spatialStyle);
+    const { syncDomRect, domRect, inheritedPortalStyle } = useSyncDomRect();
 
     useImperativeHandle(ref, () => ({
         syncDomRect
     }));
 
-    const JSXPortalInstance = renderJSXPortalInstance(inProps, elWidth, elHeight, inheritedPortalStyle);
+    useSyncSpatialProps(spatialWindowManager, { style: props.style, allowScroll, scrollWithParent, spatialStyle }, domRect);
+
+    const JSXPortalInstance = renderJSXPortalInstance(props, domRect.width, domRect.height, inheritedPortalStyle);
 
     return (
         <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
