@@ -13,7 +13,7 @@ class CommandManager{
     static let Instance = CommandManager()
     
     private let decoder = JSONDecoder()
-    private var commandList:[String:(_ target:SpatialWindowComponent, _ jsb:JSBCommand) -> Void] = [:]
+    private var commandList:[String:(_ target:SpatialWindowComponent, _ jsb:JSBCommand, _ info:CommandInfo) -> Void] = [:]
     private init(){
         let _ = registerCommand(name: "multiCommand", action: multiCommand)
         let _ = registerCommand(name: "ping", action: ping)
@@ -31,12 +31,31 @@ class CommandManager{
         let _ = registerCommand(name: "setLogLevel", action: setLogLevel)
     }
     
-    public func registerCommand(name:String, action:@escaping (_ target:SpatialWindowComponent, _ jsb:JSBCommand)->Void) -> Bool{
+    private func getInfo(_ target:SpatialWindowComponent, _ jsb:JSBCommand) -> CommandInfo?{
+        var ret = CommandInfo()
+        ret.requestID = jsb.requestID
+        if let windowGroupID = jsb.data.windowGroupID{
+            ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID)//windowGroupID
+        }
+        if let entityID = jsb.data.entityID{
+            ret.entityID = entityID
+        }
+        if let resourceID = jsb.data.resourceID{
+            ret.resourceID = resourceID
+        }
+        if ret.resourceID == "current" {
+            ret.resourceID = target.id
+        }
+        return ret
+        
+    }
+    
+    public func registerCommand(name:String, action:@escaping (_ target:SpatialWindowComponent, _ jsb:JSBCommand, _ info:CommandInfo)->Void) -> Bool{
         if(commandList[name] == nil) {
             commandList[name] = action
             return true
         }
-        return true
+        return false
     }
     
     public func decode(jsonData:String) -> JSBCommand{
@@ -52,23 +71,25 @@ class CommandManager{
     
     public func doCommand(target:SpatialWindowComponent, jsb:JSBCommand){
         if let action = commandList[jsb.command]{
-            action(target, jsb)
+            if let info = getInfo(target, jsb){
+                action(target, jsb, info)
+            }
         }
     }
     
-    private func multiCommand(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func multiCommand(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         for subCommand in jsb.data.commandList!{
             doCommand(target:target, jsb:subCommand)
         }
-        target.completeEvent(requestID:jsb.requestID)
+        target.completeEvent(requestID:info.requestID)
     }
     
-    private func ping(target:SpatialWindowComponent, jsb:JSBCommand){
-        target.completeEvent(requestID:jsb.requestID, data: "{ping: 'Complete'}")
+    private func ping(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        target.completeEvent(requestID:info.requestID, data: "{ping: 'Complete'}")
     }
     
-    private func inspect(target:SpatialWindowComponent, jsb:JSBCommand){
-        if let spatialObject = SpatialObject.getRefObject(jsb.data.resourceID!) {
+    private func inspect(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        if let spatialObject = SpatialObject.getRefObject(info.resourceID) {
             let inspectInfo = spatialObject.inspect()
             let isValidJSON = JSONSerialization.isValidJSONObject(inspectInfo)
             if isValidJSON {
@@ -91,7 +112,7 @@ class CommandManager{
         }
     }
     
-    private func getStats(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func getStats(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         let statsInfo = SpatialObject.stats()
         do {
             let jsonData = try JSONEncoder().encode(statsInfo)
@@ -105,8 +126,8 @@ class CommandManager{
         }
     }
     
-    private func setComponent(target:SpatialWindowComponent, jsb:JSBCommand){
-        if let component = target.getChildSpatialObject(name: jsb.data.resourceID!) as? SpatialComponent,
+    private func setComponent(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
            let entity = target.getChildSpatialObject(name: jsb.data.entityID!) as? SpatialEntity
         {
             entity.addComponent(component)
@@ -115,41 +136,40 @@ class CommandManager{
         }
     }
     
-    private func createResource(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func createResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         CommandDataManager.Instance.createResource(target: target, requestID:jsb.requestID, data: jsb.data)
     }
     
-    private func destroyResource(target:SpatialWindowComponent, jsb:JSBCommand){
-        if let resourceID = jsb.data.resourceID{
-            target.destroyChild(name: resourceID)
-        }
+    private func destroyResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        let resourceID = info.resourceID
+        target.destroyChild(name: resourceID)
     }
     
-    private func updateResource(target:SpatialWindowComponent, jsb:JSBCommand){
-        CommandDataManager.Instance.updateResource(target: target, requestID:jsb.requestID, data: jsb.data)
+    private func updateResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        CommandDataManager.Instance.updateResource(target: target, requestID:jsb.requestID, resourceID:info.resourceID, data: jsb.data)
     }
     
-    private func createWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func createWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
     }
     
-    private func updateWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func updateWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
     }
     
-    private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(true)
     }
     
-    private func dismissImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func dismissImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(false)
     }
     
-    private func log(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func log(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         CommandDataManager.Instance.log(data: jsb.data)
     }
     
-    private func setLogLevel(target:SpatialWindowComponent, jsb:JSBCommand){
+    private func setLogLevel(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         CommandDataManager.Instance.setLogLevel(data: jsb.data)
     }
 }
@@ -178,7 +198,7 @@ class CommandDataManager{
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
                 break;
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowGroupID: data.windowGroupID!)
+                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id:data.windowGroupID!))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
                 break;
@@ -239,201 +259,199 @@ class CommandDataManager{
         }
     }
     
-    public func updateResource(target:SpatialWindowComponent, requestID:Int, data:JSData){
+    public func updateResource(target:SpatialWindowComponent, requestID:Int, resourceID:String, data:JSData){
         var delayComplete = false
-        if let resourceID = data.resourceID == "current" ? target.id : data.resourceID {
-            if SpatialObject.get(resourceID) == nil {
-                print("Missing resource:" + resourceID)
+        if SpatialObject.get(resourceID) == nil {
+            print("Missing resource:" + resourceID)
+            return
+        }
+        let sr = SpatialObject.get(resourceID)!
+        if let entity = sr as? SpatialEntity {
+            if let setParentID: String = data.update?.setParent {
+                if setParentID.isEmpty {
+                    entity.setParent(parentEnt: nil)
+                } else {
+                    if let parentEntity = SpatialObject.get(setParentID) as? SpatialEntity {
+                        entity.setParent(parentEnt: parentEntity)
+                    } else {
+                        print("Invalid setParentID", setParentID)
+                    }
+                }
+            }
+
+            if let space: String = data.update?.setCoordinateSpace {
+                entity.coordinateSpace = .APP
+                if space == "Root" {
+                    entity.coordinateSpace = .ROOT
+                }
+
+                if space == "Dom" {
+                    entity.coordinateSpace = .DOM
+                }
+            }
+
+            if var newParentID: String = data.update?.setParentWindowGroupID {
+                newParentID = target.readWinodwGroupID(id: newParentID)
+                let wg = SpatialWindowGroup.getSpatialWindowGroup(newParentID)
+                entity.setParentWindowGroup(wg: wg)
+            }
+
+            if let position: JSVector4 = data.update?.position,
+               let scale: JSVector4 = data.update?.scale,
+               let orientation: JSVector4 = data.update?.orientation
+            {
+                entity.modelEntity.position = SIMD3<Float>(position.x, position.y, position.z)
+                entity.modelEntity.scale = SIMD3<Float>(scale.x, scale.y, scale.z)
+                entity.modelEntity.orientation.vector = SIMD4<Float>(orientation.x, orientation.y, orientation.z, orientation.w)
+                entity.forceUpdate = !entity.forceUpdate
+            }
+        } else if sr is SpatialMeshResource {
+        } else if let spatialPhysicallyBasedMaterial = sr as? SpatialPhysicallyBasedMaterial {
+            if let baseColor: JSColor = data.update?.baseColor
+            {
+                spatialPhysicallyBasedMaterial.physicallyBasedMaterial.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: baseColor.r, green: baseColor.g, blue: baseColor.b, alpha: baseColor.a))
+            }
+
+            if let roughness: Double = data.update?.roughness?.value {
+                spatialPhysicallyBasedMaterial.physicallyBasedMaterial.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: Float(roughness))
+            }
+
+            if let metallic: Double = data.update?.metallic?.value {
+                spatialPhysicallyBasedMaterial.physicallyBasedMaterial.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
+            }
+
+        } else if let spatialModelUIComponent = sr as? SpatialModelUIComponent {
+            if var url: String = data.update?.url {
+                url = target.parseURL(url: url)
+                spatialModelUIComponent.url = URL(string: url)!
+            }
+            if let aspectRatio: String = data.update?.aspectRatio {
+                spatialModelUIComponent.aspectRatio = aspectRatio
+            }
+            if let opacity: Double = data.update?.opacity {
+                spatialModelUIComponent.opacity = opacity
+            }
+            if let resolution = data.update?.resolution
+            {
+                spatialModelUIComponent.resolutionX = resolution.x
+                spatialModelUIComponent.resolutionY = resolution.y
+            }
+
+        } else if let spatialModelComponent = sr as? SpatialModelComponent {
+            if let meshResourceId: String = data.update?.meshResource {
+                if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
+                    spatialModelComponent.modelComponent.mesh = spatialMeshResource.meshResource
+                } else {
+                    print("invalid  meshResource")
+                }
+            }
+
+            if let materials: [String] = data.update?.materials {
+                spatialModelComponent.modelComponent.materials = []
+                for matID in materials {
+                    if let spatialMaterialComponent = target.getChildSpatialObject(name: matID) as? SpatialPhysicallyBasedMaterial {
+                        spatialModelComponent.modelComponent.materials.append(spatialMaterialComponent.physicallyBasedMaterial)
+                    }
+                }
+            }
+        } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
+            if let _: String = data.update?.getEntityID {
+                let id = spatialWindowComponent.entity!.id
+                target.completeEvent(requestID: requestID, data: "{parentID:'"+id+"'}")
                 return
             }
-            let sr = SpatialObject.get(resourceID)!
-            if let entity = sr as? SpatialEntity {
-                if let setParentID: String = data.update?.setParent {
-                    if setParentID.isEmpty {
-                        entity.setParent(parentEnt: nil)
-                    } else {
-                        if let parentEntity = SpatialObject.get(setParentID) as? SpatialEntity {
-                            entity.setParent(parentEnt: parentEntity)
-                        } else {
-                            print("Invalid setParentID", setParentID)
-                        }
-                    }
-                }
 
-                if let space: String = data.update?.setCoordinateSpace {
-                    entity.coordinateSpace = .APP
-                    if space == "Root" {
-                        entity.coordinateSpace = .ROOT
-                    }
-
-                    if space == "Dom" {
-                        entity.coordinateSpace = .DOM
-                    }
-                }
-
-                if var newParentID: String = data.update?.setParentWindowGroupID {
-                    newParentID = target.readWinodwGroupID(id: newParentID)
-                    let wg = SpatialWindowGroup.getSpatialWindowGroup(newParentID)
-                    entity.setParentWindowGroup(wg: wg)
-                }
-
-                if let position: JSVector4 = data.update?.position,
-                   let scale: JSVector4 = data.update?.scale,
-                   let orientation: JSVector4 = data.update?.orientation
-                {
-                    entity.modelEntity.position = SIMD3<Float>(position.x, position.y, position.z)
-                    entity.modelEntity.scale = SIMD3<Float>(scale.x, scale.y, scale.z)
-                    entity.modelEntity.orientation.vector = SIMD4<Float>(orientation.x, orientation.y, orientation.z, orientation.w)
-                    entity.forceUpdate = !entity.forceUpdate
-                }
-            } else if sr is SpatialMeshResource {
-            } else if let spatialPhysicallyBasedMaterial = sr as? SpatialPhysicallyBasedMaterial {
-                if let baseColor: JSColor = data.update?.baseColor
-                {
-                    spatialPhysicallyBasedMaterial.physicallyBasedMaterial.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: baseColor.r, green: baseColor.g, blue: baseColor.b, alpha: baseColor.a))
-                }
-
-                if let roughness: Double = data.update?.roughness?.value {
-                    spatialPhysicallyBasedMaterial.physicallyBasedMaterial.roughness = PhysicallyBasedMaterial.Roughness(floatLiteral: Float(roughness))
-                }
-
-                if let metallic: Double = data.update?.metallic?.value {
-                    spatialPhysicallyBasedMaterial.physicallyBasedMaterial.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
-                }
-
-            } else if let spatialModelUIComponent = sr as? SpatialModelUIComponent {
-                if var url: String = data.update?.url {
-                    url = target.parseURL(url: url)
-                    spatialModelUIComponent.url = URL(string: url)!
-                }
-                if let aspectRatio: String = data.update?.aspectRatio {
-                    spatialModelUIComponent.aspectRatio = aspectRatio
-                }
-                if let opacity: Double = data.update?.opacity {
-                    spatialModelUIComponent.opacity = opacity
-                }
-                if let resolution = data.update?.resolution
-                {
-                    spatialModelUIComponent.resolutionX = resolution.x
-                    spatialModelUIComponent.resolutionY = resolution.y
-                }
-
-            } else if let spatialModelComponent = sr as? SpatialModelComponent {
-                if let meshResourceId: String = data.update?.meshResource {
-                    if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
-                        spatialModelComponent.modelComponent.mesh = spatialMeshResource.meshResource
-                    } else {
-                        print("invalid  meshResource")
-                    }
-                }
-
-                if let materials: [String] = data.update?.materials {
-                    spatialModelComponent.modelComponent.materials = []
-                    for matID in materials {
-                        if let spatialMaterialComponent = target.getChildSpatialObject(name: matID) as? SpatialPhysicallyBasedMaterial {
-                            spatialModelComponent.modelComponent.materials.append(spatialMaterialComponent.physicallyBasedMaterial)
-                        }
-                    }
-                }
-            } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
-                if let _: String = data.update?.getEntityID {
-                    let id = spatialWindowComponent.entity!.id
-                    target.completeEvent(requestID: requestID, data: "{parentID:'"+id+"'}")
-                    return
-                }
-
-                if let _: String = data.update?.getParentID {
-                    target.completeEvent(requestID: requestID, data: "{parentID:'"+spatialWindowComponent.parentWebviewID+"'}")
-                    return
-                }
-
-                if let scrollEnabled: Bool = data.update?.scrollEnabled {
-                    if !scrollEnabled {
-                        spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
-                        spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = false
-                    } else {
-                        spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
-                    }
-                }
-
-                if let rect: JSRect = data.update?.setScrollEdgeInsets
-                {
-                    spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.contentInset = UIEdgeInsets(top: rect.top, left: rect.left, bottom: rect.bottom, right: rect.right)
-                }
-
-                if let scrollWithParent: Bool = data.update?.scrollWithParent {
-                    spatialWindowComponent.scrollWithParent = scrollWithParent
-                }
-
-                if let windowID: String = data.update?.windowID {
-                    if let spawnedWebView = target.spawnedNativeWebviews.removeValue(forKey: windowID) {
-                        spatialWindowComponent.getView()!.destroy()
-                        spatialWindowComponent.setView(wv: spawnedWebView)
-                        spatialWindowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = spatialWindowComponent
-                    }
-                }
-
-                if let url: String = data.update?.url {
-                    // Compute target url depending if the url is relative or not
-                    let targetUrl = target.parseURL(url: url)
-
-                    delayComplete = true
-                    if spatialWindowComponent.loadRequestID == -1 {
-                        spatialWindowComponent.loadRequestID = requestID
-                        spatialWindowComponent.loadRequestWV = target
-                        spatialWindowComponent.setURL(url:URL(string: targetUrl)!)
-                        spatialWindowComponent.getView()!.initialLoad()
-                    } else {
-                        target.failEvent(requestID: requestID)
-                    }
-                }
-
-                if let resolution: JSVector2 = data.update?.resolution
-                {
-                    spatialWindowComponent.resolutionX = resolution.x
-                    spatialWindowComponent.resolutionY = resolution.y
-                }
-
-                if let materialThickness: String = data.update?.style?.materialThickness {
-                    let mat = target.stringToThickness(str: materialThickness)
-                    if mat != nil {
-                        if target.isLoading {
-                            target.loadingStyles.useMaterialThickness = true
-                            target.loadingStyles.materialThickness = mat!
-                        }
-                        spatialWindowComponent.useMaterialThickness = true
-                        spatialWindowComponent.materialThickness = mat!
-                    } else {
-                        if target.isLoading {
-                            target.loadingStyles.useMaterialThickness = false
-                        }
-                        spatialWindowComponent.useMaterialThickness = false
-                    }
-                }
-
-                if let glassEffect: Bool = data.update?.style?.glassEffect {
-                    if target.isLoading {
-                        target.loadingStyles.glassEffect = glassEffect
-                    }
-                    spatialWindowComponent.glassEffect = glassEffect
-                }
-                if let transparentEffect: Bool = data.update?.style?.transparentEffect {
-                    if target.isLoading {
-                        target.loadingStyles.transparentEffect = transparentEffect
-                    }
-                    spatialWindowComponent.transparentEffect = transparentEffect
-                }
-                if let cornerRadius: Double = data.update?.style?.cornerRadius {
-                    if target.isLoading {
-                        target.loadingStyles.cornerRadius = CGFloat(cornerRadius)
-                    }
-                    spatialWindowComponent.cornerRadius = CGFloat(cornerRadius)
-                }
-                spatialWindowComponent.gotStyle = true
+            if let _: String = data.update?.getParentID {
+                target.completeEvent(requestID: requestID, data: "{parentID:'"+spatialWindowComponent.parentWebviewID+"'}")
+                return
             }
-            if !delayComplete {
-                target.completeEvent(requestID: requestID)
+
+            if let scrollEnabled: Bool = data.update?.scrollEnabled {
+                if !scrollEnabled {
+                    spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.contentOffset.y = 0
+                    spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = false
+                } else {
+                    spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.isScrollEnabled = true
+                }
             }
+
+            if let rect: JSRect = data.update?.setScrollEdgeInsets
+            {
+                spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.contentInset = UIEdgeInsets(top: rect.top, left: rect.left, bottom: rect.bottom, right: rect.right)
+            }
+
+            if let scrollWithParent: Bool = data.update?.scrollWithParent {
+                spatialWindowComponent.scrollWithParent = scrollWithParent
+            }
+
+            if let windowID: String = data.update?.windowID {
+                if let spawnedWebView = target.spawnedNativeWebviews.removeValue(forKey: windowID) {
+                    spatialWindowComponent.getView()!.destroy()
+                    spatialWindowComponent.setView(wv: spawnedWebView)
+                    spatialWindowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = spatialWindowComponent
+                }
+            }
+
+            if let url: String = data.update?.url {
+                // Compute target url depending if the url is relative or not
+                let targetUrl = target.parseURL(url: url)
+
+                delayComplete = true
+                if spatialWindowComponent.loadRequestID == -1 {
+                    spatialWindowComponent.loadRequestID = requestID
+                    spatialWindowComponent.loadRequestWV = target
+                    spatialWindowComponent.setURL(url:URL(string: targetUrl)!)
+                    spatialWindowComponent.getView()!.initialLoad()
+                } else {
+                    target.failEvent(requestID: requestID)
+                }
+            }
+
+            if let resolution: JSVector2 = data.update?.resolution
+            {
+                spatialWindowComponent.resolutionX = resolution.x
+                spatialWindowComponent.resolutionY = resolution.y
+            }
+
+            if let materialThickness: String = data.update?.style?.materialThickness {
+                let mat = target.stringToThickness(str: materialThickness)
+                if mat != nil {
+                    if target.isLoading {
+                        target.loadingStyles.useMaterialThickness = true
+                        target.loadingStyles.materialThickness = mat!
+                    }
+                    spatialWindowComponent.useMaterialThickness = true
+                    spatialWindowComponent.materialThickness = mat!
+                } else {
+                    if target.isLoading {
+                        target.loadingStyles.useMaterialThickness = false
+                    }
+                    spatialWindowComponent.useMaterialThickness = false
+                }
+            }
+
+            if let glassEffect: Bool = data.update?.style?.glassEffect {
+                if target.isLoading {
+                    target.loadingStyles.glassEffect = glassEffect
+                }
+                spatialWindowComponent.glassEffect = glassEffect
+            }
+            if let transparentEffect: Bool = data.update?.style?.transparentEffect {
+                if target.isLoading {
+                    target.loadingStyles.transparentEffect = transparentEffect
+                }
+                spatialWindowComponent.transparentEffect = transparentEffect
+            }
+            if let cornerRadius: Double = data.update?.style?.cornerRadius {
+                if target.isLoading {
+                    target.loadingStyles.cornerRadius = CGFloat(cornerRadius)
+                }
+                spatialWindowComponent.cornerRadius = CGFloat(cornerRadius)
+            }
+            spatialWindowComponent.gotStyle = true
+        }
+        if !delayComplete {
+            target.completeEvent(requestID: requestID)
         }
     }
     
