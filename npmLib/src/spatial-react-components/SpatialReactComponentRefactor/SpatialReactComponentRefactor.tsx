@@ -15,8 +15,6 @@ export interface SpatialReactComponentProps {
 
     component?: React.ElementType;
 
-    // TBF: when disableSpatial, display as normal div in current webview
-    disableSpatial?: boolean,
     debugName?: string,
     debugShowStandardInstance?: boolean
 }
@@ -51,15 +49,16 @@ function renderWebReactComponent(inProps: SpatialReactComponentProps) {
 
 
 function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
+    // console.log('dbg renderSpatialReactComponent', inProps)
     const {componentDesc, spatialDesc, debugDesc, children, props} = parseProps(inProps);
     const portalInstanceRef: PortalInstanceRef = useRef(null);
     const onStandardDomChange = useCallback((dom: HTMLElement) => {
         portalInstanceRef.current?.syncDomRect(dom);
     }, []);
 
-    const standardInstanceProps = {children, ...props, ...componentDesc, ...debugDesc, onDomRectChange: onStandardDomChange} ;
+    const standardInstanceProps = {children, ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance, onDomRectChange: onStandardDomChange} ;
 
-    const portalInstanceProps = {children, ...props, ...componentDesc, ...spatialDesc, ...debugDesc} ;
+    const portalInstanceProps = {children, ...props, ...componentDesc, ...spatialDesc, debugName: debugDesc.debugName} ;
 
     return (
     <>
