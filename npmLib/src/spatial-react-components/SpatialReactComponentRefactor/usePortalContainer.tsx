@@ -24,12 +24,9 @@ export function usePortalContainer(options: PortalContainerOption) {
             const session = getSession()!;
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
             
-            // Open window and set style
-            let openedWindow = session.createWindowContext();
-
             // Create spatial window
             let windowMgr = new SpatialWindowManager();
-            await windowMgr.initFromWidow(openedWindow!, parentSpatialWindowManager)
+            await windowMgr.initFromWidow(parentSpatialWindowManager)
 
             if (isDestroyed) {
                 windowMgr.destroy()
