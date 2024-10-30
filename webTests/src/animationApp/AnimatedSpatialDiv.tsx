@@ -24,10 +24,8 @@ export interface AnimatedSpatialDivProps extends SpatialDivProps {
 
 export function AnimatedSpatialDiv(props: AnimatedSpatialDivProps) {
     const { duration = 1000, direction = 'alternate', loop = true, easing = 'linear',
-        spaceTranslateX = 0, spaceTranslateY = 0, spaceTranslateZ = 0, 
-        spaceRotationX = 0,  spaceRotationY = 0, spaceRotationZ = 0,
         spatialStyle: spatialStyleOriginal, 
-        ...spatialDivProps } = props;
+        ...otherDivProps } = props;
 
     const positionOriginal = spatialStyleOriginal?.position || { x: 0, y: 0, z: 0 }
     const spatialX = positionOriginal?.x || 0;
@@ -38,6 +36,12 @@ export function AnimatedSpatialDiv(props: AnimatedSpatialDivProps) {
     const rotationX = rotationOriginal?.x || 0;
     const rotationY = rotationOriginal?.y || 0;
     const rotationZ = rotationOriginal?.z || 0;
+
+    const {  
+        spaceTranslateX = spatialX, spaceTranslateY = spatialY, spaceTranslateZ = spatialZ, 
+        spaceRotationX = rotationX,  spaceRotationY = rotationY, spaceRotationZ = rotationZ,
+        ...spatialDivProps
+         } = otherDivProps;
 
 
     const [spatialPosition, setSpatialPosition] = useState({ x: spatialX, y: spatialY, z: spatialZ });
