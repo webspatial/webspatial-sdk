@@ -6,6 +6,7 @@ import { NestedDivsTest } from './tests/nestedDivs'
 import { ToolbarTest } from './tests/toolbar'
 import { PopupTest } from './tests/popup'
 import { ManyPanelTest } from './tests/manyPanels'
+import { SpatialDiv } from 'web-spatial'
 
 function HomePage() {
     return <>
@@ -45,7 +46,7 @@ ReactDOM.createRoot(root).render(
                 </div>
             </div>
             <Routes>
-                <Route path={"/"} element={<div />}></Route>
+                <Route path={"/"} element={<SpatialDiv><div style={{ width: "500px", height: "500px", backgroundColor: "red" }}>Hello world!!!</div></SpatialDiv>}></Route>
                 {testPages.map((page, i) => {
                     var MyTag = page
                     return (

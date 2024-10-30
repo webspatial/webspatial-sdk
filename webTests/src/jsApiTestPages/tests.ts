@@ -1,6 +1,16 @@
 import { Euler, Quaternion, Vector3 } from 'three';
-import { Spatial, SpatialEntity } from "web-spatial"
+import { Spatial, SpatialEntity, SpatialSession } from "web-spatial"
 
+class TimerLog {
+    lastTime = Date.now()
+    constructor(public session: SpatialSession) { }
+
+    logDiff(str: String) {
+        var curTime = Date.now()
+        var deltaMS = curTime - this.lastTime
+        this.session.log("TimerLog " + str + ": " + deltaMS + "ms")
+    }
+}
 
 var main = async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -74,36 +84,50 @@ var main = async () => {
             await (wc).setStyle({ glassEffect: glassState, cornerRadius: 50 })
         }
     } else if (page == "setFromWindow") {
-        // Open a new window
-        let openedWindow = session.createWindowContext()!
+        var createWin = async (pos: number, color: string) => {
+            let l = new TimerLog(session)
+            // Open a new window
+            let openedWindow = await session.createWindowContext()!
+            l.logDiff("openedWindow")
+            // Create entity
+            var entity = await (session).createEntity()
+            l.logDiff("createEntity")
+            entity.transform.position.x = pos
+            entity.transform.position.y = 300
+            entity.transform.position.z = 50
+            await entity.updateTransform()
+            l.logDiff("updateTransform")
 
-        // Create entity
-        var entity = await (session).createEntity()
-        entity.transform.position.x = 500 + ((Math.random() * 200) - 100)
-        entity.transform.position.y = 300
-        entity.transform.position.z = 50
-        await entity.updateTransform()
+            // Add entity to the Spatial Group
+            var wc = (await session.getCurrentWindowComponent())
+            var ent = await wc.getEntity()
+            await entity.setParent(ent!)
 
-        // Add entity to the Spatial Group
-        var wc = (await session.getCurrentWindowComponent())
-        var ent = await wc.getEntity()
-        await entity.setParent(ent!)
+            // Create window component and set its content from the window
+            var webview = await (session).createWindowComponent();
+            await Promise.all([
+                webview.setFromWindow(openedWindow!.window),
+                webview.setScrollEnabled(false),
+                entity!.setCoordinateSpace("Dom"),
+                webview.setResolution(200, 200),
+            ])
+            openedWindow!.document.documentElement.style.backgroundColor = color
+            openedWindow!.window.document.body.innerHTML = "<p style='color:white;'>hello world</p>"
+            await webview.setStyle({ glassEffect: true, cornerRadius: 0 })
 
-        // Create window component and set its content from the window
-        var webview = await (session).createWindowComponent();
+            // Attach to entity
+            await entity.setComponent(webview)
+            l.logDiff("rest")
+        }
+
+        await session.log("page start")
+
         await Promise.all([
-            webview.setFromWindow(openedWindow!.window),
-            webview.setScrollEnabled(false),
-            entity!.setCoordinateSpace("Dom"),
-            webview.setResolution(300, 300),
+            createWin(100 + 200 * 0, "red"),
+            createWin(100 + 200 * 1, "blue"),
+            createWin(100 + 200 * 2, "green"),
+            createWin(100 + 200 * 3, "yellow")
         ])
-        openedWindow!.document.documentElement.style.backgroundColor = "red"
-        openedWindow!.window.document.body.innerHTML = "<p style='color:white;font-size:5em;'>hello world</p>"
-        await webview.setStyle({ glassEffect: true, cornerRadius: 0 })
-        await webview.setResolution(200, 200)
-
-        // Attach to entity
-        entity.setComponent(webview)
 
         await session.log("page done done")
     } else if (page == "modelUI") {

@@ -1,4 +1,4 @@
-export { Model, type ModelRef } from './Model';
+export { Model, type ModelProps, type ModelRef } from './Model';
 export { SpatialIFrame } from './SpatialIFrame';
 export { SpatialPrimitive, withSpatial } from './SpatialPrimitive';
 export { type SpatialReactComponentProps, type SpatialReactComponentRef } from './SpatialReactComponentRefactor';
