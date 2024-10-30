@@ -2,8 +2,7 @@
 
 import { SpatialEntity, SpatialWindowComponent } from '../../core';
 import { getSession } from '../../utils';
-import { vecType, quatType } from '../types';
-
+import { vecType, quatType, RectType } from '../types';
 
 // Manager classes to handle resource creation/deletion
 export class SpatialWindowManager {
@@ -59,12 +58,11 @@ export class SpatialWindowManager {
         this.initPromise = this.initInternalFromWindow(parentSpatialWindowManager)
         await this.initPromise
     }
-    async resize(domRect: DOMRect, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
-        let rect = domRect
-        let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
+    async resize(rect: RectType, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }) {
+        let targetPosX = (rect.x + ((rect.width) / 2))
         // Adjust to get the page relative to document instead of viewport
         // This is needed as when you scroll down the page the rect.top moves but we dont want it to so we can offset that by adding scroll
-        let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
+        let targetPosY = (rect.y + rect.height) + ((rect.height) / 2) + window.scrollY
 
         if (!this.webview) {
             return
