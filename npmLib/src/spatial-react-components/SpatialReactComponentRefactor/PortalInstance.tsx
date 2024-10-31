@@ -22,13 +22,13 @@ interface PortalInstanceProps {
 }
 
 function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'debugName' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
-    const { El, isPrimitiveEl, isSelfClosingTags, children, ...props } = inProps;
+    const { El, isPrimitiveEl, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
         width: `${elWidth}px`,
         height: `${elHeight}px`,
     }
-    const style = { ...inheritedPortalStyle, ...extraStyle, ...elWHStyle }
+    const style = { ...inStyle, ...inheritedPortalStyle, ...extraStyle, ...elWHStyle }
 
     if (isSelfClosingTags) {
         return <El style={style} {...props} />
