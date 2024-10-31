@@ -96,7 +96,7 @@ function syncHeaderStyle(openedWindow: Window) {
     return headObserver
 }
 
-function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
+function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefined, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
     let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
     let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
     let stylePosition = style?.position
@@ -139,7 +139,7 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, 
     useEffect(() => {
         if (spatialWindowManager && domRect.width) {
             (async function () {
-                        // console.log('dbg syncSpatialProps for resize', domRect, position, rotation)
+                // console.log('dbg syncSpatialProps for resize', domRect, position, rotation)
 
                 await spatialWindowManager.resize(domRect, position as vecType, rotation);
             })()
