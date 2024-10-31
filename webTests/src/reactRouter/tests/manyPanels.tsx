@@ -57,7 +57,7 @@ export function ManyPanelTest() {
     return <>
         <div className="grid grid-cols-10 gap-4">
             {[...Array(count)].map((v, i) =>
-                <SpatialDiv spatialStyle={{ position: { z: (x * (cyrb128("2" + i)[0] / 4294967296)) + ((cyrb128("2" + i)[0] / 4294967296) * 100) }, cornerRadius: 70 }} style={{ backgroundColor: redCol, height: "200px" }}>
+                <SpatialDiv key={i} spatialStyle={{ position: { z: (x * (cyrb128("2" + i)[0] / 4294967296)) + ((cyrb128("2" + i)[0] / 4294967296) * 100) }, cornerRadius: 70 }} style={{ backgroundColor: redCol, height: "200px" }}>
 
                     <img
                         src={"http://picsum.photos/200/30" + (i % 6)}
