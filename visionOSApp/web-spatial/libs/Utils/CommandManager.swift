@@ -25,8 +25,8 @@ class CommandManager{
         let _ = registerCommand(name: "updateResource", action: updateResource)
         let _ = registerCommand(name: "createWindowGroup", action: createWindowGroup)
         let _ = registerCommand(name: "updateWindowGroup", action: updateWindowGroup)
-        let _ = registerCommand(name: "openImmersiveSpace", action: self.openImmersiveSpace)
-        let _ = registerCommand(name: "dismissImmersiveSpace", action: self.dismissImmersiveSpace)
+        let _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
+        let _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         let _ = registerCommand(name: "log", action: self.log)
         let _ = registerCommand(name: "setLogLevel", action: setLogLevel)
     }
@@ -34,13 +34,13 @@ class CommandManager{
     private func getInfo(_ target:SpatialWindowComponent, _ jsb:JSBCommand) -> CommandInfo?{
         var ret = CommandInfo()
         ret.requestID = jsb.requestID
-        if let windowGroupID = jsb.data.windowGroupID{
+        if let windowGroupID = jsb.data?.windowGroupID{
             ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID)//windowGroupID
         }
-        if let entityID = jsb.data.entityID{
+        if let entityID = jsb.data?.entityID{
             ret.entityID = entityID
         }
-        if let resourceID = jsb.data.resourceID{
+        if let resourceID = jsb.data?.resourceID{
             ret.resourceID = resourceID
         }
         if ret.resourceID == "current" {
@@ -70,7 +70,9 @@ class CommandManager{
     }
     
     public func doCommand(target:SpatialWindowComponent, jsb:JSBCommand){
+//        print("do command:", jsb.command)
         if let action = commandList[jsb.command]{
+//            print("action command:", jsb.command)
             if let info = getInfo(target, jsb){
                 action(target, jsb, info)
             }
@@ -78,7 +80,7 @@ class CommandManager{
     }
     
     private func multiCommand(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        for subCommand in jsb.data.commandList!{
+        for subCommand in jsb.data!.commandList!{
             doCommand(target:target, jsb:subCommand)
         }
         target.completeEvent(requestID:info.requestID)
@@ -128,7 +130,7 @@ class CommandManager{
     
     private func setComponent(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
         if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
-           let entity = target.getChildSpatialObject(name: jsb.data.entityID!) as? SpatialEntity
+           let entity = target.getChildSpatialObject(name: jsb.data!.entityID!) as? SpatialEntity
         {
             entity.addComponent(component)
         } else {
@@ -137,7 +139,7 @@ class CommandManager{
     }
     
     private func createResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.createResource(target: target, requestID:jsb.requestID, data: jsb.data)
+        CommandDataManager.Instance.createResource(target: target, requestID:jsb.requestID, data: jsb.data!)
     }
     
     private func destroyResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
@@ -146,31 +148,33 @@ class CommandManager{
     }
     
     private func updateResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.updateResource(target: target, requestID:jsb.requestID, resourceID:info.resourceID, data: jsb.data)
+        CommandDataManager.Instance.updateResource(target: target, requestID:jsb.requestID, resourceID:info.resourceID, data: jsb.data!)
     }
     
     private func createWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
+        CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data!)
     }
     
     private func updateWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.updateWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
+        CommandDataManager.Instance.updateWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data!)
     }
     
     private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        print("openImmersiveSpace")
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(true)
     }
     
     private func dismissImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+        print("dismissImmersiveSpace")
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(false)
     }
     
     private func log(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.log(data: jsb.data)
+        CommandDataManager.Instance.log(data: jsb.data!)
     }
     
     private func setLogLevel(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.setLogLevel(data: jsb.data)
+        CommandDataManager.Instance.setLogLevel(data: jsb.data!)
     }
 }
 
@@ -514,7 +518,7 @@ class CommandDataManager{
 
 struct JSBCommand: Codable {
     var command: String
-    var data: JSData
+    var data: JSData?
     var requestID: Int
 }
 
