@@ -475,6 +475,7 @@ class CommandDataManager{
             target.loadingStyles.windowGroupSize = CGSize(width: dimensions.x, height: dimensions.y)
             wg.setSize.send(target.loadingStyles.windowGroupSize)
         }
+        target.completeEvent(requestID: requestID)
     }
     
     public func log(data:JSData){
