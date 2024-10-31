@@ -154,7 +154,7 @@ class CommandManager{
     }
     
     private func updateWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
+        CommandDataManager.Instance.updateWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data)
     }
     
     private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
@@ -471,7 +471,7 @@ class CommandDataManager{
     
     public func updateWindowGroup(target:SpatialWindowComponent, requestID:Int, data:JSData){
         if let dimensions = data.update?.style?.dimensions,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(data.windowGroupID!){
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id:data.windowGroupID!)){
             target.loadingStyles.windowGroupSize = CGSize(width: dimensions.x, height: dimensions.y)
             wg.setSize.send(target.loadingStyles.windowGroupSize)
         }
