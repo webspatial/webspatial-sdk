@@ -4,11 +4,8 @@ import { primitives, SelfClosingTags } from "./primitives";
 
 export function withSpatial(Component: any) {
     const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
-        const { children, component: ignoreComponent, ...props } = givenProps;
-        if (SelfClosingTags.includes(Component)) {
-            return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
-        }
-        return <SpatialReactComponent component={Component} {...props} ref={givenRef} > {children} </SpatialReactComponent>
+        const { component: ignoreComponent, ...props } = givenProps;
+        return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
     })
 
     WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
