@@ -98,14 +98,14 @@ function syncHeaderStyle(openedWindow: Window) {
 
 function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
     let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
-    let { position = { x: 0, y: 0, z: 0 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
+    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
     let stylePosition = style?.position
     let styleOverflow = style?.overflow
 
     // fill default values for position
     if (position.x === undefined) position.x = 0
     if (position.y === undefined) position.y = 0
-    if (position.z === undefined) position.z = 0
+    if (position.z === undefined) position.z = 1
 
     // Sync prop updates
     useEffect(() => {
@@ -128,7 +128,9 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | null, 
             const webview = spatialWindowManager.webview;
             (async function () {
                 webview.setScrollEnabled(allowScroll || (styleOverflow == "scroll"))
-                webview.setScrollWithParent(scrollWithParent == false && (stylePosition == "fixed"))
+
+                const isFixed = scrollWithParent == false || (stylePosition == "fixed")
+                webview.setScrollWithParent(!isFixed)
             })()
         }
     }, [spatialWindowManager, allowScroll, scrollWithParent, stylePosition, styleOverflow]);
