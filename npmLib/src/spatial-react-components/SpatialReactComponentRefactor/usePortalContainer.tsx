@@ -1,8 +1,9 @@
-import { useContext, useRef, useState, useEffect } from 'react'
+import { useContext, useRef, useEffect } from 'react'
 import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext'
 import { getSession } from '../../utils/getSession'
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
+import { useForceUpdate } from './useForceUpdate';
 
 type PortalContainerOption = {
     onContainerSpawned: (spatialWindowManager: SpatialWindowManager) => Promise<any>,
@@ -13,17 +14,18 @@ export function usePortalContainer(options: PortalContainerOption) {
     const isStandard = useContext(SpatialIsStandardInstanceContext) // Spatial components render both a standard (hidden) and spatial instance (displayed), this prop lets us know which context we are in
     const parentSpatialWindowManager = useContext(SpatialWindowManagerContext);
 
-    const spawnedResultRef = useRef<any>();
+    const forceUpdate = useForceUpdate();
 
-    const [spatialWindowManager, setSpatialWindowManager] = useState<SpatialWindowManager | null>(null)
+    const spatialWindowManagerRef = useRef<SpatialWindowManager>()
 
     useEffect(() => {
         let isDestroyed = false;
+        let spawnedResult: any;
 
-        async function asyncCreatePortalContainer () {
+        async function asyncCreatePortalContainer() {
             const session = getSession()!;
             // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
-            
+
             // Create spatial window
             let windowMgr = new SpatialWindowManager();
             await windowMgr.initFromWidow(parentSpatialWindowManager)
@@ -33,30 +35,31 @@ export function usePortalContainer(options: PortalContainerOption) {
                 return;
             }
 
-            spawnedResultRef.current = await options.onContainerSpawned(windowMgr);
+            spawnedResult = await options.onContainerSpawned(windowMgr);
             if (isDestroyed) {
-                options.onContainerDestroyed(windowMgr, spawnedResultRef.current)
-                windowMgr.destroy()
-                spawnedResultRef.current = undefined
+                options.onContainerDestroyed(windowMgr, spawnedResult)
+                windowMgr.destroy();
                 return;
             }
 
-            setSpatialWindowManager(windowMgr);
+            spatialWindowManagerRef.current = windowMgr
+            forceUpdate();
         }
 
         if (isStandard !== true) {
             asyncCreatePortalContainer();
-        } 
+        }
 
         return () => {
             isDestroyed = true;
+            const spatialWindowManager = spatialWindowManagerRef.current;
 
             if (spatialWindowManager) {
-                options.onContainerDestroyed(spatialWindowManager, spawnedResultRef.current)
+                options.onContainerDestroyed(spatialWindowManager, spawnedResult)
                 spatialWindowManager.destroy()
             }
         }
     }, []);
 
-    return [spatialWindowManager];
+    return [spatialWindowManagerRef.current];
 }
