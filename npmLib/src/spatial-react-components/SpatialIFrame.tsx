@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactElement, useEffect, useRef, useState } from 'react'
 import { initializeSpatialOffset } from './utils'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
-import { SpatialWindowManager } from './SpatialWindowManager'
+import { SpatialWindowManager } from './SpatialReactComponent/SpatialWindowManager'
 import { vecType } from './types'
 import { SpatialWindowComponent } from '../core'
 import { spatial } from '../utils/getSession'
