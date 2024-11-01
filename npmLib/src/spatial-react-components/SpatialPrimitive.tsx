@@ -1,6 +1,7 @@
 import { forwardRef, Ref } from "react";
-import { SpatialReactComponent } from "./SpatialReactComponent";
+// import { SpatialReactComponent } from "./SpatialReactComponent";
 import { primitives, SelfClosingTags } from "./primitives";
+import { SpatialReactComponent } from "./SpatialReactComponent/SpatialReactComponent";
 
 export function withSpatial(Component: any) {
     const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
