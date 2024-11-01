@@ -49,7 +49,7 @@ function App() {
 
                 <div className='flex flex-row pt-5 gap-2'>
                     <div className="flex-1">
-                        <AnimatedSpatialDiv spatialStyle={{ position: { z: 30, x: 0 } }} spaceTranslateX={100} className=' h-12'>
+                        <AnimatedSpatialDiv debugShowStandardInstance={false} spatialStyle={{ position: { z: 30, x: 0 } }} spaceTranslateX={100} loop={true} className=' h-12'>
 
                             <div className="w-full h-full rounded-xl bg-red-400 text-yellow-500	 text-center	 content-center">
                                 spaceTranslateX
@@ -59,7 +59,7 @@ function App() {
                     </div>
 
                     <div className="flex-1">
-                        <AnimatedSpatialDiv spatialStyle={{ position: { z: 40, x: 0 } }} spaceTranslateY={50} className='  h-12'>
+                        <AnimatedSpatialDiv debugShowStandardInstance={false} loop={true} spatialStyle={{ position: { z: 40, x: 0 } }} spaceTranslateY={50} className='  h-12'>
 
                             <div className="w-full h-full rounded-xl bg-red-400 text-yellow-500	 text-center	 content-center">
                                 spaceTranslateY
@@ -81,7 +81,7 @@ function App() {
 
                 </div>
 
-                <div className='flex flex-row mt-5 gap-4 	'>
+                {/* <div className='flex flex-row mt-5 gap-4 	'>
                     <AnimatedSpatialDiv
                         duration={1000}
                         spatialStyle={
@@ -132,7 +132,7 @@ function App() {
                         </div>
 
                     </AnimatedSpatialDiv>
-                </div>
+                </div> */}
             </div>
         </div>
     )

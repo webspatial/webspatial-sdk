@@ -7,7 +7,7 @@ const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
-    var session = (new Spatial()).requestSession();
+    const session = (new Spatial()).requestSession();
     (session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
 }
 

@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { Model, ModelProps } from 'web-spatial';
+import { Model, type ModelProps } from 'web-spatial';
 import animejs from 'animejs';
 import { Easing } from './types';
 
