@@ -1,9 +1,10 @@
-import { ReactNode, CSSProperties, Ref, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { ReactNode, CSSProperties, Ref, useRef, useCallback, useImperativeHandle, forwardRef, useMemo, ElementType } from 'react';
 import { spatialStyleDef } from '../types'
 import { getSession } from '../../utils';
 import { SelfClosingTags } from "../primitives";
 import {StandardInstance } from './StandardInstance'
-import {PortalInstance, PortalInstanceRef } from './PortalInstance'
+import { PortalInstance } from './PortalInstance'
+import { SpatialReactContext, SpatialReactContextObject } from './SpatialReactContext';
 
 export interface SpatialReactComponentProps {
     allowScroll?: boolean,
@@ -13,14 +14,14 @@ export interface SpatialReactComponentProps {
     className?: string,
     style?: CSSProperties | undefined
 
-    component?: React.ElementType;
+    component?: ElementType;
 
     debugName?: string,
     debugShowStandardInstance?: boolean
 }
 
 function parseProps(inProps: SpatialReactComponentProps) {
-    const { debugShowStandardInstance, debugName, component, allowScroll, spatialStyle, scrollWithParent, children, ...props } = inProps;
+    const { debugShowStandardInstance, debugName='', component, allowScroll, spatialStyle, scrollWithParent, children, ...props } = inProps;
 
     const El = component ? component : 'div';
     const isPrimitiveEl = typeof El === 'string';
@@ -51,20 +52,18 @@ function renderWebReactComponent(inProps: SpatialReactComponentProps) {
 function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
     // console.log('dbg renderSpatialReactComponent', inProps)
     const {componentDesc, spatialDesc, debugDesc, children, props} = parseProps(inProps);
-    const portalInstanceRef: PortalInstanceRef = useRef(null);
-    const onStandardDomChange = useCallback((dom: HTMLElement) => {
-        portalInstanceRef.current?.syncDomRect(dom);
-    }, []);
 
-    const standardInstanceProps = {children, ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance, onDomRectChange: onStandardDomChange} ;
+    const standardInstanceProps = {children, ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance } ;
 
-    const portalInstanceProps = {children, ...props, ...componentDesc, ...spatialDesc, debugName: debugDesc.debugName} ;
+    const portalInstanceProps = {children, ...props, ...componentDesc, ...spatialDesc} ;
+
+    const spatialReactContextObject = useMemo(() => new SpatialReactContextObject(debugDesc.debugName), [])
 
     return (
-    <>
+    <SpatialReactContext.Provider value={spatialReactContextObject}>
         <StandardInstance {...standardInstanceProps} /> 
-        <PortalInstance ref={portalInstanceRef} {...portalInstanceProps} />
-    </>)
+        <PortalInstance {...portalInstanceProps} />
+    </SpatialReactContext.Provider>)
 
 }
 
