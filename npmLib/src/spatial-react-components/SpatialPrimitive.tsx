@@ -1,16 +1,22 @@
 import { forwardRef, Ref } from "react";
-// import { SpatialReactComponent } from "./SpatialReactComponent";
-import { primitives, SelfClosingTags } from "./primitives";
-import { SpatialReactComponent } from "./SpatialReactComponent/SpatialReactComponent";
+import { primitives } from "./primitives";
+import { SpatialReactComponent } from "./SpatialReactComponent";
 
-export function withSpatial(Component: any) {
-    const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
-        const { component: ignoreComponent, ...props } = givenProps;
-        return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
-    })
+const cachedWithSpatialType = new Map();
 
-    WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
-    return WithSpatialComponent
+export function withSpatial(Component: React.ElementType) {
+    if (cachedWithSpatialType.has(Component)) {
+        return cachedWithSpatialType.get(Component);
+    } else {
+        const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
+            const { component: ignoreComponent, ...props } = givenProps;
+            return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
+        })
+        WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
+        
+        cachedWithSpatialType.set(Component, WithSpatialComponent);
+        return WithSpatialComponent
+    }
 }
 
 export const SpatialPrimitive: Record<string, typeof SpatialReactComponent> = {};
