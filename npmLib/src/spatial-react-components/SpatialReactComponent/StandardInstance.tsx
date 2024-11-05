@@ -1,14 +1,17 @@
-import React, { CSSProperties, useRef, ReactNode, useLayoutEffect, useEffect } from 'react'
+import React, { CSSProperties, useRef, ReactNode, useLayoutEffect, useEffect, useContext } from 'react'
 import { useForceUpdate } from './useForceUpdate';
 import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext';
-
-function useDetectDomRectChange(onDOMChange: (dom: HTMLDivElement) => void) {
+import { SpatialReactContext } from './SpatialReactContext';
+ 
+function useDetectDomRectChange() {
     const ref = useRef<HTMLDivElement>(null);
 
     const forceUpdate = useForceUpdate()
 
+    const spatialReactContextObject = useContext(SpatialReactContext);
+
     useLayoutEffect(() => {
-        ref.current && onDOMChange(ref.current)
+        ref.current && spatialReactContextObject?.notifyDomChange(ref.current)
     })
 
     // detect dom resize
@@ -34,18 +37,15 @@ interface StandardInstanceProps {
     children: ReactNode,
     style?: CSSProperties | undefined,
 
-    // to notify Portal Instance dom changed
-    onDomRectChange: (dom: HTMLDivElement) => void;
-
     // for debug
-    debugShowStandardInstance?: boolean
+    debugShowStandardInstance?: boolean,
 }
 export function StandardInstance(inProps: StandardInstanceProps) {
-    const { El, isPrimitiveEl, isSelfClosingTags, children, style: inStyle, onDomRectChange, debugShowStandardInstance, ...props } = inProps;
+    const { El, isPrimitiveEl, isSelfClosingTags, children, style: inStyle, debugShowStandardInstance, ...props } = inProps;
     const extraStyle = { visibility: debugShowStandardInstance ? "visible" : "hidden" };
     const style = { ...inStyle, ...extraStyle }
 
-    const ref = useDetectDomRectChange(onDomRectChange);
+    const ref = useDetectDomRectChange();
 
 
     let JSXComponent;
@@ -60,8 +60,6 @@ export function StandardInstance(inProps: StandardInstanceProps) {
     return (<SpatialIsStandardInstanceContext.Provider value={true}>
         {JSXComponent}
     </SpatialIsStandardInstanceContext.Provider>)
-
-
 }
 
 StandardInstance.displayName = 'StandardInstance'
