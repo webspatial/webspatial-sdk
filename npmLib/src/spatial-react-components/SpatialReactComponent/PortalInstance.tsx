@@ -1,10 +1,11 @@
-import React, { CSSProperties, useRef, ReactNode, useCallback, useEffect, Ref, useImperativeHandle, forwardRef, useState } from 'react'
+import React, { CSSProperties, useRef, ReactNode, useCallback, useEffect, Ref, useImperativeHandle, forwardRef, useState, useContext } from 'react'
 import { createPortal } from 'react-dom';
 import { usePortalContainer } from './usePortalContainer';
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext';
 import { SpatialWindowManager } from './SpatialWindowManager';
 import { RectType, spatialStyleDef, vecType } from '../types';
 import { getInheritedStyleProps } from './utils';
+import { SpatialReactContext } from './SpatialReactContext';
 
 interface PortalInstanceProps {
     allowScroll?: boolean,
@@ -16,12 +17,9 @@ interface PortalInstanceProps {
     isSelfClosingTags: boolean,
     children: ReactNode,
     style?: CSSProperties | undefined,
-
-    // for debug
-    debugName?: string,
 }
 
-function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'debugName' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
+function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
     const { El, isPrimitiveEl, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
@@ -170,34 +168,31 @@ function useSyncDomRect() {
 
     const inheritedPortalStyleRef = useRef({})
 
-    const syncDomRect = useCallback((dom: HTMLElement) => {
+    const spatialReactContextObject = useContext(SpatialReactContext);
 
-        let domRect = dom!.getBoundingClientRect()
-        inheritedPortalStyleRef.current = getInheritedStyleProps(dom)
-        // TBD with Trevor: why need to set width and height with computedStyle.width instead of domRect.width and domRect.height ?
+    useEffect(() => {
+        const syncDomRect = (dom: HTMLElement) => {
+            let domRect = dom!.getBoundingClientRect()
+            inheritedPortalStyleRef.current = getInheritedStyleProps(dom)
+            setDomRect({ x: domRect.x, y: domRect.y, width: domRect.width, height: domRect.height })
+        }
 
-        // // Note: should not use el.clientWidth which may ignore decimal, like 102.3 will be 102
-        // const computedStyle = getComputedStyle(dom);
-        // const width = computedStyle.width.endsWith('px') ? parseFloat(computedStyle.width) : 0;
-        // const height = computedStyle.height.endsWith('px') ? parseFloat(computedStyle.height) : 0;
+        spatialReactContextObject?.onDomChange(syncDomRect)
 
-        // await setViewport(spatialWindowManager!, width);
-
-        // setElWidth(width)
-        // setElHeight(height)
-
-        setDomRect({ x: domRect.x, y: domRect.y, width: domRect.width, height: domRect.height })
+        return () => {
+            spatialReactContextObject?.offDomChange(syncDomRect)
+        }
     }, []);
 
-    return { syncDomRect, domRect, inheritedPortalStyle: inheritedPortalStyleRef.current }
+     
+
+    return { domRect, inheritedPortalStyle: inheritedPortalStyleRef.current }
 }
 
-export type PortalInstanceRef = Ref<{
-    syncDomRect: (dom: HTMLElement) => void
-}>
+ 
 
-function PortalInstanceBase(inProps: PortalInstanceProps, ref: PortalInstanceRef) {
-    const { allowScroll, scrollWithParent, spatialStyle, debugName, ...props } = (inProps);
+export function PortalInstance(inProps: PortalInstanceProps) {
+    const { allowScroll, scrollWithParent, spatialStyle, ...props } = (inProps);
 
     const onContainerSpawned = useCallback(async (spatialWindowManager: SpatialWindowManager) => {
         const openWindow = spatialWindowManager.window!
@@ -221,11 +216,7 @@ function PortalInstanceBase(inProps: PortalInstanceProps, ref: PortalInstanceRef
     const [spatialWindowManager] = usePortalContainer({ onContainerSpawned, onContainerDestroyed });
 
 
-    const { syncDomRect, domRect, inheritedPortalStyle } = useSyncDomRect();
-
-    useImperativeHandle(ref, () => ({
-        syncDomRect
-    }));
+    const { domRect, inheritedPortalStyle } = useSyncDomRect();
 
     useSyncSpatialProps(spatialWindowManager, { style: props.style, allowScroll, scrollWithParent, spatialStyle }, domRect);
 
@@ -238,5 +229,4 @@ function PortalInstanceBase(inProps: PortalInstanceProps, ref: PortalInstanceRef
     );
 }
 
-export const PortalInstance = forwardRef(PortalInstanceBase)
 PortalInstance.displayName = 'PortalInstance'
