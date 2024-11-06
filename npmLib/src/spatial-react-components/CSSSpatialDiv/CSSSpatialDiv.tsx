@@ -1,10 +1,22 @@
 import { forwardRef, Ref } from 'react';
 import { useSpatialStyle } from './useSpatialStyle';
-import { primitives } from '../primitives';
+import { primitives, SelfClosingTags } from '../primitives';
 import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialReactComponent';
+import { getSession } from '../../utils/getSession';
+
+function renderWebReactComponent(inProps: SpatialReactComponentProps) {
+    const {children, component: El = 'div', ...props} = (inProps);
+    const isPrimitiveEl = typeof El === 'string';
+    const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(El as string)
+    if (isSelfClosingTags) {
+        return <El {...props} /> 
+    } else {
+        return <El {...props} > {children} </El>
+    }
+}
 
 export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
-    const { className = "", style = {}, component: El = 'div' } = inProps;
+    const { style = {}, ...props } = inProps;
     const { ref, spatialStyle,  ready } = useSpatialStyle();
     const {debugName, ...otherSpatial} = spatialStyle
 
@@ -13,9 +25,22 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
         "visibility": "hidden",
     }
 
+    const spatialDivStyle = {
+        ...style,
+        transform: 'none'
+    }
+    const El = inProps.component || 'div' 
+
+    console.log('dbg spatialStyle', spatialStyle)
+
+    const isWebSpatialEnv = getSession() !== null
+    if (!isWebSpatialEnv) {
+        return renderWebReactComponent(inProps);
+    }
+
     return <>
-        {ready && <SpatialReactComponent {...inProps} spatialStyle={otherSpatial} debugName={debugName}/>}
-        <El className={className} style={divRefStyle} ref={ref} />
+        {ready && <SpatialReactComponent style={spatialDivStyle} {...props} spatialStyle={otherSpatial} debugName={debugName}/>}
+        <El className={inProps.className} style={divRefStyle} ref={ref} />
     </>
 }
 
