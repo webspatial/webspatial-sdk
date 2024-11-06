@@ -27,7 +27,7 @@ function parseProps(inProps: SpatialReactComponentProps) {
     const isPrimitiveEl = typeof El === 'string';
     const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(component as string)
 
-    const componentDesc = {El, isPrimitiveEl, isSelfClosingTags}
+    const componentDesc = {El, isSelfClosingTags}
     const spatialDesc = {spatialStyle, allowScroll, scrollWithParent}
     const debugDesc = {debugShowStandardInstance, debugName}
     return {componentDesc, spatialDesc, debugDesc, children, props}
@@ -35,16 +35,12 @@ function parseProps(inProps: SpatialReactComponentProps) {
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps) {
     const {componentDesc, children, props} = parseProps(inProps);
-    const {El, isPrimitiveEl, isSelfClosingTags } = componentDesc;
+    const {El, isSelfClosingTags } = componentDesc;
 
     if (isSelfClosingTags) {
         return <El {...props} /> 
-    }
-    if (isPrimitiveEl) {
-        return <El {...props} > {children} </El>
     } else {
-        // render div wrapped component
-        return <div> <El {...props} > {children} </El> </div>
+        return <El {...props} > {children} </El>
     }
 }
 
