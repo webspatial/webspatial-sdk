@@ -1,1 +1,1 @@
-export { encodeSpatialStyleRuleString } from "./spatial-react-components/spatialCSSStyleCodec";
+export { withCSSSpatial } from './spatial-react-components/CSSSpatialDiv'
