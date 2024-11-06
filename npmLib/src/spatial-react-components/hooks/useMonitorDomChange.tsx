@@ -1,18 +1,19 @@
 import { useRef, useEffect } from "react";
-import { notifyUpdateStandInstanceLayout } from "../notifyUpdateStandInstanceLayout";
+import { notifyDOMUpdate } from "../notifyUpdateStandInstanceLayout";
 
 export function useMonitorDomChange() {
     const ref = useRef(undefined);
 
     useEffect(() => {
       const observer = new MutationObserver((mutationsList) => {
-        notifyUpdateStandInstanceLayout();
+        notifyDOMUpdate(mutationsList);
       });
   
       const config = {
         childList: true,
         subtree: true,
         attributes: true,
+        attributeFilter: ["style", "class"],
       };
   
       ref.current && observer.observe(ref.current, config);

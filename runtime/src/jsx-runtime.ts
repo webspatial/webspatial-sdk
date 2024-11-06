@@ -1,18 +1,16 @@
 "use strict";
 
 import reactJSXRuntime from "react/jsx-runtime";
-import { withSpatial } from "web-spatial";
-import { initWebSpatialCSSSupportCapability } from "./initWebSpatialCSSSupportCapability";
+import { withCSSSpatial } from "web-spatial/private";
 
-initWebSpatialCSSSupportCapability();
-
-const specialFlag = "isspatial";
+const specialFlag = "enable-xr";
 
 function replaceToSpatialPrimitiveType(type: React.ElementType, props: unknown) {
+  
   const propsObject =  (props as Object)
   if (specialFlag in propsObject) {
-    delete propsObject.isspatial;
-    withSpatial(type);
+    delete propsObject[specialFlag];
+    return withCSSSpatial(type);
   }
 
   return type;

@@ -1,6 +1,6 @@
 import * as esbuild from "esbuild";
 import { tailwindPlugin } from "esbuild-plugin-tailwindcss";
-import webSpatialPostCSSPlugin from '../postcss-plugin/webspatial-postcss-plugin.js'
+
 
 import glob from "tiny-glob";
 import path from "path";
@@ -16,7 +16,7 @@ var plugins = []
 plugins.push(tailwindPlugin())
 plugins.push(sassPlugin({
   filter: /\.module\.scss$/,
-  transform: postcssModules({}, [webSpatialPostCSSPlugin])
+  transform: postcssModules({}, [])
 }))
 
 var outdir = "dist";
