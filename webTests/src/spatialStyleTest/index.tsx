@@ -18,8 +18,8 @@ function App() {
             <SpatialMonitor className='w-screen h-screen  ' >
                 <SimpleSpatialComponent />
 
-                <StyledTitleComponent />
-                <CSSModelSample />
+                {/* <StyledTitleComponent />
+                <CSSModelSample /> */}
 
             </SpatialMonitor>
         </div>
