@@ -7,12 +7,17 @@ export const SimpleSpatialComponent = () => {
   }
   const style = isPrimary ? {
     '--xr-back': 60,
+    
+    // transform: 'translateX(10px) translateZ(10px) rotateZ(30deg)',
+
+    transform: 'rotateZ(30deg) ',
+
     color: 'blue',
   } : {
     '--xr-back': 160,
     color: 'red',
   }
 
-  return <div enable-xr style={style} onClick={onClick}  > SimpleSpatialComponent  </div>
+  return <div enable-xr style={style} className="inline-block" onClick={onClick}  > SimpleSpatialComponent  </div>
 }
  
