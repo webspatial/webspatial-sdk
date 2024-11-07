@@ -5,11 +5,12 @@ import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialRea
 import { getSession } from '../../utils/getSession';
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<any>) {
-    const {children, component: El = 'div', ...props} = (inProps);
+    const { children, component: El = 'div', ...props } = (inProps);
     const isPrimitiveEl = typeof El === 'string';
     const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(El as string)
     if (isSelfClosingTags) {
-        return <El {...props} ref={ref} /> 
+        // @ts-ignore
+        return <El {...props} ref={ref} />
     } else {
         return <El {...props} ref={ref} > {children} </El>
     }
@@ -17,8 +18,8 @@ function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<a
 
 export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
     const { style = {}, ...props } = inProps;
-    const { ref, spatialStyle,  ready } = useSpatialStyle();
-    const {debugName, ...otherSpatial} = spatialStyle
+    const { ref, spatialStyle, ready } = useSpatialStyle();
+    const { debugName, ...otherSpatial } = spatialStyle
 
     const divRefStyle = {
         ...style,
@@ -29,9 +30,7 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
         ...style,
         transform: 'none'
     }
-    const El = inProps.component || 'div' 
-
-    console.log('dbg spatialStyle', spatialStyle)
+    const El = inProps.component || 'div'
 
     const isWebSpatialEnv = getSession() !== null
     if (!isWebSpatialEnv) {
@@ -39,7 +38,7 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
     }
 
     return <>
-        {ready && <SpatialReactComponent style={spatialDivStyle} {...props} spatialStyle={otherSpatial} debugName={debugName}/>}
+        {ready && <SpatialReactComponent style={spatialDivStyle} {...props} spatialStyle={otherSpatial} debugName={debugName} />}
         <El className={inProps.className} style={divRefStyle} ref={ref} />
     </>
 }
