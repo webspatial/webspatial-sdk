@@ -18,19 +18,11 @@ function parse2dMatrix(transformDataArray: number[]) {
     0,0,1,0,
     0,0,0,1]
   const matrix4 = new Matrix4(...mat4);
- 
-  const position = new Vector3();
-  const quaternion = new Quaternion()
-  const scale = new Vector3();
-  matrix4.decompose(position, quaternion, scale);
-
-  console.log('dbg position', position, quaternion, scale)
-  
   return matrix4
 }
 
 function parse3dMatrix(transformDataArray: number[]) {
-  const matrix4 = new Matrix4(...transformDataArray, 0, 0, 0, 1);
+  const matrix4 = new Matrix4().fromArray(transformDataArray);
   return matrix4
 }
 
@@ -44,7 +36,7 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
   } else {
     const matrix3dFlagString = 'matrix3d(';
     const idxOfMatrix3d = transform.indexOf(matrix3dFlagString);
-    if (idxOfMatrix3d) {
+    if (idxOfMatrix3d !== -1) {
       const transform3dDataArray = transform.substring(matrix3dFlagString.length, transform.length-1).split(',').map((item)=>parseFloat(item)  );
       return parse3dMatrix(transform3dDataArray)
     } else {
@@ -76,7 +68,7 @@ function parseSpatialStyle(node: HTMLElement) {
   const mat4ForTransform = parseTransform(computedStyle);
 
   const resultMatrix = new Matrix4();
-  resultMatrix.multiplyMatrices(mat4ForTransform, mat4ForBack);
+  resultMatrix.multiplyMatrices(mat4ForBack, mat4ForTransform);
 
   const position = new Vector3();
   const quaternion = new Quaternion()
