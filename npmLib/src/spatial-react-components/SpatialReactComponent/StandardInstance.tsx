@@ -17,6 +17,11 @@ function useDetectDomRectChange() {
     // detect dom resize
     // Trigger native resize on web resize events
     useEffect(() => {
+        if (!ref.current) {
+            console.warn('Ref is not attached to the DOM');
+            return;
+        }
+        
         let ro = new ResizeObserver((elements) => {
             forceUpdate()
         })
@@ -32,7 +37,6 @@ function useDetectDomRectChange() {
 
 interface StandardInstanceProps {
     El: React.ElementType,
-    isPrimitiveEl: boolean,
     isSelfClosingTags: boolean,
     children: ReactNode,
     style?: CSSProperties | undefined,
@@ -41,20 +45,17 @@ interface StandardInstanceProps {
     debugShowStandardInstance?: boolean,
 }
 export function StandardInstance(inProps: StandardInstanceProps) {
-    const { El, isPrimitiveEl, isSelfClosingTags, children, style: inStyle, debugShowStandardInstance, ...props } = inProps;
+    const { El, isSelfClosingTags, children, style: inStyle, debugShowStandardInstance, ...props } = inProps;
     const extraStyle = { visibility: debugShowStandardInstance ? "visible" : "hidden" };
     const style = { ...inStyle, ...extraStyle }
 
     const ref = useDetectDomRectChange();
 
-
     let JSXComponent;
     if (isSelfClosingTags) {
         JSXComponent = <El ref={ref} style={style} {...props} />
-    } else if (isPrimitiveEl) {
-        JSXComponent = <El ref={ref} style={style} {...props} > {children} </El>
     } else {
-        JSXComponent = <div ref={ref}> <El style={style} {...props} > {children} </El> </div>
+        JSXComponent = <El ref={ref} style={style} {...props} > {children} </El>
     }
 
     return (<SpatialIsStandardInstanceContext.Provider value={true}>

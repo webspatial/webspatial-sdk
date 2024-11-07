@@ -13,14 +13,13 @@ interface PortalInstanceProps {
     spatialStyle?: Partial<spatialStyleDef>,
 
     El: React.ElementType,
-    isPrimitiveEl: boolean,
     isSelfClosingTags: boolean,
     children: ReactNode,
     style?: CSSProperties | undefined,
 }
 
 function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
-    const { El, isPrimitiveEl, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
+    const { El, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
         width: `${elWidth}px`,
