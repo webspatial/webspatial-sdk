@@ -9,88 +9,86 @@ import RealityKit
 import SwiftUI
 import SwiftyBeaver
 
-class CommandManager{
+class CommandManager {
     static let Instance = CommandManager()
-    
+
     private let decoder = JSONDecoder()
-    private var commandList:[String:(_ target:SpatialWindowComponent, _ jsb:JSBCommand, _ info:CommandInfo) -> Void] = [:]
-    private init(){
-        let _ = registerCommand(name: "multiCommand", action: multiCommand)
-        let _ = registerCommand(name: "ping", action: ping)
-        let _ = registerCommand(name: "inspect", action: inspect)
-        let _ = registerCommand(name: "getStats", action: getStats)
-        let _ = registerCommand(name: "setComponent", action: setComponent)
-        let _ = registerCommand(name: "createResource", action: createResource)
-        let _ = registerCommand(name: "destroyResource", action: destroyResource)
-        let _ = registerCommand(name: "updateResource", action: updateResource)
-        let _ = registerCommand(name: "createWindowGroup", action: createWindowGroup)
-        let _ = registerCommand(name: "updateWindowGroup", action: updateWindowGroup)
-        let _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
-        let _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
-        let _ = registerCommand(name: "log", action: self.log)
-        let _ = registerCommand(name: "setLogLevel", action: setLogLevel)
+    private var commandList: [String: (_ target: SpatialWindowComponent, _ jsb: JSBCommand, _ info: CommandInfo) -> Void] = [:]
+    private init() {
+        _ = registerCommand(name: "multiCommand", action: multiCommand)
+        _ = registerCommand(name: "ping", action: ping)
+        _ = registerCommand(name: "inspect", action: inspect)
+        _ = registerCommand(name: "getStats", action: getStats)
+        _ = registerCommand(name: "setComponent", action: setComponent)
+        _ = registerCommand(name: "createResource", action: createResource)
+        _ = registerCommand(name: "destroyResource", action: destroyResource)
+        _ = registerCommand(name: "updateResource", action: updateResource)
+        _ = registerCommand(name: "createWindowGroup", action: createWindowGroup)
+        _ = registerCommand(name: "updateWindowGroup", action: updateWindowGroup)
+        _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
+        _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
+        _ = registerCommand(name: "log", action: log)
+        _ = registerCommand(name: "setLogLevel", action: setLogLevel)
     }
-    
-    private func getInfo(_ target:SpatialWindowComponent, _ jsb:JSBCommand) -> CommandInfo?{
+
+    private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
         var ret = CommandInfo()
         ret.requestID = jsb.requestID
-        if let windowGroupID = jsb.data?.windowGroupID{
-            ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID)//windowGroupID
+        if let windowGroupID = jsb.data?.windowGroupID {
+            ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID) // windowGroupID
         }
-        if let entityID = jsb.data?.entityID{
+        if let entityID = jsb.data?.entityID {
             ret.entityID = entityID
         }
-        if let resourceID = jsb.data?.resourceID{
+        if let resourceID = jsb.data?.resourceID {
             ret.resourceID = resourceID
         }
         if ret.resourceID == "current" {
             ret.resourceID = target.id
         }
         return ret
-        
     }
-    
-    public func registerCommand(name:String, action:@escaping (_ target:SpatialWindowComponent, _ jsb:JSBCommand, _ info:CommandInfo)->Void) -> Bool{
-        if(commandList[name] == nil) {
+
+    public func registerCommand(name: String, action: @escaping (_ target: SpatialWindowComponent, _ jsb: JSBCommand, _ info: CommandInfo) -> Void) -> Bool {
+        if commandList[name] == nil {
             commandList[name] = action
             return true
         }
         return false
     }
-    
-    public func decode(jsonData:String) -> JSBCommand{
+
+    public func decode(jsonData: String) -> JSBCommand {
         var jsbCommand = JSBCommand(command: "", data: JSData(), requestID: 0)
         do {
             jsbCommand = try decoder.decode(JSBCommand.self, from: jsonData.data(using: .utf8)!)
-        }
-        catch{
+        } catch {
 //            print(error)
         }
         return jsbCommand
     }
-    
-    public func doCommand(target:SpatialWindowComponent, jsb:JSBCommand){
+
+    public func doCommand(target: SpatialWindowComponent, jsb: JSBCommand) {
 //        print("do command:", jsb.command)
-        if let action = commandList[jsb.command]{
+        if let action = commandList[jsb.command] {
 //            print("action command:", jsb.command)
-            if let info = getInfo(target, jsb){
+            if let info = getInfo(target, jsb) {
                 action(target, jsb, info)
             }
         }
     }
-    
-    private func multiCommand(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        for subCommand in jsb.data!.commandList!{
-            doCommand(target:target, jsb:subCommand)
+
+    private func multiCommand(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        for subCommand in jsb.data!.commandList! {
+            doCommand(target: target, jsb: subCommand)
         }
-        target.completeEvent(requestID:info.requestID)
+        target.completeEvent(requestID: info.requestID)
     }
-    
-    private func ping(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        target.completeEvent(requestID:info.requestID, data: "{ping: 'Complete'}")
+
+    private func ping(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        target.completeEvent(requestID: info.requestID, data: "{ping: 'Complete'}")
     }
-    
-    private func inspect(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func inspect(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         if let spatialObject = SpatialObject.getRefObject(info.resourceID) {
             let inspectInfo = spatialObject.inspect()
             let isValidJSON = JSONSerialization.isValidJSONObject(inspectInfo)
@@ -113,8 +111,8 @@ class CommandManager{
             return
         }
     }
-    
-    private func getStats(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func getStats(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         let statsInfo = SpatialObject.stats()
         do {
             let jsonData = try JSONEncoder().encode(statsInfo)
@@ -127,8 +125,8 @@ class CommandManager{
             """)
         }
     }
-    
-    private func setComponent(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func setComponent(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
            let entity = target.getChildSpatialObject(name: jsb.data!.entityID!) as? SpatialEntity
         {
@@ -137,78 +135,74 @@ class CommandManager{
             print("missing resource, event not processed")
         }
     }
-    
-    private func createResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.createResource(target: target, requestID:jsb.requestID, data: jsb.data!)
+
+    private func createResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.createResource(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
-    
-    private func destroyResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func destroyResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         let resourceID = info.resourceID
         target.destroyChild(name: resourceID)
     }
-    
-    private func updateResource(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.updateResource(target: target, requestID:jsb.requestID, resourceID:info.resourceID, data: jsb.data!)
+
+    private func updateResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.updateResource(target: target, requestID: jsb.requestID, resourceID: info.resourceID, data: jsb.data!)
     }
-    
-    private func createWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.createWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data!)
+
+    private func createWindowGroup(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.createWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
-    
-    private func updateWindowGroup(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
-        CommandDataManager.Instance.updateWindowGroup(target: target, requestID:jsb.requestID, data: jsb.data!)
+
+    private func updateWindowGroup(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.updateWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
-    
-    private func openImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func openImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         print("openImmersiveSpace")
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(true)
     }
-    
-    private func dismissImmersiveSpace(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func dismissImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         print("dismissImmersiveSpace")
         SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(false)
     }
-    
-    private func log(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
     }
-    
-    private func setLogLevel(target:SpatialWindowComponent, jsb:JSBCommand, info:CommandInfo){
+
+    private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.setLogLevel(data: jsb.data!)
     }
 }
 
-class CommandDataManager{
+class CommandDataManager {
     static let Instance = CommandDataManager()
-    
-    public func createResource(target:SpatialWindowComponent, requestID:Int, data:JSData){
-        if let type = data.type{
+
+    public func createResource(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let type = data.type {
             var sr: SpatialObject?
-            switch type{
+            switch type {
             case "Entity":
-                sr = SpatialEntity();
-                break;
+                sr = SpatialEntity()
             case "InputComponent":
                 sr = SpatialInputComponent()
                 (sr as! SpatialInputComponent).wv = target
-                break;
             case "MeshResource":
-                if let shape = data.params?.shape{
+                if let shape = data.params?.shape {
                     let meshResource: MeshResource = shape == "sphere" ? .generateSphere(radius: 0.5) : .generateBox(size: 1.0)
                     sr = SpatialMeshResource(meshResource)
                 }
-                break;
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
-                break;
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id:data.windowGroupID!))
+                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id: data.windowGroupID!))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
-                break;
             case "ModelUIComponent":
                 sr = SpatialModelUIComponent()
-                break;
+            case "SpatialView":
+                sr = SpatialViewComponent()
             case "ModelComponent":
                 if var modelURL: String = data.params?.modelURL {
                     modelURL = target.parseURL(url: modelURL)
@@ -250,9 +244,8 @@ class CommandDataManager{
                     let modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                     sr = SpatialModelComponent(modelComponent)
                 }
-                break;
-                
-                default:print("failed to create sr of type", type)
+
+            default: print("failed to create sr of type", type)
             }
             if let srObject = sr {
                 target.completeEvent(requestID: requestID, data: "{createdID: '"+srObject.id+"'}")
@@ -262,11 +255,11 @@ class CommandDataManager{
             }
         }
     }
-    
-    public func updateResource(target:SpatialWindowComponent, requestID:Int, resourceID:String, data:JSData){
+
+    public func updateResource(target: SpatialWindowComponent, requestID: Int, resourceID: String, data: JSData) {
         var delayComplete = false
         if SpatialObject.get(resourceID) == nil {
-            print("Missing resource:" + resourceID)
+            print("Missing resource:"+resourceID)
             return
         }
         let sr = SpatialObject.get(resourceID)!
@@ -311,8 +304,7 @@ class CommandDataManager{
             }
         } else if sr is SpatialMeshResource {
         } else if let spatialPhysicallyBasedMaterial = sr as? SpatialPhysicallyBasedMaterial {
-            if let baseColor: JSColor = data.update?.baseColor
-            {
+            if let baseColor: JSColor = data.update?.baseColor {
                 spatialPhysicallyBasedMaterial.physicallyBasedMaterial.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: baseColor.r, green: baseColor.g, blue: baseColor.b, alpha: baseColor.a))
             }
 
@@ -335,8 +327,7 @@ class CommandDataManager{
             if let opacity: Double = data.update?.opacity {
                 spatialModelUIComponent.opacity = opacity
             }
-            if let resolution = data.update?.resolution
-            {
+            if let resolution = data.update?.resolution {
                 spatialModelUIComponent.resolutionX = resolution.x
                 spatialModelUIComponent.resolutionY = resolution.y
             }
@@ -379,8 +370,7 @@ class CommandDataManager{
                 }
             }
 
-            if let rect: JSRect = data.update?.setScrollEdgeInsets
-            {
+            if let rect: JSRect = data.update?.setScrollEdgeInsets {
                 spatialWindowComponent.getView()!.webViewHolder.appleWebView!.scrollView.contentInset = UIEdgeInsets(top: rect.top, left: rect.left, bottom: rect.bottom, right: rect.right)
             }
 
@@ -404,15 +394,14 @@ class CommandDataManager{
                 if spatialWindowComponent.loadRequestID == -1 {
                     spatialWindowComponent.loadRequestID = requestID
                     spatialWindowComponent.loadRequestWV = target
-                    spatialWindowComponent.setURL(url:URL(string: targetUrl)!)
+                    spatialWindowComponent.setURL(url: URL(string: targetUrl)!)
                     spatialWindowComponent.getView()!.initialLoad()
                 } else {
                     target.failEvent(requestID: requestID)
                 }
             }
 
-            if let resolution: JSVector2 = data.update?.resolution
-            {
+            if let resolution: JSVector2 = data.update?.resolution {
                 spatialWindowComponent.resolutionX = resolution.x
                 spatialWindowComponent.resolutionY = resolution.y
             }
@@ -458,48 +447,50 @@ class CommandDataManager{
             target.completeEvent(requestID: requestID)
         }
     }
-    
-    public func createWindowGroup(target:SpatialWindowComponent, requestID:Int, data:JSData){
-        if let windowStyle: String = data.windowStyle{
+
+    public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let windowStyle: String = data.windowStyle {
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
             // Force window group creation to happen now so it can be accessed after complete event returns
-            let _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+            _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
 
             SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
-            target.setWindowGroup(uuid:uuid, wgd:wgd)
+            target.setWindowGroup(uuid: uuid, wgd: wgd)
             target.completeEvent(requestID: requestID, data: "{createdID: '"+uuid+"'}")
         }
     }
-    
-    public func updateWindowGroup(target:SpatialWindowComponent, requestID:Int, data:JSData){
+
+    public func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let dimensions = data.update?.style?.dimensions,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id:data.windowGroupID!)){
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
+        {
             target.loadingStyles.windowGroupSize = CGSize(width: dimensions.x, height: dimensions.y)
             wg.setSize.send(target.loadingStyles.windowGroupSize)
         }
         target.completeEvent(requestID: requestID)
     }
-    
-    public func log(data:JSData){
+
+    public func log(data: JSData) {
         if let logStringArr: [String] = data.logString,
-           let logLevel:String = data.logLevel{
+           let logLevel: String = data.logLevel
+        {
             let log = Logger.getLogger()
             let logString = logStringArr.joined()
             switch logLevel {
-                case "TRACE": log.verbose(logString)
-                case "DEBUG": log.debug(logString)
-                case "INFO": log.info(logString)
-                case "WARN": log.warning(logString)
-                case "ERROR": log.error(logString)
-                default: print(logString)
+            case "TRACE": log.verbose(logString)
+            case "DEBUG": log.debug(logString)
+            case "INFO": log.info(logString)
+            case "WARN": log.warning(logString)
+            case "ERROR": log.error(logString)
+            default: print(logString)
             }
         }
     }
-    
-    public func setLogLevel(data:JSData){
-        if let logLevel:String = data.logLevel{
+
+    public func setLogLevel(data: JSData) {
+        if let logLevel: String = data.logLevel {
             let levelDict = [
                 "DEBUG": SwiftyBeaver.Level.debug,
                 "ERROR": SwiftyBeaver.Level.error,
@@ -522,7 +513,7 @@ struct JSBCommand: Codable {
     var requestID: Int
 }
 
-struct JSData: Codable{
+struct JSData: Codable {
     var commandList: [JSBCommand]? // multiCommand
     var resourceID: String?
     var windowGroupID: String?
@@ -535,70 +526,70 @@ struct JSData: Codable{
     var logLevel: String?
 }
 
-struct JSParams: Codable{
+struct JSParams: Codable {
     var shape: String?
     var modelURL: String?
 }
 
-struct JSResourceData: Codable{
-    var setParent:String?
-    var setCoordinateSpace:String?
+struct JSResourceData: Codable {
+    var setParent: String?
+    var setCoordinateSpace: String?
     var setParentWindowGroupID: String?
-    var position:JSVector4?
-    var orientation:JSVector4?
-    var scale:JSVector4?
-    var baseColor:JSColor?
-    var roughness:JSValue?
-    var metallic:JSValue?
-    var url:String?
-    var aspectRatio:String?
-    var opacity:Double?
-    var resolution:JSVector2?
-    var meshResource:String?
-    var materials:[String]?
-    var getEntityID:String?
-    var getParentID:String?
-    var scrollEnabled:Bool?
-    var scrollWithParent:Bool?
-    var setScrollEdgeInsets:JSRect?
-    var windowID:String?
-    var style:JSEntityStyle?
+    var position: JSVector4?
+    var orientation: JSVector4?
+    var scale: JSVector4?
+    var baseColor: JSColor?
+    var roughness: JSValue?
+    var metallic: JSValue?
+    var url: String?
+    var aspectRatio: String?
+    var opacity: Double?
+    var resolution: JSVector2?
+    var meshResource: String?
+    var materials: [String]?
+    var getEntityID: String?
+    var getParentID: String?
+    var scrollEnabled: Bool?
+    var scrollWithParent: Bool?
+    var setScrollEdgeInsets: JSRect?
+    var windowID: String?
+    var style: JSEntityStyle?
 }
 
-struct JSColor:Codable{
-    var r:Double
-    var g:Double
-    var b:Double
-    var a:Double
+struct JSColor: Codable {
+    var r: Double
+    var g: Double
+    var b: Double
+    var a: Double
 }
 
-struct JSVector2:Codable{
-    var x:Double
-    var y:Double
+struct JSVector2: Codable {
+    var x: Double
+    var y: Double
 }
 
-struct JSVector4:Codable{
-    var x:Float
-    var y:Float
-    var z:Float
-    var w:Float
+struct JSVector4: Codable {
+    var x: Float
+    var y: Float
+    var z: Float
+    var w: Float
 }
 
-struct JSValue:Codable{
-    var value:Double
+struct JSValue: Codable {
+    var value: Double
 }
 
-struct JSRect:Codable{
-    var top:Double
-    var bottom:Double
-    var left:Double
-    var right:Double
+struct JSRect: Codable {
+    var top: Double
+    var bottom: Double
+    var left: Double
+    var right: Double
 }
 
-struct JSEntityStyle:Codable{
-    var materialThickness:String?
-    var glassEffect:Bool?
-    var transparentEffect:Bool?
-    var cornerRadius:Double?
-    var dimensions:JSVector2?
+struct JSEntityStyle: Codable {
+    var materialThickness: String?
+    var glassEffect: Bool?
+    var transparentEffect: Bool?
+    var cornerRadius: Double?
+    var dimensions: JSVector2?
 }
