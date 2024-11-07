@@ -4,14 +4,14 @@ import { primitives, SelfClosingTags } from '../primitives';
 import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialReactComponent';
 import { getSession } from '../../utils/getSession';
 
-function renderWebReactComponent(inProps: SpatialReactComponentProps) {
+function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<any>) {
     const {children, component: El = 'div', ...props} = (inProps);
     const isPrimitiveEl = typeof El === 'string';
     const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(El as string)
     if (isSelfClosingTags) {
-        return <El {...props} /> 
+        return <El {...props} ref={ref} /> 
     } else {
-        return <El {...props} > {children} </El>
+        return <El {...props} ref={ref} > {children} </El>
     }
 }
 
@@ -35,7 +35,7 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
 
     const isWebSpatialEnv = getSession() !== null
     if (!isWebSpatialEnv) {
-        return renderWebReactComponent(inProps);
+        return renderWebReactComponent(inProps, ref);
     }
 
     return <>
