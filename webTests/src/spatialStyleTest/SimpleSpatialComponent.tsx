@@ -5,15 +5,14 @@ export const SimpleSpatialComponent = () => {
   const onClick = () => {
     setIsPrimary(v => !v)
   }
-
   const style = isPrimary ? {
-    back: 30,
+    '--xr-back': 60,
     color: 'blue',
   } : {
-    back: 60,
+    '--xr-back': 160,
     color: 'red',
   }
 
-
-  return (<div isspatial style={style} onClick={onClick}> SimpleSpatialComponent </div>)
+  return <div enable-xr style={style} onClick={onClick}  > SimpleSpatialComponent  </div>
 }
+ 
