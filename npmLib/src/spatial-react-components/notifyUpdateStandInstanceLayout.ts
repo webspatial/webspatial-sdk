@@ -1,6 +1,6 @@
 export enum SpatialStyleInfoUpdateEvent {
   standInstanceLayout = 'standInstanceLayout',
-  // portalInstanceProps = 'portalInstanceProps',
+  domUpdated = 'domUpdated',
 }
 
 /**
@@ -16,4 +16,8 @@ export function notifyUpdateStandInstanceLayout() {
   }));
 }
 
-
+export function notifyDOMUpdate(mutationsList: MutationRecord[]) {
+  document.dispatchEvent(new CustomEvent(SpatialStyleInfoUpdateEvent.domUpdated, {
+    detail: mutationsList,
+  }));
+}

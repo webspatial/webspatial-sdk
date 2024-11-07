@@ -7,7 +7,7 @@ export const StyledTitle = styled.h1<{ $primary?: boolean; }>`
   position: absolute;
   bottom: ${props => props.$primary ? '-120px' : '-150px'};
   color: ${props => props.$primary ? "blue" : "red"};
-  back: ${props => props.$primary ? 12 : 15};
+  --xr-back: ${props => props.$primary ? 6 : 12};
   background: #fff;
 `;
 
@@ -26,12 +26,6 @@ export const StyledTitleComponent = () => {
     setIsPrimary(v => !v)
   }
 
-  const style = isPrimary ? {
-    back: 31,
-  } : {
-    back: 42
-  }
-
   const [showText, setShowText] = useState(true)
   const onToggleHelloworld = () => {
     setShowText(v => !v)
@@ -42,7 +36,7 @@ export const StyledTitleComponent = () => {
     {showText && <div  > helloworld </div>}
 
 
-    <StyledTitle isspatial style={style} onClick={onClick} $primary={isPrimary} > this is style component </StyledTitle>
+    <StyledTitle enable-xr  onClick={onClick} $primary={isPrimary} > this is style component </StyledTitle>
 
   </div>
 
