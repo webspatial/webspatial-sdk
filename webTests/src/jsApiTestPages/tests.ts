@@ -66,6 +66,34 @@ var main = async () => {
 
             return
         }
+    } else if (page == "spatialView") {
+        await session.log("Trying to load webview")
+
+        var e = await session.createEntity()
+        e.transform.position.x = 500
+        e.transform.position.y = 300
+        e.transform.position.z = 200
+        var wc = (await session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
+        await e.updateTransform()
+        let i = await session.createViewComponent()
+        await e.setComponent(i)
+
+        // Create model ent and add as a child to the spatialView
+        var box = await session.createMeshResource({ shape: "box" })
+        var mat = await session.createPhysicallyBasedMaterial()
+        mat.baseColor.r = Math.random()
+        await mat.update()
+        var customModel = await session.createModelComponent()
+        customModel.setMaterials([mat])
+        customModel.setMesh(box)
+        var e2 = await session.createEntity()
+        await e2.setComponent(customModel)
+        e2.transform.scale = new DOMPoint(0.03, 0.03, 0.03)
+        await e2.updateTransform()
+        await e2.setParent(e)
+
     } else if (page == "glassBackground") {
         await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
         // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
