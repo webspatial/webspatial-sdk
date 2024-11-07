@@ -316,6 +316,11 @@ class CommandDataManager {
                 spatialPhysicallyBasedMaterial.physicallyBasedMaterial.metallic = PhysicallyBasedMaterial.Metallic(floatLiteral: Float(metallic))
             }
 
+        } else if let spatialViewComponent = sr as? SpatialViewComponent {
+            if let resolution = data.update?.resolution {
+                spatialViewComponent.resolutionX = resolution.x
+                spatialViewComponent.resolutionY = resolution.y
+            }
         } else if let spatialModelUIComponent = sr as? SpatialModelUIComponent {
             if var url: String = data.update?.url {
                 url = target.parseURL(url: url)
@@ -331,7 +336,6 @@ class CommandDataManager {
                 spatialModelUIComponent.resolutionX = resolution.x
                 spatialModelUIComponent.resolutionY = resolution.y
             }
-
         } else if let spatialModelComponent = sr as? SpatialModelComponent {
             if let meshResourceId: String = data.update?.meshResource {
                 if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
