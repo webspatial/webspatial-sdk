@@ -5,7 +5,7 @@ import { WebSpatial, WebSpatialResource } from "./private/WebSpatial"
 import { WindowStyle } from './types'
 
 import { SpatialMesh, SpatialPhysicallyBasedMaterial } from "./resource"
-import { SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialWindowComponent } from "./component"
+import { SpatialModelUIComponent, SpatialModelComponent, SpatialInputComponent, SpatialWindowComponent, SpatialViewComponent } from "./component"
 import { SpatialObject } from "./SpatialObject"
 
 class SpatialFrame {
@@ -62,6 +62,15 @@ export class SpatialSession {
   async createWindowComponent(wg?: SpatialWindowGroup) {
     let entity = await WebSpatial.createResource("SpatialWebView", wg ? wg._wg : WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
     return new SpatialWindowComponent(entity)
+  }
+
+  /**
+   * Creates a ViewComponent
+   * @returns SpatialViewComponent
+   */
+  async createViewComponent(wg?: SpatialWindowGroup) {
+    let entity = await WebSpatial.createResource("SpatialView", wg ? wg._wg : WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel());
+    return new SpatialViewComponent(entity)
   }
 
   /**
