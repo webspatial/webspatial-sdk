@@ -8,9 +8,7 @@ export const SimpleSpatialComponent = () => {
   const style = isPrimary ? {
     '--xr-back': 60,
     
-    // transform: 'translateX(10px) translateZ(10px) rotateZ(30deg)',
-
-    transform: 'rotateZ(30deg) ',
+    transform: 'rotate3d(0, 1, 0, 80deg) translateZ(120px)',
 
     color: 'blue',
   } : {
