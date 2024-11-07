@@ -118,7 +118,22 @@ async function webViewMemoryLeakTest() {
         return testResult = ["WebView JS API", false, ""]
     }
 
-    //creating webview 1 and get memory stats
+    var stats = await session.getStats()
+    if (stats.backend == "Android") {
+        var e1 = await session.createEntity();
+        var e2 = await session.createEntity();
+        var stats2 = await session.getStats()
+
+        await e1.destroy()
+        await e2.destroy()
+        if (stats2.objects.count - 2 == stats.objects.count) {
+            testResult = ["WebView Memory Leak Test", true, ""]
+        } else {
+            return testResult = ["WebView Memory Leak Test", false, ""]
+        }
+        return testResult
+    }
+
     try {
         await session.log("Trying to load webview 1")
 
@@ -221,6 +236,28 @@ async function nestedDivsTest() {
         <NestedDivRender />
     )
     await getSession()
+
+    var stats = await session.getStats()
+    if (stats.backend == "Android") {
+        var objCount = 0
+        var retry = 0
+        while (objCount != 15) {
+            await timeout(50)
+            var sessionStats = await session.getStats()
+            objCount = sessionStats.objects.count
+            retry++
+            if (retry > 100) {
+                break;
+            }
+        }
+        if (stats.objects.count == 3 && objCount == 15) {
+            testResult = ["NestedDivsTest", true, ""]
+        } else {
+            return testResult = ["NestedDivsTest", false, ""]
+        }
+        return testResult
+    }
+
     var entityCount = 0
     var retry = 0
     while (entityCount != 7) {
@@ -231,7 +268,7 @@ async function nestedDivsTest() {
         if (retry > 40) {
             break;
         }
-    }  
+    }
     await session.log("nestedDivs Stats: " + JSON.stringify(entityCount))
     if (entityCount == 7) {
         testResult = ["NestedDivsTest", true, ""]
@@ -241,11 +278,11 @@ async function nestedDivsTest() {
     }
     await session.log(testResult)
     document.body.removeChild(root)
-    
+
     return testResult
 }
 
-var allTests = [createSession, createWebViewJSAPI,changeWebViewStyle, webViewMemoryLeakTest, nestedDivsTest]
+var allTests = [createSession, createWebViewJSAPI, changeWebViewStyle, webViewMemoryLeakTest, nestedDivsTest]
 
 class TestRunner {
     _started = false
@@ -271,10 +308,10 @@ class TestRunner {
 }
 
 function timeout(delay: number) {
-    return new Promise( res => setTimeout(res, delay) );
+    return new Promise(res => setTimeout(res, delay));
 }
 
-function NestedDivRender(){
+function NestedDivRender() {
     const [depth, setDepth] = useState(1)
     var redCol = "#cc111144"
     var greenCol = "#11cc1144"
@@ -282,41 +319,41 @@ function NestedDivRender(){
 
     return (<>
         <SpatialDiv
-                debugName="PARENT A ROOT"
-                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: false }}
-                style={{ height: 300, backgroundColor: redCol }}>
-                <p>Hello world A</p>
-                <SpatialDiv
-                    debugName="CHILD A1"
-                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: false }}
-                    style={{ height: 100, backgroundColor: blueCol }}>
-                    <p>Hello world B</p>
-                </SpatialDiv>
-            </SpatialDiv>
+            debugName="PARENT A ROOT"
+            spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: false }}
+            style={{ height: 300, backgroundColor: redCol }}>
+            <p>Hello world A</p>
             <SpatialDiv
-                debugName="PARENT B ROOT"
-                spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
-                style={{ height: 300, backgroundColor: redCol }}>
-                <p>Hello world A</p>
+                debugName="CHILD A1"
+                spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: false }}
+                style={{ height: 100, backgroundColor: blueCol }}>
+                <p>Hello world B</p>
+            </SpatialDiv>
+        </SpatialDiv>
+        <SpatialDiv
+            debugName="PARENT B ROOT"
+            spatialStyle={{ position: { z: depth * 10, x: 0, y: 0 }, glassEffect: true }}
+            style={{ height: 300, backgroundColor: redCol }}>
+            <p>Hello world A</p>
+            <SpatialDiv
+                debugName="CHILD B1"
+                spatialStyle={{ position: { z: depth * 20, x: 0, y: 0 }, glassEffect: true }}
+                style={{ height: 100, backgroundColor: blueCol }}>
+                <p>Hello world B</p>
                 <SpatialDiv
-                    debugName="CHILD B1"
-                    spatialStyle={{ position: { z: depth * 20, x: 0, y: 0 }, glassEffect: true }}
-                    style={{ height: 100, backgroundColor: blueCol }}>
-                    <p>Hello world B</p>
-                    <SpatialDiv
-                        debugName="CHILD B2"
-                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
-                        style={{ height: 100, backgroundColor: greenCol }}>
-                        <p>Hello world C</p>
-                    </SpatialDiv>
-                    <SpatialDiv
-                        debugName="CHILD B3"
-                        spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
-                        style={{ height: 100, backgroundColor: redCol }}>
-                        <p>Hello world C</p>
-                    </SpatialDiv>
+                    debugName="CHILD B2"
+                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                    style={{ height: 100, backgroundColor: greenCol }}>
+                    <p>Hello world C</p>
+                </SpatialDiv>
+                <SpatialDiv
+                    debugName="CHILD B3"
+                    spatialStyle={{ position: { z: depth * 30, x: 0, y: 0 }, glassEffect: true }}
+                    style={{ height: 100, backgroundColor: redCol }}>
+                    <p>Hello world C</p>
                 </SpatialDiv>
             </SpatialDiv>
+        </SpatialDiv>
     </>)
 }
 
