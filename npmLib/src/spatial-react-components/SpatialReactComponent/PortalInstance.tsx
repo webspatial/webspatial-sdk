@@ -13,13 +13,12 @@ interface PortalInstanceProps {
     spatialStyle?: Partial<spatialStyleDef>,
 
     El: React.ElementType,
-    isSelfClosingTags: boolean,
-    children: ReactNode,
+    children?: ReactNode,
     style?: CSSProperties | undefined,
 }
 
 function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
-    const { El, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
+    const { El, style: inStyle = {}, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
         width: `${elWidth}px`,
@@ -27,11 +26,7 @@ function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll
     }
     const style = { ...inStyle, ...inheritedPortalStyle, ...extraStyle, ...elWHStyle }
 
-    if (isSelfClosingTags) {
-        return <El style={style} {...props} />
-    } else {
-        return <El style={style} {...props} > {children} </El>
-    }
+    return <El style={style} {...props} />
 }
 
 function setOpenWindowStyle(openedWindow: Window) {
