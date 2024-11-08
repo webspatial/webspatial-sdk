@@ -276,6 +276,14 @@ class CommandDataManager {
                 }
             }
 
+            if let _ = data.update?.getBoundingBox {
+                var b = entity.modelEntity.visualBounds(relativeTo: nil)
+                var exts = "x:"+String(b.extents.x)+","+"y:"+String(b.extents.y)+","+"z:"+String(b.extents.z)
+                var center = "x:"+String(b.center.x)+","+"y:"+String(b.center.y)+","+"z:"+String(b.center.z)
+                target.completeEvent(requestID: requestID, data: "{center: {"+center+"}, extents: {"+exts+"}}")
+                return
+            }
+
             if let space: String = data.update?.setCoordinateSpace {
                 entity.coordinateSpace = .APP
                 if space == "Root" {
@@ -554,6 +562,7 @@ struct JSResourceData: Codable {
     var setScrollEdgeInsets: JSRect?
     var windowID: String?
     var style: JSEntityStyle?
+    var getBoundingBox: Bool?
 }
 
 struct JSColor: Codable {
