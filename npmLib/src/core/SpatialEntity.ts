@@ -51,6 +51,11 @@ export class SpatialEntity extends SpatialObject {
     await WebSpatial.updateResource(this._entity, { setCoordinateSpace: space })
   }
 
+  async getBoundingBox() {
+    var res: any = await WebSpatial.updateResource(this._entity, { getBoundingBox: true })
+    return res.data as { center: { x: number, y: number, z: number }, extents: { x: number, y: number, z: number } }
+  }
+
   /**
   * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
   */
