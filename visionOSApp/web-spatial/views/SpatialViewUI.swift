@@ -28,6 +28,9 @@ struct SpatialViewUI: View {
                     world.transform.scale.y = newScale
                     world.transform.scale.z = newScale
 
+                    // Pull out content so volume sits in front of the page
+                    world.transform.translation.z = world.transform.scale.z / 2
+
                     for (_, entity) in ent.getEntities() {
                         world.addChild(entity.modelEntity)
                     }
