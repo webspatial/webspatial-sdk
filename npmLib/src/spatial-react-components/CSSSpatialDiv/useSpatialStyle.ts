@@ -1,31 +1,95 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SpatialStyleInfoUpdateEvent } from "../notifyUpdateStandInstanceLayout";
 import isEqual from "lodash.isequal";
+// @ts-ignore
+import { Matrix4 } from "./math/Matrix4.js";
+// @ts-ignore
+import { Vector3 } from "./math/Vector3.js";
+// @ts-ignore
+import { Quaternion } from "./math/Quaternion.js";
 
 const SpatialCustomVars = {
-  back: '--xr-back',
-  debugName: '--xr-name',
+  back: "--xr-back",
+  debugName: "--xr-name",
+};
+
+function parse2dMatrix(transformDataArray: number[]) {
+  const [n11, n21, n12, n22, n13, n23] = transformDataArray;
+  const mat4 = [n11, n12, 0, n13, n21, n22, 0, n23, 0, 0, 1, 0, 0, 0, 0, 1];
+  const matrix4 = new Matrix4(...mat4);
+  return matrix4;
 }
-function decodeSpatialStyle(computedStyle: CSSStyleDeclaration) {
-  let debugName = computedStyle.getPropertyValue(SpatialCustomVars.debugName);
+
+function parse3dMatrix(transformDataArray: number[]) {
+  const matrix4 = new Matrix4().fromArray(transformDataArray);
+  return matrix4;
+}
+
+function parseTransform(computedStyle: CSSStyleDeclaration) {
+  let transform = computedStyle.getPropertyValue("transform");
+  const matrixFlagString = "matrix(";
+  const idxOfMatrix = transform.indexOf(matrixFlagString);
+  if (idxOfMatrix !== -1) {
+    const transformDataArray = transform
+      .substring(matrixFlagString.length, transform.length - 1)
+      .split(",")
+      .map((item) => parseFloat(item));
+    return parse2dMatrix(transformDataArray);
+  } else {
+    const matrix3dFlagString = "matrix3d(";
+    const idxOfMatrix3d = transform.indexOf(matrix3dFlagString);
+    if (idxOfMatrix3d !== -1) {
+      const transform3dDataArray = transform
+        .substring(matrix3dFlagString.length, transform.length - 1)
+        .split(",")
+        .map((item) => parseFloat(item));
+      return parse3dMatrix(transform3dDataArray);
+    } else {
+      return new Matrix4();
+    }
+  }
+}
+
+function parseBack(computedStyle: CSSStyleDeclaration) {
   let backProperty = computedStyle.getPropertyValue(SpatialCustomVars.back);
   let back: number | undefined = undefined;
   try {
     back = parseFloat(backProperty);
-  } catch (error) {
-     
-  }
-  return {back, debugName};
+  } catch (error) {}
+  return new Matrix4().makeTranslation(0, 0, back || 1);
 }
 
 function parseSpatialStyle(node: HTMLElement) {
   const computedStyle = getComputedStyle(node);
-  const { back, debugName } = decodeSpatialStyle(computedStyle);
 
-  const position = { x: 0, y: 0, z: back || 1 };
-  const rotation = { x: 0, y: 0, z: 0, w: 1 };
-  const scale = { x: 1, y: 1, z: 1 };
-  return { position, rotation, scale, debugName };
+  let debugName = computedStyle.getPropertyValue(SpatialCustomVars.debugName);
+
+  // handle back property
+  const mat4ForBack = parseBack(computedStyle);
+
+  // handle transform and transform-origin properties
+  const mat4ForTransform = parseTransform(computedStyle);
+
+  const resultMatrix = new Matrix4();
+  resultMatrix.multiplyMatrices(mat4ForBack, mat4ForTransform);
+
+  const position = new Vector3();
+  const quaternion = new Quaternion();
+  const scale = new Vector3();
+
+  resultMatrix.decompose(position, quaternion, scale);
+
+  return {
+    position: { x: position.x, y: position.y, z: position.z },
+    rotation: {
+      x: quaternion.x,
+      y: quaternion.y,
+      z: quaternion.z,
+      w: quaternion.w,
+    },
+    scale: { x: scale.x, y: scale.y, z: scale.z },
+    debugName,
+  };
 }
 
 export function useSpatialStyle() {
@@ -34,7 +98,7 @@ export function useSpatialStyle() {
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
-    debugName: ''
+    debugName: "",
   });
   const [ready, setReady] = useState(false);
 
