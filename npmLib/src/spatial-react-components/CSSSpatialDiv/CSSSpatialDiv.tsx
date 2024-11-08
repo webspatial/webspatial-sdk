@@ -1,21 +1,45 @@
 import { forwardRef, Ref } from 'react';
 import { useSpatialStyle } from './useSpatialStyle';
-import { primitives } from '../primitives';
+import { primitives, SelfClosingTags } from '../primitives';
 import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialReactComponent';
+import { getSession } from '../../utils/getSession';
+
+function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<any>) {
+    const { children, component: El = 'div', ...props } = (inProps);
+    const isPrimitiveEl = typeof El === 'string';
+    const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(El as string)
+    if (isSelfClosingTags) {
+        // @ts-ignore
+        return <El {...props} ref={ref} />
+    } else {
+        return <El {...props} ref={ref} > {children} </El>
+    }
+}
 
 export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
-    const { className = "", style = {}, component: El = 'div' } = inProps;
-    const { ref, spatialStyle,  ready } = useSpatialStyle();
-    const {debugName, ...otherSpatial} = spatialStyle
+    const { style = {}, ...props } = inProps;
+    const { ref, spatialStyle, ready } = useSpatialStyle();
+    const { debugName, ...otherSpatial } = spatialStyle
 
     const divRefStyle = {
         ...style,
         "visibility": "hidden",
     }
 
+    const spatialDivStyle = {
+        ...style,
+        transform: 'none'
+    }
+    const El = inProps.component || 'div'
+
+    const isWebSpatialEnv = getSession() !== null
+    if (!isWebSpatialEnv) {
+        return renderWebReactComponent(inProps, ref);
+    }
+
     return <>
-        {ready && <SpatialReactComponent {...inProps} spatialStyle={otherSpatial} debugName={debugName}/>}
-        <El className={className} style={divRefStyle} ref={ref} />
+        {ready && <SpatialReactComponent style={spatialDivStyle} {...props} spatialStyle={otherSpatial} debugName={debugName} />}
+        <El className={inProps.className} style={divRefStyle} ref={ref} />
     </>
 }
 
