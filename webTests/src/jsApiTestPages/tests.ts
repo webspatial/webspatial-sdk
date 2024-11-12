@@ -72,27 +72,58 @@ var main = async () => {
         var e = await session.createEntity()
         e.transform.position.x = 500
         e.transform.position.y = 300
-        e.transform.position.z = 200
+        e.transform.position.z = 0
         var wc = (await session.getCurrentWindowComponent())
         var ent = await wc.getEntity()
         await e.setParent(ent!)
         await e.updateTransform()
         let i = await session.createViewComponent()
+        await i.setResolution(500, 500)
         await e.setComponent(i)
 
         // Create model ent and add as a child to the spatialView
         var box = await session.createMeshResource({ shape: "box" })
         var mat = await session.createPhysicallyBasedMaterial()
-        mat.baseColor.r = Math.random()
         await mat.update()
         var customModel = await session.createModelComponent()
         customModel.setMaterials([mat])
         customModel.setMesh(box)
         var e2 = await session.createEntity()
         await e2.setComponent(customModel)
-        e2.transform.scale = new DOMPoint(0.03, 0.03, 0.03)
+        e2.transform.position.z = -(0.1 / 2 + 0.00001)
+        e2.transform.scale = new DOMPoint((1920 / 2) / 1360, (1080 / 2) / 1360, 0.1)
         await e2.updateTransform()
         await e2.setParent(e)
+
+        {
+            var box = await session.createMeshResource({ shape: "sphere" })
+            var mat = await session.createPhysicallyBasedMaterial()
+            await mat.update()
+            var customModel = await session.createModelComponent()
+            customModel.setMaterials([mat])
+            customModel.setMesh(box)
+            var e2 = await session.createEntity()
+            await e2.setComponent(customModel)
+            e2.transform.position.y = 0.3
+            e2.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+            await e2.updateTransform()
+            await e2.setParent(e)
+        }
+
+        // Load webpage that displays simple game
+        var e3 = await session.createEntity()
+        e3.transform.position.x = 0
+        e3.transform.position.y = 0.0
+        e3.transform.position.z = 0
+        e3.transform.scale = new DOMPoint(1.0, 1.0, 1.0)
+        await e3.updateTransform()
+        let win = await session.createWindowComponent()
+        await Promise.all([
+            win.loadURL("http://coolmathgames.com/0-retro-helicopter/play"),
+            win.setResolution((1920 / 2), (1080 / 2)),
+        ])
+        await e3.setComponent(win)
+        await e3.setParent(e)
 
     } else if (page == "glassBackground") {
         await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
