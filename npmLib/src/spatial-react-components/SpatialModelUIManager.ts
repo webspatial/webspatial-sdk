@@ -1,4 +1,4 @@
-import { SpatialEntity, SpatialModelUIComponent } from "../core"
+import { SpatialEntity, SpatialModelUIComponent, SpatialViewComponent } from "../core"
 import { getSession } from "../utils"
 import { vecType } from "./types"
 
@@ -6,18 +6,35 @@ import { vecType } from "./types"
 export class SpatialModelUIManager {
     initPromise?: Promise<any>
     entity?: SpatialEntity
-    modelComponent?: SpatialModelUIComponent
+    viewComponent?: SpatialViewComponent
 
     async initInternal(url: string) {
-        this.entity = await (await getSession()!).createEntity()
+        var session = (getSession()!)
 
-        var wc = (await getSession()!.getCurrentWindowComponent())
+        // Create entity with view component to display the model inside
+        this.entity = await session.createEntity()
+        this.viewComponent = await session.createViewComponent()
+        await this.entity.setComponent(this.viewComponent)
+
+
+        // Add model within the view and center within view
+        var e = await session.createEntity()
+        var model = await session.createModelComponent({ url: url })
+        await e.setComponent(model)
+        var bb = await e.getBoundingBox()
+        e.transform.position.x = -bb.center.x
+        e.transform.position.y = -bb.center.y
+        e.transform.position.z = -bb.center.z
+        e.transform.position.x = -bb.center.x
+        e.transform.position.y = -bb.center.y
+        e.transform.position.z = -bb.center.z
+        await e.updateTransform()
+        await e.setParent(this.entity)
+
+        // Add entity to the window
+        var wc = (session.getCurrentWindowComponent())
         var ent = await wc.getEntity()
         await this.entity.setParent(ent!)
-
-        this.modelComponent = await (await getSession()!).createModelUIComponent()
-        await this.modelComponent.setURL(url)
-        await this.entity.setComponent(this.modelComponent)
     }
     async init(url: string) {
         this.initPromise = this.initInternal(url)
@@ -27,7 +44,7 @@ export class SpatialModelUIManager {
         let rect = element.getBoundingClientRect();
         let targetPosX = (rect.left + ((rect.right - rect.left) / 2))
         let targetPosY = (rect.bottom + ((rect.top - rect.bottom) / 2)) + window.scrollY
-        if (!this.modelComponent) {
+        if (!this.viewComponent) {
             return
         }
         var entity = this.entity!
@@ -36,24 +53,21 @@ export class SpatialModelUIManager {
         entity.transform.position.z = offset.z
         await entity.updateTransform()
 
-        var modelComponent = this.modelComponent!
-        await modelComponent.setResolution(rect.width, rect.height);
-
-        await modelComponent.setAspectRatio("fit");
+        var viewComponent = this.viewComponent!
+        await viewComponent.setResolution(rect.width, rect.height);
     }
 
     async setOpacity(opacity: number) {
-        if (!this.modelComponent) {
+        if (!this.viewComponent) {
             return
         }
-        return this.modelComponent.setOpacity(opacity);
     }
 
     async destroy() {
         if (this.initPromise) {
             await this.initPromise
             this.entity?.destroy()
-            this.modelComponent?.destroy()
+            this.viewComponent?.destroy()
         }
     }
 }
