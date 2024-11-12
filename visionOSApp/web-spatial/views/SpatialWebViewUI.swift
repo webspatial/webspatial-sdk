@@ -52,6 +52,11 @@ struct SpatialWebViewUI: View {
                                         .frame(width: width, height: height)
                                         .frame(depth: 0, alignment: .back)
                                         .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                        .scaleEffect(
+                                            x: CGFloat(e.modelEntity.scale.x),
+                                            y: CGFloat(e.modelEntity.scale.y),
+                                            z: CGFloat(e.modelEntity.scale.z)
+                                        )
                                         .position(x: x, y: y)
                                         .offset(z: z)
                                         .gesture(
