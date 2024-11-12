@@ -67,6 +67,8 @@ class SpatialWindowComponent: SpatialComponent {
     var resolutionY: Double = 0
     var scrollWithParent = false
 
+    var rotationAnchor: UnitPoint3D = .center
+
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
     var parentWindowGroupID: String
@@ -91,12 +93,12 @@ class SpatialWindowComponent: SpatialComponent {
             )
         childResources.removeValue(forKey: spatialObject.id)
     }
-    
-    public func getChildSpatialObject(name: String) -> SpatialObject?{
+
+    public func getChildSpatialObject(name: String) -> SpatialObject? {
         return childResources[name]
     }
-    
-    public func destroyChild(name: String){
+
+    public func destroyChild(name: String) {
         childResources[name]?.destroy()
     }
 
@@ -104,8 +106,8 @@ class SpatialWindowComponent: SpatialComponent {
         let spatialObject = object as! SpatialObject
         removeChildSpatialObject(spatialObject)
     }
-    
-    public func setWindowGroup(uuid: String, wgd: WindowGroupData){
+
+    public func setWindowGroup(uuid: String, wgd: WindowGroupData) {
         childWindowGroups[uuid] = wgd
     }
 
@@ -171,8 +173,8 @@ class SpatialWindowComponent: SpatialComponent {
     func getView() -> WebViewNative? {
         return webViewNative
     }
-    
-    func setView(wv:WebViewNative){
+
+    func setView(wv: WebViewNative) {
         webViewNative = wv
         webViewNative!.webViewRef = self
     }
@@ -184,8 +186,8 @@ class SpatialWindowComponent: SpatialComponent {
     func getURL() -> URL? {
         return webViewNative?.url
     }
-    
-    func setURL(url:URL){
+
+    func setURL(url: URL) {
         webViewNative!.url = url
     }
 
