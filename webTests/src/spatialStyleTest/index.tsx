@@ -2,10 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample';
 import { StyledTitleComponent } from './StyledTitleComponent';
-// import { FpsView } from 'react-fps';
-
 import { SpatialMonitor } from 'web-spatial'
-import { SimpleSpatialComponent } from './SimpleSpatialComponent';
+import { SpatialTagComponent } from './SpatialTagComponent';
 
 function App() {
     return (
@@ -16,10 +14,9 @@ function App() {
             </div>
 
             <SpatialMonitor className='w-screen h-screen  ' >
-                <SimpleSpatialComponent />
-
-                {/* <StyledTitleComponent />
-                <CSSModelSample /> */}
+                <SpatialTagComponent />
+                <StyledTitleComponent />
+                <CSSModelSample />
 
             </SpatialMonitor>
         </div>
