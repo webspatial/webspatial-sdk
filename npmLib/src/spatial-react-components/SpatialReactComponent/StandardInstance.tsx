@@ -37,29 +37,21 @@ function useDetectDomRectChange() {
 
 interface StandardInstanceProps {
     El: React.ElementType,
-    isSelfClosingTags: boolean,
-    children: ReactNode,
+    children?: ReactNode,
     style?: CSSProperties | undefined,
 
     // for debug
     debugShowStandardInstance?: boolean,
 }
 export function StandardInstance(inProps: StandardInstanceProps) {
-    const { El, isSelfClosingTags, children, style: inStyle, debugShowStandardInstance, ...props } = inProps;
+    const { El, style: inStyle, debugShowStandardInstance, ...props } = inProps;
     const extraStyle = { visibility: debugShowStandardInstance ? "visible" : "hidden" };
     const style = { ...inStyle, ...extraStyle }
 
     const ref = useDetectDomRectChange();
 
-    let JSXComponent;
-    if (isSelfClosingTags) {
-        JSXComponent = <El ref={ref} style={style} {...props} />
-    } else {
-        JSXComponent = <El ref={ref} style={style} {...props} > {children} </El>
-    }
-
     return (<SpatialIsStandardInstanceContext.Provider value={true}>
-        {JSXComponent}
+        <El ref={ref} style={style} {...props} />
     </SpatialIsStandardInstanceContext.Provider>)
 }
 
