@@ -34,6 +34,7 @@ struct SpatialWebViewUI: View {
             let childEntities = ent.getEntities()
 
             // Display child entities of the webview
+
             ZStack {
                 OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                     ZStack {
@@ -48,11 +49,12 @@ struct SpatialWebViewUI: View {
                                         let z = CGFloat(e.modelEntity.position.z)
                                         let width = CGFloat(view.resolutionX)
                                         let height = CGFloat(view.resolutionY)
+                                        let anchor = view.rotationAnchor
                                         
                                         SpatialWebViewUI().environment(e)
                                             .frame(width: width, height: height)
                                             .frame(depth: 0, alignment: .back)
-                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
+                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)), anchor: anchor)
                                             .position(x: x, y: y)
                                             .offset(z: z)
                                             .gesture(
