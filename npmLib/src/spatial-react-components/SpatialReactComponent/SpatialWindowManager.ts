@@ -58,7 +58,7 @@ export class SpatialWindowManager {
         this.initPromise = this.initInternalFromWindow(parentSpatialWindowManager)
         await this.initPromise
     }
-    async resize(rect: RectType, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }, rotationOrigin: vecType = { x: 0, y: 0, z: 0 }) {
+    async resize(rect: RectType, offset: vecType, rotation: quatType = { x: 0, y: 0, z: 0, w: 1 }, scale: vecType = { x: 1, y: 1, z: 1 }, rotationOrigin: vecType = { x: 0, y: 0, z: 0 }) {
         let targetPosX = (rect.x + ((rect.width) / 2))
         // Adjust to get the page relative to document instead of viewport
         // This is needed as when you scroll down the page the rect.top moves but we dont want it to so we can offset that by adding scroll
@@ -76,6 +76,11 @@ export class SpatialWindowManager {
         entity.transform.orientation.y = rotation.y
         entity.transform.orientation.z = rotation.z
         entity.transform.orientation.w = rotation.w
+
+        entity.transform.scale.x = scale.x
+        entity.transform.scale.y = scale.y
+        entity.transform.scale.z = scale.z
+        
         await entity.updateTransform()
 
         var webview = this.webview!

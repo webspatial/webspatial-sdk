@@ -51,9 +51,16 @@ struct SpatialWebViewUI: View {
                                         let height = CGFloat(view.resolutionY)
                                         let anchor = view.rotationAnchor
                                         
+                                        // Matrix = MTranslate X MRotate X MScale
                                         SpatialWebViewUI().environment(e)
                                             .frame(width: width, height: height)
                                             .frame(depth: 0, alignment: .back)
+                                            .scaleEffect(
+                                                x: CGFloat(e.modelEntity.scale.x),
+                                                y: CGFloat(e.modelEntity.scale.y),
+                                                z: CGFloat(e.modelEntity.scale.z),
+                                                anchor: anchor
+                                            )
                                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)), anchor: anchor)
                                             .position(x: x, y: y)
                                             .offset(z: z)
