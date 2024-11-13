@@ -4,6 +4,7 @@ import { CSSModelSample } from './CSSModelSample';
 import { StyledTitleComponent } from './StyledTitleComponent';
 import { SpatialMonitor } from 'web-spatial'
 import { SpatialTagComponent } from './SpatialTagComponent';
+import { SimpleSpatialComponent } from './SimpleSpatialComponent';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                 <SpatialTagComponent />
                 <StyledTitleComponent />
                 <CSSModelSample />
+                <SimpleSpatialComponent />
 
             </SpatialMonitor>
         </div>
