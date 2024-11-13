@@ -15,11 +15,12 @@ function App() {
             </div>
 
             <SpatialMonitor className='w-screen h-screen  ' >
-                <SpatialTagComponent />
-                <StyledTitleComponent />
-                <CSSModelSample />
                 <SimpleSpatialComponent />
 
+                <StyledTitleComponent />
+                <CSSModelSample /> 
+
+                <SpatialTagComponent />
             </SpatialMonitor>
         </div>
     )

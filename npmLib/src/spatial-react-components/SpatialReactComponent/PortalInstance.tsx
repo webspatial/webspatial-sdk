@@ -90,7 +90,7 @@ function syncHeaderStyle(openedWindow: Window) {
 
 function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefined, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
     let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
-    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, rotationAnchor = { x: 0.5, y: 0.5, z: 0 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
+    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, rotationAnchor = { x: 0.5, y: 0.5, z: 0 }, scale = {x: 1, y: 1, z:1}, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
     let stylePosition = style?.position
     let styleOverflow = style?.overflow
 
@@ -98,6 +98,11 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefi
     if (position.x === undefined) position.x = 0
     if (position.y === undefined) position.y = 0
     if (position.z === undefined) position.z = 1
+
+    // fill default values for scale
+    if (scale.x === undefined) scale.x = 1
+    if (scale.y === undefined) scale.y = 1
+    if (scale.z === undefined) scale.z = 1
 
     // fill default values for position
     if (rotationAnchor.x === undefined) rotationAnchor.x = 0.5
@@ -138,10 +143,10 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefi
             (async function () {
                 // console.log('dbg syncSpatialProps for resize', domRect, position, rotation)
 
-                await spatialWindowManager.resize(domRect, position as vecType, rotation, rotationAnchor as vecType);
+                await spatialWindowManager.resize(domRect, position as vecType, rotation, scale as vecType, rotationAnchor as vecType);
             })()
         }
-    }, [spatialWindowManager, domRect, position, rotation, rotationAnchor])
+    }, [spatialWindowManager, domRect, position, rotation, scale, rotationAnchor])
 
     useEffect(() => {
         // sync viewport
