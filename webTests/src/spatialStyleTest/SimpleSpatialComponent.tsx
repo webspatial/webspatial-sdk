@@ -6,9 +6,11 @@ export const SimpleSpatialComponent = () => {
     setIsPrimary(v => !v)
   }
   const style = isPrimary ? {
-    '--xr-back': 60,
-    
-    transform: 'rotate3d(0, 1, 0, 80deg) translateZ(120px)',
+    // '--xr-back': 60,
+    transformOrigin: 'left top',
+    // transform: 'scaleZ(3)   scaleX(3) rotate3d(0, 0, 1, 30deg)',
+    transform: 'rotate3d(1, 0, 0, 30deg) ',
+    // rotate3d(1, 0, 0, 30deg)
 
     color: 'blue',
   } : {
