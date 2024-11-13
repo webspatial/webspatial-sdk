@@ -17,6 +17,7 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
     const divRefStyle = {
         ...style,
         "visibility": "hidden",
+        "position": 'absolute',
     }
 
     const spatialDivStyle = {
@@ -32,7 +33,7 @@ export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
 
     return <>
         {ready && <SpatialReactComponent style={spatialDivStyle} {...props} spatialStyle={otherSpatial} debugName={debugName} />}
-        <El className={inProps.className} style={divRefStyle} ref={ref} />
+        <El {...props} style={divRefStyle} ref={ref} />
     </>
 }
 
