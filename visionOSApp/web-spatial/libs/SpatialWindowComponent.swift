@@ -67,6 +67,8 @@ class SpatialWindowComponent: SpatialComponent {
     var resolutionY: Double = 0
     var scrollWithParent = false
 
+    var rotationAnchor: UnitPoint3D = .center
+
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
     var parentWindowGroupID: String
