@@ -11,6 +11,97 @@ class TimerLog {
         this.session.log("TimerLog " + str + ": " + deltaMS + "ms")
     }
 }
+class TestHelper {
+    constructor(public session: SpatialSession) { }
+
+    async delay(ms: number) {
+        await new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    setWebContent = async (win: Window, content: string, refVar: any) => {
+        var newDiv = document.createElement('div');
+        for (var key in refVar) {
+            (win as any)[key] = refVar[key]
+        }
+        newDiv.innerHTML = content
+        win.document.body.appendChild(newDiv)
+        await this.delay(20)
+    }
+
+    async addToCurrentWindow(e: SpatialEntity) {
+        var wc = (await this.session.getCurrentWindowComponent())
+        var ent = await wc.getEntity()
+        await e.setParent(ent!)
+    }
+
+    async createWindow(options?: {
+        position?: any,
+        resolution?: any,
+        url?: string,
+        windowContent?: string
+    }) {
+        if (!options) {
+            options = {}
+        }
+        if (!options.position) {
+            options.position = { x: 500, y: 300, z: 300 }
+        }
+        if (!options.resolution) {
+            options.resolution = { x: 100, y: 100 }
+        }
+        if (!options.url) {
+            options.url = ""
+        }
+
+        // Create entity
+        var e = await this.session.createEntity()
+        if (options.position) {
+            e.transform.position.x = options.position.x || 0
+            e.transform.position.y = options.position.y || 0
+            e.transform.position.z = options.position.z || 0
+        }
+        await e.updateTransform()
+
+        // Setup window content
+        var pageWindow = null;
+        if (options.url == "") {
+            pageWindow = await this.session.createWindowContext()
+            await this.setWebContent(pageWindow!, options.windowContent ? options.windowContent : `
+            <div>This is an example div</div>
+            `, {
+                rootWindow: window
+            })
+        }
+
+        // Setup window component
+        let wc = await this.session.createWindowComponent()
+        var dim = {
+            x: 100,
+            y: 100
+        }
+        if (options.url == "") {
+            await wc.setFromWindow(pageWindow!.window)
+        } else {
+            await wc.loadURL(options.url)
+        }
+        await wc.setScrollEnabled(false)
+        await e.setCoordinateSpace("Dom")
+        if (options.resolution) {
+            dim.x = options.resolution.x
+            dim.y = options.resolution.y
+        }
+        await wc.setResolution(dim.x, dim.y)
+        await e.setComponent(wc)
+
+        // Result
+        return {
+            entity: e,
+            windowComponent: wc,
+            windowContext: pageWindow
+        }
+    }
+}
+
 
 var main = async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -19,6 +110,7 @@ var main = async () => {
 
     var spatial = new Spatial()
     let session = await spatial.requestSession()
+    var testHelper = new TestHelper(session)
     await session.log("        --------------Page loaded: " + page)
 
     if (page == "default") {
@@ -27,39 +119,23 @@ var main = async () => {
         await session.log("Trying to load webview")
 
         {
-            var e = await session.createEntity()
-            e.transform.position.x = 500
-            e.transform.position.y = 300
-            e.transform.position.z = 300
-
-            var wc = (await session.getCurrentWindowComponent())
-            var ent = await wc.getEntity()
-            await e.setParent(ent!)
-
-            await e.updateTransform()
-            let i = await session.createWindowComponent()
-            await Promise.all([
-                i.loadURL("/src/embed/basic.html"),
-                i.setScrollEnabled(false),
-                e.setCoordinateSpace("Dom"),
-                i.setResolution(300, 300),
-            ])
-            await e.setComponent(i)
+            var w = await testHelper.createWindow({ resolution: { x: 300, y: 300 }, url: "/src/embed/basic.html" })
+            testHelper.addToCurrentWindow(w.entity)
 
             var loop = (time: DOMHighResTimeStamp) => {
-                if (e.isDestroyed()) {
+                if (w.entity.isDestroyed()) {
                     return
                 }
                 session.requestAnimationFrame(loop)
-                e.transform.position.x = 500 + Math.sin(time / 1000) * 200
-                e.updateTransform()
+                w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
+                w.entity.updateTransform()
             }
             session.requestAnimationFrame(loop)
 
 
             setTimeout(async () => {
-                await e.destroy()
-                await i.destroy()
+                await w.entity.destroy()
+                await w.windowComponent.destroy()
                 await session.log("destroy complete")
             }, 5000);
 
