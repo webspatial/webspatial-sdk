@@ -12,7 +12,7 @@ export const SimpleSpatialComponent = () => {
     transform: 'rotate3d(1, 0, 0, 30deg) ',
     // rotate3d(1, 0, 0, 30deg)
 
-    color: 'blue',
+    color: 'red',
   } : {
     '--xr-back': 160,
     color: 'red',

@@ -244,7 +244,6 @@ class CommandDataManager {
                     let modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                     sr = SpatialModelComponent(modelComponent)
                 }
-
             default: print("failed to create sr of type", type)
             }
             if let srObject = sr {
@@ -329,6 +328,7 @@ class CommandDataManager {
                 spatialViewComponent.resolutionX = resolution.x
                 spatialViewComponent.resolutionY = resolution.y
             }
+
         } else if let spatialModelUIComponent = sr as? SpatialModelUIComponent {
             if var url: String = data.update?.url {
                 url = target.parseURL(url: url)
@@ -416,6 +416,14 @@ class CommandDataManager {
             if let resolution: JSVector2 = data.update?.resolution {
                 spatialWindowComponent.resolutionX = resolution.x
                 spatialWindowComponent.resolutionY = resolution.y
+            }
+
+            if let rotationAnchor = data.update?.rotationAnchor {
+                spatialWindowComponent.rotationAnchor = UnitPoint3D(
+                    x: rotationAnchor.x,
+                    y: rotationAnchor.y,
+                    z: rotationAnchor.z
+                )
             }
 
             if let materialThickness: String = data.update?.style?.materialThickness {
@@ -557,6 +565,7 @@ struct JSResourceData: Codable {
     var aspectRatio: String?
     var opacity: Double?
     var resolution: JSVector2?
+    var rotationAnchor: JSVector3?
     var meshResource: String?
     var materials: [String]?
     var getEntityID: String?
@@ -579,6 +588,12 @@ struct JSColor: Codable {
 struct JSVector2: Codable {
     var x: Double
     var y: Double
+}
+
+struct JSVector3: Codable {
+    var x: Double
+    var y: Double
+    var z: Double
 }
 
 struct JSVector4: Codable {
