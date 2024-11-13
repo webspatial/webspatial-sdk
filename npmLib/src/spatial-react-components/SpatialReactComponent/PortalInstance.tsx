@@ -13,13 +13,12 @@ interface PortalInstanceProps {
     spatialStyle?: Partial<spatialStyleDef>,
 
     El: React.ElementType,
-    isSelfClosingTags: boolean,
-    children: ReactNode,
+    children?: ReactNode,
     style?: CSSProperties | undefined,
 }
 
 function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
-    const { El, isSelfClosingTags, style: inStyle = {}, children, ...props } = inProps;
+    const { El, style: inStyle = {}, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
         width: `${elWidth}px`,
@@ -27,11 +26,7 @@ function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll
     }
     const style = { ...inStyle, ...inheritedPortalStyle, ...extraStyle, ...elWHStyle }
 
-    if (isSelfClosingTags) {
-        return <El style={style} {...props} />
-    } else {
-        return <El style={style} {...props} > {children} </El>
-    }
+    return <El style={style} {...props} />
 }
 
 function setOpenWindowStyle(openedWindow: Window) {
@@ -95,7 +90,7 @@ function syncHeaderStyle(openedWindow: Window) {
 
 function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefined, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
     let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
-    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, scale = {x: 1, y: 1, z:1}, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
+    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, rotationAnchor = { x: 0.5, y: 0.5, z: 0 }, scale = {x: 1, y: 1, z:1}, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
     let stylePosition = style?.position
     let styleOverflow = style?.overflow
 
@@ -108,6 +103,11 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefi
     if (scale.x === undefined) scale.x = 1
     if (scale.y === undefined) scale.y = 1
     if (scale.z === undefined) scale.z = 1
+
+    // fill default values for position
+    if (rotationAnchor.x === undefined) rotationAnchor.x = 0.5
+    if (rotationAnchor.y === undefined) rotationAnchor.y = 0.5
+    if (rotationAnchor.z === undefined) rotationAnchor.z = 0
 
     // Sync prop updates
     useEffect(() => {
@@ -143,10 +143,10 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefi
             (async function () {
                 // console.log('dbg syncSpatialProps for resize', domRect, position, rotation)
 
-                await spatialWindowManager.resize(domRect, position as vecType, rotation, scale as vecType);
+                await spatialWindowManager.resize(domRect, position as vecType, rotation, scale as vecType, rotationAnchor as vecType);
             })()
         }
-    }, [spatialWindowManager, domRect, position, rotation, scale])
+    }, [spatialWindowManager, domRect, position, rotation, scale, rotationAnchor])
 
     useEffect(() => {
         // sync viewport

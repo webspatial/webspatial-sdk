@@ -1,7 +1,6 @@
 import { ReactNode, CSSProperties, Ref, useRef, useCallback, useImperativeHandle, forwardRef, useMemo, ElementType } from 'react';
 import { spatialStyleDef } from '../types'
 import { getSession } from '../../utils';
-import { SelfClosingTags } from "../primitives";
 import {StandardInstance } from './StandardInstance'
 import { PortalInstance } from './PortalInstance'
 import { SpatialReactContext, SpatialReactContextObject } from './SpatialReactContext';
@@ -21,37 +20,31 @@ export interface SpatialReactComponentProps {
 }
 
 function parseProps(inProps: SpatialReactComponentProps) {
-    const { debugShowStandardInstance, debugName='', component, allowScroll, spatialStyle, scrollWithParent, children, ...props } = inProps;
+    const { debugShowStandardInstance, debugName='', component, allowScroll, spatialStyle, scrollWithParent, ...props } = inProps;
 
     const El = component ? component : 'div';
-    const isPrimitiveEl = typeof El === 'string';
-    const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(component as string)
 
-    const componentDesc = {El, isSelfClosingTags}
+    const componentDesc = {El}
     const spatialDesc = {spatialStyle, allowScroll, scrollWithParent}
     const debugDesc = {debugShowStandardInstance, debugName}
-    return {componentDesc, spatialDesc, debugDesc, children, props}
+    return {componentDesc, spatialDesc, debugDesc, props}
 }
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps) {
-    const {componentDesc, children, props} = parseProps(inProps);
-    const {El, isSelfClosingTags } = componentDesc;
+    const {componentDesc, props} = parseProps(inProps);
+    const {El } = componentDesc;
 
-    if (isSelfClosingTags) {
-        return <El {...props} /> 
-    } else {
-        return <El {...props} > {children} </El>
-    }
+    return <El {...props} /> 
 }
 
 
 function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
     // console.log('dbg renderSpatialReactComponent', inProps)
-    const {componentDesc, spatialDesc, debugDesc, children, props} = parseProps(inProps);
+    const {componentDesc, spatialDesc, debugDesc, props} = parseProps(inProps);
 
-    const standardInstanceProps = {children, ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance } ;
+    const standardInstanceProps = {...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance } ;
 
-    const portalInstanceProps = {children, ...props, ...componentDesc, ...spatialDesc} ;
+    const portalInstanceProps = {...props, ...componentDesc, ...spatialDesc} ;
 
     const spatialReactContextObject = useMemo(() => new SpatialReactContextObject(debugDesc.debugName), [])
 
