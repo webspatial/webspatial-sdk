@@ -216,6 +216,12 @@ class SpatialWindowComponent: SpatialComponent {
             let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
             targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
         } else {
+            // Full url eg. http://domain.com
+            if let parsed = URL(string: url) {
+                if parsed.scheme != nil {
+                    return url
+                }
+            }
             // Reletive path
             let localDir = NSString(string: webViewNative!.url.absoluteString)
             let relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl

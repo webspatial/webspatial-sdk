@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@r2wc/react-to-web-component": "^2.0.3",
     "lodash.isequal": "^4.5.0",
     "loglevel": "^1.9.1"
   },
