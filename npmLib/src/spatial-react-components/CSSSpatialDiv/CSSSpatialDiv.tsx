@@ -1,19 +1,12 @@
 import { forwardRef, Ref } from 'react';
 import { useSpatialStyle } from './useSpatialStyle';
-import { primitives, SelfClosingTags } from '../primitives';
+import { primitives } from '../primitives';
 import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialReactComponent';
 import { getSession } from '../../utils/getSession';
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<any>) {
-    const { children, component: El = 'div', ...props } = (inProps);
-    const isPrimitiveEl = typeof El === 'string';
-    const isSelfClosingTags = isPrimitiveEl && SelfClosingTags.includes(El as string)
-    if (isSelfClosingTags) {
-        // @ts-ignore
-        return <El {...props} ref={ref} />
-    } else {
-        return <El {...props} ref={ref} > {children} </El>
-    }
+    const { component: El = 'div', ...props } = (inProps);
+    return <El {...props} ref={ref} />
 }
 
 export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
@@ -57,6 +50,7 @@ export function withCSSSpatial(Component: React.ElementType) {
         WithCSSSpatialComponent.displayName = `WithCSSSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
 
         cachedWithCSSSpatialType.set(Component, WithCSSSpatialComponent);
+        cachedWithCSSSpatialType.set(WithCSSSpatialComponent, WithCSSSpatialComponent);
         return WithCSSSpatialComponent
     }
 }
