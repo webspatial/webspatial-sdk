@@ -265,6 +265,10 @@ export class SpatialSession {
         await new Promise(resolve => setTimeout(resolve, 10))
       }
       (openedWindow! as any)._webSpatialID = (openedWindow!.window as any).testAPI.getWindowID()
+    } else {
+      while ((openedWindow!.window as any)._webSpatialID == undefined) {
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
     }
     openedWindow!.document.head.innerHTML = '<meta name="viewport" content="width=device-width, initial-scale=1">'
     return openedWindow
