@@ -49,6 +49,7 @@ export function withCSSSpatial(Component: React.ElementType) {
         WithCSSSpatialComponent.displayName = `WithCSSSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
 
         cachedWithCSSSpatialType.set(Component, WithCSSSpatialComponent);
+        cachedWithCSSSpatialType.set(WithCSSSpatialComponent, WithCSSSpatialComponent);
         return WithCSSSpatialComponent
     }
 }
