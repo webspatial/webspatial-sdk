@@ -199,8 +199,6 @@ class CommandDataManager {
                 sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id: data.windowGroupID!))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
-            case "ModelUIComponent":
-                sr = SpatialModelUIComponent()
             case "SpatialView":
                 sr = SpatialViewComponent()
             case "ModelComponent":
@@ -329,21 +327,6 @@ class CommandDataManager {
                 spatialViewComponent.resolutionY = resolution.y
             }
 
-        } else if let spatialModelUIComponent = sr as? SpatialModelUIComponent {
-            if var url: String = data.update?.url {
-                url = target.parseURL(url: url)
-                spatialModelUIComponent.url = URL(string: url)!
-            }
-            if let aspectRatio: String = data.update?.aspectRatio {
-                spatialModelUIComponent.aspectRatio = aspectRatio
-            }
-            if let opacity: Double = data.update?.opacity {
-                spatialModelUIComponent.opacity = opacity
-            }
-            if let resolution = data.update?.resolution {
-                spatialModelUIComponent.resolutionX = resolution.x
-                spatialModelUIComponent.resolutionY = resolution.y
-            }
         } else if let spatialModelComponent = sr as? SpatialModelComponent {
             if let meshResourceId: String = data.update?.meshResource {
                 if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
