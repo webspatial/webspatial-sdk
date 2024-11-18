@@ -12,6 +12,14 @@ class TimerLog {
     }
 }
 class TestHelper {
+    // https://colorhunt.co/palette/ffb6b9fae3d9bbded661c0bf
+    static colors = {
+        a: "#FFB6B9",
+        b: "#FAE3D9",
+        c: "#BBDED6",
+        d: "#61C0BF"
+    };
+
     constructor(public session: SpatialSession) { }
 
     async delay(ms: number) {
@@ -151,7 +159,7 @@ var main = async () => {
         e.transform.position.z = 0
         var wc = (await session.getCurrentWindowComponent())
         var ent = await wc.getEntity()
-        await e.setParent(ent!)
+
         await e.updateTransform()
         let i = await session.createViewComponent()
         await i.setResolution(500, 500)
@@ -191,16 +199,19 @@ var main = async () => {
         e3.transform.position.x = 0
         e3.transform.position.y = 0.0
         e3.transform.position.z = 0
-        e3.transform.scale = new DOMPoint(1.0, 1.0, 1.0)
+        e3.transform.scale = new DOMPoint(2.0, 2.0, 2.0)
         await e3.updateTransform()
         let win = await session.createWindowComponent()
         await Promise.all([
             win.loadURL("http://coolmathgames.com/0-retro-helicopter/play"),
-            win.setResolution((1920 / 2), (1080 / 2)),
+            // TODO: Bug with there seeming to be a max resolution on some platofrms
+            win.setResolution((1920 / 4), (1080 / 4)),
         ])
         await e3.setComponent(win)
         await e3.setParent(e)
 
+        // TODO: Bug with attachments on some platforms so window components need to be added prior to adding spatialView to scene
+        await e.setParent(ent!)
     } else if (page == "glassBackground") {
         await (await session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
         // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
