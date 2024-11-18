@@ -50,51 +50,62 @@ struct SpatialWebViewUI: View {
                                         let width = CGFloat(view.resolutionX)
                                         let height = CGFloat(view.resolutionY)
                                         let anchor = view.rotationAnchor
-                                        
+
                                         // Matrix = MTranslate X MRotate X MScale
-                                        SpatialWebViewUI().environment(e)
-                                            .frame(width: width, height: height)
-                                            .frame(depth: 0, alignment: .back)
-                                            .scaleEffect(
-                                                x: CGFloat(e.modelEntity.scale.x),
-                                                y: CGFloat(e.modelEntity.scale.y),
-                                                z: CGFloat(e.modelEntity.scale.z),
-                                                anchor: anchor
-                                            )
-                                            .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)), anchor: anchor)
-                                            .position(x: x, y: y)
-                                            .offset(z: z)
-                                            .gesture(
-                                                DragGesture()
-                                                    .onChanged { gesture in
-                                                        let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled, wv.isScrollEnabled() {
-                                                            if !view.dragStarted {
-                                                                view.dragStarted = true
-                                                                view.dragStart = (gesture.translation.height)
+                                        ZStack {
+                                            SpatialWebViewUI().environment(e)
+                                                .frame(width: width, height: height)
+                                                .frame(depth: 0, alignment: .back)
+                                                .position(x: x, y: y)
+                                                .offset(z: z)
+                                                .gesture(
+                                                    DragGesture()
+                                                        .onChanged { gesture in
+                                                            let scrollEnabled = view.isScrollEnabled()
+                                                            if !scrollEnabled, wv.isScrollEnabled() {
+                                                                if !view.dragStarted {
+                                                                    view.dragStarted = true
+                                                                    view.dragStart = (gesture.translation.height)
+                                                                }
+
+                                                                // TODO: this should have velocity
+                                                                let delta = view.dragStart - gesture.translation.height
+                                                                view.dragStart = gesture.translation.height
+                                                                wv.updateScrollOffset(delta: delta)
                                                             }
-                                                            
-                                                            // TODO: this should have velocity
-                                                            let delta = view.dragStart - gesture.translation.height
-                                                            view.dragStart = gesture.translation.height
-                                                            wv.updateScrollOffset(delta: delta)
                                                         }
-                                                    }
-                                                    .onEnded { _ in
-                                                        let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled, wv.isScrollEnabled() {
-                                                            view.dragStarted = false
-                                                            view.dragStart = 0
-                                                            
-                                                            wv.stopScrolling()
+                                                        .onEnded { _ in
+                                                            let scrollEnabled = view.isScrollEnabled()
+                                                            if !scrollEnabled, wv.isScrollEnabled() {
+                                                                view.dragStarted = false
+                                                                view.dragStart = 0
+
+                                                                wv.stopScrolling()
+                                                            }
                                                         }
-                                                    }
-                                            )
+                                                )
+                                        }
+                                        // Had to move rotation and scale to a parent ZStack as they seem to cause frame's width/height behavior to break if added directly
+                                        .rotation3DEffect(
+                                            Rotation3D(simd_quatf(
+                                                ix: e.modelEntity.orientation.vector.x,
+                                                iy: e.modelEntity.orientation.vector.y,
+                                                iz: e.modelEntity.orientation.vector.z,
+                                                r: e.modelEntity.orientation.vector.w
+                                            )),
+                                            anchor: anchor
+                                        )
+                                        .scaleEffect(
+                                            x: CGFloat(e.modelEntity.scale.x),
+                                            y: CGFloat(e.modelEntity.scale.y),
+                                            z: CGFloat(e.modelEntity.scale.z),
+                                            anchor: anchor
+                                        )
                                     }
                                 }
                             }
                         }
-                        
+
                         // Mode3D content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
@@ -103,10 +114,10 @@ struct SpatialWebViewUI: View {
                                         let x = CGFloat(e.modelEntity.position.x)
                                         let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                         let z = CGFloat(e.modelEntity.position.z)
-                                        
+
                                         let scaleX = e.modelEntity.scale.x
                                         let scaleY = e.modelEntity.scale.y
-                                        
+
                                         let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
                                         let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
                                         Model3D(url: modelUrl) { model in
@@ -123,7 +134,7 @@ struct SpatialWebViewUI: View {
                                 }
                             }
                         }
-                        
+
                         // SpatialView content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
@@ -131,10 +142,10 @@ struct SpatialWebViewUI: View {
                                     let x = CGFloat(e.modelEntity.position.x)
                                     let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                     let z = CGFloat(e.modelEntity.position.z)
-                                    
+
                                     let width = CGFloat(viewComponent.resolutionX)
                                     let height = CGFloat(viewComponent.resolutionY)
-                                    
+
                                     SpatialViewUI().environment(e).frame(width: width, height: height).position(x: x, y: y)
                                         .offset(z: z)
                                 }
@@ -142,7 +153,7 @@ struct SpatialWebViewUI: View {
                         }
                     }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
                 }
-                
+
                 // Display the main webview
                 wv.getView()
                     .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
