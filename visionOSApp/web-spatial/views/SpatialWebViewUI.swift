@@ -106,35 +106,6 @@ struct SpatialWebViewUI: View {
                             }
                         }
 
-                        // Mode3D content
-                        ForEach(Array(childEntities.keys), id: \.self) { key in
-                            if let e = childEntities[key] {
-                                if let modelUIComponent = e.getComponent(SpatialModelUIComponent.self) {
-                                    if let modelUrl = modelUIComponent.url {
-                                        let x = CGFloat(e.modelEntity.position.x)
-                                        let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                                        let z = CGFloat(e.modelEntity.position.z)
-
-                                        let scaleX = e.modelEntity.scale.x
-                                        let scaleY = e.modelEntity.scale.y
-
-                                        let width = CGFloat(modelUIComponent.resolutionX) * CGFloat(scaleX)
-                                        let height = CGFloat(modelUIComponent.resolutionY) * CGFloat(scaleY)
-                                        Model3D(url: modelUrl) { model in
-                                            model.model?
-                                                .resizable()
-                                                .aspectRatio(contentMode: modelUIComponent.aspectRatio == "fit" ? .fit : .fill)
-                                        }
-                                        .frame(width: width, height: height)
-                                        .position(x: x, y: y)
-                                        .offset(z: z)
-                                        .padding3D(.front, -100000)
-                                        .opacity(modelUIComponent.opacity)
-                                    }
-                                }
-                            }
-                        }
-
                         // SpatialView content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
