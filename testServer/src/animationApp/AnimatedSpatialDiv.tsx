@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { SpatialDiv, SpatialDivProps } from 'web-spatial';
+import { SpatialDiv, SpatialDivProps } from '@xrsdk/runtime';
 import animejs from 'animejs';
 import { Easing } from './types';
 
@@ -24,7 +24,7 @@ export interface AnimatedSpatialDivProps extends SpatialDivProps {
 
 export function AnimatedSpatialDiv(props: AnimatedSpatialDivProps) {
     const { duration = 1000, direction = 'alternate', loop = true, easing = 'linear',
-        spatialStyle: spatialStyleOriginal, 
+        spatialStyle: spatialStyleOriginal,
         ...otherDivProps } = props;
 
     const positionOriginal = spatialStyleOriginal?.position || { x: 0, y: 0, z: 0 }
@@ -37,11 +37,11 @@ export function AnimatedSpatialDiv(props: AnimatedSpatialDivProps) {
     const rotationY = rotationOriginal?.y || 0;
     const rotationZ = rotationOriginal?.z || 0;
 
-    const {  
-        spaceTranslateX = spatialX, spaceTranslateY = spatialY, spaceTranslateZ = spatialZ, 
-        spaceRotationX = rotationX,  spaceRotationY = rotationY, spaceRotationZ = rotationZ,
+    const {
+        spaceTranslateX = spatialX, spaceTranslateY = spatialY, spaceTranslateZ = spatialZ,
+        spaceRotationX = rotationX, spaceRotationY = rotationY, spaceRotationZ = rotationZ,
         ...spatialDivProps
-         } = otherDivProps;
+    } = otherDivProps;
 
 
     const [spatialPosition, setSpatialPosition] = useState({ x: spatialX, y: spatialY, z: spatialZ });
@@ -90,7 +90,7 @@ export function AnimatedSpatialDiv(props: AnimatedSpatialDivProps) {
                 loop,
 
                 update: function () {
-                    setSpatialRotation({ ...animeRotationTarget.current, w:1 })
+                    setSpatialRotation({ ...animeRotationTarget.current, w: 1 })
                 },
 
             })

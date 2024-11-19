@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from 'web-spatial';
+import { Spatial } from '@xrsdk/runtime';
 import { AnimatedSpatialDiv } from './AnimatedSpatialDiv';
 import { AnimatedModel } from './AnimatedModel';
 
@@ -19,32 +19,32 @@ function App() {
     return (
         <div className='w-screen h-screen flex flex-row base-200'>
             <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
-            <a href="#" onClick={() => history.go(-1)}>Go Back</a>
+                <a href="#" onClick={() => history.go(-1)}>Go Back</a>
             </div>
             <div className="flex flex-col flex-1">
                 <div className='flex flex-row pt-5 gap-2 h-64'>
-                            <AnimatedModel className="flex-1 h-full"
-                                spatialOffset={{ z: 0, x: 0, y: 0 }} 
-                                spaceTranslateX={10}
-                                opacityFromTo={[1, 0]}
-                            >
-                                <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
-                            </AnimatedModel>
+                    <AnimatedModel className="flex-1 h-full"
+                        spatialOffset={{ z: 0, x: 0, y: 0 }}
+                        spaceTranslateX={10}
+                        opacityFromTo={[1, 0]}
+                    >
+                        <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+                    </AnimatedModel>
 
-                            <AnimatedModel className="flex-1 h-full"
-                                spatialOffset={{ z: 0, x: 0, y: 0 }}
-                                spaceTranslateZ={100}
-                            >
-                                <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
-                            </AnimatedModel>
+                    <AnimatedModel className="flex-1 h-full"
+                        spatialOffset={{ z: 0, x: 0, y: 0 }}
+                        spaceTranslateZ={100}
+                    >
+                        <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+                    </AnimatedModel>
 
-                            <AnimatedModel className="flex-1 h-full"
-                                spatialOffset={{ z: 0, x: 0, y: 0 }} 
-                                spaceTranslateZ={100}
-                                opacityFromTo={[1, 0]}
-                            >
-                                <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
-                            </AnimatedModel>
+                    <AnimatedModel className="flex-1 h-full"
+                        spatialOffset={{ z: 0, x: 0, y: 0 }}
+                        spaceTranslateZ={100}
+                        opacityFromTo={[1, 0]}
+                    >
+                        <source src="/src/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" ></source>
+                    </AnimatedModel>
                 </div>
 
                 <div className='flex flex-row pt-5 gap-2'>

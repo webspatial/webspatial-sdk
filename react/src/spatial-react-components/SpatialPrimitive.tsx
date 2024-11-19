@@ -1,6 +1,7 @@
 import { forwardRef, Ref } from "react";
 import { primitives } from "./primitives";
 import { SpatialReactComponent } from "./SpatialReactComponent";
+import React from "react";
 
 const cachedWithSpatialType = new Map();
 
@@ -13,7 +14,7 @@ export function withSpatial(Component: React.ElementType) {
             return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
         })
         WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
-        
+
         cachedWithSpatialType.set(Component, WithSpatialComponent);
         cachedWithSpatialType.set(WithSpatialComponent, WithSpatialComponent);
         return WithSpatialComponent

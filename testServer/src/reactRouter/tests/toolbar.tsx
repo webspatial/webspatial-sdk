@@ -1,4 +1,4 @@
-import { SpatialDiv } from "web-spatial"
+import { SpatialDiv } from "@xrsdk/runtime"
 
 export function ToolbarTest() {
     return <>
