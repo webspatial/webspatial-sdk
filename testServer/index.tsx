@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialEntity } from '@xrsdk/runtime';
+import { SpatialIFrame, Model } from '@xrsdk/react';
 
 var spatial: Spatial | null = new Spatial();
 if (!spatial.isSupported()) {
