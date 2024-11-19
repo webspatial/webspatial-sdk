@@ -9,9 +9,9 @@
     "linkRuntime": "cd runtime/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/runtime && cd .. && cd react/ && pnpm link --global @xrsdk/runtime",
     "linkReact": "cd react/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/react && cd .. && cd jsx-runtime/ && pnpm link --global @xrsdk/react",
     "setup": "npm run installPackages && npm run buildPackages && npm run linkRuntime && npm run linkReact",
-    "devNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
+    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
-    "dev": "concurrently \"npm run testServer\" \"npm run devNPM\"",
+    "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
