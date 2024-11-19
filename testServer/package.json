@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node esbuild.mjs",
-    "build": "npm run dev",
+    "start": "npm run dev",
     "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },

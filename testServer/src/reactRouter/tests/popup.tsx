@@ -1,6 +1,6 @@
 import anime from "animejs";
 import { useEffect, useRef, useState } from "react"
-import { SpatialDiv } from "web-spatial"
+import { SpatialDiv } from "@xrsdk/runtime"
 
 export function PopupTest() {
     const [popupEnabled, setPopupEnabled] = useState(true)

@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial,   SpatialDiv, SpatialPrimitive, withSpatial } from 'web-spatial';
+import { Spatial, SpatialDiv, SpatialPrimitive, withSpatial } from '@xrsdk/runtime';
 import { SimpleComponent } from './SimpleComponent';
 
 const spatial = new Spatial()
@@ -11,7 +11,7 @@ if (spatialSupported) {
     (session.getCurrentWindowComponent()).setStyle({ glassEffect: true, cornerRadius: 50 })
 }
 
-const SpatialSimpleComponent =  withSpatial(SimpleComponent);
+const SpatialSimpleComponent = withSpatial(SimpleComponent);
 
 const imgSrc = 'https://interactive-examples.mdn.mozilla.net/media/examples/firefox-logo.svg'
 
@@ -38,7 +38,7 @@ function App() {
                     <SpatialDiv spatialStyle={spatialStyle} className={spaceCls} >  this is spatial div </SpatialDiv>
                 </div>
 
-                
+
                 <div className='flex flex-row pt-5 gap-2'>
                     <p className={divCls}> this is p</p>
                     <SpatialPrimitive.p spatialStyle={spatialStyle} className={spaceCls} > this is spatial p</SpatialPrimitive.p >
@@ -50,15 +50,15 @@ function App() {
                 </div>
 
                 <div className='flex flex-row pt-5 gap-2'>
-                    <SpatialPrimitive.img spatialStyle={spatialStyle} className={spaceCls}  src={imgSrc} width={200} />
+                    <SpatialPrimitive.img spatialStyle={spatialStyle} className={spaceCls} src={imgSrc} width={200} />
                 </div>
 
                 <div className='flex flex-row pt-5 gap-2'>
                     <SimpleComponent className={divCls} />
-                    <SpatialSimpleComponent spatialStyle={spatialStyle} className={spaceCls}  />
+                    <SpatialSimpleComponent spatialStyle={spatialStyle} className={spaceCls} />
                 </div>
 
-                
+
             </div>
         </div>
     )

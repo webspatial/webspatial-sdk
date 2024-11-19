@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-import { Model, SpatialIFrame, getSession, SpatialEntity } from 'web-spatial'
+import { Model, SpatialIFrame, getSession, SpatialEntity } from '@xrsdk/runtime'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync';

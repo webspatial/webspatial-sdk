@@ -3,6 +3,7 @@ import { useSpatialStyle } from './useSpatialStyle';
 import { primitives } from '../primitives';
 import { SpatialReactComponent, SpatialReactComponentProps } from '../SpatialReactComponent';
 import { getSession } from '../../utils/getSession';
+import React from 'react';
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps, ref: Ref<any>) {
     const { component: El = 'div', ...props } = (inProps);
