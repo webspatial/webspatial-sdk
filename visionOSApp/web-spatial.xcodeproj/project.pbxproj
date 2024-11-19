@@ -35,7 +35,6 @@
 		2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */; };
 		2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */; };
 		2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */; };
-		2BE1E90F2C90780000EAE76A /* SpatialModelUIComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90E2C90780000EAE76A /* SpatialModelUIComponent.swift */; };
 		2BE1E9112C90795D00EAE76A /* SpatialModelComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */; };
 		2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */; };
 /* End PBXBuildFile section */
@@ -81,7 +80,6 @@
 		2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowComponent.swift; sourceTree = "<group>"; };
 		2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialMeshResource.swift; sourceTree = "<group>"; };
 		2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialPhysicallyBasedMaterial.swift; sourceTree = "<group>"; };
-		2BE1E90E2C90780000EAE76A /* SpatialModelUIComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModelUIComponent.swift; sourceTree = "<group>"; };
 		2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModelComponent.swift; sourceTree = "<group>"; };
 		2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebViewUI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -178,7 +176,6 @@
 				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
 				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
 				2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */,
-				2BE1E90E2C90780000EAE76A /* SpatialModelUIComponent.swift */,
 				2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */,
 				2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */,
 				2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */,
@@ -366,7 +363,6 @@
 				2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */,
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
 				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
-				2BE1E90F2C90780000EAE76A /* SpatialModelUIComponent.swift in Sources */,
 				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
 				2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */,
 				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
