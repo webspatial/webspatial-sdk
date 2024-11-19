@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { Model, type ModelProps } from '@xrsdk/runtime';
+import { Model, type ModelProps } from '@xrsdk/react';
 import animejs from 'animejs';
 import { Easing } from './types';
 

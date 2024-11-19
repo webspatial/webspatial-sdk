@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SpatialStyleInfoUpdateEvent } from "../notifyUpdateStandInstanceLayout";
 import isEqual from "lodash.isequal";
-// @ts-ignore
-import { Matrix4 } from "./math/Matrix4.js";
-// @ts-ignore
-import { Vector3 } from "./math/Vector3.js";
-// @ts-ignore
-import { Quaternion } from "./math/Quaternion.js";
+import { Matrix4, Vector3, Quaternion } from "./math";
 
 const SpatialCustomVars = {
   back: "--xr-back",
@@ -15,8 +10,7 @@ const SpatialCustomVars = {
 
 function parse2dMatrix(transformDataArray: number[]) {
   const [n11, n21, n12, n22, n13, n23] = transformDataArray;
-  const mat4 = [n11, n12, 0, n13, n21, n22, 0, n23, 0, 0, 1, 0, 0, 0, 0, 1];
-  const matrix4 = new Matrix4(...mat4);
+  const matrix4 = new Matrix4(n11, n12, 0, n13, n21, n22, 0, n23, 0, 0, 1, 0, 0, 0, 0, 1);
   return matrix4;
 }
 
@@ -32,7 +26,7 @@ function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
   const width = parseFloat(computedStyle.getPropertyValue("width"));
   const height = parseFloat(computedStyle.getPropertyValue("height"));
 
-  return {x: width > 0 ? x/width: 0.5, y: height > 0 ? y/height: 0.5, z: 0}
+  return { x: width > 0 ? x / width : 0.5, y: height > 0 ? y / height : 0.5, z: 0 }
 }
 
 function parseTransform(computedStyle: CSSStyleDeclaration) {
@@ -65,7 +59,7 @@ function parseBack(computedStyle: CSSStyleDeclaration) {
   let back: number | undefined = undefined;
   try {
     back = parseFloat(backProperty);
-  } catch (error) {}
+  } catch (error) { }
   return new Matrix4().makeTranslation(0, 0, back || 1);
 }
 
