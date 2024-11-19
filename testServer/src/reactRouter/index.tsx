@@ -6,7 +6,7 @@ import { NestedDivsTest } from './tests/nestedDivs'
 import { ToolbarTest } from './tests/toolbar'
 import { PopupTest } from './tests/popup'
 import { ManyPanelTest } from './tests/manyPanels'
-import { SpatialDiv } from '@xrsdk/runtime';
+import { SpatialDiv } from '@xrsdk/react';
 
 function HomePage() {
     return <>
