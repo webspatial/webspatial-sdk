@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { SpatialDiv, SpatialDivProps } from '@xrsdk/runtime';
+import { SpatialDiv, SpatialDivProps } from '@xrsdk/react';
 import animejs from 'animejs';
 import { Easing } from './types';
 
