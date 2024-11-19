@@ -1,0 +1,28 @@
+{
+  "name": "@xrsdk/runtime",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spatial-web/XRSDK.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spatial-web/XRSDK/issues"
+  },
+  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "loglevel": "^1.9.2"
+  }
+}
