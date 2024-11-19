@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialDiv, SpatialPrimitive, withSpatial } from '@xrsdk/runtime';
+import { Spatial } from '@xrsdk/runtime';
+import { SpatialDiv, SpatialPrimitive, withSpatial } from '@xrsdk/react';
 import { SimpleComponent } from './SimpleComponent';
 
 const spatial = new Spatial()

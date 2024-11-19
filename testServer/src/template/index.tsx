@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Model, SpatialDiv } from '@xrsdk/runtime';
+import { Model, SpatialDiv } from '@xrsdk/react';
 
 function App() {
     const [toggle, setToggle] = useState(true)
