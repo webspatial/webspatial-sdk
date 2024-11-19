@@ -1,4 +1,4 @@
-import { SpatialDiv } from "@xrsdk/runtime"
+import { SpatialDiv } from "@xrsdk/react"
 
 export function ToolbarTest() {
     return <>
