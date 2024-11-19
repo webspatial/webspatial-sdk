@@ -42,8 +42,7 @@ var ctx = await esbuild.context({
   alias: {
     react: path.resolve("node_modules/react"),
     "react-dom": path.resolve("node_modules/react-dom"),
-    "web-spatial": path.resolve("../npmLib/src"),
-    "css-support-runtime": path.resolve("../runtime/src"),
+    "css-support-runtime": path.resolve("../jsx-runtime/src"),
   },
 });
 ctx.watch();
@@ -59,9 +58,9 @@ var server = livereload.createServer({
 });
 var watchPaths = [path.resolve(outdir)];
 watchPaths = watchPaths.concat(await glob("./src/**/*.html"));
-watchPaths = watchPaths.concat(await glob("./src/**/*.tsx"));
-watchPaths = watchPaths.concat(await glob("./src/**/*.ts"));
+// watchPaths = watchPaths.concat(await glob("./src/**/*.tsx"));
+// watchPaths = watchPaths.concat(await glob("./src/**/*.ts"));
 watchPaths.push("index.html");
-watchPaths.push("index.tsx");
+// watchPaths.push("index.tsx");
 server.watch(watchPaths);
 console.log("server created!");

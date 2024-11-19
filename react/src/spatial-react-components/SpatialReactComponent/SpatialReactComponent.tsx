@@ -1,9 +1,10 @@
 import { ReactNode, CSSProperties, Ref, useRef, useCallback, useImperativeHandle, forwardRef, useMemo, ElementType } from 'react';
 import { spatialStyleDef } from '../types'
 import { getSession } from '../../utils';
-import {StandardInstance } from './StandardInstance'
+import { StandardInstance } from './StandardInstance'
 import { PortalInstance } from './PortalInstance'
 import { SpatialReactContext, SpatialReactContextObject } from './SpatialReactContext';
+import React from 'react';
 
 export interface SpatialReactComponentProps {
     allowScroll?: boolean,
@@ -20,39 +21,39 @@ export interface SpatialReactComponentProps {
 }
 
 function parseProps(inProps: SpatialReactComponentProps) {
-    const { debugShowStandardInstance, debugName='', component, allowScroll, spatialStyle, scrollWithParent, ...props } = inProps;
+    const { debugShowStandardInstance, debugName = '', component, allowScroll, spatialStyle, scrollWithParent, ...props } = inProps;
 
     const El = component ? component : 'div';
 
-    const componentDesc = {El}
-    const spatialDesc = {spatialStyle, allowScroll, scrollWithParent}
-    const debugDesc = {debugShowStandardInstance, debugName}
-    return {componentDesc, spatialDesc, debugDesc, props}
+    const componentDesc = { El }
+    const spatialDesc = { spatialStyle, allowScroll, scrollWithParent }
+    const debugDesc = { debugShowStandardInstance, debugName }
+    return { componentDesc, spatialDesc, debugDesc, props }
 }
 
 function renderWebReactComponent(inProps: SpatialReactComponentProps) {
-    const {componentDesc, props} = parseProps(inProps);
-    const {El } = componentDesc;
+    const { componentDesc, props } = parseProps(inProps);
+    const { El } = componentDesc;
 
-    return <El {...props} /> 
+    return <El {...props} />
 }
 
 
 function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
     // console.log('dbg renderSpatialReactComponent', inProps)
-    const {componentDesc, spatialDesc, debugDesc, props} = parseProps(inProps);
+    const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps);
 
-    const standardInstanceProps = {...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance } ;
+    const standardInstanceProps = { ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance };
 
-    const portalInstanceProps = {...props, ...componentDesc, ...spatialDesc} ;
+    const portalInstanceProps = { ...props, ...componentDesc, ...spatialDesc };
 
     const spatialReactContextObject = useMemo(() => new SpatialReactContextObject(debugDesc.debugName), [])
 
     return (
-    <SpatialReactContext.Provider value={spatialReactContextObject}>
-        <StandardInstance {...standardInstanceProps} /> 
-        <PortalInstance {...portalInstanceProps} />
-    </SpatialReactContext.Provider>)
+        <SpatialReactContext.Provider value={spatialReactContextObject}>
+            <StandardInstance {...standardInstanceProps} />
+            <PortalInstance {...portalInstanceProps} />
+        </SpatialReactContext.Provider>)
 
 }
 
@@ -63,7 +64,7 @@ export type SpatialReactComponentRef = Ref<{
 function SpatialReactComponentRefactor(props: SpatialReactComponentProps, ref: SpatialReactComponentRef) {
     useImperativeHandle(ref, () => ({
         getBoundingClientRect() {
-            return new DOMRect(0,0,0,0);
+            return new DOMRect(0, 0, 0, 0);
         }
     }));
 

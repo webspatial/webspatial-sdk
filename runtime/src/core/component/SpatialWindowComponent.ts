@@ -1,6 +1,5 @@
 import { SpatialComponent } from "./SpatialComponent"
-import { WebSpatial } from "../private/WebSpatial"
-import { vecType } from "../../spatial-react-components/types"
+import { Vec3, Vec4, WebSpatial } from "../private/WebSpatial"
 
 /**
 * Used to position an web window in 3D space
@@ -33,7 +32,7 @@ export class SpatialWindowComponent extends SpatialComponent {
     await WebSpatial.updateResource(this._resource, { resolution: { x: x, y: y } })
   }
 
-  async setRotationAnchor(rotationAnchor: vecType) {
+  async setRotationAnchor(rotationAnchor: Vec3) {
     await WebSpatial.updateResource(this._resource, { rotationAnchor: rotationAnchor })
   }
 

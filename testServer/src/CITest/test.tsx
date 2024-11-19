@@ -1,4 +1,4 @@
-import { Spatial, SpatialEntity, SpatialDiv, getSession } from 'web-spatial';
+import { Spatial, SpatialEntity, SpatialDiv, getSession } from '@xrsdk/runtime';
 
 import React, { useEffect, useRef, useState, } from 'react'
 import ReactDOM from 'react-dom/client'
