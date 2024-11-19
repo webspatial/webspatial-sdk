@@ -12,7 +12,6 @@ struct SpatialObjectInfo: Codable {
     var windowArray: [String]
     var windowGroupArray: [String]
     var entityArray: [String]
-    var modelUIArray: [String]
 }
 
 struct SpatialObjectStatsInfo: Codable {
@@ -53,16 +52,8 @@ class SpatialObject: EventEmitter, Equatable {
             $0.value is SpatialWindowGroup
         }
 
-        let modelUIs = objects.filter {
-            $0.value is SpatialModelUIComponent
-        }
-
         let weakRefWebviews = weakRefObjects.filter {
             $0.value.value is SpatialWindowComponent
-        }
-
-        let weakRefModelUIs = weakRefObjects.filter {
-            $0.value.value is SpatialModelUIComponent
         }
 
         let weakRefWindowGroups = weakRefObjects.filter {
@@ -78,15 +69,13 @@ class SpatialObject: EventEmitter, Equatable {
                 count: objects.count,
                 windowArray: Array(webviews.keys),
                 windowGroupArray: Array(windowGroups.keys),
-                entityArray: Array(entities.keys),
-                modelUIArray: Array(modelUIs.keys)
+                entityArray: Array(entities.keys)
             ),
             refObjects: SpatialObjectInfo(
                 count: weakRefObjects.count,
                 windowArray: Array(weakRefWebviews.keys),
                 windowGroupArray: Array(weakRefWindowGroups.keys),
-                entityArray: Array(weakRefEntities.keys),
-                modelUIArray: Array(weakRefModelUIs.keys)
+                entityArray: Array(weakRefEntities.keys)
             )
         )
     }
