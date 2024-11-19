@@ -4,6 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "installPackages": "cd runtime/ && pnpm install && cd .. && cd react/ && pnpm install && cd .. && cd jsx-runtime/ && pnpm install && cd .. && cd testServer/ && pnpm install && cd ..",
+    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. && cd jsx-runtime/ && npm run build && cd ..",
+    "linkRuntime": "cd runtime/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/runtime && cd .. && cd react/ && pnpm link --global @xrsdk/runtime",
+    "linkReact": "cd react/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/react && cd .. && cd jsx-runtime/ && pnpm link --global @xrsdk/react",
+    "setup": "npm run installPackages && npm run buildPackages && npm run linkRuntime && npm run linkReact",
+    "devNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
+    "testServer": "cd testServer/ && npm run dev -- --host",
+    "dev": "concurrently \"npm run testServer\" \"npm run devNPM\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

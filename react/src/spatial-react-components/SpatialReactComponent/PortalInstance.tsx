@@ -90,7 +90,7 @@ function syncHeaderStyle(openedWindow: Window) {
 
 function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefined, props: Pick<PortalInstanceProps, 'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, domRect: RectType) {
     let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props;
-    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, rotationAnchor = { x: 0.5, y: 0.5, z: 0 }, scale = {x: 1, y: 1, z:1}, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
+    let { position = { x: 0, y: 0, z: 1 }, rotation = { x: 0, y: 0, z: 0, w: 1 }, rotationAnchor = { x: 0.5, y: 0.5, z: 0 }, scale = { x: 1, y: 1, z: 1 }, glassEffect = false, transparentEffect = true, cornerRadius = 0, materialThickness = "none" } = spatialStyle;
     let stylePosition = style?.position
     let styleOverflow = style?.overflow
 
@@ -188,12 +188,12 @@ function useSyncDomRect() {
         }
     }, []);
 
-     
+
 
     return { domRect, inheritedPortalStyle: inheritedPortalStyleRef.current }
 }
 
- 
+
 
 export function PortalInstance(inProps: PortalInstanceProps) {
     const { allowScroll, scrollWithParent, spatialStyle, ...props } = (inProps);

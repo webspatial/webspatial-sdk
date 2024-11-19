@@ -1,7 +1,7 @@
 "use strict";
 
 import reactJSXRuntime from "react/jsx-runtime";
-import { withCSSSpatial } from "web-spatial/private";
+import { withCSSSpatial } from "@xrsdk/react"
 
 const attributeFlag = "enable-xr";
 const styleFlag = "enableXr";
@@ -9,7 +9,7 @@ const classFlag = "__enableXr__";
 
 
 function replaceToSpatialPrimitiveType(type: React.ElementType, props: unknown) {
-  const propsObject =  (props as Record<string, any>)
+  const propsObject = (props as Record<string, any>)
   if (attributeFlag in propsObject) {
     delete propsObject[attributeFlag];
     return withCSSSpatial(type);
@@ -24,7 +24,7 @@ function replaceToSpatialPrimitiveType(type: React.ElementType, props: unknown) 
   if (propsObject && propsObject.className) {
     const originalClassNames = propsObject.className.split(" ");
     const idx = originalClassNames.indexOf(classFlag);
-    if (idx!== -1) {
+    if (idx !== -1) {
       originalClassNames.splice(idx, 1);
       propsObject.className = originalClassNames.join(" ");
       return withCSSSpatial(type);

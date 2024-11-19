@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample';
 import { StyledTitleComponent } from './StyledTitleComponent';
-import { SpatialMonitor } from 'web-spatial'
+import { SpatialMonitor } from '@xrsdk/runtime';
 import { SpatialTagComponent } from './SpatialTagComponent';
 import { SimpleSpatialComponent } from './SimpleSpatialComponent';
 
@@ -18,7 +18,7 @@ function App() {
                 <SimpleSpatialComponent />
 
                 <StyledTitleComponent />
-                <CSSModelSample /> 
+                <CSSModelSample />
 
                 <SpatialTagComponent />
             </SpatialMonitor>
