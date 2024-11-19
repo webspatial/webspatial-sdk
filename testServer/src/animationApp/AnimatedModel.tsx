@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { Model, type ModelProps } from 'web-spatial';
+import { Model, type ModelProps } from '@xrsdk/runtime';
 import animejs from 'animejs';
 import { Easing } from './types';
 
@@ -9,7 +9,7 @@ export interface AnimatedModelProps extends ModelProps {
     loop?: number | boolean;
     easing?: Easing;
 
-    opacityFromTo?: [number, number]; 
+    opacityFromTo?: [number, number];
 
     spaceTranslateX?: number;
     spaceTranslateY?: number;
@@ -18,9 +18,9 @@ export interface AnimatedModelProps extends ModelProps {
 
 export function AnimatedModel(props: AnimatedModelProps) {
     const { duration = 1000, direction = 'alternate', loop = true, easing = 'linear',
-        spaceTranslateX = 0, spaceTranslateY = 0, spaceTranslateZ = 0, 
+        spaceTranslateX = 0, spaceTranslateY = 0, spaceTranslateZ = 0,
         // spaceRotationX = 0,  spaceRotationY = 0, spaceRotationZ = 0,
-        spatialOffset: positionOriginal =  { x: 0, y: 0, z: 0 }, 
+        spatialOffset: positionOriginal = { x: 0, y: 0, z: 0 },
         opacityFromTo = [1, 1],
         ...modelProps } = props;
 
@@ -32,8 +32,8 @@ export function AnimatedModel(props: AnimatedModelProps) {
     const [modelOpacity, setModelOpacity] = useState(opacityFromTo[0]);
 
     const animeTranslateTarget = useRef<{ x: number, y: number, z: number }>({ ...spatialOffset });
-    const animeOpacityTarget = useRef<{opacity: number}>({opacity: opacityFromTo[0]});
-    
+    const animeOpacityTarget = useRef<{ opacity: number }>({ opacity: opacityFromTo[0] });
+
     const cleanupAnimeStack = () => {
         animejs.remove(animeTranslateTarget.current);
         animejs.remove(animeOpacityTarget.current);

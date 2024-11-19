@@ -3,7 +3,7 @@ import { initializeSpatialOffset } from './utils'
 import { _incSpatialUIInstanceIDCounter } from './_SpatialUIInstanceIDCounter'
 import { SpatialWindowManager } from './SpatialReactComponent/SpatialWindowManager'
 import { vecType } from './types'
-import { SpatialWindowComponent } from '../core'
+import { SpatialWindowComponent } from '@xrsdk/runtime'
 import { spatial } from '../utils/getSession'
 
 // React components

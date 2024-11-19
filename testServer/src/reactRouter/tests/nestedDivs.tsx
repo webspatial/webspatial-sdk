@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { SpatialDiv } from "web-spatial"
+import { SpatialDiv } from "@xrsdk/runtime"
 
 var redCol = "#cc111144"
 var greenCol = "#11cc1144"
