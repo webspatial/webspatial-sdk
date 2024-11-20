@@ -1,1 +1,0 @@
-## math is copied from threejs math library

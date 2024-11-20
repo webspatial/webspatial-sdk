@@ -1,16 +1,27 @@
 {
-  "name": "web-spatial",
+  "name": "xrsdk",
   "version": "1.0.0",
-  "description": "#### Spatial 3D library for the web",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "installPackages": "cd npmLib/ && yarn install && npm run build && yarn link && cd .. && cd webTests/ && yarn install && yarn link web-spatial",
-    "webTests": "cd webTests/ && npm run dev -- --host",
-    "devNPM": "cd npmLib/ && npm run start",
-    "dev": "concurrently \"npm run webTests\" \"npm run devNPM\"",
-    "genDocs": "cd npmLib/ && npm run genDocs",
+    "installPackages": "cd runtime/ && pnpm install && cd .. && cd react/ && pnpm install && cd .. && cd jsx-runtime/ && pnpm install && cd .. && cd testServer/ && pnpm install && cd ..",
+    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. && cd jsx-runtime/ && npm run build && cd ..",
+    "linkRuntime": "cd runtime/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/runtime && cd .. && cd react/ && pnpm link --global @xrsdk/runtime",
+    "linkReact": "cd react/ && pnpm link --global && cd .. && cd testServer/ && pnpm link --global @xrsdk/react && cd .. && cd jsx-runtime/ && pnpm link --global @xrsdk/react",
+    "setup": "npm run installPackages && npm run buildPackages && npm run linkRuntime && npm run linkReact",
+    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
+    "testServer": "cd testServer/ && npm run dev -- --host",
+    "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spatial-web/XRSDK.git"
+  },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spatial-web/XRSDK/issues"
+  },
+  "homepage": "https://github.com/spatial-web/XRSDK#readme"
 }
