@@ -23,6 +23,7 @@
         "noFallthroughCasesInSwitch": true,
         "outDir": "./dist",
         "allowSyntheticDefaultImports": true,
+        "jsx": "react",
     },
     "include": [
         "src/index.ts"

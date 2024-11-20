@@ -1,7 +1,9 @@
-.DS_Store
-
-node_modules
-dist
-visionOSAPP/web-spatial/static-web
-visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
+builder/visionOSAPP/web-spatial/static-web
+builder/visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+builder/visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
+old/
+# We only allow pnpm lock files
+**/*/yarn.lock
+**/*/package-lock.json
+# No node_modules anywhere
+**/*/node_modules/
