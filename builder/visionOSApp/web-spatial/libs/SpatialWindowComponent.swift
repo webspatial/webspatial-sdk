@@ -69,6 +69,9 @@ class SpatialWindowComponent: SpatialComponent {
 
     var rotationAnchor: UnitPoint3D = .center
 
+    // Track the first load event of the webview so we don't see a flash of white before the page loads
+    var didFinishFirstLoad = false
+
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
     var parentWindowGroupID: String
@@ -294,6 +297,7 @@ class SpatialWindowComponent: SpatialComponent {
     func didStartReceivePageContent() {}
 
     func didFinishLoadPage() {
+        didFinishFirstLoad = true
         glassEffect = loadingStyles.glassEffect
         transparentEffect = loadingStyles.transparentEffect
         cornerRadius = loadingStyles.cornerRadius
