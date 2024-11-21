@@ -41,6 +41,15 @@ export class SpatialWindowComponent extends SpatialComponent {
    * @param options style options
    */
   async setStyle(options: any) {
+    if (document && document.readyState == "loading") {
+      // Avoid flash of unstyled content by sending style command via a link element
+      var encoded = encodeURIComponent(JSON.stringify(options))
+      var x = document.createElement("link")
+      x.rel = "stylesheet"
+      x.href = "forceStyle://mystyle.css?" + "style=" + encoded
+      document.head.appendChild(x)
+    }
+
     await WebSpatial.updateResource(this._resource, { style: options })
   }
 
