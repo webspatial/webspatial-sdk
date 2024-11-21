@@ -16,6 +16,7 @@
         "isolatedModules": true,
         "noEmit": false,
         "declaration": true,
+        "declarationMap": true,
         /* Linting */
         "strict": true,
         "noUnusedLocals": false,
