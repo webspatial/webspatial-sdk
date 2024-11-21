@@ -1,4 +1,4 @@
-builder/visionOSAPP/web-spatial/static-web
+# builder/visionOSAPP/web-spatial/static-web
 builder/visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 builder/visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
 old/
@@ -7,3 +7,4 @@ old/
 **/*/package-lock.json
 # No node_modules anywhere
 **/*/node_modules/
+node_modules
