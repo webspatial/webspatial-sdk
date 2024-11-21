@@ -17,10 +17,12 @@ if (spatial) {
 var transparent = (new URLSearchParams(window.location.search)).get("transparent");
 if (session) {
     session.getCurrentWindowComponent().setStyle({ transparentEffect: !!transparent, glassEffect: !transparent, cornerRadius: transparent ? 0 : 70 })
+    document.documentElement.style.backgroundColor = "#1155aa55";
 } else {
     console.log("not supported")
+    document.documentElement.style.backgroundColor = "#FFFFFF00";
 }
-document.documentElement.style.backgroundColor = "#FFFFFF00";
+
 
 
 function WebSpatialTitle(props: { makeShadow?: boolean }) {
@@ -68,7 +70,7 @@ function App() {
         if (session) {
             setSpatialSupported(true);
             (async () => {
-                document.documentElement.style.backgroundColor = "#1155aa55";
+
 
                 // Create entities
                 var meshResource = await session.createMeshResource({ shape: "sphere" })
@@ -161,7 +163,7 @@ function App() {
                 session.requestAnimationFrame(loop)
             })();
         } else {
-            document.body.style.backgroundColor = "#1155aa99"
+
         }
     }, [])
 
@@ -241,28 +243,38 @@ function App() {
     )
 }
 
-// Components mapp
-var names = {
-    "App": App,
-    "WebSpatialTitle": WebSpatialTitle,
-    "FeatureList": FeatureList
-}
 
-var isEmbed = false
-var pageName = (new URLSearchParams(window.location.search)).get("pageName");
-if (pageName) {
-    isEmbed = true
-    // Clear the background
-    document.documentElement.style.backgroundColor = "#FFFFFF00";
-}
-var MyTag = names[pageName ? pageName : "App"]
+document.addEventListener('readystatechange', event => {
+    switch (document.readyState) {
+        case "interactive":
 
-// Create react root
-var root = document.createElement("div")
-document.body.appendChild(root)
-ReactDOM.createRoot(root).render(
-    // <React.StrictMode>
-    <MyTag></MyTag>
-    // </React.StrictMode >,
-)
+            // Components mapp
+            var names = {
+                "App": App,
+                "WebSpatialTitle": WebSpatialTitle,
+                "FeatureList": FeatureList
+            }
 
+            var isEmbed = false
+            var pageName = (new URLSearchParams(window.location.search)).get("pageName");
+            if (pageName) {
+                isEmbed = true
+                // Clear the background
+                document.documentElement.style.backgroundColor = "#FFFFFF00";
+            }
+            var MyTag = names[pageName ? pageName : "App"]
+
+            // Create react root
+            var root = document.createElement("div")
+            document.body.appendChild(root)
+            ReactDOM.createRoot(root).render(
+                // <React.StrictMode>
+                <MyTag></MyTag>
+                // </React.StrictMode >,
+            )
+
+
+            break;
+    }
+
+})
