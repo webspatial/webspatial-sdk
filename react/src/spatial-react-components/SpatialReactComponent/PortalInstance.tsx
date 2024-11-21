@@ -1,11 +1,12 @@
-import React, { CSSProperties, useRef, ReactNode, useCallback, useEffect, Ref, useImperativeHandle, forwardRef, useState, useContext } from 'react'
+import React, { CSSProperties, useRef, ReactNode, useCallback, useEffect, Ref, useImperativeHandle, forwardRef, useState, useContext, useMemo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom';
 import { usePortalContainer } from './usePortalContainer';
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext';
 import { SpatialWindowManager } from './SpatialWindowManager';
 import { RectType, spatialStyleDef, vecType } from '../types';
-import { getInheritedStyleProps } from './utils';
+import { domRect2rectType, getInheritedStyleProps } from './utils';
 import { SpatialReactContext } from './SpatialReactContext';
+import { SpatialID } from './const';
 
 interface PortalInstanceProps {
     allowScroll?: boolean,
@@ -15,9 +16,11 @@ interface PortalInstanceProps {
     El: React.ElementType,
     children?: ReactNode,
     style?: CSSProperties | undefined,
+
+    [SpatialID]: string,
 }
 
-function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle'>, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
+function renderJSXPortalInstance(inProps: Omit<PortalInstanceProps, 'allowScroll' | 'scrollWithParent' | 'spatialStyle' >, elWidth: number, elHeight: number, inheritedPortalStyle: CSSProperties) {
     const { El, style: inStyle = {}, ...props } = inProps;
     const extraStyle = { visibility: "visible", position: "", top: "0px", left: "0px", margin: "0px", marginLeft: "0px", marginRight: "0px", marginTop: "0px", marginBottom: "0px", overflow: "" };
     const elWHStyle = {
@@ -162,7 +165,7 @@ function useSyncSpatialProps(spatialWindowManager: SpatialWindowManager | undefi
     }, [spatialWindowManager, domRect.width])
 }
 
-function useSyncDomRect() {
+function useSyncDomRect(spatialId: string) {
     const [domRect, setDomRect] = useState({
         x: 0,
         y: 0,
@@ -175,16 +178,29 @@ function useSyncDomRect() {
     const spatialReactContextObject = useContext(SpatialReactContext);
 
     useEffect(() => {
-        const syncDomRect = (dom: HTMLElement) => {
-            let domRect = dom!.getBoundingClientRect()
-            inheritedPortalStyleRef.current = getInheritedStyleProps(dom)
-            setDomRect({ x: domRect.x, y: domRect.y, width: domRect.width, height: domRect.height })
+        const syncDomRect = () => {
+            const dom = spatialReactContextObject?.querySpatialDom(spatialId);
+            if (!dom) {
+                return;
+            }
+            let domRect = dom.getBoundingClientRect();
+            let rectType = domRect2rectType(domRect);
+            const parentDom = spatialReactContextObject?.queryParentSpatialDom(spatialId);
+            if (parentDom) {
+                const parentDomRect = parentDom.getBoundingClientRect();
+                const parentRectType = domRect2rectType(parentDomRect);
+                rectType.x -= parentRectType.x;
+                rectType.y -= parentRectType.y;
+            }
+
+            inheritedPortalStyleRef.current = getInheritedStyleProps(dom);
+            setDomRect(rectType);
         }
 
-        spatialReactContextObject?.onDomChange(syncDomRect)
+        spatialReactContextObject?.onDomChange(spatialId, syncDomRect)
 
         return () => {
-            spatialReactContextObject?.offDomChange(syncDomRect)
+            spatialReactContextObject?.offDomChange(spatialId)
         }
     }, []);
 
@@ -197,7 +213,6 @@ function useSyncDomRect() {
 
 export function PortalInstance(inProps: PortalInstanceProps) {
     const { allowScroll, scrollWithParent, spatialStyle, ...props } = (inProps);
-
     const onContainerSpawned = useCallback(async (spatialWindowManager: SpatialWindowManager) => {
         const openWindow = spatialWindowManager.window!
         setOpenWindowStyle(openWindow)
@@ -220,7 +235,9 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     const [spatialWindowManager] = usePortalContainer({ onContainerSpawned, onContainerDestroyed });
 
 
-    const { domRect, inheritedPortalStyle } = useSyncDomRect();
+    const spatialId = props[SpatialID];
+
+    const { domRect, inheritedPortalStyle } = useSyncDomRect(spatialId);
 
     useSyncSpatialProps(spatialWindowManager, { style: props.style, allowScroll, scrollWithParent, spatialStyle }, domRect);
 
