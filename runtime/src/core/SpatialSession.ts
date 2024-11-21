@@ -264,4 +264,25 @@ export class SpatialSession {
     openedWindow!.document.head.innerHTML = '<meta name="viewport" content="width=device-width, initial-scale=1">'
     return openedWindow
   }
+
+  // Get Entity by id. Currently for debugging only.
+  async getEntity(id: string) {
+    const entityInfo = await WebSpatial.inspect(id);
+    const [_, x, y, z] = entityInfo.position.match(/(\d+\.?\d*)/g);
+    const [__, sx, sy, sz] = entityInfo.scale.match(/(\d+\.?\d*)/g);
+
+    var res = new WebSpatialResource()
+    res.id = id
+    res.windowGroupId = WebSpatial.getCurrentWindowGroup().id
+    const entity = new SpatialEntity(res)
+    entity.transform.position.x = parseFloat(x)
+    entity.transform.position.y = parseFloat(y)
+    entity.transform.position.z = parseFloat(z)
+
+    entity.transform.scale.x = parseFloat(sx)
+    entity.transform.scale.y = parseFloat(sy)
+    entity.transform.scale.z = parseFloat(sz)
+
+    return entity
+  }
 }
