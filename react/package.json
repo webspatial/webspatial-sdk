@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/spatial-web/XRSDK#readme",
   "dependencies": {
+    "@xrsdk/runtime": "workspace:*",
     "@types/three": "^0.170.0",
     "lodash.isequal": "^4.5.0",
     "loglevel": "^1.9.1",
