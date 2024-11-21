@@ -37,6 +37,7 @@
   "devDependencies": {
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
-    "simple-git-hooks": "^2.11.1"
+    "simple-git-hooks": "^2.11.1",
+    "concurrently": "^8.2.2"
   }
 }

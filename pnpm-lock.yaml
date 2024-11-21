@@ -17,6 +17,9 @@ importers:
       simple-git-hooks:
         specifier: ^2.11.1
         version: 2.11.1
+      concurrently:
+        specifier: ^8.2.2
+        version: 8.2.2
 
   jsx-runtime:
     dependencies:
