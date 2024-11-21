@@ -296,6 +296,20 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didStartReceivePageContent() {}
 
+    func didGetEarlyStyle(style: PreloadStyleSettings) {
+        if style.glassEffect != nil {
+            loadingStyles.glassEffect = style.glassEffect!
+        }
+
+        if style.transparentEffect != nil {
+            loadingStyles.transparentEffect = style.transparentEffect!
+        }
+
+        if style.cornerRadius != nil {
+            loadingStyles.cornerRadius = CGFloat(style.cornerRadius!)
+        }
+    }
+
     func didFinishLoadPage() {
         didFinishFirstLoad = true
         glassEffect = loadingStyles.glassEffect
