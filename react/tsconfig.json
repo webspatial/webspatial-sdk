@@ -2,11 +2,7 @@
     "compilerOptions": {
         "target": "ES2023",
         "useDefineForClassFields": true,
-        "lib": [
-            "ES2023",
-            "DOM",
-            "DOM.Iterable"
-        ],
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "skipLibCheck": true,
         "allowJs": false,
@@ -16,6 +12,7 @@
         "isolatedModules": true,
         "noEmit": false,
         "declaration": true,
+        "declarationMap": true,
         /* Linting */
         "strict": true,
         "noUnusedLocals": false,
@@ -23,10 +20,8 @@
         "noFallthroughCasesInSwitch": true,
         "outDir": "./dist",
         "allowSyntheticDefaultImports": true,
-        "jsx": "react",
+        "jsx": "react"
     },
-    "include": [
-        "src/index.ts"
-    ],
+    "include": ["src/index.ts"],
     "references": []
 }
