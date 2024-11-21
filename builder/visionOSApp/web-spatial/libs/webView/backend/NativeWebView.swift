@@ -20,7 +20,41 @@ class WebViewHolder {
     }
 }
 
-class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate {
+struct PreloadStyleSettings: Codable {
+    var visible: Bool? = true
+    var glassEffect: Bool? = false
+    var transparentEffect: Bool? = false
+    var cornerRadius: Float? = Float(0)
+}
+
+class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
+    let decoder = JSONDecoder()
+    func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
+        // Parse the style json string from url
+        let url = urlSchemeTask.request.url
+        let styleJsonString = URLComponents(string: url!.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
+        
+        do {
+            var styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
+            webViewRef?.didGetEarlyStyle(style: styleToSet)
+            // Respond with empty css file
+            let response = ".ignoreThis{}".data(using: .utf8)
+            let mimeType = "text/css"
+            let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
+            let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
+           
+                urlSchemeTask.didReceive(resp!)
+                urlSchemeTask.didReceive(response!)
+                urlSchemeTask.didFinish()
+            
+            return
+        } catch {
+            print("Style url parse failure " + error.localizedDescription)
+        }
+        urlSchemeTask.didFinish()
+    }
+    func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
+    
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
     @Environment(\.dismiss) private var dismiss
@@ -135,6 +169,7 @@ struct WebViewNative: UIViewRepresentable {
             myConfig.userContentController = userContentController
             myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
             
+            myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "forceStyle")
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
