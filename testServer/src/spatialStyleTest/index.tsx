@@ -2,9 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample';
 import { StyledTitleComponent } from './StyledTitleComponent';
-import { SpatialMonitor } from '@xrsdk/react';
+import { SpatialMonitor, enableDebugTool } from '@xrsdk/react';
 import { SpatialTagComponent } from './SpatialTagComponent';
 import { SimpleSpatialComponent } from './SimpleSpatialComponent';
+
+enableDebugTool()
 
 function App() {
     return (
