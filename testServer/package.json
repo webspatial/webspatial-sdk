@@ -10,6 +10,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@xrsdk/runtime": "workspace:*",
+    "@xrsdk/react": "workspace:*",
     "@reduxjs/toolkit": "^2.2.4",
     "@types/three": "^0.164.0",
     "animejs": "^3.2.2",
