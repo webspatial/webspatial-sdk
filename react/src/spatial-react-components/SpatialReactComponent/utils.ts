@@ -1,3 +1,5 @@
+import { RectType } from "../types"
+
 export function getInheritedStyleProps(from: HTMLElement): any {
     //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
     var propNames = [
@@ -51,4 +53,13 @@ export function getInheritedStyleProps(from: HTMLElement): any {
         }
     }
     return props
+}
+
+export function domRect2rectType(from: DOMRect): RectType {
+    return {
+        x: from.x,
+        y: from.y,
+        width: from.width,
+        height: from.height
+    }
 }

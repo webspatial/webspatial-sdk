@@ -1,10 +1,12 @@
-import { ReactNode, CSSProperties, Ref, useRef, useCallback, useImperativeHandle, forwardRef, useMemo, ElementType } from 'react';
+import { ReactNode, CSSProperties, Ref, useImperativeHandle, forwardRef, useMemo, ElementType, useContext, useEffect, useLayoutEffect } from 'react';
 import { spatialStyleDef } from '../types'
 import { getSession } from '../../utils';
 import { StandardInstance } from './StandardInstance'
 import { PortalInstance } from './PortalInstance'
 import { SpatialReactContext, SpatialReactContextObject } from './SpatialReactContext';
-import React from 'react';
+import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext';
+import { SpatialID } from './const';
+import { SpatialLayerContext } from './SpatialLayerContext';
 
 export interface SpatialReactComponentProps {
     allowScroll?: boolean,
@@ -20,7 +22,12 @@ export interface SpatialReactComponentProps {
     debugShowStandardInstance?: boolean
 }
 
-function parseProps(inProps: SpatialReactComponentProps) {
+
+interface SpatialReactComponentWithUniqueIDProps extends SpatialReactComponentProps {
+    [SpatialID]: string
+}
+
+function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
     const { debugShowStandardInstance, debugName = '', component, allowScroll, spatialStyle, scrollWithParent, ...props } = inProps;
 
     const El = component ? component : 'div';
@@ -31,16 +38,13 @@ function parseProps(inProps: SpatialReactComponentProps) {
     return { componentDesc, spatialDesc, debugDesc, props }
 }
 
-function renderWebReactComponent(inProps: SpatialReactComponentProps) {
+function renderWebReactComponent(inProps: SpatialReactComponentWithUniqueIDProps) {
     const { componentDesc, props } = parseProps(inProps);
     const { El } = componentDesc;
-
     return <El {...props} />
 }
 
-
-function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
-    // console.log('dbg renderSpatialReactComponent', inProps)
+function renderSpatialReactComponent(inProps: SpatialReactComponentWithUniqueIDProps) {
     const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps);
 
     const standardInstanceProps = { ...props, ...componentDesc, debugShowStandardInstance: debugDesc.debugShowStandardInstance };
@@ -53,29 +57,58 @@ function renderSpatialReactComponent(inProps: SpatialReactComponentProps) {
         <SpatialReactContext.Provider value={spatialReactContextObject}>
             <StandardInstance {...standardInstanceProps} />
             <PortalInstance {...portalInstanceProps} />
-        </SpatialReactContext.Provider>)
+        </SpatialReactContext.Provider>
+    )
 
 }
+
+function renderSubPortalInstance(inProps: SpatialReactComponentWithUniqueIDProps) {
+    const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps);
+    const portalInstanceProps = { ...props, ...componentDesc, ...spatialDesc, debugName: debugDesc.debugName };
+
+    return <PortalInstance {...portalInstanceProps} />
+}
+
 
 export type SpatialReactComponentRef = Ref<{
     getBoundingClientRect: () => DOMRect
 }>
 
-function SpatialReactComponentRefactor(props: SpatialReactComponentProps, ref: SpatialReactComponentRef) {
+function SpatialReactComponentRefactor(inProps: SpatialReactComponentProps, ref: SpatialReactComponentRef) {
     useImperativeHandle(ref, () => ({
         getBoundingClientRect() {
             return new DOMRect(0, 0, 0, 0);
         }
     }));
 
+    const layer = useContext(SpatialLayerContext);
+    const props = { ...inProps, [SpatialID]: (layer + 1).toString() };
+
+    const contentInLayer = renderContentInLayer(props)
+    return (
+        <SpatialLayerContext.Provider value={layer + 1} >
+            {contentInLayer}
+        </SpatialLayerContext.Provider>
+    )
+}
+
+function renderContentInLayer(inProps: SpatialReactComponentWithUniqueIDProps) {
+    const isInStandardInstance = useContext(SpatialIsStandardInstanceContext)
     const isWebSpatialEnv = getSession() !== null
-    if (!isWebSpatialEnv) {
-        return renderWebReactComponent(props)
+    if (isInStandardInstance || !isWebSpatialEnv) {
+        return renderWebReactComponent(inProps)
     } else {
-        return renderSpatialReactComponent(props)
+        const parentSpatialReactContextObject = useContext(SpatialReactContext);
+        if (parentSpatialReactContextObject) {
+            return renderSubPortalInstance(inProps)
+        } else {
+            return renderSpatialReactComponent(inProps)
+        }
     }
 }
+
 
 export const SpatialReactComponent = forwardRef(SpatialReactComponentRefactor)
 
 SpatialReactComponent.displayName = 'SpatialReactComponent'
+
