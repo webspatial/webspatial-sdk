@@ -1,90 +1,108 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { SpatialStyleInfoUpdateEvent } from "../notifyUpdateStandInstanceLayout";
-import isEqual from "lodash.isequal";
-import { Matrix4, Vector3, Quaternion } from "./math";
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
+import isEqual from 'lodash.isequal'
+import { Matrix4, Vector3, Quaternion } from './math'
 
 const SpatialCustomVars = {
-  back: "--xr-back",
-  debugName: "--xr-name",
-};
+  back: '--xr-back',
+}
 
 function parse2dMatrix(transformDataArray: number[]) {
-  const [n11, n21, n12, n22, n13, n23] = transformDataArray;
-  const matrix4 = new Matrix4(n11, n12, 0, n13, n21, n22, 0, n23, 0, 0, 1, 0, 0, 0, 0, 1);
-  return matrix4;
+  const [n11, n21, n12, n22, n13, n23] = transformDataArray
+  const matrix4 = new Matrix4(
+    n11,
+    n12,
+    0,
+    n13,
+    n21,
+    n22,
+    0,
+    n23,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+  )
+  return matrix4
 }
 
 function parse3dMatrix(transformDataArray: number[]) {
-  const matrix4 = new Matrix4().fromArray(transformDataArray);
-  return matrix4;
+  const matrix4 = new Matrix4().fromArray(transformDataArray)
+  return matrix4
 }
 
 function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
   const transformOriginProperty =
-    computedStyle.getPropertyValue("transform-origin");
-  const [x, y] = transformOriginProperty.split(" ").map(parseFloat);
-  const width = parseFloat(computedStyle.getPropertyValue("width"));
-  const height = parseFloat(computedStyle.getPropertyValue("height"));
+    computedStyle.getPropertyValue('transform-origin')
+  const [x, y] = transformOriginProperty.split(' ').map(parseFloat)
+  const width = parseFloat(computedStyle.getPropertyValue('width'))
+  const height = parseFloat(computedStyle.getPropertyValue('height'))
 
-  return { x: width > 0 ? x / width : 0.5, y: height > 0 ? y / height : 0.5, z: 0 }
+  return {
+    x: width > 0 ? x / width : 0.5,
+    y: height > 0 ? y / height : 0.5,
+    z: 0,
+  }
 }
 
 function parseTransform(computedStyle: CSSStyleDeclaration) {
-  let transform = computedStyle.getPropertyValue("transform");
-  const matrixFlagString = "matrix(";
-  const idxOfMatrix = transform.indexOf(matrixFlagString);
+  let transform = computedStyle.getPropertyValue('transform')
+  const matrixFlagString = 'matrix('
+  const idxOfMatrix = transform.indexOf(matrixFlagString)
   if (idxOfMatrix !== -1) {
     const transformDataArray = transform
       .substring(matrixFlagString.length, transform.length - 1)
-      .split(",")
-      .map((item) => parseFloat(item));
-    return parse2dMatrix(transformDataArray);
+      .split(',')
+      .map(item => parseFloat(item))
+    return parse2dMatrix(transformDataArray)
   } else {
-    const matrix3dFlagString = "matrix3d(";
-    const idxOfMatrix3d = transform.indexOf(matrix3dFlagString);
+    const matrix3dFlagString = 'matrix3d('
+    const idxOfMatrix3d = transform.indexOf(matrix3dFlagString)
     if (idxOfMatrix3d !== -1) {
       const transform3dDataArray = transform
         .substring(matrix3dFlagString.length, transform.length - 1)
-        .split(",")
-        .map((item) => parseFloat(item));
-      return parse3dMatrix(transform3dDataArray);
+        .split(',')
+        .map(item => parseFloat(item))
+      return parse3dMatrix(transform3dDataArray)
     } else {
-      return new Matrix4();
+      return new Matrix4()
     }
   }
 }
 
 function parseBack(computedStyle: CSSStyleDeclaration) {
-  let backProperty = computedStyle.getPropertyValue(SpatialCustomVars.back);
-  let back: number | undefined = undefined;
+  let backProperty = computedStyle.getPropertyValue(SpatialCustomVars.back)
+  let back: number | undefined = undefined
   try {
-    back = parseFloat(backProperty);
-  } catch (error) { }
-  return new Matrix4().makeTranslation(0, 0, back || 1);
+    back = parseFloat(backProperty)
+  } catch (error) {}
+  return new Matrix4().makeTranslation(0, 0, back || 1)
 }
 
 function parseSpatialStyle(node: HTMLElement) {
-  const computedStyle = getComputedStyle(node);
-
-  let debugName = computedStyle.getPropertyValue(SpatialCustomVars.debugName);
+  const computedStyle = getComputedStyle(node)
 
   // handle back property
-  const mat4ForBack = parseBack(computedStyle);
+  const mat4ForBack = parseBack(computedStyle)
 
   // handle transform properties
-  const mat4ForTransform = parseTransform(computedStyle);
+  const mat4ForTransform = parseTransform(computedStyle)
 
-  const resultMatrix = new Matrix4();
-  resultMatrix.multiplyMatrices(mat4ForBack, mat4ForTransform);
+  const resultMatrix = new Matrix4()
+  resultMatrix.multiplyMatrices(mat4ForBack, mat4ForTransform)
 
-  const position = new Vector3();
-  const quaternion = new Quaternion();
-  const scale = new Vector3();
+  const position = new Vector3()
+  const quaternion = new Quaternion()
+  const scale = new Vector3()
 
-  resultMatrix.decompose(position, quaternion, scale);
+  resultMatrix.decompose(position, quaternion, scale)
 
   // handle transform-origin properties
-  const rotationAnchor = parseTransformOrigin(computedStyle);
+  const rotationAnchor = parseTransformOrigin(computedStyle)
   return {
     position: { x: position.x, y: position.y, z: position.z },
     rotation: {
@@ -95,115 +113,113 @@ function parseSpatialStyle(node: HTMLElement) {
     },
     scale: { x: scale.x, y: scale.y, z: scale.z },
     rotationAnchor,
-    debugName,
-  };
+  }
 }
 
 export function useSpatialStyle() {
-  const ref = useRef(null);
+  const ref = useRef(null)
   const [spatialStyle, setSpatialStyle] = useState({
-    position: { x: 0, y: 0, z: 0 },
+    position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
     rotationAnchor: { x: 0.5, y: 0.5, z: 0 },
-    debugName: "",
-  });
-  const [ready, setReady] = useState(false);
+  })
+  const [ready, setReady] = useState(false)
 
   const checkSpatialStyleUpdate = useCallback(() => {
-    const nextSpatialStyle = parseSpatialStyle(ref.current!);
+    const nextSpatialStyle = parseSpatialStyle(ref.current!)
     if (!isEqual(spatialStyle, nextSpatialStyle)) {
-      setSpatialStyle(nextSpatialStyle);
+      setSpatialStyle(nextSpatialStyle)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     // first time update
     if (!ref.current) {
-      return;
+      return
     }
 
-    const spatialStyle = parseSpatialStyle(ref.current!);
-    setSpatialStyle(spatialStyle);
-    setReady(true);
-  }, []);
+    const spatialStyle = parseSpatialStyle(ref.current!)
+    setSpatialStyle(spatialStyle)
+    setReady(true)
+  }, [])
 
   useEffect(() => {
     if (!ref.current) {
-      return;
+      return
     }
 
     // sync spatial style when this dom or sub dom change
-    const observer = new MutationObserver((mutationsList) => {
-      checkSpatialStyleUpdate();
-    });
+    const observer = new MutationObserver(mutationsList => {
+      checkSpatialStyleUpdate()
+    })
     const config = {
       childList: true,
       subtree: true,
       attributes: true,
       // attributeOldValue: true,
-      attributeFilter: ["style", "class"],
-    };
-    observer.observe(ref.current!, config);
+      attributeFilter: ['style', 'class'],
+    }
+    observer.observe(ref.current!, config)
 
     return () => {
-      observer.disconnect();
-    };
-  }, []);
+      observer.disconnect()
+    }
+  }, [])
 
   // TODO: check style property change for spatial react component
 
   useEffect(() => {
     if (!ref.current) {
-      return;
+      return
     }
 
     // check style property change when some external node changed
     function isDescendant(child: Node, parent: Node) {
       if (child === parent) {
-        return true;
+        return true
       }
-      let node: Node | null = child;
+      let node: Node | null = child
       while (node) {
         if (node === parent) {
-          return true;
+          return true
         }
-        node = node.parentElement;
+        node = node.parentElement
       }
-      return false;
+      return false
     }
 
     const onDomUpdated = (event: Event) => {
-      const mutationsList = (event as CustomEvent).detail as MutationRecord[];
+      const mutationsList = (event as CustomEvent).detail as MutationRecord[]
       // spatialReactComponentDiv is hardcode currently, maybe refactor later (get from SpatialReactComponent)
       const spatialReactComponentDiv = (ref.current! as HTMLElement)
-        .previousElementSibling!;
+        .previousElementSibling!
       // ignore the mutation that is in the current ref dom or the previous sibling dom (Like SpatialReactComponent)
       const targets = mutationsList
-        .map((m) => m.target)
+        .map(m => m.target)
         .filter(
-          (node) =>
+          node =>
             node !== ref.current! &&
-            !isDescendant(node, spatialReactComponentDiv)
-        );
+            !isDescendant(node, spatialReactComponentDiv),
+        )
       if (targets.length > 0) {
-        checkSpatialStyleUpdate();
+        checkSpatialStyleUpdate()
       }
-    };
+    }
 
     // check style property change when some external style change
     document.addEventListener(
       SpatialStyleInfoUpdateEvent.domUpdated,
-      onDomUpdated
-    );
+      onDomUpdated,
+    )
 
     return () => {
       document.removeEventListener(
         SpatialStyleInfoUpdateEvent.domUpdated,
-        onDomUpdated
-      );
-    };
-  }, []);
+        onDomUpdated,
+      )
+    }
+  }, [])
 
-  return { ref, ready, spatialStyle };
+  return { ref, ready, spatialStyle }
 }
