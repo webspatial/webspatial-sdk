@@ -22,6 +22,9 @@
     ],
     "*.ts?(x)": [
       "prettier --write"
+    ],
+    "*.swift": [
+      "swiftformat"
     ]
   },
   "repository": {
