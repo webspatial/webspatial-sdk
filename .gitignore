@@ -8,3 +8,10 @@ old/
 # No node_modules anywhere
 **/*/node_modules/
 node_modules
+.DS_Store
+*.log
+.pnpm-store
+coverage
+.vscode
+coverage
+temp
