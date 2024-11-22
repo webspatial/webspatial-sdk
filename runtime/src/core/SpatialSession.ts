@@ -266,7 +266,8 @@ export class SpatialSession {
   }
 
   // Get Entity by id. Currently for debugging only.
-  async getEntity(id: string) {
+  /** @hidden */
+  async _getEntity(id: string) {
     const entityInfo = await WebSpatial.inspect(id);
     const [_, x, y, z] = entityInfo.position.match(/(\d+\.?\d*)/g);
     const [__, sx, sy, sz] = entityInfo.scale.match(/(\d+\.?\d*)/g);
