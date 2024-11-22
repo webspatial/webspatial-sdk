@@ -4,8 +4,8 @@ TODO
 npm install pnpm -g
 pnpm setup
 
-# Install packages and link to testServer for local development
-npm run installPackages
+# Install packages and link to workspace for local development
+pnpm i
 
 # open terminal to watch and build npm package
 npm run watchNPM
