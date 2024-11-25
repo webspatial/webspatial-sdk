@@ -73,7 +73,16 @@ export function showSample(MySample: Function, hasCode = true) {
                       const examplePath = urlParams.get('examplePath')
                       fetch('/src/docsWebsite/examples/' + examplePath + '.tsx')
                         .then(response => response.text())
-                        .then(text => setShowCode(text))
+                        .then(text => {
+                          const regex =
+                            /CODESAMPLE_START.(.*?)\/\/ CODESAMPLE_END/s
+                          const matches = text.match(regex)
+                          if (matches && matches[1]) {
+                            setShowCode(matches[1])
+                          } else {
+                            setShowCode(text)
+                          }
+                        })
                     } else {
                       setShowCode('')
                     }
@@ -131,7 +140,9 @@ export function showSample(MySample: Function, hasCode = true) {
                         <summary style={{ cursor: 'pointer' }}>JS API</summary>
                         <ul>
                           <li>
-                            <a>Create Session</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=createSession">
+                              Create Session
+                            </a>
                           </li>
                           <li>
                             <a href="/src/docsWebsite/index.html?examplePath=backgroundMaterial">
@@ -139,16 +150,24 @@ export function showSample(MySample: Function, hasCode = true) {
                             </a>
                           </li>
                           <li>
-                            <a>3D Web Element</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=webElement">
+                              3D Web Element
+                            </a>
                           </li>
                           <li>
-                            <a>Load model</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=loadModel">
+                              Load model
+                            </a>
                           </li>
                           <li>
-                            <a>Open Window Group</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=openWindowGroup">
+                              Open Window Group
+                            </a>
                           </li>
                           <li>
-                            <a>Game loop</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=gameLoop">
+                              Game loop
+                            </a>
                           </li>
                         </ul>
                       </details>
