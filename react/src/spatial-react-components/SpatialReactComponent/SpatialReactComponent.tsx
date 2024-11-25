@@ -7,8 +7,6 @@ import {
   useMemo,
   ElementType,
   useContext,
-  useEffect,
-  useLayoutEffect,
 } from 'react'
 import { spatialStyleDef } from '../types'
 import { getSession } from '../../utils'
@@ -79,13 +77,18 @@ function renderSpatialReactComponent(
     debugShowStandardInstance: debugDesc.debugShowStandardInstance,
   }
 
-  const portalInstanceProps = { ...props, ...componentDesc, ...spatialDesc }
+  const portalInstanceProps = {
+    ...props,
+    ...componentDesc,
+    ...spatialDesc,
+    debugName: debugDesc.debugName,
+  }
 
   const spatialReactContextObject = useMemo(
     () => new SpatialReactContextObject(debugDesc.debugName),
     [],
   )
-  console.log('dbg portalInstanceProps', portalInstanceProps)
+
   return (
     <SpatialReactContext.Provider value={spatialReactContextObject}>
       <StandardInstance {...standardInstanceProps} />
@@ -97,8 +100,13 @@ function renderSpatialReactComponent(
 function renderSubPortalInstance(
   inProps: SpatialReactComponentWithUniqueIDProps,
 ) {
-  const { componentDesc, spatialDesc, props } = parseProps(inProps)
-  const portalInstanceProps = { ...props, ...componentDesc, ...spatialDesc }
+  const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps)
+  const portalInstanceProps = {
+    ...props,
+    ...componentDesc,
+    ...spatialDesc,
+    debugName: debugDesc.debugName,
+  }
 
   return <PortalInstance {...portalInstanceProps} />
 }
