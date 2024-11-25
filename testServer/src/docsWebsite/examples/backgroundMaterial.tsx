@@ -6,10 +6,12 @@ function MySample(props: { session?: SpatialSession }) {
   var [toggle, setToggle] = useState(true)
   useEffect(() => {
     if (props.session) {
-      // JS API used here
-      props.session
+      let session = props.session
+      // CODESAMPLE_START
+      session
         .getCurrentWindowComponent()
         .setStyle({ transparentEffect: toggle, glassEffect: toggle })
+      // CODESAMPLE_END
     }
   }, [toggle])
   return (

@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
-  return <div>Homepage</div>
+  return (
+    <div>
+      <a href="/">Homepage</a>
+    </div>
+  )
 }
 showSample(MySample, false)
