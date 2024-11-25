@@ -21,13 +21,11 @@ export function showSample(MySample: Function, hasCode = true) {
       .getComputedStyle(document.documentElement)
       .getPropertyValue('--spatial-material')
     if (translucentStyle == 'translucent') {
-      session
-        .getCurrentWindowComponent()
-        .setStyle({
-          transparentEffect: true,
-          glassEffect: true,
-          cornerRadius: 0,
-        })
+      session.getCurrentWindowComponent().setStyle({
+        transparentEffect: true,
+        glassEffect: true,
+        cornerRadius: 0,
+      })
     }
 
     var backgroundStyle = window
@@ -126,7 +124,7 @@ export function showSample(MySample: Function, hasCode = true) {
               </li>
               <li>
                 <details open>
-                  <summary style={{ cursor: 'pointer' }}>Examples</summary>
+                  <summary style={{ cursor: 'pointer' }}>Samples</summary>
                   <ul>
                     <li>
                       <details open>
@@ -162,13 +160,26 @@ export function showSample(MySample: Function, hasCode = true) {
                         </summary>
                         <ul>
                           <li>
-                            <a>Spatial Dom Element</a>
+                            <a>Spatial Dom Elements</a>
                           </li>
                           <li>
-                            <a>Model Element</a>
+                            <a>3D Model Element</a>
+                          </li>
+                          <li>
+                            <a>Popup Element</a>
                           </li>
                         </ul>
                       </details>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details open>
+                  <summary style={{ cursor: 'pointer' }}>Showcases</summary>
+                  <ul>
+                    <li>
+                      <a>Ecommerce Website</a>
                     </li>
                   </ul>
                 </details>

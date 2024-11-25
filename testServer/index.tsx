@@ -16,13 +16,11 @@ if (spatial) {
 
 var transparent = new URLSearchParams(window.location.search).get('transparent')
 if (session) {
-  session
-    .getCurrentWindowComponent()
-    .setStyle({
-      transparentEffect: !!transparent,
-      glassEffect: !transparent,
-      cornerRadius: transparent ? 0 : 70,
-    })
+  session.getCurrentWindowComponent().setStyle({
+    transparentEffect: !!transparent,
+    glassEffect: !transparent,
+    cornerRadius: transparent ? 0 : 70,
+  })
   document.documentElement.style.backgroundColor = '#1155aa55'
 } else {
   console.log('not supported')
