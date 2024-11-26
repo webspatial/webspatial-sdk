@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "tsc  --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "author": "",
   "license": "ISC",
