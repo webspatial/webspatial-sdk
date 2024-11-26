@@ -1,1 +1,1 @@
-export type WindowStyle = "Plain" | "Volumetric"
+export type WindowStyle = 'Plain' | 'Volumetric'
