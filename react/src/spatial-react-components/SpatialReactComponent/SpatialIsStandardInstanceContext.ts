@@ -1,3 +1,5 @@
-import { createContext } from "react";
+import { createContext } from 'react'
 
-export const SpatialIsStandardInstanceContext = createContext(null as null | boolean);
+export const SpatialIsStandardInstanceContext = createContext(
+  null as null | boolean,
+)
