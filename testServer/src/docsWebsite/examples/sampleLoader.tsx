@@ -62,6 +62,15 @@ export function showSample(MySample: any, hasCode = true) {
               </div>
             </div>
             <div className="w-full h-full">
+              {spatialSupported ? (
+                <></>
+              ) : (
+                <div className="w-full bg-slate-500">
+                  Note: WebSpatial is not supported in this browser so xr
+                  content will not be displayed. Currently only availible on
+                  Apple Vision Pro app
+                </div>
+              )}
               {hasCode ? (
                 <div
                   className="btn m-5"
