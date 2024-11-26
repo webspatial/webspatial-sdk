@@ -227,12 +227,12 @@ class CommandDataManager {
 
                                 Task.detached { @MainActor in
                                     // Update state on main thread
-                                    target.completeEvent(requestID: requestID, data: "{createdID: '"+spatialModelComponent.id+"'}")
+                                    target.completeEvent(requestID: requestID, data: "{createdID: '" + spatialModelComponent.id + "'}")
                                     target.addChildSpatialObject(spatialModelComponent)
                                     print("Model load success!")
                                 }
                             } catch {
-                                print("failed to load model: "+error.localizedDescription)
+                                print("failed to load model: " + error.localizedDescription)
                             }
                         }
                     })
@@ -245,7 +245,7 @@ class CommandDataManager {
             default: print("failed to create sr of type", type)
             }
             if let srObject = sr {
-                target.completeEvent(requestID: requestID, data: "{createdID: '"+srObject.id+"'}")
+                target.completeEvent(requestID: requestID, data: "{createdID: '" + srObject.id + "'}")
                 target.addChildSpatialObject(srObject)
             } else {
                 print("failed to create sr of type", type)
@@ -256,7 +256,7 @@ class CommandDataManager {
     public func updateResource(target: SpatialWindowComponent, requestID: Int, resourceID: String, data: JSData) {
         var delayComplete = false
         if SpatialObject.get(resourceID) == nil {
-            print("Missing resource:"+resourceID)
+            print("Missing resource:" + resourceID)
             return
         }
         let sr = SpatialObject.get(resourceID)!
@@ -275,9 +275,9 @@ class CommandDataManager {
 
             if let _ = data.update?.getBoundingBox {
                 var b = entity.modelEntity.visualBounds(relativeTo: nil)
-                var exts = "x:"+String(b.extents.x)+","+"y:"+String(b.extents.y)+","+"z:"+String(b.extents.z)
-                var center = "x:"+String(b.center.x)+","+"y:"+String(b.center.y)+","+"z:"+String(b.center.z)
-                target.completeEvent(requestID: requestID, data: "{center: {"+center+"}, extents: {"+exts+"}}")
+                var exts = "x:" + String(b.extents.x) + "," + "y:" + String(b.extents.y) + "," + "z:" + String(b.extents.z)
+                var center = "x:" + String(b.center.x) + "," + "y:" + String(b.center.y) + "," + "z:" + String(b.center.z)
+                target.completeEvent(requestID: requestID, data: "{center: {" + center + "}, extents: {" + exts + "}}")
                 return
             }
 
@@ -347,12 +347,12 @@ class CommandDataManager {
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 let id = spatialWindowComponent.entity!.id
-                target.completeEvent(requestID: requestID, data: "{parentID:'"+id+"'}")
+                target.completeEvent(requestID: requestID, data: "{parentID:'" + id + "'}")
                 return
             }
 
             if let _: String = data.update?.getParentID {
-                target.completeEvent(requestID: requestID, data: "{parentID:'"+spatialWindowComponent.parentWebviewID+"'}")
+                target.completeEvent(requestID: requestID, data: "{parentID:'" + spatialWindowComponent.parentWebviewID + "'}")
                 return
             }
 
@@ -461,7 +461,7 @@ class CommandDataManager {
 
             SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
             target.setWindowGroup(uuid: uuid, wgd: wgd)
-            target.completeEvent(requestID: requestID, data: "{createdID: '"+uuid+"'}")
+            target.completeEvent(requestID: requestID, data: "{createdID: '" + uuid + "'}")
         }
     }
 

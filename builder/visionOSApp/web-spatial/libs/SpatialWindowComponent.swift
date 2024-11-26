@@ -214,10 +214,10 @@ class SpatialWindowComponent: SpatialComponent {
             // Absolute path
             var port = ""
             if let p = webViewNative?.url.port {
-                port = ":"+String(p)
+                port = ":" + String(p)
             }
-            let domain = webViewNative!.url.scheme!+"://"+webViewNative!.url.host()!+port+"/"
-            targetUrl = domain+String(url[url.index(url.startIndex, offsetBy: 1)...])
+            let domain = webViewNative!.url.scheme! + "://" + webViewNative!.url.host()! + port + "/"
+            targetUrl = domain + String(url[url.index(url.startIndex, offsetBy: 1)...])
         } else {
             // Full url eg. http://domain.com
             if let parsed = URL(string: url) {
@@ -227,7 +227,7 @@ class SpatialWindowComponent: SpatialComponent {
             }
             // Reletive path
             let localDir = NSString(string: webViewNative!.url.absoluteString)
-            let relPath = String(localDir.deletingLastPathComponent)+"/"+targetUrl
+            let relPath = String(localDir.deletingLastPathComponent) + "/" + targetUrl
             return relPath
         }
         return targetUrl
@@ -247,15 +247,15 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
-        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:"+String(requestID)+", data: "+data+"})")
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:" + String(requestID) + ", data: " + data + "})")
     }
 
     func fireGestureEvent(inputComponentID: String, data: String = "{}") {
-        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'"+inputComponentID+"', data: "+data+"})")
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'" + inputComponentID + "', data: " + data + "})")
     }
 
     func failEvent(requestID: Int, data: String = "{}") {
-        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:"+String(requestID)+", data: "+data+"})")
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:" + String(requestID) + ", data: " + data + "})")
     }
 
     // Request information of webview that request this webview to load
@@ -264,7 +264,7 @@ class SpatialWindowComponent: SpatialComponent {
 //    var resourceID = ""
     // A load request of a child webview was loaded
     func didLoadChild(loadRequestID: Int, resourceID: String) {
-        completeEvent(requestID: loadRequestID, data: "{createdID: '"+id+"'}")
+        completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
     }
 
     func didStartLoadPage() {
@@ -290,7 +290,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didSpawnWebView(wv: WebViewNative) {
         let uuid = UUID().uuidString
-        wv.webViewHolder.appleWebView!.evaluateJavaScript("window._webSpatialID = '"+uuid+"'")
+        wv.webViewHolder.appleWebView!.evaluateJavaScript("window._webSpatialID = '" + uuid + "'")
         spawnedNativeWebviews[uuid] = wv
     }
 

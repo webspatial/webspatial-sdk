@@ -161,7 +161,7 @@ class SpatialEntity: SpatialObject {
             "coordinateSpace": coordinateSpace.description,
             "parent": parent?.id,
             "parentWindowGroup": parentWindowGroup?.id,
-            "components": componentsInfo
+            "components": componentsInfo,
         ]
 
         let baseInspectInfo = super.inspect()

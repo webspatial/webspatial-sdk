@@ -8,14 +8,14 @@
 import Foundation
 import SwiftyBeaver
 
-struct Logger {
+enum Logger {
     static func getLogger() -> SwiftyBeaver.Type {
-        return SwiftyBeaver.self;
+        return SwiftyBeaver.self
     }
-    
-    static func initLogger(){
-        let logConsole = ConsoleDestination();
-        logConsole.useTerminalColors = true;
-        SwiftyBeaver.self.addDestination(logConsole)
+
+    static func initLogger() {
+        let logConsole = ConsoleDestination()
+        logConsole.useTerminalColors = true
+        SwiftyBeaver.addDestination(logConsole)
     }
 }
