@@ -80,7 +80,7 @@ struct PlainWindowGroupView: View {
                     let height = proxy3D.size.height
 
                     if windowResizeInProgress {
-                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100000)
+                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
                             .position(x: x, y: y)
                             .offset(z: z)
                     } else {
@@ -89,7 +89,7 @@ struct PlainWindowGroupView: View {
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
 
                         SpatialWebViewUI().environment(e)
-                            .frame(width: width, height: height).padding3D(.front, -100000)
+                            .frame(width: width, height: height).padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
