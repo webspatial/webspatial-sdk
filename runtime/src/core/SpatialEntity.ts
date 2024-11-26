@@ -1,8 +1,8 @@
-import { SpatialObject } from "./SpatialObject"
-import { SpatialTransform } from "./SpatialTransform"
-import { SpatialWindowGroup } from "./SpatialWindowGroup"
+import { SpatialObject } from './SpatialObject'
+import { SpatialTransform } from './SpatialTransform'
+import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial } from './private/WebSpatial'
-import { SpatialComponent } from "./component"
+import { SpatialComponent } from './component'
 
 /**
  * Entity used to describe an object that can be added to the scene
@@ -25,8 +25,8 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
-  * Attaches a component to the entity to be displayed
-  */
+   * Attaches a component to the entity to be displayed
+   */
   async setComponent(component: SpatialComponent) {
     await WebSpatial.setComponent(this._entity, component._resource)
   }
@@ -36,7 +36,9 @@ export class SpatialEntity extends SpatialObject {
    * @param wg the window group that should render this entity
    */
   async setParentWindowGroup(wg: SpatialWindowGroup) {
-    await WebSpatial.updateResource(this._entity, { setParentWindowGroupID: wg._wg.id })
+    await WebSpatial.updateResource(this._entity, {
+      setParentWindowGroupID: wg._wg.id,
+    })
   }
 
   /**
@@ -44,30 +46,36 @@ export class SpatialEntity extends SpatialObject {
    * @param e parent entity or null to remove current parent
    */
   async setParent(e: SpatialEntity | null) {
-    await WebSpatial.updateResource(this._entity, { setParent: e ? e._entity.id : "" })
+    await WebSpatial.updateResource(this._entity, {
+      setParent: e ? e._entity.id : '',
+    })
   }
 
-  async setCoordinateSpace(space: "App" | "Dom" | "Root") {
+  async setCoordinateSpace(space: 'App' | 'Dom' | 'Root') {
     await WebSpatial.updateResource(this._entity, { setCoordinateSpace: space })
   }
 
   async getBoundingBox() {
-    var res: any = await WebSpatial.updateResource(this._entity, { getBoundingBox: true })
-    return res.data as { center: { x: number, y: number, z: number }, extents: { x: number, y: number, z: number } }
+    var res: any = await WebSpatial.updateResource(this._entity, {
+      getBoundingBox: true,
+    })
+    return res.data as {
+      center: { x: number; y: number; z: number }
+      extents: { x: number; y: number; z: number }
+    }
   }
 
   /**
-  * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
-  */
+   * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
+   */
   async destroy() {
     this._destroyed = true
     await WebSpatial.destroyResource(this._entity)
   }
 
-
   /**
-  * Check if destroy has been called
-  */
+   * Check if destroy has been called
+   */
   isDestroyed() {
     return this._destroyed
   }
