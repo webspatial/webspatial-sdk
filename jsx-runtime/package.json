@@ -4,7 +4,7 @@
   "scripts": {
     "start": "tsc  --watch",
     "build": "tsc",
-    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx'"
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "author": "",
   "license": "ISC",
