@@ -52,55 +52,53 @@ struct SpatialWebViewUI: View {
                                         let anchor = view.rotationAnchor
 
                                         // Matrix = MTranslate X MRotate X MScale
-                                        ZStack {
-                                            SpatialWebViewUI().environment(e)
-                                                .frame(width: width, height: height)
-                                                .frame(depth: 0, alignment: .back)
-                                                .position(x: x, y: y)
-                                                .offset(z: z)
-                                                .gesture(
-                                                    DragGesture()
-                                                        .onChanged { gesture in
-                                                            let scrollEnabled = view.isScrollEnabled()
-                                                            if !scrollEnabled, wv.isScrollEnabled() {
-                                                                if !view.dragStarted {
-                                                                    view.dragStarted = true
-                                                                    view.dragStart = (gesture.translation.height)
-                                                                }
+                                        SpatialWebViewUI().environment(e)
+                                            .frame(width: width, height: height)
+                                            .frame(depth: 0, alignment: .back)
+                                            .scaleEffect(
+                                                x: CGFloat(e.modelEntity.scale.x),
+                                                y: CGFloat(e.modelEntity.scale.y),
+                                                z: CGFloat(e.modelEntity.scale.z),
+                                                anchor: anchor
+                                            )
+                                            .rotation3DEffect(
+                                                Rotation3D(simd_quatf(
+                                                    ix: e.modelEntity.orientation.vector.x,
+                                                    iy: e.modelEntity.orientation.vector.y,
+                                                    iz: e.modelEntity.orientation.vector.z,
+                                                    r: e.modelEntity.orientation.vector.w
+                                                )),
+                                                anchor: anchor
+                                            )
 
-                                                                // TODO: this should have velocity
-                                                                let delta = view.dragStart - gesture.translation.height
-                                                                view.dragStart = gesture.translation.height
-                                                                wv.updateScrollOffset(delta: delta)
+                                            .position(x: x, y: y)
+                                            .offset(z: z)
+                                            .gesture(
+                                                DragGesture()
+                                                    .onChanged { gesture in
+                                                        let scrollEnabled = view.isScrollEnabled()
+                                                        if !scrollEnabled, wv.isScrollEnabled() {
+                                                            if !view.dragStarted {
+                                                                view.dragStarted = true
+                                                                view.dragStart = (gesture.translation.height)
                                                             }
-                                                        }
-                                                        .onEnded { _ in
-                                                            let scrollEnabled = view.isScrollEnabled()
-                                                            if !scrollEnabled, wv.isScrollEnabled() {
-                                                                view.dragStarted = false
-                                                                view.dragStart = 0
 
-                                                                wv.stopScrolling()
-                                                            }
+                                                            // TODO: this should have velocity
+                                                            let delta = view.dragStart - gesture.translation.height
+                                                            view.dragStart = gesture.translation.height
+                                                            wv.updateScrollOffset(delta: delta)
                                                         }
-                                                )
-                                        }
-                                        // Had to move rotation and scale to a parent ZStack as they seem to cause frame's width/height behavior to break if added directly
-                                        .rotation3DEffect(
-                                            Rotation3D(simd_quatf(
-                                                ix: e.modelEntity.orientation.vector.x,
-                                                iy: e.modelEntity.orientation.vector.y,
-                                                iz: e.modelEntity.orientation.vector.z,
-                                                r: e.modelEntity.orientation.vector.w
-                                            )),
-                                            anchor: anchor
-                                        )
-                                        .scaleEffect(
-                                            x: CGFloat(e.modelEntity.scale.x),
-                                            y: CGFloat(e.modelEntity.scale.y),
-                                            z: CGFloat(e.modelEntity.scale.z),
-                                            anchor: anchor
-                                        )
+                                                    }
+                                                    .onEnded { _ in
+                                                        let scrollEnabled = view.isScrollEnabled()
+                                                        if !scrollEnabled, wv.isScrollEnabled() {
+                                                            view.dragStarted = false
+                                                            view.dragStart = 0
+
+                                                            wv.stopScrolling()
+                                                        }
+                                                    }
+                                            )
                                     }
                                 }
                             }
