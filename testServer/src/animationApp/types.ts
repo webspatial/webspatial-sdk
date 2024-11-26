@@ -30,4 +30,4 @@ export type Easing =
   | 'easeOutExpo'
   | 'easeInOutExpo'
   | 'linear'
-  // | [number, number, number, number];
+// | [number, number, number, number];
