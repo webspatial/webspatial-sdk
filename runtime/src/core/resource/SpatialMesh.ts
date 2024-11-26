@@ -1,4 +1,3 @@
-import { SpatialObject } from "../SpatialObject";
+import { SpatialObject } from '../SpatialObject'
 
-export class SpatialMesh extends SpatialObject {
-}
+export class SpatialMesh extends SpatialObject {}

@@ -1,2 +1,2 @@
-export { getSession } from './getSession';
-export { enableDebugTool } from './debugTool';
+export { getSession } from './getSession'
+export { enableDebugTool } from './debugTool'

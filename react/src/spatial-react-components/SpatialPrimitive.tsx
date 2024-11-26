@@ -1,32 +1,39 @@
-import { forwardRef, Ref } from "react";
-import { primitives } from "./primitives";
-import { SpatialReactComponent } from "./SpatialReactComponent";
-import React from "react";
+import { forwardRef, Ref } from 'react'
+import { primitives } from './primitives'
+import { SpatialReactComponent } from './SpatialReactComponent'
+import React from 'react'
 
-const cachedWithSpatialType = new Map();
+const cachedWithSpatialType = new Map()
 
 export function withSpatial(Component: React.ElementType) {
-    if (cachedWithSpatialType.has(Component)) {
-        return cachedWithSpatialType.get(Component);
-    } else {
-        const WithSpatialComponent = forwardRef((givenProps: any, givenRef: Ref<any>) => {
-            const { component: ignoreComponent, ...props } = givenProps;
-            return <SpatialReactComponent component={Component} {...props} ref={givenRef} />
-        })
-        WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : (Component.displayName || Component.name)})`
+  if (cachedWithSpatialType.has(Component)) {
+    return cachedWithSpatialType.get(Component)
+  } else {
+    const WithSpatialComponent = forwardRef(
+      (givenProps: any, givenRef: Ref<any>) => {
+        const { component: ignoreComponent, ...props } = givenProps
+        return (
+          <SpatialReactComponent
+            component={Component}
+            {...props}
+            ref={givenRef}
+          />
+        )
+      },
+    )
+    WithSpatialComponent.displayName = `WithSpatial(${typeof Component === 'string' ? Component : Component.displayName || Component.name})`
 
-        cachedWithSpatialType.set(Component, WithSpatialComponent);
-        cachedWithSpatialType.set(WithSpatialComponent, WithSpatialComponent);
-        return WithSpatialComponent
-    }
+    cachedWithSpatialType.set(Component, WithSpatialComponent)
+    cachedWithSpatialType.set(WithSpatialComponent, WithSpatialComponent)
+    return WithSpatialComponent
+  }
 }
 
-export const SpatialPrimitive: Record<string, typeof SpatialReactComponent> = {};
+export const SpatialPrimitive: Record<string, typeof SpatialReactComponent> = {}
+;(function createSpatialPrimitive(SpatialPrimitive) {
+  primitives.forEach(primitive => {
+    SpatialPrimitive[primitive] = withSpatial(primitive)
+  })
+})(SpatialPrimitive)
 
-(function createSpatialPrimitive(SpatialPrimitive) {
-    primitives.forEach((primitive) => {
-        SpatialPrimitive[primitive] = withSpatial(primitive);
-    });
-})(SpatialPrimitive);
-
-export const SpatialDiv = SpatialPrimitive.div;
+export const SpatialDiv = SpatialPrimitive.div
