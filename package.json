@@ -11,7 +11,8 @@
     "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "pnpm -r run format"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
