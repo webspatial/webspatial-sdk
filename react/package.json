@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "tsc --watch",
-    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx'"
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "repository": {
     "type": "git",
