@@ -1,16 +1,15 @@
 export class RemoteCommand {
-    private static requestCounter = 0
+  private static requestCounter = 0
 
-    command: string
+  command: string
 
-    data: any
+  data: any
 
-    requestID: number
+  requestID: number
 
-    constructor(cmd: string, data?: any) {
-        this.command = cmd
-        this.data = data
-        this.requestID = ++RemoteCommand.requestCounter
-    }
+  constructor(cmd: string, data?: any) {
+    this.command = cmd
+    this.data = data
+    this.requestID = ++RemoteCommand.requestCounter
+  }
 }
-
