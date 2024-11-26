@@ -116,6 +116,9 @@ importers:
       '@types/three':
         specifier: ^0.164.0
         version: 0.164.1
+      '@xrsdk/jsx-runtime':
+        specifier: workspace:*
+        version: link:../jsx-runtime
       '@xrsdk/react':
         specifier: workspace:*
         version: link:../react

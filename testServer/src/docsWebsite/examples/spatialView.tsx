@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
-  let divRef = useRef()
+  let divRef = useRef(null)
   useEffect(() => {
     ;(async () => {
       if (props.session) {
