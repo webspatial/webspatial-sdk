@@ -20,13 +20,10 @@ function App() {
 
       <SpatialMonitor className="w-screen h-screen  ">
         <NestedComponent />
-
-        {/* <SimpleSpatialComponent />
-
-                <StyledTitleComponent />
-                <CSSModelSample />
-
-                <SpatialTagComponent /> */}
+        <SimpleSpatialComponent />
+        <StyledTitleComponent />
+        <CSSModelSample />
+        <SpatialTagComponent />
       </SpatialMonitor>
     </div>
   )
