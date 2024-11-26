@@ -16,6 +16,7 @@
     "@types/three": "^0.164.0",
     "@xrsdk/react": "workspace:*",
     "@xrsdk/runtime": "workspace:*",
+    "@xrsdk/jsx-runtime": "workspace:*",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
     "livereload": "^0.9.3",
