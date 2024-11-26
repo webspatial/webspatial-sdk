@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { SpatialIFrame, Model } from '@xrsdk/react'
+import { flushSync } from 'react-dom'
+import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark as dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
-export function showSample(MySample: Function, hasCode = true) {
+export function showSample(MySample: any, hasCode = true) {
   var spatial: Spatial | null = new Spatial()
   if (!spatial.isSupported()) {
     spatial = null
@@ -234,12 +234,17 @@ export function showSample(MySample: Function, hasCode = true) {
       case 'complete':
         document.body.appendChild(root)
         var createdRoot = ReactDOM.createRoot(root)
-        // Create react root
-        createdRoot.render(
-          <App>
-            <MySample session={session} />
-          </App>,
-        )
+
+        // There seems to be a bug with React's concurrent renderer in safari which is causing an FOUC
+        // This is required to force dom updates prior to page completion
+        flushSync(() => {
+          // Create react root
+          createdRoot.render(
+            <App>
+              <MySample session={session} />
+            </App>,
+          )
+        })
         break
     }
   })
