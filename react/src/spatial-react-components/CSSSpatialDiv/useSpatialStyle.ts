@@ -35,20 +35,6 @@ function parse3dMatrix(transformDataArray: number[]) {
   return matrix4
 }
 
-function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
-  const transformOriginProperty =
-    computedStyle.getPropertyValue('transform-origin')
-  const [x, y] = transformOriginProperty.split(' ').map(parseFloat)
-  const width = parseFloat(computedStyle.getPropertyValue('width'))
-  const height = parseFloat(computedStyle.getPropertyValue('height'))
-
-  return {
-    x: width > 0 ? x / width : 0.5,
-    y: height > 0 ? y / height : 0.5,
-    z: 0,
-  }
-}
-
 function parseTransform(computedStyle: CSSStyleDeclaration) {
   let transform = computedStyle.getPropertyValue('transform')
   const matrixFlagString = 'matrix('
@@ -101,8 +87,6 @@ function parseSpatialStyle(node: HTMLElement) {
 
   resultMatrix.decompose(position, quaternion, scale)
 
-  // handle transform-origin properties
-  const rotationAnchor = parseTransformOrigin(computedStyle)
   return {
     position: { x: position.x, y: position.y, z: position.z },
     rotation: {
@@ -112,7 +96,6 @@ function parseSpatialStyle(node: HTMLElement) {
       w: quaternion.w,
     },
     scale: { x: scale.x, y: scale.y, z: scale.z },
-    rotationAnchor,
   }
 }
 
@@ -122,7 +105,6 @@ export function useSpatialStyle() {
     position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
-    rotationAnchor: { x: 0.5, y: 0.5, z: 0 },
   })
   const [ready, setReady] = useState(false)
 
