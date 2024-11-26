@@ -1,2 +1,2 @@
-export {RemoteCommand} from './RemoteCommand'
+export { RemoteCommand } from './RemoteCommand'
 export * from './CommandCreator'
