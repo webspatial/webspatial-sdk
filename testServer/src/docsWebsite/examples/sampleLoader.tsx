@@ -160,6 +160,11 @@ export function showSample(MySample: Function, hasCode = true) {
                             </a>
                           </li>
                           <li>
+                            <a href="/src/docsWebsite/index.html?examplePath=spatialView">
+                              Spatial View
+                            </a>
+                          </li>
+                          <li>
                             <a href="/src/docsWebsite/index.html?examplePath=openWindowGroup">
                               Open Window Group
                             </a>
