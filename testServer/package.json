@@ -7,7 +7,8 @@
     "dev": "node esbuild.mjs",
     "start": "npm run dev",
     "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx'"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.4",
