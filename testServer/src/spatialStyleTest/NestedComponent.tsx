@@ -1,6 +1,7 @@
 export const NestedComponent = () => {
   const styleOuter = {
     '--xr-back': 121,
+    width: '200px',
     height: '78px',
 
     backgroundColor: 'red',
@@ -9,8 +10,6 @@ export const NestedComponent = () => {
   const styleInner = {
     '--xr-back': 36,
     backgroundColor: 'blue',
-    // transformOrigin: 'left top',
-    // transform: 'rotate3d(0, 0, 1, 30deg) scaleX(3) ',
   }
 
   return (
@@ -27,7 +26,6 @@ export const NestedComponent = () => {
         debugname="InnerDiv"
         debugShowStandardInstance={false}
       >
-        {' '}
         Inner Div!!
       </div>
     </div>
