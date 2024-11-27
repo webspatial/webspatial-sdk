@@ -3,7 +3,7 @@ import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
 
 class TimerLog {
   lastTime = Date.now()
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   logDiff(str: String) {
     var curTime = Date.now()
@@ -20,7 +20,7 @@ class TestHelper {
     d: '#61C0BF',
   }
 
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   async delay(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms))
@@ -29,7 +29,7 @@ class TestHelper {
   setWebContent = async (win: Window, content: string, refVar: any) => {
     var newDiv = document.createElement('div')
     for (var key in refVar) {
-      ;(win as any)[key] = refVar[key]
+      ; (win as any)[key] = refVar[key]
     }
     newDiv.innerHTML = content
     win.document.body.appendChild(newDiv)
@@ -113,6 +113,21 @@ class TestHelper {
       windowComponent: wc,
       windowContext: pageWindow,
     }
+  }
+
+  attachToElement(element: HTMLElement, content: any) {
+    var update = () => {
+      var rect = element.getBoundingClientRect()
+      content.entity.transform.position.x = rect.x + rect.width / 2
+      content.entity.transform.position.y = rect.y + rect.height / 2
+      content.entity.updateTransform()
+      content.component.setResolution(rect.width, rect.height)
+    }
+    var mo = new MutationObserver(update)
+    mo.observe(element, { attributes: true })
+    var ro = new ResizeObserver(update)
+    ro.observe(element)
+    update()
   }
 }
 
@@ -285,23 +300,6 @@ var main = async () => {
     ])
 
     await session.log('page done done')
-  } else if (page == 'modelUI') {
-    var e = await session.createEntity()
-    e.transform.position.x = 500
-    e.transform.position.y = 300
-    e.transform.position.z = 50
-    await e.updateTransform()
-
-    var wc = await session.getCurrentWindowComponent()
-    var ent = await wc.getEntity()
-    await e.setParent(ent!)
-
-    let i = await session.createModelUIComponent()
-    await Promise.all([
-      i.setURL('/src/assets/FlightHelmet.usdz'), //
-      i.setResolution(200, 200),
-      e.setComponent(i),
-    ])
   } else if (page == 'model') {
     session.log('create entitys')
 

@@ -10,5 +10,5 @@ export default {
     base: false,
     themes: false, // Disable all themes
   },
-  plugins: [daisyui],
+  plugins: [daisyui, require('@tailwindcss/typography')],
 }
