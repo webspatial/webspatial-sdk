@@ -8,7 +8,6 @@ export const NestedComponent = () => {
   }
 
   const styleInner = {
-    '--xr-back': 36,
     backgroundColor: 'blue',
   }
 
@@ -16,14 +15,14 @@ export const NestedComponent = () => {
     <div
       enable-xr
       style={styleOuter}
-      debugname="OuterDiv"
+      debugName="OuterDiv"
       debugShowStandardInstance={false}
     >
       OuterDiv
       <div
         enable-xr
         style={styleInner}
-        debugname="InnerDiv"
+        debugName="InnerDiv"
         debugShowStandardInstance={false}
       >
         Inner Div!!
