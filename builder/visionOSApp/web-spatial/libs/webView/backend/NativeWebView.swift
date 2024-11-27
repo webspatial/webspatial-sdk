@@ -169,9 +169,24 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
 
-            let userScript = WKUserScript(source: "window.WebSpatailEnabled = true", injectionTime: .atDocumentStart, forMainFrameOnly: false)
+            let userScript = WKUserScript(source: "window.WebSpatailEnabled = true", injectionTime: .atDocumentStart, forMainFrameOnly: true)
             userContentController.addUserScript(userScript)
             userContentController.add(webViewHolder.webViewCoordinator!, name: "bridge")
+
+            // inject xr-spatial-default style
+            let userScriptForSpatialDefaultStyle = WKUserScript(
+                source: """
+                (function injectSpatialDefaultStyle(){
+                    const styleEle = document.createElement('style');
+                    styleEle.type = 'text/css';
+                    styleEle.innerHTML = ' .xr-spatial-default {  --xr-back: 0.001  } ';
+                    document.head.appendChild(styleEle);
+                })();
+                """,
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: false
+            )
+            userContentController.addUserScript(userScriptForSpatialDefaultStyle)
 
             let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
             myConfig.userContentController = userContentController
