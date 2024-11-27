@@ -18,6 +18,7 @@ plugins.push(sassPlugin({
   filter: /\.module\.scss$/,
   transform: postcssModules({}, [])
 }))
+plugins.push(sassPlugin())
 
 var outdir = "dist";
 var port = 5173
