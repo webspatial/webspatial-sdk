@@ -1,11 +1,13 @@
 {
-  "name": "css-support-jsx-runtime",
+  "name": "@xrsdk/jsx-runtime",
   "version": "1.0.0",
   "scripts": {
     "start": "tsc  --watch",
     "build": "tsc",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
+  "main": "dist/jsx-runtime.js",
+  "types": "dist/jsx-runtime.d.js",
   "author": "",
   "license": "ISC",
   "description": "",
