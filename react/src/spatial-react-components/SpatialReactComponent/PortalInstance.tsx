@@ -101,7 +101,39 @@ function handleOpenWindowDocumentClick(openedWindow: Window) {
   }
 }
 
-function syncParentHeadToChild(childWindow: WindowProxy) {
+function asyncLoadStyleToChildWindow(
+  childWindow: WindowProxy,
+  n: HTMLLinkElement,
+  debugName: string,
+) {
+  return new Promise(resolve => {
+    // Safari seems to have a bug where
+    // ~1/50 loads, if the same url is loaded very quickly in a window and a child window,
+    // the second load request never is fired resulting in css not to be applied.
+    // Workaround this by making the css stylesheet request unique
+    n.href += '?uniqueURL=' + Math.random()
+    n.onerror = function () {
+      console.error(
+        'Failed to load style link',
+        debugName,
+        (n as HTMLLinkElement).href,
+      )
+      resolve(false)
+    }
+    n.onload = function () {
+      resolve(true)
+    }
+
+    childWindow.document.head.appendChild(n)
+  })
+}
+
+async function syncParentHeadToChild(
+  childWindow: WindowProxy,
+  debugName: string,
+) {
+  const styleLoadedPromises = []
+
   for (let i = document.head.children.length - 1; i >= 0; i--) {
     let n = document.head.children[i].cloneNode(true)
     if (
@@ -109,24 +141,26 @@ function syncParentHeadToChild(childWindow: WindowProxy) {
       (n as HTMLLinkElement).rel == 'stylesheet' &&
       (n as HTMLLinkElement).href
     ) {
-      // Safari seems to have a bug where
-      // ~1/50 loads, if the same url is loaded very quickly in a window and a child window,
-      // the second load request never is fired resulting in css not to be applied.
-      // Workaround this by making the css stylesheet request unique
-      ;(n as HTMLLinkElement).href += '?uniqueURL=' + Math.random()
-      childWindow.document.head.appendChild(n)
+      const promise = asyncLoadStyleToChildWindow(
+        childWindow,
+        n as HTMLLinkElement,
+        debugName,
+      )
+      styleLoadedPromises.push(promise)
     } else {
       childWindow.document.head.appendChild(n)
     }
   }
+
+  return Promise.all(styleLoadedPromises)
 }
 
-function syncHeaderStyle(openedWindow: Window) {
+async function syncHeaderStyle(openedWindow: Window, debugName: string) {
   // Synchronize head of parent page to this page to ensure styles are in sync
-  syncParentHeadToChild(openedWindow)
+  await syncParentHeadToChild(openedWindow, debugName)
 
   const headObserver = new MutationObserver(mutations => {
-    syncParentHeadToChild(openedWindow)
+    syncParentHeadToChild(openedWindow, debugName)
   })
 
   headObserver.observe(document.head, { childList: true, subtree: true })
@@ -312,7 +346,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       setOpenWindowStyle(openWindow)
       handleOpenWindowDocumentClick(openWindow)
 
-      const headObserver = syncHeaderStyle(openWindow)
+      const headObserver = await syncHeaderStyle(openWindow, debugName)
       const spawnedResult = {
         headObserver,
       }
