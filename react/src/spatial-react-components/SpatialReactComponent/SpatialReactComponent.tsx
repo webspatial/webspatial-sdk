@@ -19,6 +19,7 @@ import {
 import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext'
 import { SpatialID } from './const'
 import { SpatialLayerContext } from './SpatialLayerContext'
+import { SpatialDebugNameContext } from './SpatialDebugNameContext'
 
 export interface SpatialReactComponentProps {
   allowScroll?: boolean
@@ -54,7 +55,7 @@ function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
 
   const componentDesc = { El }
   const spatialDesc = { spatialStyle, allowScroll, scrollWithParent }
-  const debugDesc = { debugShowStandardInstance, debugName }
+  const debugDesc = { debugName, debugShowStandardInstance }
   return { componentDesc, spatialDesc, debugDesc, props }
 }
 
@@ -81,7 +82,6 @@ function renderSpatialReactComponent(
     ...props,
     ...componentDesc,
     ...spatialDesc,
-    debugName: debugDesc.debugName,
   }
 
   const spatialReactContextObject = useMemo(
@@ -100,12 +100,11 @@ function renderSpatialReactComponent(
 function renderSubPortalInstance(
   inProps: SpatialReactComponentWithUniqueIDProps,
 ) {
-  const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps)
+  const { componentDesc, spatialDesc, props } = parseProps(inProps)
   const portalInstanceProps = {
     ...props,
     ...componentDesc,
     ...spatialDesc,
-    debugName: debugDesc.debugName,
   }
 
   return <PortalInstance {...portalInstanceProps} />
@@ -130,9 +129,11 @@ function SpatialReactComponentRefactor(
 
   const contentInLayer = renderContentInLayer(props)
   return (
-    <SpatialLayerContext.Provider value={layer + 1}>
-      {contentInLayer}
-    </SpatialLayerContext.Provider>
+    <SpatialDebugNameContext.Provider value={inProps.debugName || ''}>
+      <SpatialLayerContext.Provider value={layer + 1}>
+        {contentInLayer}
+      </SpatialLayerContext.Provider>
+    </SpatialDebugNameContext.Provider>
   )
 }
 
