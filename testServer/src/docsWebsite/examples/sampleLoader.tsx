@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark as dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import ReactMarkdown from 'react-markdown'
 
 export function showSample(MySample: any, hasCode = true) {
   var spatial: Spatial | null = new Spatial()
@@ -39,6 +40,7 @@ export function showSample(MySample: any, hasCode = true) {
   function App(props: { children?: ReactNode }) {
     var [spatialSupported, setSpatialSupported] = useState(false)
     var [showCode, setShowCode] = useState('')
+    var [showMarkdown, setShowMarkdown] = useState('')
 
     useEffect(() => {
       if (session) {
@@ -124,7 +126,7 @@ export function showSample(MySample: any, hasCode = true) {
               className="menu bg-base-200 text-base-content min-h-full w-80 p-4"
               style={{ backgroundColor: '#00000088' }}
             >
-              <a href="/src/docsWebsite/index.html">
+              <a href="/">
                 <h1 className="text-3xl">WebSpatial</h1>
               </a>
               <li>
@@ -132,10 +134,12 @@ export function showSample(MySample: any, hasCode = true) {
                   <summary style={{ cursor: 'pointer' }}>Docs</summary>
                   <ul>
                     <li>
-                      <a>Getting started</a>
+                      <a href="/src/docsWebsite/index.html">Getting started</a>
                     </li>
                     <li>
-                      <a>Hello world</a>
+                      <a href="/src/docsWebsite/index.html?examplePath=helloWorld">
+                        Hello world
+                      </a>
                     </li>
                   </ul>
                 </details>
@@ -165,7 +169,7 @@ export function showSample(MySample: any, hasCode = true) {
                           </li>
                           <li>
                             <a href="/src/docsWebsite/index.html?examplePath=loadModel">
-                              Load model
+                              Load model file
                             </a>
                           </li>
                           <li>
