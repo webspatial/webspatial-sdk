@@ -24,7 +24,7 @@ if (session) {
   document.documentElement.style.backgroundColor = '#1155aa55'
 } else {
   console.log('not supported')
-  document.documentElement.style.backgroundColor = '#FFFFFF00'
+  document.documentElement.style.backgroundColor = '#1155aa55'
 }
 
 function WebSpatialTitle(props: { makeShadow?: boolean }) {

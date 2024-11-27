@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { SpatialIFrame, Model } from '@xrsdk/react'
+import { flushSync } from 'react-dom'
+import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark as dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import ReactMarkdown from 'react-markdown'
 
-export function showSample(MySample: Function, hasCode = true) {
+export function showSample(MySample: any, hasCode = true) {
   var spatial: Spatial | null = new Spatial()
   if (!spatial.isSupported()) {
     spatial = null
@@ -39,6 +40,7 @@ export function showSample(MySample: Function, hasCode = true) {
   function App(props: { children?: ReactNode }) {
     var [spatialSupported, setSpatialSupported] = useState(false)
     var [showCode, setShowCode] = useState('')
+    var [showMarkdown, setShowMarkdown] = useState('')
 
     useEffect(() => {
       if (session) {
@@ -62,6 +64,15 @@ export function showSample(MySample: Function, hasCode = true) {
               </div>
             </div>
             <div className="w-full h-full">
+              {spatialSupported ? (
+                <></>
+              ) : (
+                <div className="w-full bg-slate-500">
+                  Note: WebSpatial is not supported in this browser so xr
+                  content will not be displayed. Currently only availible on
+                  Apple Vision Pro app
+                </div>
+              )}
               {hasCode ? (
                 <div
                   className="btn m-5"
@@ -115,7 +126,7 @@ export function showSample(MySample: Function, hasCode = true) {
               className="menu bg-base-200 text-base-content min-h-full w-80 p-4"
               style={{ backgroundColor: '#00000088' }}
             >
-              <a href="/src/docsWebsite/index.html">
+              <a href="/">
                 <h1 className="text-3xl">WebSpatial</h1>
               </a>
               <li>
@@ -123,10 +134,12 @@ export function showSample(MySample: Function, hasCode = true) {
                   <summary style={{ cursor: 'pointer' }}>Docs</summary>
                   <ul>
                     <li>
-                      <a>Getting started</a>
+                      <a href="/src/docsWebsite/index.html">Getting started</a>
                     </li>
                     <li>
-                      <a>Hello world</a>
+                      <a href="/src/docsWebsite/index.html?examplePath=helloWorld">
+                        Hello world
+                      </a>
                     </li>
                   </ul>
                 </details>
@@ -156,7 +169,12 @@ export function showSample(MySample: Function, hasCode = true) {
                           </li>
                           <li>
                             <a href="/src/docsWebsite/index.html?examplePath=loadModel">
-                              Load model
+                              Load model file
+                            </a>
+                          </li>
+                          <li>
+                            <a href="/src/docsWebsite/index.html?examplePath=spatialView">
+                              Spatial View
                             </a>
                           </li>
                           <li>
@@ -229,12 +247,17 @@ export function showSample(MySample: Function, hasCode = true) {
       case 'complete':
         document.body.appendChild(root)
         var createdRoot = ReactDOM.createRoot(root)
-        // Create react root
-        createdRoot.render(
-          <App>
-            <MySample session={session} />
-          </App>,
-        )
+
+        // There seems to be a bug with React's concurrent renderer in safari which is causing an FOUC
+        // This is required to force dom updates prior to page completion
+        flushSync(() => {
+          // Create react root
+          createdRoot.render(
+            <App>
+              <MySample session={session} />
+            </App>,
+          )
+        })
         break
     }
   })
