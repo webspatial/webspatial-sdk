@@ -1,11 +1,10 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample'
-import { StyledTitleComponent } from './StyledTitleComponent'
 import { SpatialMonitor, enableDebugTool } from '@xrsdk/react'
 import { SpatialTagComponent } from './SpatialTagComponent'
-import { SimpleSpatialComponent } from './SimpleSpatialComponent'
 import { NestedComponent } from './NestedComponent'
+import { CubeComponent } from './CubeComponent'
+import { SimpleSpatialComponent } from './SimpleSpatialComponent'
 
 enableDebugTool()
 
@@ -19,18 +18,16 @@ function App() {
       </div>
 
       <SpatialMonitor className="w-screen h-screen  ">
-        <NestedComponent />
-        <SimpleSpatialComponent />
-        <StyledTitleComponent />
-        <CSSModelSample />
-        <SpatialTagComponent />
+        <div className="flex flex-col">
+          <SimpleSpatialComponent />
+          <SpatialTagComponent />
+          <NestedComponent />
+          <CSSModelSample />
+          <CubeComponent />
+        </div>
       </SpatialMonitor>
     </div>
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  // <React.StrictMode>
-  <App />,
-  // </React.StrictMode >,
-)
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
