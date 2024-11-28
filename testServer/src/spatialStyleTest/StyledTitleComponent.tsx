@@ -4,18 +4,10 @@ import styled from 'styled-components'
 export const StyledTitle = styled.h1<{ $primary?: boolean }>`
   font-size: 1.5em;
   text-align: center;
-  position: absolute;
-  bottom: ${props => (props.$primary ? '-120px' : '-150px')};
+  position: relative;
   color: ${props => (props.$primary ? 'blue' : 'red')};
-  --xr-back: ${props => (props.$primary ? 6 : 12)};
+  --xr-back: ${props => (props.$primary ? 60 : 120)};
   background: #fff;
-`
-
-export const StyledTitle2 = styled.h1`
-  font-size: 1.5em;
-  text-align: center;
-  color: #bf4f74;
-  back: 123;
 `
 
 export const StyledTitleComponent = () => {
@@ -31,7 +23,7 @@ export const StyledTitleComponent = () => {
   }
 
   return (
-    <div className="flex flex-col relative">
+    <div>
       <div onClick={onToggleHelloworld}>toggle helloworld</div>
       {showText && <div>helloworld</div>}
 
