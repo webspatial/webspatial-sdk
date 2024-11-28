@@ -6,6 +6,8 @@ import {
 } from '../SpatialReactComponent'
 import { SpatialIsStandardInstanceContext } from '../SpatialReactComponent/SpatialIsStandardInstanceContext'
 import { getSession } from '../../utils/getSession'
+import { CSSSpatialDebugNameContext } from './CSSSpatialDebugNameContext'
+
 function renderWithCSSParser(inProps: SpatialReactComponentProps) {
   const { style = {}, className = '', ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
@@ -48,14 +50,21 @@ function renderWithoutCSSParser(
   return <SpatialReactComponent style={style} {...props} />
 }
 
-export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
+function CSSSpatialComponentBase(inProps: SpatialReactComponentProps) {
   const isWebEnv = !getSession()
-
-  const isInStandardInstance = useContext(SpatialIsStandardInstanceContext)
+  const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
 
   if (isWebEnv || isInStandardInstance === true) {
     return renderWithoutCSSParser(inProps, isWebEnv)
   } else {
     return renderWithCSSParser(inProps)
   }
+}
+
+export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
+  return (
+    <CSSSpatialDebugNameContext.Provider value={inProps.debugName || ''}>
+      <CSSSpatialComponentBase {...inProps} />
+    </CSSSpatialDebugNameContext.Provider>
+  )
 }
