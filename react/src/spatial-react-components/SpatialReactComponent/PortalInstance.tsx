@@ -168,6 +168,13 @@ async function syncHeaderStyle(openedWindow: Window, debugName: string) {
   return headObserver
 }
 
+function syncDefaultSpatialStyle(openedWindow: Window, debugName: string) {
+  const styleElement = document.createElement('style')
+  styleElement.type = 'text/css'
+  styleElement.innerHTML = ' .xr-spatial-default {  --xr-back: 0.001  } '
+  openedWindow.document.head.appendChild(styleElement)
+}
+
 function useSyncSpatialProps(
   spatialWindowManager: SpatialWindowManager | undefined,
   props: Pick<
@@ -346,6 +353,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       setOpenWindowStyle(openWindow)
       handleOpenWindowDocumentClick(openWindow)
 
+      syncDefaultSpatialStyle(openWindow, debugName)
       const headObserver = await syncHeaderStyle(openWindow, debugName)
       const spawnedResult = {
         headObserver,
