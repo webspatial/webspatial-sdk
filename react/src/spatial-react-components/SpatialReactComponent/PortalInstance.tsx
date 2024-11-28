@@ -19,6 +19,7 @@ import {
 } from './utils'
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
+import { SpatialDebugNameContext } from './SpatialDebugNameContext'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
@@ -30,14 +31,12 @@ interface PortalInstanceProps {
   style?: CSSProperties | undefined
 
   [SpatialID]: string
-
-  debugName: string
 }
 
 function renderJSXPortalInstance(
   inProps: Omit<
     PortalInstanceProps,
-    'allowScroll' | 'scrollWithParent' | 'spatialStyle' | 'debugName'
+    'allowScroll' | 'scrollWithParent' | 'spatialStyle'
   >,
   elWidth: number,
   elHeight: number,
@@ -183,7 +182,6 @@ function useSyncSpatialProps(
   >,
   domRect: RectType,
   anchor: vecType,
-  debugName: string,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -207,8 +205,6 @@ function useSyncSpatialProps(
   if (scale.x === undefined) scale.x = 1
   if (scale.y === undefined) scale.y = 1
   if (scale.z === undefined) scale.z = 1
-
-  const spatialReactContextObject = useContext(SpatialReactContext)
 
   // Sync prop updates
   useEffect(() => {
@@ -345,8 +341,10 @@ function useSyncDomRect(spatialId: string) {
 }
 
 export function PortalInstance(inProps: PortalInstanceProps) {
-  const { allowScroll, scrollWithParent, spatialStyle, debugName, ...props } =
-    inProps
+  const { allowScroll, scrollWithParent, spatialStyle, ...props } = inProps
+
+  const debugName = useContext(SpatialDebugNameContext)
+
   const onContainerSpawned = useCallback(
     async (spatialWindowManager: SpatialWindowManager) => {
       const openWindow = spatialWindowManager.window!
@@ -386,7 +384,6 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     { style: props.style, allowScroll, scrollWithParent, spatialStyle },
     domRect,
     anchor,
-    debugName,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(
