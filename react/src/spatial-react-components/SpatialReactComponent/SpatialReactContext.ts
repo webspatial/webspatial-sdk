@@ -32,9 +32,6 @@ export class SpatialReactContextObject {
     this.layerSequences[layer][idx] = sequenceId + 1
     const spatialId = `${debugName}_${layer}_${sequenceId}`
 
-    console.log(
-      `dbg ${debugName} isInStandardInstance ${isInStandardInstance} getSpatialID ${spatialId}`,
-    )
     return spatialId
   }
 
