@@ -5,6 +5,7 @@ import { SpatialMonitor, enableDebugTool } from '@xrsdk/react'
 import { SpatialTagComponent } from './SpatialTagComponent'
 import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'
+import { StyledTitleComponent } from './StyledTitleComponent'
 
 enableDebugTool()
 
@@ -20,6 +21,7 @@ function App() {
       <SpatialMonitor className="w-screen h-screen  ">
         <div className="flex flex-col">
           <SpatialTagComponent />
+          <StyledTitleComponent />
           <NestedComponent />
           <CSSModelSample />
           <CubeComponent />
