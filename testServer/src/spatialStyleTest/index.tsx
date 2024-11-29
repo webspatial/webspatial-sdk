@@ -5,6 +5,7 @@ import { SpatialTagComponent } from './SpatialTagComponent'
 import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'
 import { SimpleSpatialComponent } from './SimpleSpatialComponent'
+import { StyledTitleComponent } from './StyledTitleComponent'
 
 enableDebugTool()
 
@@ -21,6 +22,7 @@ function App() {
         <div className="flex flex-col">
           <SimpleSpatialComponent />
           <SpatialTagComponent />
+          <StyledTitleComponent />
           <NestedComponent />
           <CSSModelSample />
           <CubeComponent />
