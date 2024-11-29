@@ -9,7 +9,7 @@ import { getSession } from '../../utils/getSession'
 import { CSSSpatialDebugNameContext } from './CSSSpatialDebugNameContext'
 
 function renderWithCSSParser(inProps: SpatialReactComponentProps) {
-  const { style = {}, className = '', ...props } = inProps
+  const { style = {}, children, ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
     ...style,
@@ -22,17 +22,19 @@ function renderWithCSSParser(inProps: SpatialReactComponentProps) {
     transform: 'none',
   }
 
+  const El = inProps.component || 'div'
+
   return (
     <>
       {ready && (
         <SpatialReactComponent
           style={spatialDivStyle}
-          className={className}
+          children={children}
           {...props}
           spatialStyle={spatialStyle}
         />
       )}
-      <div style={divRefStyle} className={className} ref={ref} />
+      <El style={divRefStyle} {...props} ref={ref} />
     </>
   )
 }
