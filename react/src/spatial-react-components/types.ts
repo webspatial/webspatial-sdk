@@ -4,6 +4,7 @@ export type spatialStyleDef = {
   position: Partial<vecType>
   rotation: quatType
   scale: Partial<vecType>
+  zIndex?: number
   transparentEffect: boolean
   glassEffect: boolean
   materialThickness: 'none' | 'thick' | 'regular' | 'thin'

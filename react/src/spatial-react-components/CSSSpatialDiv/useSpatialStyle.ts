@@ -87,6 +87,9 @@ function parseSpatialStyle(node: HTMLElement) {
 
   resultMatrix.decompose(position, quaternion, scale)
 
+  // parse zIndex
+  const zIndex = parseFloat(computedStyle.getPropertyValue('z-index'))
+
   return {
     position: { x: position.x, y: position.y, z: position.z },
     rotation: {
@@ -96,6 +99,7 @@ function parseSpatialStyle(node: HTMLElement) {
       w: quaternion.w,
     },
     scale: { x: scale.x, y: scale.y, z: scale.z },
+    zIndex,
   }
 }
 
@@ -105,6 +109,7 @@ export function useSpatialStyle() {
     position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
+    zIndex: 0,
   })
   const [ready, setReady] = useState(false)
 
