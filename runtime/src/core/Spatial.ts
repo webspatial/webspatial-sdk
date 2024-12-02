@@ -5,10 +5,25 @@ import { SpatialSession } from './SpatialSession'
  */
 export class Spatial {
   requestSession() {
-    return new SpatialSession()
+    if (
+      this.isSupported() &&
+      this.getNativeVersion() === this.getClientVersion()
+    ) {
+      return new SpatialSession()
+    } else {
+      return null
+    }
   }
 
   isSupported() {
     return (window as any).WebSpatailEnabled
+  }
+
+  getNativeVersion() {
+    return (window as any).WebSpatailNativeVersion
+  }
+
+  getClientVersion() {
+    return '0.0.1'
   }
 }
