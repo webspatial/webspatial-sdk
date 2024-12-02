@@ -25,6 +25,14 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
+   * Syncs the zIndex with the renderer
+   */
+  async updateZIndex(zIndex: number) {
+    console.log('dbg updateZIndex', zIndex)
+    await WebSpatial.updateResource(this._entity, { zIndex })
+  }
+
+  /**
    * Attaches a component to the entity to be displayed
    */
   async setComponent(component: SpatialComponent) {

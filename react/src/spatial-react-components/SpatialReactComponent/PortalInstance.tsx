@@ -185,6 +185,7 @@ function useSyncSpatialProps(
     transparentEffect = true,
     cornerRadius = 0,
     materialThickness = 'none',
+    zIndex = 0,
   } = spatialStyle
   let stylePosition = style?.position
   let styleOverflow = style?.overflow
@@ -248,9 +249,11 @@ function useSyncSpatialProps(
           scale as vecType,
           anchor,
         )
+
+        spatialWindowManager?.setZIndex(zIndex)
       })()
     }
-  }, [spatialWindowManager, domRect, position, rotation, scale, anchor])
+  }, [spatialWindowManager, domRect, position, rotation, scale, anchor, zIndex])
 
   useEffect(() => {
     // sync viewport
