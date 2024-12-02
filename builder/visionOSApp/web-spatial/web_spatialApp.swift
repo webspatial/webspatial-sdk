@@ -27,6 +27,7 @@ struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var root: SpatialWindowComponent? = nil
     @State var rootWGD: SpatialWindowGroup
+    @State var initialLaunch = true
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -87,7 +88,19 @@ struct web_spatialApp: App {
                     // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
                     .handlesExternalEvents(preferring: [], allowing: [])
             }
-        }.windowStyle(.plain)
+        }.windowStyle(.plain).onChange(of: scenePhase) { oldPhase, newPhase in
+            if oldPhase == .background && newPhase == .inactive {
+                if initialLaunch {
+                    // App initial open
+                    initialLaunch = false
+                } else {
+                    // App reopened
+                    let fileUrl = getFileUrl()
+                    root?.navigateToURL(url: fileUrl)
+                    rootWGD.setSize.send(DefaultPlainWindowGroupSize)
+                }
+            }
+        }
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowData!.windowGroupID)
