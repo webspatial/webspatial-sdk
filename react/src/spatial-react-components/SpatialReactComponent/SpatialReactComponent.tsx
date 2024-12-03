@@ -124,13 +124,27 @@ function SpatialReactComponentRefactor(
     },
   }))
 
-  const layer = useContext(SpatialLayerContext)
-  const props = { ...inProps, [SpatialID]: (layer + 1).toString() }
+  const layer = useContext(SpatialLayerContext) + 1
+
+  const parentSpatialReactContextObject = useContext(SpatialReactContext)
+  const isNestedSubInstance = !parentSpatialReactContextObject
+  const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
+  const spatialID = useMemo(() => {
+    return isNestedSubInstance
+      ? layer.toString()
+      : parentSpatialReactContextObject.getSpatialID(
+          layer,
+          isInStandardInstance,
+          inProps.debugName,
+        )
+  }, [])
+
+  const props = { ...inProps, [SpatialID]: spatialID }
 
   const contentInLayer = renderContentInLayer(props)
   return (
     <SpatialDebugNameContext.Provider value={inProps.debugName || ''}>
-      <SpatialLayerContext.Provider value={layer + 1}>
+      <SpatialLayerContext.Provider value={layer}>
         {contentInLayer}
       </SpatialLayerContext.Provider>
     </SpatialDebugNameContext.Provider>

@@ -16,6 +16,25 @@ export class SpatialReactContextObject {
   private spatialId2dom: Record<string, HTMLElement> = {}
   private spatialId2parentSpatialDom: Record<string, HTMLElement> = {}
 
+  // layer : [standardInstance sequence, portalInstance sequence]
+  private layerSequences: Record<number, [number, number]> = {}
+
+  public getSpatialID(
+    layer: number,
+    isInStandardInstance: boolean,
+    debugName: string = '',
+  ): string {
+    if (this.layerSequences[layer] === undefined) {
+      this.layerSequences[layer] = [0, 0]
+    }
+    const idx = isInStandardInstance ? 0 : 1
+    const sequenceId = this.layerSequences[layer][idx]
+    this.layerSequences[layer][idx] = sequenceId + 1
+    const spatialId = `${debugName}_${layer}_${sequenceId}`
+
+    return spatialId
+  }
+
   public onDomChange(spatialId: string, fn: () => void) {
     this.fns[spatialId] = fn
     if (this.dom) {
