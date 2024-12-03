@@ -292,6 +292,10 @@ class CommandDataManager {
                 }
             }
 
+            if let zIndex: Double = data.update?.zIndex {
+                entity.zIndex = zIndex
+            }
+
             if var newParentID: String = data.update?.setParentWindowGroupID {
                 newParentID = target.readWinodwGroupID(id: newParentID)
                 let wg = SpatialWindowGroup.getSpatialWindowGroup(newParentID)
@@ -559,6 +563,7 @@ struct JSResourceData: Codable {
     var windowID: String?
     var style: JSEntityStyle?
     var getBoundingBox: Bool?
+    var zIndex: Double?
 }
 
 struct JSColor: Codable {

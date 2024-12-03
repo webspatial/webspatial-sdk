@@ -44,6 +44,7 @@ class SpatialBridgeComponent: Component {
 class SpatialEntity: SpatialObject {
     var coordinateSpace = CoordinateSpaceMode.APP
     let modelEntity = ModelEntity()
+    var zIndex: Double = 0
 
     var forceUpdate = false
 
@@ -157,6 +158,7 @@ class SpatialEntity: SpatialObject {
         var inspectInfo: [String: Any] = [
             "position": modelEntity.position.description,
             "scale": modelEntity.scale.description,
+            "zIndex": zIndex,
             "childEntities": childEntitiesInfo,
             "coordinateSpace": coordinateSpace.description,
             "parent": parent?.id,
