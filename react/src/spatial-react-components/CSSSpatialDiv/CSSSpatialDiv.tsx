@@ -10,10 +10,16 @@ export function withCSSSpatial(Component: React.ElementType) {
   } else {
     const WithCSSSpatialComponent = forwardRef(
       (givenProps: any, givenRef: Ref<any>) => {
-        const { component: ignoreComponent, ...props } = givenProps
+        const {
+          component: ignoreComponent,
+          className: origClassName = '',
+          ...props
+        } = givenProps
+        const className = 'xr-spatial-default ' + origClassName
         return (
           <CSSSpatialComponent
             component={Component}
+            className={className}
             {...props}
             ref={givenRef}
           />
