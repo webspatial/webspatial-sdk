@@ -73,6 +73,7 @@ struct SpatialWebViewUI: View {
 
                                             .position(x: x, y: y)
                                             .offset(z: z)
+                                            .zIndex(e.zIndex)
                                             .gesture(
                                                 DragGesture()
                                                     .onChanged { gesture in
