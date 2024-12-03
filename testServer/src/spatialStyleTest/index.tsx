@@ -1,10 +1,10 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample'
 import { SpatialMonitor, enableDebugTool } from '@xrsdk/react'
 import { SpatialTagComponent } from './SpatialTagComponent'
 import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'
+import { SimpleSpatialComponent } from './SimpleSpatialComponent'
 import { StyledTitleComponent } from './StyledTitleComponent'
 
 enableDebugTool()
@@ -20,6 +20,7 @@ function App() {
 
       <SpatialMonitor className="w-screen h-screen  ">
         <div className="flex flex-col">
+          <SimpleSpatialComponent />
           <SpatialTagComponent />
           <StyledTitleComponent />
           <NestedComponent />
