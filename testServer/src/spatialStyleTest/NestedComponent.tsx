@@ -12,7 +12,6 @@ export const NestedComponent = () => {
   }
 
   const styleInner = {
-    '--xr-back': 36,
     backgroundColor: 'blue',
   }
 
