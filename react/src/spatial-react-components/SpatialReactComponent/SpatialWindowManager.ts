@@ -97,6 +97,11 @@ export class SpatialWindowManager {
     await webview.setRotationAnchor(rotationOrigin)
   }
 
+  async setZIndex(zIndex: number) {
+    let entity = this.entity!
+    entity.updateZIndex(zIndex)
+  }
+
   async destroy() {
     if (this.initPromise) {
       await this.initPromise
