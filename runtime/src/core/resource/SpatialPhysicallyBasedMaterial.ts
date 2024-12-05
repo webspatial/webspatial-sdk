@@ -1,3 +1,4 @@
+import { SpatialModelComponent } from '../component'
 import { WebSpatial } from '../private/WebSpatial'
 import { SpatialObject } from '../SpatialObject'
 
@@ -9,6 +10,11 @@ export class SpatialPhysicallyBasedMaterial extends SpatialObject {
   metallic = { value: 0.5 }
   roughness = { value: 0.5 }
 
+  _modelComponentAttachedTo: { [key: string]: SpatialModelComponent } = {}
+  _addToComponent(c: SpatialModelComponent) {
+    this._modelComponentAttachedTo[c._resource.id] = c
+  }
+
   /**
    * Syncs state of color, metallic, roupghness to the renderer
    */
@@ -18,5 +24,10 @@ export class SpatialPhysicallyBasedMaterial extends SpatialObject {
       metallic: this.metallic,
       roughness: this.roughness,
     })
+
+    // Since realitykit's materials are structs and not references, every time we change a material, we must copy it to all of the components its attached to to observe the update
+    for (var key in this._modelComponentAttachedTo) {
+      await this._modelComponentAttachedTo[key]._syncMaterials()
+    }
   }
 }
