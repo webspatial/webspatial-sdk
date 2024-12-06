@@ -22,4 +22,11 @@ class SpatialModelComponent: SpatialComponent {
     override func onAddToEntity() {
         entity?.modelEntity.model = modelComponent
     }
+
+    // Since modelComponent is a struct instead of a class, we must sync it to the entity its attached to
+    func onUpdate() {
+        if entity != nil {
+            entity?.modelEntity.model = modelComponent
+        }
+    }
 }
