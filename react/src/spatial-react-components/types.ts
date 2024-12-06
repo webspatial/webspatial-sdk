@@ -1,13 +1,14 @@
+import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
+
 export type vecType = { x: number; y: number; z: number }
 export type quatType = { x: number; y: number; z: number; w: number }
+
 export type spatialStyleDef = {
   position: Partial<vecType>
   rotation: quatType
   scale: Partial<vecType>
   zIndex?: number
-  transparentEffect: boolean
-  glassEffect: boolean
-  materialThickness: 'none' | 'thick' | 'regular' | 'thin'
+  material?: { type: BackgroundMaterialType }
   cornerRadius: number
 }
 

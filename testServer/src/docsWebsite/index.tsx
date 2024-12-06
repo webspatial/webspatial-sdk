@@ -24,7 +24,7 @@ if (session) {
   if (translucentStyle == 'translucent') {
     session
       .getCurrentWindowComponent()
-      .setStyle({ transparentEffect: true, glassEffect: true, cornerRadius: 0 })
+      .setStyle({ material: { type: 'default' }, cornerRadius: 0 })
   }
 
   var backgroundStyle = window
@@ -41,7 +41,7 @@ function MySample() {
     if (session) {
       session
         .getCurrentWindowComponent()
-        .setStyle({ transparentEffect: toggle, glassEffect: toggle })
+        .setStyle({ material: { type: toggle ? 'default' : 'none' } })
     }
   }, [toggle])
   return (
