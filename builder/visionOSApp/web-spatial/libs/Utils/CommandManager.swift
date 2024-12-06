@@ -500,7 +500,6 @@ class CommandDataManager {
             } else {
                 target.failEvent(requestID: requestID, data: "sceneName is required")
             }
-
         case "close":
             if let sceneName = data.sceneData?.sceneName {
                 let success = SceneMgr.Instance.close(sceneName: sceneName)
@@ -513,7 +512,6 @@ class CommandDataManager {
             } else {
                 target.failEvent(requestID: requestID, data: "sceneName is required")
             }
-
         case "getConfig":
             if let sceneName = data.sceneData?.sceneName {
                 // Call logic to get specific scene config
@@ -539,7 +537,6 @@ class CommandDataManager {
                     target.completeEvent(requestID: requestID, data: "null")
                 }
             }
-
         case "setConfig":
             if let sceneName = data.sceneData?.sceneName,
                let sceneConfig = data.sceneData?.sceneConfig
@@ -554,10 +551,8 @@ class CommandDataManager {
                 }
 
             } else {
-                print("setConfig, no sceneConfig")
                 target.failEvent(requestID: requestID)
             }
-
         case "delConfig":
             if let sceneName = data.sceneData?.sceneName {
                 // Call logic to remove the scene config
@@ -571,7 +566,6 @@ class CommandDataManager {
             } else {
                 target.completeEvent(requestID: requestID)
             }
-
         case "getScene":
             if let sceneName = data.sceneData?.sceneName {
                 // Call logic to get specific scene state
@@ -592,7 +586,6 @@ class CommandDataManager {
                     target.failEvent(requestID: requestID)
                 }
             }
-
         default:
             // Handle unsupported method
             target.completeEvent(requestID: requestID)
