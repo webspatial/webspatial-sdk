@@ -41,7 +41,7 @@ class SceneMgr {
     // Set up the singleton instance with a creator
     static func initInstance(_ creator: web_spatialApp) {
         guard Instance == nil else {
-            print("SceneMgr instance already exists.")
+            // SceneMgr instance already exists
             return
         }
         Instance = SceneMgr(creator: creator)
@@ -49,7 +49,7 @@ class SceneMgr {
 
     // Get config for a specific scene
     func getConfig(sceneName: String) -> Config? {
-        return sceneMap[sceneName]?.config // Return the scene's config or nil if not found
+        return sceneMap[sceneName]?.config
     }
 
     // Get all scene configs
@@ -81,7 +81,7 @@ class SceneMgr {
     // Open scene
     func open(sceneName: String, url: String) -> Bool {
         guard var scene = sceneMap[sceneName] else {
-            print("Scene \(sceneName) does not exist.")
+            // sceneName does not exist
             return false
         }
 
@@ -102,8 +102,7 @@ class SceneMgr {
             }
         }
 
-        print("Opening scene: \(sceneName), Config: \(scene.config)")
-        // Logic for opening the scene can be added here
+        // Logic for opening the scene
 
         let config = scene.config
 
@@ -150,18 +149,17 @@ class SceneMgr {
     // Close scene
     func close(sceneName: String) -> Bool {
         guard var scene = sceneMap[sceneName] else {
-            print("Scene \(sceneName) does not exist.")
+            // sceneName does not exist
             return false
         }
-        print("Closing scene: \(sceneName)")
-        // Logic for closing the scene can be added here
+        // Logic for closing the scene
         if let wgd = scene.wgd {
             parent?.rootWGD.closeWindowData.send(wgd)
             scene.wgd = nil
             sceneMap[sceneName] = scene // save
             return true
         } else {
-            print("scene not opened yet")
+            // scene not opened yet
             return false
         }
     }
@@ -169,9 +167,9 @@ class SceneMgr {
     // Get scene names with wgd (if name is provided and wgd exists, return the scene name; else, return nil)
     func getScene(sceneName: String) -> String? {
         if let scene = sceneMap[sceneName], scene.wgd != nil {
-            return sceneName // If scene exists and has wgd, return the scene name
+            return sceneName
         } else {
-            return nil // If the scene doesn't exist or doesn't have wgd, return nil
+            return nil
         }
     }
 
