@@ -38,8 +38,22 @@ function MySample(props: { session?: SpatialSession }) {
           customModel.setMesh(box)
           var e2 = await session.createEntity()
           await e2.setComponent(customModel)
+
+          var input = await session.createInputComponent()
+          await e2.setComponent(input)
+          input.onTranslate = async data => {
+            if (data.eventType == 'dragstart') {
+              if (mat.baseColor.r == 1) {
+                mat.baseColor.r = 0
+              } else {
+                mat.baseColor.r = 1
+              }
+              await mat.update()
+            }
+          }
+
           e2.transform.position.y = 0.3
-          e2.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+          e2.transform.scale = new DOMPoint(0.2, 0.2, 0.2)
           await e2.updateTransform()
           await e2.setParent(viewEnt)
         }
@@ -100,12 +114,12 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Resize div onclick to see it resize
         divOnPage.onclick = () => {
-          if (divOnPage.style.width == '300px') {
-            divOnPage.style.width = '100px'
-            divOnPage.style.height = '100px'
-          } else {
+          if (divOnPage.style.width == '600px') {
             divOnPage.style.width = '300px'
             divOnPage.style.height = '300px'
+          } else {
+            divOnPage.style.width = '600px'
+            divOnPage.style.height = '600px'
           }
         }
         // CODESAMPLE_END
@@ -120,7 +134,7 @@ function MySample(props: { session?: SpatialSession }) {
       </h1>
       <div
         ref={divRef}
-        style={{ width: '300px', height: '300px', backgroundColor: '#bbbbbb' }}
+        style={{ width: '600px', height: '600px', backgroundColor: '#bbbbbb' }}
       ></div>
     </div>
   )
