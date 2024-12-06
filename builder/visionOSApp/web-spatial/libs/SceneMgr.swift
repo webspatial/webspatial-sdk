@@ -61,7 +61,12 @@ class SceneMgr {
 
     // Set scene config
     func setConfig(sceneName: String, cfg: Config) -> Bool {
-        // TODO: ensure existing ones can't be changed?
+        // Ensure existing ones can't be changed if wgd already exists
+        if let scene = sceneMap[sceneName], scene.wgd != nil {
+            // If the scene exists and has a non-nil wgd, prevent modification
+            return false
+        }
+
         if sceneMap[sceneName] == nil {
             sceneMap[sceneName] = SceneData(config: cfg, wgd: nil)
         } else {
@@ -73,7 +78,11 @@ class SceneMgr {
 
     // Delete scene config
     func delConfig(sceneName: String) -> Bool {
-        // TODO: ensure existing ones can't be deleted
+        // Ensure existing ones can't be deleted if the scene is currently open
+        guard let scene = sceneMap[sceneName], scene.wgd == nil else {
+            // If the scene exists and has an associated wgd, prevent deletion
+            return false
+        }
         sceneMap.removeValue(forKey: sceneName)
         return true
     }
