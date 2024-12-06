@@ -70,9 +70,10 @@ function renderJSXPortalInstance(
 }
 
 function setOpenWindowStyle(openedWindow: Window) {
-  openedWindow!.document.documentElement.style.backgroundColor = 'transparent'
   openedWindow!.document.documentElement.style.cssText +=
     document.documentElement.style.cssText
+
+  openedWindow!.document.documentElement.style.backgroundColor = 'transparent'
   openedWindow!.document.body.style.margin = '0px'
 }
 
@@ -188,10 +189,9 @@ function useSyncSpatialProps(
     position = { x: 0, y: 0, z: 1 },
     rotation = { x: 0, y: 0, z: 0, w: 1 },
     scale = { x: 1, y: 1, z: 1 },
-    glassEffect = true,
-    transparentEffect = true,
+    material = { type: 'none' },
+
     cornerRadius = 0,
-    materialThickness = 'none',
     zIndex = 0,
   } = spatialStyle
   let stylePosition = style?.position
@@ -213,20 +213,12 @@ function useSyncSpatialProps(
       const webview = spatialWindowManager.webview
       ;(async function () {
         webview.setStyle({
-          transparentEffect,
-          glassEffect,
+          material: { type: material.type },
           cornerRadius,
-          materialThickness,
         })
       })()
     }
-  }, [
-    spatialWindowManager,
-    transparentEffect,
-    glassEffect,
-    cornerRadius,
-    materialThickness,
-  ])
+  }, [spatialWindowManager, material.type, cornerRadius])
 
   useEffect(() => {
     if (spatialWindowManager && spatialWindowManager.webview) {
@@ -298,7 +290,7 @@ function useSyncDomRect(spatialId: string) {
   const anchorRef = useRef({
     x: 0.5,
     y: 0.5,
-    z: 0,
+    z: 0.5,
   })
 
   const spatialReactContextObject = useContext(SpatialReactContext)
@@ -355,6 +347,8 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       handleOpenWindowDocumentClick(openWindow)
 
       syncDefaultSpatialStyle(openWindow, debugName)
+
+      console.log('openWindow', openWindow)
       const headObserver = await syncHeaderStyle(openWindow, debugName)
       const spawnedResult = {
         headObserver,

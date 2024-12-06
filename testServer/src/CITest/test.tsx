@@ -91,7 +91,10 @@ async function changeWebViewStyle() {
   }
   await (
     await session.getCurrentWindowComponent()
-  ).setStyle({ glassEffect: true, cornerRadius: 50 })
+  ).setStyle({
+    material: { type: 'default' },
+    cornerRadius: 50,
+  })
   document.documentElement.style.backgroundColor = 'transparent'
   document.body.style.backgroundColor = 'transparent'
 
