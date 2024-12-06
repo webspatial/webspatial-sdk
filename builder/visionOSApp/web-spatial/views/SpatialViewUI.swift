@@ -13,6 +13,40 @@ struct SpatialViewUI: View {
     // Entity which will contain all the content of this realityView and scale to fit frame
     @State var world = Entity()
 
+    private func toJson(val: SIMD3<Float>) -> String {
+        return "{x: " + String(val.x) + ",y: " + String(val.y) + ",z: " + String(val.z) + "}"
+    }
+
+    var dragGesture: some Gesture {
+        DragGesture().handActivationBehavior(.automatic)
+            .targetedToAnyEntity()
+            .onChanged { value in
+                let startPos = value.convert(value.startLocation3D, from: .local, to: .scene)
+                let translate = value.convert(value.location3D, from: .local, to: .scene)
+                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
+                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
+
+                if !ic.isDragging {
+                    ic.isDragging = true
+                    ic.trackedPosition = startPos
+                    let delta = translate - ic.trackedPosition
+                    ic.trackedPosition = translate
+
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                } else {
+                    let delta = translate - ic.trackedPosition
+                    ic.trackedPosition = translate
+                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'drag', translate: " + toJson(val: delta) + "}")
+                }
+            }
+            .onEnded { value in
+                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
+                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
+                ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragend'}")
+                ic.isDragging = false
+            }
+    }
+
     var body: some View {
         if let viewComponent = ent.getComponent(SpatialViewComponent.self) {
             GeometryReader3D { proxy in
@@ -64,7 +98,7 @@ struct SpatialViewUI: View {
                             SpatialWebViewUI().environment(entity).frame(width: wv.resolutionX, height: wv.resolutionY)
                         }
                     }
-                }.clipped()
+                }.gesture(dragGesture).clipped()
             }
         }
     }
