@@ -19,40 +19,6 @@ struct PlainWindowGroupView: View {
         sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
     }
 
-    private func toJson(val: SIMD3<Float>) -> String {
-        return "{x: " + String(val.x) + ",y: " + String(val.y) + ",z: " + String(val.z) + "}"
-    }
-
-    var dragGesture: some Gesture {
-        DragGesture().handActivationBehavior(.automatic)
-            .targetedToAnyEntity()
-            .onChanged { value in
-                let startPos = value.convert(value.startLocation3D, from: .local, to: .scene)
-                let translate = value.convert(value.location3D, from: .local, to: .scene)
-                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
-                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
-
-                if !ic.isDragging {
-                    ic.isDragging = true
-                    ic.trackedPosition = startPos
-                    let delta = translate - ic.trackedPosition
-                    ic.trackedPosition = translate
-
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
-                } else {
-                    let delta = translate - ic.trackedPosition
-                    ic.trackedPosition = translate
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
-                }
-            }
-            .onEnded { value in
-                let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
-                let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
-                ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragend'}")
-                ic.isDragging = false
-            }
-    }
-
     var body: some View {
         OpenDismissHandlerUI().environment(windowGroupContent)
 
@@ -62,15 +28,6 @@ struct PlainWindowGroupView: View {
 
         GeometryReader { proxy3D in
             ZStack {
-                RealityView { _ in
-
-                } update: { content in
-                    for (_, entity) in windowGroupContent.getEntities() {
-                        content.add(entity.modelEntity)
-                    }
-                }.opacity(windowResizeInProgress ? 0 : 1)
-                    .gesture(dragGesture).offset(z: -0.1)
-
                 if let e = rootEntity {
                     let _ = e.forceUpdate ? 0 : 0
                     let x = proxy3D.size.width / 2
