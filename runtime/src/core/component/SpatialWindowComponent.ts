@@ -1,6 +1,20 @@
 import { SpatialComponent } from './SpatialComponent'
 import { Vec3, Vec4, WebSpatial } from '../private/WebSpatial'
 
+export type BackgroundMaterialType =
+  | 'none'
+  | 'default'
+  | 'thick'
+  | 'regular'
+  | 'thin'
+
+export type StyleParam = {
+  material?: {
+    type: BackgroundMaterialType
+  }
+  cornerRadius?: number
+}
+
 /**
  * Used to position an web window in 3D space
  */
@@ -47,7 +61,16 @@ export class SpatialWindowComponent extends SpatialComponent {
    * Sets the style that should be applied to the window
    * @param options style options
    */
-  async setStyle(options: any) {
+  async setStyle(styleParam: StyleParam) {
+    const { material, cornerRadius } = styleParam
+    const options: any = {}
+    if (material) {
+      options.backgroundMaterial = material.type
+    }
+    if (cornerRadius) {
+      options.cornerRadius = cornerRadius
+    }
+
     if (document && document.readyState == 'loading') {
       // Avoid flash of unstyled content by sending style command via a link element
       var encoded = encodeURIComponent(JSON.stringify(options))

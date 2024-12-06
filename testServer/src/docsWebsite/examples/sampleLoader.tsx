@@ -23,8 +23,7 @@ export function showSample(MySample: any, hasCode = true) {
       .getPropertyValue('--spatial-material')
     if (translucentStyle == 'translucent') {
       session.getCurrentWindowComponent().setStyle({
-        transparentEffect: true,
-        glassEffect: true,
+        material: { type: 'default' },
         cornerRadius: 0,
       })
     }

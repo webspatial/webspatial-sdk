@@ -54,7 +54,7 @@ struct SpatialWebViewUI: View {
                                         // Matrix = MTranslate X MRotate X MScale
                                         SpatialWebViewUI().environment(e)
                                             .frame(width: width, height: height)
-                                            .frame(depth: 0, alignment: .back)
+                                            .offset(z: 0.000001)
                                             .scaleEffect(
                                                 x: CGFloat(e.modelEntity.scale.x),
                                                 y: CGFloat(e.modelEntity.scale.y),
@@ -126,12 +126,15 @@ struct SpatialWebViewUI: View {
 
                 // Display the main webview
                 wv.getView()
-                    .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
-                    .background(
-                        wv.materialThickness.opacity(wv.useMaterialThickness ? 1.0 : 0.0)
+                    .materialWithBorderCorner(
+                        wv.backgroundMaterial,
+                        CornerRadius(
+                            topLeading: wv.cornerRadius,
+                            bottomLeading: wv.cornerRadius,
+                            topTrailing: wv.cornerRadius,
+                            bottomTrailing: wv.cornerRadius
+                        )
                     )
-                    .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
-                    .cornerRadius(wv.cornerRadius)
                     .opacity(wv.visible ? 1 : 0)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

@@ -413,34 +413,11 @@ class CommandDataManager {
                 )
             }
 
-            if let materialThickness: String = data.update?.style?.materialThickness {
-                let mat = target.stringToThickness(str: materialThickness)
-                if mat != nil {
-                    if target.isLoading {
-                        target.loadingStyles.useMaterialThickness = true
-                        target.loadingStyles.materialThickness = mat!
-                    }
-                    spatialWindowComponent.useMaterialThickness = true
-                    spatialWindowComponent.materialThickness = mat!
-                } else {
-                    if target.isLoading {
-                        target.loadingStyles.useMaterialThickness = false
-                    }
-                    spatialWindowComponent.useMaterialThickness = false
-                }
-            }
-
-            if let glassEffect: Bool = data.update?.style?.glassEffect {
+            if let backgroundMaterial: BackgroundMaterial = data.update?.style?.backgroundMaterial {
                 if target.isLoading {
-                    target.loadingStyles.glassEffect = glassEffect
+                    target.loadingStyles.backgroundMaterial = backgroundMaterial
                 }
-                spatialWindowComponent.glassEffect = glassEffect
-            }
-            if let transparentEffect: Bool = data.update?.style?.transparentEffect {
-                if target.isLoading {
-                    target.loadingStyles.transparentEffect = transparentEffect
-                }
-                spatialWindowComponent.transparentEffect = transparentEffect
+                spatialWindowComponent.backgroundMaterial = backgroundMaterial
             }
             if let cornerRadius: Double = data.update?.style?.cornerRadius {
                 if target.isLoading {
@@ -603,9 +580,7 @@ struct JSRect: Codable {
 }
 
 struct JSEntityStyle: Codable {
-    var materialThickness: String?
-    var glassEffect: Bool?
-    var transparentEffect: Bool?
     var cornerRadius: Double?
+    var backgroundMaterial: BackgroundMaterial?
     var dimensions: JSVector2?
 }

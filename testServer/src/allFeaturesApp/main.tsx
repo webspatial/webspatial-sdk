@@ -245,7 +245,7 @@ var session = getSession()
 if (session) {
   session!
     .getCurrentWindowComponent()
-    .setStyle({ transparentEffect: false, glassEffect: true, cornerRadius: 70 })
+    .setStyle({ material: { type: 'default' }, cornerRadius: 70 })
   document.documentElement.style.backgroundColor = 'transparent'
   document.body.style.backgroundColor = 'transparent'
 } else {
