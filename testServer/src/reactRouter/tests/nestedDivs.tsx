@@ -112,7 +112,27 @@ export function NestedDivsTest() {
             </SpatialDiv>
           </SpatialDiv>
         </SpatialDiv>
-        <div style={{ backgroundColor: redCol, height: '50px' }}>02</div>
+        <SpatialDiv
+          debugName="PARENT C ROOT"
+          spatialStyle={{
+            position: { z: depth * 10, x: 0, y: 0 },
+            glassEffect: false,
+          }}
+          style={{ height: 120, backgroundColor: redCol }}
+        >
+          <p>Hello world A</p>
+          <SpatialDiv
+            debugName="CHILD C1"
+            spatialStyle={{
+              position: { z: depth * 30, x: 0, y: 0 },
+              glassEffect: false,
+            }}
+            style={{ height: 150, backgroundColor: blueCol }}
+          >
+            <p>Hello world B</p>
+          </SpatialDiv>
+        </SpatialDiv>
+
         <div style={{ backgroundColor: redCol, height: '50px' }}>02</div>
         <div style={{ backgroundColor: redCol, height: '50px' }}>02</div>
         <div style={{ backgroundColor: redCol, height: '50px' }}>02</div>

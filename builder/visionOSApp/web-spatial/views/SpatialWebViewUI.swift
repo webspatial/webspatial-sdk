@@ -54,7 +54,8 @@ struct SpatialWebViewUI: View {
                                         // Matrix = MTranslate X MRotate X MScale
                                         SpatialWebViewUI().environment(e)
                                             .frame(width: width, height: height)
-                                            .offset(z: 0.000001)
+                                            // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
+                                            .offset(z: 0.0001)
                                             .scaleEffect(
                                                 x: CGFloat(e.modelEntity.scale.x),
                                                 y: CGFloat(e.modelEntity.scale.y),
