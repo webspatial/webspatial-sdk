@@ -15,6 +15,7 @@ import { RectType, spatialStyleDef, vecType } from '../types'
 import {
   domRect2rectType,
   getInheritedStyleProps,
+  parseCornerRadius,
   parseTransformOrigin,
 } from './utils'
 import { SpatialReactContext } from './SpatialReactContext'
@@ -185,6 +186,7 @@ function useSyncSpatialProps(
   >,
   domRect: RectType,
   anchor: vecType,
+  cornerRadiusFromStyle: CornerRadius,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -193,7 +195,7 @@ function useSyncSpatialProps(
     scale = { x: 1, y: 1, z: 1 },
     material = { type: 'none' },
 
-    cornerRadius = 0,
+    cornerRadius = cornerRadiusFromStyle,
     zIndex = 0,
   } = spatialStyle
   let stylePosition = style?.position
@@ -318,6 +320,13 @@ function useSyncDomRect(spatialId: string) {
     z: 0.5,
   })
 
+  const cornerRadiusRef = useRef({
+    topLeading: 0,
+    bottomLeading: 0,
+    topTrailing: 0,
+    bottomTrailing: 0,
+  })
+
   const spatialReactContextObject = useContext(SpatialReactContext)
 
   useEffect(() => {
@@ -343,6 +352,9 @@ function useSyncDomRect(spatialId: string) {
       const anchor = parseTransformOrigin(computedStyle)
       anchorRef.current = anchor
 
+      const cornerRadius = parseCornerRadius(computedStyle)
+      cornerRadiusRef.current = cornerRadius
+
       setDomRect(rectType)
     }
 
@@ -357,6 +369,7 @@ function useSyncDomRect(spatialId: string) {
     domRect,
     inheritedPortalStyle: inheritedPortalStyleRef.current,
     anchor: anchorRef.current,
+    cornerRadius: cornerRadiusRef.current,
   }
 }
 
@@ -399,13 +412,15 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
   const spatialId = props[SpatialID]
 
-  const { domRect, inheritedPortalStyle, anchor } = useSyncDomRect(spatialId)
+  const { domRect, inheritedPortalStyle, anchor, cornerRadius } =
+    useSyncDomRect(spatialId)
 
   useSyncSpatialProps(
     spatialWindowManager,
     { style: props.style, allowScroll, scrollWithParent, spatialStyle },
     domRect,
     anchor,
+    cornerRadius,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(
