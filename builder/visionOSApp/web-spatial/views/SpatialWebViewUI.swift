@@ -129,12 +129,7 @@ struct SpatialWebViewUI: View {
                 wv.getView()
                     .materialWithBorderCorner(
                         wv.backgroundMaterial,
-                        CornerRadius(
-                            topLeading: wv.cornerRadius,
-                            bottomLeading: wv.cornerRadius,
-                            topTrailing: wv.cornerRadius,
-                            bottomTrailing: wv.cornerRadius
-                        )
+                        wv.cornerRadius
                     )
                     .opacity(wv.visible ? 1 : 0)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
