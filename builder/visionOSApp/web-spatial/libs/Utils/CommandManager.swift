@@ -348,6 +348,7 @@ class CommandDataManager {
                     }
                 }
             }
+            spatialModelComponent.onUpdate()
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 let id = spatialWindowComponent.entity!.id
