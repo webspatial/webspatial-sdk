@@ -1,0 +1,17 @@
+# builder/visionOSAPP/web-spatial/static-web
+builder/visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+builder/visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
+old/
+# We only allow pnpm lock files
+**/*/yarn.lock
+**/*/package-lock.json
+# No node_modules anywhere
+**/*/node_modules/
+node_modules
+.DS_Store
+*.log
+.pnpm-store
+coverage
+.vscode
+coverage
+temp

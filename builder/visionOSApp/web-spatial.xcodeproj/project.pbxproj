@@ -1,0 +1,662 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */; };
+		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
+		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
+		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
+		2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */; };
+		2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */; };
+		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
+		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
+		2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */; };
+		2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */; };
+		2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D902BED61A8006897EE /* NativeWebView.swift */; };
+		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
+		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
+		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
+		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
+		2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */; };
+		2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */; };
+		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
+		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
+		2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */; };
+		2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */; };
+		2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */; };
+		2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */; };
+		2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */; };
+		2BE1E9072C903E2C00EAE76A /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */; };
+		2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */; };
+		2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */; };
+		2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */; };
+		2BE1E9112C90795D00EAE76A /* SpatialModelComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */; };
+		2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2B2F1D7B2BEBFAAD006897EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2B2F1D5B2BEBFAAA006897EE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B2F1D622BEBFAAA006897EE;
+			remoteInfo = "web-spatial";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
+		2B2F1D632BEBFAAA006897EE /* web-spatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web-spatial.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
+		2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialApp.swift; sourceTree = "<group>"; };
+		2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
+		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "web-spatialTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialTests.swift; sourceTree = "<group>"; };
+		2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JsonParser.swift; sourceTree = "<group>"; };
+		2B2F1D902BED61A8006897EE /* NativeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebView.swift; sourceTree = "<group>"; };
+		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
+		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
+		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
+		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewComponent.swift; sourceTree = "<group>"; };
+		2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewUI.swift; sourceTree = "<group>"; };
+		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
+		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
+		2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
+		2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialEntity.swift; sourceTree = "<group>"; };
+		2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialComponent.swift; sourceTree = "<group>"; };
+		2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialInputComponent.swift; sourceTree = "<group>"; };
+		2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowGroup.swift; sourceTree = "<group>"; };
+		2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEmitter.swift; sourceTree = "<group>"; };
+		2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowComponent.swift; sourceTree = "<group>"; };
+		2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialMeshResource.swift; sourceTree = "<group>"; };
+		2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialPhysicallyBasedMaterial.swift; sourceTree = "<group>"; };
+		2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModelComponent.swift; sourceTree = "<group>"; };
+		2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebViewUI.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2B2F1D602BEBFAAA006897EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */,
+				2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B2F1D772BEBFAAD006897EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B0B1C0E2C494E4100E644F9 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				2B0B43092CBE21540003CEF3 /* CommandManager.swift */,
+				2B0B1C0F2C494E5400E644F9 /* Logger.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		2B2F1D5A2BEBFAAA006897EE = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D652BEBFAAA006897EE /* web-spatial */,
+				2B2F1D662BEBFAAA006897EE /* Packages */,
+				2B2F1D7D2BEBFAAD006897EE /* web-spatialTests */,
+				2B2F1D642BEBFAAA006897EE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2B2F1D642BEBFAAA006897EE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D632BEBFAAA006897EE /* web-spatial.app */,
+				2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2B2F1D652BEBFAAA006897EE /* web-spatial */ = {
+			isa = PBXGroup;
+			children = (
+				2BDBF9B52C4ED9F600D269D7 /* static-web */,
+				2B2F1D972BEDA8BD006897EE /* views */,
+				2B2F1D8A2BED4CD0006897EE /* libs */,
+				2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */,
+				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
+				2B2F1D752BEBFAAC006897EE /* Info.plist */,
+				2B2F1D722BEBFAAC006897EE /* Preview Content */,
+			);
+			path = "web-spatial";
+			sourceTree = "<group>";
+		};
+		2B2F1D662BEBFAAA006897EE /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D672BEBFAAA006897EE /* RealityKitContent */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		2B2F1D722BEBFAAC006897EE /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2B2F1D7D2BEBFAAD006897EE /* web-spatialTests */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */,
+			);
+			path = "web-spatialTests";
+			sourceTree = "<group>";
+		};
+		2B2F1D8A2BED4CD0006897EE /* libs */ = {
+			isa = PBXGroup;
+			children = (
+				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
+				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
+				2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */,
+				2BE1E9102C90795D00EAE76A /* SpatialModelComponent.swift */,
+				2BE1E90C2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift */,
+				2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */,
+				2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */,
+				2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */,
+				2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */,
+				2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */,
+				2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */,
+				2B0B1C0E2C494E4100E644F9 /* Utils */,
+				2B9909912C360594004826D1 /* uiKitDelegate */,
+				2B2F1D8C2BED4CE7006897EE /* json */,
+				2B2F1D8B2BED4CDA006897EE /* webView */,
+			);
+			path = libs;
+			sourceTree = "<group>";
+		};
+		2B2F1D8B2BED4CDA006897EE /* webView */ = {
+			isa = PBXGroup;
+			children = (
+				2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */,
+				2B2F1D8D2BED4CFA006897EE /* backend */,
+			);
+			path = webView;
+			sourceTree = "<group>";
+		};
+		2B2F1D8C2BED4CE7006897EE /* json */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */,
+			);
+			path = json;
+			sourceTree = "<group>";
+		};
+		2B2F1D8D2BED4CFA006897EE /* backend */ = {
+			isa = PBXGroup;
+			children = (
+				2B2F1D902BED61A8006897EE /* NativeWebView.swift */,
+			);
+			path = backend;
+			sourceTree = "<group>";
+		};
+		2B2F1D972BEDA8BD006897EE /* views */ = {
+			isa = PBXGroup;
+			children = (
+				2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */,
+				2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */,
+				2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */,
+				2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */,
+				2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */,
+				2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */,
+			);
+			path = views;
+			sourceTree = "<group>";
+		};
+		2B9909912C360594004826D1 /* uiKitDelegate */ = {
+			isa = PBXGroup;
+			children = (
+				2B9909922C3605A9004826D1 /* Window.swift */,
+			);
+			path = uiKitDelegate;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2B2F1D622BEBFAAA006897EE /* web-spatial */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B2F1D822BEBFAAD006897EE /* Build configuration list for PBXNativeTarget "web-spatial" */;
+			buildPhases = (
+				2B2F1D5F2BEBFAAA006897EE /* Sources */,
+				2B2F1D602BEBFAAA006897EE /* Frameworks */,
+				2B2F1D612BEBFAAA006897EE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "web-spatial";
+			packageProductDependencies = (
+				2B2F1D682BEBFAAA006897EE /* RealityKitContent */,
+				2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */,
+			);
+			productName = "web-spatial";
+			productReference = 2B2F1D632BEBFAAA006897EE /* web-spatial.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2B2F1D792BEBFAAD006897EE /* web-spatialTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B2F1D852BEBFAAD006897EE /* Build configuration list for PBXNativeTarget "web-spatialTests" */;
+			buildPhases = (
+				2B2F1D762BEBFAAD006897EE /* Sources */,
+				2B2F1D772BEBFAAD006897EE /* Frameworks */,
+				2B2F1D782BEBFAAD006897EE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2B2F1D7C2BEBFAAD006897EE /* PBXTargetDependency */,
+			);
+			name = "web-spatialTests";
+			productName = "web-spatialTests";
+			productReference = 2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2B2F1D5B2BEBFAAA006897EE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1530;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					2B2F1D622BEBFAAA006897EE = {
+						CreatedOnToolsVersion = 15.3;
+					};
+					2B2F1D792BEBFAAD006897EE = {
+						CreatedOnToolsVersion = 15.3;
+						TestTargetID = 2B2F1D622BEBFAAA006897EE;
+					};
+				};
+			};
+			buildConfigurationList = 2B2F1D5E2BEBFAAA006897EE /* Build configuration list for PBXProject "web-spatial" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2B2F1D5A2BEBFAAA006897EE;
+			packageReferences = (
+				2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
+			);
+			productRefGroup = 2B2F1D642BEBFAAA006897EE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2B2F1D622BEBFAAA006897EE /* web-spatial */,
+				2B2F1D792BEBFAAD006897EE /* web-spatialTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2B2F1D612BEBFAAA006897EE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */,
+				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
+				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B2F1D782BEBFAAD006897EE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2B2F1D5F2BEBFAAA006897EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */,
+				2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */,
+				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
+				2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */,
+				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
+				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
+				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
+				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
+				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
+				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
+				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
+				2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */,
+				2BE1E9072C903E2C00EAE76A /* EventEmitter.swift in Sources */,
+				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
+				2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */,
+				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
+				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
+				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
+				2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */,
+				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
+				2BE1E9112C90795D00EAE76A /* SpatialModelComponent.swift in Sources */,
+				2B9909932C3605A9004826D1 /* Window.swift in Sources */,
+				2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */,
+				2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B2F1D762BEBFAAD006897EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2B2F1D7C2BEBFAAD006897EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+			targetProxy = 2B2F1D7B2BEBFAAD006897EE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2B2F1D802BEBFAAD006897EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = xros;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Debug;
+		};
+		2B2F1D812BEBFAAD006897EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = xros;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 1.0;
+			};
+			name = Release;
+		};
+		2B2F1D832BEBFAAD006897EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"web-spatial/Preview Content\"";
+				DEVELOPMENT_TEAM = 73A8AMDVNC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dev.web-spatial";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.2;
+			};
+			name = Debug;
+		};
+		2B2F1D842BEBFAAD006897EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"web-spatial/Preview Content\"";
+				DEVELOPMENT_TEAM = 73A8AMDVNC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dev.web-spatial";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.2;
+			};
+			name = Release;
+		};
+		2B2F1D862BEBFAAD006897EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.testOrg3224234.web-spatialTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
+				XROS_DEPLOYMENT_TARGET = 1.1;
+			};
+			name = Debug;
+		};
+		2B2F1D872BEBFAAD006897EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.testOrg3224234.web-spatialTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
+				XROS_DEPLOYMENT_TARGET = 1.1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2B2F1D5E2BEBFAAA006897EE /* Build configuration list for PBXProject "web-spatial" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B2F1D802BEBFAAD006897EE /* Debug */,
+				2B2F1D812BEBFAAD006897EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2B2F1D822BEBFAAD006897EE /* Build configuration list for PBXNativeTarget "web-spatial" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B2F1D832BEBFAAD006897EE /* Debug */,
+				2B2F1D842BEBFAAD006897EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2B2F1D852BEBFAAD006897EE /* Build configuration list for PBXNativeTarget "web-spatialTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B2F1D862BEBFAAD006897EE /* Debug */,
+				2B2F1D872BEBFAAD006897EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyBeaver/SwiftyBeaver";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
+			productName = SwiftyBeaver;
+		};
+		2B2F1D682BEBFAAA006897EE /* RealityKitContent */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RealityKitContent;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2B2F1D5B2BEBFAAA006897EE /* Project object */;
+}

@@ -1,0 +1,47 @@
+{
+  "name": "xrsdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "postinstall": "simple-git-hooks",
+    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. && cd jsx-runtime/ && npm run build && cd ..",
+    "setup": "pnpm install && npm run buildPackages",
+    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
+    "testServer": "cd testServer/ && npm run dev -- --host",
+    "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "pnpm -r run format"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --write"
+    ],
+    "*.swift": [
+      "swiftformat"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spatial-web/XRSDK.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spatial-web/XRSDK/issues"
+  },
+  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "devDependencies": {
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "simple-git-hooks": "^2.11.1",
+    "concurrently": "^8.2.2"
+  }
+}
