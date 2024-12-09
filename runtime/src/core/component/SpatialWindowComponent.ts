@@ -8,11 +8,18 @@ export type BackgroundMaterialType =
   | 'regular'
   | 'thin'
 
+export type CornerRadius = {
+  topLeading: number
+  bottomLeading: number
+  topTrailing: number
+  bottomTrailing: number
+}
+
 export type StyleParam = {
   material?: {
     type: BackgroundMaterialType
   }
-  cornerRadius?: number
+  cornerRadius?: number | CornerRadius
 }
 
 /**
@@ -62,13 +69,21 @@ export class SpatialWindowComponent extends SpatialComponent {
    * @param options style options
    */
   async setStyle(styleParam: StyleParam) {
-    const { material, cornerRadius } = styleParam
+    const { material, cornerRadius = 0 } = styleParam
     const options: any = {}
     if (material) {
       options.backgroundMaterial = material.type
     }
-    if (cornerRadius) {
-      options.cornerRadius = cornerRadius
+
+    if (typeof cornerRadius == 'number') {
+      options.cornerRadius = {
+        topLeading: cornerRadius,
+        bottomLeading: cornerRadius,
+        topTrailing: cornerRadius,
+        bottomTrailing: cornerRadius,
+      }
+    } else {
+      options.cornerRadius = { ...cornerRadius }
     }
 
     if (document && document.readyState == 'loading') {

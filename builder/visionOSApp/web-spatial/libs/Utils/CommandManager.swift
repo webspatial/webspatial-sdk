@@ -420,11 +420,11 @@ class CommandDataManager {
                 }
                 spatialWindowComponent.backgroundMaterial = backgroundMaterial
             }
-            if let cornerRadius: Double = data.update?.style?.cornerRadius {
+            if let cornerRadius: CornerRadius = data.update?.style?.cornerRadius {
                 if target.isLoading {
-                    target.loadingStyles.cornerRadius = CGFloat(cornerRadius)
+                    target.loadingStyles.cornerRadius = cornerRadius
                 }
-                spatialWindowComponent.cornerRadius = CGFloat(cornerRadius)
+                spatialWindowComponent.cornerRadius = cornerRadius
             }
             spatialWindowComponent.gotStyle = true
         }
@@ -581,7 +581,7 @@ struct JSRect: Codable {
 }
 
 struct JSEntityStyle: Codable {
-    var cornerRadius: Double?
+    var cornerRadius: CornerRadius?
     var backgroundMaterial: BackgroundMaterial?
     var dimensions: JSVector2?
 }

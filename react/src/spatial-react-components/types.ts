@@ -1,4 +1,4 @@
-import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
+import { BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime/dist'
 
 export type vecType = { x: number; y: number; z: number }
 export type quatType = { x: number; y: number; z: number; w: number }
@@ -9,7 +9,7 @@ export type spatialStyleDef = {
   scale: Partial<vecType>
   zIndex?: number
   material?: { type: BackgroundMaterialType }
-  cornerRadius: number
+  cornerRadius: number | CornerRadius
 }
 
 export type RectType = {
