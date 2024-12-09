@@ -7,35 +7,38 @@ function MySample(props: { session?: SpatialSession }) {
     ;(async () => {
       if (props.session) {
         let session = props.session
-        // CODESAMPLE_START
-        // Setup initial contnet
-        var modelEntity = await session.createEntity()
-        modelEntity.transform.position.x = 0
-        modelEntity.transform.position.y = 0
-        modelEntity.transform.position.z = 0.05
-        modelEntity.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
-        await modelEntity.updateTransform()
-        var model = await session.createModelComponent({
-          url: '/src/assets/FlightHelmet.usdz',
-        })
-        await modelEntity.setComponent(model)
-        await modelEntity.setParentWindowGroup(
-          await session.getCurrentWindowGroup(),
-        )
 
+        // Setup initial contnet
+        var entity = await session.createEntity()
+        entity.transform.position.x = 500
+        entity.transform.position.y = 300
+        entity.transform.position.z = 100
+        await entity.updateTransform()
+        await entity.setCoordinateSpace('Dom')
+        let pageWindow = await session.createWindowContext()
+        var newDiv = document.createElement('div')
+        newDiv.innerHTML = "<div style='color:red;'>Hello world</div>"
+        pageWindow!.document.body.appendChild(newDiv)
+        let wc = await session.createWindowComponent()
+        await wc.setResolution(100, 100)
+        await wc.setFromWindow(pageWindow!.window)
+        await entity.setComponent(wc)
+        var rootWC = await session.getCurrentWindowComponent()
+        var rootEntity = await rootWC.getEntity()
+        await entity.setParent(rootEntity!)
+
+        // CODESAMPLE_START
         var dt = 0
         var curTime = Date.now()
         let loop = async () => {
           session.requestAnimationFrame(loop)
           dt = Date.now() - curTime
           curTime = Date.now()
-
           // Perform onFrame logic
-          modelEntity.transform.position.x = Math.sin(curTime / 1000) * 0.2
-
+          entity.transform.position.x = 500 + Math.sin(curTime / 1000) * 100
           // Batch update events (will improve performance if multiple entities are used)
           await session.transaction(() => {
-            modelEntity.updateTransform()
+            entity.updateTransform()
           })
         }
         loop()
