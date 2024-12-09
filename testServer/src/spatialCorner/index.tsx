@@ -1,36 +1,34 @@
-import { type BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime/dist'
+import { type BackgroundMaterialType } from '@xrsdk/runtime/dist'
 import ReactDOM from 'react-dom/client'
 import { useState } from 'react'
 
 function App() {
   const z = 100
 
-  const [bottomLeading, setBottomLeading] = useState(10)
-  const [bottomTrailing, setBottomTrailing] = useState(10)
-  const [topLeading, setTopLeading] = useState(10)
-  const [topTrailing, setTopTrailing] = useState(10)
+  const [bottomLeft, setBottomLeading] = useState(10)
+  const [bottomRight, setBottomTrailing] = useState(10)
+  const [topLeft, setTopLeading] = useState(10)
+  const [topRight, setTopTrailing] = useState(10)
 
-  const cornerRadius: CornerRadius = {
-    bottomLeading,
-    bottomTrailing,
-    topLeading,
-    topTrailing,
-  }
+  const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
-  const style1 = {
-    '--xr-back': z + '',
-  }
   return (
     <>
+      <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
+        <a href="#" onClick={() => history.go(-1)}>
+          Go Back
+        </a>
+      </div>
+
       <div className="text-orange-200 mx-2.5 my-2.5">
         <div className="">
-          borderRadius bottomLeading:
+          borderRadius bottomLeft:
           <input
             type="range"
             style={{ width: '50%' }}
             min={0}
             max="200"
-            value={bottomLeading}
+            value={bottomLeft}
             onChange={e => {
               setBottomLeading(Number(e.target.value))
             }}
@@ -39,13 +37,13 @@ function App() {
         </div>
 
         <div>
-          borderRadius bottomTrailing:
+          borderRadius bottomRight:
           <input
             type="range"
             style={{ width: '50%' }}
             min={0}
             max="200"
-            value={bottomTrailing}
+            value={bottomRight}
             onChange={e => {
               setBottomTrailing(Number(e.target.value))
             }}
@@ -54,13 +52,13 @@ function App() {
         </div>
 
         <div>
-          borderRadius topLeading:
+          borderRadius topLeft:
           <input
             type="range"
             style={{ width: '50%' }}
             min={0}
             max="200"
-            value={topLeading}
+            value={topLeft}
             onChange={e => {
               setTopLeading(Number(e.target.value))
             }}
@@ -69,13 +67,13 @@ function App() {
         </div>
 
         <div>
-          borderRadius topTrailing:
+          borderRadius topRight:
           <input
             type="range"
             style={{ width: '50%' }}
             min={0}
             max="200"
-            value={topTrailing}
+            value={topRight}
             onChange={e => {
               setTopTrailing(Number(e.target.value))
             }}
@@ -90,7 +88,7 @@ function App() {
           style={{
             '--xr-back': z + '',
             '--xr-background-material': 'none' as BackgroundMaterialType,
-            cornerRadius,
+            borderRadius,
             height: '100px',
           }}
           className="grow"
@@ -103,7 +101,7 @@ function App() {
           style={{
             '--xr-back': z + '',
             '--xr-background-material': 'default' as BackgroundMaterialType,
-            cornerRadius,
+            borderRadius,
             height: '100px',
           }}
           className="grow bg-slate-50/50"
@@ -116,7 +114,7 @@ function App() {
           style={{
             '--xr-back': z + '',
             '--xr-background-material': 'thin' as BackgroundMaterialType,
-            cornerRadius,
+            borderRadius,
             height: '100px',
           }}
           className="grow bg-slate-50/50"
@@ -129,7 +127,7 @@ function App() {
           style={{
             '--xr-back': z + '',
             '--xr-background-material': 'regular' as BackgroundMaterialType,
-            cornerRadius,
+            borderRadius,
             height: '100px',
           }}
           className="grow bg-slate-50/50"
@@ -142,7 +140,7 @@ function App() {
           style={{
             '--xr-back': z + '',
             '--xr-background-material': 'thick' as BackgroundMaterialType,
-            cornerRadius,
+            borderRadius,
             height: '100px',
           }}
           className="grow bg-slate-50/50"
