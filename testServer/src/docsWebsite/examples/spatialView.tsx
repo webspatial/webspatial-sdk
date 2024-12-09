@@ -1,4 +1,4 @@
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
+import { Spatial, SpatialSession, SpatialViewComponent } from '@xrsdk/runtime'
 import { useEffect, useRef, useState } from 'react'
 import { showSample } from './sampleLoader'
 
@@ -13,8 +13,7 @@ function MySample(props: { session?: SpatialSession }) {
         // Create SpatialView
         var viewEnt = await session.createEntity()
         await viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
-        let viewComponent = await session.createViewComponent()
-        await viewEnt.setComponent(viewComponent)
+        await viewEnt.setComponent(await session.createViewComponent())
 
         // Create model ent and add as a child to the spatialView
         var box = await session.createMeshResource({ shape: 'box' })
@@ -86,7 +85,9 @@ function MySample(props: { session?: SpatialSession }) {
           viewEnt.transform.position.y =
             rect.y + rect.height / 2 + window.scrollY
           viewEnt.updateTransform()
-          viewComponent.setResolution(rect.width, rect.height)
+          viewEnt
+            .getComponent(SpatialViewComponent)!
+            .setResolution(rect.width, rect.height)
         }
         var mo = new MutationObserver(update)
         mo.observe(divOnPage, { attributes: true })
