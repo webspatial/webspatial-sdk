@@ -344,7 +344,6 @@
 			files = (
 				2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */,
 				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
-				2B4EBED22CFEF8FA00D30F1A /* injectScene.js in Resources */,
 				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

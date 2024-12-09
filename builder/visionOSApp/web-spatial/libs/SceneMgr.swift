@@ -148,8 +148,18 @@ class SceneMgr {
             url: URL(string: url)!
         )
         ent.addComponent(windowComponent)
+        let existing = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID)
+        let isFirstCreate = existing == nil
+
         let wg = SpatialWindowGroup
             .getOrCreateSpatialWindowGroup(windowGroupID)
+
+        if isFirstCreate {
+            wg!.on(event: "closed", listener: { _, _ in
+                self.delScene(sceneName)
+            })
+        }
+
         ent.setParentWindowGroup(wg: wg)
 
         return true
@@ -157,15 +167,14 @@ class SceneMgr {
 
     // Close scene
     func close(sceneName: String) -> Bool {
-        guard var scene = sceneMap[sceneName] else {
+        guard let scene = sceneMap[sceneName] else {
             // sceneName does not exist
             return false
         }
         // Logic for closing the scene
         if let wgd = scene.wgd {
             parent?.rootWGD.closeWindowData.send(wgd)
-            scene.wgd = nil
-            sceneMap[sceneName] = scene // save
+            delScene(sceneName)
             return true
         } else {
             // scene not opened yet
@@ -179,6 +188,14 @@ class SceneMgr {
             return sceneName
         } else {
             return nil
+        }
+    }
+
+    // Set scene wgd to nil
+    func delScene(_ sceneName: String) {
+        if var scene = sceneMap[sceneName] {
+            scene.wgd = nil
+            sceneMap[sceneName] = scene // save
         }
     }
 
