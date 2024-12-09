@@ -196,13 +196,19 @@ export function showSample(MySample: any, hasCode = true) {
                         </summary>
                         <ul>
                           <li>
-                            <a>Spatial Dom Elements</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=reactDomElement">
+                              Spatial Dom Elements
+                            </a>
                           </li>
                           <li>
-                            <a>3D Model Element</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=reactModelElement">
+                              3D Model Element
+                            </a>
                           </li>
                           <li>
-                            <a>Popup Element</a>
+                            <a href="/src/docsWebsite/index.html?examplePath=reactPopup">
+                              Popup Element
+                            </a>
                           </li>
                         </ul>
                       </details>
