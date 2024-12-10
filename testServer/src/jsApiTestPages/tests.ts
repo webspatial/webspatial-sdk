@@ -3,7 +3,7 @@ import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
 
 class TimerLog {
   lastTime = Date.now()
-  constructor(public session: SpatialSession) { }
+  constructor(public session: SpatialSession) {}
 
   logDiff(str: String) {
     var curTime = Date.now()
@@ -20,7 +20,7 @@ class TestHelper {
     d: '#61C0BF',
   }
 
-  constructor(public session: SpatialSession) { }
+  constructor(public session: SpatialSession) {}
 
   async delay(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms))
@@ -29,7 +29,7 @@ class TestHelper {
   setWebContent = async (win: Window, content: string, refVar: any) => {
     var newDiv = document.createElement('div')
     for (var key in refVar) {
-      ; (win as any)[key] = refVar[key]
+      ;(win as any)[key] = refVar[key]
     }
     newDiv.innerHTML = content
     win.document.body.appendChild(newDiv)
@@ -236,7 +236,10 @@ var main = async () => {
   } else if (page == 'glassBackground') {
     await (
       await session.getCurrentWindowComponent()
-    ).setStyle({ glassEffect: true, cornerRadius: 50 })
+    ).setStyle({
+      material: { type: 'default' },
+      cornerRadius: 50,
+    })
     // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
     document.documentElement.style.backgroundColor = 'transparent'
     document.body.style.backgroundColor = 'transparent'
@@ -250,7 +253,10 @@ var main = async () => {
     var glassState = true
     b.onclick = async () => {
       glassState = !glassState
-      await wc.setStyle({ glassEffect: glassState, cornerRadius: 50 })
+      await wc.setStyle({
+        material: { type: !glassState ? 'none' : 'default' },
+        cornerRadius: 50,
+      })
     }
   } else if (page == 'setFromWindow') {
     var createWin = async (pos: number, color: string) => {
@@ -283,7 +289,7 @@ var main = async () => {
       openedWindow!.document.documentElement.style.backgroundColor = color
       openedWindow!.window.document.body.innerHTML =
         "<p style='color:white;'>hello world</p>"
-      await webview.setStyle({ glassEffect: true, cornerRadius: 0 })
+      await webview.setStyle({ material: { type: 'default' }, cornerRadius: 0 })
 
       // Attach to entity
       await entity.setComponent(webview)
@@ -472,8 +478,7 @@ var main = async () => {
         x.document.documentElement.style.color = 'white'
         x.document.documentElement.style.fontSize = '5em'
         await i.setStyle({
-          transparentEffect: true,
-          glassEffect: false,
+          material: { type: 'none' },
           cornerRadius: 0,
         })
         await Promise.all([

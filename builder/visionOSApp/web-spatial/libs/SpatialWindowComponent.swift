@@ -28,12 +28,10 @@ struct CommandInfo {
 
 struct LoadingStyles {
     var visible = true
-    var glassEffect = false
-    var transparentEffect = false
     var cornerRadius = CGFloat(0)
-    var materialThickness = Material.ultraThin
-    var useMaterialThickness = false
     var windowGroupSize = DefaultPlainWindowGroupSize
+
+    var backgroundMaterial: BackgroundMaterial = .None
 }
 
 @Observable
@@ -121,11 +119,8 @@ class SpatialWindowComponent: SpatialComponent {
 
     var gotStyle = false
     var visible = true
-    var glassEffect = false
-    var transparentEffect = false
     var cornerRadius = CGFloat(0)
-    var materialThickness = Material.ultraThin
-    var useMaterialThickness = false
+    var backgroundMaterial = BackgroundMaterial.None
 
     var loadingStyles = LoadingStyles()
     var isLoading = true
@@ -192,19 +187,6 @@ class SpatialWindowComponent: SpatialComponent {
 
     func setURL(url: URL) {
         webViewNative!.url = url
-    }
-
-    func stringToThickness(str: String) -> SwiftUI.Material? {
-        if str == "thin" {
-            return Material.thin
-        }
-        if str == "thick" {
-            return Material.thick
-        }
-        if str == "regular" {
-            return Material.regular
-        }
-        return nil
     }
 
     func parseURL(url: String) -> String {
@@ -297,26 +279,19 @@ class SpatialWindowComponent: SpatialComponent {
     func didStartReceivePageContent() {}
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
-        if style.glassEffect != nil {
-            loadingStyles.glassEffect = style.glassEffect!
-        }
-
-        if style.transparentEffect != nil {
-            loadingStyles.transparentEffect = style.transparentEffect!
-        }
-
         if style.cornerRadius != nil {
             loadingStyles.cornerRadius = CGFloat(style.cornerRadius!)
+        }
+
+        if let backgroundMaterial = style.backgroundMaterial {
+            loadingStyles.backgroundMaterial = backgroundMaterial
         }
     }
 
     func didFinishLoadPage() {
         didFinishFirstLoad = true
-        glassEffect = loadingStyles.glassEffect
-        transparentEffect = loadingStyles.transparentEffect
         cornerRadius = loadingStyles.cornerRadius
-        materialThickness = loadingStyles.materialThickness
-        useMaterialThickness = loadingStyles.useMaterialThickness
+        backgroundMaterial = loadingStyles.backgroundMaterial
 
 //        if root {
 //            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)

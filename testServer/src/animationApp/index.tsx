@@ -11,7 +11,7 @@ if (spatialSupported) {
   var session = new Spatial().requestSession()
   session
     .getCurrentWindowComponent()
-    .setStyle({ glassEffect: true, cornerRadius: 50 })
+    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
 }
 
 function App() {
