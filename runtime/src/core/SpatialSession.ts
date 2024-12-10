@@ -280,8 +280,8 @@ export class SpatialSession {
   // Creates a window context object that is compatable with SpatialWindowComponent's setFromWindow API
   async createWindowContext() {
     let openedWindow = window.open()
-    if (WebSpatial.getBackend() == 'PICO') {
-      // Currently there is a bug with android webview which requires us to trigger a navigation before native code can interact with created webview
+    if (WebSpatial.getBackend() != 'AVP') {
+      // Currently there is a bug with webview which requires us to trigger a navigation before native code can interact with created webview
       var counter = 0
       while ((openedWindow!.window as any).testAPI == null) {
         if (counter > 15) {
