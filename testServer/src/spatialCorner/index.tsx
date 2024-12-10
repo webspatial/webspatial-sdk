@@ -1,4 +1,4 @@
-import { type BackgroundMaterialType } from '@xrsdk/runtime/dist'
+import { type BackgroundMaterialType } from '@xrsdk/runtime'
 import ReactDOM from 'react-dom/client'
 import { useState } from 'react'
 
