@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
 import isEqual from 'lodash.isequal'
 import { Matrix4, Vector3, Quaternion } from './math'
-import { type BackgroundMaterialType } from '@xrsdk/runtime/dist'
+import { type BackgroundMaterialType } from '@xrsdk/runtime'
 
 const SpatialCustomVars = {
   back: '--xr-back',
