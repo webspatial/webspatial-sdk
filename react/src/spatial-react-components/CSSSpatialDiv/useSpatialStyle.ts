@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
 import isEqual from 'lodash.isequal'
 import { Matrix4, Vector3, Quaternion } from './math'
+import { type BackgroundMaterialType } from '@xrsdk/runtime'
 
 const SpatialCustomVars = {
   back: '--xr-back',
+  backgroundMaterial: '--xr-background-material',
 }
 
 function parse2dMatrix(transformDataArray: number[]) {
@@ -90,6 +92,12 @@ function parseSpatialStyle(node: HTMLElement) {
   // parse zIndex
   const zIndex = parseFloat(computedStyle.getPropertyValue('z-index'))
 
+  // parse backgroundMaterialType
+  const backgroundMaterialType: BackgroundMaterialType =
+    computedStyle.getPropertyValue(
+      SpatialCustomVars.backgroundMaterial,
+    ) as BackgroundMaterialType
+
   return {
     position: { x: position.x, y: position.y, z: position.z },
     rotation: {
@@ -100,6 +108,9 @@ function parseSpatialStyle(node: HTMLElement) {
     },
     scale: { x: scale.x, y: scale.y, z: scale.z },
     zIndex,
+    material: {
+      type: backgroundMaterialType,
+    },
   }
 }
 
@@ -110,6 +121,9 @@ export function useSpatialStyle() {
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
     zIndex: 0,
+    material: {
+      type: 'none' as BackgroundMaterialType,
+    },
   })
   const [ready, setReady] = useState(false)
 
