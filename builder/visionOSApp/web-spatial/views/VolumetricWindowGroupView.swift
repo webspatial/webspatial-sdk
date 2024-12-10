@@ -52,9 +52,8 @@ struct VolumetricWindowGroupView: View {
                 let wv = entity.getComponent(SpatialWindowComponent.self)!
                 Attachment(id: key) {
                     wv.getView()
-                        .background(wv.glassEffect || wv.transparentEffect ? Color.clear.opacity(0) : Color.white)
-                        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: wv.cornerRadius), displayMode: wv.glassEffect ? .always : .never)
-                        .cornerRadius(wv.cornerRadius).frame(width: wv.resolutionX, height: wv.resolutionY)
+                        .materialWithBorderCorner(wv.backgroundMaterial, .init())
+                        .frame(width: wv.resolutionX, height: wv.resolutionY)
                 }
             }
         }

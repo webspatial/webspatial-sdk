@@ -75,6 +75,6 @@ export function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
   return {
     x: width > 0 ? x / width : 0.5,
     y: height > 0 ? y / height : 0.5,
-    z: 0,
+    z: 0.5,
   }
 }
