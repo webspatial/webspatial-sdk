@@ -17,8 +17,7 @@ if (spatial) {
 var transparent = new URLSearchParams(window.location.search).get('transparent')
 if (session) {
   session.getCurrentWindowComponent().setStyle({
-    transparentEffect: !!transparent,
-    glassEffect: !transparent,
+    material: { type: transparent ? 'none' : 'default' },
     cornerRadius: transparent ? 0 : 70,
   })
   document.documentElement.style.backgroundColor = '#1155aa55'

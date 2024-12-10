@@ -22,9 +22,9 @@ class WebViewHolder {
 
 struct PreloadStyleSettings: Codable {
     var visible: Bool? = true
-    var glassEffect: Bool? = false
-    var transparentEffect: Bool? = false
     var cornerRadius: Float? = Float(0)
+
+    var backgroundMaterial: BackgroundMaterial? = .None
 }
 
 class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
@@ -200,7 +200,7 @@ struct WebViewNative: UIViewRepresentable {
             let request = URLRequest(url: url)
             webViewHolder.appleWebView!.load(request)
             webViewHolder.appleWebView!.isOpaque = false
-            // webView.backgroundColor = UIColor.clear
+            webViewHolder.appleWebView!.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
     }
