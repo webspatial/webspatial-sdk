@@ -35,9 +35,6 @@ function MySample(props: { session?: SpatialSession }) {
         var rootWC = await session.getCurrentWindowComponent()
         var rootEntity = await rootWC.getEntity()
         await entity.setParent(rootEntity!)
-
-        // TODO, should we be able to do this?
-        //  await entity.setParentWindowGroup(await session.getCurrentWindowGroup())
         // CODESAMPLE_END
       }
     })()

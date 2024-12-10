@@ -12,6 +12,7 @@ function MySample(props: { session?: SpatialSession }) {
         // CODESAMPLE_START
         // Create SpatialView
         var viewEnt = await session.createEntity()
+        await viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
         let viewComponent = await session.createViewComponent()
         await viewEnt.setComponent(viewComponent)
 
