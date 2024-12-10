@@ -28,7 +28,7 @@ struct CommandInfo {
 
 struct LoadingStyles {
     var visible = true
-    var cornerRadius = CGFloat(0)
+    var cornerRadius: CornerRadius = .init()
     var windowGroupSize = DefaultPlainWindowGroupSize
 
     var backgroundMaterial: BackgroundMaterial = .None
@@ -119,7 +119,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     var gotStyle = false
     var visible = true
-    var cornerRadius = CGFloat(0)
+    var cornerRadius: CornerRadius = .init()
     var backgroundMaterial = BackgroundMaterial.None
 
     var loadingStyles = LoadingStyles()
@@ -280,7 +280,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
         if style.cornerRadius != nil {
-            loadingStyles.cornerRadius = CGFloat(style.cornerRadius!)
+            loadingStyles.cornerRadius = style.cornerRadius
         }
 
         if let backgroundMaterial = style.backgroundMaterial {
