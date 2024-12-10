@@ -268,20 +268,6 @@ export class WebSpatial {
     return result
   }
 
-  // static async applyAnimationToResource(resource: WebSpatialResource, data: any = null) {
-  //     var cmd = new RemoteCommand("animateResource", {
-  //         windowGroupID: resource.windowGroupId,
-  //         resourceID: resource.id,
-  //         animation: data || resource.data
-  //     });
-
-  //     var result = await new Promise((res, rej) => {
-  //         WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-  //         WebSpatial.sendCommand(cmd)
-  //     })
-  //     return result
-  // }
-
   static async openImmersiveSpace() {
     var cmd = new RemoteCommand('openImmersiveSpace')
     await WebSpatial.sendCommand(cmd)
@@ -307,18 +293,3 @@ export class WebSpatial {
   }
 }
 WebSpatial.init()
-if ((window as any).WebSpatailEnabled) {
-  let pos = 0
-  let last = 0
-  ;(window as any)._magicUpdate = () => {
-    const now = Date.now()
-    let dt = now - last
-    last = now
-    if (dt / 1000 < 1 / 10) {
-      pos += 1 * (dt / 1000)
-      return Math.sin(pos) * 0.3
-    } else {
-      return 0
-    }
-  }
-}
