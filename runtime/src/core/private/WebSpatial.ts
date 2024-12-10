@@ -203,6 +203,19 @@ export class WebSpatial {
     WebSpatial.sendCommand(cmd)
   }
 
+  static async removeComponent(
+    entity: WebSpatialResource,
+    resource: WebSpatialResource,
+  ) {
+    var cmd = new RemoteCommand('removeComponent', {
+      windowGroupID: entity.windowGroupId,
+      resourceID: resource.id,
+      entityID: entity.id,
+    })
+
+    WebSpatial.sendCommand(cmd)
+  }
+
   // windowGroup is the group the resource will be tied to (if not provided it will use the current window grou)
   // parentWebView is the SpatialWebView that the resource will be tied to (if not provided, resource will continue to exist even if this page is unloaded)
   static async createResource(
