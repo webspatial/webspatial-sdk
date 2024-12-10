@@ -15,6 +15,7 @@ struct SpatialObjectInfo: Codable {
 }
 
 struct SpatialObjectStatsInfo: Codable {
+    var backend = "AVP"
     var objects: SpatialObjectInfo
     var refObjects: SpatialObjectInfo
 }
