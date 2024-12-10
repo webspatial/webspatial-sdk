@@ -12,6 +12,13 @@ struct SpatialViewUI: View {
 
     // Entity which will contain all the content of this realityView and scale to fit frame
     @State var world = Entity()
+    @State var portal = Entity()
+    @State var light = PointLight()
+    @State var portalModel = ModelComponent(
+        mesh: .generatePlane(width: 1.0, height: 1.0, cornerRadius: 0.0),
+        materials: [PortalMaterial()]
+    )
+    @State var worldComponent = WorldComponent()
 
     private func toJson(val: SIMD3<Float>) -> String {
         return "{x: " + String(val.x) + ",y: " + String(val.y) + ",z: " + String(val.z) + "}"
@@ -57,10 +64,13 @@ struct SpatialViewUI: View {
                 } update: { content, attachments in
                     // Scale content so it will be a 1x1x1 space and not exceed the frame
                     let viewSpaceDimensions = content.convert(proxySize3d, from: .local, to: content)
-                    var newScale = min(viewSpaceDimensions.extents.x, viewSpaceDimensions.extents.y)
+                    let newScale = min(viewSpaceDimensions.extents.x, viewSpaceDimensions.extents.y)
                     world.transform.scale.x = newScale
                     world.transform.scale.y = newScale
                     world.transform.scale.z = newScale
+                    portal.transform.scale.x = newScale
+                    portal.transform.scale.y = newScale
+                    portal.transform.scale.z = newScale
 
                     // Pull out content so volume sits in front of the page
                     world.transform.translation.z = world.transform.scale.z / 2
@@ -84,6 +94,34 @@ struct SpatialViewUI: View {
                             }
                         }
                     }
+                    if viewComponent.isPortal {
+                        // Setup portal
+                        portal.components.set(portalModel)
+                        portal.transform.translation.z = 0.0001 // avoid z fighting
+                        if !portal.components.has(PortalComponent.self) {
+                            portal.components.set(PortalComponent(target: world))
+                        }
+
+                        // Setup default light
+                        light.light.intensity = 5000
+                        light.position.z = 2
+                        light.position.y = 1
+                        light.position.x = 0.5
+                        world.addChild(light)
+
+                        // Position volume behind portal instead of in front
+                        world.transform.translation.z *= -1
+
+                        // Add portal to scene
+                        world.components.set(worldComponent)
+                        content.add(portal)
+                    } else {
+                        // Remove portal elements/components
+                        content.remove(portal)
+                        world.components.remove(WorldComponent.self)
+                        world.removeChild(light)
+                    }
+
                     content.add(world)
                 }
                 attachments: {
