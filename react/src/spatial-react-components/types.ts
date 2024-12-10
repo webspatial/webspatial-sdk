@@ -1,4 +1,4 @@
-import { BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime/dist'
+import { BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime'
 
 export type vecType = { x: number; y: number; z: number }
 export type quatType = { x: number; y: number; z: number; w: number }

@@ -20,7 +20,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius } from '@xrsdk/runtime/dist'
+import { CornerRadius } from '@xrsdk/runtime'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
