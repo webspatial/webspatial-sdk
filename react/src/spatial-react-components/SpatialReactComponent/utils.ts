@@ -80,7 +80,6 @@ export function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
 }
 
 function parseBorderRadius(borderProperty: string, width: number) {
-  console.log('parseBorderRadius', borderProperty, width)
   if (borderProperty === '') {
     return 0
   }
