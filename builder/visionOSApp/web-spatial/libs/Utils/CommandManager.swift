@@ -331,6 +331,10 @@ class CommandDataManager {
                 spatialViewComponent.resolutionY = resolution.y
             }
 
+            if let isPortal = data.update?.isPortal {
+                spatialViewComponent.isPortal = isPortal
+            }
+
         } else if let spatialModelComponent = sr as? SpatialModelComponent {
             if let meshResourceId: String = data.update?.meshResource {
                 if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
@@ -553,6 +557,7 @@ struct JSResourceData: Codable {
     var aspectRatio: String?
     var opacity: Double?
     var resolution: JSVector2?
+    var isPortal: Bool?
     var rotationAnchor: JSVector3?
     var meshResource: String?
     var materials: [String]?
