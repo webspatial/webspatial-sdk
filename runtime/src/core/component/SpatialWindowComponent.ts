@@ -75,7 +75,7 @@ export class SpatialWindowComponent extends SpatialComponent {
       options.backgroundMaterial = material.type
     }
 
-    if (typeof cornerRadius == 'number') {
+    if (typeof cornerRadius === 'number') {
       options.cornerRadius = {
         topLeading: cornerRadius,
         bottomLeading: cornerRadius,
