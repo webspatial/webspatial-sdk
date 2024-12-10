@@ -12,6 +12,7 @@ export class SpatialModelUIManager {
 
     // Create entity with view component to display the model inside
     this.entity = await session.createEntity()
+    this.entity.setCoordinateSpace('Dom')
     this.viewComponent = await session.createViewComponent()
     await this.entity.setComponent(this.viewComponent)
 

@@ -72,10 +72,10 @@ export class WebSpatial {
   }
 
   static getBackend() {
-    if ((window as any).Android) {
-      return 'PICO'
-    } else {
+    if ((window as any).webkit) {
       return 'AVP'
+    } else {
+      return 'UNKNOWN'
     }
   }
 
@@ -87,11 +87,12 @@ export class WebSpatial {
 
     var msg = JSON.stringify(cmd)
 
-    if (WebSpatial.getBackend() == 'PICO') {
-      ;(window as any).Android.nativeMessage(msg)
+    if (WebSpatial.getBackend() == 'AVP') {
+      ;(window as any).webkit.messageHandlers.bridge.postMessage(msg)
       return
     } else {
-      ;(window as any).webkit.messageHandlers.bridge.postMessage(msg)
+      ;(window as any).bridge.nativeMessage(msg)
+      return
     }
   }
 
