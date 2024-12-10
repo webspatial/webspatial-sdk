@@ -109,16 +109,18 @@ struct SpatialWebViewUI: View {
                         // SpatialView content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
-                                if let viewComponent = e.getComponent(SpatialViewComponent.self) {
-                                    let x = CGFloat(e.modelEntity.position.x)
-                                    let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                                    let z = CGFloat(e.modelEntity.position.z)
+                                if e.coordinateSpace == .DOM {
+                                    if let viewComponent = e.getComponent(SpatialViewComponent.self) {
+                                        let x = CGFloat(e.modelEntity.position.x)
+                                        let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                                        let z = CGFloat(e.modelEntity.position.z)
 
-                                    let width = CGFloat(viewComponent.resolutionX)
-                                    let height = CGFloat(viewComponent.resolutionY)
+                                        let width = CGFloat(viewComponent.resolutionX)
+                                        let height = CGFloat(viewComponent.resolutionY)
 
-                                    SpatialViewUI().environment(e).frame(width: width, height: height).position(x: x, y: y)
-                                        .offset(z: z)
+                                        SpatialViewUI().environment(e).frame(width: width, height: height).position(x: x, y: y)
+                                            .offset(z: z)
+                                    }
                                 }
                             }
                         }
