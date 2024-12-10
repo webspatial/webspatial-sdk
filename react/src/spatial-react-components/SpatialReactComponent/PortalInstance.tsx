@@ -172,7 +172,8 @@ async function syncHeaderStyle(openedWindow: Window, debugName: string) {
 function syncDefaultSpatialStyle(openedWindow: Window, debugName: string) {
   const styleElement = document.createElement('style')
   styleElement.type = 'text/css'
-  styleElement.innerHTML = ' .xr-spatial-default {  --xr-back: 0.001  } '
+  styleElement.innerHTML =
+    ' .xr-spatial-default {  --xr-back: 0.001; --xr-background-material: none  } '
   openedWindow.document.head.appendChild(styleElement)
 }
 
