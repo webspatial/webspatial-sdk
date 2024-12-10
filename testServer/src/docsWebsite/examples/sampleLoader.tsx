@@ -167,13 +167,13 @@ export function showSample(MySample: any, hasCode = true) {
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=loadModel">
-                              Load model file
+                            <a href="/src/docsWebsite/index.html?examplePath=spatialView">
+                              Spatial View
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=spatialView">
-                              Spatial View
+                            <a href="/src/docsWebsite/index.html?examplePath=loadModel">
+                              Load model file
                             </a>
                           </li>
                           <li>
