@@ -20,6 +20,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
+import { CornerRadius } from '@xrsdk/runtime'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
@@ -207,6 +208,22 @@ function useSyncSpatialProps(
   if (scale.y === undefined) scale.y = 1
   if (scale.z === undefined) scale.z = 1
 
+  // fill cornerRadius Object
+  const cornerRadiusObject: CornerRadius = {
+    topLeading: 0,
+    bottomLeading: 0,
+    topTrailing: 0,
+    bottomTrailing: 0,
+  }
+  if (typeof cornerRadius == 'number') {
+    cornerRadiusObject.topLeading = cornerRadius
+    cornerRadiusObject.bottomLeading = cornerRadius
+    cornerRadiusObject.topTrailing = cornerRadius
+    cornerRadiusObject.bottomTrailing = cornerRadius
+  } else {
+    Object.assign(cornerRadiusObject, cornerRadius)
+  }
+
   // Sync prop updates
   useEffect(() => {
     if (spatialWindowManager && spatialWindowManager.webview) {
@@ -214,11 +231,18 @@ function useSyncSpatialProps(
       ;(async function () {
         webview.setStyle({
           material: { type: material.type },
-          cornerRadius,
+          cornerRadius: cornerRadiusObject,
         })
       })()
     }
-  }, [spatialWindowManager, material.type, cornerRadius])
+  }, [
+    spatialWindowManager,
+    material.type,
+    cornerRadiusObject.topLeading,
+    cornerRadiusObject.bottomLeading,
+    cornerRadiusObject.topTrailing,
+    cornerRadiusObject.bottomTrailing,
+  ])
 
   useEffect(() => {
     if (spatialWindowManager && spatialWindowManager.webview) {

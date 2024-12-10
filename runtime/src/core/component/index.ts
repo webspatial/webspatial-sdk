@@ -3,6 +3,7 @@ export {
   SpatialWindowComponent,
   type BackgroundMaterialType,
   type StyleParam,
+  type CornerRadius,
 } from './SpatialWindowComponent'
 export { SpatialInputComponent } from './SpatialInputComponent'
 export { SpatialModelComponent } from './SpatialModelComponent'
