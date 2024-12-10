@@ -1,5 +1,5 @@
 import { SpatialDiv } from '@xrsdk/react'
-import { CornerRadius } from '@xrsdk/runtime/dist'
+import { CornerRadius } from '@xrsdk/runtime'
 import { useState } from 'react'
 
 export function BackgroundMaterialTest() {
