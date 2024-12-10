@@ -14,7 +14,7 @@ enum BackgroundMaterial: String, Codable {
     case ThinMaterial = "thin"
 }
 
-struct CornerRadius {
+struct CornerRadius: Codable {
     var topLeading: CGFloat = 0
     var bottomLeading: CGFloat = 0
     var topTrailing: CGFloat = 0
