@@ -32,11 +32,30 @@ export class SpatialEntity extends SpatialObject {
     await WebSpatial.updateResource(this._entity, { zIndex })
   }
 
+  private components: Map<Function, SpatialComponent> = new Map()
+
   /**
    * Attaches a component to the entity to be displayed
    */
   async setComponent(component: SpatialComponent) {
     await WebSpatial.setComponent(this._entity, component._resource)
+    this.components.set(component.constructor, component)
+  }
+
+  async removeComponent<T extends SpatialComponent>(
+    type: new (...args: any[]) => T,
+  ) {
+    var c = this.getComponent(type)
+    if (c != undefined) {
+      await WebSpatial.removeComponent(this._entity, c._resource)
+      this.components.delete(c.constructor)
+    }
+  }
+
+  getComponent<T extends SpatialComponent>(
+    type: new (...args: any[]) => T,
+  ): T | undefined {
+    return this.components.get(type) as T | undefined
   }
 
   /**
