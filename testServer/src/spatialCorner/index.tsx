@@ -1,9 +1,11 @@
 import { type BackgroundMaterialType } from '@xrsdk/runtime'
 import ReactDOM from 'react-dom/client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
   const z = 100
+
+  const [mainBorderRadius, setBorderRadius] = useState(10)
 
   const [bottomLeft, setBottomLeading] = useState(10)
   const [bottomRight, setBottomTrailing] = useState(10)
@@ -24,9 +26,13 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    document.documentElement.style.borderRadius = `${mainBorderRadius}px`
+  }, [mainBorderRadius])
+
   return (
     <>
-      <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
+      <div className="text-blue    	bg-clip-border px-6 py-6  ">
         <a href="#" onClick={() => history.go(-1)}>
           Go Back
         </a>
@@ -36,6 +42,20 @@ function App() {
         <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
           toggle background material:
         </button>
+        <div className="">
+          change main window borderRadius:
+          <input
+            type="range"
+            style={{ width: '50%' }}
+            min={0}
+            max="200"
+            value={mainBorderRadius}
+            onChange={e => {
+              setBorderRadius(Number(e.target.value))
+            }}
+            className="range"
+          />
+        </div>
 
         <div className="">
           borderRadius bottomLeft:
