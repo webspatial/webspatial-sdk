@@ -20,6 +20,7 @@ class CommandManager {
         _ = registerCommand(name: "inspect", action: inspect)
         _ = registerCommand(name: "getStats", action: getStats)
         _ = registerCommand(name: "setComponent", action: setComponent)
+        _ = registerCommand(name: "removeComponent", action: removeComponent)
         _ = registerCommand(name: "createResource", action: createResource)
         _ = registerCommand(name: "destroyResource", action: destroyResource)
         _ = registerCommand(name: "updateResource", action: updateResource)
@@ -132,7 +133,17 @@ class CommandManager {
         {
             entity.addComponent(component)
         } else {
-            print("missing resource, event not processed")
+            print("missing resource, setComponent not processed")
+        }
+    }
+
+    private func removeComponent(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
+           let entity = target.getChildSpatialObject(name: jsb.data!.entityID!) as? SpatialEntity
+        {
+            entity.removeComponent(component)
+        } else {
+            print("missing resource, removeComponent not processed")
         }
     }
 
