@@ -2,6 +2,7 @@
 
 import reactJSXRuntime from 'react/jsx-runtime'
 import { withCSSSpatial } from '@xrsdk/react'
+import { spatialPolyfill } from './spatialPolyfill'
 
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
@@ -44,6 +45,8 @@ function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props)
   return reactJSXRuntime.jsx(type, props, key)
 }
+
+spatialPolyfill()
 
 module.exports = {
   jsxs: jsxs,
