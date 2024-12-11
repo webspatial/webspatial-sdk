@@ -12,6 +12,18 @@ function App() {
 
   const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
+  const toggleBackgroundMaterial = () => {
+    const backgroundMaterial =
+      document.documentElement.style['--xr-background-material']
+    if (backgroundMaterial !== 'default') {
+      document.documentElement.style['--xr-background-material'] = 'default'
+      document.documentElement.style['background-color'] = 'transparent'
+    } else {
+      document.documentElement.style['--xr-background-material'] = 'none'
+      document.documentElement.style['background-color'] = '#4f4f4f'
+    }
+  }
+
   return (
     <>
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -21,6 +33,10 @@ function App() {
       </div>
 
       <div className="text-orange-200 mx-2.5 my-2.5">
+        <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
+          toggle background material:
+        </button>
+
         <div className="">
           borderRadius bottomLeft:
           <input
