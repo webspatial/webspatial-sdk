@@ -8,6 +8,8 @@ export {
 export { SpatialMonitor } from './SpatialMonitor'
 export { notifyUpdateStandInstanceLayout } from './notifyUpdateStandInstanceLayout'
 
+export { parseCornerRadius } from './SpatialReactComponent/utils'
+
 // for compatibility
 export { SpatialDiv } from './SpatialPrimitive'
 export {
