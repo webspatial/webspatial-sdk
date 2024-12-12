@@ -7,8 +7,20 @@
 import RealityKit
 import SwiftUI
 
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
 struct SpatialViewUI: View {
     @Environment(SpatialEntity.self) var ent: SpatialEntity
+    @State var isRoot = false
 
     // Entity which will contain all the content of this realityView and scale to fit frame
     @State var world = Entity()
@@ -65,6 +77,7 @@ struct SpatialViewUI: View {
                     // Scale content so it will be a 1x1x1 space and not exceed the frame
                     let viewSpaceDimensions = content.convert(proxySize3d, from: .local, to: content)
                     let newScale = min(viewSpaceDimensions.extents.x, viewSpaceDimensions.extents.y)
+
                     world.transform.scale.x = newScale
                     world.transform.scale.y = newScale
                     world.transform.scale.z = newScale
@@ -72,8 +85,10 @@ struct SpatialViewUI: View {
                     portal.transform.scale.y = newScale
                     portal.transform.scale.z = newScale
 
-                    // Pull out content so volume sits in front of the page
-                    world.transform.translation.z = world.transform.scale.z / 2
+                    if !isRoot {
+                        // Pull out content so volume sits in front of the page
+                        world.transform.translation.z = world.transform.scale.z / 2
+                    }
 
                     for (_, entity) in ent.getEntities() {
                         world.addChild(entity.modelEntity)
@@ -136,7 +151,9 @@ struct SpatialViewUI: View {
                             SpatialWebViewUI().environment(entity).frame(width: wv.resolutionX, height: wv.resolutionY)
                         }
                     }
-                }.gesture(dragGesture).clipped()
+                }.gesture(dragGesture).if(!isRoot) { view in
+                    view.clipped()
+                }
             }
         }
     }
