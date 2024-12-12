@@ -20,42 +20,13 @@ struct VolumetricWindowGroupView: View {
     var body: some View {
         OpenDismissHandlerUI().environment(windowGroupContent)
 
-        RealityView { _, _ in
-//            print("gu")
+        let entities = windowGroupContent.getEntities().filter { _, entity in
+            entity.coordinateSpace == .ROOT && entity.hasComponent(SpatialViewComponent.self)
         }
-        update: { content, attachments in
-            let entities = windowGroupContent.getEntities()
-            for (_, entity) in entities {
-                content.add(entity.modelEntity)
-            }
 
-            for key in Array(entities.keys) {
-                let e = entities[key]!
-                let windowComponent = e.getComponent(SpatialWindowComponent.self)
-                if windowComponent != nil && e.coordinateSpace == .APP {
-                    if let glassCubeAttachment = attachments.entity(for: key) {
-                        //   glassCubeAttachment.position = e.modelEntity.position
-                        if e.modelEntity.children.count == 0 {
-                            e.modelEntity.addChild(glassCubeAttachment, preservingWorldTransform: false)
-                        }
-                    }
-                }
-            }
-        }
-        attachments: {
-            let entities = windowGroupContent.getEntities().filter { _, entity in
-                entity.coordinateSpace == .APP && entity.hasComponent(SpatialWindowComponent.self)
-            }
-
-            ForEach(Array(entities.keys), id: \.self) { key in
-                let entity = entities[key]!
-                let wv = entity.getComponent(SpatialWindowComponent.self)!
-                Attachment(id: key) {
-                    wv.getView()
-                        .materialWithBorderCorner(wv.backgroundMaterial, .init())
-                        .frame(width: wv.resolutionX, height: wv.resolutionY)
-                }
-            }
+        ForEach(Array(entities.keys), id: \.self) { key in
+            let entity = entities[key]!
+            SpatialViewUI(isRoot: true).environment(entity)
         }
     }
 }
