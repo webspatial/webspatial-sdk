@@ -16,4 +16,14 @@ export class SpatialViewComponent extends SpatialComponent {
       resolution: { x: x, y: y },
     })
   }
+
+  /**
+   * Sets if content of the spatialView should be within a portal
+   * If true, volume will be behind the page, if false, it will be in front of the page
+   */
+  async setIsPortal(isPortal: Boolean) {
+    await WebSpatial.updateResource(this._resource, {
+      isPortal: isPortal,
+    })
+  }
 }
