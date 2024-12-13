@@ -9,13 +9,14 @@ function MySample(props: { session?: SpatialSession }) {
         let session = props.session
         // Create a spatial view entity to display model in
         var viewEnt = await session.createEntity()
-        viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
+        await viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
         viewEnt.transform.position.x = 800
         viewEnt.transform.position.y = 300
-        viewEnt.updateTransform()
+        await viewEnt.updateTransform()
 
         let viewComponent = await session.createViewComponent()
-        viewComponent.setResolution(400, 400)
+        await viewComponent.setIsPortal(true)
+        await viewComponent.setResolution(400, 400)
         await viewEnt.setComponent(viewComponent)
         var wc = await session.getCurrentWindowComponent()
         var ent = await wc.getEntity()
@@ -25,9 +26,9 @@ function MySample(props: { session?: SpatialSession }) {
         // Create an entity
         var modelEntity = await session.createEntity()
         modelEntity.transform.position.x = 0
-        modelEntity.transform.position.y = 0
-        modelEntity.transform.position.z = -0.4 // Place at the back of the volume 1x1x1
-        modelEntity.transform.scale = new DOMPoint(0.4, 0.4, 0.4)
+        modelEntity.transform.position.y = -0.3
+        modelEntity.transform.position.z = 0.3 // Place at the front of the volume 1x1x1
+        modelEntity.transform.scale = new DOMPoint(0.8, 0.8, 0.8)
         await modelEntity.updateTransform()
 
         // Add model to entity
