@@ -20,7 +20,9 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        OpenDismissHandlerUI().environment(windowGroupContent)
+        OpenDismissHandlerUI().environment(windowGroupContent).onDisappear {
+            windowGroupContent.destroy()
+        }
 
         let rootEntity = windowGroupContent.getEntities().filter {
             $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT

@@ -50,15 +50,20 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
     }
 }
 
-class WindowGroupModel {
+@Observable
+class WindowGroupModel: ObservableObject {
     static let Instance = WindowGroupModel()
 
     private init() {}
 
-    var wgSetting: WindowGroupPlainDefaultValues = .init(
+    private var wgSetting: WindowGroupPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720),
         windowResizability: .automatic
     )
+
+    func getValue() -> WindowGroupPlainDefaultValues {
+        return wgSetting
+    }
 
     func update(_ data: WindowGroupPlainDefaultValues) {
         if let newSize = data.defaultSize {
