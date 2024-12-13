@@ -125,7 +125,8 @@ class SceneMgr {
                 config.resizability
             )
         )
-        parent?.rootWGD.setWindowGroupPlainDefaultValues.send(plainDV)
+
+        WindowGroupModel.Instance.update(plainDV)
 
         let windowGroupID = UUID().uuidString
         // open window
