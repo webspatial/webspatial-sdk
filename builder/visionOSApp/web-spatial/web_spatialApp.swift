@@ -38,6 +38,7 @@ struct web_spatialApp: App {
         // create root SpatialWindowGroup and Immersive SpatialWindowGroup
         rootWGD = SpatialWindowGroup.createRootWindowGroup()
         let _ = SpatialWindowGroup.createImmersiveWindowGroup()
+        SceneMgr.initInstance(self)
     }
 
     func getFileUrl() -> URL {
