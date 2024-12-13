@@ -84,9 +84,7 @@ export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
-  window.addEventListener('load', function () {
-    checkHtmlBackgroundMaterial()
-  })
+  checkHtmlBackgroundMaterial()
 
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
