@@ -18,11 +18,6 @@ import SwiftUI
 let initialPageToLoad = "http://localhost:5173"
 let nativeAPIVersion = "0.0.1"
 
-struct WindowGroupData: Decodable, Hashable, Encodable {
-    let windowStyle: String
-    let windowGroupID: String
-}
-
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
