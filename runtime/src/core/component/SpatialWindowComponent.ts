@@ -69,21 +69,23 @@ export class SpatialWindowComponent extends SpatialComponent {
    * @param options style options
    */
   async setStyle(styleParam: StyleParam) {
-    const { material, cornerRadius = 0 } = styleParam
+    const { material, cornerRadius } = styleParam
     const options: any = {}
     if (material) {
       options.backgroundMaterial = material.type
     }
 
-    if (typeof cornerRadius === 'number') {
-      options.cornerRadius = {
-        topLeading: cornerRadius,
-        bottomLeading: cornerRadius,
-        topTrailing: cornerRadius,
-        bottomTrailing: cornerRadius,
+    if (cornerRadius !== undefined) {
+      if (typeof cornerRadius === 'number') {
+        options.cornerRadius = {
+          topLeading: cornerRadius,
+          bottomLeading: cornerRadius,
+          topTrailing: cornerRadius,
+          bottomTrailing: cornerRadius,
+        }
+      } else {
+        options.cornerRadius = { ...cornerRadius }
       }
-    } else {
-      options.cornerRadius = { ...cornerRadius }
     }
 
     if (document && document.readyState == 'loading') {

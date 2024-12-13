@@ -279,8 +279,8 @@ class SpatialWindowComponent: SpatialComponent {
     func didStartReceivePageContent() {}
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
-        if style.cornerRadius != nil {
-            loadingStyles.cornerRadius = style.cornerRadius
+        if let cornerRadius = style.cornerRadius {
+            loadingStyles.cornerRadius = cornerRadius
         }
 
         if let backgroundMaterial = style.backgroundMaterial {
