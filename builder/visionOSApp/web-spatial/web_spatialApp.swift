@@ -96,7 +96,11 @@ struct web_spatialApp: App {
                     rootWGD.setSize.send(DefaultPlainWindowGroupSize)
                 }
             }
-        }
+        }.defaultSize(
+            WindowGroupModel.Instance.wgSetting.defaultSize!
+        ).windowResizability(
+            WindowGroupModel.Instance.wgSetting.windowResizability!
+        )
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowData!.windowGroupID)

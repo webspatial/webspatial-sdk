@@ -49,3 +49,23 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
         return .automatic
     }
 }
+
+class WindowGroupModel {
+    static let Instance = WindowGroupModel()
+
+    private init() {}
+
+    var wgSetting: WindowGroupPlainDefaultValues = .init(
+        defaultSize: CGSize(width: 1080, height: 720),
+        windowResizability: .automatic
+    )
+
+    func update(_ data: WindowGroupPlainDefaultValues) {
+        if let newSize = data.defaultSize {
+            wgSetting.defaultSize = newSize
+        }
+        if let newResizability = data.windowResizability {
+            wgSetting.windowResizability = newResizability
+        }
+    }
+}
