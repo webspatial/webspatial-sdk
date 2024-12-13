@@ -30,6 +30,7 @@ class CommandManager {
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
         _ = registerCommand(name: "setLogLevel", action: setLogLevel)
+        _ = registerCommand(name: "scene", action: handleScene)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -184,6 +185,10 @@ class CommandManager {
 
     private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.setLogLevel(data: jsb.data!)
+    }
+
+    private func handleScene(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.handleScene(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 }
 
@@ -472,6 +477,128 @@ class CommandDataManager {
         target.completeEvent(requestID: requestID)
     }
 
+    public func handleScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        // Extract the method and parameters from data
+        guard let method = data.sceneData?.method else {
+            target.failEvent(requestID: requestID)
+            return
+        }
+
+        // Switch based on the method name
+        switch method {
+        case "open":
+            if let sceneName = data.sceneData?.sceneName,
+               let url = data.sceneData?.url
+            {
+                let success = SceneMgr.Instance.open(sceneName: sceneName, url: url)
+                if success {
+                    target.completeEvent(requestID: requestID)
+                } else {
+                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
+                }
+
+            } else {
+                target.failEvent(requestID: requestID, data: "sceneName is required")
+            }
+
+        case "close":
+            if let sceneName = data.sceneData?.sceneName {
+                let success = SceneMgr.Instance.close(sceneName: sceneName)
+                if success {
+                    target.completeEvent(requestID: requestID)
+                } else {
+                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
+                }
+
+            } else {
+                target.failEvent(requestID: requestID, data: "sceneName is required")
+            }
+
+        case "getConfig":
+            if let sceneName = data.sceneData?.sceneName {
+                // Call logic to get specific scene config
+                let config = SceneMgr.Instance.getConfig(
+                    sceneName: sceneName
+                )
+                if config != nil,
+                   let ans = JsonParser.serialize(config)
+                {
+                    target.completeEvent(requestID: requestID, data: ans)
+                } else {
+                    target.completeEvent(requestID: requestID, data: "null")
+                }
+
+            } else {
+                // Call logic to get all scene configs
+                let configs = SceneMgr.Instance.getConfig()
+                if configs.count > 0,
+                   let ans = JsonParser.serialize(configs)
+                {
+                    target.completeEvent(requestID: requestID, data: ans)
+                } else {
+                    target.completeEvent(requestID: requestID, data: "null")
+                }
+            }
+
+        case "setConfig":
+            if let sceneName = data.sceneData?.sceneName,
+               let sceneConfig = data.sceneData?.sceneConfig
+            {
+                // Call logic to set the scene config
+                let success = SceneMgr.Instance
+                    .setConfig(sceneName: sceneName, cfg: sceneConfig)
+                if success {
+                    target.completeEvent(requestID: requestID)
+                } else {
+                    target.failEvent(requestID: requestID)
+                }
+
+            } else {
+                print("setConfig, no sceneConfig")
+                target.failEvent(requestID: requestID)
+            }
+
+        case "delConfig":
+            if let sceneName = data.sceneData?.sceneName {
+                // Call logic to remove the scene config
+                let success = SceneMgr.Instance
+                    .delConfig(sceneName: sceneName)
+                if success {
+                    target.completeEvent(requestID: requestID)
+                } else {
+                    target.failEvent(requestID: requestID)
+                }
+            } else {
+                target.completeEvent(requestID: requestID)
+            }
+
+        case "getScene":
+            if let sceneName = data.sceneData?.sceneName {
+                // Call logic to get specific scene state
+                if let name = SceneMgr.Instance
+                    .getScene(sceneName: sceneName)
+                {
+                    target.completeEvent(requestID: requestID, data: "true")
+                } else {
+                    target.failEvent(requestID: requestID)
+                }
+
+            } else {
+                // Call logic to get all scenes with wgd
+                let scenes = SceneMgr.Instance.getScene()
+                if let ans = JsonParser.serialize(scenes) {
+                    target.completeEvent(requestID: requestID, data: ans)
+                } else {
+                    target.failEvent(requestID: requestID)
+                }
+            }
+
+        default:
+            // Handle unsupported method
+            target.completeEvent(requestID: requestID)
+        }
+    }
+
     public func log(data: JSData) {
         if let logStringArr: [String] = data.logString,
            let logLevel: String = data.logLevel
@@ -522,6 +649,8 @@ struct JSData: Codable {
     var params: JSParams? // createResource
     var update: JSResourceData?
     var windowStyle: String?
+    var windowGroupOptions: WindowGroupOptions?
+    var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
 }

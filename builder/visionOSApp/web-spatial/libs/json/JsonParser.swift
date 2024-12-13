@@ -36,4 +36,17 @@ class JsonParser {
         }
         return nil
     }
+
+    // Convert the instance to a JSON string
+    static func serialize<T: Encodable>(_ data: T) -> String? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted // Makes the JSON output more readable
+        do {
+            let jsonData = try encoder.encode(data)
+            return String(data: jsonData, encoding: .utf8) // Convert Data to String
+        } catch {
+            print("Failed to encode WindowGroupOptions to JSON: \(error)")
+            return nil
+        }
+    }
 }
