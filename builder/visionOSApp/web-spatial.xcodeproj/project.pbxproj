@@ -10,6 +10,7 @@
 		2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */; };
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
+		2B23CB3F2D0BEE6900E70D95 /* WindowGroupModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B23CB3E2D0BEE6900E70D95 /* WindowGroupModel.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */; };
 		2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */; };
@@ -53,6 +54,7 @@
 /* Begin PBXFileReference section */
 		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
+		2B23CB3E2D0BEE6900E70D95 /* WindowGroupModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupModel.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* web-spatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web-spatial.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialApp.swift; sourceTree = "<group>"; };
@@ -175,6 +177,8 @@
 		2B2F1D8A2BED4CD0006897EE /* libs */ = {
 			isa = PBXGroup;
 			children = (
+				2B23CB3E2D0BEE6900E70D95 /* WindowGroupModel.swift */,
+
 				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
 				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
 				2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */,
@@ -367,6 +371,7 @@
 				2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */,
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
 				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
+				2B23CB3F2D0BEE6900E70D95 /* WindowGroupModel.swift in Sources */,
 				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
 				2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */,
 				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
