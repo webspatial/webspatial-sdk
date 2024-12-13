@@ -25,6 +25,8 @@ struct web_spatialApp: App {
     @State var rootWGD: SpatialWindowGroup
     @State var initialLaunch = true
 
+    @ObservedObject var wgm = WindowGroupModel.Instance
+
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -97,9 +99,9 @@ struct web_spatialApp: App {
                 }
             }
         }.defaultSize(
-            WindowGroupModel.Instance.wgSetting.defaultSize!
+            wgm.getValue().defaultSize!
         ).windowResizability(
-            WindowGroupModel.Instance.wgSetting.windowResizability!
+            wgm.getValue().windowResizability!
         )
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
