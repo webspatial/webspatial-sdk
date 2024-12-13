@@ -18,17 +18,14 @@ import SwiftUI
 let initialPageToLoad = "http://localhost:5173"
 let nativeAPIVersion = "0.0.1"
 
-struct WindowGroupData: Decodable, Hashable, Encodable {
-    let windowStyle: String
-    let windowGroupID: String
-}
-
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var root: SpatialWindowComponent? = nil
     @State var rootWGD: SpatialWindowGroup
     @State var initialLaunch = true
+
+    @ObservedObject var wgm = WindowGroupModel.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -101,7 +98,11 @@ struct web_spatialApp: App {
                     rootWGD.setSize.send(DefaultPlainWindowGroupSize)
                 }
             }
-        }
+        }.defaultSize(
+            wgm.getValue().defaultSize!
+        ).windowResizability(
+            wgm.getValue().windowResizability!
+        )
 
         WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
             let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowData!.windowGroupID)
