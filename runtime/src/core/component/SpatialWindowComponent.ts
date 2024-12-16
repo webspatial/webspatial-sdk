@@ -71,7 +71,7 @@ export class SpatialWindowComponent extends SpatialComponent {
   async setStyle(styleParam: StyleParam) {
     const { material, cornerRadius } = styleParam
     const options: any = {}
-    if (material) {
+    if (material?.type) {
       options.backgroundMaterial = material.type
     }
 
