@@ -67,9 +67,6 @@ function renderSpatialReactComponent(
     [],
   )
 
-  console.log('dbg ref', ref)
-  ;(window as any).ref2 = ref
-
   return (
     <SpatialReactContext.Provider value={spatialReactContextObject}>
       <StandardInstance {...standardInstanceProps} ref={ref} />
