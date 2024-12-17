@@ -31,6 +31,15 @@ export function useHijackSpatialDivRef(
                       value as string,
                     )
                   }
+                } else if (prop === 'removeProperty') {
+                  const [property] = args
+                  if (property === SpatialCustomVars.backgroundMaterial) {
+                    ref.current?.style.removeProperty(
+                      SpatialCustomVars.backgroundMaterial,
+                    )
+                  } else if (property === SpatialCustomVars.back) {
+                    ref.current?.style.removeProperty(SpatialCustomVars.back)
+                  }
                 }
                 return (target[prop as keyof CSSStyleDeclaration] as Function)(
                   ...args,
