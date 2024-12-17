@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom'
 import { usePortalContainer } from './usePortalContainer'
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
 import { SpatialWindowManager } from './SpatialWindowManager'
-import { RectType, spatialStyleDef, vecType } from '../types'
+import { RectType, spatialStyleDef, vecType } from './types'
 import {
   domRect2rectType,
   getInheritedStyleProps,
@@ -386,7 +386,6 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
       syncDefaultSpatialStyle(openWindow, debugName)
 
-      console.log('openWindow', openWindow)
       const headObserver = await syncHeaderStyle(openWindow, debugName)
       const spawnedResult = {
         headObserver,
