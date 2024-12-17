@@ -45,6 +45,16 @@ function App() {
     ref2.current!.style.setProperty('border-radius', newBordeRadius + 'px')
   }
 
+  const onResetBorderRadiusByRefStyle = () => {
+    ref2.current!.style.removeProperty('border-radius')
+  }
+
+  const onRemoveBackgroundMaterial = () => {
+    if (refBackgroundDom.current) {
+      refBackgroundDom.current.style.removeProperty('--xr-background-material')
+    }
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -77,6 +87,13 @@ function App() {
           >
             decrease borderRadio
           </button>
+          <span className="divider divider-horizontal">OR</span>
+          <button
+            className="btn btn-primary"
+            onClick={onResetBorderRadiusByRefStyle}
+          >
+            reset borderRadio
+          </button>
         </div>
 
         <div
@@ -101,6 +118,12 @@ function App() {
           <option>regular</option>
           <option>thick</option>
         </select>
+        <button
+          className="btn btn-primary"
+          onClick={onRemoveBackgroundMaterial}
+        >
+          remove background material property
+        </button>
       </div>
     </div>
   )
