@@ -1,14 +1,9 @@
+import { forwardRef, useMemo, useContext } from 'react'
 import {
-  ReactNode,
-  CSSProperties,
-  Ref,
-  useImperativeHandle,
-  forwardRef,
-  useMemo,
-  ElementType,
-  useContext,
-} from 'react'
-import { spatialStyleDef } from '../types'
+  SpatialReactComponentProps,
+  SpatialReactComponentRef,
+  SpatialReactComponentWithUniqueIDProps,
+} from './types'
 import { getSession } from '../../utils'
 import { StandardInstance } from './StandardInstance'
 import { PortalInstance } from './PortalInstance'
@@ -20,25 +15,6 @@ import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceCon
 import { SpatialID } from './const'
 import { SpatialLayerContext } from './SpatialLayerContext'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-
-export interface SpatialReactComponentProps {
-  allowScroll?: boolean
-  scrollWithParent?: boolean
-  spatialStyle?: Partial<spatialStyleDef>
-  children?: ReactNode
-  className?: string
-  style?: CSSProperties | undefined
-
-  component?: ElementType
-
-  debugName?: string
-  debugShowStandardInstance?: boolean
-}
-
-interface SpatialReactComponentWithUniqueIDProps
-  extends SpatialReactComponentProps {
-  [SpatialID]: string
-}
 
 function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
   const {
@@ -61,14 +37,16 @@ function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
 
 function renderWebReactComponent(
   inProps: SpatialReactComponentWithUniqueIDProps,
+  ref: SpatialReactComponentRef,
 ) {
   const { componentDesc, props } = parseProps(inProps)
   const { El } = componentDesc
-  return <El {...props} />
+  return <El {...props} ref={ref} />
 }
 
 function renderSpatialReactComponent(
   inProps: SpatialReactComponentWithUniqueIDProps,
+  ref: SpatialReactComponentRef,
 ) {
   const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps)
 
@@ -91,7 +69,7 @@ function renderSpatialReactComponent(
 
   return (
     <SpatialReactContext.Provider value={spatialReactContextObject}>
-      <StandardInstance {...standardInstanceProps} />
+      <StandardInstance {...standardInstanceProps} ref={ref} />
       <PortalInstance {...portalInstanceProps} />
     </SpatialReactContext.Provider>
   )
@@ -110,20 +88,10 @@ function renderSubPortalInstance(
   return <PortalInstance {...portalInstanceProps} />
 }
 
-export type SpatialReactComponentRef = Ref<{
-  getBoundingClientRect: () => DOMRect
-}>
-
 function SpatialReactComponentRefactor(
   inProps: SpatialReactComponentProps,
   ref: SpatialReactComponentRef,
 ) {
-  useImperativeHandle(ref, () => ({
-    getBoundingClientRect() {
-      return new DOMRect(0, 0, 0, 0)
-    },
-  }))
-
   const layer = useContext(SpatialLayerContext) + 1
 
   const parentSpatialReactContextObject = useContext(SpatialReactContext)
@@ -141,7 +109,7 @@ function SpatialReactComponentRefactor(
 
   const props = { ...inProps, [SpatialID]: spatialID }
 
-  const contentInLayer = renderContentInLayer(props)
+  const contentInLayer = renderContentInLayer(props, ref)
   return (
     <SpatialDebugNameContext.Provider value={inProps.debugName || ''}>
       <SpatialLayerContext.Provider value={layer}>
@@ -151,17 +119,20 @@ function SpatialReactComponentRefactor(
   )
 }
 
-function renderContentInLayer(inProps: SpatialReactComponentWithUniqueIDProps) {
+function renderContentInLayer(
+  inProps: SpatialReactComponentWithUniqueIDProps,
+  ref: SpatialReactComponentRef,
+) {
   const isInStandardInstance = useContext(SpatialIsStandardInstanceContext)
   const isWebSpatialEnv = getSession() !== null
   if (isInStandardInstance || !isWebSpatialEnv) {
-    return renderWebReactComponent(inProps)
+    return renderWebReactComponent(inProps, ref)
   } else {
     const parentSpatialReactContextObject = useContext(SpatialReactContext)
     if (parentSpatialReactContextObject) {
       return renderSubPortalInstance(inProps)
     } else {
-      return renderSpatialReactComponent(inProps)
+      return renderSpatialReactComponent(inProps, ref)
     }
   }
 }
