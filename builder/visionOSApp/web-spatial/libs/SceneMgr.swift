@@ -31,7 +31,10 @@ typealias SceneMap = [String: SceneData]
 class SceneMgr {
     static var Instance: SceneMgr! // Singleton instance
     private var sceneMap: SceneMap = [:] // Store the scene mappings
-    private var webViewToSceneMap: [WKWebView: String] = [:] // WKWebView to sceneName mapping
+
+    // to find webview or sceneName
+    private var webViewToSceneNameMap: [WKWebView: String] = [:] // WKWebView to sceneName mapping
+    private var sceneNameToWebview: [String: WKWebView] = [:] //  sceneName to WKWebView mapping
 
     private let logger = Logger.getLogger()
     // Holder for the creating class
@@ -51,14 +54,24 @@ class SceneMgr {
         Instance = SceneMgr(creator: creator)
     }
 
+    func getWebViewBySceneName(_ sceneName: String) -> WKWebView? {
+        return sceneNameToWebview[sceneName]
+    }
+
     // Add mapping between WKWebView and sceneName
     private func addWebViewToSceneMapping(webView: WKWebView, sceneName: String) {
-        webViewToSceneMap[webView] = sceneName
+        webViewToSceneNameMap[webView] = sceneName
+        sceneNameToWebview[sceneName] = webView
     }
 
     // Remove mapping for a WKWebView
     private func removeWebViewToSceneMapping(webView: WKWebView) {
-        webViewToSceneMap.removeValue(forKey: webView)
+        if let sceneName = webViewToSceneNameMap[webView] {
+            sceneNameToWebview.removeValue(forKey: sceneName)
+            webViewToSceneNameMap.removeValue(forKey: webView)
+        } else {
+            logger.error("webview/scene record not found")
+        }
     }
 
     // Get config for a specific scene
@@ -103,7 +116,7 @@ class SceneMgr {
 
     // Open scene
     func open(sceneName: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
-//        print("SceneMgr open",sceneName,url,from.id,windowID as! String)
+//        print("SceneMgr open",sceneName,url,from.id,windowID)
         guard var scene = sceneMap[sceneName] else {
             // sceneName does not exist
             return false
@@ -124,9 +137,8 @@ class SceneMgr {
             }.first?.value
 
             if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
-                wv.navigateToURL(url: URL(string: url)!)
                 // bring to focus
-                parent?.rootWGD.openWindowData.send(scene.wgd!)
+                wg?.openWindowData.send(scene.wgd!)
                 return true
             } else {
                 return false
@@ -196,9 +208,12 @@ class SceneMgr {
         if isFirstCreate {
             // before view destroy do some clean up
             wg!.on(event: SpatialObject.Events.BeforeDestroyed.rawValue, listener: { _, _ in
-                windowComponent
-                    .getView()?.webViewHolder.appleWebView?
-                    .evaluateJavaScript("window.close()") // fire close event
+                if let wv = windowComponent
+                    .getView()?.webViewHolder.appleWebView
+                {
+                    wv.uiDelegate?.webViewDidClose?(wv)
+                }
+
             })
             wg!.on(event: SpatialObject.Events.Destroyed.rawValue, listener: { _, _ in
                 self.delScene(sceneName)
@@ -234,7 +249,7 @@ class SceneMgr {
 
     // Close a scene by WKWebView
     func close(_ webView: WKWebView) -> Bool {
-        guard let sceneName = webViewToSceneMap[webView] else {
+        guard let sceneName = webViewToSceneNameMap[webView] else {
             logger.error("No scene found for the provided WKWebView")
             return false
         }
