@@ -1,11 +1,33 @@
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@xrsdk/react'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 
 function App() {
-  const ref2 = useRef<HTMLElement>()
+  const ref2 = useRef<HTMLDivElement>(null)
+  const [backgroundMaterial, setBackgroundMaterial] = useState('none')
+
+  const refBackgroundDom = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (refBackgroundDom.current) {
+      // refBackgroundDom.current.style.setProperty(
+      //   '--xr-background-material',
+      //   backgroundMaterial,
+      // )
+
+      refBackgroundDom.current.style['--xr-background-material'] =
+        backgroundMaterial
+    }
+  }, [backgroundMaterial])
+
+  const onRef = useCallback((node: HTMLDivElement) => {
+    if (node) {
+      // ;(window as any).ref1 = node
+
+      refBackgroundDom.current = node
+    }
+  }, [])
 
   const onIncreaseBorderRadiusByRefStyle = () => {
     const curBordeRadius = parseFloat(
@@ -36,7 +58,7 @@ function App() {
             '--xr-back': 100,
           }}
           ref={ref2}
-          className="w-6/12 h-20 bg-red-500"
+          className="w-6/12  bg-blue-500"
         >
           Spatial Div
         </div>
@@ -56,6 +78,29 @@ function App() {
             decrease borderRadio
           </button>
         </div>
+
+        <div
+          enable-xr
+          style={{
+            '--xr-back': 100,
+          }}
+          ref={onRef}
+          className="w-6/12"
+        >
+          Spatial Div For Background Material
+        </div>
+
+        <select
+          className="select w-full m-6 select-sm max-w-xs"
+          value={backgroundMaterial} // ...force the select's value to match the state variable...
+          onChange={e => setBackgroundMaterial(e.target.value)}
+        >
+          <option>none</option>
+          <option>default</option>
+          <option>thin</option>
+          <option>regular</option>
+          <option>thick</option>
+        </select>
       </div>
     </div>
   )
