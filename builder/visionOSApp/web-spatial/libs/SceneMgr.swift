@@ -103,8 +103,14 @@ class SceneMgr {
 
     // Open scene
     func open(sceneName: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
+//        print("SceneMgr open",sceneName,url,from.id,windowID as! String)
         guard var scene = sceneMap[sceneName] else {
             // sceneName does not exist
+            return false
+        }
+
+        guard let windowID = windowID else {
+            // no windowID
             return false
         }
 
@@ -168,21 +174,18 @@ class SceneMgr {
         )
 
         // attach spawned webview to windowComponent
-        if let windowID: String = windowID {
-            if let spawnedWebView = from.spawnedNativeWebviews.removeValue(
-                forKey: windowID
-            ) {
-                windowComponent.getView()!.destroy()
-                windowComponent.setView(wv: spawnedWebView)
-                windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
-            } else {
-                logger.error("no spawned")
-                return false
-            }
+
+        if let spawnedWebView = from.spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
         } else {
-            logger.error("no windowID")
+            logger.error("no spawned")
             return false
         }
+
         ent.addComponent(windowComponent)
 
         let isFirstCreate = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID) == nil
