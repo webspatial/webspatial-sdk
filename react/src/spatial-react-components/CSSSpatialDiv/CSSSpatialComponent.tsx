@@ -1,14 +1,18 @@
-import { CSSProperties, useContext } from 'react'
+import { CSSProperties, forwardRef, useContext } from 'react'
 import { useSpatialStyle } from './useSpatialStyle'
 import {
   SpatialReactComponent,
   SpatialReactComponentProps,
+  SpatialReactComponentRef,
 } from '../SpatialReactComponent'
 import { SpatialIsStandardInstanceContext } from '../SpatialReactComponent/SpatialIsStandardInstanceContext'
 import { getSession } from '../../utils/getSession'
 import { CSSSpatialDebugNameContext } from './CSSSpatialDebugNameContext'
 
-function renderWithCSSParser(inProps: SpatialReactComponentProps) {
+function renderWithCSSParser(
+  inProps: SpatialReactComponentProps,
+  refIn: SpatialReactComponentRef,
+) {
   const { style = {}, children, ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
@@ -32,6 +36,7 @@ function renderWithCSSParser(inProps: SpatialReactComponentProps) {
           children={children}
           {...props}
           spatialStyle={spatialStyle}
+          ref={refIn}
         />
       )}
       <El style={divRefStyle} {...props} ref={ref} />
@@ -42,6 +47,7 @@ function renderWithCSSParser(inProps: SpatialReactComponentProps) {
 function renderWithoutCSSParser(
   inProps: SpatialReactComponentProps,
   isWebEnv: boolean,
+  ref: SpatialReactComponentRef,
 ) {
   const { style: inStyle = {}, ...props } = inProps
   const style: CSSProperties = { ...inStyle }
@@ -49,24 +55,34 @@ function renderWithoutCSSParser(
     style.transform = 'none'
   }
 
-  return <SpatialReactComponent style={style} {...props} />
+  return <SpatialReactComponent style={style} {...props} ref={ref} />
 }
 
-function CSSSpatialComponentBase(inProps: SpatialReactComponentProps) {
+function CSSSpatialComponentBase(
+  inProps: SpatialReactComponentProps,
+  ref: SpatialReactComponentRef,
+) {
   const isWebEnv = !getSession()
   const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
 
   if (isWebEnv || isInStandardInstance === true) {
-    return renderWithoutCSSParser(inProps, isWebEnv)
+    return renderWithoutCSSParser(inProps, isWebEnv, ref)
   } else {
-    return renderWithCSSParser(inProps)
+    return renderWithCSSParser(inProps, ref)
   }
 }
 
-export function CSSSpatialComponent(inProps: SpatialReactComponentProps) {
+const CSSSpatialComponentBaseWithRef = forwardRef(CSSSpatialComponentBase)
+
+function CSSSpatialComponentWithRef(
+  inProps: SpatialReactComponentProps,
+  ref: SpatialReactComponentRef,
+) {
   return (
     <CSSSpatialDebugNameContext.Provider value={inProps.debugName || ''}>
-      <CSSSpatialComponentBase {...inProps} />
+      <CSSSpatialComponentBaseWithRef {...inProps} ref={ref} />
     </CSSSpatialDebugNameContext.Provider>
   )
 }
+
+export const CSSSpatialComponent = forwardRef(CSSSpatialComponentWithRef)
