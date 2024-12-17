@@ -5,13 +5,15 @@ import React, {
   useLayoutEffect,
   useEffect,
   useContext,
+  forwardRef,
 } from 'react'
 import { useForceUpdate } from './useForceUpdate'
 import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext'
 import { SpatialReactContext } from './SpatialReactContext'
+import { SpatialReactComponentRef } from './types'
 
 function useDetectDomRectChange() {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLElement>(null)
 
   const forceUpdate = useForceUpdate()
 
@@ -39,6 +41,23 @@ function useDetectDomRectChange() {
     }
   }, [])
 
+  // detect dom style and class change
+  useEffect(() => {
+    if (!ref.current) {
+      console.warn('Ref is not attached to the DOM')
+      return
+    }
+    let ro = new MutationObserver(elements => {
+      forceUpdate()
+    })
+    ro.observe(ref.current!, {
+      attributeFilter: ['class', 'style'],
+    })
+    return () => {
+      ro.disconnect()
+    }
+  }, [])
+
   return ref
 }
 
@@ -50,20 +69,42 @@ interface StandardInstanceProps {
   // for debug
   debugShowStandardInstance?: boolean
 }
-export function StandardInstance(inProps: StandardInstanceProps) {
+export const StandardInstance = forwardRef(function (
+  inProps: StandardInstanceProps,
+  refIn: SpatialReactComponentRef,
+) {
   const { El, style: inStyle, debugShowStandardInstance, ...props } = inProps
   const extraStyle = {
     visibility: debugShowStandardInstance ? undefined : 'hidden',
   }
   const style = { ...inStyle, ...extraStyle }
 
-  const ref = useDetectDomRectChange()
+  var ref = useDetectDomRectChange()
+
+  const proxyRef = new Proxy<typeof ref>(ref, {
+    get(target, prop, receiver) {
+      return Reflect.get(target, prop, receiver)
+    },
+    set(target, prop, value, receiver) {
+      if (prop === 'current') {
+        const domElement = value as HTMLElement
+        if (refIn) {
+          if (typeof refIn === 'function') {
+            refIn(domElement)
+          } else {
+            refIn.current = domElement
+          }
+        }
+      }
+      return Reflect.set(target, prop, value, receiver)
+    },
+  })
 
   return (
     <SpatialIsStandardInstanceContext.Provider value={true}>
-      <El ref={ref} style={style} {...props} />
+      <El ref={proxyRef} style={style} {...props} />
     </SpatialIsStandardInstanceContext.Provider>
   )
-}
+})
 
 StandardInstance.displayName = 'StandardInstance'

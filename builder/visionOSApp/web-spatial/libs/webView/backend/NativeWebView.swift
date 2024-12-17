@@ -41,7 +41,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                 styleJsonString = styleJsonString?
                     .components(separatedBy: "?").first
             }
-            var styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
+            let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
             webViewRef?.didGetEarlyStyle(style: styleToSet)
             // Respond with empty css file
             let response = ".ignoreThis{}".data(using: .utf8)
