@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 enableDebugTool()
 
 function App() {
-  const ref2 = useRef<HTMLDivElement>(null)
   const [backgroundMaterial, setBackgroundMaterial] = useState('none')
 
   const refBackgroundDom = useRef<HTMLDivElement>(null)
@@ -29,24 +28,18 @@ function App() {
     }
   }, [])
 
-  const onIncreaseBorderRadiusByRefStyle = () => {
-    const curBordeRadius = parseFloat(
-      ref2.current!.style.getPropertyValue('border-radius') || '0',
-    )
-    const newBordeRadius = curBordeRadius + 10
-    ref2.current!.style.setProperty('border-radius', newBordeRadius + 'px')
-  }
-
-  const onDecreaseBorderRadiusByRefStyle = () => {
-    const curBordeRadius = parseFloat(
-      ref2.current!.style.getPropertyValue('border-radius') || '0',
-    )
-    const newBordeRadius = curBordeRadius > 10 ? curBordeRadius - 10 : 0
-    ref2.current!.style.setProperty('border-radius', newBordeRadius + 'px')
-  }
+  const [borderRadius, setBorderRadius] = useState('0')
+  useEffect(() => {
+    if (refBackgroundDom.current) {
+      refBackgroundDom.current!.style.setProperty(
+        'border-radius',
+        borderRadius + 'px',
+      )
+    }
+  }, [borderRadius])
 
   const onResetBorderRadiusByRefStyle = () => {
-    ref2.current!.style.removeProperty('border-radius')
+    refBackgroundDom.current!.style.removeProperty('border-radius')
   }
 
   const onRemoveBackgroundMaterial = () => {
@@ -69,7 +62,7 @@ function App() {
     setRotateZ(value)
   }
 
-  const [translateX, setTranslateX] = useState(0)
+  const [translateX, setTranslateX] = useState('0')
   const onChangeTranslateX = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setTranslateX(value)
@@ -96,43 +89,25 @@ function App() {
       </div>
 
       <div className="bg-slate-500 m-6	w-8/12">
-        <div
-          enable-xr
-          style={{
-            '--xr-back': 100,
-          }}
-          ref={ref2}
-          className="w-6/12  bg-blue-500"
+        <div enable-xr ref={onRef} className="w-6/12 bg-red-200/30 h-10">
+          This is Spatial Div
+        </div>
+
+        <div className="m-2">change border radius</div>
+        <input
+          type="range"
+          min={0}
+          max="50"
+          value={borderRadius}
+          className="range range-primary"
+          onChange={e => setBorderRadius(e.target.value)}
+        />
+        <button
+          className="btn btn-primary"
+          onClick={onResetBorderRadiusByRefStyle}
         >
-          Spatial Div
-        </div>
-
-        <div className="m-6 flex w-full flex-col lg:flex-row">
-          <button
-            className="btn btn-primary"
-            onClick={onIncreaseBorderRadiusByRefStyle}
-          >
-            increase borderRadio
-          </button>
-          <span className="divider divider-horizontal">OR</span>
-          <button
-            className="btn btn-primary"
-            onClick={onDecreaseBorderRadiusByRefStyle}
-          >
-            decrease borderRadio
-          </button>
-          <span className="divider divider-horizontal">OR</span>
-          <button
-            className="btn btn-primary"
-            onClick={onResetBorderRadiusByRefStyle}
-          >
-            reset borderRadio
-          </button>
-        </div>
-
-        <div enable-xr style={{}} ref={onRef} className="w-6/12">
-          Spatial Div For Background Material
-        </div>
+          reset borderRadio
+        </button>
 
         <select
           className="select w-full m-2 select-sm max-w-xs"
