@@ -86,6 +86,12 @@ export function useHijackSpatialDivRef(
               return domStyleProxy
             }
 
+            if (typeof target[prop as keyof HTMLElement] === 'function') {
+              return function (this: any, ...args: any[]) {
+                return (target[prop as keyof HTMLElement] as Function)(...args)
+              }
+            }
+
             return Reflect.get(target, prop, target)
           },
           set(target, prop, value) {
