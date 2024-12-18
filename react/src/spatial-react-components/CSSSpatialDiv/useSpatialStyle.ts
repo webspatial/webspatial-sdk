@@ -3,11 +3,7 @@ import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
 import isEqual from 'lodash.isequal'
 import { Matrix4, Vector3, Quaternion } from './math'
 import { type BackgroundMaterialType } from '@xrsdk/runtime'
-
-const SpatialCustomVars = {
-  back: '--xr-back',
-  backgroundMaterial: '--xr-background-material',
-}
+import { SpatialCustomVars } from './const'
 
 function parse2dMatrix(transformDataArray: number[]) {
   const [n11, n21, n12, n22, n13, n23] = transformDataArray
@@ -115,7 +111,7 @@ function parseSpatialStyle(node: HTMLElement) {
 }
 
 export function useSpatialStyle() {
-  const ref = useRef(null)
+  const ref = useRef<HTMLElement | null>(null)
   const [spatialStyle, setSpatialStyle] = useState({
     position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
@@ -167,8 +163,6 @@ export function useSpatialStyle() {
       observer.disconnect()
     }
   }, [])
-
-  // TODO: check style property change for spatial react component
 
   useEffect(() => {
     if (!ref.current) {
