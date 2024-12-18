@@ -30,15 +30,23 @@ export function useHijackSpatialDivRef(
                       SpatialCustomVars.back,
                       value as string,
                     )
+                  } else if (property === 'transform') {
+                    ref.current?.style.setProperty(property, value as string)
+                    return true
                   }
                 } else if (prop === 'removeProperty') {
                   const [property] = args
-                  if (property === SpatialCustomVars.backgroundMaterial) {
-                    ref.current?.style.removeProperty(
-                      SpatialCustomVars.backgroundMaterial,
-                    )
-                  } else if (property === SpatialCustomVars.back) {
-                    ref.current?.style.removeProperty(SpatialCustomVars.back)
+                  if (
+                    property === SpatialCustomVars.backgroundMaterial ||
+                    property === SpatialCustomVars.back ||
+                    property === 'transform'
+                  ) {
+                    ref.current?.style.removeProperty(property)
+                  }
+                } else if (prop === 'getPropertyValue') {
+                  const [property] = args
+                  if (property === 'transform') {
+                    return ref.current?.style[property]
                   }
                 }
                 return (target[prop as keyof CSSStyleDeclaration] as Function)(
@@ -46,6 +54,11 @@ export function useHijackSpatialDivRef(
                 )
               }
             }
+
+            if (prop === 'transform') {
+              return ref.current?.style[prop]
+            }
+
             return Reflect.get(target, prop, receiver)
           },
           set(target, property, value, receiver) {
@@ -59,6 +72,9 @@ export function useHijackSpatialDivRef(
                 SpatialCustomVars.back,
                 value as string,
               )
+            } else if (property === 'transform') {
+              ref.current?.style.setProperty(property, value as string)
+              return true
             }
             return Reflect.set(target, property, value, receiver)
           },
