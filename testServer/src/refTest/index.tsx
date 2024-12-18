@@ -23,7 +23,7 @@ function App() {
 
   const onRef = useCallback((node: HTMLDivElement) => {
     if (node) {
-      // ;(window as any).ref1 = node
+      ;(window as any).ref1 = node
 
       refBackgroundDom.current = node
     }
@@ -62,13 +62,33 @@ function App() {
     setBackDepth(value)
   }
 
+  const [rotateZ, setRotateZ] = useState('0')
+  const onChangeRotateZ = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+
+    setRotateZ(value)
+  }
+
+  const [translateX, setTranslateX] = useState(0)
+  const onChangeTranslateX = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setTranslateX(value)
+  }
+
+  useEffect(() => {
+    if (refBackgroundDom.current) {
+      const transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)`
+      refBackgroundDom.current!.style.setProperty('transform', transform)
+    }
+  }, [translateX, rotateZ])
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
         <a href="#">Go Back</a>
       </div>
 
-      <div className="bg-slate-500 m-6	 artboard artboard-horizontal phone-2">
+      <div className="bg-slate-500 m-6	w-8/12">
         <div
           enable-xr
           style={{
@@ -133,6 +153,26 @@ function App() {
           value={backDepth}
           className="range range-primary"
           onChange={onChangeBackDepth}
+        />
+
+        <div className="m-6">change rotateZ</div>
+        <input
+          type="range"
+          min={10}
+          max="200"
+          value={rotateZ}
+          className="range range-primary"
+          onChange={onChangeRotateZ}
+        />
+
+        <div className="m-6">change translateX</div>
+        <input
+          type="range"
+          min={0}
+          max="200"
+          value={translateX}
+          className="range range-primary"
+          onChange={onChangeTranslateX}
         />
       </div>
     </div>
