@@ -13,7 +13,7 @@ export function useHijackSpatialDivRef(
       if (domElement && refIn) {
         const domStyle = domElement.style
         const domStyleProxy = new Proxy(domStyle, {
-          get(target, prop: string, receiver) {
+          get(target, prop: string) {
             if (
               typeof target[prop as keyof CSSStyleDeclaration] === 'function'
             ) {
@@ -59,9 +59,9 @@ export function useHijackSpatialDivRef(
               return ref.current?.style[prop]
             }
 
-            return Reflect.get(target, prop, receiver)
+            return Reflect.get(target, prop)
           },
-          set(target, property, value, receiver) {
+          set(target, property, value) {
             if (property === SpatialCustomVars.backgroundMaterial) {
               ref.current?.style.setProperty(
                 SpatialCustomVars.backgroundMaterial,
@@ -76,7 +76,7 @@ export function useHijackSpatialDivRef(
               ref.current?.style.setProperty(property, value as string)
               return true
             }
-            return Reflect.set(target, property, value, receiver)
+            return Reflect.set(target, property, value)
           },
         })
 
