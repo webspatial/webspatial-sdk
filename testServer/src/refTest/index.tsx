@@ -82,6 +82,13 @@ function App() {
     }
   }, [translateX, rotateZ])
 
+  const [transformOrigin, setTransformOrigin] = useState('center')
+  useEffect(() => {
+    if (refBackgroundDom.current) {
+      refBackgroundDom.current!.style.transformOrigin = transformOrigin
+    }
+  }, [transformOrigin])
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -128,7 +135,7 @@ function App() {
         </div>
 
         <select
-          className="select w-full m-6 select-sm max-w-xs"
+          className="select w-full m-2 select-sm max-w-xs"
           value={backgroundMaterial} // ...force the select's value to match the state variable...
           onChange={e => setBackgroundMaterial(e.target.value)}
         >
@@ -145,7 +152,7 @@ function App() {
           remove background material property
         </button>
 
-        <div className="m-6">change depth</div>
+        <div className="m-2">change depth</div>
         <input
           type="range"
           min={10}
@@ -155,7 +162,7 @@ function App() {
           onChange={onChangeBackDepth}
         />
 
-        <div className="m-6">change rotateZ</div>
+        <div className="m-2">change rotateZ</div>
         <input
           type="range"
           min={10}
@@ -165,7 +172,7 @@ function App() {
           onChange={onChangeRotateZ}
         />
 
-        <div className="m-6">change translateX</div>
+        <div className="m-2">change translateX</div>
         <input
           type="range"
           min={0}
@@ -174,6 +181,17 @@ function App() {
           className="range range-primary"
           onChange={onChangeTranslateX}
         />
+
+        <div className="m-6">select transformOrigin</div>
+        <select
+          className="select w-full  m-2 select-sm max-w-xs"
+          value={transformOrigin} // ...force the select's value to match the state variable...
+          onChange={e => setTransformOrigin(e.target.value)}
+        >
+          <option>center</option>
+          <option>top left</option>
+          <option>10px 10px</option>
+        </select>
       </div>
     </div>
   )
