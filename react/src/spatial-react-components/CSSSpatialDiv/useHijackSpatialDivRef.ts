@@ -2,6 +2,7 @@ import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
 import { MutableRefObject, useCallback } from 'react'
 import { SpatialReactComponentRef } from '../SpatialReactComponent/types'
 import { SpatialCustomVars } from './const'
+import { InjectClassName } from './injectClassStyle'
 
 export function useHijackSpatialDivRef(
   refIn: SpatialReactComponentRef,
@@ -95,9 +96,12 @@ export function useHijackSpatialDivRef(
             return Reflect.get(target, prop, target)
           },
           set(target, prop, value) {
-            if (prop === 'style') {
-              // todo: set style
+            if (ref.current) {
+              if (prop === 'className') {
+                ref.current.className = value + ' ' + InjectClassName
+              }
             }
+
             return Reflect.set(target, prop, value)
           },
         })
