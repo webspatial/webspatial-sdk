@@ -55,6 +55,13 @@ function App() {
     }
   }
 
+  const [backDepth, setBackDepth] = useState('10')
+  const onChangeBackDepth = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    refBackgroundDom.current!.style.setProperty('--xr-back', value)
+    setBackDepth(value)
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -96,14 +103,7 @@ function App() {
           </button>
         </div>
 
-        <div
-          enable-xr
-          style={{
-            '--xr-back': 100,
-          }}
-          ref={onRef}
-          className="w-6/12"
-        >
+        <div enable-xr style={{}} ref={onRef} className="w-6/12">
           Spatial Div For Background Material
         </div>
 
@@ -124,6 +124,16 @@ function App() {
         >
           remove background material property
         </button>
+
+        <div className="m-6">change depth</div>
+        <input
+          type="range"
+          min={10}
+          max="200"
+          value={backDepth}
+          className="range range-primary"
+          onChange={onChangeBackDepth}
+        />
       </div>
     </div>
   )
