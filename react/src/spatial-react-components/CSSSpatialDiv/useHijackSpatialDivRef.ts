@@ -13,7 +13,7 @@ export function useHijackSpatialDivRef(
       if (domElement && refIn) {
         const domStyle = domElement.style
         const domStyleProxy = new Proxy(domStyle, {
-          get(target, prop: string, receiver) {
+          get(target, prop: string) {
             if (
               typeof target[prop as keyof CSSStyleDeclaration] === 'function'
             ) {
@@ -30,6 +30,23 @@ export function useHijackSpatialDivRef(
                       SpatialCustomVars.back,
                       value as string,
                     )
+                  } else if (property === 'transform') {
+                    ref.current?.style.setProperty(property, value as string)
+                    return true
+                  }
+                } else if (prop === 'removeProperty') {
+                  const [property] = args
+                  if (
+                    property === SpatialCustomVars.backgroundMaterial ||
+                    property === SpatialCustomVars.back ||
+                    property === 'transform'
+                  ) {
+                    ref.current?.style.removeProperty(property)
+                  }
+                } else if (prop === 'getPropertyValue') {
+                  const [property] = args
+                  if (property === 'transform') {
+                    return ref.current?.style[property]
                   }
                 }
                 return (target[prop as keyof CSSStyleDeclaration] as Function)(
@@ -37,9 +54,14 @@ export function useHijackSpatialDivRef(
                 )
               }
             }
-            return Reflect.get(target, prop, receiver)
+
+            if (prop === 'transform') {
+              return ref.current?.style[prop]
+            }
+
+            return Reflect.get(target, prop)
           },
-          set(target, property, value, receiver) {
+          set(target, property, value) {
             if (property === SpatialCustomVars.backgroundMaterial) {
               ref.current?.style.setProperty(
                 SpatialCustomVars.backgroundMaterial,
@@ -50,8 +72,11 @@ export function useHijackSpatialDivRef(
                 SpatialCustomVars.back,
                 value as string,
               )
+            } else if (property === 'transform') {
+              ref.current?.style.setProperty(property, value as string)
+              return true
             }
-            return Reflect.set(target, property, value, receiver)
+            return Reflect.set(target, property, value)
           },
         })
 

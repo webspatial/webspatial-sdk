@@ -9,12 +9,13 @@ import { SpatialIsStandardInstanceContext } from '../SpatialReactComponent/Spati
 import { getSession } from '../../utils/getSession'
 import { CSSSpatialDebugNameContext } from './CSSSpatialDebugNameContext'
 import { useHijackSpatialDivRef } from './useHijackSpatialDivRef'
+import { InjectClassName } from './injectClassStyle'
 
 function renderWithCSSParser(
   inProps: SpatialReactComponentProps,
   refIn: SpatialReactComponentRef,
 ) {
-  const { style = {}, children, ...props } = inProps
+  const { style = {}, className = '', children, ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
     ...style,
@@ -32,18 +33,26 @@ function renderWithCSSParser(
   // hijack SpatialDiv ref
   const spatialDivRef = useHijackSpatialDivRef(refIn, ref)
 
+  const divRefClassName = className + ' ' + InjectClassName
+
   return (
     <>
       {ready && (
         <SpatialReactComponent
           style={spatialDivStyle}
+          className={className}
           children={children}
           {...props}
           spatialStyle={spatialStyle}
           ref={spatialDivRef}
         />
       )}
-      <El style={divRefStyle} {...props} ref={ref} />
+      <El
+        style={divRefStyle}
+        className={divRefClassName}
+        {...props}
+        ref={ref}
+      />
     </>
   )
 }
