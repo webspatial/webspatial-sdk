@@ -122,8 +122,12 @@ class SceneMgr {
             sceneName = UUID().uuidString
             _ = setConfig(
                 sceneName: sceneName,
-                cfg: WindowGroupOptions(
-                    defaultSize: DefaultPlainWindowGroupSize, resizability: nil
+                cfg: Config(
+                    defaultSize: Config.Size(
+                        width: DefaultPlainWindowGroupSize.width,
+                        height: DefaultPlainWindowGroupSize.height
+                    ),
+                    resizability: nil
                 )
             )
         }
