@@ -28,7 +28,22 @@ typealias SceneMap = [String: SceneData]
 
 // Define SceneMgr class
 class SceneMgr {
-    static var Instance: SceneMgr! // Singleton instance
+    private static var _instance: SceneMgr?
+
+    static var Instance: SceneMgr {
+        get {
+            if _instance == nil {
+                _instance = SceneMgr()
+            }
+            return _instance!
+        }
+        set {
+            // not allowed
+        }
+    }
+
+    private init() {}
+
     private var sceneMap: SceneMap = [:] // Store the scene mappings
 
     // to find webview or sceneName
@@ -36,22 +51,6 @@ class SceneMgr {
     private var sceneNameToWebview: [String: WKWebView] = [:] //  sceneName to WKWebView mapping
 
     private let logger = Logger.getLogger()
-    // Holder for the creating class
-    private(set) var parent: web_spatialApp?
-
-    // Initialize with the creator
-    init(creator: web_spatialApp) {
-        parent = creator
-    }
-
-    // Set up the singleton instance with a creator
-    static func initInstance(_ creator: web_spatialApp) {
-        guard Instance == nil else {
-            // SceneMgr instance already exists
-            return
-        }
-        Instance = SceneMgr(creator: creator)
-    }
 
     func getWebViewBySceneName(_ sceneName: String) -> WKWebView? {
         return sceneNameToWebview[sceneName]
@@ -235,8 +234,12 @@ class SceneMgr {
             return false
         }
         // Logic for closing the scene
-        if let wgd = scene.wgd {
-            parent?.rootWGD.closeWindowData.send(wgd)
+        if let wgd = scene.wgd,
+           let pwg = SpatialWindowGroup.getSpatialWindowGroup(
+               wgd.windowGroupID
+           )
+        {
+            pwg.closeWindowData.send(wgd)
             return true
         } else {
             // scene not opened yet
