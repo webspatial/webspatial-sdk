@@ -1,4 +1,11 @@
-import { CSSProperties, forwardRef, useContext } from 'react'
+import {
+  CSSProperties,
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import { useSpatialStyle } from './useSpatialStyle'
 import {
   SpatialReactComponent,
@@ -10,11 +17,27 @@ import { getSession } from '../../utils/getSession'
 import { CSSSpatialDebugNameContext } from './CSSSpatialDebugNameContext'
 import { useHijackSpatialDivRef } from './useHijackSpatialDivRef'
 import { InjectClassName } from './injectClassStyle'
+import { CSSSpatialLayerContext } from './CSSSpatialLayerContext'
+import {
+  CSSSpatialID,
+  CSSSpatialRootContext,
+  CSSSpatialRootContextObject,
+} from './CSSSpatialRootContext'
 
-function renderWithCSSParser(
+interface CSSSpatialComponentWithUniqueIDProps
+  extends SpatialReactComponentProps {
+  [CSSSpatialID]: string
+}
+
+function renderRootCSSSpatialComponent(
   inProps: SpatialReactComponentProps,
   refIn: SpatialReactComponentRef,
 ) {
+  const cssSpatialRootContextObject = useMemo(
+    () => new CSSSpatialRootContextObject(),
+    [],
+  )
+
   const { style = {}, className = '', children, ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
@@ -36,7 +59,7 @@ function renderWithCSSParser(
   const divRefClassName = className + ' ' + InjectClassName
 
   return (
-    <>
+    <CSSSpatialRootContext.Provider value={cssSpatialRootContextObject}>
       {ready && (
         <SpatialReactComponent
           style={spatialDivStyle}
@@ -53,35 +76,122 @@ function renderWithCSSParser(
         {...props}
         ref={ref}
       />
+    </CSSSpatialRootContext.Provider>
+  )
+}
+
+function renderInWebEnv(
+  props: SpatialReactComponentProps,
+  ref: SpatialReactComponentRef,
+) {
+  return <SpatialReactComponent {...props} ref={ref} />
+}
+
+function renderInStandardInstance(
+  cssSpatialRootContextObject: CSSSpatialRootContextObject,
+  cssSpatialID: string,
+  inProps: SpatialReactComponentProps,
+  refIn: SpatialReactComponentRef,
+) {
+  const { style: inStyle = {}, ...props } = inProps
+  const style: CSSProperties = { ...inStyle, transform: 'none' }
+
+  // hijack SpatialDiv ref
+  var cssParserRef = useRef<HTMLElement>()
+  const spatialDivRef = useHijackSpatialDivRef(refIn, cssParserRef)
+
+  useEffect(() => {
+    const onDomChangeAction = (dom: HTMLElement | undefined) => {
+      cssParserRef.current = dom
+    }
+    cssSpatialRootContextObject.onDomChange(cssSpatialID, onDomChangeAction)
+
+    return () => {
+      cssSpatialRootContextObject.offDomChange(cssSpatialID, onDomChangeAction)
+    }
+  }, [])
+
+  return <SpatialReactComponent style={style} {...props} ref={spatialDivRef} />
+}
+
+function renderInPortalInstance(
+  cssSpatialRootContextObject: CSSSpatialRootContextObject,
+  cssSpatialID: string,
+  inProps: SpatialReactComponentProps,
+) {
+  const { style = {}, className = '', children, ...props } = inProps
+  const { ref, spatialStyle, ready } = useSpatialStyle()
+  const divRefStyle: CSSProperties = {
+    ...style,
+    visibility: 'hidden',
+    position: 'absolute',
+  }
+
+  const spatialDivStyle: CSSProperties = {
+    ...style,
+    transform: 'none',
+  }
+
+  const El = inProps.component || 'div'
+
+  const divRefClassName = className + ' ' + InjectClassName
+
+  useEffect(() => {
+    cssSpatialRootContextObject.setCSSParserRef(cssSpatialID, ref.current)
+  }, [ref.current])
+
+  return (
+    <>
+      {ready && (
+        <SpatialReactComponent
+          style={spatialDivStyle}
+          className={className}
+          children={children}
+          {...props}
+          spatialStyle={spatialStyle}
+        />
+      )}
+      <El
+        style={divRefStyle}
+        className={divRefClassName}
+        {...props}
+        ref={ref}
+      />
     </>
   )
 }
 
-function renderWithoutCSSParser(
-  inProps: SpatialReactComponentProps,
-  isWebEnv: boolean,
-  ref: SpatialReactComponentRef,
-) {
-  const { style: inStyle = {}, ...props } = inProps
-  const style: CSSProperties = { ...inStyle }
-  if (!isWebEnv) {
-    style.transform = 'none'
-  }
-
-  return <SpatialReactComponent style={style} {...props} ref={ref} />
-}
-
 function CSSSpatialComponentBase(
-  inProps: SpatialReactComponentProps,
+  inProps: CSSSpatialComponentWithUniqueIDProps,
   ref: SpatialReactComponentRef,
 ) {
+  const { [CSSSpatialID]: cssSpatialID, ...props } = inProps
   const isWebEnv = !getSession()
-  const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
-
-  if (isWebEnv || isInStandardInstance === true) {
-    return renderWithoutCSSParser(inProps, isWebEnv, ref)
+  if (isWebEnv) {
+    return renderInWebEnv(props, ref)
   } else {
-    return renderWithCSSParser(inProps, ref)
+    const cssSpatialRootContextObject = useContext(CSSSpatialRootContext)
+    if (cssSpatialRootContextObject) {
+      const isInStandardInstance = !!useContext(
+        SpatialIsStandardInstanceContext,
+      )
+      if (isInStandardInstance) {
+        return renderInStandardInstance(
+          cssSpatialRootContextObject,
+          cssSpatialID,
+          props,
+          ref,
+        )
+      } else {
+        return renderInPortalInstance(
+          cssSpatialRootContextObject,
+          cssSpatialID,
+          props,
+        )
+      }
+    } else {
+      return renderRootCSSSpatialComponent(props, ref)
+    }
   }
 }
 
@@ -91,9 +201,28 @@ function CSSSpatialComponentWithRef(
   inProps: SpatialReactComponentProps,
   ref: SpatialReactComponentRef,
 ) {
+  const layer = useContext(CSSSpatialLayerContext) + 1
+
+  const cssSpatialRootContextObject = useContext(CSSSpatialRootContext)
+  const isRootInstance = !cssSpatialRootContextObject
+  const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
+  const cssSpatialID = useMemo(() => {
+    return isRootInstance
+      ? layer.toString()
+      : cssSpatialRootContextObject.getSpatialID(
+          layer,
+          isInStandardInstance,
+          inProps.debugName,
+        )
+  }, [])
+
+  const props = { ...inProps, [CSSSpatialID]: cssSpatialID }
+
   return (
     <CSSSpatialDebugNameContext.Provider value={inProps.debugName || ''}>
-      <CSSSpatialComponentBaseWithRef {...inProps} ref={ref} />
+      <CSSSpatialLayerContext.Provider value={layer}>
+        <CSSSpatialComponentBaseWithRef {...props} ref={ref} />
+      </CSSSpatialLayerContext.Provider>
     </CSSSpatialDebugNameContext.Provider>
   )
 }
