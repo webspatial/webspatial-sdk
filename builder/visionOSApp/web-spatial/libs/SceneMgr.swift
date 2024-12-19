@@ -142,8 +142,8 @@ class SceneMgr {
             }.first?.value
 
             if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
-                // bring to focus
-                wg?.openWindowData.send(scene.wgd!)
+                wv.navigateToURL(url: URL(string: url)!) // TODO: should we support dataURI?
+                wg?.openWindowData.send(scene.wgd!) // bring to focus
                 return true
             } else {
                 return false
