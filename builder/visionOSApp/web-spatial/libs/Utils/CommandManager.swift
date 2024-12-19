@@ -490,7 +490,12 @@ class CommandDataManager {
             if let sceneName = data.sceneData?.sceneName,
                let url = data.sceneData?.url
             {
-                let success = SceneMgr.Instance.open(sceneName: sceneName, url: url)
+                let success = SceneMgr.Instance.open(
+                    sceneName: sceneName,
+                    url: url,
+                    from: target
+                )
+
                 if success {
                     target.completeEvent(requestID: requestID)
                 } else {
