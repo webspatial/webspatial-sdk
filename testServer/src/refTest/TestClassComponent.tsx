@@ -21,6 +21,30 @@ export function TestClassComponent() {
     }
   }, [selectedOption])
 
+  const onAddClass = () => {
+    if (ref.current) {
+      ref.current.classList.add('translate-y-8')
+    }
+  }
+
+  const onRemoveClass = () => {
+    if (ref.current) {
+      ref.current.classList.remove('translate-y-8')
+    }
+  }
+
+  const onReplaceClass = () => {
+    if (ref.current) {
+      ref.current.classList.replace('translate-y-8', 'w-8/12')
+    }
+  }
+
+  const onToggleClass = () => {
+    if (ref.current) {
+      ref.current.classList.toggle('translate-y-8')
+    }
+  }
+
   const style: React.CSSProperties = {
     '--xr-background-material': 'none',
     '--xr-back': '100px',
@@ -59,6 +83,21 @@ export function TestClassComponent() {
               onChange={handleOptionChange}
             />
           </label>
+        </div>
+        <span>Test classList:</span>
+        <div className="flex gap-2">
+          <button className="btn btn-primary" onClick={onAddClass}>
+            add class
+          </button>
+          <button className="btn btn-primary" onClick={onRemoveClass}>
+            remove class
+          </button>
+          <button className="btn btn-primary" onClick={onReplaceClass}>
+            replace class
+          </button>
+          <button className="btn btn-primary" onClick={onToggleClass}>
+            toggle class
+          </button>
         </div>
       </div>
     </div>
