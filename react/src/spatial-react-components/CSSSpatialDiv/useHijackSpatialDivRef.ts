@@ -2,6 +2,11 @@ import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
 import { MutableRefObject, useCallback } from 'react'
 import { SpatialReactComponentRef } from '../SpatialReactComponent/types'
 import { SpatialCustomVars } from './const'
+import { InjectClassName } from './injectClassStyle'
+
+function makeOriginalKey(key: string) {
+  return `__original_${key}`
+}
 
 export function useHijackSpatialDivRef(
   refIn: SpatialReactComponentRef,
@@ -80,18 +85,52 @@ export function useHijackSpatialDivRef(
           },
         })
 
+        // hijack classList
+        const domClassList = domElement.classList
+        const domClassMethodKeys: Array<
+          'add' | 'remove' | 'toggle' | 'replace'
+        > = ['add', 'remove', 'toggle', 'replace']
+        domClassMethodKeys.forEach(key => {
+          const hiddenKey = makeOriginalKey(key)
+          const hiddenKeyExist = (domClassList as any)[hiddenKey] !== undefined
+          const originalMethod = hiddenKeyExist
+            ? (domClassList as any)[hiddenKey]
+            : domClassList[key].bind(domClassList)
+
+          ;(domClassList as any)[hiddenKey] = originalMethod
+
+          domClassList[key] = function (this: any, ...args: any[]) {
+            const result = (originalMethod as Function)(...args)
+            if (ref.current) {
+              // update CSSParser className
+              ref.current.className =
+                domElement.className + ' ' + InjectClassName
+            }
+            return result
+          }
+        })
+
         const proxyDomElement = new Proxy(domElement, {
           get(target, prop) {
             if (prop === 'style') {
               return domStyleProxy
             }
 
+            if (typeof target[prop as keyof HTMLElement] === 'function') {
+              return function (this: any, ...args: any[]) {
+                return (target[prop as keyof HTMLElement] as Function)(...args)
+              }
+            }
+
             return Reflect.get(target, prop, target)
           },
           set(target, prop, value) {
-            if (prop === 'style') {
-              // todo: set style
+            if (ref.current) {
+              if (prop === 'className') {
+                ref.current.className = value + ' ' + InjectClassName
+              }
             }
+
             return Reflect.set(target, prop, value)
           },
         })
