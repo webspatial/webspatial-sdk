@@ -111,7 +111,7 @@ function parseSpatialStyle(node: HTMLElement) {
 }
 
 export function useSpatialStyle() {
-  const ref = useRef<HTMLElement | null>(null)
+  const ref = useRef<HTMLElement>()
   const [spatialStyle, setSpatialStyle] = useState({
     position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },

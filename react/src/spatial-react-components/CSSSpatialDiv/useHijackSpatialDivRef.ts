@@ -10,7 +10,7 @@ function makeOriginalKey(key: string) {
 
 export function useHijackSpatialDivRef(
   refIn: SpatialReactComponentRef,
-  cssParserRef: MutableRefObject<HTMLElement | null>,
+  cssParserRef: MutableRefObject<HTMLElement | undefined>,
 ) {
   const ref = cssParserRef
   const spatialDivRef = useCallback(
