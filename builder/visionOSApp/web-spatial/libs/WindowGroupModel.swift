@@ -29,12 +29,8 @@ struct WindowGroupPlainDefaultValues {
 // incomming JSB data
 struct WindowGroupOptions: Codable {
     // windowGroup
-    let defaultSize: Size?
+    let defaultSize: CGSize?
     let resizability: String?
-    struct Size: Codable {
-        var width: Double
-        var height: Double
-    }
 }
 
 func getWindowResizability(_ windowResizability: String?) -> WindowResizability {
