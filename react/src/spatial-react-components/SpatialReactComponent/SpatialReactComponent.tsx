@@ -95,10 +95,10 @@ function SpatialReactComponentRefactor(
   const layer = useContext(SpatialLayerContext) + 1
 
   const parentSpatialReactContextObject = useContext(SpatialReactContext)
-  const isNestedSubInstance = !parentSpatialReactContextObject
+  const isRootInstance = !parentSpatialReactContextObject
   const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
   const spatialID = useMemo(() => {
-    return isNestedSubInstance
+    return isRootInstance
       ? layer.toString()
       : parentSpatialReactContextObject.getSpatialID(
           layer,
