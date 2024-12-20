@@ -54,8 +54,6 @@ export class CSSSpatialRootContextObject {
       delete this.spatialId2dom[cssSpatialID]
     }
     this.fns[cssSpatialID]?.(domElement)
-
-    return
   }
 }
 

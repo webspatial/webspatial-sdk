@@ -1,4 +1,4 @@
-import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
+import { BackgroundMaterialType } from '@xrsdk/runtime'
 import { MutableRefObject, useCallback } from 'react'
 import { SpatialReactComponentRef } from '../SpatialReactComponent/types'
 import { SpatialCustomVars } from './const'
