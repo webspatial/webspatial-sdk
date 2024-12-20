@@ -1,5 +1,5 @@
 //
-//  WindowGroupModel.swift
+//  WindowGroupMgr.swift
 //  web-spatial
 //
 //  Created by ByteDance on 2024/12/13.
@@ -60,8 +60,8 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 }
 
 @Observable
-class WindowGroupModel: ObservableObject {
-    static let Instance = WindowGroupModel()
+class WindowGroupMgr: ObservableObject {
+    static let Instance = WindowGroupMgr()
 
     private init() {
         if let cfg = WindowGroupPlainDefaultValues(mainSceneConfig) {

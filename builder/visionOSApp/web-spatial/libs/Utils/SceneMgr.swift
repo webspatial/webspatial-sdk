@@ -176,7 +176,7 @@ class SceneMgr {
         )
 
         if let pwg = SpatialWindowGroup.getSpatialWindowGroup(from.parentWindowGroupID) {
-            WindowGroupModel.Instance.update(plainDV) // set default values
+            WindowGroupMgr.Instance.update(plainDV) // set default values
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pwg.openWindowData.send(wgd) // openwindow
             }
