@@ -22,6 +22,10 @@
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
 		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
 		2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */; };
+		2B4EBEC92CF44D2100D30F1A /* WindowGroupModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4EBEC82CF44D1A00D30F1A /* WindowGroupModel.swift */; };
+
+		2B4EBED02CFD92F300D30F1A /* SceneMgr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4EBECF2CFD92ED00D30F1A /* SceneMgr.swift */; };
+
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
 		2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */; };
@@ -69,6 +73,10 @@
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
 		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
 		2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialWithBorderCornerModifier.swift; sourceTree = "<group>"; };
+		2B4EBEC82CF44D1A00D30F1A /* WindowGroupModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupModel.swift; sourceTree = "<group>"; };
+
+		2B4EBECF2CFD92ED00D30F1A /* SceneMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMgr.swift; sourceTree = "<group>"; };
+
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewComponent.swift; sourceTree = "<group>"; };
@@ -179,6 +187,7 @@
 			children = (
 				2B23CB3E2D0BEE6900E70D95 /* WindowGroupModel.swift */,
 
+				2B4EBECF2CFD92ED00D30F1A /* SceneMgr.swift */,
 				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
 				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
 				2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */,
@@ -360,6 +369,7 @@
 				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
+				2B4EBED02CFD92F300D30F1A /* SceneMgr.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
 				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
 				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
