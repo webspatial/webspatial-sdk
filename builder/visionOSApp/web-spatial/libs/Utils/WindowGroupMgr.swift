@@ -64,9 +64,7 @@ class WindowGroupMgr: ObservableObject {
     static let Instance = WindowGroupMgr()
 
     private init() {
-        if let cfg = WindowGroupPlainDefaultValues(mainSceneConfig) {
-            update(cfg)
-        }
+        setToMainSceneCfg()
     }
 
     private var wgSetting: WindowGroupPlainDefaultValues = .init(
@@ -76,6 +74,12 @@ class WindowGroupMgr: ObservableObject {
 
     func getValue() -> WindowGroupPlainDefaultValues {
         return wgSetting
+    }
+
+    func setToMainSceneCfg() {
+        if let cfg = WindowGroupPlainDefaultValues(mainSceneConfig) {
+            update(cfg)
+        }
     }
 
     func update(_ data: WindowGroupPlainDefaultValues) {
