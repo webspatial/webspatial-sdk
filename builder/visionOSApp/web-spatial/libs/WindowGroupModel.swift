@@ -26,6 +26,15 @@ struct WindowGroupPlainDefaultValues {
     var windowResizability: WindowResizability?
 }
 
+// support WindowGroupOptions => WindowGroupPlainDefaultValues
+extension WindowGroupPlainDefaultValues {
+    init?(_ options: WindowGroupOptions) {
+        guard let defaultSize = options.defaultSize else { return nil }
+        self.defaultSize = CGSize(width: defaultSize.width, height: defaultSize.height)
+        windowResizability = getWindowResizability(options.resizability)
+    }
+}
+
 // incomming JSB data
 struct WindowGroupOptions: Codable {
     // windowGroup
@@ -54,7 +63,11 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 class WindowGroupModel: ObservableObject {
     static let Instance = WindowGroupModel()
 
-    private init() {}
+    private init() {
+        if let cfg = WindowGroupPlainDefaultValues(mainSceneConfig) {
+            update(cfg)
+        }
+    }
 
     private var wgSetting: WindowGroupPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720),
