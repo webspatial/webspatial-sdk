@@ -25,7 +25,7 @@ struct web_spatialApp: App {
     @State var rootWGD: SpatialWindowGroup
     @State var initialLaunch = true
 
-    @ObservedObject var wgm = WindowGroupModel.Instance
+    @ObservedObject var wgm = WindowGroupMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
