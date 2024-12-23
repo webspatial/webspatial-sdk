@@ -1,5 +1,5 @@
 //
-//  WindowGroupModel.swift
+//  WindowGroupMgr.swift
 //  web-spatial
 //
 //  Created by ByteDance on 2024/12/13.
@@ -24,6 +24,15 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
 struct WindowGroupPlainDefaultValues {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?
+}
+
+// support WindowGroupOptions => WindowGroupPlainDefaultValues
+extension WindowGroupPlainDefaultValues {
+    init?(_ options: WindowGroupOptions) {
+        guard let defaultSize = options.defaultSize else { return nil }
+        self.defaultSize = CGSize(width: defaultSize.width, height: defaultSize.height)
+        windowResizability = getWindowResizability(options.resizability)
+    }
 }
 
 // incomming JSB data
@@ -51,10 +60,12 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 }
 
 @Observable
-class WindowGroupModel: ObservableObject {
-    static let Instance = WindowGroupModel()
+class WindowGroupMgr: ObservableObject {
+    static let Instance = WindowGroupMgr()
 
-    private init() {}
+    private init() {
+        setToMainSceneCfg()
+    }
 
     private var wgSetting: WindowGroupPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720),
@@ -63,6 +74,12 @@ class WindowGroupModel: ObservableObject {
 
     func getValue() -> WindowGroupPlainDefaultValues {
         return wgSetting
+    }
+
+    func setToMainSceneCfg() {
+        if let cfg = WindowGroupPlainDefaultValues(mainSceneConfig) {
+            update(cfg)
+        }
     }
 
     func update(_ data: WindowGroupPlainDefaultValues) {
