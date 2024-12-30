@@ -96,7 +96,11 @@ function renderInStandardInstance(
   refIn: SpatialReactComponentRef,
 ) {
   const { style: inStyle = {}, ...props } = inProps
-  const style: CSSProperties = { ...inStyle, transform: 'none' }
+  const style: CSSProperties = {
+    ...inStyle,
+    transform: 'none',
+    visibility: 'hidden',
+  }
 
   // hijack SpatialDiv ref
   var cssParserRef = useRef<HTMLElement>()
