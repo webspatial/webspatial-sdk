@@ -22,6 +22,7 @@ export type spatialStyleDef = {
   zIndex?: number
   material?: { type: BackgroundMaterialType }
   cornerRadius: number | CornerRadius
+  visible?: boolean
 }
 
 export type RectType = {
