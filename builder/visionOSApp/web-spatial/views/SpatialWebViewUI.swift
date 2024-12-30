@@ -135,7 +135,7 @@ struct SpatialWebViewUI: View {
                     )
                     .opacity(wv.visible ? 1 : 0)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+            }.hidden(!ent.visible)
         }
     }
 }
