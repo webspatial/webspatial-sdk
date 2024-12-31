@@ -64,6 +64,10 @@ export function useHijackSpatialDivRef(
               return ref.current?.style[prop]
             }
 
+            if (prop === 'visibility') {
+              return ref.current?.style.visibility
+            }
+
             return Reflect.get(target, prop)
           },
           set(target, property, value) {
@@ -78,6 +82,9 @@ export function useHijackSpatialDivRef(
                 value as string,
               )
             } else if (property === 'transform') {
+              ref.current?.style.setProperty(property, value as string)
+              return true
+            } else if (property === 'visibility') {
               ref.current?.style.setProperty(property, value as string)
               return true
             }
