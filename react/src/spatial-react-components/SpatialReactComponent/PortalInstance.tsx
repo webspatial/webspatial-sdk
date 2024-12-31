@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
   useContext,
+  useMemo,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { usePortalContainer } from './usePortalContainer'
@@ -194,12 +195,17 @@ function useSyncSpatialProps(
     rotation = { x: 0, y: 0, z: 0, w: 1 },
     scale = { x: 1, y: 1, z: 1 },
     material = { type: 'none' },
-    visible = true,
     cornerRadius = cornerRadiusFromStyle,
     zIndex = 0,
   } = spatialStyle
   let stylePosition = style?.position
   let styleOverflow = style?.overflow
+
+  const visible = useMemo(() => {
+    return (
+      spatialStyle.visible !== false && domRect.width > 0 && domRect.height > 0
+    )
+  }, [spatialStyle.visible, domRect.width, domRect.height])
 
   // fill default values for position
   if (position.x === undefined) position.x = 0
@@ -266,7 +272,7 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && domRect.width) {
+    if (spatialWindowManager) {
       ;(async function () {
         await spatialWindowManager.resize(
           domRect,
@@ -279,10 +285,21 @@ function useSyncSpatialProps(
         spatialWindowManager?.setZIndex(zIndex)
       })()
     }
-  }, [spatialWindowManager, domRect, position, rotation, scale, anchor, zIndex])
+  }, [
+    spatialWindowManager,
+    domRect.x,
+    domRect.y,
+    domRect.width,
+    domRect.height,
+    position,
+    rotation,
+    scale,
+    anchor,
+    zIndex,
+  ])
 
   useEffect(() => {
-    if (spatialWindowManager && domRect.width) {
+    if (spatialWindowManager) {
       spatialWindowManager.entity?.setVisible(visible)
     }
   }, [spatialWindowManager, visible])
@@ -338,11 +355,13 @@ function useSyncDomRect(spatialId: string) {
   useEffect(() => {
     const syncDomRect = () => {
       const dom = spatialReactContextObject?.querySpatialDom(spatialId)
+
       if (!dom) {
         return
       }
       let domRect = dom.getBoundingClientRect()
       let rectType = domRect2rectType(domRect)
+
       const parentDom =
         spatialReactContextObject?.queryParentSpatialDom(spatialId)
       if (parentDom) {
@@ -351,7 +370,6 @@ function useSyncDomRect(spatialId: string) {
         rectType.x -= parentRectType.x
         rectType.y -= parentRectType.y
       }
-
       const computedStyle = getComputedStyle(dom)
       inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
 

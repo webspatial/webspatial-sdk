@@ -52,6 +52,7 @@ function useDetectDomRectChange() {
     })
     ro.observe(ref.current!, {
       attributeFilter: ['class', 'style'],
+      subtree: true,
     })
     return () => {
       ro.disconnect()
