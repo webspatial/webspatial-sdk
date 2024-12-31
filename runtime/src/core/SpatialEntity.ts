@@ -91,6 +91,10 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
+  async setVisible(visible: boolean) {
+    await WebSpatial.updateResource(this._entity, { visible })
+  }
+
   /**
    * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
    */
