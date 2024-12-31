@@ -45,6 +45,7 @@ class SpatialEntity: SpatialObject {
     var coordinateSpace = CoordinateSpaceMode.APP
     let modelEntity = ModelEntity()
     var zIndex: Double = 0
+    var visible = true
 
     var forceUpdate = false
 
@@ -159,6 +160,7 @@ class SpatialEntity: SpatialObject {
             "position": modelEntity.position.description,
             "scale": modelEntity.scale.description,
             "zIndex": zIndex,
+            "visible": visible,
             "childEntities": childEntitiesInfo,
             "coordinateSpace": coordinateSpace.description,
             "parent": parent?.id,

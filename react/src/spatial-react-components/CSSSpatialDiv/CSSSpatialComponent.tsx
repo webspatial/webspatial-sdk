@@ -40,9 +40,10 @@ function renderRootCSSSpatialComponent(
 
   const { style = {}, className = '', children, ...props } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
+
   const divRefStyle: CSSProperties = {
     ...style,
-    visibility: 'hidden',
+    width: 0,
     position: 'absolute',
   }
 
@@ -70,6 +71,7 @@ function renderRootCSSSpatialComponent(
           ref={spatialDivRef}
         />
       )}
+
       <El
         style={divRefStyle}
         className={divRefClassName}
@@ -94,7 +96,11 @@ function renderInStandardInstance(
   refIn: SpatialReactComponentRef,
 ) {
   const { style: inStyle = {}, ...props } = inProps
-  const style: CSSProperties = { ...inStyle, transform: 'none' }
+  const style: CSSProperties = {
+    ...inStyle,
+    transform: 'none',
+    visibility: 'hidden',
+  }
 
   // hijack SpatialDiv ref
   var cssParserRef = useRef<HTMLElement>()
@@ -123,7 +129,7 @@ function renderInPortalInstance(
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
     ...style,
-    visibility: 'hidden',
+    width: 0,
     position: 'absolute',
   }
 
