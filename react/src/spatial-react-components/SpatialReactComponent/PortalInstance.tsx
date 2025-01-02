@@ -188,6 +188,7 @@ function useSyncSpatialProps(
   domRect: RectType,
   anchor: vecType,
   cornerRadiusFromStyle: CornerRadius,
+  opacity: number,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -299,6 +300,13 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
+    if (spatialWindowManager && spatialWindowManager.webview) {
+      const webview = spatialWindowManager.webview
+      webview.setOpacity(opacity)
+    }
+  }, [spatialWindowManager, opacity])
+
+  useEffect(() => {
     if (spatialWindowManager) {
       spatialWindowManager.entity?.setVisible(visible)
     }
@@ -350,6 +358,8 @@ function useSyncDomRect(spatialId: string) {
     bottomTrailing: 0,
   })
 
+  const opacityRef = useRef(1.0)
+
   const spatialReactContextObject = useContext(SpatialReactContext)
 
   useEffect(() => {
@@ -379,6 +389,9 @@ function useSyncDomRect(spatialId: string) {
       const cornerRadius = parseCornerRadius(computedStyle)
       cornerRadiusRef.current = cornerRadius
 
+      const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
+      opacityRef.current = opacity
+
       setDomRect(rectType)
     }
 
@@ -394,6 +407,7 @@ function useSyncDomRect(spatialId: string) {
     inheritedPortalStyle: inheritedPortalStyleRef.current,
     anchor: anchorRef.current,
     cornerRadius: cornerRadiusRef.current,
+    opacity: opacityRef.current,
   }
 }
 
@@ -435,7 +449,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
   const spatialId = props[SpatialID]
 
-  const { domRect, inheritedPortalStyle, anchor, cornerRadius } =
+  const { domRect, inheritedPortalStyle, anchor, cornerRadius, opacity } =
     useSyncDomRect(spatialId)
 
   useSyncSpatialProps(
@@ -449,6 +463,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     domRect,
     anchor,
     cornerRadius,
+    opacity,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(

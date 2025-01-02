@@ -27,10 +27,8 @@ struct CommandInfo {
 }
 
 struct LoadingStyles {
-    var visible = true
     var cornerRadius: CornerRadius = .init()
     var windowGroupSize = DefaultPlainWindowGroupSize
-
     var backgroundMaterial: BackgroundMaterial = .None
 }
 
@@ -118,7 +116,7 @@ class SpatialWindowComponent: SpatialComponent {
     var dragVelocity = 0.0
 
     var gotStyle = false
-    var visible = true
+    var opacity = 1.0
     var cornerRadius: CornerRadius = .init()
     var backgroundMaterial = BackgroundMaterial.None
 
