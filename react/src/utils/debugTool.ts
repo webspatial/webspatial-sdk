@@ -31,6 +31,7 @@ function simplifyEntityTree(rootTree: any) {
       width: node.components[0].resolutionX,
       height: node.components[0].resolutionY,
       zIndex: node.zIndex,
+      visible: node.visible,
     }
     nodeMap[node.id] = newNode
 
