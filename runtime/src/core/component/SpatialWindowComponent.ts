@@ -65,6 +65,16 @@ export class SpatialWindowComponent extends SpatialComponent {
   }
 
   /**
+   * Sets the opacity of the window after apply material
+   * @param opacity
+   */
+  async setOpacity(opacity: number) {
+    await WebSpatial.updateResource(this._resource, {
+      opacity,
+    })
+  }
+
+  /**
    * Sets the style that should be applied to the window
    * @param options style options
    */
