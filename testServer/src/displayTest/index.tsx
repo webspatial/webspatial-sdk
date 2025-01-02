@@ -19,17 +19,14 @@ function CustomComponent(props: {
     top: '-30px',
     height: '100px',
     backgroundColor: color,
-    '--xr-back': 10,
-    visibility:
-      // 'hidden',
-      props.visible ? 'visible' : 'hidden',
+    '--xr-back': 30,
+    display: props.visible ? 'block' : 'none',
   }
 
   const childDivVisibleStyle: CSSProperties = {
-    visibility:
-      // 'visible',
-      props.childDivVisible ? 'visible' : 'hidden',
-    '--xr-back': 10,
+    display: props.childDivVisible ? 'block' : 'none',
+    '--xr-back': 30,
+    '--xr-background-material': 'default',
   }
 
   const childRef = useRef<HTMLDivElement>(null)
@@ -38,9 +35,19 @@ function CustomComponent(props: {
   }, [])
 
   return (
-    <div enable-xr style={styleForSpatialDiv} onClick={onToggleColor}>
+    <div
+      enable-xr
+      style={styleForSpatialDiv}
+      onClick={onToggleColor}
+      debugName="PARENT"
+    >
       this is spatial div
-      <div enable-xr style={childDivVisibleStyle} ref={childRef}>
+      <div
+        enable-xr
+        style={childDivVisibleStyle}
+        ref={childRef}
+        debugName="child"
+      >
         this is child spatial div
       </div>
     </div>
@@ -51,8 +58,8 @@ function VisibleRefComponent() {
   const ref = useRef<HTMLElement>(null)
 
   const onClick = () => {
-    ref.current.style.visibility =
-      ref.current.style.visibility !== 'hidden' ? 'hidden' : 'visible'
+    ref.current.style.display =
+      ref.current.style.display !== 'none' ? 'none' : 'block'
   }
 
   useEffect(() => {
@@ -111,12 +118,12 @@ function App() {
       ></CustomComponent>
 
       <div className="text-orange-200 mx-2.5 my-2.5">
-        <button onClick={onToggleVisible}>toggle spatialdiv visible</button>
+        <button onClick={onToggleVisible}>toggle spatialdiv display</button>
       </div>
 
       <div className="text-orange-200 mx-2.5 my-2.5">
         <button onClick={onToggleChildVisible}>
-          toggle child spatialdiv visible
+          toggle child spatialdiv display
         </button>
       </div>
 
