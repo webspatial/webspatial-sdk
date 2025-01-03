@@ -108,8 +108,22 @@ class SpatialWindowComponent: SpatialComponent {
         removeChildSpatialObject(spatialObject)
     }
 
+    private func onWindowGroupDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialWindowGroup
+        spatialObject
+            .off(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onWindowGroupDestroyed
+            )
+        childWindowGroups.removeValue(forKey: spatialObject.id)
+    }
+
     public func setWindowGroup(uuid: String, wgd: WindowGroupData) {
         childWindowGroups[uuid] = wgd
+        SpatialWindowGroup.getSpatialWindowGroup(uuid)!.on(
+            event: SpatialObject.Events.BeforeDestroyed.rawValue,
+            listener: onWindowGroupDestroyed
+        )
     }
 
     // Drag event handling
