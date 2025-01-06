@@ -21,7 +21,6 @@ class WebViewHolder {
 }
 
 struct PreloadStyleSettings: Codable {
-    var visible: Bool? = true
     var cornerRadius: CornerRadius? = .init()
     var backgroundMaterial: BackgroundMaterial? = .None
 }

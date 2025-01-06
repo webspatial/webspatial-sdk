@@ -32,7 +32,10 @@ function CustomComponent(props: {
   const childRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     ;(window as any).refChild = childRef
+    ;(window as any).parentRef = parentRef
   }, [])
+
+  const parentRef = useRef<HTMLDivElement>(null)
 
   return (
     <div
@@ -40,6 +43,7 @@ function CustomComponent(props: {
       style={styleForSpatialDiv}
       onClick={onToggleColor}
       debugName="PARENT"
+      ref={parentRef}
     >
       this is spatial div
       <div
