@@ -438,6 +438,18 @@ class CommandDataManager {
                 )
             }
 
+            if let rotationAnchor = data.update?.rotationAnchor {
+                spatialWindowComponent.rotationAnchor = UnitPoint3D(
+                    x: rotationAnchor.x,
+                    y: rotationAnchor.y,
+                    z: rotationAnchor.z
+                )
+            }
+
+            if let opacity = data.update?.opacity {
+                spatialWindowComponent.opacity = opacity
+            }
+
             if let backgroundMaterial: BackgroundMaterial = data.update?.style?.backgroundMaterial {
                 if target.isLoading {
                     target.loadingStyles.backgroundMaterial = backgroundMaterial
