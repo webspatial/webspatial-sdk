@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity } from '@xrsdk/runtime'
+import {
+  Spatial,
+  SpatialEntity,
+  SpatialSession,
+  SpatialViewComponent,
+} from '@xrsdk/runtime'
 import { SpatialIFrame, Model } from '@xrsdk/react'
 
 var spatial: Spatial | null = new Spatial()
@@ -9,7 +14,7 @@ if (!spatial.isSupported()) {
 }
 
 // Create session if spatial is supported
-var session
+var session: SpatialSession | null = null
 if (spatial) {
   session = spatial.requestSession()
 }
@@ -81,11 +86,17 @@ function FeatureList() {
 }
 
 function App() {
+  var header = useRef(null)
   var [spatialSupported, setSpatialSupported] = useState(false)
   useEffect(() => {
     if (session) {
       setSpatialSupported(true)
       ;(async () => {
+        // Create SpatialView
+        var viewEnt = await session.createEntity()
+        await viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
+        await viewEnt.setComponent(await session.createViewComponent())
+
         // Create entities
         var meshResource = await session.createMeshResource({ shape: 'sphere' })
         var entities = new Array<{
@@ -95,7 +106,7 @@ function App() {
         for (var i = 0; i < 7; i++) {
           let e = await session.createEntity()
           e.transform.position = new DOMPoint(-0.35 + i * 0.1, 0, 0.15)
-          e.transform.scale = new DOMPoint(0.04, 0.04, 0.04)
+          e.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
           await e.updateTransform()
           var mat = await session.createPhysicallyBasedMaterial()
           mat.baseColor.r = 0.8
@@ -126,60 +137,105 @@ function App() {
             }
           }
 
-          await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+          await e.setParent(viewEnt)
           entities.push({ e: e, v: v })
         }
+        // Add to the root window component to display
+        var wc = await session.getCurrentWindowComponent()
+        var ent = await wc.getEntity()
+        await viewEnt.setParent(ent!)
+
+        // Watch for updates
+        // Keep spatialView positioned where the div is
+        var update = () => {
+          var rect = (header.current! as HTMLElement).getBoundingClientRect()
+          viewEnt.transform.position.x = rect.x + rect.width / 2
+          viewEnt.transform.position.y =
+            rect.y + rect.height / 2 + window.scrollY
+          viewEnt.updateTransform()
+          viewEnt
+            .getComponent(SpatialViewComponent)!
+            .setResolution(rect.width, rect.height)
+        }
+        var mo = new MutationObserver(update)
+        mo.observe(header.current!, { attributes: true })
+        var ro = new ResizeObserver(update)
+        ro.observe(header.current!)
+        const addRemoveObserver = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            mutation.removedNodes.forEach(node => {
+              if (node instanceof HTMLElement) {
+                update()
+              }
+            })
+            mutation.addedNodes.forEach(node => {
+              if (node instanceof HTMLElement) {
+                console.log('Element added:', node)
+                update()
+              }
+            })
+          })
+        })
+        addRemoveObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+        })
+        update()
 
         // Update loop for entities
         var dt = 0
-        var curTime = Date.now()
-        var loop = (time: DOMHighResTimeStamp) => {
-          session.requestAnimationFrame(loop)
+        var curTime = Date.now() - 60
+        var loop = async (time: DOMHighResTimeStamp) => {
           dt = Date.now() - curTime
           curTime = Date.now()
           if (dt <= 0 || dt > 1000) {
-            return
+            dt = 60
+            console.log('invalid frame delta')
           }
-          for (var i = 0; i < entities.length; i++) {
-            var entity = entities[i].e
-            var timeMultiplier = dt / (1000 / 90)
-            entity.transform.position.x += entities[i].v.x * timeMultiplier
-            entity.transform.position.y += entities[i].v.y * timeMultiplier
-            entity.transform.position.z += entities[i].v.z * timeMultiplier
 
-            entities[i].v.x *= 0.96 * Math.min(timeMultiplier, 1)
-            entities[i].v.y *= 0.96 * Math.min(timeMultiplier, 1)
-            entities[i].v.z *= 0.96 * Math.min(timeMultiplier, 1)
+          await session!.transaction(() => {
+            for (var i = 0; i < entities.length; i++) {
+              var entity = entities[i].e
+              var timeMultiplier = dt / (1000 / 90)
+              entity.transform.position.x += entities[i].v.x * timeMultiplier
+              entity.transform.position.y += entities[i].v.y * timeMultiplier
+              entity.transform.position.z += entities[i].v.z * timeMultiplier
 
-            if (entity.transform.position.x < -0.5) {
-              entity.transform.position.x = -0.5
-              entities[i].v.x = Math.abs(entities[i].v.x)
-            }
-            if (entity.transform.position.x > 0.5) {
-              entity.transform.position.x = 0.5
-              entities[i].v.x = -Math.abs(entities[i].v.x)
-            }
+              entities[i].v.x *= 0.96 * Math.min(timeMultiplier, 1)
+              entities[i].v.y *= 0.96 * Math.min(timeMultiplier, 1)
+              entities[i].v.z *= 0.96 * Math.min(timeMultiplier, 1)
 
-            if (entity.transform.position.y < -0.3) {
-              entity.transform.position.y = -0.3
-              entities[i].v.y = Math.abs(entities[i].v.y)
-            }
-            if (entity.transform.position.y > 0.3) {
-              entity.transform.position.y = 0.3
-              entities[i].v.y = -Math.abs(entities[i].v.y)
-            }
+              if (entity.transform.position.x < -0.5) {
+                entity.transform.position.x = -0.5
+                entities[i].v.x = Math.abs(entities[i].v.x)
+              }
+              if (entity.transform.position.x > 0.5) {
+                entity.transform.position.x = 0.5
+                entities[i].v.x = -Math.abs(entities[i].v.x)
+              }
 
-            if (entity.transform.position.z < -0) {
-              entity.transform.position.z = -0
-              entities[i].v.z = Math.abs(entities[i].v.z)
-            }
-            if (entity.transform.position.z > 0.3) {
-              entity.transform.position.z = 0.3
-              entities[i].v.z = -Math.abs(entities[i].v.z)
-            }
+              if (entity.transform.position.y < -0.3) {
+                entity.transform.position.y = -0.3
+                entities[i].v.y = Math.abs(entities[i].v.y)
+              }
+              if (entity.transform.position.y > 0.3) {
+                entity.transform.position.y = 0.3
+                entities[i].v.y = -Math.abs(entities[i].v.y)
+              }
 
-            entity.updateTransform()
-          }
+              if (entity.transform.position.z < -0) {
+                entity.transform.position.z = -0
+                entities[i].v.z = Math.abs(entities[i].v.z)
+              }
+              if (entity.transform.position.z > 0.3) {
+                entity.transform.position.z = 0.3
+                entities[i].v.z = -Math.abs(entities[i].v.z)
+              }
+
+              entity.updateTransform()
+            }
+          })
+          session!.requestAnimationFrame(loop)
         }
         session.requestAnimationFrame(loop)
       })()
@@ -200,7 +256,10 @@ function App() {
         <a href="/src/template/index.html">Template</a>
       </div>
       <div className="m-5 flex flex-row flex-wrap text-white">
-        <div className="grow flex flex-col  items-center justify-center p-20">
+        <div
+          className="grow flex flex-col  items-center justify-center p-20"
+          ref={header}
+        >
           {spatialSupported ? (
             <div>
               <WebSpatialTitle makeShadow={true} />
