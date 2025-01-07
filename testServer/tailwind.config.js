@@ -1,4 +1,5 @@
 import daisyui from 'daisyui'
+import typography from '@tailwindcss/typography'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -10,5 +11,5 @@ export default {
     base: false,
     themes: false, // Disable all themes
   },
-  plugins: [daisyui, require('@tailwindcss/typography')],
+  plugins: [daisyui, typography],
 }

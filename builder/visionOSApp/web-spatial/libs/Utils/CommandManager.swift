@@ -312,6 +312,10 @@ class CommandDataManager {
                 entity.zIndex = zIndex
             }
 
+            if let visible: Bool = data.update?.visible {
+                entity.visible = visible
+            }
+
             if var newParentID: String = data.update?.setParentWindowGroupID {
                 newParentID = target.readWinodwGroupID(id: newParentID)
                 let wg = SpatialWindowGroup.getSpatialWindowGroup(newParentID)
@@ -432,6 +436,18 @@ class CommandDataManager {
                     y: rotationAnchor.y,
                     z: rotationAnchor.z
                 )
+            }
+
+            if let rotationAnchor = data.update?.rotationAnchor {
+                spatialWindowComponent.rotationAnchor = UnitPoint3D(
+                    x: rotationAnchor.x,
+                    y: rotationAnchor.y,
+                    z: rotationAnchor.z
+                )
+            }
+
+            if let opacity = data.update?.opacity {
+                spatialWindowComponent.opacity = opacity
             }
 
             if let backgroundMaterial: BackgroundMaterial = data.update?.style?.backgroundMaterial {
@@ -685,6 +701,7 @@ struct JSResourceData: Codable {
     var style: JSEntityStyle?
     var getBoundingBox: Bool?
     var zIndex: Double?
+    var visible: Bool?
 }
 
 struct JSColor: Codable {

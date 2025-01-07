@@ -133,9 +133,11 @@ struct SpatialWebViewUI: View {
                         wv.backgroundMaterial,
                         wv.cornerRadius
                     )
-                    .opacity(wv.visible ? 1 : 0)
+
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            .opacity(wv.opacity)
+            .hidden(!ent.visible)
         }
     }
 }

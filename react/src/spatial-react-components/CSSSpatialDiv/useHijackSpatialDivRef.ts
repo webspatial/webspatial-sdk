@@ -1,4 +1,4 @@
-import { BackgroundMaterialType } from '@xrsdk/runtime/dist'
+import { BackgroundMaterialType } from '@xrsdk/runtime'
 import { MutableRefObject, useCallback } from 'react'
 import { SpatialReactComponentRef } from '../SpatialReactComponent/types'
 import { SpatialCustomVars } from './const'
@@ -10,7 +10,7 @@ function makeOriginalKey(key: string) {
 
 export function useHijackSpatialDivRef(
   refIn: SpatialReactComponentRef,
-  cssParserRef: MutableRefObject<HTMLElement | null>,
+  cssParserRef: MutableRefObject<HTMLElement | undefined>,
 ) {
   const ref = cssParserRef
   const spatialDivRef = useCallback(
@@ -64,6 +64,10 @@ export function useHijackSpatialDivRef(
               return ref.current?.style[prop]
             }
 
+            if (prop === 'visibility') {
+              return ref.current?.style.visibility
+            }
+
             return Reflect.get(target, prop)
           },
           set(target, property, value) {
@@ -78,6 +82,9 @@ export function useHijackSpatialDivRef(
                 value as string,
               )
             } else if (property === 'transform') {
+              ref.current?.style.setProperty(property, value as string)
+              return true
+            } else if (property === 'visibility') {
               ref.current?.style.setProperty(property, value as string)
               return true
             }

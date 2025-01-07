@@ -27,10 +27,8 @@ struct CommandInfo {
 }
 
 struct LoadingStyles {
-    var visible = true
     var cornerRadius: CornerRadius = .init()
     var windowGroupSize = DefaultPlainWindowGroupSize
-
     var backgroundMaterial: BackgroundMaterial = .None
 }
 
@@ -108,8 +106,22 @@ class SpatialWindowComponent: SpatialComponent {
         removeChildSpatialObject(spatialObject)
     }
 
+    private func onWindowGroupDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialWindowGroup
+        spatialObject
+            .off(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onWindowGroupDestroyed
+            )
+        childWindowGroups.removeValue(forKey: spatialObject.id)
+    }
+
     public func setWindowGroup(uuid: String, wgd: WindowGroupData) {
         childWindowGroups[uuid] = wgd
+        SpatialWindowGroup.getSpatialWindowGroup(uuid)!.on(
+            event: SpatialObject.Events.BeforeDestroyed.rawValue,
+            listener: onWindowGroupDestroyed
+        )
     }
 
     // Drag event handling
@@ -118,7 +130,7 @@ class SpatialWindowComponent: SpatialComponent {
     var dragVelocity = 0.0
 
     var gotStyle = false
-    var visible = true
+    var opacity = 1.0
     var cornerRadius: CornerRadius = .init()
     var backgroundMaterial = BackgroundMaterial.None
 
