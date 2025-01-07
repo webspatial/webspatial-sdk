@@ -69,6 +69,10 @@ class SpatialWindowGroup: SpatialObject {
 
 extension SpatialWindowGroup {
     private static let RootID = "root"
+    static func getRootID() -> String {
+        return RootID
+    }
+
     static func getRootWindowGroup() -> SpatialWindowGroup {
         return getSpatialWindowGroup(RootID)!
     }
