@@ -196,6 +196,7 @@ function App() {
         <a href="/src/docsWebsite/index.html">Docs</a>
         <a href="/src/jsApiTestPages/testList.html">Examples</a>
         <a href="/src/CITest/index.html">Run CI</a>
+        <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
         <a href="/src/template/index.html">Template</a>
       </div>
