@@ -20,6 +20,7 @@
     "@xrsdk/runtime": "workspace:*",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
+    "http-server": "^14.1.1",
     "livereload": "^0.9.3",
     "loglevel": "^1.9.1",
     "postcss": "^8.4.38",
