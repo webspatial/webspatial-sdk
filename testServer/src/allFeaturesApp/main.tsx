@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
 import { SpatialEntity } from '@xrsdk/runtime'
-import { Model, SpatialIFrame, getSession } from '@xrsdk/react'
+import { Model, SpatialDiv, getSession } from '@xrsdk/react'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync'
@@ -21,12 +21,11 @@ function App() {
   const children = []
   for (var i = sharedCount - 1; i >= 0; i -= 1) {
     children.push(
-      <SpatialIFrame
-        src="/src/embed/basic.html"
+      <SpatialDiv
         key={i}
         className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-4"
-        spatialOffset={{ z: 100 }}
-      ></SpatialIFrame>,
+        spatialStyle={{ position: { z: 100 } }}
+      ></SpatialDiv>,
     )
   }
   var goHome = () => {
@@ -188,33 +187,29 @@ function App() {
             ></source>
           </Model>
 
-          {/* <SpatialModel webViewID='testModel' className='w-full h-full bg-white bg-opacity-50' spatialOffset={{ z: 0 }}>
+          {/* <SpatialModel webViewID='testModel' className='w-full h-full bg-white bg-opacity-50' spatialStyle={{ position: { z: 0} }}>
           </SpatialModel> */}
         </div>
       </div>
 
       <div className="text-white m-10">{children}</div>
       <div className="flex text-white h-64 m-10">
-        <SpatialIFrame
-          src="/src/embed/basic.html"
+        <SpatialDiv
           className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
-          spatialOffset={{ z: 100 }}
-        ></SpatialIFrame>
-        <SpatialIFrame
-          src="/src/embed/basic.html"
+          spatialStyle={{ position: { z: 100 } }}
+        ></SpatialDiv>
+        <SpatialDiv
           className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
-          spatialOffset={{ z: 50 }}
-        ></SpatialIFrame>
-        <SpatialIFrame
-          src="/src/embed/basic.html"
+          spatialStyle={{ position: { z: 50 } }}
+        ></SpatialDiv>
+        <SpatialDiv
           className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
-          spatialOffset={{ z: 25 }}
-        ></SpatialIFrame>
-        <SpatialIFrame
-          src="/src/embed/basic.html"
+          spatialStyle={{ position: { z: 25 } }}
+        ></SpatialDiv>
+        <SpatialDiv
           className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
-          spatialOffset={{ z: 10 }}
-        ></SpatialIFrame>
+          spatialStyle={{ position: { z: 10 } }}
+        ></SpatialDiv>
       </div>
 
       <div className="flex text-white">
