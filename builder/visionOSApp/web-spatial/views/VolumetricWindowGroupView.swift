@@ -18,7 +18,9 @@ struct VolumetricWindowGroupView: View {
     @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
 
     var body: some View {
-        OpenDismissHandlerUI().environment(windowGroupContent)
+        OpenDismissHandlerUI().environment(windowGroupContent).onDisappear {
+            windowGroupContent.destroy()
+        }
 
         let entities = windowGroupContent.getEntities().filter { _, entity in
             entity.coordinateSpace == .ROOT && entity.hasComponent(SpatialViewComponent.self)

@@ -88,6 +88,9 @@ function parseSpatialStyle(node: HTMLElement) {
   // parse zIndex
   const zIndex = parseFloat(computedStyle.getPropertyValue('z-index'))
 
+  // parse visibility
+  const visible = computedStyle.getPropertyValue('visibility') === 'visible'
+
   // parse backgroundMaterialType
   const backgroundMaterialType: BackgroundMaterialType =
     computedStyle.getPropertyValue(
@@ -107,11 +110,13 @@ function parseSpatialStyle(node: HTMLElement) {
     material: {
       type: backgroundMaterialType,
     },
+    visible,
   }
 }
 
 export function useSpatialStyle() {
-  const ref = useRef<HTMLElement | null>(null)
+  const ref = useRef<HTMLElement>()
+
   const [spatialStyle, setSpatialStyle] = useState({
     position: { x: 0, y: 0, z: 1 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
@@ -120,6 +125,7 @@ export function useSpatialStyle() {
     material: {
       type: 'none' as BackgroundMaterialType,
     },
+    visible: true,
   })
   const [ready, setReady] = useState(false)
 

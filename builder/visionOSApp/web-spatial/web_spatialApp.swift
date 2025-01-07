@@ -25,7 +25,7 @@ struct web_spatialApp: App {
     @State var rootWGD: SpatialWindowGroup
     @State var initialLaunch = true
 
-    @ObservedObject var wgm = WindowGroupModel.Instance
+    @ObservedObject var wgm = WindowGroupMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -69,7 +69,7 @@ struct web_spatialApp: App {
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
-            if windowData == nil {
+            if windowData.windowGroupID == SpatialWindowGroup.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
                 PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
@@ -81,11 +81,16 @@ struct web_spatialApp: App {
                     }
                 }
             } else {
-                let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowData!.windowGroupID)
+                let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(
+                    windowData.windowGroupID
+                )
                 PlainWindowGroupView().environment(wg)
                     // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
                     .handlesExternalEvents(preferring: [], allowing: [])
             }
+        } defaultValue: {
+            WindowGroupData(windowStyle: "Plain", windowGroupID: SpatialWindowGroup.getRootID())
+
         }.windowStyle(.plain).onChange(of: scenePhase) { oldPhase, newPhase in
             if oldPhase == .background && newPhase == .inactive {
                 if initialLaunch {

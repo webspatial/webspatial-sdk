@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
   useContext,
+  useMemo,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { usePortalContainer } from './usePortalContainer'
@@ -187,6 +188,7 @@ function useSyncSpatialProps(
   domRect: RectType,
   anchor: vecType,
   cornerRadiusFromStyle: CornerRadius,
+  opacity: number,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -194,12 +196,17 @@ function useSyncSpatialProps(
     rotation = { x: 0, y: 0, z: 0, w: 1 },
     scale = { x: 1, y: 1, z: 1 },
     material = { type: 'none' },
-
     cornerRadius = cornerRadiusFromStyle,
     zIndex = 0,
   } = spatialStyle
   let stylePosition = style?.position
   let styleOverflow = style?.overflow
+
+  const visible = useMemo(() => {
+    return (
+      spatialStyle.visible !== false && domRect.width > 0 && domRect.height > 0
+    )
+  }, [spatialStyle.visible, domRect.width, domRect.height])
 
   // fill default values for position
   if (position.x === undefined) position.x = 0
@@ -266,7 +273,7 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && domRect.width) {
+    if (spatialWindowManager) {
       ;(async function () {
         await spatialWindowManager.resize(
           domRect,
@@ -279,7 +286,31 @@ function useSyncSpatialProps(
         spatialWindowManager?.setZIndex(zIndex)
       })()
     }
-  }, [spatialWindowManager, domRect, position, rotation, scale, anchor, zIndex])
+  }, [
+    spatialWindowManager,
+    domRect.x,
+    domRect.y,
+    domRect.width,
+    domRect.height,
+    position,
+    rotation,
+    scale,
+    anchor,
+    zIndex,
+  ])
+
+  useEffect(() => {
+    if (spatialWindowManager && spatialWindowManager.webview) {
+      const webview = spatialWindowManager.webview
+      webview.setOpacity(opacity)
+    }
+  }, [spatialWindowManager, opacity])
+
+  useEffect(() => {
+    if (spatialWindowManager) {
+      spatialWindowManager.entity?.setVisible(visible)
+    }
+  }, [spatialWindowManager, visible])
 
   useEffect(() => {
     // sync viewport
@@ -327,16 +358,20 @@ function useSyncDomRect(spatialId: string) {
     bottomTrailing: 0,
   })
 
+  const opacityRef = useRef(1.0)
+
   const spatialReactContextObject = useContext(SpatialReactContext)
 
   useEffect(() => {
     const syncDomRect = () => {
       const dom = spatialReactContextObject?.querySpatialDom(spatialId)
+
       if (!dom) {
         return
       }
       let domRect = dom.getBoundingClientRect()
       let rectType = domRect2rectType(domRect)
+
       const parentDom =
         spatialReactContextObject?.queryParentSpatialDom(spatialId)
       if (parentDom) {
@@ -345,7 +380,6 @@ function useSyncDomRect(spatialId: string) {
         rectType.x -= parentRectType.x
         rectType.y -= parentRectType.y
       }
-
       const computedStyle = getComputedStyle(dom)
       inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
 
@@ -354,6 +388,9 @@ function useSyncDomRect(spatialId: string) {
 
       const cornerRadius = parseCornerRadius(computedStyle)
       cornerRadiusRef.current = cornerRadius
+
+      const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
+      opacityRef.current = opacity
 
       setDomRect(rectType)
     }
@@ -370,6 +407,7 @@ function useSyncDomRect(spatialId: string) {
     inheritedPortalStyle: inheritedPortalStyleRef.current,
     anchor: anchorRef.current,
     cornerRadius: cornerRadiusRef.current,
+    opacity: opacityRef.current,
   }
 }
 
@@ -411,15 +449,21 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
   const spatialId = props[SpatialID]
 
-  const { domRect, inheritedPortalStyle, anchor, cornerRadius } =
+  const { domRect, inheritedPortalStyle, anchor, cornerRadius, opacity } =
     useSyncDomRect(spatialId)
 
   useSyncSpatialProps(
     spatialWindowManager,
-    { style: props.style, allowScroll, scrollWithParent, spatialStyle },
+    {
+      style: props.style,
+      allowScroll,
+      scrollWithParent,
+      spatialStyle,
+    },
     domRect,
     anchor,
     cornerRadius,
+    opacity,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(
