@@ -375,8 +375,12 @@ class CommandDataManager {
             spatialModelComponent.onUpdate()
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
-                let id = spatialWindowComponent.entity!.id
-                target.completeEvent(requestID: requestID, data: "{parentID:'" + id + "'}")
+                if let entity: SpatialEntity = spatialWindowComponent.entity {
+                    target.completeEvent(requestID: requestID, data: "{parentID:'" + entity.id + "'}")
+
+                } else {
+                    target.completeEvent(requestID: requestID, data: "{parentID:''}")
+                }
                 return
             }
 
