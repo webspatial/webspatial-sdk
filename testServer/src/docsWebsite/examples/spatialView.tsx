@@ -5,7 +5,7 @@ import { showSample } from './sampleLoader'
 function MySample(props: { session?: SpatialSession }) {
   let divRef = useRef(null)
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         var divOnPage = divRef.current! as HTMLElement
         let session = props.session
