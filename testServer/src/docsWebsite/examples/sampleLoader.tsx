@@ -17,24 +17,6 @@ export function showSample(MySample: any, hasCode = true) {
   if (spatial) {
     session = spatial.requestSession()
   }
-  if (session) {
-    var translucentStyle = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--spatial-material')
-    if (translucentStyle == 'translucent') {
-      session.getCurrentWindowComponent().setStyle({
-        material: { type: 'default' },
-        cornerRadius: 0,
-      })
-    }
-
-    var backgroundStyle = window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--spatial-background-color')
-    if (backgroundStyle) {
-      document.documentElement.style.backgroundColor = backgroundStyle
-    }
-  }
 
   function App(props: { children?: ReactNode }) {
     var [spatialSupported, setSpatialSupported] = useState(false)
