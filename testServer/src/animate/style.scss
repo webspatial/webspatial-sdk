@@ -1,0 +1,11 @@
+.box {
+  width: 100px;
+  height: 100px;
+  // border-radius: 50%;
+  background-color: red;
+  --xr-back: 10;
+  position: relative;
+  overflow: hidden;
+
+  // margin: 110px;
+}
