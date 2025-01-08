@@ -59,6 +59,31 @@ function setCornerRadius(cornerRadius: any) {
   }
 }
 
+function setOpacity(opacity: number) {
+  const session = getSession()!
+  session.getCurrentWindowComponent().setOpacity(opacity)
+}
+
+function checkOpacity() {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
+  setOpacity(opacity)
+}
+
+async function setHtmlVisible(visible: boolean) {
+  const session = getSession()!
+  const wc = session.getCurrentWindowComponent()
+  const ent = await wc.getEntity()
+  ent?.setVisible(visible)
+}
+
+function checkHtmlVisible() {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const visibility = computedStyle.getPropertyValue('visibility') !== 'hidden'
+  const widthGtZero = parseFloat(computedStyle.getPropertyValue('width')) > 0
+  setHtmlVisible(visibility && widthGtZero)
+}
+
 function hijackDocumentElementStyle() {
   const rawDocumentStyle = document.documentElement.style
   const styleProxy = new Proxy(rawDocumentStyle, {
@@ -83,6 +108,15 @@ function hijackDocumentElementStyle() {
       ) {
         checkCornerRadius()
       }
+
+      if (key === 'opacity') {
+        checkOpacity()
+      }
+
+      if (key === 'visibility' || key === 'display') {
+        checkHtmlVisible()
+      }
+
       return ret
     },
     get: function (target, key) {
@@ -120,8 +154,7 @@ function monitorExternalStyleChange() {
         })
 
         if (needCheck) {
-          checkHtmlBackgroundMaterial()
-          checkCornerRadius()
+          checkCSSProperties()
         }
       }
     }
@@ -130,11 +163,18 @@ function monitorExternalStyleChange() {
   headObserver.observe(document.head, { childList: true, subtree: true })
 }
 
+function checkCSSProperties() {
+  checkHtmlBackgroundMaterial()
+  checkCornerRadius()
+  checkOpacity()
+  checkHtmlVisible()
+}
+
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
-  checkHtmlBackgroundMaterial()
+  checkCSSProperties()
 
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
