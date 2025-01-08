@@ -4,7 +4,7 @@ import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       if (props.session) {
         let session = props.session
         // Create a spatial view entity to display model in
@@ -43,6 +43,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div></div>
+  return <div style={{ height: "500px" }}></div>
 }
 showSample(MySample)

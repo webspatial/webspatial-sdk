@@ -72,6 +72,9 @@ export function showSample(MySample: any, hasCode = true) {
                   Apple Vision Pro app
                 </div>
               )}
+              <div className="p-5">
+                {props.children}
+              </div>
               {hasCode ? (
                 <div
                   className="btn m-5"
@@ -111,8 +114,6 @@ export function showSample(MySample: any, hasCode = true) {
                   {showCode}
                 </SyntaxHighlighter>
               )}
-
-              {props.children}
             </div>
           </div>
           <div className="drawer-side">
