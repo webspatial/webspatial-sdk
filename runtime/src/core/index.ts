@@ -8,3 +8,4 @@ export { SpatialHelper } from './SpatialHelper'
 
 export { type WindowStyle } from './types'
 export { SpatialTransform } from './SpatialTransform'
+export { XRApp } from './XRApp'

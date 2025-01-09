@@ -122,6 +122,11 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         return wvNative.webViewHolder.appleWebView
     }
 
+    // handle close
+    func webViewDidClose(_ webView: WKWebView) {
+        _ = SceneMgr.Instance.close(webView)
+    }
+
     // receive message from wkwebview
     func userContentController(
         _ userContentController: WKUserContentController,
@@ -162,10 +167,32 @@ struct WebViewNative: UIViewRepresentable {
         return c
     }
 
+    func readJSFile(named fileName: String) -> String {
+        if let filePath = Bundle.main.path(forResource: fileName, ofType: "js") {
+            do {
+                return try String(contentsOfFile: filePath, encoding: .utf8)
+            } catch {
+                print("Error reading \(fileName).js: \(error)")
+                return ""
+            }
+        } else {
+            print("\(fileName).js not found")
+            return ""
+        }
+    }
+
+    func injectSceneJS(_ userContentController: WKUserContentController) {
+        let source = readJSFile(named: "injectScene")
+        let userScript = WKUserScript(source: source, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
+        userContentController.addUserScript(userScript)
+    }
+
     func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
+
+            injectSceneJS(userContentController)
 
             let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = '" + nativeAPIVersion + "';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
             userContentController.addUserScript(userScript)

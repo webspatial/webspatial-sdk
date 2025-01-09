@@ -15,6 +15,7 @@ struct SceneJSBData: Codable {
     var sceneName: String?
     var sceneConfig: Config?
     var url: String?
+    var windowID: String?
 }
 
 // Define SceneData structure
@@ -113,7 +114,7 @@ class SceneMgr {
     }
 
     // Open scene
-    func open(sceneName name: String, url: String, from: SpatialWindowComponent) -> Bool {
+    func open(sceneName name: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
         var sceneName = name
         // if is anonymous scene
         if sceneName == "" {
@@ -132,6 +133,11 @@ class SceneMgr {
         }
         guard var scene = sceneMap[sceneName] else {
             // sceneName does not exist
+            return false
+        }
+
+        guard let windowID = windowID else {
+            // no windowID
             return false
         }
 
@@ -190,9 +196,21 @@ class SceneMgr {
         let ent = SpatialEntity()
         ent.coordinateSpace = CoordinateSpaceMode.ROOT
         let windowComponent = SpatialWindowComponent(
-            parentWindowGroupID: windowGroupID,
-            url: URL(string: url)! // TODO: should support dataURI?
+            parentWindowGroupID: windowGroupID
         )
+
+        // attach spawned webview to windowComponent
+
+        if let spawnedWebView = from.spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+        } else {
+            logger.error("no spawned")
+            return false
+        }
 
         ent.addComponent(windowComponent)
 

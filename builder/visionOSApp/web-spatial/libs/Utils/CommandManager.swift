@@ -513,7 +513,8 @@ class CommandDataManager {
                 let success = SceneMgr.Instance.open(
                     sceneName: sceneName,
                     url: url,
-                    from: target
+                    from: target,
+                    windowID: data.sceneData?.windowID
                 )
 
                 if success {

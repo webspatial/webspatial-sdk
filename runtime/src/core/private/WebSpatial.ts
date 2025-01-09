@@ -1,7 +1,7 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { Logger, LoggerLevel, NativeLogger, WebLogger } from './log'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle } from '../types'
+import { WindowStyle, WindowGroupOptions } from '../types'
 
 export class Vec3 {
   constructor(
@@ -271,6 +271,100 @@ export class WebSpatial {
     return result
   }
 
+  static async getSceneConfig(sceneName?: string) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'getConfig',
+        sceneName,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async setSceneConfig(
+    sceneName: string,
+    sceneConfig: WindowGroupOptions,
+  ) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'setConfig',
+        sceneName,
+        sceneConfig,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async removeSceneConfig(sceneName: string) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'delConfig',
+        sceneName,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async getScene(sceneName?: string) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'getScene',
+        sceneName,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async openScene(sceneName: string, url: string) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'open',
+        sceneName,
+        url,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async closeScene(sceneName?: string) {
+    var cmd = new RemoteCommand('scene', {
+      sceneData: {
+        method: 'close',
+        sceneName,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
   static async openImmersiveSpace() {
     var cmd = new RemoteCommand('openImmersiveSpace')
     await WebSpatial.sendCommand(cmd)
