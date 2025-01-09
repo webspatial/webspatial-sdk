@@ -526,24 +526,10 @@ class CommandDataManager {
             } else {
                 target.failEvent(requestID: requestID, data: "sceneName is required")
             }
-        case "close":
-            if let sceneName = data.sceneData?.sceneName {
-                let success = SceneMgr.Instance.close(sceneName: sceneName)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
-                }
-
-            } else {
-                target.failEvent(requestID: requestID, data: "sceneName is required")
-            }
         case "getConfig":
             if let sceneName = data.sceneData?.sceneName {
                 // Call logic to get specific scene config
-                let config = SceneMgr.Instance.getConfig(
-                    sceneName: sceneName
-                )
+                let config = SceneMgr.Instance.getConfig(sceneName)
                 if config != nil,
                    let ans = JsonParser.serialize(config)
                 {
@@ -591,26 +577,6 @@ class CommandDataManager {
                 }
             } else {
                 target.completeEvent(requestID: requestID)
-            }
-        case "getScene":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to get specific scene state
-                if let name = SceneMgr.Instance
-                    .getScene(sceneName: sceneName)
-                {
-                    target.completeEvent(requestID: requestID, data: "true")
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-
-            } else {
-                // Call logic to get all scenes with wgd
-                let scenes = SceneMgr.Instance.getScene()
-                if let ans = JsonParser.serialize(scenes) {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
             }
         default:
             // Handle unsupported method

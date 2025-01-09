@@ -100,69 +100,6 @@ function App() {
       log(error)
     }
   }
-  async function getScene(name?: string) {
-    try {
-      startlog('testGetScene')
-      if (name) {
-        const ans = await XRApp.getScene(name)
-        if (ans) {
-          log('ans:scene name:', ans.name)
-        } else {
-          log('no such scene')
-        }
-      } else {
-        // list
-        const ans = await XRApp.getScene()
-        if (ans) {
-          for (let scene of ans) {
-            log('scene[' + scene.name + ']')
-          }
-        }
-      }
-    } catch (error) {
-      log(error)
-    }
-  }
-  async function closeScene(name: string) {
-    try {
-      startlog('testCloseScene')
-      const win = (await XRApp.getScene(name)) as Window
-      log('after getScene')
-      if (win) {
-        log('has window')
-        win!.close()
-      } else {
-        log('no such window')
-      }
-    } catch (error: any) {
-      log('error:', error.message)
-    }
-  }
-
-  async function closeAllScene() {
-    try {
-      startlog('testCloseScene')
-      const wins = await XRApp.getScene()
-      log('after getScene')
-
-      if (!wins) return
-      let cnt = 0
-
-      for (let win of wins) {
-        log('close scene:', win.name)
-        try {
-          win.close()
-          cnt += 1
-        } catch (error: any) {
-          log('error:', error.message)
-        }
-      }
-
-      log('closed count:' + cnt)
-    } catch (error: any) {
-      log('error:', error.message)
-    }
-  }
 
   const winARef = useRef<any>(null)
   const winBRef = useRef<any>(null)
@@ -245,7 +182,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open no name')
-          winARef.current = window.open(
+          window.open(
             extUrl,
             // 'http://localhost:5173/src/scene/xrapp.html',
           )
@@ -391,89 +328,6 @@ function App() {
         }}
       >
         close sb
-      </button>
-
-      <h1 className="text-2xl text-black">close scene by getScene</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close sa')
-          await closeScene('sa')
-        }}
-      >
-        close sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close sb')
-          await closeScene('sb')
-        }}
-      >
-        close sb
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close sc')
-          await closeScene('sc')
-        }}
-      >
-        close sc
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close')
-          await closeAllScene()
-        }}
-      >
-        close all scene
-      </button>
-      <h1 className="text-2xl text-black">getScene</h1>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getScene('sa')
-        }}
-      >
-        get sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getScene('sb')
-        }}
-      >
-        get sb
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getScene('sc')
-        }}
-      >
-        get sc
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getScene()
-        }}
-      >
-        get all
-      </button>
-
-      <h1 className="text-2xl text-black">xxxx</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close main')
-          await XRApp.close('__xrEntryScene')
-        }}
-      >
-        close main
       </button>
 
       <h1 className="text-2xl text-black">cross test</h1>

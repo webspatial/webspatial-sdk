@@ -18,14 +18,10 @@ struct SceneJSBData: Codable {
     var windowID: String?
 }
 
-// Define SceneData structure
-struct SceneData {
-    var config: Config
-    var wgd: WindowGroupData? // Optional, could be null
+struct WGData {
+    let webview: WKWebView
+    let wgd: WindowGroupData
 }
-
-// Define sceneMap type
-typealias SceneMap = [String: SceneData]
 
 // Define SceneMgr class
 class SceneMgr {
@@ -45,67 +41,56 @@ class SceneMgr {
 
     private init() {}
 
-    private var sceneMap: SceneMap = [:] // Store the scene mappings
+    private var sceneMap: [String: Config] = [:] // Store the scene config mappings
 
-    // to find webview or sceneName
-    private var webViewToSceneNameMap: [WKWebView: String] = [:] // WKWebView to sceneName mapping
-    private var sceneNameToWebview: [String: WKWebView] = [:] //  sceneName to WKWebView mapping
+    private var windowIDToWGData: [String: WGData] = [:] // windowID to WGData mapping
+
+    private var webviewToWindowID: [WKWebView: String] = [:] // webview to windowID mapping
 
     private let logger = Logger.getLogger()
 
-    func getWebViewBySceneName(_ sceneName: String) -> WKWebView? {
-        return sceneNameToWebview[sceneName]
+    // Add mapping WKWebView
+    private func addWebViewMapping(
+        webView: WKWebView,
+        windowID: String,
+        wgd: WindowGroupData
+    ) {
+        webviewToWindowID[webView] = windowID
+        windowIDToWGData[windowID] = WGData(webview: webView, wgd: wgd)
     }
 
-    // Add mapping between WKWebView and sceneName
-    private func addWebViewToSceneMapping(webView: WKWebView, sceneName: String) {
-        webViewToSceneNameMap[webView] = sceneName
-        sceneNameToWebview[sceneName] = webView
-    }
-
-    // Remove mapping for a WKWebView
-    private func removeWebViewToSceneMapping(webView: WKWebView) {
-        if let sceneName = webViewToSceneNameMap[webView] {
-            sceneNameToWebview.removeValue(forKey: sceneName)
-            webViewToSceneNameMap.removeValue(forKey: webView)
+    // Remove mapping WKWebView
+    private func removeWebViewMapping(webView: WKWebView) {
+        if let windowID = webviewToWindowID[webView] {
+            webviewToWindowID.removeValue(forKey: webView)
+            windowIDToWGData.removeValue(forKey: windowID)
         } else {
-            logger.error("webview/scene record not found")
+            logger.error("windowID record not found")
         }
     }
 
     // Get config for a specific scene
-    func getConfig(sceneName: String) -> Config? {
-        return sceneMap[sceneName]?.config
+    func getConfig(_ name: String) -> Config? {
+        return sceneMap[name]
     }
 
     // Get all scene configs
     func getConfig() -> [String: Config] {
         return sceneMap.reduce(into: [String: Config]()) { result, entry in
-            result[entry.key] = entry.value.config
+            result[entry.key] = entry.value
         }
     }
 
     // Set scene config
     func setConfig(sceneName: String, cfg: Config) -> Bool {
-        // Ensure existing ones can't be changed if wgd already exists
-        if let scene = sceneMap[sceneName], scene.wgd != nil {
-            // If the scene exists and has a non-nil wgd, prevent modification
-            return false
-        }
-
-        if sceneMap[sceneName] == nil {
-            sceneMap[sceneName] = SceneData(config: cfg, wgd: nil)
-        } else {
-            sceneMap[sceneName]?.config = cfg
-        }
-
+        sceneMap[sceneName] = cfg
         return true
     }
 
     // Delete scene config
     func delConfig(sceneName: String) -> Bool {
         // Ensure existing ones can't be deleted if the scene is currently open
-        guard let scene = sceneMap[sceneName], scene.wgd == nil else {
+        guard let scene = sceneMap[sceneName] else {
             // If the scene exists and has an associated wgd, prevent deletion
             return false
         }
@@ -131,7 +116,7 @@ class SceneMgr {
                 )
             )
         }
-        guard var scene = sceneMap[sceneName] else {
+        guard var config = sceneMap[sceneName] else {
             // sceneName does not exist
             return false
         }
@@ -142,26 +127,20 @@ class SceneMgr {
         }
 
         // if scene already opened, navigate to new url
-        if scene.wgd != nil {
-            let wgid = scene.wgd!.windowGroupID
+        if let wgdata = windowIDToWGData[windowID] {
+            let wgid = wgdata.wgd.windowGroupID
             let wg = SpatialWindowGroup
                 .getOrCreateSpatialWindowGroup(wgid)
             let rootEntity = wg!.getEntities().filter {
                 $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
             }.first?.value
 
-            if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
-                wv.navigateToURL(url: URL(string: url)!) // TODO: should we support dataURI?
-                wg?.openWindowData.send(scene.wgd!) // bring to focus
-                return true
-            } else {
-                return false
-            }
+            wg?.openWindowData.send(wgdata.wgd) // bring to focus
+
+            return true
         }
 
         // Logic for opening the scene
-
-        let config = scene.config
 
         // set default values
         let plainDV = WindowGroupPlainDefaultValues(
@@ -189,8 +168,9 @@ class SceneMgr {
         }
 
         // save wgd
-        scene.wgd = wgd
-        sceneMap[sceneName] = scene
+
+//        scene.wgd = wgd
+//        sceneMap[sceneName] = scene
 
         // create EC
         let ent = SpatialEntity()
@@ -236,27 +216,27 @@ class SceneMgr {
 
         ent.setParentWindowGroup(wg: wg)
 
-        // save webview->sceneName map
-        addWebViewToSceneMapping(
+        // save webview->wgdata map
+        addWebViewMapping(
             webView: windowComponent.getView()!.webViewHolder.appleWebView!,
-            sceneName: sceneName
+            windowID: windowID,
+            wgd: wgd
         )
 
         return true
     }
 
     // Close scene
-    func close(sceneName: String) -> Bool {
-        guard let scene = sceneMap[sceneName] else {
+    func close(_ windowID: String) -> Bool {
+        guard let wgdata = windowIDToWGData[windowID] else {
             // sceneName does not exist
             return false
         }
         // Logic for closing the scene
-        if let wgd = scene.wgd,
-           let pwg = SpatialWindowGroup.getSpatialWindowGroup(
-               wgd.windowGroupID
-           )
-        {
+        let wgd = wgdata.wgd
+        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(
+            wgd.windowGroupID
+        ) {
             pwg.closeWindowData.send(wgd)
             return true
         } else {
@@ -267,39 +247,21 @@ class SceneMgr {
 
     // Close a scene by WKWebView
     func close(_ webView: WKWebView) -> Bool {
-        guard let sceneName = webViewToSceneNameMap[webView] else {
-            logger.error("No scene found for the provided WKWebView")
-            return false
-        }
-
-        if close(sceneName: sceneName) {
-            removeWebViewToSceneMapping(webView: webView)
+        if let windowID = webviewToWindowID[webView],
+           close(windowID)
+        {
+            removeWebViewMapping(webView: webView)
             return true
         } else {
-            logger.error("Failed to close scene \(sceneName)")
+            logger.error("Failed to close due")
             return false
-        }
-    }
-
-    // Get scene names with wgd (if name is provided and wgd exists, return the scene name; else, return nil)
-    func getScene(sceneName: String) -> String? {
-        if let scene = sceneMap[sceneName], scene.wgd != nil {
-            return sceneName
-        } else {
-            return nil
         }
     }
 
     // Set scene wgd to nil
     func delScene(_ sceneName: String) {
-        if var scene = sceneMap[sceneName] {
-            scene.wgd = nil
-            sceneMap[sceneName] = scene // save
+        if let wgdata = windowIDToWGData[sceneName] {
+            windowIDToWGData.removeValue(forKey: sceneName)
         }
-    }
-
-    // Get all scene names with wgd
-    func getScene() -> [String] {
-        return sceneMap.filter { $0.value.wgd != nil }.map { $0.key }
     }
 }

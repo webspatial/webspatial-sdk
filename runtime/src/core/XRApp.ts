@@ -67,38 +67,6 @@ export class XRApp {
    * Get one scene
    *
    */
-
-  static async getScene(sceneName: string): Promise<SceneShape | null>
-  /**
-   * Get all scenes
-   *
-   */
-  static async getScene(): Promise<SceneShape[] | null>
-  static async getScene(
-    sceneName?: string,
-  ): Promise<SceneShape | SceneShape[] | null> {
-    const ans = ((await WebSpatial.getScene(sceneName)) as any).data
-    if (sceneName) {
-      // one scene
-      if (typeof ans === 'boolean' && ans === true)
-        return getSceneObj(sceneName)
-      else return null
-    }
-
-    // multiple scenes
-    if (ans instanceof Array) {
-      return ans.map(name => {
-        return getSceneObj(name)
-      })
-    }
-    // error
-    console.error('not match any result')
-    return null
-  }
-
-  static async close(sceneName: string): Promise<any> {
-    return await WebSpatial.closeScene(sceneName)
-  }
 }
 
 function getSceneObj(sceneName: string): SceneShape {
