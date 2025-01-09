@@ -135,8 +135,6 @@ class SpatialEntity: SpatialObject {
             wg.removeEntity(self)
         }
 
-        // handle components destroy
-        components.forEach { $0.destroy() }
         components = []
 
         setParent(parentEnt: nil)
