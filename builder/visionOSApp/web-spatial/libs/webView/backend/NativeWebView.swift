@@ -202,10 +202,22 @@ struct WebViewNative: UIViewRepresentable {
         }
     }
 
+    func injectSceneJS(_ userContentController: WKUserContentController, filename: String) {
+        let source = readJSFile(named: filename)
+        let userScript = WKUserScript(
+            source: source,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: false
+        )
+        userContentController.addUserScript(userScript)
+    }
+
     func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
+
+            injectSceneJS(userContentController, filename: "injectHook")
 
             let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = '" + nativeAPIVersion + "';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
             userContentController.addUserScript(userScript)

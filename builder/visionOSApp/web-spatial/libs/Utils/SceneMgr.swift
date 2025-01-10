@@ -11,6 +11,14 @@ import WebKit
 
 typealias Config = WindowGroupOptions
 
+let defaultConfig = Config(
+    defaultSize: Config.Size(
+        width: DefaultPlainWindowGroupSize.width,
+        height: DefaultPlainWindowGroupSize.height
+    ),
+    resizability: nil
+)
+
 struct SceneJSBData: Codable {
     var method: String?
     var sceneName: String?
@@ -128,7 +136,7 @@ class SceneMgr {
     // Delete scene config
     func delConfig(sceneName: String) -> Bool {
         // Ensure existing ones can't be deleted if the scene is currently open
-        guard let scene = sceneMap[sceneName] else {
+        guard sceneMap[sceneName] != nil else {
             // If the scene exists and has an associated wgd, prevent deletion
             return false
         }
@@ -139,25 +147,24 @@ class SceneMgr {
     // Open scene
     func open(sceneName name: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
         var sceneName = name
-        // if is anonymous scene
+        // if is anonymous scene, we let the page set itself by hook
         if sceneName == "" {
+            // if target is _blank,
+            return true
             // create unique name and set its config
-            sceneName = UUID().uuidString
-            _ = setConfig(
-                sceneName: sceneName,
-                cfg: Config(
-                    defaultSize: Config.Size(
-                        width: DefaultPlainWindowGroupSize.width,
-                        height: DefaultPlainWindowGroupSize.height
-                    ),
-                    resizability: nil
-                )
-            )
+//            sceneName = UUID().uuidString
+//            _ = setConfig(
+//                sceneName: sceneName,
+//                cfg: Config(
+//                    defaultSize: Config.Size(
+//                        width: DefaultPlainWindowGroupSize.width,
+//                        height: DefaultPlainWindowGroupSize.height
+//                    ),
+//                    resizability: nil
+//                )
+//            )
         }
-        guard var config = sceneMap[sceneName] else {
-            // sceneName does not exist
-            return false
-        }
+        let config: Config = sceneMap[sceneName] ?? defaultConfig
 
         guard let windowID = windowID else {
             // no windowID
@@ -290,7 +297,7 @@ class SceneMgr {
 
     // Set scene wgd to nil
     func delScene(_ sceneName: String) {
-        if let wgdata = windowIDToWGData[sceneName] {
+        if windowIDToWGData[sceneName] != nil {
             windowIDToWGData.removeValue(forKey: sceneName)
         }
     }

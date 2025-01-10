@@ -17,6 +17,15 @@ if (spatialSupported) {
 }
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
+;(window as any).customHookForEntry = () => {
+  return {
+    defaultSize: {
+      width: 500,
+      height: 500,
+    },
+  }
+}
+
 function App() {
   const [logs, setLogs] = useState('')
 
@@ -181,20 +190,10 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
-          startlog('open hook')
-          window.open('http://localhost:5173/src/scene/hook.html')
-        }}
-      >
-        open hook page
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
           startlog('open no name')
           window.open(
-            // extUrl,
-            'http://localhost:5173/src/scene/xrapp.html',
+            extUrl,
+            // 'http://localhost:5173/src/scene/xrapp.html',
           )
         }}
       >
