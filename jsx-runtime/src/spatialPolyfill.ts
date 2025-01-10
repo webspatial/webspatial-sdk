@@ -181,13 +181,11 @@ function hijackGetComputedStyle() {
 }
 
 export function spatialPolyfill() {
-  hijackGetComputedStyle()
-
   if (!isWebSpatialEnv) {
     return
   }
   checkCSSProperties()
-
+  hijackGetComputedStyle()
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
 }
