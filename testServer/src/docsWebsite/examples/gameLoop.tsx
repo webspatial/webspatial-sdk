@@ -4,7 +4,7 @@ import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       if (props.session) {
         let session = props.session
 
@@ -46,6 +46,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div></div>
+  return <div style={{ height: "400px" }}></div>
 }
 showSample(MySample)
