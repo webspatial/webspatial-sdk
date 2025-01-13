@@ -167,11 +167,6 @@ class SceneMgr {
             }
         }
 
-        // save wgd
-
-//        scene.wgd = wgd
-//        sceneMap[sceneName] = scene
-
         // create EC
         let ent = SpatialEntity()
         ent.coordinateSpace = CoordinateSpaceMode.ROOT
