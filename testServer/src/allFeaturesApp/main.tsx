@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-import { SpatialEntity } from '@xrsdk/runtime'
+import { SpatialEntity, SpatialHelper } from '@xrsdk/runtime'
 import { Model, SpatialDiv, getSession } from '@xrsdk/react'
 
 import { Provider } from 'react-redux'
@@ -85,12 +85,18 @@ function App() {
               var session = await getSession()
               var wg = await session!.createWindowGroup('Volumetric')
 
+              var spatialViewEnt = await session!.createEntity()
+              await spatialViewEnt.setCoordinateSpace('Root')
+              var vc = await session!.createViewComponent()
+              await spatialViewEnt.setComponent(vc)
+
               var ent = await session!.createEntity()
               ent.transform.position.x = 0
-              ent.transform.position.y = -0.4
-              ent.transform.position.z = 0.4
+              ent.transform.position.y = 0
+              ent.transform.position.z = 0
+              ent.transform.scale = new DOMPoint(3.0, 3.0, 3.0)
               await ent.updateTransform()
-              await ent.setParentWindowGroup(wg)
+              await ent.setParent(spatialViewEnt)
               volumePanelEnt = ent
 
               var i = await session!.createWindowComponent()
@@ -101,14 +107,16 @@ function App() {
               var ent = await session!.createEntity()
               ent.transform.position.x = 0
               ent.transform.position.y = -0.4
-              ent.transform.position.z = 0.4
-              ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
+              ent.transform.position.z = 0
+              ent.transform.scale = new DOMPoint(0.8, 0.8, 0.8)
               await ent.updateTransform()
-              await ent.setParentWindowGroup(wg)
+              await ent.setParent(spatialViewEnt)
               var helmetModel = await session!.createModelComponent({
                 url: '/src/assets/FlightHelmet.usdz',
               })
               await ent.setComponent(helmetModel)
+
+              await spatialViewEnt.setParentWindowGroup(wg)
               volumeModelEnt = ent
             }}
           >
@@ -124,12 +132,12 @@ function App() {
                 volumeModelEnt.transform.position = new DOMPoint(
                   Number(e.target.value) / 1000,
                   -0.4,
-                  0.4,
+                  0,
                 )
                 volumePanelEnt.transform.position = new DOMPoint(
                   -(Number(e.target.value) / 1000),
-                  -0.4,
-                  0.4,
+                  0,
+                  0,
                 )
                 await volumeModelEnt.updateTransform()
                 await volumePanelEnt.updateTransform()
@@ -195,21 +203,33 @@ function App() {
       <div className="text-white m-10">{children}</div>
       <div className="flex text-white h-64 m-10">
         <SpatialDiv
-          className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
+          className="p-5 m-4 flex-1 bg-red-600 bg-opacity-50 rounded-xl text-center h-64 "
           spatialStyle={{ position: { z: 100 } }}
-        ></SpatialDiv>
+        >
+          {' '}
+          red
+        </SpatialDiv>
         <SpatialDiv
-          className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
+          className="p-5 m-4 flex-1 bg-blue-600 bg-opacity-50 rounded-xl text-center h-64 "
           spatialStyle={{ position: { z: 50 } }}
-        ></SpatialDiv>
+        >
+          {' '}
+          blue
+        </SpatialDiv>
         <SpatialDiv
-          className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
+          className="p-5 m-4 flex-1 bg-green-600 bg-opacity-50 rounded-xl text-center h-64"
           spatialStyle={{ position: { z: 25 } }}
-        ></SpatialDiv>
+        >
+          {' '}
+          green
+        </SpatialDiv>
         <SpatialDiv
-          className="p-5 m-4 flex-1 bg-white bg-opacity-5 rounded-xl text-center h-64"
+          className="p-5 m-4 flex-1 bg-purple-600 bg-opacity-50 rounded-xl text-center h-64"
           spatialStyle={{ position: { z: 10 } }}
-        ></SpatialDiv>
+        >
+          {' '}
+          purple
+        </SpatialDiv>
       </div>
 
       <div className="flex text-white">
