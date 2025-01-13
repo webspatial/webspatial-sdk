@@ -1,12 +1,13 @@
-//@ts-nocheck
 ;(function () {
   const sendMsg = msg => {
+    //@ts-ignore
     window.webkit.messageHandlers.bridge.postMessage(JSON.stringify(msg))
   }
 
   const originalOpen = window.open
   window.open = function (url, target, ...rest) {
-    const isUrlEscape = !url || url.startsWith('about:blank')
+    const isUrlEscape =
+      !url || (typeof url === 'string' && url.startsWith('about:blank'))
 
     const isNewDefault = target === undefined || target === '_blank'
 
