@@ -1,11 +1,9 @@
 .box {
-  width: 100px;
+  width: 200px;
   height: 100px;
-  // border-radius: 50%;
-  background-color: red;
-  --xr-back: 10;
   position: relative;
   overflow: hidden;
+  color: blue;
 
-  // margin: 110px;
+  background-color: aqua;
 }

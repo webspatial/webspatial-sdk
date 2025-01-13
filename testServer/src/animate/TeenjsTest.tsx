@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { Easing, Tween, update } from '@tweenjs/tween.js'
+import { useRef } from 'react'
+import { Easing, Tween } from '@tweenjs/tween.js'
 
 function applyTeen(tween) {
   function animate() {
@@ -27,7 +27,7 @@ export function TeenjsTest() {
 
   const onChangeOpacity = () => {
     const tween = new Tween({ v: 1 })
-      .to({ v: 0 }, 1000)
+      .to({ v: 0.5 }, 1000)
       .easing(Easing.Quadratic.InOut)
       .onUpdate(o => {
         if (ref.current) ref.current.style.opacity = o.v

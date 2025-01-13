@@ -1,38 +1,38 @@
 import { useRef } from 'react'
-import { animate } from 'popmotion'
+import anime from 'animejs/lib/anime.es.js'
 
-export function PopmotionTest() {
+export function AnimeTest() {
   const ref = useRef<HTMLElement>(null)
 
   const onChangeBack = () => {
-    animate({
-      from: 0,
-      to: 100,
-      onUpdate: latest => {
-        if (ref.current) ref.current.style['--xr-back'] = latest
+    const object = {
+      back: 0,
+    }
+
+    anime({
+      targets: object,
+      easing: 'linear',
+      back: 100,
+      duration: 1000,
+      update: function () {
+        if (ref.current) ref.current.style['--xr-back'] = object.back
       },
     })
   }
 
   const onChangeOpacity = () => {
-    animate({
-      from: 1,
-      to: 0.5,
-      onUpdate: latest => {
-        if (ref.current) ref.current.style.opacity = latest
-      },
+    anime({
+      targets: ref.current,
+      opacity: 0.5,
+      translateX: 100,
     })
   }
 
   const onChangeRotation = () => {
-    animate({
-      from: 360,
-      to: 0,
-      onUpdate: latest => {
-        if (ref.current)
-          ref.current.style.transform =
-            'translate3d(0,0,0) rotateY(' + latest + 'deg)'
-      },
+    anime({
+      targets: ref.current,
+      rotate: 180,
+      translateZ: 100,
     })
   }
 
@@ -44,10 +44,17 @@ export function PopmotionTest() {
     }
   }
 
+  const initialStyle = {
+    opacity: 1,
+    '--xr-back': 0,
+    transform: 'none',
+    '--my-color': 'red',
+  }
+
   return (
     <div>
-      <div className="text-white"> this is popmotion test</div>
-      <div enable-xr ref={ref} className="box">
+      <div className="text-white"> this is AnimeJS test</div>
+      <div enable-xr ref={ref} style={initialStyle} className="box">
         this is spatial div
       </div>
       <button className="btn btn-primary" onClick={onChangeBack}>
