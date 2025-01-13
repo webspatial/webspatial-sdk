@@ -8,20 +8,25 @@ const btnCls =
 const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
+;(window as any).log = []
 if (spatialSupported) {
   var session = new Spatial().requestSession()
-  session!.getCurrentWindowComponent().setStyle({
-    material: { type: 'default' },
-    cornerRadius: 50,
-  })
+  try {
+    session!.getCurrentWindowComponent().setStyle({
+      material: { type: 'default' },
+      cornerRadius: 50,
+    })
+  } catch (error: any) {
+    ;(window as any).log.push(error.message)
+  }
 }
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 ;(window as any).customHookForEntry = () => {
   return {
     defaultSize: {
-      width: 500,
-      height: 500,
+      width: 600 + ((Math.random() * 500) >> 0),
+      height: 900,
     },
   }
 }
@@ -35,11 +40,11 @@ function App() {
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
-    ;(async () => {
-      await setConfig('sa', 1024)
-      await setConfig('sb', 500)
-      await setConfig('sc', 800)
-    })()
+    // ;(async () => {
+    //   await setConfig('sa', 1024)
+    //   await setConfig('sb', 500)
+    //   await setConfig('sc', 800)
+    // })()
 
     return () => {
       window.onerror = null
@@ -116,227 +121,14 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">getConfig</h1>
+      <h1 className="text-2xl text-black">navigate</h1>
       <button
         className={btnCls}
         onClick={async () => {
-          await getConfig('sa')
+          location.href = './xrapp.html'
         }}
       >
-        getConfig sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getConfig('sb')
-        }}
-      >
-        getConfig sb
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await getAllConfig()
-        }}
-      >
-        getAllConfig
-      </button>
-      <h1 className="text-2xl text-black">setConfig</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await setConfig('sa', 1024)
-        }}
-      >
-        setConfig sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await setConfig('sb', 500)
-        }}
-      >
-        setConfig sb
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await setConfig('sa', 1024)
-          await setConfig('sb', 500)
-          await setConfig('sc', 800)
-        }}
-      >
-        setConfig sa+sb+sc
-      </button>
-      <h1 className="text-2xl text-black">removeConfig</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await removeConfig('sa')
-        }}
-      >
-        removeConfig sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          await removeConfig('sb')
-        }}
-      >
-        removeConfig sb
-      </button>
-      <h1 className="text-2xl text-black">openscene</h1>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          window.open(
-            extUrl,
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
-        }}
-      >
-        open no name
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        open sa
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open Google')
-          winARef.current = window.open(extUrl, 'sa')
-        }}
-      >
-        open sa google
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open MDN')
-          winARef.current = window.open(extUrl2, 'sa')
-        }}
-      >
-        open sa MDN
-      </button>
-
-      <a className={btnCls} href="https://www.google.com" target="sa">
-        open sa google a tag
-      </a>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winBRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sb',
-          )
-        }}
-      >
-        open sb xrapp
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winBRef.current = window.open(extUrl, 'sb')
-        }}
-      >
-        open sb google
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winCRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sc',
-          )
-        }}
-      >
-        open sc
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
-          winBRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sb',
-          )
-        }}
-      >
-        open sa+sb
-      </button>
-
-      <h1 className="text-2xl text-black">close scene by local</h1>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close')
-          try {
-            if (!winARef.current) {
-              log('no window')
-              return
-            }
-            if (winARef.current?.closed) {
-              log('is already closed')
-            } else {
-              winARef.current?.close?.()
-              log('close success')
-            }
-          } catch (error: any) {
-            log(error.message)
-          }
-        }}
-      >
-        close sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('close')
-
-          try {
-            if (!winBRef.current) {
-              log('no window')
-              return
-            }
-            if (winBRef.current?.closed) {
-              log('is already closed')
-            } else {
-              winBRef.current?.close?.()
-              log('close success')
-            }
-          } catch (error: any) {
-            log(error.message)
-          }
-        }}
-      >
-        close sb
+        navigate to xrapp
       </button>
 
       <h1 className="text-2xl text-black">cross test</h1>

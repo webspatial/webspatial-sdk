@@ -182,6 +182,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open hook')
+          // window.open(extUrl) // fixme: CORS
           window.open('http://localhost:5173/src/scene/hook.html')
         }}
       >
@@ -200,7 +201,19 @@ function App() {
       >
         open no name
       </button>
-
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/hook.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open sa hook
+      </button>
       <button
         className={btnCls}
         onClick={async () => {
@@ -349,7 +362,7 @@ function App() {
           log('windowID:', window._webSpatialID)
         }}
       >
-        get window._webSpatialID
+        get window._webSpatialID!
       </button>
       <div>
         <div>console</div>

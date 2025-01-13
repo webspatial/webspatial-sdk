@@ -11,6 +11,9 @@ import WebKit
 
 typealias Config = WindowGroupOptions
 
+// feature toggle to support config windowGroup by hook function
+let enableInjectHook = true
+
 let defaultConfig = Config(
     defaultSize: Config.Size(
         width: DefaultPlainWindowGroupSize.width,
@@ -30,6 +33,7 @@ struct SceneJSBData: Codable {
 struct WGData {
     let webview: WKWebView
     let wgd: WindowGroupData
+    var callback: (() -> Void)?
 }
 
 // Define SceneMgr class
@@ -83,10 +87,15 @@ class SceneMgr {
     private func addWebViewMapping(
         webView: WKWebView,
         windowID: String,
-        wgd: WindowGroupData
+        wgd: WindowGroupData,
+        callback: (() -> Void)?
     ) {
         webviewToWindowID[webView] = windowID
-        windowIDToWGData[windowID] = WGData(webview: webView, wgd: wgd)
+        windowIDToWGData[windowID] = WGData(
+            webview: webView,
+            wgd: wgd,
+            callback: callback
+        )
     }
 
     // Remove mapping WKWebView
@@ -144,47 +153,10 @@ class SceneMgr {
         return true
     }
 
-    // Open scene
-    func open(sceneName name: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
-        var sceneName = name
-        // if is anonymous scene, we let the page set itself by hook
-        if sceneName == "" {
-            // if target is _blank,
-            return true
-            // create unique name and set its config
-//            sceneName = UUID().uuidString
-//            _ = setConfig(
-//                sceneName: sceneName,
-//                cfg: Config(
-//                    defaultSize: Config.Size(
-//                        width: DefaultPlainWindowGroupSize.width,
-//                        height: DefaultPlainWindowGroupSize.height
-//                    ),
-//                    resizability: nil
-//                )
-//            )
-        }
-        let config: Config = sceneMap[sceneName] ?? defaultConfig
+    // set WindowGroup default value by sceneName
+    private func applyWindowGroupDVByConfig(_ sceneName: String) {
+        let config = sceneMap[sceneName] ?? defaultConfig // fallback to defaultConfig
 
-        guard let windowID = windowID else {
-            // no windowID
-            return false
-        }
-
-        // if scene already opened, navigate to new url
-        if let wgdata = windowIDToWGData[windowID] {
-            let wgid = wgdata.wgd.windowGroupID
-            let wg = SpatialWindowGroup
-                .getOrCreateSpatialWindowGroup(wgid)
-
-            wg?.openWindowData.send(wgdata.wgd) // bring to focus
-
-            return true
-        }
-
-        // Logic for opening the scene
-
-        // set default values
         let plainDV = WindowGroupPlainDefaultValues(
             defaultSize: CGSize(
                 width: config.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
@@ -195,6 +167,59 @@ class SceneMgr {
             )
         )
 
+        WindowGroupMgr.Instance.update(plainDV) // set default values
+    }
+
+    // Open scene
+    func open(sceneName name: String, url: String, from: SpatialWindowComponent, windowID: String?) -> Bool {
+        var sceneName = name
+        // if is anonymous scene, we let the page set itself by hook
+        var shouldOpenWGImmediately = true
+        if sceneName == "" {
+            if enableInjectHook {
+                shouldOpenWGImmediately = false // we skip open windowGroup when it is anonymous
+                // injectHook.js will open it later
+            } else {
+                // if we disable injectHook, here we should give it a default config
+                sceneName = UUID().uuidString
+                _ = setConfig(
+                    sceneName: sceneName,
+                    cfg: defaultConfig
+                )
+            }
+        }
+
+        guard let windowID = windowID else {
+            // no windowID
+            return false
+        }
+
+        // set default values
+        if shouldOpenWGImmediately {
+            applyWindowGroupDVByConfig(sceneName)
+        }
+
+        // if scene already opened, navigate to new url
+        if let wgdata = windowIDToWGData[windowID] {
+            // consume callback
+            if let callback = wgdata.callback {
+                callback()
+                windowIDToWGData[windowID]!.callback = nil // remove callback
+//                wgdata.webview
+            } else {
+                let wgid = wgdata.wgd.windowGroupID
+                let wg = SpatialWindowGroup
+                    .getOrCreateSpatialWindowGroup(wgid)
+
+                // current view may not rendered so no one can handle openWindowData message
+                wg?.openWindowData.send(wgdata.wgd) // bring to focus
+            }
+
+            return true
+        }
+
+        // Logic for opening the scene
+
         let windowGroupID = UUID().uuidString
         // open window
         let wgd = WindowGroupData(
@@ -202,10 +227,16 @@ class SceneMgr {
             windowGroupID: windowGroupID
         )
 
+        var callback: (() -> Void)? = nil
         if let pwg = SpatialWindowGroup.getSpatialWindowGroup(from.parentWindowGroupID) {
-            WindowGroupMgr.Instance.update(plainDV) // set default values
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                pwg.openWindowData.send(wgd) // openwindow
+            if shouldOpenWGImmediately {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    pwg.openWindowData.send(wgd) // openwindow
+                }
+            } else {
+                callback = {
+                    pwg.openWindowData.send(wgd) // openwindow
+                }
             }
         }
 
@@ -257,7 +288,8 @@ class SceneMgr {
         addWebViewMapping(
             webView: windowComponent.getView()!.webViewHolder.appleWebView!,
             windowID: windowID,
-            wgd: wgd
+            wgd: wgd,
+            callback: callback
         )
 
         return true

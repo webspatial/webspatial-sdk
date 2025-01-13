@@ -217,7 +217,9 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
 
-            injectSceneJS(userContentController, filename: "injectHook")
+            if enableInjectHook {
+                injectSceneJS(userContentController, filename: "injectHook")
+            }
 
             let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = '" + nativeAPIVersion + "';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
             userContentController.addUserScript(userScript)
