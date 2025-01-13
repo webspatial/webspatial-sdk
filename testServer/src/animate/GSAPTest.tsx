@@ -22,7 +22,7 @@ export function GSAPTest() {
 
   const onChangeOpacity = contextSafe(() => {
     gsap.to(ref.current as HTMLElement, {
-      opacity: 0,
+      opacity: 0.5,
       x: 200,
       duration: 1,
       clearProps: 'all',

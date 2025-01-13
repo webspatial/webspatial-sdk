@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.1",
+    "@react-spring/web": "^9.7.5",
     "@reduxjs/toolkit": "^2.2.4",
     "@tailwindcss/typography": "^0.5.15",
     "@tweenjs/tween.js": "^25.0.0",
@@ -22,8 +23,8 @@
     "@xrsdk/runtime": "workspace:*",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
-    "http-server": "^14.1.1",
     "gsap": "^3.12.5",
+    "http-server": "^14.1.1",
     "livereload": "^0.9.3",
     "loglevel": "^1.9.1",
     "motion": "^11.15.0",
