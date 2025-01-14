@@ -29,7 +29,6 @@
 		2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */; };
 		2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */; };
 		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
-		2BBE02082D06F505007C6AD5 /* injectScene.js in Resources */ = {isa = PBXBuildFile; fileRef = 2BBE02072D06F505007C6AD5 /* injectScene.js */; };
 		2BC9A2212D1E829B00912170 /* HideViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC9A2202D1E829B00912170 /* HideViewModifier.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 		2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */; };
@@ -80,7 +79,6 @@
 		2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewComponent.swift; sourceTree = "<group>"; };
 		2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewUI.swift; sourceTree = "<group>"; };
 		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
-		2BBE02072D06F505007C6AD5 /* injectScene.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = injectScene.js; sourceTree = "<group>"; };
 		2BC9A2202D1E829B00912170 /* HideViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HideViewModifier.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 		2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
@@ -227,7 +225,6 @@
 		2B2F1D8D2BED4CFA006897EE /* backend */ = {
 			isa = PBXGroup;
 			children = (
-				2BBE02072D06F505007C6AD5 /* injectScene.js */,
 				2B2F1D902BED61A8006897EE /* NativeWebView.swift */,
 			);
 			path = backend;
@@ -346,7 +343,6 @@
 			files = (
 				2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */,
 				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
-				2BBE02082D06F505007C6AD5 /* injectScene.js in Resources */,
 				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
