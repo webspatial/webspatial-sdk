@@ -320,51 +320,6 @@ export class WebSpatial {
     return result
   }
 
-  static async getScene(sceneName?: string) {
-    var cmd = new RemoteCommand('scene', {
-      sceneData: {
-        method: 'getScene',
-        sceneName,
-      },
-    })
-
-    var result = await new Promise((res, rej) => {
-      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-      WebSpatial.sendCommand(cmd)
-    })
-    return result
-  }
-
-  static async openScene(sceneName: string, url: string) {
-    var cmd = new RemoteCommand('scene', {
-      sceneData: {
-        method: 'open',
-        sceneName,
-        url,
-      },
-    })
-
-    var result = await new Promise((res, rej) => {
-      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-      WebSpatial.sendCommand(cmd)
-    })
-    return result
-  }
-
-  static async closeScene(sceneName?: string) {
-    var cmd = new RemoteCommand('scene', {
-      sceneData: {
-        method: 'close',
-        sceneName,
-      },
-    })
-
-    var result = await new Promise((res, rej) => {
-      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-      WebSpatial.sendCommand(cmd)
-    })
-    return result
-  }
   static async openImmersiveSpace() {
     var cmd = new RemoteCommand('openImmersiveSpace')
     await WebSpatial.sendCommand(cmd)

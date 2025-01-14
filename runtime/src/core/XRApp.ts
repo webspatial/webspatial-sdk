@@ -58,20 +58,4 @@ export class XRApp {
       return false
     }
   }
-
-  // Open url at a scene
-  static async open(url: string, sceneName?: string): Promise<boolean> {
-    return ((await WebSpatial.openScene(sceneName ?? '', url)) as any).data
-  }
-  /**
-   * Get one scene
-   *
-   */
-}
-
-function getSceneObj(sceneName: string): SceneShape {
-  return {
-    name: sceneName,
-    close: () => WebSpatial.closeScene(sceneName),
-  }
 }
