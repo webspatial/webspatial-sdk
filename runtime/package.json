@@ -10,7 +10,8 @@
     "build": "tsc",
     "start": "tsc --watch",
     "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=xrsdkRuntime",
-    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
+    "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,9 @@
   },
   "homepage": "https://github.com/spatial-web/XRSDK#readme",
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typedoc": "^0.26.5",
+    "typedoc-plugin-markdown": "^4.2.2"
   },
   "dependencies": {
     "loglevel": "^1.9.2"
