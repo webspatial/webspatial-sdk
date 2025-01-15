@@ -262,6 +262,7 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     func didStartLoadPage() {
+        webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
         let spatialObjects = childResources.map { $0.value }
         for spatialObject in spatialObjects {
             spatialObject.destroy()
