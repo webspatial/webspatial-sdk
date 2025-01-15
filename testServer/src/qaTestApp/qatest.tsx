@@ -45,6 +45,14 @@ function App() {
           <h2 className="text-xl font-bold mb-2">Material API测试</h2>
           <p className="text-sm opacity-80">Tests for Material APIs</p>
         </a>
+
+        <a
+          href="/src/qaTestApp/domapi1.html"
+          className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
+        >
+          <h2 className="text-xl font-bold mb-2">DOM API测试1</h2>
+          <p className="text-sm opacity-80">测试DOM样式和类操作</p>
+        </a>
       </div>
     </div>
   )
