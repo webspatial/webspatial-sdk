@@ -20,6 +20,8 @@ class WebViewHolder {
     }
 }
 
+var jsFileCache = [String: String]()
+
 struct PreloadStyleSettings: Codable {
     var cornerRadius: CornerRadius? = .init()
     var backgroundMaterial: BackgroundMaterial? = .None
@@ -173,9 +175,14 @@ struct WebViewNative: UIViewRepresentable {
     }
 
     func readJSFile(named fileName: String) -> String {
+        if let cachedContent = jsFileCache[fileName] {
+            return cachedContent
+        }
         if let filePath = Bundle.main.path(forResource: fileName, ofType: "js") {
             do {
-                return try String(contentsOfFile: filePath, encoding: .utf8)
+                let content = try String(contentsOfFile: filePath, encoding: .utf8)
+                jsFileCache[fileName] = content
+                return content
             } catch {
                 print("Error reading \(fileName).js: \(error)")
                 return ""
