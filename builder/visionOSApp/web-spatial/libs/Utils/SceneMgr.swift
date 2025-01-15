@@ -69,6 +69,22 @@ class SceneMgr {
         }
     }
 
+    // find SpatialWindowComponent by webview
+    func getSWCbyWebview(_ webview: WKWebView) -> SpatialWindowComponent? {
+        if let windowID = webviewToWindowID[webview],
+           let wgdata = windowIDToWGData[windowID],
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(wgdata.wgd.windowGroupID)
+        {
+            let rootEntity = wg.getEntities().filter {
+                $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
+            }.first?.value
+
+            let wv = rootEntity?.getComponent(SpatialWindowComponent.self)
+            return wv
+        }
+        return nil
+    }
+
     // Get config for a specific scene
     func getConfig(_ name: String) -> Config? {
         return sceneMap[name]
@@ -131,9 +147,6 @@ class SceneMgr {
             let wgid = wgdata.wgd.windowGroupID
             let wg = SpatialWindowGroup
                 .getOrCreateSpatialWindowGroup(wgid)
-            let rootEntity = wg!.getEntities().filter {
-                $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
-            }.first?.value
 
             wg?.openWindowData.send(wgdata.wgd) // bring to focus
 

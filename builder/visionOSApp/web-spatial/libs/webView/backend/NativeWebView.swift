@@ -41,7 +41,12 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                     .components(separatedBy: "?").first
             }
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
-            webViewRef?.didGetEarlyStyle(style: styleToSet)
+
+            // get webview's swc
+            if let swc = SceneMgr.Instance.getSWCbyWebview(webView) {
+                swc.didGetEarlyStyle(style: styleToSet)
+            }
+
             // Respond with empty css file
             let response = ".ignoreThis{}".data(using: .utf8)
             let mimeType = "text/css"
