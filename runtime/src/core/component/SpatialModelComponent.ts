@@ -32,6 +32,7 @@ export class SpatialModelComponent extends SpatialComponent {
     })
   }
 
+  /** @hidden */
   async _syncMaterials() {
     await this.setMaterials(this.cachedMaterials)
   }

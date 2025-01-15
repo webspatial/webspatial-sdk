@@ -49,6 +49,7 @@ export class SpatialWindowComponent extends SpatialComponent {
   /**
    * Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
    * eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
+   * [TODO] should better document how this translates to dimensions when in app sapce, 1360 doesnt seem to be in any docs
    * @param x width in pixels
    * @param y height in pixels
    */
@@ -58,6 +59,10 @@ export class SpatialWindowComponent extends SpatialComponent {
     })
   }
 
+  /**
+   * [TODO] should this be on entity instead?
+   * @param rotationAnchor
+   */
   async setRotationAnchor(rotationAnchor: Vec3) {
     await WebSpatial.updateResource(this._resource, {
       rotationAnchor: rotationAnchor,
