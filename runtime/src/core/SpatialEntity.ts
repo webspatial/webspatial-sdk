@@ -47,8 +47,8 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
- * Removes a component from the entity
- */
+   * Removes a component from the entity
+   */
   async removeComponent<T extends SpatialComponent>(
     type: new (...args: any[]) => T,
   ) {
@@ -60,8 +60,8 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
-  * Gets a component from the entity
-  */
+   * Gets a component from the entity
+   */
   getComponent<T extends SpatialComponent>(
     type: new (...args: any[]) => T,
   ): T | undefined {
@@ -116,7 +116,7 @@ export class SpatialEntity extends SpatialObject {
 
   /**
    * Sets if the entity should be visible (default: True)
-   * @param visible 
+   * @param visible
    */
   async setVisible(visible: boolean) {
     await WebSpatial.updateResource(this._entity, { visible })

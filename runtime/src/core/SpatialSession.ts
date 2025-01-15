@@ -187,7 +187,7 @@ export class SpatialSession {
 
   /**
    * [TODO] should these log apis be private?
-   * @param logLevel 
+   * @param logLevel
    */
   async setLogLevel(logLevel: LoggerLevel) {
     await WebSpatial.logger.setLevel(logLevel)
@@ -242,8 +242,8 @@ export class SpatialSession {
   }
 
   /**
- * [TODO] make this private
- */
+   * [TODO] make this private
+   */
   async inspectRootWindowGroup() {
     return WebSpatial.inspectRootWindowGroup()
   }
@@ -326,7 +326,7 @@ export class SpatialSession {
 
         await new Promise(resolve => setTimeout(resolve, 10))
       }
-      ; (openedWindow! as any)._webSpatialID = (
+      ;(openedWindow! as any)._webSpatialID = (
         openedWindow!.window as any
       ).testAPI.getWindowID()
     } else {
