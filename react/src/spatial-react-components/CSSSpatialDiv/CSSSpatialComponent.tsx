@@ -38,7 +38,14 @@ function renderRootCSSSpatialComponent(
     [],
   )
 
-  const { style = {}, className = '', children, ...props } = inProps
+  const {
+    style = {},
+    className = '',
+    children,
+    debugName,
+    debugShowStandardInstance,
+    ...props
+  } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
 
   const divRefStyle: CSSProperties = {
@@ -68,6 +75,8 @@ function renderRootCSSSpatialComponent(
           children={children}
           {...props}
           spatialStyle={spatialStyle}
+          debugName={debugName}
+          debugShowStandardInstance={debugShowStandardInstance}
           ref={spatialDivRef}
         />
       )}
@@ -125,7 +134,14 @@ function renderInPortalInstance(
   cssSpatialID: string,
   inProps: SpatialReactComponentProps,
 ) {
-  const { style = {}, className = '', children, ...props } = inProps
+  const {
+    style = {},
+    className = '',
+    children,
+    debugName,
+    debugShowStandardInstance,
+    ...props
+  } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
     ...style,
@@ -155,6 +171,8 @@ function renderInPortalInstance(
           children={children}
           {...props}
           spatialStyle={spatialStyle}
+          debugName={debugName}
+          debugShowStandardInstance={debugShowStandardInstance}
         />
       )}
       <El

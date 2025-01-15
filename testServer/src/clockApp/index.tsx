@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialSession } from '@xrsdk/runtime'
-import { SpatialIFrame } from '@xrsdk/react'
+import { SpatialDiv } from '@xrsdk/react'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -152,13 +152,9 @@ function App() {
       ) : (
         <div>
           <Time makeShadow={true} />
-          <SpatialIFrame
-            src="index.html?pageName=Time&transparent=true"
-            className=""
-            spatialOffset={{ z: 50 }}
-          >
+          <SpatialDiv className="" spatialStyle={{ position: { z: 50 } }}>
             <Time makeShadow={false} />
-          </SpatialIFrame>
+          </SpatialDiv>
         </div>
       )}
 

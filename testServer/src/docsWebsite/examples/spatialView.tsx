@@ -5,7 +5,7 @@ import { showSample } from './sampleLoader'
 function MySample(props: { session?: SpatialSession }) {
   let divRef = useRef(null)
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       if (props.session) {
         var divOnPage = divRef.current! as HTMLElement
         let session = props.session
@@ -116,12 +116,12 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Resize div onclick to see it resize
         divOnPage.onclick = () => {
-          if (divOnPage.style.width == '600px') {
+          if (divOnPage.style.width == '300px') {
+            divOnPage.style.width = '400px'
+            divOnPage.style.height = '400px'
+          } else {
             divOnPage.style.width = '300px'
             divOnPage.style.height = '300px'
-          } else {
-            divOnPage.style.width = '600px'
-            divOnPage.style.height = '600px'
           }
         }
         // CODESAMPLE_END
@@ -136,7 +136,7 @@ function MySample(props: { session?: SpatialSession }) {
       </h1>
       <div
         ref={divRef}
-        style={{ width: '600px', height: '600px', backgroundColor: '#bbbbbb' }}
+        style={{ width: '300px', height: '300px', backgroundColor: '#bbbbbb' }}
       ></div>
     </div>
   )

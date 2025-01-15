@@ -5,14 +5,14 @@ import { showSample } from './sampleLoader'
 function MySample(props: { session?: SpatialSession }) {
   var [supported, setSupported] = useState(false)
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       if (props.session) {
         let session = props.session
         // CODESAMPLE_START
         // Create an entity
         var entity = await session.createEntity()
         entity.transform.position.x = 500
-        entity.transform.position.y = 300
+        entity.transform.position.y = 100
         entity.transform.position.z = 100
         await entity.updateTransform()
 
@@ -21,6 +21,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Create a window context we can display html within
         let pageWindow = await session.createWindowContext()
+        pageWindow!.document.documentElement.style.backgroundColor = "#0033aa99"
         var newDiv = document.createElement('div')
         newDiv.innerHTML = "<div style='color:red;'>Hello world</div>"
         pageWindow!.document.body.appendChild(newDiv)
@@ -39,6 +40,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div></div>
+  return <div className='h-32'></div>
 }
 showSample(MySample)

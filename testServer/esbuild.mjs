@@ -6,6 +6,7 @@ import glob from "tiny-glob";
 import path from "path";
 import livereload from "livereload";
 import {sassPlugin, postcssModules} from 'esbuild-sass-plugin'
+import { createServer } from 'http-server';
 
 var entryPoints = await glob("./src/**/*.tsx");
 entryPoints = entryPoints.concat(await glob("./src/**/*.ts"))
@@ -47,9 +48,15 @@ var ctx = await esbuild.context({
   },
 });
 ctx.watch();
-ctx.serve({
-  servedir: ".",
-  port,
+
+// Use http-server instead of ctx serve to avoid overhead delay of ~500ms
+const staticServer = createServer({
+  root: './', // Set the root directory
+  cache: -1,        // Disable caching
+  port: port,       // Define the port
+});
+staticServer.listen(port, () => {
+  console.log('HTTP server is running on http://localhost:'+port);
 });
 
 var server = livereload.createServer({
@@ -64,4 +71,4 @@ watchPaths = watchPaths.concat(await glob("./src/**/*.html"));
 watchPaths.push("index.html");
 // watchPaths.push("index.tsx");
 server.watch(watchPaths);
-console.log("server created!");
+console.log("esbuild ready!");
