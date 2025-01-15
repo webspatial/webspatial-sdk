@@ -1,5 +1,5 @@
-;(function () {
-  const sendMsg = msg => {
+export function injectSceneHook() {
+  const sendMsg = (msg: any) => {
     try {
       //@ts-ignore
       window.webkit.messageHandlers.bridge.postMessage(JSON.stringify(msg))
@@ -10,6 +10,8 @@
 
   if (window.opener) {
     document.addEventListener('DOMContentLoaded', async () => {
+      //@ts-ignore
+      window.hehe = true
       try {
         // @ts-ignore
         if (typeof window.customHookForEntry === 'function') {
@@ -69,4 +71,4 @@
       }
     })
   }
-})()
+}

@@ -1,5 +1,6 @@
 import { getSession, parseCornerRadius } from '@xrsdk/react'
 import { hijackWindowOpen } from './hijackWindowOpen'
+import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -203,6 +204,7 @@ export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
+  injectSceneHook()
   hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()

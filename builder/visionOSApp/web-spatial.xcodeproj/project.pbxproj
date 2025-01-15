@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2B07EA252D2FDBFD00F777E9 /* injectHook.js in Resources */ = {isa = PBXBuildFile; fileRef = 2B07EA242D2FDBF600F777E9 /* injectHook.js */; };
 		2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */; };
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
@@ -56,7 +55,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2B07EA242D2FDBF600F777E9 /* injectHook.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = injectHook.js; sourceTree = "<group>"; };
 		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
 		2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupMgr.swift; sourceTree = "<group>"; };
@@ -227,7 +225,6 @@
 		2B2F1D8D2BED4CFA006897EE /* backend */ = {
 			isa = PBXGroup;
 			children = (
-				2B07EA242D2FDBF600F777E9 /* injectHook.js */,
 				2B2F1D902BED61A8006897EE /* NativeWebView.swift */,
 			);
 			path = backend;
@@ -347,7 +344,6 @@
 				2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */,
 				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
 				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
-				2B07EA252D2FDBFD00F777E9 /* injectHook.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
