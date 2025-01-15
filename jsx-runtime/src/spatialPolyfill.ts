@@ -1,4 +1,5 @@
 import { getSession, parseCornerRadius } from '@xrsdk/react'
+import { hijackWindowOpen } from './hijackWindowOpen'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -202,6 +203,7 @@ export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
+  hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()
   hijackDocumentElementStyle()
