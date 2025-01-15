@@ -5,6 +5,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import RealityKitContent
@@ -27,6 +28,17 @@ struct PreloadStyleSettings: Codable {
     var backgroundMaterial: BackgroundMaterial? = .None
 }
 
+// event of webview closed
+var webViewDidCloseData = PassthroughSubject<WKWebView, Never>()
+
+struct WebviewEarlyStyle {
+    let webview: WKWebView
+    let style: PreloadStyleSettings
+}
+
+// event of forcestyle handler
+var webviewGetEarlyStyleData = PassthroughSubject<WebviewEarlyStyle, Never>()
+
 class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     let decoder = JSONDecoder()
     func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
@@ -44,10 +56,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             }
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
 
-            // get webview's swc
-            if let swc = SceneMgr.Instance.getSWCbyWebview(webView) {
-                swc.didGetEarlyStyle(style: styleToSet)
-            }
+            webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
 
             // Respond with empty css file
             let response = ".ignoreThis{}".data(using: .utf8)
@@ -131,7 +140,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
     // handle close
     func webViewDidClose(_ webView: WKWebView) {
-        _ = SceneMgr.Instance.close(webView)
+        webViewDidCloseData.send(webView)
     }
 
     // receive message from wkwebview

@@ -5,6 +5,7 @@
 //  Created by ByteDance on 2024/12/2.
 //
 
+import Combine
 import UIKit
 import WebKit
 
@@ -39,7 +40,28 @@ class SceneMgr {
         }
     }
 
-    private init() {}
+    private var cancellables = Set<AnyCancellable>() // save subscriptions
+
+    private init() {
+        webViewDidCloseData
+            .sink { [weak self] webView in
+                _ = self?.close(webView)
+            }
+            .store(in: &cancellables)
+
+        // get webview's swc
+        webviewGetEarlyStyleData
+            .sink { [weak self] event in
+                if let swc = self?.getSWCbyWebview(event.webview) {
+                    swc.didGetEarlyStyle(style: event.style)
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    deinit {
+        cancellables.removeAll()
+    }
 
     private var sceneMap: [String: Config] = [:] // Store the scene config mappings
 
