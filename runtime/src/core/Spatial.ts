@@ -24,7 +24,10 @@ export class Spatial {
    * @returns true if web spatial is supported by this webpage
    */
   isSupported() {
-    return (window as any).WebSpatailEnabled && (this.getNativeVersion() === this.getClientVersion())
+    return (
+      (window as any).WebSpatailEnabled &&
+      this.getNativeVersion() === this.getClientVersion()
+    )
   }
 
   /**

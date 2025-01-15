@@ -8,7 +8,7 @@ export class SpatialWindowGroup {
   constructor(
     /** @hidden */
     public _wg: WindowGroup,
-  ) { }
+  ) {}
 
   /**
    * Sets the style that should be applied to the windowGroup
