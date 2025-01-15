@@ -202,16 +202,6 @@ struct WebViewNative: UIViewRepresentable {
         }
     }
 
-    func injectSceneJS(_ userContentController: WKUserContentController, filename: String) {
-        let source = readJSFile(named: filename)
-        let userScript = WKUserScript(
-            source: source,
-            injectionTime: .atDocumentStart,
-            forMainFrameOnly: false
-        )
-        userContentController.addUserScript(userScript)
-    }
-
     func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
