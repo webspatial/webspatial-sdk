@@ -80,6 +80,9 @@ export class WebSpatial {
   }
 
   static async sendCommand(cmd: RemoteCommand) {
+    if ((window as any).__WebSpatialUnloaded) {
+      return
+    }
     if (WebSpatial.transactionStarted) {
       WebSpatial.transactionCommands.push(cmd as any)
       return

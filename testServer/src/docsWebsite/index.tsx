@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { SpatialIFrame, Model } from '@xrsdk/react'
+import { Model } from '@xrsdk/react'
 
 function App2() {
   return <div></div>

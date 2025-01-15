@@ -6,7 +6,7 @@ import {
   SpatialSession,
   SpatialViewComponent,
 } from '@xrsdk/runtime'
-import { SpatialIFrame, Model } from '@xrsdk/react'
+import { SpatialDiv, Model } from '@xrsdk/react'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -264,13 +264,9 @@ function App() {
           {spatialSupported ? (
             <div>
               <WebSpatialTitle makeShadow={true} />
-              <SpatialIFrame
-                src="/index.html?pageName=WebSpatialTitle&transparent=true"
-                className=""
-                spatialOffset={{ z: 100 }}
-              >
+              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
                 <WebSpatialTitle />
-              </SpatialIFrame>
+              </SpatialDiv>
             </div>
           ) : (
             <div>
@@ -317,13 +313,9 @@ function App() {
         <div className="grow flex flex-col w-full bg-black bg-opacity-25 p-10 my-10">
           {spatialSupported ? (
             <div>
-              <SpatialIFrame
-                src="/index.html?pageName=FeatureList&transparent=true"
-                className=""
-                spatialOffset={{ z: 100 }}
-              >
+              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
                 <FeatureList />
-              </SpatialIFrame>
+              </SpatialDiv>
             </div>
           ) : (
             <FeatureList />
