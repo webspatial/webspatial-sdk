@@ -3,10 +3,10 @@ import { SpatialSession } from './SpatialSession'
 
 /**
  * Helper class used to quickly add spatial content to standard web pages
- * Experimental, expect APIs to change in future versions
+ * [Experimental] expect APIs to potentially change in future versions
  */
 export class SpatialHelper {
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   shape = {
     createShapeEntity: async (shape = 'box') => {
