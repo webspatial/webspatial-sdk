@@ -10,6 +10,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>webSpatial</string>
+				<string>web+spatial</string>
 			</array>
 		</dict>
 	</array>
