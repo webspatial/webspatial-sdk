@@ -23,7 +23,7 @@ function App() {
 
   const testBasicStyles = () => {
     if (!ref.current) return
-    ref.current.style.borderRadius = '500px'
+    ref.current.style.borderRadius = '100'
     ;(ref.current.style as any)['--xr-background-material'] = 'default' // maybe bug
     ;(ref.current.style as any)['--xr-back'] = '50' // not work？maybe bug
     updateElementState()

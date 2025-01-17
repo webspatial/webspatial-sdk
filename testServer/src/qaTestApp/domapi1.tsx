@@ -47,6 +47,7 @@ function App() {
       ref.current.style.getPropertyValue('border-radius')
     console.log('get borderRadius value:', currentBorderRadius)
     ref.current.style.setProperty('border-radius', `${borderRadius}px`)
+    // ref.current.style.setProperty('border-radius', `0px`) //设置为0px
     updateElementState(ref)
   }
   // 处理滑动条值变化的事件处理函数
@@ -96,7 +97,7 @@ function App() {
 
   // 测试 background-material
   // 存储 backgroundMaterial 的值
-  const [backgroundMaterial, setBackgroundMaterial] = useState('default') // 可以直接修改material
+  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // 可以直接修改material
 
   const handleBackgroundMaterialChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -142,11 +143,8 @@ function App() {
     // 获取当前的 testTransform 值
     const currentTransform = ref.current.style.getPropertyValue('transform')
     console.log('get transform value:', currentTransform)
-    // ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)`  //方式1
-    ref.current.style.setProperty(
-      'transform',
-      `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,
-    ) //方式2
+    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` //方式1
+    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,) //方式2
     updateElementState(ref)
   }
   // 处理滑动条值变化的事件处理函数
@@ -159,17 +157,14 @@ function App() {
     setRotateZ(parseInt(event.target.value, 10))
   }
 
-  // 移除 testTransform 的函数
+  // 移除 Transform 的函数
   const removeTestTransform = () => {
     if (ref.current) {
-      ref.current.style.removeProperty('transform') //remove接口后，get属性值未移出，需要再调用下set设置为0的接口，是bug？
+      ref.current.style.removeProperty('transform')
       // 获取当前的 testTransform 值
       const currentTransform = ref.current.style.getPropertyValue('transform')
       console.log('get transform value:', currentTransform)
       updateElementState(ref)
-      // console.log('更新状态值之后', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`)
-      // const currentTransform1 = ref.current.style.getPropertyValue('transform');
-      // console.log('get transform value:', currentTransform1)
       setTranslateX(0)
       setRotateZ(0)
     }
@@ -187,11 +182,12 @@ function App() {
     setTransformOrigin(selectedOrigin)
     if (!ref.current) return
     console.log('ref.current:', ref.current, selectedOrigin)
-    ref.current.style.transformOrigin = selectedOrigin //transform如果不设置值，transformOrigin点击不生效，是bug？
-    // ref.current.style.setProperty('transformOrigin', `${selectedOrigin}`) //方式2设置不了值是bug？
+    // ref.current.style.transformOrigin = selectedOrigin
+    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`)
+    // ref.current.style.setProperty('transform-Origin', `left`)
     // 获取当前的 TransformOrigin 值
     const currentTransformOrigin =
-      ref.current.style.getPropertyValue('transformOrigin') // get 获取不到值是bug？
+      ref.current.style.getPropertyValue('transform-Origin')
     console.log('get transform value:', currentTransformOrigin)
     updateElementState(ref)
   }
@@ -254,7 +250,7 @@ function App() {
   const testClassOperations = () => {
     if (!ref.current) return
     ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white transition-all duration-300 classA classB'
+      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 classA classB'
     updateElementState(ref)
     ref.current.classList.add('translate-y-8')
     updateElementState(ref)
@@ -292,7 +288,7 @@ function App() {
     if (!ref.current) return
     ref.current.removeAttribute('style')
     ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white transition-all duration-300'
+      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref)
   }
 
@@ -320,14 +316,14 @@ function App() {
           <div
             enable-xr
             ref={ref}
-            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white transition-all duration-300"
+            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
           >
             Test Element
           </div>
           <div
             enable-xr
             ref={ref1}
-            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-blue-200/30  rounded-lg flex items-center justify-center text-white transition-all duration-300"
+            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-blue-200/30  rounded-lg flex items-center justify-center text-white duration-300"
           >
             Test Element1
           </div>
@@ -345,8 +341,8 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="range"
-                min="-1"
-                max="9999"
+                min="0"
+                max="100"
                 value={borderRadius}
                 onChange={handleBorderRadiusChange}
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -370,8 +366,8 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="range"
-                min="-50"
-                max="350"
+                min="-150"
+                max="900"
                 value={xrBack}
                 onChange={handleXrBackChange}
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -425,8 +421,8 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="range"
-                min="-100"
-                max="100"
+                min="-50"
+                max="50"
                 value={translateX}
                 onChange={handleTranslateXChange}
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
