@@ -3,6 +3,7 @@ import { MutableRefObject, useCallback } from 'react'
 import { SpatialReactComponentRef } from '../SpatialReactComponent/types'
 import { SpatialCustomVars } from './const'
 import { InjectClassName } from './injectClassStyle'
+import { extractAndRemoveCustomProperties, joinToCSSText } from './utils'
 
 function makeOriginalKey(key: string) {
   return `__original_${key}`
@@ -68,6 +69,10 @@ export function useHijackSpatialDivRef(
               return ref.current?.style.visibility
             }
 
+            if (prop === 'cssText') {
+              // todo: concat target cssText with ref.current.style's spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+            }
+
             return Reflect.get(target, prop)
           },
           set(target, property, value) {
@@ -87,6 +92,41 @@ export function useHijackSpatialDivRef(
             } else if (property === 'visibility') {
               ref.current?.style.setProperty(property, value as string)
               return true
+            } else if (property === 'cssText') {
+              // parse cssText, filter out spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+              const toFilteredCSSProperties = [
+                'transform',
+                'visibility',
+                SpatialCustomVars.back,
+                SpatialCustomVars.backgroundMaterial,
+              ]
+              const { extractedValues, filteredCssText } =
+                extractAndRemoveCustomProperties(
+                  value as string,
+                  toFilteredCSSProperties,
+                )
+
+              // update cssText for CSSParserDiv
+              toFilteredCSSProperties.forEach(key => {
+                // update cssText for CSSParserDiv according to extractedValues
+                if (extractedValues[key]) {
+                  ref.current?.style.setProperty(key, extractedValues[key])
+                } else {
+                  ref.current?.style.removeProperty(key)
+                }
+              })
+
+              const appendedCSSText = joinToCSSText({
+                transform: 'none',
+                visibility: 'hidden',
+              })
+
+              // set cssText for spatialDiv
+              return Reflect.set(
+                target,
+                property,
+                [appendedCSSText, filteredCssText].join(';'),
+              )
             }
             return Reflect.set(target, property, value)
           },
@@ -117,10 +157,25 @@ export function useHijackSpatialDivRef(
           }
         })
 
+        const __getComputedStyle = (
+          originalGetComputedStyle: any,
+          pseudoElt: any,
+        ) => {
+          return originalGetComputedStyle(domElement, pseudoElt)
+        }
+
         const proxyDomElement = new Proxy(domElement, {
           get(target, prop) {
             if (prop === 'style') {
               return domStyleProxy
+            }
+
+            if (prop === '__isSpatialDiv') {
+              return true
+            }
+
+            if (prop === '__getComputedStyle') {
+              return __getComputedStyle
             }
 
             if (typeof target[prop as keyof HTMLElement] === 'function') {
