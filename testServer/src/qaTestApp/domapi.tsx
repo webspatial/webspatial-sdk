@@ -25,7 +25,7 @@ function App() {
     if (!ref.current) return
     ref.current.style.borderRadius = '500px'
     ;(ref.current.style as any)['--xr-background-material'] = 'default' // maybe bug
-    ;(ref.current.style as any)['--xr-back'] = '50' // not work？maybe bug
+    ;(ref.current.style as any)['--xr-back'] = '100' // not work？maybe bug
     updateElementState()
   }
 
@@ -101,6 +101,7 @@ function App() {
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
+            enable-xr
             ref={ref}
             className="test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white transition-all duration-300"
           >

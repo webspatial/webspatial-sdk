@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { SpatialDiv } from '@xrsdk/react/dist'
 
 function App() {
-  const ref = useRef<HTMLDivElement>(null)
+  const testElementRef = useRef<HTMLDivElement>(null)
   const [elementState, setElementState] = useState({
     style: '',
     className: '',
@@ -19,37 +19,55 @@ function App() {
   const [style, setStyle] = useState<CSSProperties>({
     '--xr-back': '100',
   } as CSSProperties)
+  const [selectedHtmlMaterial, setSelectedHtmlMaterial] = useState('none')
+  const [htmlStyles, setHtmlStyles] = useState<CSSStyleDeclaration | null>(null)
 
   const removeStyleAttribute = () => {
-    if (ref.current) {
+    if (testElementRef.current) {
       // remove --xr-background-material style property
-      ref.current.style.removeProperty('--xr-background-material')
+      testElementRef.current.style.removeProperty('--xr-background-material')
     }
   }
 
   const updateElementState = () => {
-    if (ref.current) {
+    if (testElementRef.current) {
       setElementState({
-        style: ref.current.getAttribute('style') || 'None',
-        className: ref.current.className || 'None',
+        style: testElementRef.current.getAttribute('style') || 'None',
+        className: testElementRef.current.className || 'None',
       })
     }
   }
 
   useEffect(() => {
     updateElementState()
-  }, [ref.current])
+  }, [testElementRef.current])
+
+  useEffect(() => {
+    const htmlElement = document.documentElement
+    const computedStyles = window.getComputedStyle(htmlElement)
+    setHtmlStyles(computedStyles)
+  }, [])
+
+  useEffect(() => {}, [document.documentElement])
+
+  const updateHtmlBackgroundMaterial = (newMaterial: string) => {
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      newMaterial,
+    )
+    setSelectedInlineMaterial(newMaterial)
+  }
 
   const applyRefMaterial = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] =
+    if (!testElementRef.current) return
+    ;(testElementRef.current.style as any)['--xr-background-material'] =
       selectedRefMaterial
     setTestName(`test ${selectedRefMaterial} Mat ref`)
     updateElementState()
   }
 
   const applyClassNameMaterial = () => {
-    if (!ref.current) return
+    if (!testElementRef.current) return
     let newClassNames =
       'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
     if (selectedClassNameMaterial === 'default') {
@@ -77,16 +95,24 @@ function App() {
   }
 
   const resetStyles = () => {
-    if (!ref.current) return
+    if (!testElementRef.current) return
     removeStyleAttribute()
-    ref.current.className =
+    testElementRef.current.className =
       'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
     console.log('ResetMat classNames:' + classNames)
     setTestName('testName')
   }
 
+  const applyHtmlInlineStyleMaterial = () => {
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      selectedHtmlMaterial,
+    )
+    console.log(htmlStyles.getPropertyValue('--xr-background-material'))
+  }
+
   return (
-    <div className="min-h-screen bg-gray-700 p-4">
+    <div className="min-h-screen bg-amber-200 bg-opacity-10 p-4">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
         <SpatialDiv
           spatialStyle={{
@@ -113,7 +139,12 @@ function App() {
 
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[100px] flex items-center justify-center">
-          <div enable-xr style={style} ref={ref} className={classNames}>
+          <div
+            enable-xr
+            style={style}
+            ref={testElementRef}
+            className={classNames}
+          >
             <center>{testName}</center>
           </div>
         </div>
@@ -136,6 +167,7 @@ function App() {
                 onChange={e => setSelectedRefMaterial(e.target.value)}
                 className="w-full p-2 rounded-md"
               >
+                <option value="none">none Material</option>
                 <option value="default">Glass Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
@@ -167,6 +199,7 @@ function App() {
                 onChange={e => setSelectedClassNameMaterial(e.target.value)}
                 className="w-full p-2 rounded-md"
               >
+                <option value="none">none Material</option>
                 <option value="default">Glass Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
@@ -197,6 +230,7 @@ function App() {
                 onChange={e => setSelectedInlineMaterial(e.target.value)}
                 className="w-full p-2 rounded-md"
               >
+                <option value="none">none Material</option>
                 <option value="default">Glass Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
@@ -211,6 +245,7 @@ function App() {
             </div>
           </div>
         </div>
+
         {/* Reset Button */}
         <div className="flex items-center justify-end">
           <button
@@ -224,12 +259,80 @@ function App() {
         <div className="bg-gray-800 p-4 rounded-lg">
           <h3 className="text-base text-white mb-2">Current Element State:</h3>
           <pre className="text-sm text-gray-300 whitespace-pre-wrap">
-            {ref.current
+            {testElementRef.current
               ? `Style: ${elementState.style}
 Class Name: ${elementState.className}`
               : 'Element Not Loaded'}
           </pre>
         </div>
+
+        {/* Test html page material*/}
+        <div className="grid grid-cols-3 gap-4">
+          {/* html in-line style tests */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>html In-line Style Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                onChange={e => setSelectedHtmlMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">Glass Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyHtmlInlineStyleMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          onClick={() => updateHtmlBackgroundMaterial('regular')}
+        >
+          切换背景材质
+        </button>
+
+        {/*Get the html style state */}
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-base text-white mb-2">
+            Current html style State:
+          </h3>
+          {htmlStyles ? (
+            <pre>
+              <code>
+                {JSON.stringify(
+                  {
+                    backgroundColor: htmlStyles.backgroundColor,
+                    borderRadius: htmlStyles.borderRadius,
+                    '--xr-background-material': htmlStyles.getPropertyValue(
+                      '--xr-background-material',
+                    ),
+                  },
+                  null,
+                  2,
+                )}
+              </code>
+            </pre>
+          ) : (
+            <p>Loading styles...</p>
+          )}
+        </div>
+
         <div
           enable-xr
           style={{
