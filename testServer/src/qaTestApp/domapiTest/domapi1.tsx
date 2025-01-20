@@ -15,7 +15,6 @@ function App() {
     className: '',
   })
 
-  // const updateElementState = (ref: React.MutableRefObject<HTMLDivElement | null>, setElementState: React.Dispatch<React.SetStateAction<{ style: string; className: string }>>) => {
   const updateElementState = (
     ref: React.MutableRefObject<HTMLDivElement | null>,
   ) => {
@@ -30,7 +29,7 @@ function App() {
   useEffect(() => {
     updateElementState(ref)
     updateElementState(ref1)
-  }, [ref.current, ref1.current])
+  }, [ref, ref1])
 
   // 测试BorderRadius
   // 存储 borderRadius 的值
@@ -182,8 +181,8 @@ function App() {
     setTransformOrigin(selectedOrigin)
     if (!ref.current) return
     console.log('ref.current:', ref.current, selectedOrigin)
-    // ref.current.style.transformOrigin = selectedOrigin
-    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`)
+    // ref.current.style.transformOrigin = selectedOrigin //方式1
+    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`) //方式2
     // ref.current.style.setProperty('transform-Origin', `left`)
     // 获取当前的 TransformOrigin 值
     const currentTransformOrigin =
@@ -194,7 +193,11 @@ function App() {
   // 移除 TransformOrigin 的函数
   const removeTransformOrigin = () => {
     if (ref.current) {
-      ref.current.style.removeProperty('TransformOrigin')
+      ref.current.style.removeProperty('Transform-Origin')
+      // 获取当前的 TransformOrigin 值
+      const currentTransformOrigin =
+        ref.current.style.getPropertyValue('transform-Origin')
+      console.log('get transform value:', currentTransformOrigin)
       updateElementState(ref)
       setTransformOrigin('left center')
     }
@@ -208,10 +211,11 @@ function App() {
   const setZIndexValue = () => {
     if (!ref.current) return
     console.log(zIndex, ref.current)
-    // ref.current.style.setProperty('zIndex',`${zIndex}`)
-    // ref.current.style['zIndex'] = '70'
-    ref.current.style.zIndex = zIndex.toString() //方式1
-    // ref.current.style.setProperty('zIndex',zIndex.toString()) //方式2
+    // ref.current.style.zIndex = zIndex.toString() //方式1
+    ref.current.style.setProperty('z-Index', `${zIndex}`) //方式2 技术文档错误
+    // 获取当前的 zIndex 值
+    const currentZIndex = ref.current.style.getPropertyValue('z-Index')
+    console.log('get zIndex:', currentZIndex)
     updateElementState(ref)
   }
   const handleZIndexChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,7 +225,7 @@ function App() {
   const setZIndexValue1 = () => {
     if (!ref1.current) return
     console.log(zIndex1, ref1.current)
-    // ref1.current.style.setProperty('zIndex',`${zIndex1}`)
+    // ref1.current.style.setProperty('z-Index',`${zIndex1}`)
     ref1.current.style.zIndex = zIndex1.toString()
     updateElementState(ref1)
   }
@@ -233,47 +237,71 @@ function App() {
   const removeZIndex = () => {
     if (ref.current) {
       console.log('removeZIndex', ref.current)
-      ref.current.style.removeProperty('zIndex')
+      ref.current.style.removeProperty('z-Index')
       updateElementState(ref)
     }
   }
   // 移除 zIndex1 的函数
   const removeZIndex1 = () => {
-    if (ref.current) {
-      console.log('removeZIndex1', ref.current)
-      ref.current.style.removeProperty('zIndex')
+    if (ref1.current) {
+      console.log('removeZIndex1', ref1.current)
+      ref1.current.style.removeProperty('z-Index')
       updateElementState(ref1)
     }
-  } //mabye bug??
+  }
 
   // 测试class操作
   const testClassOperations = () => {
     if (!ref.current) return
+    // 读取class
+    const currentClass = ref.current.className
+    console.log('当前class:', currentClass)
     ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 classA classB'
+      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 '
+    // // 读取class
+    const currentClassNew = ref.current.className
+    console.log('更新后当前class:', currentClassNew)
+    // 元素class name 设为空字符串
+    // ref.current.className = '' //元素class name 设为空字符串后，web端与avp文本内容颜色不一致，bug？
+    // // 读取class
+    // const currentClassNone = ref.current.className
+    // console.log('更新为空后 当前class:', currentClassNone)
     updateElementState(ref)
-    ref.current.classList.add('translate-y-8')
-    updateElementState(ref)
+    // ref.current.classList.add('translate-y-8')
+    // updateElementState(ref)
 
     setTimeout(() => {
       if (ref.current) {
         ref.current.classList.remove('translate-y-8')
+        console.log('移除translate-y-8 class:', ref.current.classList.value)
+        // ref.current.classList.value
         updateElementState(ref)
       }
       setTimeout(() => {
         if (ref.current) {
           ref.current.classList.add('translate-y-8')
+          console.log('添加translate-y-8 class:', ref.current.classList.value)
           ref.current.classList.replace('translate-y-8', 'translate-x-8')
+          console.log(
+            '替换translate-y-8为translate-x-8 class:',
+            ref.current.classList.value,
+          )
           updateElementState(ref)
         }
         setTimeout(() => {
           if (ref.current) {
             ref.current.classList.toggle('translate-y-8')
+            console.log('反转translate-y-8 class:', ref.current.classList.value)
+            ref.current.classList.toggle('translate-y-8')
+            console.log(
+              '再反转translate-y-8 class:',
+              ref.current.classList.value,
+            )
             updateElementState(ref)
           }
-        }, 1000)
-      }, 1000)
-    }, 1000)
+        }, 2000)
+      }, 2000)
+    }, 2000)
   }
 
   const testDimensionStyles = () => {
@@ -287,8 +315,8 @@ function App() {
   const resetStyles = () => {
     if (!ref.current) return
     ref.current.removeAttribute('style')
-    ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
+    // ref.current.className =
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref)
   }
 
@@ -313,19 +341,21 @@ function App() {
 
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
-          <div
-            enable-xr
-            ref={ref}
-            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
-          >
-            Test Element
-          </div>
-          <div
-            enable-xr
-            ref={ref1}
-            className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-blue-200/30  rounded-lg flex items-center justify-center text-white duration-300"
-          >
-            Test Element1
+          <div className="flex">
+            <div
+              enable-xr
+              ref={ref}
+              className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+            >
+              Test Element
+            </div>
+            <div
+              enable-xr
+              ref={ref1}
+              className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
+            >
+              Test Element1
+            </div>
           </div>
         </div>
 
