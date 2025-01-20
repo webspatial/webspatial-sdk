@@ -6,6 +6,7 @@ enableDebugTool()
 
 function App() {
   const ref = useRef<HTMLDivElement>(null)
+  ;(window as any).ref = ref
   const ref1 = useRef<HTMLDivElement>(null)
 
   const [elementState, setElementState] = useState({
@@ -371,6 +372,7 @@ function App() {
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
+            id="father"
             className="flex"
             style={{
               backgroundColor: 'rgba(173, 216, 230, 0.2)',
