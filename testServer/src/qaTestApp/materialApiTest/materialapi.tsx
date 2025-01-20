@@ -12,6 +12,14 @@ function App() {
   const [classNames, setClassNames] = useState(
     'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
   )
+  const [selectedRefMaterial, setSelectedRefMaterial] = useState('default')
+  const [selectedClassNameMaterial, setSelectedClassNameMaterial] =
+    useState('default')
+  const [selectedInlineMaterial, setSelectedInlineMaterial] = useState('none')
+  const [style, setStyle] = useState<CSSProperties>({
+    '--xr-back': '100',
+  } as CSSProperties)
+
   const removeStyleAttribute = () => {
     if (ref.current) {
       // remove --xr-background-material style property
@@ -32,85 +40,48 @@ function App() {
     updateElementState()
   }, [ref.current])
 
-  const testDefaultMatRef = () => {
+  const applyRefMaterial = () => {
     if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'default'
-    setTestName('test default Mat ref')
+    ;(ref.current.style as any)['--xr-background-material'] =
+      selectedRefMaterial
+    setTestName(`test ${selectedRefMaterial} Mat ref`)
     updateElementState()
   }
 
-  const testThickMatRef = () => {
+  const applyClassNameMaterial = () => {
     if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'thick'
-    updateElementState()
-    setTestName('test thick Mat ref')
+    let newClassNames =
+      'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
+    if (selectedClassNameMaterial === 'default') {
+      newClassNames = 'defaultMat ' + newClassNames
+    } else if (selectedClassNameMaterial === 'thick') {
+      newClassNames = 'thickMat ' + newClassNames
+    } else if (selectedClassNameMaterial === 'regular') {
+      newClassNames = 'regularMat ' + newClassNames
+    } else if (selectedClassNameMaterial === 'thin') {
+      newClassNames = 'thinMat ' + newClassNames
+    }
+    setClassNames(newClassNames)
+    console.log(`${selectedClassNameMaterial}Mat classNames: ` + classNames)
+    setTestName(`test ${selectedClassNameMaterial} Mat className`)
   }
 
-  const testRegularMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'regular'
-    updateElementState()
-    setTestName('test regular Mat ref')
-  }
-
-  const testThinMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'thin'
-    updateElementState()
-    setTestName('test thin Mat ref')
-  }
-
-  const testDefaultMatClassName = () => {
-    if (!ref.current) return
-    // (ref.current.style as any)['--xr-background-material'] = 'none'
-
-    setClassNames(
-      'defaultMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    console.log('DefaultMat classNames: ' + classNames)
-    setTestName('test Default Mat className')
-  }
-
-  const testRegularMatClassName = () => {
-    // if (!ref.current) return
-    // (ref.current.style as any)['--xr-background-material'] = 'none'
-    setClassNames(
-      'regularMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('RegularMat classNames: ' + classNames)
-    setTestName('test Regular Mat className')
-  }
-
-  const testThickMatClassName = () => {
-    // if (!ref.current) return
-    setClassNames(
-      'thickMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('ThickMat classNames: ' + classNames)
-    setTestName('test Thick Mat className')
-  }
-
-  const testThinMatClassName = () => {
-    // if (!ref.current) return
-    setClassNames(
-      'thinMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('ThinMat classNames: ' + classNames)
-    setTestName('test Thin Mat className')
+  const applyInlineStyleMaterial = () => {
+    const material = selectedInlineMaterial
+    const newStyle: CSSProperties = {
+      '--xr-back': '100',
+      ...(material !== 'none' && { '--xr-background-material': material }),
+    }
+    setStyle(newStyle)
+    setTestName(`test ${material} Mat inline`)
   }
 
   const resetStyles = () => {
     if (!ref.current) return
-    // ref.current.removeAttribute('style')
     removeStyleAttribute()
-    // ;(ref.current.style as any)['--xr-background-material'] = 'none'  // maybe bug this cannot be used together with className
     ref.current.className =
       'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
-    console.log('ResetMat classNames: ' + classNames)
-    // updateElementState()
+    console.log('ResetMat classNames:' + classNames)
     setTestName('testName')
   }
 
@@ -128,10 +99,7 @@ function App() {
       </h1>
       {/* 导航栏 */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
-        <a
-          href="/testServer/public"
-          className="hover:text-blue-400 transition-colors"
-        >
+        <a href="/" className="hover:text-blue-400 transition-colors">
           返回主页
         </a>
         <a
@@ -145,96 +113,112 @@ function App() {
 
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[100px] flex items-center justify-center">
-          <div
-            enable-xr
-            style={{
-              '--xr-back': 100,
-            }}
-            ref={ref}
-            // className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300"
-            className={classNames}
-          >
+          <div enable-xr style={style} ref={ref} className={classNames}>
             <center>{testName}</center>
           </div>
         </div>
 
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-4">
+          {/* Ref Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
             <div
               enable-xr
               style={{
                 '--xr-background-material': 'default',
               }}
-              className="p-2 text-white rounded-lg transition-colors col-span-2"
+              className="p-2 text-white rounded-lg transition-colors"
             >
-              <center>ref test</center>
+              <center>Ref Test</center>
             </div>
-            <button
-              onClick={testDefaultMatRef}
-              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Glass Material ref
-            </button>
-            <button
-              onClick={testThickMatRef}
-              className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-            >
-              Thick Material ref
-            </button>
-            <button
-              onClick={testRegularMatRef}
-              className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              Regular Material
-            </button>
-            <button
-              onClick={testThinMatRef}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
-            >
-              Thin Material
-            </button>
-
-            <div
-              enable-xr
-              style={{
-                '--xr-background-material': 'default',
-              }}
-              className="p-2 text-white rounded-lg transition-colors col-span-2"
-            >
-              <center>class name test</center>
+            <div className="mt-4">
+              <select
+                value={selectedRefMaterial}
+                onChange={e => setSelectedRefMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyRefMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
             </div>
-            <button
-              onClick={testDefaultMatClassName}
-              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Glass Material ClassName
-            </button>
-            <button
-              onClick={testThickMatClassName}
-              className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-            >
-              Thick Material ClassName
-            </button>
-            <button
-              onClick={testRegularMatClassName}
-              className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              Regular Material ClassName
-            </button>
-            <button
-              onClick={testThinMatClassName}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
-            >
-              Thin Material ClassName
-            </button>
-
-            <button
-              onClick={resetStyles}
-              className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
-            >
-              Reset Material
-            </button>
           </div>
+
+          {/* Class Name Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>Class Name Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                value={selectedClassNameMaterial}
+                onChange={e => setSelectedClassNameMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyClassNameMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          {/* In-line Style Test */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>In-line Style Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                onChange={e => setSelectedInlineMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyInlineStyleMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* Reset Button */}
+        <div className="flex items-center justify-end">
+          <button
+            onClick={resetStyles}
+            className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          >
+            Reset Material
+          </button>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg">
