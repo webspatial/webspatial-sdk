@@ -429,6 +429,8 @@ export function PortalInstance(inProps: PortalInstanceProps) {
         headObserver,
       }
 
+      spatialWindowManager.setDebugName(debugName)
+
       return spawnedResult
     },
     [],
