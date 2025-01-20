@@ -279,7 +279,7 @@ export class SpatialSession {
 
   // Creates a window context object that is compatable with SpatialWindowComponent's setFromWindow API
   async createWindowContext() {
-    let openedWindow = window.open()
+    let openedWindow = window.open('webspatial://createWindowContext')
     if (WebSpatial.getBackend() != 'AVP') {
       // Currently there is a bug with webview which requires us to trigger a navigation before native code can interact with created webview
       var counter = 0
