@@ -277,8 +277,8 @@ function App() {
     // const currentClassNone = ref.current.className
     // console.log('更新为空后 当前class:', currentClassNone)
     updateElementState(ref)
-    // ref.current.classList.add('translate-y-8')
-    // updateElementState(ref)
+    ref.current.classList.add('translate-y-8')
+    updateElementState(ref)
 
     setTimeout(() => {
       if (ref.current) {
@@ -311,21 +311,35 @@ function App() {
       }, 2000)
     }, 2000)
   }
-
-  const testDimensionStyles = () => {
-    if (!ref.current) return
-    ref.current.style.fontSize = '2rem'
-    ref.current.style.width = '200px'
-    ref.current.style.height = '200px'
+  // 测试Test Element1 元素clas list单个操作
+  const ClassListTest = () => {
+    if (!ref1.current) return
+    ref1.current.style.fontSize = '2rem'
+    ref1.current.style.width = '200px'
+    ref1.current.style.height = '200px'
     updateElementState(ref)
+    ref1.current.classList.add('translate-y-8')
+    updateElementState(ref1)
   }
 
   const resetStyles = () => {
     if (!ref.current) return
     ref.current.removeAttribute('style')
+    ref.current.removeAttribute('class')
+    console.log('移除Element classList:', ref.current.classList.value)
     // ref.current.className =
     //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref)
+  }
+  const resetStyles1 = () => {
+    if (!ref1.current) return
+    ref1.current.removeAttribute('style')
+    // ref1.current.classList.remove('translate-y-8')
+    ref1.current.removeAttribute('class')
+    console.log('移除Element1 classList:', ref1.current.classList.value)
+    // ref.current.className =
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
+    updateElementState(ref1)
   }
 
   return (
@@ -352,15 +366,15 @@ function App() {
           <div className="flex">
             <div
               enable-xr
-              ref={ref}
               className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              ref={ref}
             >
               Test Element
             </div>
             <div
               enable-xr
-              ref={ref1}
               className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
+              ref={ref1}
             >
               Test Element1
             </div>
@@ -581,16 +595,22 @@ function App() {
               Class Operations Test
             </button>
             <button
-              onClick={testDimensionStyles}
+              onClick={ClassListTest}
               className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
             >
-              Dimension Style Test
+              ClassList Test
             </button>
             <button
               onClick={resetStyles}
               className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
             >
-              Reset Styles
+              Reset Element
+            </button>
+            <button
+              onClick={resetStyles1}
+              className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
+            >
+              Reset Element1
             </button>
           </div>
         </div>
