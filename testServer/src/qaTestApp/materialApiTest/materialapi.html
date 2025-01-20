@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark"
-      style="background-color: #99777700; border-radius: 10%;">
+      style="background-color: #99777700; --xr-background-material: thick; border-radius: 10%;">
 <head>
   <meta charset="UTF-8">
   <title>DOM API Testing</title>
@@ -11,6 +11,10 @@
       @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-20px); }
+      }
+
+      html {
+          --xr-background-material: default;
       }
 
       .animated {
