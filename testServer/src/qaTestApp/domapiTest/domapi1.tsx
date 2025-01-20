@@ -11,8 +11,8 @@ function App() {
     className: '',
   })
   const [elementState1, setElementState1] = useState({
-    style: '',
-    className: '',
+    style1: '',
+    className1: '',
   })
 
   const updateElementState = (
@@ -25,10 +25,20 @@ function App() {
       })
     }
   }
+  const updateElementState1 = (
+    ref: React.MutableRefObject<HTMLDivElement | null>,
+  ) => {
+    if (ref.current) {
+      setElementState1({
+        style1: ref.current.getAttribute('style') || 'None',
+        className1: ref.current.className || 'None',
+      })
+    }
+  }
 
   useEffect(() => {
     updateElementState(ref)
-    updateElementState(ref1)
+    updateElementState1(ref1)
   }, [ref, ref1])
 
   // 测试BorderRadius
@@ -127,7 +137,7 @@ function App() {
     if (ref.current) {
       ref.current.style.removeProperty('--xr-background-material')
       updateElementState(ref)
-      setBackgroundMaterialValue('default')
+      // setBackgroundMaterialValue('default')
     }
   }
   // 测试 Transform
@@ -227,7 +237,7 @@ function App() {
     console.log(zIndex1, ref1.current)
     // ref1.current.style.setProperty('z-Index',`${zIndex1}`)
     ref1.current.style.zIndex = zIndex1.toString()
-    updateElementState(ref1)
+    updateElementState1(ref1)
   }
   const handleZIndex1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setZIndex1(parseInt(event.target.value, 10))
@@ -246,7 +256,7 @@ function App() {
     if (ref1.current) {
       console.log('removeZIndex1', ref1.current)
       ref1.current.style.removeProperty('z-Index')
-      updateElementState(ref1)
+      updateElementState1(ref1)
     }
   }
 
@@ -292,11 +302,9 @@ function App() {
           if (ref.current) {
             ref.current.classList.toggle('translate-y-8')
             console.log('反转translate-y-8 class:', ref.current.classList.value)
-            ref.current.classList.toggle('translate-y-8')
-            console.log(
-              '再反转translate-y-8 class:',
-              ref.current.classList.value,
-            )
+            // 再次反转translate-y-8 class
+            // ref.current.classList.toggle('translate-y-8')
+            // console.log('再反转translate-y-8 class:', ref.current.classList.value)
             updateElementState(ref)
           }
         }, 2000)
@@ -524,8 +532,8 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <input
                   type="range"
-                  min="0"
-                  max="100"
+                  min="-10"
+                  max="10"
                   value={zIndex}
                   onChange={handleZIndexChange}
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -548,8 +556,8 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <input
                   type="range"
-                  min="0"
-                  max="100"
+                  min="-10"
+                  max="10"
                   value={zIndex1}
                   onChange={handleZIndex1Change}
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -597,8 +605,8 @@ Class Name: ${elementState.className}`
           </pre>
           <pre className="text-sm text-gray-300 whitespace-pre-wrap">
             {ref1.current
-              ? `Style: ${elementState1.style}
-Class Name: ${elementState1.className}`
+              ? `Style: ${elementState1.style1}
+Class Name: ${elementState1.className1}`
               : 'Element Not Loaded'}
           </pre>
         </div>
