@@ -56,6 +56,7 @@ function renderJSXPortalInstance(
     marginRight: '0px',
     marginTop: '0px',
     marginBottom: '0px',
+    borderRadius: '0px',
     overflow: '',
   }
   const elWHStyle = {
