@@ -97,12 +97,12 @@ function App() {
 
         <div className="bg-gray-800 p-4 rounded-lg">
           <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={testPositionInlineStyles}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
-            >
-              Dimension Style Test
-            </button>
+            {/*<button*/}
+            {/*  onClick={testPositionInlineStyles}*/}
+            {/*  className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"*/}
+            {/*>*/}
+            {/*  Dimension Style Test*/}
+            {/*</button>*/}
             <button
               onClick={resetStyles}
               className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
