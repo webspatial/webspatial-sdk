@@ -9,6 +9,10 @@ export class SpatialWindowManager {
   webview?: SpatialWindowComponent
   window: WindowProxy | null = null
 
+  setDebugName(debugName: string) {
+    this.entity?._setName(debugName)
+  }
+
   private async initInternal(url: string) {
     this.entity = await getSession()!.createEntity()
     this.webview = await getSession()!.createWindowComponent()

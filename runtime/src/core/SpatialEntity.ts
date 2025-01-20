@@ -109,4 +109,10 @@ export class SpatialEntity extends SpatialObject {
   isDestroyed() {
     return this._destroyed
   }
+
+  // Set Entity name. Currently for debugging only.
+  /** @hidden */
+  async _setName(name: string) {
+    return WebSpatial.updateResource(this._entity, { name })
+  }
 }
