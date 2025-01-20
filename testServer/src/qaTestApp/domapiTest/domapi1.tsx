@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { transform } from 'esbuild'
+import { enableDebugTool } from '@xrsdk/react'
+
+enableDebugTool()
 
 function App() {
   const ref = useRef<HTMLDivElement>(null)
