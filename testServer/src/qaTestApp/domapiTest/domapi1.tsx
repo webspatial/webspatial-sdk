@@ -266,45 +266,32 @@ function App() {
     // 读取class
     const currentClass = ref.current.className
     console.log('当前class:', currentClass)
-    ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 '
-    // // 读取class
-    const currentClassNew = ref.current.className
-    console.log('更新后当前class:', currentClassNew)
+    // ref.current.className =
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 '
+    // console.log('更新后当前class:', ref.current.className)
     // 元素class name 设为空字符串
     // ref.current.className = '' //元素class name 设为空字符串后，web端与avp文本内容颜色不一致，bug？
     // // 读取class
     // const currentClassNone = ref.current.className
     // console.log('更新为空后 当前class:', currentClassNone)
     updateElementState(ref)
-    ref.current.classList.add('translate-y-8')
-    updateElementState(ref)
 
     setTimeout(() => {
       if (ref.current) {
-        ref.current.classList.remove('translate-y-8')
-        console.log('移除translate-y-8 class:', ref.current.classList.value)
-        // ref.current.classList.value
+        ref.current.classList.add('translate-y-10', 'translate-x-8')
+        console.log('添加translate-y-8 class:', ref.current.classList.value)
         updateElementState(ref)
       }
       setTimeout(() => {
         if (ref.current) {
-          ref.current.classList.add('translate-y-8')
-          console.log('添加translate-y-8 class:', ref.current.classList.value)
-          ref.current.classList.replace('translate-y-8', 'translate-x-8')
-          console.log(
-            '替换translate-y-8为translate-x-8 class:',
-            ref.current.classList.value,
-          )
+          ref.current.classList.remove('translate-y-10')
+          console.log('移除translate-y-8 class:', ref.current.classList.value)
           updateElementState(ref)
         }
         setTimeout(() => {
           if (ref.current) {
             ref.current.classList.toggle('translate-y-8')
             console.log('反转translate-y-8 class:', ref.current.classList.value)
-            // 再次反转translate-y-8 class
-            // ref.current.classList.toggle('translate-y-8')
-            // console.log('再反转translate-y-8 class:', ref.current.classList.value)
             updateElementState(ref)
           }
         }, 2000)
@@ -314,19 +301,37 @@ function App() {
   // 测试Test Element1 元素clas list单个操作
   const ClassListTest = () => {
     if (!ref1.current) return
-    ref1.current.style.fontSize = '2rem'
-    ref1.current.style.width = '200px'
-    ref1.current.style.height = '200px'
-    updateElementState(ref)
-    ref1.current.classList.add('translate-y-8')
+    // ref1.current.style.fontSize = '2rem'
+    // ref1.current.style.width = '200px'
+    // ref1.current.style.height = '200px'
+    // updateElementState(ref1)
+
+    //添加类名
+    // ref1.current.classList.add('translate-y-8')
+    // console.log('添加translate-y-8 class:',ref1.current, ref1.current.classList.value)
+    // updateElementState(ref1)
+
+    //移除类名
+    // ref1.current.classList.remove('translate-y-10')
+    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
+    // updateElementState(ref1)
+
+    //替换类名
+    // ref1.current.classList.replace('translate-y-10','translate-y-8')
+    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
+    // updateElementState(ref1)
+
+    //反转类名
+    ref1.current.classList.toggle('translate-y-8')
+    console.log('反转translate-y-8 class:', ref1.current.classList.value)
     updateElementState(ref1)
   }
 
   const resetStyles = () => {
     if (!ref.current) return
     ref.current.removeAttribute('style')
-    ref.current.removeAttribute('class')
-    console.log('移除Element classList:', ref.current.classList.value)
+    // ref.current.removeAttribute('class')
+    // console.log('移除Element classList:', ref.current.classList.value)
     // ref.current.className =
     //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref)
@@ -363,10 +368,17 @@ function App() {
 
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
-          <div className="flex">
+          <div
+            className="flex"
+            style={{
+              backgroundColor: 'rgba(173, 216, 230, 0.2)',
+              padding: '30px',
+            }}
+          >
             <div
               enable-xr
               className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值
               ref={ref}
             >
               Test Element
@@ -374,6 +386,8 @@ function App() {
             <div
               enable-xr
               className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
+              // style={{ color: 'blue' }} // 测试 style样式优先级
+              // className="text-red-500" // 测试 style样式优先级
               ref={ref1}
             >
               Test Element1
