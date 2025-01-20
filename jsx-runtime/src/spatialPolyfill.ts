@@ -170,12 +170,22 @@ function checkCSSProperties() {
   checkHtmlVisible()
 }
 
+function hijackGetComputedStyle() {
+  const rawFn = window.getComputedStyle.bind(window)
+  window.getComputedStyle = (element, pseudoElt) => {
+    if ((element as any).__isSpatialDiv) {
+      return (element as any).__getComputedStyle(rawFn, pseudoElt)
+    }
+    return rawFn(element, pseudoElt)
+  }
+}
+
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
   checkCSSProperties()
-
+  hijackGetComputedStyle()
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
 }
