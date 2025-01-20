@@ -180,6 +180,13 @@ export function useHijackSpatialDivRef(
 
             if (typeof target[prop as keyof HTMLElement] === 'function') {
               return function (this: any, ...args: any[]) {
+                if ('removeAttribute' === prop) {
+                  const [property] = args
+                  if (property === 'style') {
+                    domStyleProxy.cssText = ''
+                    return true
+                  }
+                }
                 return (target[prop as keyof HTMLElement] as Function)(...args)
               }
             }
@@ -190,6 +197,10 @@ export function useHijackSpatialDivRef(
             if (ref.current) {
               if (prop === 'className') {
                 ref.current.className = value + ' ' + InjectClassName
+              }
+              if (prop === 'style') {
+                domStyleProxy.cssText = joinToCSSText(value)
+                return true
               }
             }
 
