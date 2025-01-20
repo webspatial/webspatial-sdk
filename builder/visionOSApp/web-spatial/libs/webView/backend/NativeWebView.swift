@@ -5,6 +5,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import RealityKitContent
@@ -20,10 +21,20 @@ class WebViewHolder {
     }
 }
 
+var jsFileCache = [String: String]()
+
 struct PreloadStyleSettings: Codable {
     var cornerRadius: CornerRadius? = .init()
     var backgroundMaterial: BackgroundMaterial? = .None
 }
+
+struct WebviewEarlyStyle {
+    let webview: WKWebView
+    let style: PreloadStyleSettings
+}
+
+// event of forcestyle handler
+var webviewGetEarlyStyleData = PassthroughSubject<WebviewEarlyStyle, Never>()
 
 class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     let decoder = JSONDecoder()
@@ -41,7 +52,9 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                     .components(separatedBy: "?").first
             }
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
-            webViewRef?.didGetEarlyStyle(style: styleToSet)
+
+            webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
+
             // Respond with empty css file
             let response = ".ignoreThis{}".data(using: .utf8)
             let mimeType = "text/css"
@@ -116,10 +129,31 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
+        // check url
+        guard let url = navigationAction.request.url else {
+            return nil
+        }
+
+        // TODO: pwa logic
+
         let wvNative = WebViewNative()
+
+        // TODO: read w/h and set windowGroup
         _ = wvNative.createResources(configuration: configuration)
-        webViewRef!.didSpawnWebView(wv: wvNative)
+
+        if url.scheme == "webspatial" && url.host == "createWindowContext" {
+            webViewRef!.didSpawnWebView(wv: wvNative)
+        } else {
+            // create root for it
+            webViewRef!.createRoot(wv: wvNative)
+        }
+
         return wvNative.webViewHolder.appleWebView
+    }
+
+    // handle close
+    func webViewDidClose(_ webView: WKWebView) {
+        webViewRef!.didCloseWebView()
     }
 
     // receive message from wkwebview
@@ -160,6 +194,25 @@ struct WebViewNative: UIViewRepresentable {
         let c = Coordinator()
         c.webViewRef = webViewRef
         return c
+    }
+
+    func readJSFile(named fileName: String) -> String {
+        if let cachedContent = jsFileCache[fileName] {
+            return cachedContent
+        }
+        if let filePath = Bundle.main.path(forResource: fileName, ofType: "js") {
+            do {
+                let content = try String(contentsOfFile: filePath, encoding: .utf8)
+                jsFileCache[fileName] = content
+                return content
+            } catch {
+                print("Error reading \(fileName).js: \(error)")
+                return ""
+            }
+        } else {
+            print("\(fileName).js not found")
+            return ""
+        }
     }
 
     func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {

@@ -10,6 +10,7 @@ import Foundation
 import RealityKit
 import SwiftUI
 import SwiftyBeaver
+import WebKit
 
 let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
 
@@ -56,6 +57,9 @@ class SpatialWindowComponent: SpatialComponent {
         }
         return inspectInfo
     }
+
+    // if this is root
+    var isRoot = false
 
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
@@ -289,6 +293,54 @@ class SpatialWindowComponent: SpatialComponent {
         spawnedNativeWebviews[uuid] = wv
     }
 
+    func createRoot(wv: WebViewNative) {
+        let windowGroupID = UUID().uuidString
+        // open window
+        let wgd = WindowGroupData(
+            windowStyle: "Plain",
+            windowGroupID: windowGroupID
+        )
+        let ent = SpatialEntity()
+        ent.coordinateSpace = CoordinateSpaceMode.ROOT
+        let windowComponent = SpatialWindowComponent(
+            parentWindowGroupID: windowGroupID
+        )
+
+        windowComponent.getView()!.destroy()
+        windowComponent.setView(wv: wv)
+        windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+
+        windowComponent.isRoot = true // register close
+
+        ent.addComponent(windowComponent)
+
+        let plainDV = WindowGroupPlainDefaultValues(
+            defaultWindowGroupConfig
+        )
+
+        let wg = SpatialWindowGroup
+            .getOrCreateSpatialWindowGroup(windowGroupID)
+
+        wg!.wgd = wgd
+        ent.setParentWindowGroup(wg: wg)
+
+        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
+            WindowGroupMgr.Instance.update(plainDV) // set default values
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                pwg.openWindowData.send(wgd) // openwindow
+            }
+        }
+    }
+
+    func didCloseWebView() {
+        // if need
+        if isRoot,
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID)
+        {
+            wg.closeWindowData.send(wg.wgd!)
+        }
+    }
+
     func didStartReceivePageContent() {}
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
@@ -316,5 +368,9 @@ class SpatialWindowComponent: SpatialComponent {
             //   print("Didn't get SwiftUI styles prior to page finish load")
         }
         isLoading = false
+    }
+
+    override func onDestroy() {
+        didCloseWebView()
     }
 }

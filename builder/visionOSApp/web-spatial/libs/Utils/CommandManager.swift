@@ -30,7 +30,6 @@ class CommandManager {
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
         _ = registerCommand(name: "setLogLevel", action: setLogLevel)
-        _ = registerCommand(name: "scene", action: handleScene)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -185,10 +184,6 @@ class CommandManager {
 
     private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.setLogLevel(data: jsb.data!)
-    }
-
-    private func handleScene(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.handleScene(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 }
 
@@ -471,6 +466,9 @@ class CommandDataManager {
                 spatialWindowComponent.cornerRadius = cornerRadius
             }
             spatialWindowComponent.gotStyle = true
+            if let closeWindowGroupAfterWebviewClosed: Bool = data.update?.isRoot {
+                spatialWindowComponent.isRoot = closeWindowGroupAfterWebviewClosed
+            }
         }
         if !delayComplete {
             target.completeEvent(requestID: requestID)
@@ -483,10 +481,27 @@ class CommandDataManager {
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
             // Force window group creation to happen now so it can be accessed after complete event returns
-            _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+            let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+            wg!.wgd = wgd
+
+            if let config = data.sceneData?.sceneConfig {
+                let plainDV = WindowGroupPlainDefaultValues(
+                    defaultSize: CGSize(
+                        width: config.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
+                        height: config.defaultSize?.height ?? DefaultPlainWindowGroupSize.height
+                    ),
+                    windowResizability: getWindowResizability(
+                        config.resizability
+                    )
+                )
+                WindowGroupMgr.Instance.update(plainDV)
+            } else {
+                // old
+                target.setWindowGroup(uuid: uuid, wgd: wgd)
+            }
 
             SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
-            target.setWindowGroup(uuid: uuid, wgd: wgd)
+
             target.completeEvent(requestID: requestID, data: "{createdID: '" + uuid + "'}")
         }
     }
@@ -499,126 +514,6 @@ class CommandDataManager {
             wg.setSize.send(target.loadingStyles.windowGroupSize)
         }
         target.completeEvent(requestID: requestID)
-    }
-
-    public func handleScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
-        // Extract the method and parameters from data
-        guard let method = data.sceneData?.method else {
-            target.failEvent(requestID: requestID)
-            return
-        }
-
-        // Switch based on the method name
-        switch method {
-        case "open":
-            if let sceneName = data.sceneData?.sceneName,
-               let url = data.sceneData?.url
-            {
-                let success = SceneMgr.Instance.open(
-                    sceneName: sceneName,
-                    url: url,
-                    from: target
-                )
-
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
-                }
-
-            } else {
-                target.failEvent(requestID: requestID, data: "sceneName is required")
-            }
-        case "close":
-            if let sceneName = data.sceneData?.sceneName {
-                let success = SceneMgr.Instance.close(sceneName: sceneName)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
-                }
-
-            } else {
-                target.failEvent(requestID: requestID, data: "sceneName is required")
-            }
-        case "getConfig":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to get specific scene config
-                let config = SceneMgr.Instance.getConfig(
-                    sceneName: sceneName
-                )
-                if config != nil,
-                   let ans = JsonParser.serialize(config)
-                {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.completeEvent(requestID: requestID, data: "null")
-                }
-
-            } else {
-                // Call logic to get all scene configs
-                let configs = SceneMgr.Instance.getConfig()
-                if configs.count > 0,
-                   let ans = JsonParser.serialize(configs)
-                {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.completeEvent(requestID: requestID, data: "null")
-                }
-            }
-        case "setConfig":
-            if let sceneName = data.sceneData?.sceneName,
-               let sceneConfig = data.sceneData?.sceneConfig
-            {
-                // Call logic to set the scene config
-                let success = SceneMgr.Instance
-                    .setConfig(sceneName: sceneName, cfg: sceneConfig)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-
-            } else {
-                target.failEvent(requestID: requestID)
-            }
-        case "delConfig":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to remove the scene config
-                let success = SceneMgr.Instance
-                    .delConfig(sceneName: sceneName)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-            } else {
-                target.completeEvent(requestID: requestID)
-            }
-        case "getScene":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to get specific scene state
-                if let name = SceneMgr.Instance
-                    .getScene(sceneName: sceneName)
-                {
-                    target.completeEvent(requestID: requestID, data: "true")
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-
-            } else {
-                // Call logic to get all scenes with wgd
-                let scenes = SceneMgr.Instance.getScene()
-                if let ans = JsonParser.serialize(scenes) {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-            }
-        default:
-            // Handle unsupported method
-            target.completeEvent(requestID: requestID)
-        }
     }
 
     public func log(data: JSData) {
@@ -710,6 +605,7 @@ struct JSResourceData: Codable {
     var getBoundingBox: Bool?
     var zIndex: Double?
     var visible: Bool?
+    var isRoot: Bool?
     var name: String?
 }
 
@@ -753,4 +649,14 @@ struct JSEntityStyle: Codable {
     var cornerRadius: CornerRadius?
     var backgroundMaterial: BackgroundMaterial?
     var dimensions: JSVector2?
+}
+
+typealias Config = WindowGroupOptions
+
+struct SceneJSBData: Codable {
+    var method: String?
+    var sceneName: String?
+    var sceneConfig: Config?
+    var url: String?
+    var windowID: String?
 }

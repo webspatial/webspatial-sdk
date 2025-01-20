@@ -75,6 +75,17 @@ export class SpatialWindowComponent extends SpatialComponent {
   }
 
   /**
+   *
+   * Sets webview close behavior
+   * @param {boolean} b
+   */
+  async setIsRoot(b: boolean) {
+    await WebSpatial.updateResource(this._resource, {
+      isRoot: b,
+    })
+  }
+
+  /**
    * Sets the style that should be applied to the window
    * @param options style options
    */

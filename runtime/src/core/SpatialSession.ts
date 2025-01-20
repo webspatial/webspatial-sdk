@@ -2,7 +2,7 @@ import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { WindowStyle } from './types'
+import { WindowGroupOptions, WindowStyle } from './types'
 
 import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
 import {
@@ -151,8 +151,10 @@ export class SpatialSession {
    * Creates a WindowGroup
    * @returns WindowGroup
    */
-  async createWindowGroup(style: WindowStyle = 'Plain') {
-    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
+  async createWindowGroup(style: WindowStyle = 'Plain', cfg = {}) {
+    return new SpatialWindowGroup(
+      await WebSpatial.createWindowGroup(style, cfg),
+    )
   }
 
   /**
@@ -329,5 +331,41 @@ export class SpatialSession {
     entity.transform.scale.z = parseFloat(sz)
 
     return entity
+  }
+
+  async spatialOpen(url: string, config: WindowGroupOptions) {
+    // todo: check scope
+    var wg = await this.createWindowGroup('Plain', {
+      sceneData: {
+        sceneConfig: config,
+      },
+    })
+    await wg.setStyle({ dimensions: { x: 300, y: 500 } })
+
+    var ent = await this.createEntity()
+    ent.transform.position.x = 0
+    ent.transform.position.y = 0
+    ent.transform.position.z = 0
+    await ent.updateTransform()
+
+    var wc = await this.createWindowComponent(wg)
+
+    await wc.loadURL(url)
+
+    await wc.setIsRoot(true) // fixme:
+
+    // wc.setDismissWindowGroupOnWebviewClose(true)
+
+    await ent.setCoordinateSpace('Root')
+    await ent.setComponent(wc)
+
+    await ent.setParentWindowGroup(wg)
+
+    const ans = {
+      async close() {
+        await wc.destroy()
+      },
+    }
+    return ans
   }
 }
