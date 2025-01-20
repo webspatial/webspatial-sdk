@@ -119,8 +119,26 @@ function hijackDocumentElementStyle() {
 
       return ret
     },
-    get: function (target, key) {
-      return Reflect.get(target, key)
+    get: function (target, prop: string) {
+      if (typeof target[prop as keyof CSSStyleDeclaration] === 'function') {
+        return function (this: any, ...args: any[]) {
+          if (prop === 'setProperty') {
+            const [property, value] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle(value)
+            }
+          } else if (prop === 'removeProperty') {
+            const [property] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle('none')
+            }
+          }
+          return (target[prop as keyof CSSStyleDeclaration] as Function)(
+            ...args,
+          )
+        }
+      }
+      return Reflect.get(target, prop)
     },
   })
   Object.defineProperty(document.documentElement, 'style', {
