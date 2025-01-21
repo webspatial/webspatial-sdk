@@ -128,23 +128,15 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         // check url
-        guard let url = navigationAction.request.url else {
-            return nil
+        if let url = navigationAction.request.url {
+            // TODO: pwa logic
         }
-
-        // TODO: pwa logic
 
         let wvNative = WebViewNative()
 
-        // TODO: read w/h and set windowGroup
         _ = wvNative.createResources(configuration: configuration)
 
-        if url.scheme == "webspatial" && url.host == "createWindowContext" {
-            webViewRef!.didSpawnWebView(wv: wvNative)
-        } else {
-            // create root for it
-            webViewRef!.createRoot(wv: wvNative)
-        }
+        webViewRef!.didSpawnWebView(wv: wvNative)
 
         return wvNative.webViewHolder.appleWebView
     }

@@ -6,6 +6,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import SwiftUI
@@ -141,6 +142,8 @@ class SpatialWindowComponent: SpatialComponent {
     var loadingStyles = LoadingStyles()
     var isLoading = true
 
+    private var cancellables = Set<AnyCancellable>() // save subscriptions
+
     init(parentWindowGroupID: String) {
 //        wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
@@ -148,6 +151,7 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
     }
 
     init(parentWindowGroupID: String, url: URL) {
@@ -158,12 +162,24 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
     }
 
     func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
+    }
+
+    func registerForceStyle() {
+        webviewGetEarlyStyleData.sink { [weak self] event in
+            if self?.getView()?.webViewHolder.appleWebView == event.webview {
+                // matched swc should handle the force style
+                self?.didGetEarlyStyle(style: event.style)
+            }
+
+        }.store(in: &cancellables)
     }
 
     func navigateToURL(url: URL) {
@@ -242,6 +258,7 @@ class SpatialWindowComponent: SpatialComponent {
     deinit {
 //        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
+        cancellables.removeAll()
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {

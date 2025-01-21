@@ -477,13 +477,12 @@ class CommandDataManager {
 
     public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
-            let uuid = UUID().uuidString
-            let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
+            // windowID exist in SWC
 
-            // Force window group creation to happen now so it can be accessed after complete event returns
-            let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
-            wg!.wgd = wgd
+            // TODO: check url scope
+            // if not in scope open in safari
 
+            // setup windowGroup defaultValues
             if let config = data.sceneData?.sceneConfig {
                 let plainDV = WindowGroupPlainDefaultValues(
                     defaultSize: CGSize(
@@ -495,10 +494,32 @@ class CommandDataManager {
                     )
                 )
                 WindowGroupMgr.Instance.update(plainDV)
-            } else {
-                // old
-                target.setWindowGroup(uuid: uuid, wgd: wgd)
             }
+
+            if data.sceneData?.method == "isRoot" {
+                if let windowID = data.sceneData?.windowID {
+                    // if windowID in spawned uuid, createRoot
+
+                    if let wv = target.spawnedNativeWebviews[windowID] {
+                        target.createRoot(wv: wv)
+                    } else {
+                        // TODO: search for the swc with windowID
+                        // call focusRoot
+                    }
+
+                    target.completeEvent(requestID: requestID, data: "")
+                    return
+                }
+            }
+
+            let uuid = UUID().uuidString
+            let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
+
+            // Force window group creation to happen now so it can be accessed after complete event returns
+            let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+            wg!.wgd = wgd
+
+            target.setWindowGroup(uuid: uuid, wgd: wgd)
 
             SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
 
