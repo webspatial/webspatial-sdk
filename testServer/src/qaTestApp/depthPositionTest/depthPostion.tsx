@@ -23,30 +23,43 @@ function App() {
     updateElementState(ref)
   }, [ref])
 
-  const styleOne = {
-    position: 'absolute',
-    width: '200px',
-    height: '78px',
-    top: '-5px',
-    backgroundColor: 'red',
-  }
-
   const containerStyle = {
+    '--xr-back': 10,
     position: 'relative',
+    // position: 'absolute',
     width: '500px',
     height: '300px',
     backgroundColor: 'rgba(173, 216, 230, 0.2)',
-    border: '1px solid black',
+    border: '1px solid red',
     margin: '50px auto',
   }
 
+  const styleOne = {
+    '--xr-back': 30,
+    position: 'absolute', //绝对定位（相对已定位的祖先元素定位）
+    // position: 'relative', //相对定位（相对其正常位置偏移）
+    // position: 'static',  //html顺序布局
+    // position: 'fixed',  //相对浏览器窗口定位
+    width: '200px',
+    height: '78px',
+    // top: '-25px',
+    right: '100px',
+    // bottom: '50px',
+    backgroundColor: 'red',
+    // border: '1px solid red',
+    zIndex: 11,
+  }
+
   const referenceStyle = {
-    position: 'absolute',
+    '--xr-back': 30,
+    // position: 'absolute',
+    // position: 'relative',
     width: '100px',
     height: '100px',
     backgroundColor: 'green',
-    top: '50px',
-    left: '50px',
+    // top: '50px',
+    // left: '50px',
+    zIndex: 13,
   }
 
   return (
@@ -69,11 +82,16 @@ function App() {
       </div>
 
       <div className="max-w-3xl mx-auto space-y-4">
-        <div style={containerStyle}>
-          <div style={referenceStyle}>参考元素</div>
+        <div enable-xr style={containerStyle}>
+          <div enable-xr style={referenceStyle}>
+            参考元素
+          </div>
           <div enable-xr style={styleOne} ref={ref}>
             one
           </div>
+          {/*<div enable-xr className="container">*/}
+          {/*  <div enable-xr className="reference">参考元素</div>*/}
+          {/*  <div enable-xr className="style-one" ref={ref}>one</div>*/}
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg">
