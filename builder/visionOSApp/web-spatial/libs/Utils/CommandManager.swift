@@ -297,6 +297,10 @@ class CommandDataManager {
                 return
             }
 
+            if let name = data.update?.name {
+                entity.name = name
+            }
+
             if let space: String = data.update?.setCoordinateSpace {
                 entity.coordinateSpace = .APP
                 if space == "Root" {
@@ -706,6 +710,7 @@ struct JSResourceData: Codable {
     var getBoundingBox: Bool?
     var zIndex: Double?
     var visible: Bool?
+    var name: String?
 }
 
 struct JSColor: Codable {
