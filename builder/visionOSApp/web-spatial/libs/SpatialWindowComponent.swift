@@ -9,7 +9,6 @@
 import Foundation
 import RealityKit
 import SwiftUI
-import SwiftyBeaver
 
 let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
 
