@@ -25,6 +25,7 @@ function simplifyEntityTree(rootTree: any) {
   function visitNode(node: any, parent: any) {
     let newNode = {
       id: node.id,
+      name: node.name,
       children: [],
       position: node.position,
       scale: node.scale,
