@@ -151,7 +151,17 @@ export class SpatialSession {
    * Creates a WindowGroup
    * @returns WindowGroup
    */
-  async createWindowGroup(style: WindowStyle = 'Plain', cfg = {}) {
+  async createWindowGroup(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData?: {
+        method?: string
+        sceneConfig?: WindowGroupOptions
+        url?: string
+        windowID?: string
+      }
+    } = {},
+  ) {
     return new SpatialWindowGroup(
       await WebSpatial.createWindowGroup(style, cfg),
     )
