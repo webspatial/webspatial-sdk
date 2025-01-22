@@ -7,7 +7,6 @@
 import Foundation
 import RealityKit
 import SwiftUI
-import SwiftyBeaver
 
 class CommandManager {
     static let Instance = CommandManager()
@@ -638,22 +637,7 @@ class CommandDataManager {
         }
     }
 
-    public func setLogLevel(data: JSData) {
-        if let logLevel: String = data.logLevel {
-            let levelDict = [
-                "DEBUG": SwiftyBeaver.Level.debug,
-                "ERROR": SwiftyBeaver.Level.error,
-                "TRACE": SwiftyBeaver.Level.verbose,
-                "WARN": SwiftyBeaver.Level.warning,
-                "INFO": SwiftyBeaver.Level.info,
-            ]
-            if let level = levelDict[logLevel] {
-                for destination in SwiftyBeaver.destinations {
-                    destination.minLevel = level
-                }
-            }
-        }
-    }
+    public func setLogLevel(data: JSData) {}
 }
 
 struct JSBCommand: Codable {
