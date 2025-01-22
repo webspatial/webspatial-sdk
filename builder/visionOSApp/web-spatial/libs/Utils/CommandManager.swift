@@ -482,34 +482,35 @@ class CommandDataManager {
             // TODO: check url scope
             // if not in scope open in safari
 
-            // setup windowGroup defaultValues
-            if let config = data.sceneData?.sceneConfig {
-                let plainDV = WindowGroupPlainDefaultValues(
-                    defaultSize: CGSize(
-                        width: config.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
-                        height: config.defaultSize?.height ?? DefaultPlainWindowGroupSize.height
-                    ),
-                    windowResizability: getWindowResizability(
-                        config.resizability
-                    )
-                )
-                WindowGroupMgr.Instance.update(plainDV)
-            }
+            let fakeData = "{createdID: 'uuid'}"
 
             if data.sceneData?.method == "createRoot" {
                 if let windowID = data.sceneData?.windowID {
                     // if windowID in spawned uuid, createRoot
 
-                    if let wv = target.spawnedNativeWebviews[windowID] {
-                        target.createRoot(wv: wv)
+                    if target.spawnedNativeWebviews[windowID] != nil {
+                        // setup windowGroup defaultValues
+                        if let config = data.sceneData?.sceneConfig {
+                            target.createRoot(windowID: windowID, config: config)
+                        } else {
+                            target.createRoot(windowID: windowID)
+                        }
+
                     } else {
                         // TODO: search for the swc with windowID
                         // call focusRoot
                     }
 
-                    target.completeEvent(requestID: requestID, data: "")
+                    target.completeEvent(requestID: requestID, data: fakeData)
                     return
                 }
+            } else if data.sceneData?.method == "showRoot" {
+                print("showRoot:", data.sceneData?.sceneConfig)
+                if let config = data.sceneData?.sceneConfig {
+                    target.showRoot(config: config)
+                }
+                target.completeEvent(requestID: requestID, data: fakeData)
+                return
             }
 
             let uuid = UUID().uuidString
@@ -672,12 +673,10 @@ struct JSEntityStyle: Codable {
     var dimensions: JSVector2?
 }
 
-typealias Config = WindowGroupOptions
-
 struct SceneJSBData: Codable {
     var method: String?
     var sceneName: String?
-    var sceneConfig: Config?
+    var sceneConfig: WindowGroupOptions?
     var url: String?
     var windowID: String?
 }

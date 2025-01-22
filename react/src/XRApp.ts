@@ -1,7 +1,7 @@
 import { WindowGroupOptions } from '@xrsdk/runtime/'
 import { getSession } from './utils/getSession'
 
-const defaultConfig: WindowGroupOptions = {
+export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {
     width: 900,
     height: 700,
@@ -27,10 +27,29 @@ export class XRApp {
   }
   private configMap: Record<string, WindowGroupOptions> = {} // name=>config
   private getConfig(name?: string) {
-    if (name === undefined) return defaultConfig
-    if (this.configMap[name]) return this.configMap[name]
-    return defaultConfig
+    if (name === undefined || !this.configMap[name]) return undefined
+    return this.configMap[name]
   }
+
+  // This not work for some reason, use raw JSB instead
+  // async show(windowID:string, cfg: WindowGroupOptions) {
+  //   try {
+  //     let session = getSession()!
+  //     await session.createWindowGroup(
+  //       'Plain', // only support Plain for now
+  //       {
+  //         sceneData: {
+  //           method: 'showRoot',
+  //           sceneConfig: cfg,
+  //           // url: url,
+  //           windowID
+  //         },
+  //       },
+  //     )
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // }
   open = (url?: string, target?: string, features?: string) => {
     const newWindow = originalOpen(url, target, features)
     if (url === CONTEXT_WINDOW_URL) return newWindow
@@ -85,7 +104,7 @@ export class XRApp {
     name: string,
     callback: (pre: WindowGroupOptions) => WindowGroupOptions,
   ) {
-    this.configMap[name] = callback({ ...defaultConfig })
+    this.configMap[name] = callback({ ...defaultSceneConfig })
   }
 }
 

@@ -17,8 +17,8 @@ import SwiftUI
 import UIKit
 
 // TODO: maybe get input from pwa manifest
-let defaultWindowGroupConfig = Config(
-    defaultSize: Config.Size(
+let defaultWindowGroupConfig = WindowGroupOptions(
+    defaultSize: WindowGroupOptions.Size(
         width: DefaultPlainWindowGroupSize.width,
         height: DefaultPlainWindowGroupSize.height
     ),

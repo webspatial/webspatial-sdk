@@ -144,6 +144,8 @@ class SpatialWindowComponent: SpatialComponent {
 
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
+    var onCreateRootFn: ((WindowGroupPlainDefaultValues, WindowGroupData) -> Void)?
+
     init(parentWindowGroupID: String) {
 //        wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
@@ -310,7 +312,7 @@ class SpatialWindowComponent: SpatialComponent {
         spawnedNativeWebviews[uuid] = wv
     }
 
-    func createRoot(wv: WebViewNative) {
+    func createRoot(windowID: String) {
         let windowGroupID = UUID().uuidString
         // open window
         let wgd = WindowGroupData(
@@ -323,16 +325,65 @@ class SpatialWindowComponent: SpatialComponent {
             parentWindowGroupID: windowGroupID
         )
 
-        windowComponent.getView()!.destroy()
-        windowComponent.setView(wv: wv)
-        windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+        if let spawnedWebView = spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+        } else {
+            print("no spawned")
+        }
+
+        windowComponent.isRoot = true // register close
+
+        ent.addComponent(windowComponent)
+
+        let wg = SpatialWindowGroup
+            .getOrCreateSpatialWindowGroup(windowGroupID)
+
+        wg!.wgd = wgd
+        ent.setParentWindowGroup(wg: wg)
+
+        windowComponent.onCreateRootFn = { value, wgd in
+            if let pwg = SpatialWindowGroup.getSpatialWindowGroup(
+                self.parentWindowGroupID
+            ) {
+                WindowGroupMgr.Instance.update(value) // set default values
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    pwg.openWindowData.send(wgd) // openwindow
+                }
+            }
+        }
+    }
+
+    func createRoot(windowID: String, config: WindowGroupOptions) {
+        let windowGroupID = UUID().uuidString
+        // open window
+        let wgd = WindowGroupData(
+            windowStyle: "Plain",
+            windowGroupID: windowGroupID
+        )
+        let ent = SpatialEntity()
+        ent.coordinateSpace = CoordinateSpaceMode.ROOT
+        let windowComponent = SpatialWindowComponent(
+            parentWindowGroupID: windowGroupID
+        )
+
+        if let spawnedWebView = spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+        }
 
         windowComponent.isRoot = true // register close
 
         ent.addComponent(windowComponent)
 
         let plainDV = WindowGroupPlainDefaultValues(
-            defaultWindowGroupConfig
+            config
         )
 
         let wg = SpatialWindowGroup
@@ -346,6 +397,19 @@ class SpatialWindowComponent: SpatialComponent {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pwg.openWindowData.send(wgd) // openwindow
             }
+        }
+    }
+
+    func showRoot(config: WindowGroupOptions) {
+        let plainDV = WindowGroupPlainDefaultValues(
+            config
+        )
+
+        if let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID),
+           let cb = onCreateRootFn
+        {
+            cb(plainDV, wg.wgd!)
+            onCreateRootFn = nil // reset
         }
     }
 
