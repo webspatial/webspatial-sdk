@@ -16,6 +16,15 @@ import Combine
 import SwiftUI
 import UIKit
 
+// TODO: maybe get input from pwa manifest
+let defaultWindowGroupConfig = WindowGroupOptions(
+    defaultSize: WindowGroupOptions.Size(
+        width: DefaultPlainWindowGroupSize.width,
+        height: DefaultPlainWindowGroupSize.height
+    ),
+    resizability: nil
+)
+
 struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowStyle: String
     let windowGroupID: String
@@ -28,9 +37,11 @@ struct WindowGroupPlainDefaultValues {
 
 // support WindowGroupOptions => WindowGroupPlainDefaultValues
 extension WindowGroupPlainDefaultValues {
-    init?(_ options: WindowGroupOptions) {
-        guard let defaultSize = options.defaultSize else { return nil }
-        self.defaultSize = CGSize(width: defaultSize.width, height: defaultSize.height)
+    init(_ options: WindowGroupOptions) {
+        defaultSize = CGSize(
+            width: options.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
+            height: options.defaultSize?.height ?? DefaultPlainWindowGroupSize.height
+        )
         windowResizability = getWindowResizability(options.resizability)
     }
 }
@@ -77,9 +88,8 @@ class WindowGroupMgr: ObservableObject {
     }
 
     func setToMainSceneCfg() {
-        if let cfg = WindowGroupPlainDefaultValues(pwaConfig.mainScene) {
-            update(cfg)
-        }
+        let cfg = WindowGroupPlainDefaultValues(pwaConfig.mainScene)
+        update(cfg)
     }
 
     func update(_ data: WindowGroupPlainDefaultValues) {
