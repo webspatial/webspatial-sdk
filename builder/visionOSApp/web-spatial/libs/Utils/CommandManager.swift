@@ -496,7 +496,7 @@ class CommandDataManager {
                 WindowGroupMgr.Instance.update(plainDV)
             }
 
-            if data.sceneData?.method == "isRoot" {
+            if data.sceneData?.method == "createRoot" {
                 if let windowID = data.sceneData?.windowID {
                     // if windowID in spawned uuid, createRoot
 

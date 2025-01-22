@@ -58,19 +58,11 @@ export class XRApp {
         } else {
           const cfg = this.getConfig(target)
           try {
-            console.log({
-              sceneData: {
-                method: 'isRoot',
-                sceneConfig: cfg,
-                url: url,
-                windowID: (newWindow as any)._webSpatialID,
-              },
-            })
             await session.createWindowGroup(
               'Plain', // only support Plain for now
               {
                 sceneData: {
-                  method: 'isRoot',
+                  method: 'createRoot',
                   sceneConfig: cfg,
                   url: url,
                   windowID: (newWindow as any)._webSpatialID,
@@ -78,7 +70,7 @@ export class XRApp {
               },
             )
             // remove config after use
-            if (typeof target === 'string' && target in this.configMap) {
+            if (typeof target === 'string' && this.configMap[target]) {
               delete this.configMap[target]
             }
           } catch (error) {
