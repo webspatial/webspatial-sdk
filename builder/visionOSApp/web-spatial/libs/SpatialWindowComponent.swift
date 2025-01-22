@@ -6,9 +6,12 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import SwiftUI
+import SwiftyBeaver
+import WebKit
 
 let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
 
@@ -59,6 +62,9 @@ class SpatialWindowComponent: SpatialComponent {
         }
         return inspectInfo
     }
+
+    // if this is root
+    var isRoot = false
 
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
@@ -140,6 +146,10 @@ class SpatialWindowComponent: SpatialComponent {
     var loadingStyles = LoadingStyles()
     var isLoading = true
 
+    private var cancellables = Set<AnyCancellable>() // save subscriptions
+
+    var onCreateRootFn: ((WindowGroupPlainDefaultValues, WindowGroupData) -> Void)?
+
     init(parentWindowGroupID: String) {
 //        wgManager.wvActiveInstances += 1
         self.parentWindowGroupID = parentWindowGroupID
@@ -147,6 +157,7 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
     }
 
     init(parentWindowGroupID: String, url: URL) {
@@ -157,12 +168,24 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
     }
 
     func initFromURL(url: URL) {
         webViewNative = WebViewNative(url: url)
         webViewNative?.webViewRef = self
         _ = webViewNative?.createResources()
+        registerForceStyle()
+    }
+
+    func registerForceStyle() {
+        webviewGetEarlyStyleData.sink { [weak self] event in
+            if self?.getView()?.webViewHolder.appleWebView == event.webview {
+                // matched swc should handle the force style
+                self?.didGetEarlyStyle(style: event.style)
+            }
+
+        }.store(in: &cancellables)
     }
 
     func navigateToURL(url: URL) {
@@ -241,6 +264,7 @@ class SpatialWindowComponent: SpatialComponent {
     deinit {
 //        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
+        cancellables.removeAll()
     }
 
     func completeEvent(requestID: Int, data: String = "{}") {
@@ -292,6 +316,105 @@ class SpatialWindowComponent: SpatialComponent {
         spawnedNativeWebviews[uuid] = wv
     }
 
+    func createRoot(windowID: String) {
+        let windowGroupID = UUID().uuidString
+        // open window
+        let wgd = WindowGroupData(
+            windowStyle: "Plain",
+            windowGroupID: windowGroupID
+        )
+        let ent = SpatialEntity()
+        ent.coordinateSpace = CoordinateSpaceMode.ROOT
+        let windowComponent = SpatialWindowComponent(
+            parentWindowGroupID: windowGroupID
+        )
+
+        if let spawnedWebView = spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+        } else {
+            print("no spawned")
+        }
+
+        windowComponent.isRoot = true // register close
+
+        ent.addComponent(windowComponent)
+
+        let wg = SpatialWindowGroup
+            .getOrCreateSpatialWindowGroup(windowGroupID)
+
+        wg!.wgd = wgd
+        ent.setParentWindowGroup(wg: wg)
+
+        windowComponent.onCreateRootFn = { value, wgd in
+            if let pwg = SpatialWindowGroup.getSpatialWindowGroup(
+                self.parentWindowGroupID
+            ) {
+                WindowGroupMgr.Instance.update(value) // set default values
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    pwg.openWindowData.send(wgd) // openwindow
+                }
+            }
+        }
+    }
+
+    func createRoot(windowID: String, config: WindowGroupOptions) {
+        let windowGroupID = UUID().uuidString
+        // open window
+        let wgd = WindowGroupData(
+            windowStyle: "Plain",
+            windowGroupID: windowGroupID
+        )
+        let ent = SpatialEntity()
+        ent.coordinateSpace = CoordinateSpaceMode.ROOT
+        let windowComponent = SpatialWindowComponent(
+            parentWindowGroupID: windowGroupID
+        )
+
+        if let spawnedWebView = spawnedNativeWebviews.removeValue(
+            forKey: windowID
+        ) {
+            windowComponent.getView()!.destroy()
+            windowComponent.setView(wv: spawnedWebView)
+            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+            // signal off hook
+            windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
+        }
+
+        windowComponent.isRoot = true // register close
+
+        ent.addComponent(windowComponent)
+
+        let plainDV = WindowGroupPlainDefaultValues(
+            config
+        )
+
+        let wg = SpatialWindowGroup
+            .getOrCreateSpatialWindowGroup(windowGroupID)
+
+        wg!.wgd = wgd
+        ent.setParentWindowGroup(wg: wg)
+
+        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
+            WindowGroupMgr.Instance.update(plainDV) // set default values
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                pwg.openWindowData.send(wgd) // openwindow
+            }
+        }
+    }
+
+    func didCloseWebView() {
+        // if need
+        if isRoot,
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID)
+        {
+            wg.closeWindowData.send(wg.wgd!)
+        }
+    }
+
     func didStartReceivePageContent() {}
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
@@ -319,5 +442,9 @@ class SpatialWindowComponent: SpatialComponent {
             //   print("Didn't get SwiftUI styles prior to page finish load")
         }
         isLoading = false
+    }
+
+    override func onDestroy() {
+        didCloseWebView()
     }
 }
