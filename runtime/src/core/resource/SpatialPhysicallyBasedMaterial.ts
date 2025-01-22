@@ -6,8 +6,17 @@ import { SpatialObject } from '../SpatialObject'
  * PBR material which can be set on a SpatialModelComponent
  */
 export class SpatialPhysicallyBasedMaterial extends SpatialObject {
+  /**
+   * Base color of the material containing rgba between 0 and 1
+   */
   baseColor = { r: 0.0, g: 0.7, b: 0.7, a: 1.0 }
+  /**
+   * PBR metalic value between 0 and 1
+   */
   metallic = { value: 0.5 }
+  /**
+   * PBR roughness value between 0 and 1
+   */
   roughness = { value: 0.5 }
 
   _modelComponentAttachedTo: { [key: string]: SpatialModelComponent } = {}
