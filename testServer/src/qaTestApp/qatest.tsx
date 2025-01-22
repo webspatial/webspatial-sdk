@@ -57,8 +57,16 @@ function App() {
           href="/src/qaTestApp/depthPositionTest/index.html"
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
-          <h2 className="text-xl font-bold mb-2">Depth Postion</h2>
+          <h2 className="text-xl font-bold mb-2">Depth Position</h2>
           <p className="text-sm opacity-80">测试SpatialDiv depth position</p>
+        </a>
+
+        <a
+          href="/src/qaTestApp/CssAPITest/cssapi.html"
+          className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
+        >
+          <h2 className="text-xl font-bold mb-2">CSS API Test</h2>
+          <p className="text-sm opacity-80">测试CSS API</p>
         </a>
       </div>
     </div>
