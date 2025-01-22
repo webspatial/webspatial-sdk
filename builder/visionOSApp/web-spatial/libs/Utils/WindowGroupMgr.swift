@@ -39,8 +39,8 @@ struct WindowGroupPlainDefaultValues {
 extension WindowGroupPlainDefaultValues {
     init(_ options: WindowGroupOptions) {
         defaultSize = CGSize(
-            width: defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
-            height: defaultSize?.height ?? DefaultPlainWindowGroupSize.height
+            width: options.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
+            height: options.defaultSize?.height ?? DefaultPlainWindowGroupSize.height
         )
         windowResizability = getWindowResizability(options.resizability)
     }
