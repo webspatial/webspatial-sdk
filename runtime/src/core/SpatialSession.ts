@@ -2,7 +2,7 @@ import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { WindowStyle } from './types'
+import { WindowGroupOptions, WindowStyle } from './types'
 
 import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
 import {
@@ -172,8 +172,20 @@ export class SpatialSession {
    * [TOOD] rename this to be more clear what it does
    * @returns WindowGroup
    */
-  async createWindowGroup(style: WindowStyle = 'Plain') {
-    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
+  async createWindowGroup(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData?: {
+        method?: string
+        sceneConfig?: WindowGroupOptions
+        url?: string
+        windowID?: string
+      }
+    } = {},
+  ) {
+    return new SpatialWindowGroup(
+      await WebSpatial.createWindowGroup(style, cfg),
+    )
   }
 
   /**
