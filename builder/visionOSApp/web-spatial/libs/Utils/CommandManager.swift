@@ -217,6 +217,12 @@ class CommandDataManager {
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
                 sr = SpatialViewComponent()
+            case "Model3DComponent":
+                let spatialModel3DComponent = SpatialModel3DComponent()
+                if let modelURL: String = data.params?.modelURL {
+                    spatialModel3DComponent.setURL(modelURL)
+                }
+                sr = spatialModel3DComponent
             case "ModelComponent":
                 if var modelURL: String = data.params?.modelURL {
                     modelURL = target.parseURL(url: modelURL)
@@ -377,6 +383,24 @@ class CommandDataManager {
                 }
             }
             spatialModelComponent.onUpdate()
+        } else if let spatialModel3DComponent = sr as? SpatialModel3DComponent {
+            if let resolution: JSVector2 = data.update?.resolution {
+                spatialModel3DComponent.resolutionX = resolution.x
+                spatialModel3DComponent.resolutionY = resolution.y
+            }
+
+            if let rotationAnchor = data.update?.rotationAnchor {
+                spatialModel3DComponent.rotationAnchor = UnitPoint3D(
+                    x: rotationAnchor.x,
+                    y: rotationAnchor.y,
+                    z: rotationAnchor.z
+                )
+            }
+
+            if let opacity = data.update?.opacity {
+                spatialModel3DComponent.opacity = opacity
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -436,14 +460,6 @@ class CommandDataManager {
             if let resolution: JSVector2 = data.update?.resolution {
                 spatialWindowComponent.resolutionX = resolution.x
                 spatialWindowComponent.resolutionY = resolution.y
-            }
-
-            if let rotationAnchor = data.update?.rotationAnchor {
-                spatialWindowComponent.rotationAnchor = UnitPoint3D(
-                    x: rotationAnchor.x,
-                    y: rotationAnchor.y,
-                    z: rotationAnchor.z
-                )
             }
 
             if let rotationAnchor = data.update?.rotationAnchor {
