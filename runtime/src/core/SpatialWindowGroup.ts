@@ -1,5 +1,8 @@
 import { WebSpatial, WindowGroup } from './private/WebSpatial'
 
+/**
+ * Anchored window managed by the OS
+ */
 export class SpatialWindowGroup {
   /** @hidden */
   constructor(

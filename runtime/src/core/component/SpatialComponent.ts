@@ -1,7 +1,14 @@
 import { WebSpatial, WebSpatialResource } from '../private/WebSpatial'
 import { SpatialEntity } from '../SpatialEntity'
 import { SpatialObject } from '../SpatialObject'
+
+/** @hidden */
 export class SpatialComponent extends SpatialObject {
+  /**
+   * Gets the entity this component is attached to
+   * [TODO] should this be removed?
+   * @returns entity or null
+   */
   async getEntity() {
     let reqResp: any = await WebSpatial.updateResource(
       WebSpatial.getCurrentWebPanel(),
