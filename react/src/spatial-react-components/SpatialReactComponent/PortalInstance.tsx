@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom'
 import { usePortalContainer } from './usePortalContainer'
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
 import { SpatialWindowManager } from './SpatialWindowManager'
-import { RectType, spatialStyleDef, vecType } from './types'
+
 import {
   domRect2rectType,
   getInheritedStyleProps,
@@ -23,6 +23,8 @@ import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
 import { CornerRadius } from '@xrsdk/runtime'
+import { RectType, vecType } from '../types'
+import { spatialStyleDef } from './types'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
