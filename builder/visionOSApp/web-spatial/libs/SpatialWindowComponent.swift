@@ -376,6 +376,8 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.destroy()
             windowComponent.setView(wv: spawnedWebView)
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+            // signal off hook
+            windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
         }
 
         windowComponent.isRoot = true // register close

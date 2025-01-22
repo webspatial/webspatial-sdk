@@ -10,6 +10,8 @@ export function injectSceneHook() {
     }
   }
   if (window.opener) {
+    // see this flag, we have done create the root scene
+    if ((window as any)._SceneHookOff) return
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
