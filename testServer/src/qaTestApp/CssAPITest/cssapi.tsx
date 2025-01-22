@@ -15,12 +15,18 @@ function App() {
   const [translateX, setTranslateX] = useState(0)
   const [rotateZ, setRotateZ] = useState(0)
   const [xrBack, setXrBack] = useState(0)
+  const [transformOrigin, setTransformOrigin] = useState('left top')
+  const [display, setDisplay] = useState('')
+  const [visibility, setVisibility] = useState('')
 
   const [style, setStyle] = useState<CSSProperties>({
     borderRadius: 40,
     opacity: opacity,
     '--xr-back': xrBack,
     transform: `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,
+    transformOrigin: transformOrigin,
+    display: display,
+    visibility: visibility,
   } as CSSProperties)
 
   const [elementState, setElementState] = useState({
@@ -46,7 +52,7 @@ function App() {
     })
   }
 
-  const applyInlineStyleBackgruond = () => {
+  const applyInlineStyleBackground = () => {
     setStyle({
       ...style,
       '--xr-background-material': `${backgroundMaterial}`,
@@ -58,6 +64,49 @@ function App() {
       ...style,
       transform: `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,
     })
+  }
+
+  const applyInlineStyleBlock = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const selectedDisplay = event.target.value
+    setDisplay(selectedDisplay)
+    setStyle({
+      ...style,
+      display: selectedDisplay,
+    })
+  }
+
+  const applyInlineStyleVisibility = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const selectedVisibility = event.target.value
+    setVisibility(selectedVisibility)
+    setStyle({
+      ...style,
+      visibility: selectedVisibility,
+    })
+  }
+
+  const applyInlineStyleTransformOrigin = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const selectedOrigin = event.target.value
+    setTransformOrigin(selectedOrigin)
+    setStyle({
+      ...style,
+      transformOrigin: selectedOrigin,
+    })
+    // if (!ref.current) return
+    // console.log('ref.current:', ref.current, selectedOrigin)
+    // // ref.current.style.transformOrigin = selectedOrigin //方式1
+    // ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`) //方式2
+    // // ref.current.style.setProperty('transform-Origin', `left`)
+    // // 获取当前的 TransformOrigin 值
+    // const currentTransformOrigin =
+    //   ref.current.style.getPropertyValue('transform-Origin')
+    // console.log('get transform value:', currentTransformOrigin)
+    // updateElementState(ref)
   }
 
   const updateElementState = (
@@ -223,7 +272,6 @@ function App() {
 
   //  测试transform-origin
   // 存储 transformOrigin 的值
-  const [transformOrigin, setTransformOrigin] = useState('left top')
 
   // 处理下拉框值变化的事件处理函数
   const handleTransformOriginChange = (
@@ -451,7 +499,7 @@ function App() {
 
         <div className="bg-gray-800 p-4 rounded-lg">
           <div className="grid grid-cols-2 gap-2">
-            {/*渲染BorderRadius*/}
+            {/*Opacity Test*/}
             <button
               onClick={applyInlineStyleOpacity}
               className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -477,6 +525,7 @@ function App() {
                 remove
               </button>
             </div>
+
             {/*渲染XrBack*/}
             <button
               onClick={applyInlineStyleXrBack}
@@ -502,9 +551,64 @@ function App() {
                 remove
               </button>
             </div>
+
+            {/*Display Test*/}
+            <button
+              onClick={applyInlineStyleOpacity}
+              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Display
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <select
+                value={display}
+                onChange={applyInlineStyleBlock}
+                className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
+                style={{ flex: 1 }}
+              >
+                <option value="none">none</option>
+                <option value="block">block</option>
+                <option value="">empty</option>
+              </select>
+              <button
+                onClick={removeBackgroundMaterial}
+                className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                style={{ width: '100px', marginLeft: '10px' }}
+              >
+                remove
+              </button>
+            </div>
+
+            {/*visibility Test*/}
+            <button
+              onClick={applyInlineStyleOpacity}
+              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Visibility
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <select
+                value={visibility}
+                onChange={applyInlineStyleVisibility}
+                className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
+                style={{ flex: 1 }}
+              >
+                <option value="visible">visible</option>
+                <option value="hidden">hidden</option>
+                <option value="">empty</option>
+              </select>
+              <button
+                onClick={removeBackgroundMaterial}
+                className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                style={{ width: '100px', marginLeft: '10px' }}
+              >
+                remove
+              </button>
+            </div>
+
             {/* 渲染 background-material */}
             <button
-              onClick={applyInlineStyleBackgruond}
+              onClick={applyInlineStyleBackground}
               className="p-2 bg-pink-500 hover:bg-pink-500 text-white rounded-lg transition-colors"
               style={{ flex: 1, marginRight: '10px' }}
             >
@@ -575,7 +679,7 @@ function App() {
                   className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
                   style={{ flex: 1, width: '250px' }}
                   value={transformOrigin}
-                  onChange={handleTransformOriginChange}
+                  onChange={applyInlineStyleTransformOrigin}
                 >
                   <option value="left">元素的左边缘: left</option>
                   <option value="right">元素的右边缘: right</option>
