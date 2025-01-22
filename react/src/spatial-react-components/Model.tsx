@@ -60,12 +60,14 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
   let session = getSession()
   if (!session) {
     useEffect(() => {
-      React.Children.forEach(props.children, async element => {
+      React.Children.toArray(props.children).some((element: any) => {
         var src = element.props.src as string
         var fileExt = src.split('.').pop()
         if (fileExt == 'glb' || fileExt == 'gltf') {
           setGlbSrc(src)
+          return true // exit early
         }
+        return false
       })
     }, [])
     return (
