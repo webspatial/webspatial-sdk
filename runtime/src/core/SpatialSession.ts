@@ -10,8 +10,8 @@ import {
   SpatialInputComponent,
   SpatialWindowComponent,
   SpatialViewComponent,
+  SpatialModel3DComponent,
 } from './component'
-import { SpatialObject } from './SpatialObject'
 
 class SpatialFrame {}
 
@@ -102,6 +102,24 @@ export class SpatialSession {
       opts,
     )
     return new SpatialModelComponent(entity)
+  }
+
+  /**
+   * Creates a Model3DComponent
+   * @returns Model3DComponent
+   */
+  async createModel3DComponent(options?: { url: string }) {
+    var opts = undefined
+    if (options) {
+      opts = { modelURL: options.url }
+    }
+    let entity = await WebSpatial.createResource(
+      'Model3DComponent',
+      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWebPanel(),
+      opts,
+    )
+    return new SpatialModel3DComponent(entity)
   }
 
   /**
