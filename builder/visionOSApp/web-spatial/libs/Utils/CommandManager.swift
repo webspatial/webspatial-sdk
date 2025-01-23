@@ -492,7 +492,8 @@ class CommandDataManager {
             // windowID exist in SWC
 
             // TODO: check url scope
-            // if not in scope open in safari
+            // in scope: the url is configured in manifest
+            // if not in scope, open in safari
 
             let fakeData = "{createdID: 'uuid'}"
 

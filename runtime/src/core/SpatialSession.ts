@@ -169,14 +169,23 @@ export class SpatialSession {
 
   /**
    * Creates a WindowGroup to display content within an anchored area managed by the OS
+   * By default, the windowGroup will act as children of current spatialWindowComponent.
+   * If the cfg param is provided, the windowGroup is standalone.
    * [TOOD] rename this to be more clear what it does
+   * @param {WindowStyle} [style='Plain'] - The style of the window to be created. Defaults to 'Plain'.
+   * @param {Object} [cfg={}] - Configuration object for the window group. If provided, the window group will be standalone.
+   * @param {Object} [cfg.sceneData] - Configuration for the scene data associated with the window group.
+   * @param {string} [cfg.sceneData.method] - The method to be used for loading the scene.
+   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - Configuration options for the scene.
+   * @param {string} [cfg.sceneData.url] - The URL to load the scene from.
+   * @param {string} [cfg.sceneData.windowID] - The ID of the window to be created.
    * @returns WindowGroup
    */
   async createWindowGroup(
     style: WindowStyle = 'Plain',
     cfg: {
       sceneData?: {
-        method?: string
+        method?: 'createRoot' | 'showRoot'
         sceneConfig?: WindowGroupOptions
         url?: string
         windowID?: string
