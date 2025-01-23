@@ -27,7 +27,7 @@ export interface SpatialReactComponentProps {
   debugShowStandardInstance?: boolean
 }
 
-export type SpatialReactComponentRef = ForwardedRef<HTMLElement>
+export type SpatialReactComponentRef = ForwardedRef<HTMLDivElement>
 
 export interface SpatialReactComponentWithUniqueIDProps
   extends SpatialReactComponentProps {
