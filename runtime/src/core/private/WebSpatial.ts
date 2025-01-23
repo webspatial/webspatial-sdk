@@ -133,7 +133,7 @@ export class WebSpatial {
       WebSpatial.sendCommand(cmd)
     })
     var res = new WindowGroup()
-    res.id = (result as any)?.data?.createdID
+    res.id = (result as any).data.createdID
     return res
   }
 
