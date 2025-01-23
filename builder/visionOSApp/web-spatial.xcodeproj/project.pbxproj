@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */; };
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
 		2B23CB3F2D0BEE6900E70D95 /* WindowGroupMgr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */; };
@@ -104,7 +103,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */,
-				2B0B1C0D2C49152B00E644F9 /* SwiftyBeaver in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,7 +275,6 @@
 			name = "web-spatial";
 			packageProductDependencies = (
 				2B2F1D682BEBFAAA006897EE /* RealityKitContent */,
-				2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */,
 			);
 			productName = "web-spatial";
 			productReference = 2B2F1D632BEBFAAA006897EE /* web-spatial.app */;
@@ -330,7 +327,6 @@
 			);
 			mainGroup = 2B2F1D5A2BEBFAAA006897EE;
 			packageReferences = (
-				2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
 			);
 			productRefGroup = 2B2F1D642BEBFAAA006897EE /* Products */;
 			projectDirPath = "";
@@ -664,22 +660,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftyBeaver/SwiftyBeaver";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.1;
-			};
-		};
+
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2B0B1C0C2C49152B00E644F9 /* SwiftyBeaver */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B0B1C0B2C49152B00E644F9 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
-			productName = SwiftyBeaver;
-		};
 		2B2F1D682BEBFAAA006897EE /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;
