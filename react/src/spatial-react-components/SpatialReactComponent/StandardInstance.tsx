@@ -88,7 +88,7 @@ export const StandardInstance = forwardRef(function (
     },
     set(target, prop, value, receiver) {
       if (prop === 'current') {
-        const domElement = value as HTMLElement
+        const domElement = value as HTMLDivElement
         if (refIn) {
           if (typeof refIn === 'function') {
             refIn(domElement)
