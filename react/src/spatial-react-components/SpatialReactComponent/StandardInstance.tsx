@@ -7,7 +7,7 @@ import React, {
   useContext,
   forwardRef,
 } from 'react'
-import { useForceUpdate } from './useForceUpdate'
+import { useForceUpdate } from '../hooks/useForceUpdate'
 import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceContext'
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialReactComponentRef } from './types'
