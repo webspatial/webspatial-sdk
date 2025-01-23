@@ -3,7 +3,7 @@ import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceCon
 import { getSession } from '../../utils/getSession'
 import { SpatialWindowManager } from './SpatialWindowManager'
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
-import { useForceUpdate } from './useForceUpdate'
+import { useForceUpdate } from '../hooks/useForceUpdate'
 
 type PortalContainerOption = {
   onContainerSpawned: (

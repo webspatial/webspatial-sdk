@@ -106,6 +106,14 @@ struct SpatialWebViewUI: View {
                             }
                         }
 
+                        // Model3D content
+                        ForEach(Array(childEntities.keys), id: \.self) { key in
+                            if let e = childEntities[key] {
+                                SpatialModel3DView(parentYOffset: parentYOffset)
+                                    .environment(e)
+                            }
+                        }
+
                         // SpatialView content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
@@ -124,7 +132,8 @@ struct SpatialWebViewUI: View {
                                 }
                             }
                         }
-                    }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
                 }
 
                 // Display the main webview
@@ -138,6 +147,7 @@ struct SpatialWebViewUI: View {
             }
             .opacity(wv.opacity)
             .hidden(!ent.visible)
+//            .hidden(true)
         }
     }
 }

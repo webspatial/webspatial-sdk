@@ -112,11 +112,11 @@ function renderInStandardInstance(
   }
 
   // hijack SpatialDiv ref
-  var cssParserRef = useRef<HTMLElement>()
+  var cssParserRef = useRef<HTMLElement | null>(null)
   const spatialDivRef = useHijackSpatialDivRef(refIn, cssParserRef)
 
   useEffect(() => {
-    const onDomChangeAction = (dom: HTMLElement | undefined) => {
+    const onDomChangeAction = (dom: HTMLElement | null) => {
       cssParserRef.current = dom
     }
     cssSpatialRootContextObject.onDomChange(cssSpatialID, onDomChangeAction)

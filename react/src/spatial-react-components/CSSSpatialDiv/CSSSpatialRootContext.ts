@@ -7,7 +7,7 @@ export class CSSSpatialRootContextObject {
 
   domSpatialId: string | null = null
 
-  private fns: Record<string, (dom: HTMLElement | undefined) => void> = {}
+  private fns: Record<string, (dom: HTMLElement | null) => void> = {}
   // cache dom for each spatialId
   private spatialId2dom: Record<string, HTMLElement> = {}
 
@@ -30,24 +30,18 @@ export class CSSSpatialRootContextObject {
     return spatialId
   }
 
-  public onDomChange(
-    spatialId: string,
-    fn: (dom: HTMLElement | undefined) => void,
-  ) {
+  public onDomChange(spatialId: string, fn: (dom: HTMLElement | null) => void) {
     this.fns[spatialId] = fn
   }
 
   public offDomChange(
     spatialId: string,
-    fn: (dom: HTMLElement | undefined) => void,
+    fn: (dom: HTMLElement | null) => void,
   ) {
     delete this.fns[spatialId]
   }
 
-  public setCSSParserRef(
-    cssSpatialID: string,
-    domElement: HTMLElement | undefined,
-  ) {
+  public setCSSParserRef(cssSpatialID: string, domElement: HTMLElement | null) {
     if (domElement) {
       this.spatialId2dom[cssSpatialID] = domElement
     } else {

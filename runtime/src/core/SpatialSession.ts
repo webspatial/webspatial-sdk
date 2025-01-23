@@ -10,6 +10,7 @@ import {
   SpatialInputComponent,
   SpatialWindowComponent,
   SpatialViewComponent,
+  SpatialModel3DComponent,
 } from './component'
 
 /**
@@ -105,6 +106,25 @@ export class SpatialSession {
   }
 
   /**
+   * Creates a Model3DComponent
+   * @returns Model3DComponent
+   */
+  async createModel3DComponent(options?: { url: string }) {
+    var opts = undefined
+    if (options) {
+      opts = { modelURL: options.url }
+    }
+    let entity = await WebSpatial.createResource(
+      'Model3DComponent',
+      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWebPanel(),
+      opts,
+    )
+    return new SpatialModel3DComponent(entity)
+  }
+
+  /**
+   * Creates a InputComponent
    * [Experimental] Creates a InputComponent used to handle click and drag events of the entity containing a model
    * @returns InputComponent
    */
