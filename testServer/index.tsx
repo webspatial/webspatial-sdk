@@ -275,22 +275,18 @@ function App() {
         </div>
 
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
-          {spatialSupported ? (
-            <div className="w-full h-52">
-              <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                <source
-                  src="/src/assets/FlightHelmet.usdz"
-                  type="model/vnd.usdz+zip"
-                ></source>
-              </Model>
-            </div>
-          ) : (
-            <div className="w-full h-52">
-              <div className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                Model goes here
-              </div>
-            </div>
-          )}
+          <div className="w-full h-52">
+            <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
+              <source
+                src="/src/assets/FlightHelmet.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/FlightHelmet.glb"
+                type="model/gltf-binary"
+              />
+            </Model>
+          </div>
           <h3 className="text-xl">Get Started</h3>
           <h3 className="text-2xl">npm i web-spatial</h3>
         </div>

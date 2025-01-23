@@ -1,5 +1,6 @@
 /**
  * Transform containing position, orientation and scale
+ * [TODO] is DOMPoint the right type to use?
  */
 export class SpatialTransform {
   position = new DOMPoint(0, 0, 0)
