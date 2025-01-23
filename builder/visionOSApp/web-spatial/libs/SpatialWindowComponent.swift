@@ -38,6 +38,9 @@ class SpatialWindowComponent: SpatialComponent {
             spatialObject.inspect()
         }
 
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+
         var inspectInfo: [String: Any] = [
             "scrollWithParent": scrollWithParent,
             "resolutionX": resolutionX,
@@ -47,6 +50,7 @@ class SpatialWindowComponent: SpatialComponent {
             "childWindowGroups": childWindowGroups,
             "spawnedNativeWebviewsCount": spawnedNativeWebviews.count,
             "childResources": childEntitiesInfo,
+            "cornerRadius": cornerRadius.toJson(),
         ]
 
         let baseInspectInfo = super.inspect()
