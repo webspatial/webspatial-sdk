@@ -31,25 +31,24 @@ export class XRApp {
     return this.configMap[name]
   }
 
-  // This not work for some reason, use raw JSB instead
-  // async show(windowID:string, cfg: WindowGroupOptions) {
-  //   try {
-  //     let session = getSession()!
-  //     await session.createWindowGroup(
-  //       'Plain', // only support Plain for now
-  //       {
-  //         sceneData: {
-  //           method: 'showRoot',
-  //           sceneConfig: cfg,
-  //           // url: url,
-  //           windowID
-  //         },
-  //       },
-  //     )
-  //   } catch (error) {
-  //     console.error(error)
-  //   }
-  // }
+  async show(windowID: string, cfg: WindowGroupOptions) {
+    try {
+      let session = getSession()!
+      await session.createWindowGroup(
+        'Plain', // only support Plain for now
+        {
+          sceneData: {
+            method: 'showRoot',
+            sceneConfig: cfg,
+            // url: url,
+            windowID,
+          },
+        },
+      )
+    } catch (error) {
+      console.error(error)
+    }
+  }
   open = (url?: string, target?: string, features?: string) => {
     const newWindow = originalOpen(url, target, features)
     if (url === CONTEXT_WINDOW_URL) return newWindow
@@ -58,7 +57,9 @@ export class XRApp {
       return newWindow
     }
     // should open new scene or focus to
-    // make sure _webSpatialID exist
+
+    // _webSpatialID is assigned for the new webview
+    // timer to check _webSpatialID exist
     let cnt = 2
     let timer = setInterval(async () => {
       cnt -= 1
