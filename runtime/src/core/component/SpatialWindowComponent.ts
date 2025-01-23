@@ -26,6 +26,19 @@ export type StyleParam = {
  * Used to position an web window in 3D space
  */
 export class SpatialWindowComponent extends SpatialComponent {
+  typeName = 'SpatialWebView'
+
+  _preprocessState(state: any) {
+    if (state.window) {
+      state.windowID = state.window._webSpatialID
+      delete state.window
+    }
+    return state
+  }
+
+  resolution?: { x: number; y: number }
+  window?: Window
+
   /**
    * Loads a url page in the window
    * @param url url to load

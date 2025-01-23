@@ -1,11 +1,11 @@
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
+import { Spatial, SpatialSession, SpatialWindowComponent } from '@xrsdk/runtime'
 import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
   var [supported, setSupported] = useState(false)
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         let session = props.session
         // CODESAMPLE_START
@@ -21,16 +21,16 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Create a window context we can display html within
         let pageWindow = await session.createWindowContext()
-        pageWindow!.document.documentElement.style.backgroundColor = "#0033aa99"
+        pageWindow!.document.documentElement.style.backgroundColor = '#0033aa99'
         var newDiv = document.createElement('div')
         newDiv.innerHTML = "<div style='color:red;'>Hello world</div>"
         pageWindow!.document.body.appendChild(newDiv)
 
         // Add window content to entity
-        let wc = await session.createWindowComponent()
-        await wc.setResolution(100, 100)
-        await wc.setFromWindow(pageWindow!.window)
-        await entity.setComponent(wc)
+        await entity.addComponent(SpatialWindowComponent, {
+          resolution: { x: 100, y: 100 },
+          window: pageWindow!.window,
+        })
 
         // Add entity to the current page
         var rootWC = await session.getCurrentWindowComponent()
@@ -40,6 +40,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div className='h-32'></div>
+  return <div className="h-32"></div>
 }
 showSample(MySample)

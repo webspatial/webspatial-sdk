@@ -22,6 +22,25 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
+   * Initializes a component on the entity
+   * @param type the type of component to add
+   * @param componentState the state to initialize the component with
+   */
+  async addComponent<T extends SpatialComponent>(
+    type: new (...args: any[]) => T,
+    componentState: Partial<T>,
+  ) {
+    // Setup component resource
+    var myComponent = new type() as any
+    await myComponent._createResource()
+    await myComponent.setState(componentState)
+
+    // Create add component to entity resource
+    await WebSpatial.setComponent(this._entity, myComponent._resource)
+    this.components.set(myComponent.constructor, myComponent)
+  }
+
+  /**
    * Syncs the transform with the renderer, must be called to observe updates
    */
   async updateTransform() {
