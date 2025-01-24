@@ -320,7 +320,7 @@ class SpatialWindowComponent: SpatialComponent {
         spawnedNativeWebviews[uuid] = wv
     }
 
-    func createRoot(windowID: String) {
+    func createRoot(windowID: String, config: WindowGroupOptions? = nil) {
         let windowGroupID = UUID().uuidString
         // open window
         let wgd = WindowGroupData(
@@ -333,14 +333,17 @@ class SpatialWindowComponent: SpatialComponent {
             parentWindowGroupID: windowGroupID
         )
 
-        if let spawnedWebView = spawnedNativeWebviews.removeValue(
-            forKey: windowID
-        ) {
+        if let spawnedWebView = spawnedNativeWebviews.removeValue(forKey: windowID) {
             windowComponent.getView()!.destroy()
             windowComponent.setView(wv: spawnedWebView)
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // focusRoot need the windowGroupID
             windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
+
+            if config != nil {
+                // signal off hook
+                windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
+            }
         } else {
             print("no spawned")
         }
@@ -349,67 +352,28 @@ class SpatialWindowComponent: SpatialComponent {
 
         ent.addComponent(windowComponent)
 
-        let wg = SpatialWindowGroup
-            .getOrCreateSpatialWindowGroup(windowGroupID)
-
+        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowGroupID)
         wg!.wgd = wgd
         ent.setParentWindowGroup(wg: wg)
 
-        windowComponent.onCreateRootFn = { value, wgd in
-            if let pwg = SpatialWindowGroup.getSpatialWindowGroup(
-                self.parentWindowGroupID
-            ) {
-                WindowGroupMgr.Instance.update(value) // set default values
+        if let config = config {
+            // If config is provided, set default values and open window immediately
+            let plainDV = WindowGroupPlainDefaultValues(config)
+            WindowGroupMgr.Instance.update(plainDV) // set default values
+            if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     pwg.openWindowData.send(wgd) // openwindow
                 }
             }
-        }
-    }
-
-    func createRoot(windowID: String, config: WindowGroupOptions) {
-        let windowGroupID = UUID().uuidString
-        // open window
-        let wgd = WindowGroupData(
-            windowStyle: "Plain",
-            windowGroupID: windowGroupID
-        )
-        let ent = SpatialEntity()
-        ent.coordinateSpace = CoordinateSpaceMode.ROOT
-        let windowComponent = SpatialWindowComponent(
-            parentWindowGroupID: windowGroupID
-        )
-
-        if let spawnedWebView = spawnedNativeWebviews.removeValue(
-            forKey: windowID
-        ) {
-            windowComponent.getView()!.destroy()
-            windowComponent.setView(wv: spawnedWebView)
-            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
-            // signal off hook
-            windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
-            // focusRoot need the windowGroupID
-            windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
-        }
-
-        windowComponent.isRoot = true // register close
-
-        ent.addComponent(windowComponent)
-
-        let plainDV = WindowGroupPlainDefaultValues(
-            config
-        )
-
-        let wg = SpatialWindowGroup
-            .getOrCreateSpatialWindowGroup(windowGroupID)
-
-        wg!.wgd = wgd
-        ent.setParentWindowGroup(wg: wg)
-
-        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
-            WindowGroupMgr.Instance.update(plainDV) // set default values
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                pwg.openWindowData.send(wgd) // openwindow
+        } else {
+            // If no config is provided, set the onCreateRootFn
+            windowComponent.onCreateRootFn = { value, wgd in
+                if let pwg = SpatialWindowGroup.getSpatialWindowGroup(self.parentWindowGroupID) {
+                    WindowGroupMgr.Instance.update(value) // set default values
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        pwg.openWindowData.send(wgd) // openwindow
+                    }
+                }
             }
         }
     }
