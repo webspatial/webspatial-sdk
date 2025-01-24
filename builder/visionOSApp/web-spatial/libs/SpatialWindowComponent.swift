@@ -339,6 +339,8 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.destroy()
             windowComponent.setView(wv: spawnedWebView)
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
+            // focusRoot need the windowGroupID
+            windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
         } else {
             print("no spawned")
         }
@@ -386,6 +388,7 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // signal off hook
             windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
+            // focusRoot need the windowGroupID
             windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
         }
 
