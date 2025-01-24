@@ -59,7 +59,6 @@ function MySample(props: { session?: SpatialSession }) {
             var dt = 0
             var curTime = Date.now()
             let loop = async () => {
-              session.requestAnimationFrame(loop)
               dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
@@ -69,7 +68,7 @@ function MySample(props: { session?: SpatialSession }) {
                 e2.updateTransform()
               })
             }
-            loop()
+            session.addOnEngineUpdateEventListener(loop)
           }
         }}
       >
@@ -106,7 +105,6 @@ function MySample(props: { session?: SpatialSession }) {
             var dt = 0
             var curTime = Date.now()
             let loop = async () => {
-              session.requestAnimationFrame(loop)
               dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
@@ -118,7 +116,7 @@ function MySample(props: { session?: SpatialSession }) {
                 e2.updateTransform()
               })
             }
-            loop()
+            session.addOnEngineUpdateEventListener(loop)
           }
         }}
       >
