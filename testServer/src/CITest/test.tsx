@@ -63,11 +63,10 @@ async function createWebViewJSAPI() {
       if (e.isDestroyed()) {
         return
       }
-      session!.requestAnimationFrame(loop)
       e.transform.position.x = 500 + Math.sin(time / 1000) * 200
       e.updateTransform()
     }
-    session!.requestAnimationFrame(loop)
+    session!.addOnEngineUpdateEventListener(loop)
 
     //destory
     await new Promise(resolve => setTimeout(resolve, 1000))
