@@ -386,6 +386,7 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // signal off hook
             windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
+            windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
         }
 
         windowComponent.isRoot = true // register close
@@ -407,6 +408,12 @@ class SpatialWindowComponent: SpatialComponent {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pwg.openWindowData.send(wgd) // openwindow
             }
+        }
+    }
+
+    func focusRoot(_ windowGroupId: String) {
+        if let wg = SpatialWindowGroup.getSpatialWindowGroup(windowGroupId) {
+            wg.openWindowData.send(wg.wgd!)
         }
     }
 

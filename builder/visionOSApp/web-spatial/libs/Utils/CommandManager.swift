@@ -505,8 +505,11 @@ class CommandDataManager {
                         }
 
                     } else {
-                        // TODO: search for the swc with windowID
-                        // call focusRoot
+                        if let windowGroupID = data.sceneData?.windowGroupID {
+                            target.focusRoot(windowGroupID)
+                        } else {
+                            print("error: no windowGroupID")
+                        }
                     }
 
                     target.completeEvent(requestID: requestID, data: fakeData)
@@ -677,4 +680,5 @@ struct SceneJSBData: Codable {
     var sceneConfig: WindowGroupOptions?
     var url: String?
     var windowID: String?
+    var windowGroupID: String?
 }
