@@ -1,7 +1,7 @@
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { WindowGroupOptions, WindowStyle } from './types'
+import { LoadingMethodKind, WindowGroupOptions, WindowStyle } from './types'
 
 import {
   SpatialMeshResource,
@@ -379,5 +379,10 @@ export class SpatialSession {
     entity.transform.scale.z = parseFloat(sz)
 
     return entity
+  }
+  // set loading view.
+  /** @hidden */
+  async setLoading(method: LoadingMethodKind, style?: string) {
+    return WebSpatial.setLoading(method, style)
   }
 }

@@ -407,6 +407,22 @@ class SpatialWindowComponent: SpatialComponent {
         }
     }
 
+    func setLoading(_ method: LoadingMethod) {
+        // TODO: for first show loading the windowGroup is not visible, so no handler can accept the signal
+        // we should signal to its parent SWC
+        // another  onShowRootFn?
+        // or we pass its parent windowGroupID instead?
+
+        if let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
+            let lwgdata = LoadingWindowGroupData(
+                method: method,
+                windowStyle: nil
+            )
+            wg.setLoadingWindowData
+                .send(lwgdata)
+        }
+    }
+
     func didStartReceivePageContent() {}
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
