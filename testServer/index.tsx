@@ -235,9 +235,8 @@ function App() {
               entity.updateTransform()
             }
           })
-          session!.requestAnimationFrame(loop)
         }
-        session.requestAnimationFrame(loop)
+        session!.addOnEngineUpdateEventListener(loop)
       })()
     } else {
     }
