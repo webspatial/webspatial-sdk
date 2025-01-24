@@ -79,27 +79,6 @@ export class SpatialHelper {
     },
   }
 
-  _currentAnimationLoop = null as any
-  _loopActive = false
-  _startAnimationloop = () => {
-    var loop = async (time: DOMHighResTimeStamp) => {
-      await this.session.transaction(() => {
-        if (this._currentAnimationLoop) {
-          this._currentAnimationLoop(time)
-        }
-      })
-      this.session.requestAnimationFrame(loop)
-    }
-    this.session.requestAnimationFrame(loop)
-  }
-  setAnimationLoop = (fn: (time: DOMHighResTimeStamp) => void) => {
-    this._currentAnimationLoop = fn
-    if (!this._loopActive) {
-      this._loopActive = true
-      this._startAnimationloop()
-    }
-  }
-
   setBackgroundStyle = async (
     style: StyleParam,
     backgroundColor = '#00000000',
