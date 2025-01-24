@@ -10,15 +10,14 @@ function App() {
   ;(window as any).ref = ref
   const ref1 = useRef<HTMLDivElement>(null)
 
+  const [styleMode, setStyleMode] = useState('In-line style')
   const [opacity, setOpacity] = useState(0.8)
-
   const [translateX, setTranslateX] = useState(0)
   const [rotateZ, setRotateZ] = useState(0)
   const [xrBack, setXrBack] = useState(0)
   const [transformOrigin, setTransformOrigin] = useState('left top')
   const [display, setDisplay] = useState('')
   const [visibility, setVisibility] = useState('')
-
   const [style, setStyle] = useState<CSSProperties>({
     borderRadius: 40,
     opacity: opacity,
@@ -66,7 +65,7 @@ function App() {
     })
   }
 
-  const applyInlineStyleBlock = (
+  const applyInlineStyleDisplay = (
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const selectedDisplay = event.target.value
@@ -85,6 +84,22 @@ function App() {
     setStyle({
       ...style,
       visibility: selectedVisibility,
+    })
+  }
+
+  const removeInlineStyleDisplay = () => {
+    setDisplay('')
+    setStyle({
+      ...style,
+      display: '',
+    })
+  }
+
+  const removeInlineStyleVisibility = () => {
+    setVisibility('')
+    setStyle({
+      ...style,
+      visibility: '',
     })
   }
 
@@ -135,24 +150,6 @@ function App() {
     updateElementState1(ref1)
   }, [ref, ref1])
 
-  // 测试BorderRadius
-  // 存储 borderRadius 的值
-  const [borderRadius, setBorderRadius] = useState(0)
-  // 设置 borderRadius 的函数
-  const SetBorderRadius = (
-    ref: React.MutableRefObject<HTMLDivElement | null>,
-    borderRadius: number,
-  ) => {
-    console.log('borderRadius:' + borderRadius, ref.current)
-    if (!ref.current) return
-    // 获取当前的 borderRadius 值
-    const currentBorderRadius =
-      ref.current.style.getPropertyValue('border-radius')
-    console.log('get borderRadius value:', currentBorderRadius)
-    ref.current.style.setProperty('border-radius', `${borderRadius}px`)
-    // ref.current.style.setProperty('border-radius', `0px`) //设置为0px
-    updateElementState(ref)
-  }
   // 处理滑动条值变化的事件处理函数
   const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // 将滑动条的值转换为整数并更新 borderRadius 状态
@@ -161,13 +158,12 @@ function App() {
   }
 
   // 移除 borderRadius 的函数
-  const removeBorderRadius = () => {
-    if (ref.current) {
-      ref.current.style.removeProperty('border-radius')
-      updateElementState(ref)
-      // 重置滑动条值
-      setBorderRadius(0)
-    }
+  const removeOpacity = () => {
+    setOpacity(1)
+    setStyle({
+      ...style,
+      opacity: 1,
+    })
   }
 
   // 测试XrBack
@@ -190,11 +186,11 @@ function App() {
   }
   // 移除 xrBack 的函数
   const removeXrBack = () => {
-    if (ref.current) {
-      ref.current.style.removeProperty('--xr-back')
-      updateElementState(ref)
-      setXrBack(0)
-    }
+    setXrBack(0)
+    setStyle({
+      ...style,
+      '--xr-back': 0,
+    })
   }
 
   // 测试 background-material
@@ -227,11 +223,11 @@ function App() {
 
   // 移除 backgroundMaterial 的函数
   const removeBackgroundMaterial = () => {
-    if (ref.current) {
-      ref.current.style.removeProperty('--xr-background-material')
-      updateElementState(ref)
-      // setBackgroundMaterialValue('default')
-    }
+    setBackgroundMaterial('none')
+    setStyle({
+      ...style,
+      '--xr-background-material': `none`,
+    })
   }
   // 测试 Transform
   // 存储 translateX 和 rotateZ 的值
@@ -259,15 +255,21 @@ function App() {
 
   // 移除 Transform 的函数
   const removeTestTransform = () => {
-    if (ref.current) {
-      ref.current.style.removeProperty('transform')
-      // 获取当前的 testTransform 值
-      const currentTransform = ref.current.style.getPropertyValue('transform')
-      console.log('get transform value:', currentTransform)
-      updateElementState(ref)
-      setTranslateX(0)
-      setRotateZ(0)
-    }
+    // if (ref.current) {
+    //   ref.current.style.removeProperty('transform')
+    //   // 获取当前的 testTransform 值
+    //   const currentTransform = ref.current.style.getPropertyValue('transform')
+    //   console.log('get transform value:', currentTransform)
+    //   updateElementState(ref)
+    //   setTranslateX(0)
+    //   setRotateZ(0)
+    // }
+    setTranslateX(0)
+    setRotateZ(0)
+    setStyle({
+      ...style,
+      transform: `translateX(${0}px) rotateZ(${0}deg)`,
+    })
   }
 
   //  测试transform-origin
@@ -302,7 +304,7 @@ function App() {
       setTransformOrigin('left center')
     }
   }
-  // 测试zIndex   //AVP上没有效果 bug??
+
   // 存储 zIndex 的值
   const [zIndex, setZIndex] = useState(0)
   const [zIndex1, setZIndex1] = useState(0)
@@ -391,26 +393,6 @@ function App() {
   // 测试Test Element1 元素clas list单个操作
   const ClassListTest = () => {
     if (!ref1.current) return
-    // ref1.current.style.fontSize = '2rem'
-    // ref1.current.style.width = '200px'
-    // ref1.current.style.height = '200px'
-    // updateElementState(ref1)
-
-    //添加类名
-    // ref1.current.classList.add('translate-y-8')
-    // console.log('添加translate-y-8 class:',ref1.current, ref1.current.classList.value)
-    // updateElementState(ref1)
-
-    //移除类名
-    // ref1.current.classList.remove('translate-y-10')
-    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
-    // updateElementState(ref1)
-
-    //替换类名
-    // ref1.current.classList.replace('translate-y-10','translate-y-8')
-    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
-    // updateElementState(ref1)
-
     //反转类名
     ref1.current.classList.toggle('translate-y-8')
     console.log('反转translate-y-8 class:', ref1.current.classList.value)
@@ -476,15 +458,30 @@ function App() {
               padding: '30px',
             }}
           >
-            <div
-              enable-xr
-              className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
-              // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值
-              ref={ref}
-              style={style}
-            >
-              Test Element
-            </div>
+            {styleMode == 'In-line style' ? (
+              <div
+                enable-xr
+                style={style}
+                className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              >
+                Test in-line Style
+              </div>
+            ) : styleMode == 'Css module' ? (
+              <div className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300">
+                Test CSS Module
+              </div>
+            ) : (
+              <div>styled Component</div>
+            )}
+            {/*<div*/}
+            {/*  enable-xr*/}
+            {/*  className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"*/}
+            {/*  // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值*/}
+            {/*  ref={ref}*/}
+            {/*  style={style}*/}
+            {/*>*/}
+            {/*  Test Element*/}
+            {/*</div>*/}
             <div
               enable-xr
               className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
@@ -518,7 +515,7 @@ function App() {
                 style={{ width: '250px' }}
               />
               <button
-                onClick={removeBorderRadius}
+                onClick={removeOpacity}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
@@ -562,7 +559,7 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <select
                 value={display}
-                onChange={applyInlineStyleBlock}
+                onChange={applyInlineStyleDisplay}
                 className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
                 style={{ flex: 1 }}
               >
@@ -571,7 +568,7 @@ function App() {
                 <option value="">empty</option>
               </select>
               <button
-                onClick={removeBackgroundMaterial}
+                onClick={removeInlineStyleDisplay}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
@@ -580,12 +577,9 @@ function App() {
             </div>
 
             {/*visibility Test*/}
-            <button
-              onClick={applyInlineStyleOpacity}
-              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Visibility
-            </button>
+            <div className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+              <center>Visibility</center>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <select
                 value={visibility}
@@ -598,7 +592,7 @@ function App() {
                 <option value="">empty</option>
               </select>
               <button
-                onClick={removeBackgroundMaterial}
+                onClick={removeInlineStyleVisibility}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
@@ -773,6 +767,16 @@ function App() {
             >
               ClassList Test
             </button>
+            {/* 下拉选择框，用于选择样式应用方式 */}
+            <label>选择样式应用方式:</label>
+            <select
+              value={styleMode}
+              onChange={e => setStyleMode(e.target.value)}
+            >
+              <option value="In-line style">In-line style</option>
+              <option value="Css module">Css module</option>
+              <option value="Styled Component">Styled Component</option>
+            </select>
             <button
               onClick={resetStyles}
               className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"

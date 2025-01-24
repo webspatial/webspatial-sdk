@@ -1,0 +1,14 @@
+/* styles.module.css */
+.testElement {
+    --box-opacity: 1;
+    --box-translate-x: 0px;
+    --box-translate-z: 0px;
+    --box-visibility: visible;
+    --box-display: ;
+
+    opacity: var(--box-opacity);
+    transform: translate3d(var(--box-translate-x), 0, var(--box-translate-z));
+    visibility: var(--box-visibility);
+    display: var(--box-display);
+    transition: all 0.3s ease;
+}
