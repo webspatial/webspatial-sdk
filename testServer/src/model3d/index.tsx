@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
+import { useRef } from 'react'
 
 enableDebugTool()
 
@@ -10,9 +11,12 @@ function App() {
   const translateY = 0
   const rotateZ = 0
 
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  ;(window as any).ref = ref
+
   const styleOuter: CSSProperties = {
     // '--xr-back': 31,
-    '--xr-debug': true,
     // visibility: 'hidden',
     position: 'relative',
     width: '50%',
@@ -31,7 +35,11 @@ function App() {
         </a>
       </div>
 
-      <CSSModel3D style={styleOuter} modelUrl="/src/assets/FlightHelmet.usdz" />
+      <CSSModel3D
+        ref={ref}
+        style={styleOuter}
+        modelUrl="/src/assets/FlightHelmet.usdz"
+      />
     </div>
   )
 }
