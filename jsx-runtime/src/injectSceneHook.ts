@@ -1,28 +1,22 @@
-import { defaultSceneConfig, XRApp } from '@xrsdk/react'
+import { defaultSceneConfig, getSession, XRApp } from '@xrsdk/react'
 
 export function injectSceneHook() {
-  if (window.opener) {
-    // see this flag, we have done create the root scene
-    if ((window as any)._SceneHookOff) return
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
-          const ans = await (window as any).xrCurrentSceneDefaults?.()
+  if (!window.opener) return
+  if ((window as any)._SceneHookOff) return
 
-          await XRApp.getInstance().show((window as any)._webSpatialID, ans)
-        } else {
-          await XRApp.getInstance().show(
-            (window as any)._webSpatialID,
-            defaultSceneConfig,
-          )
-        }
-      } catch (error: any) {
-        ;(window as any).hehe = error.message
-        console.error(
-          'Error executing xrCurrentSceneDefaults or sending ans:',
-          error,
-        )
+  // getSession()?.setLoading('show')
+
+  // see this flag, we have done create the root scene
+  document.addEventListener('DOMContentLoaded', async () => {
+    let cfg = defaultSceneConfig
+    if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
+      try {
+        cfg = await (window as any).xrCurrentSceneDefaults?.()
+      } catch (error) {
+        console.error(error)
       }
-    })
-  }
+    }
+    // await getSession()?.setLoading('hide')
+    await XRApp.getInstance().show((window as any)._webSpatialID, cfg)
+  })
 }

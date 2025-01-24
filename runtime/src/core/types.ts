@@ -8,3 +8,5 @@ export interface WindowGroupOptions {
 
   resizability?: 'automatic' | 'contentSize' | 'contentMinSize'
 }
+
+export type LoadingMethodKind = 'show' | 'hide'
