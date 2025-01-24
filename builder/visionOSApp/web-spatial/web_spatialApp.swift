@@ -119,5 +119,9 @@ struct web_spatialApp: App {
             let wg = SpatialWindowGroup.getImmersiveWindowGroup()
             VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
         }
+
+        WindowGroup(id: "loading", for: LoadingWindowGroupData.self) { _ in
+            LoadingView()
+        }
     }
 }

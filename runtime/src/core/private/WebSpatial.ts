@@ -1,6 +1,6 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle, WindowGroupOptions } from '../types'
+import { WindowStyle, WindowGroupOptions, LoadingMethodKind } from '../types'
 
 export class WindowGroup {
   id = ''
@@ -245,6 +245,21 @@ export class WebSpatial {
       windowGroupID: resource.windowGroupId,
       resourceID: resource.id,
       update: data || resource.data,
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async setLoading(method: LoadingMethodKind, style?: string) {
+    var cmd = new RemoteCommand('setLoading', {
+      loading: {
+        method,
+        style,
+      },
     })
 
     var result = await new Promise((res, rej) => {

@@ -28,6 +28,7 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
+        _ = registerCommand(name: "setLoading", action: setLoading)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -178,6 +179,10 @@ class CommandManager {
 
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
+    }
+
+    private func setLoading(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.setLoading(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 }
 
@@ -525,6 +530,7 @@ class CommandDataManager {
                     return
                 }
             } else if data.sceneData?.method == "showRoot" {
+                print("showRoot")
                 if let config = data.sceneData?.sceneConfig {
                     target.showRoot(config: config)
                 }
@@ -573,7 +579,24 @@ class CommandDataManager {
         if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
             print(logString)
+            }
         }
+
+    public func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        switch data.loading?.method {
+        case "show":
+            print("open loading")
+            target.setLoading(.show)
+        case "hide":
+            print("hide loading")
+            target.setLoading(.hide)
+        case let .some(method):
+            print("Unknown Method: \(method)")
+        case .none:
+            break
+        }
+
+        target.completeEvent(requestID: requestID)
     }
 }
 
@@ -596,6 +619,7 @@ struct JSData: Codable {
     var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
+    var loading: LoadingJSBData?
 }
 
 struct JSParams: Codable {
@@ -691,4 +715,9 @@ struct SceneJSBData: Codable {
     var url: String?
     var windowID: String?
     var windowGroupID: String?
+}
+
+struct LoadingJSBData: Codable {
+    var method: String?
+    var style: String?
 }
