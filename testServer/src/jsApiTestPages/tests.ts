@@ -157,11 +157,10 @@ var main = async () => {
         if (w.entity.isDestroyed()) {
           return
         }
-        session.requestAnimationFrame(loop)
         w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
         w.entity.updateTransform()
       }
-      session.requestAnimationFrame(loop)
+      session.addOnEngineUpdateEventListener(loop)
 
       setTimeout(async () => {
         await w.entity.destroy()
@@ -356,7 +355,6 @@ var main = async () => {
       var dt = 0
       var curTime = Date.now()
       let loop = async (time: DOMHighResTimeStamp) => {
-        session.requestAnimationFrame(loop)
         dt = Date.now() - curTime
         curTime = Date.now()
         var floor = -0.1
@@ -380,7 +378,7 @@ var main = async () => {
           }
         })
       }
-      session.requestAnimationFrame(loop)
+      session.addOnEngineUpdateEventListener(loop)
 
       session.log('entity created')
       return
@@ -441,9 +439,8 @@ var main = async () => {
 
       // Populate results and request animation frame
       b.innerHTML = results
-      session.requestAnimationFrame(loop)
     }
-    session.requestAnimationFrame(loop)
+    session.addOnEngineUpdateEventListener(loop)
 
     session.log('Got response')
   } else if (page == 'winodwInnerHTML') {

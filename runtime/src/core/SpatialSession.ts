@@ -22,24 +22,21 @@ type animCallback = (time: DOMHighResTimeStamp) => void
  */
 export class SpatialSession {
   /** @hidden */
-  _animationFrameCallbacks = Array<animCallback>()
+  _engineUpdateListeners = Array<animCallback>()
   /** @hidden */
   _frameLoopStarted = false
 
   /**
-   * Request a callback to be called before the next render update
-   * [TODO] might want to rework this to be triggered by native code or better handle frame timing
-   * @param callback callback to be called before next render update
+   * Add event listener callback to be called each frame
+   * @param callback callback to be called each update
    */
-  requestAnimationFrame(callback: animCallback) {
-    this._animationFrameCallbacks.push(callback)
+  addOnEngineUpdateEventListener(callback: animCallback) {
+    this._engineUpdateListeners.push(callback)
 
     if (!this._frameLoopStarted) {
       this._frameLoopStarted = true
       WebSpatial.onFrame((time: number, delta: number) => {
-        var cbs = this._animationFrameCallbacks
-        this._animationFrameCallbacks = []
-        for (var cb of cbs) {
+        for (var cb of this._engineUpdateListeners) {
           cb(time)
         }
       })
