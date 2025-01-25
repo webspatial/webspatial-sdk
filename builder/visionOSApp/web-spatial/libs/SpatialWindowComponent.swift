@@ -410,19 +410,6 @@ class SpatialWindowComponent: SpatialComponent {
         }
     }
 
-    func showRoot(config: WindowGroupOptions) {
-        let plainDV = WindowGroupPlainDefaultValues(
-            config
-        )
-
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID),
-           let cb = onCreateRootFn
-        {
-            cb(plainDV, wg.wgd!)
-            onCreateRootFn = nil // reset
-        }
-    }
-
     func didCloseWebView() {
         // if need
         if isRoot,

@@ -517,14 +517,7 @@ class CommandDataManager {
                     target.completeEvent(requestID: requestID, data: fakeData)
                     return
                 }
-            } else if data.sceneData?.method == "showRoot" {
-                if let config = data.sceneData?.sceneConfig {
-                    target.showRoot(config: config)
-                }
-                target.completeEvent(requestID: requestID, data: fakeData)
-                return
             }
-
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 

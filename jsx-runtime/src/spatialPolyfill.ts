@@ -1,5 +1,4 @@
 import { getSession, parseCornerRadius, XRApp } from '@xrsdk/react'
-import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -207,8 +206,6 @@ export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
-
-  injectSceneHook()
   hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()
