@@ -547,7 +547,6 @@ struct JSData: Codable {
     var update: JSResourceData?
     var windowStyle: String?
     var windowGroupOptions: WindowGroupOptions?
-    var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
 }
