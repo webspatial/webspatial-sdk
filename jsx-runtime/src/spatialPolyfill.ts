@@ -1,4 +1,4 @@
-import { getSession, parseCornerRadius, XRApp } from '@xrsdk/react'
+import { getSession, parseCornerRadius } from '@xrsdk/react'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -198,15 +198,10 @@ function hijackGetComputedStyle() {
   }
 }
 
-function hijackWindowOpen() {
-  XRApp.getInstance().init()
-}
-
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
-  hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()
   hijackDocumentElementStyle()

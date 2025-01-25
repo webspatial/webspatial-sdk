@@ -489,34 +489,6 @@ class CommandDataManager {
 
     public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
-            // windowID exist in SWC
-
-            // TODO: check url scope
-            // if not in scope open in safari
-
-            let fakeData = "{createdID: 'uuid'}"
-
-            if data.sceneData?.method == "createRoot" {
-                if let windowID = data.sceneData?.windowID {
-                    // if windowID in spawned uuid, createRoot
-
-                    if target.spawnedNativeWebviews[windowID] != nil {
-                        // setup windowGroup defaultValues
-                        if let config = data.sceneData?.sceneConfig {
-                            target.createRoot(windowID: windowID, config: config)
-                        } else {
-                            target.createRoot(windowID: windowID)
-                        }
-
-                    } else {
-                        // TODO: search for the swc with windowID
-                        // call focusRoot
-                    }
-
-                    target.completeEvent(requestID: requestID, data: fakeData)
-                    return
-                }
-            }
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
@@ -656,12 +628,4 @@ struct JSEntityStyle: Codable {
     var cornerRadius: CornerRadius?
     var backgroundMaterial: BackgroundMaterial?
     var dimensions: JSVector2?
-}
-
-struct SceneJSBData: Codable {
-    var method: String?
-    var sceneName: String?
-    var sceneConfig: WindowGroupOptions?
-    var url: String?
-    var windowID: String?
 }

@@ -1,7 +1,7 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { Logger, LoggerLevel, NativeLogger, WebLogger } from './log'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle, WindowGroupOptions } from '../types'
+import { WindowStyle } from '../types'
 
 export class Vec3 {
   constructor(
@@ -122,18 +122,15 @@ export class WebSpatial {
     return wg
   }
 
-  static async createWindowGroup(style: WindowStyle = 'Plain', cfg: any) {
-    var cmd = new RemoteCommand('createWindowGroup', {
-      windowStyle: style,
-      ...cfg,
-    })
+  static async createWindowGroup(style: WindowStyle = 'Plain') {
+    var cmd = new RemoteCommand('createWindowGroup', { windowStyle: style })
 
     var result = await new Promise((res, rej) => {
       WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
       WebSpatial.sendCommand(cmd)
     })
     var res = new WindowGroup()
-    res.id = (result as any)?.data?.createdID
+    res.id = (result as any).data.createdID
     return res
   }
 

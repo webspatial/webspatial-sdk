@@ -8,4 +8,3 @@ export { SpatialHelper } from './SpatialHelper'
 
 export { type WindowStyle } from './types'
 export { SpatialTransform } from './SpatialTransform'
-export * from './types'
