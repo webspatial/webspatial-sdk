@@ -62,7 +62,7 @@ class SpatialWindowComponent: SpatialComponent {
         return inspectInfo
     }
 
-    // if this is root, close the webview will destroy parent windowGroup
+    // if this is root
     var isRoot = false
 
     var scrollOffset = CGPoint()
@@ -177,16 +177,14 @@ class SpatialWindowComponent: SpatialComponent {
         registerForceStyle()
     }
 
-    // the url schema handler for forcestyle cannot bind seperately for every webview due to apple limitation. So this is a workaround like eventbus, webview will handle the message that has matched webview.
     func registerForceStyle() {
-        webviewGetEarlyStyleData
-            .filter { [weak self] event in
-                self?.getView()?.webViewHolder.appleWebView == event.webview
-            }
-            .sink { [weak self] event in
+        webviewGetEarlyStyleData.sink { [weak self] event in
+            if self?.getView()?.webViewHolder.appleWebView == event.webview {
+                // matched swc should handle the force style
                 self?.didGetEarlyStyle(style: event.style)
             }
-            .store(in: &cancellables)
+
+        }.store(in: &cancellables)
     }
 
     func navigateToURL(url: URL) {
