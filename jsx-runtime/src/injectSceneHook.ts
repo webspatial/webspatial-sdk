@@ -1,6 +1,14 @@
 import { defaultSceneConfig, XRApp } from '@xrsdk/react'
 
 export function injectSceneHook() {
+  const sendMsg = (msg: any) => {
+    try {
+      //@ts-ignore
+      window.webkit.messageHandlers.bridge.postMessage(JSON.stringify(msg))
+    } catch (error) {
+      console.error(error)
+    }
+  }
   if (window.opener) {
     // see this flag, we have done create the root scene
     if ((window as any)._SceneHookOff) return
@@ -9,12 +17,34 @@ export function injectSceneHook() {
         if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
           const ans = await (window as any).xrCurrentSceneDefaults?.()
 
-          await XRApp.getInstance().show((window as any)._webSpatialID, ans)
+          // raw version of await XRApp.getInstance().show((window as any)._webSpatialID, ans)
+
+          sendMsg({
+            command: 'createWindowGroup',
+            data: {
+              windowStyle: 'Plain',
+              sceneData: {
+                method: 'showRoot',
+                sceneConfig: ans,
+                windowID: (window as any)._webSpatialID,
+              },
+            },
+            requestID: -3,
+          })
         } else {
-          await XRApp.getInstance().show(
-            (window as any)._webSpatialID,
-            defaultSceneConfig,
-          )
+          // raw version of await XRApp.getInstance().show(window, defaultSceneConfig)
+          sendMsg({
+            command: 'createWindowGroup',
+            data: {
+              windowStyle: 'Plain',
+              sceneData: {
+                method: 'showRoot',
+                sceneConfig: defaultSceneConfig,
+                windowID: (window as any)._webSpatialID,
+              },
+            },
+            requestID: -3,
+          })
         }
       } catch (error: any) {
         ;(window as any).hehe = error.message
