@@ -21,10 +21,38 @@ function App() {
     position: 'relative',
     width: '50%',
     height: '50%',
+    marginBottom: '140px',
     transform: `translateX(${translateX}px) translateY(${translateY}px) rotateZ(${rotateZ}deg)`,
     // transformOrigin: 'top center',
     backgroundColor: 'red',
     opacity: 0.8,
+  }
+
+  const onToggleDisplay = () => {
+    if (ref.current) {
+      ref.current.style.display =
+        ref.current.style.display === '' ||
+        ref.current.style.display === 'block'
+          ? 'none'
+          : 'block'
+    }
+  }
+
+  const onToggleOpacity = () => {
+    if (ref.current) {
+      ref.current.style.opacity =
+        ref.current.style.opacity !== '0.5' ? '0.5' : '0.8'
+    }
+  }
+
+  const onToggleVisible = () => {
+    if (ref.current) {
+      ref.current.style.visibility =
+        ref.current.style.visibility === 'visible' ||
+        ref.current.style.visibility === ''
+          ? 'hidden'
+          : 'visible'
+    }
   }
 
   return (
@@ -40,6 +68,17 @@ function App() {
         style={styleOuter}
         modelUrl="/src/assets/FlightHelmet.usdz"
       />
+      <div>
+        <button className="btn btn-primary" onClick={onToggleDisplay}>
+          display toggle
+        </button>
+        <button className="btn btn-primary" onClick={onToggleOpacity}>
+          display opacity
+        </button>
+        <button className="btn btn-primary" onClick={onToggleVisible}>
+          display visible
+        </button>
+      </div>
     </div>
   )
 }
