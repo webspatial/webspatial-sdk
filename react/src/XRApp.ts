@@ -9,7 +9,7 @@ export const defaultSceneConfig: WindowGroupOptions = {
   resizability: 'automatic',
 }
 
-const CONTEXT_WINDOW_URL = 'webspatial://createContextWindow'
+const CONTEXT_WINDOW_URL = 'webspatial://createWindowContext'
 const originalOpen = window.open
 export class XRApp {
   private static instance: XRApp
