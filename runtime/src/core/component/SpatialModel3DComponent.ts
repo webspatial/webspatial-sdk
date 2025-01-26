@@ -29,4 +29,14 @@ export class SpatialModel3DComponent extends SpatialComponent {
       opacity,
     })
   }
+
+  /**
+   * Sets how the model fill the rect
+   * @param contentMode
+   */
+  async setAspectRatio(contentMode: 'fill' | 'fit') {
+    await WebSpatial.updateResource(this._resource, {
+      contentMode,
+    })
+  }
 }
