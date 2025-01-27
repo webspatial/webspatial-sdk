@@ -1,5 +1,4 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
-import { Logger, LoggerLevel, NativeLogger, WebLogger } from './log'
 import { RemoteCommand } from './remote-command'
 import { WindowStyle, WindowGroupOptions } from '../types'
 
@@ -98,10 +97,6 @@ export class WebSpatial {
       return
     }
   }
-
-  static logger: Logger = (window as any).WebSpatailEnabled
-    ? new NativeLogger(this.sendCommand)
-    : new WebLogger('WebSpatial')
 
   static getImmersiveWindowGroup() {
     var wg = new WindowGroup()
