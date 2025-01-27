@@ -1,4 +1,3 @@
-import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
@@ -12,6 +11,7 @@ import {
   SpatialViewComponent,
   SpatialModel3DComponent,
 } from './component'
+import { RemoteCommand } from './private/remote-command'
 
 /**
  * Animation callback with timestamp
@@ -224,35 +224,11 @@ export class SpatialSession {
   }
 
   /**
-   * [TODO] should these log apis be private?
-   * @param logLevel
+   * Logs a message to the native apps console
+   * @param msg mesage to log
    */
-  async setLogLevel(logLevel: LoggerLevel) {
-    await WebSpatial.logger.setLevel(logLevel)
-  }
-
   async log(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async info(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async warn(...msg: any[]) {
-    await WebSpatial.logger.warn(...msg)
-  }
-
-  async debug(...msg: any[]) {
-    await WebSpatial.logger.debug(...msg)
-  }
-
-  async error(...msg: any[]) {
-    await WebSpatial.logger.error(...msg)
-  }
-
-  async trace(...msg: any[]) {
-    await WebSpatial.logger.trace(...msg)
+    await WebSpatial.sendCommand(new RemoteCommand('log', { logString: msg }))
   }
 
   /**
