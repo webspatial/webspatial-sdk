@@ -1,11 +1,12 @@
 import { Spatial, SpatialSession, SpatialViewComponent } from '@xrsdk/runtime'
 import { useEffect, useRef, useState } from 'react'
 import { showSample } from './sampleLoader'
+import { Vec3 } from '@xrsdk/runtime'
 
 function MySample(props: { session?: SpatialSession }) {
   let divRef = useRef(null)
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         var divOnPage = divRef.current! as HTMLElement
         let session = props.session
@@ -25,7 +26,7 @@ function MySample(props: { session?: SpatialSession }) {
         var e2 = await session.createEntity()
         await e2.setComponent(customModel)
         e2.transform.position.z = -(0.1 / 2 + 0.00001)
-        e2.transform.scale = new DOMPoint(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
+        e2.transform.scale = new Vec3(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
         await e2.updateTransform()
         await e2.setParent(viewEnt)
 
@@ -53,7 +54,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
 
           e2.transform.position.y = 0.3
-          e2.transform.scale = new DOMPoint(0.2, 0.2, 0.2)
+          e2.transform.scale = new Vec3(0.2, 0.2, 0.2)
           await e2.updateTransform()
           await e2.setParent(viewEnt)
         }
@@ -63,7 +64,7 @@ function MySample(props: { session?: SpatialSession }) {
         e3.transform.position.x = 0
         e3.transform.position.y = 0.0
         e3.transform.position.z = 0
-        e3.transform.scale = new DOMPoint(2.0, 2.0, 2.0)
+        e3.transform.scale = new Vec3(2.0, 2.0, 2.0)
         await e3.updateTransform()
         let win = await session.createWindowComponent()
         await Promise.all([
