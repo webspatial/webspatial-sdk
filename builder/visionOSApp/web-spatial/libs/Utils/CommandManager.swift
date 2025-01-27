@@ -321,8 +321,8 @@ class CommandDataManager {
                 entity.setParentWindowGroup(wg: wg)
             }
 
-            if let position: JSVector4 = data.update?.position,
-               let scale: JSVector4 = data.update?.scale,
+            if let position: JSVector3F = data.update?.position,
+               let scale: JSVector3F = data.update?.scale,
                let orientation: JSVector4 = data.update?.orientation
             {
                 entity.modelEntity.position = SIMD3<Float>(position.x, position.y, position.z)
@@ -580,9 +580,9 @@ struct JSResourceData: Codable {
     var setParent: String?
     var setCoordinateSpace: String?
     var setParentWindowGroupID: String?
-    var position: JSVector4?
+    var position: JSVector3F?
     var orientation: JSVector4?
-    var scale: JSVector4?
+    var scale: JSVector3F?
     var baseColor: JSColor?
     var roughness: JSValue?
     var metallic: JSValue?
@@ -623,6 +623,12 @@ struct JSVector3: Codable {
     var x: Double
     var y: Double
     var z: Double
+}
+
+struct JSVector3F: Codable {
+    var x: Float
+    var y: Float
+    var z: Float
 }
 
 struct JSVector4: Codable {

@@ -1,4 +1,4 @@
-import { Vec3 } from '../private/WebSpatial'
+import { Vec3 } from '../SpatialTransform'
 import { SpatialComponent } from './SpatialComponent'
 
 /**
