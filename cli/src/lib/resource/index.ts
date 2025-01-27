@@ -2,12 +2,12 @@ import * as fs from 'fs';
 import {join} from 'path';
 import { clearDir, copyDir } from './file';
 import { ManifestInfo } from '../pwa';
-import { parseRouter } from '../utils/utils';
-import { validateURL } from '../pwa/validate';
 import * as Jimp from 'jimp';
-import { ImageHelper } from './imageHelper';
+import { loadImageFromDisk, loadImageFromNet } from './load';
 export const PROJECT_DIRECTORY = join(process.cwd(), "../builder/visionOSApp");
 export const WEB_PROJECT_DIRECTORY = "web-spatial/web-project";
+export const ASSET_DIRECTORY = "web-spatial/Assets.xcassets";
+export const APPICON_DIRECTORY = "web-spatial/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset";
 
 export class ResourceManager{
     public static async moveProjectFrom(dir:string){
@@ -30,12 +30,14 @@ export class ResourceManager{
         }
     }
 
-    public static async generateIcon(info:ManifestInfo):Promise<string>{
+    public static async generateIcon(info:ManifestInfo):Promise<Jimp>{
         const manifestJson = info.json;
         const imgUrl = manifestJson.icons[0].src
-        const icon = !imgUrl.startsWith("http") ? await Jimp.read(imgUrl) : await ImageHelper.loadImage(imgUrl);
-        const fileName = PROJECT_DIRECTORY + "/icon." + icon.getMIME().replace("image/", "");
-        await icon.writeAsync(fileName)
-        return fileName;
+        const icon = !imgUrl.startsWith("http") ? await loadImageFromDisk(imgUrl) : await loadImageFromNet(imgUrl);
+        // icon.resize(512, 512);
+        return icon;
+        // const fileName = PROJECT_DIRECTORY + "/icon." + icon.getMIME().replace("image/", "");
+        // await icon.writeAsync(fileName)
+        // return fileName;
     }
 }

@@ -15,7 +15,6 @@ export async function start(args: ParsedArgs, log: Log = new ConsoleLog('help'))
      * 4. 完善start_url、scope、display、deeplink配置
      **/ 
     let manifestInfo = await PWAGenerator.generator(args as unknown as InitArgs);
-    console.log(args["project"])
     /**
      * resource步骤
      * 1. 若为本地项目，则
@@ -26,9 +25,8 @@ export async function start(args: ParsedArgs, log: Log = new ConsoleLog('help'))
     if(!manifestInfo.fromNet){ // 如果为本地项目，则需要对项目进行移动
         await ResourceManager.moveProjectFrom(args["project"])
     }
-    const iconPath = await ResourceManager.generateIcon(manifestInfo)
-    console.log(iconPath)
-    
-    XcodeManager.parseProject();
+    const icon = await ResourceManager.generateIcon(manifestInfo)
+    console.log(icon)
+    await XcodeManager.parseProject({icon});
     return true
 }

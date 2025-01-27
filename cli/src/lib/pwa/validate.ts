@@ -5,6 +5,7 @@ import { parseRouter } from "../utils/utils";
 import Jimp = require("jimp");
 import { fetchUtils } from "../utils/FetchUtils-1";
 import { ImageHelper } from "../resource/imageHelper";
+import { loadImageFromDisk, loadImageFromNet } from "../resource/load";
 
 export function checkManifestJson(manifestJson: Record<string, any>){
     const errors=[];
@@ -92,9 +93,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
             })
         }
         else{
-            console.log(item);
-            image = !imgUrl.startsWith("http") ? await Jimp.read(imgUrl) : await ImageHelper.loadImage(imgUrl);
-            console.log(image.getWidth(), image.getHeight())
+            image = !imgUrl.startsWith("http") ? await loadImageFromDisk(imgUrl) : await loadImageFromNet(imgUrl);
             if(image.getWidth() >= 1024 && image.getHeight() >= 1024){
                 has1024 = true
                 if(image.getWidth() > imageSize){
@@ -120,7 +119,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
             message: 'In the Spatial Web App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable', message_staring_params: {}});
     }
     else if(maxSizeImageUrl){
-        maxSizeImage = !maxSizeImageUrl.startsWith("http") ? await Jimp.read(maxSizeImageUrl) : await ImageHelper.loadImage(maxSizeImageUrl);
+        maxSizeImage = !maxSizeImageUrl.startsWith("http") ? await loadImageFromDisk(maxSizeImageUrl) : await loadImageFromNet(maxSizeImageUrl);
     }
     // 检测图片是否完全不透明
     if(maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)){

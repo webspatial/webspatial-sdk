@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { configDeeplink, configDisplay, configScope, configStartUrl } from './config';
-import { loadManifestJsonFromDisk, loadManifestJsonFromNet } from './load';
+import { loadJsonFromNet, loadJsonFromDisk } from '../resource/load';
 import { checkIcons, checkManifestJson, checkStartUrl } from './validate';
 
 export interface InitArgs {
@@ -34,11 +34,11 @@ export class PWAGenerator {
     if(args["manifest-url"]){
       url = args["manifest-url"]
       fromNet = true;
-      manifest = await loadManifestJsonFromNet(args["manifest-url"]);
+      manifest = await loadJsonFromNet(args["manifest-url"]);
     }
     else if(args["manifest"]){
       url = join(process.cwd(), args["manifest"])
-      manifest = await loadManifestJsonFromDisk(args["manifest"]);
+      manifest = await loadJsonFromDisk(args["manifest"]);
     }
     // 校验manifest.json
     checkManifestJson(manifest)
