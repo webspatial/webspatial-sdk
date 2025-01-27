@@ -37,7 +37,7 @@ struct SpatialViewUI: View {
     }
 
     var dragGesture: some Gesture {
-        DragGesture().handActivationBehavior(.automatic)
+        DragGesture(minimumDistance: 0).handActivationBehavior(.automatic)
             .targetedToAnyEntity()
             .onChanged { value in
                 let startPos = value.convert(value.startLocation3D, from: .local, to: .scene)
