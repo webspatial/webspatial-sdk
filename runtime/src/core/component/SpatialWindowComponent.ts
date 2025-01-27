@@ -1,5 +1,6 @@
 import { SpatialComponent } from './SpatialComponent'
-import { Vec3, Vec4, WebSpatial } from '../private/WebSpatial'
+import { WebSpatial } from '../private/WebSpatial'
+import { Vec3 } from '../SpatialTransform'
 
 export type BackgroundMaterialType =
   | 'none'
