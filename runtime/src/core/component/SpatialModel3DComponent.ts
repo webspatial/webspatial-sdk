@@ -1,5 +1,6 @@
 import { SpatialComponent } from './SpatialComponent'
-import { Vec3, WebSpatial } from '../private/WebSpatial'
+import { WebSpatial } from '../private/WebSpatial'
+import { Vec3 } from '../SpatialTransform'
 
 /**
  * Used to position a model3d in 3D space

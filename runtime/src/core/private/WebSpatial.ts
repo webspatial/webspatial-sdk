@@ -2,21 +2,6 @@ import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
 import { WindowStyle, WindowGroupOptions } from '../types'
 
-export class Vec3 {
-  constructor(
-    public x = 0,
-    public y = 0,
-    public z = 0,
-  ) {}
-}
-
-export class Vec4 {
-  x = 0
-  y = 0
-  z = 0
-  w = 1
-}
-
 export class WindowGroup {
   id = ''
 }

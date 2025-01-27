@@ -1,5 +1,6 @@
 import { Euler, Quaternion, Vector3 } from 'three'
 import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
+import { Vec3 } from '@xrsdk/runtime'
 
 class TimerLog {
   lastTime = Date.now()
@@ -195,7 +196,7 @@ var main = async () => {
     var e2 = await session.createEntity()
     await e2.setComponent(customModel)
     e2.transform.position.z = -(0.1 / 2 + 0.00001)
-    e2.transform.scale = new DOMPoint(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
+    e2.transform.scale = new Vec3(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
     await e2.updateTransform()
     await e2.setParent(e)
 
@@ -209,7 +210,7 @@ var main = async () => {
       var e2 = await session.createEntity()
       await e2.setComponent(customModel)
       e2.transform.position.y = 0.3
-      e2.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+      e2.transform.scale = new Vec3(0.1, 0.1, 0.1)
       await e2.updateTransform()
       await e2.setParent(e)
     }
@@ -219,7 +220,7 @@ var main = async () => {
     e3.transform.position.x = 0
     e3.transform.position.y = 0.0
     e3.transform.position.z = 0
-    e3.transform.scale = new DOMPoint(2.0, 2.0, 2.0)
+    e3.transform.scale = new Vec3(2.0, 2.0, 2.0)
     await e3.updateTransform()
     let win = await session.createWindowComponent()
     await Promise.all([
@@ -318,12 +319,8 @@ var main = async () => {
 
       for (var i = 0; i < 7; i++) {
         var e = await session.createEntity()
-        e.transform.position = new DOMPoint(
-          -0.35 + i * 0.1,
-          0,
-          0.2 + 0.00001 * i,
-        )
-        e.transform.scale = new DOMPoint(0.07, 0.07, 0.07)
+        e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.2 + 0.00001 * i)
+        e.transform.scale = new Vec3(0.07, 0.07, 0.07)
         await e.updateTransform()
 
         if (i == 3) {
