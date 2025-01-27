@@ -3,7 +3,7 @@ import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
 
 class TimerLog {
   lastTime = Date.now()
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   logDiff(str: String) {
     var curTime = Date.now()
@@ -20,7 +20,7 @@ class TestHelper {
     d: '#61C0BF',
   }
 
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   async delay(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms))
@@ -29,7 +29,7 @@ class TestHelper {
   setWebContent = async (win: Window, content: string, refVar: any) => {
     var newDiv = document.createElement('div')
     for (var key in refVar) {
-      ;(win as any)[key] = refVar[key]
+      ; (win as any)[key] = refVar[key]
     }
     newDiv.innerHTML = content
     win.document.body.appendChild(newDiv)
@@ -498,7 +498,7 @@ var main = async () => {
     b.style.fontSize = '1em'
     b.innerHTML = 'LOADING'
     document.body.appendChild(b)
-    var d = await session.getStats()
+    var d = await session._getStats()
     b.innerHTML = '// webviewRefs should be 1\n' + JSON.stringify(d, null, 4)
   }
 }
