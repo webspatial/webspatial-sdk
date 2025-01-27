@@ -232,10 +232,10 @@ export class SpatialSession {
   }
 
   /**
+   * @hidden
    * Debugging only, used to ping the native renderer
-   * [TODO] make this private
    */
-  async ping(msg: string) {
+  async _ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
 
