@@ -340,7 +340,7 @@ export class SpatialSession {
 
         await new Promise(resolve => setTimeout(resolve, 10))
       }
-      ; (openedWindow! as any)._webSpatialID = (
+      ;(openedWindow! as any)._webSpatialID = (
         openedWindow!.window as any
       ).testAPI.getWindowID()
     } else {

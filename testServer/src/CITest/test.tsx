@@ -300,16 +300,16 @@ class TestRunner {
   _started = false
   start() {
     this._started = true
-      ; (async () => {
-        for (let test of allTests) {
-          var result = await test()
-          this._onTestCompleteInternal({
-            name: result[0],
-            result: result[1] ? 'Pass' : 'Fail',
-            reason: result[2],
-          })
-        }
-      })()
+    ;(async () => {
+      for (let test of allTests) {
+        var result = await test()
+        this._onTestCompleteInternal({
+          name: result[0],
+          result: result[1] ? 'Pass' : 'Fail',
+          reason: result[2],
+        })
+      }
+    })()
   }
   stop() {
     this._started = false
@@ -319,7 +319,7 @@ class TestRunner {
       this.onTestComplete(tr)
     }
   }
-  onTestComplete = (tr: any) => { }
+  onTestComplete = (tr: any) => {}
 }
 
 function timeout(delay: number) {
