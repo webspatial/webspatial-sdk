@@ -137,7 +137,7 @@ var main = async () => {
   page = page ? page : 'default'
 
   var spatial = new Spatial()
-  let session = await spatial.requestSession()
+  let session = await spatial.requestSession()!
   var testHelper = new TestHelper(session)
   await session.log('        --------------Page loaded: ' + page)
 
@@ -405,7 +405,7 @@ var main = async () => {
       var startTime = Date.now()
       await session.transaction(() => {
         for (let i = 0; i < pingCount; i++) {
-          session.ping(str)
+          session._ping(str)
         }
       })
       var delta = Date.now() - startTime
@@ -422,9 +422,9 @@ var main = async () => {
       var startTime = Date.now()
       for (let i = 0; i < pingCount; i++) {
         if (i == pingCount - 1) {
-          await session.ping(str)
+          await session._ping(str)
         } else {
-          session.ping(str)
+          session._ping(str)
         }
       }
       var delta = Date.now() - startTime
