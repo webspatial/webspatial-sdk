@@ -3,7 +3,6 @@ import { SpatialComponent } from './SpatialComponent'
 
 /**
  * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
- * [TODO] need to support onclick event
  */
 type TranslateEvent = {
   eventType: 'dragstart' | 'dragend' | 'drag'
