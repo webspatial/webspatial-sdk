@@ -40,7 +40,7 @@ export class SpatialWindowComponent extends SpatialComponent {
         windowID: window._webSpatialID,
       })
     } else {
-      await WebSpatial.logger.error(
+      await console.warn(
         'failed to call setFromWindow, window provided is not valid',
       )
     }
