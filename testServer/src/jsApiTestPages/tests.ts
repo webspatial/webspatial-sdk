@@ -498,7 +498,7 @@ var main = async () => {
     b.style.fontSize = '1em'
     b.innerHTML = 'LOADING'
     document.body.appendChild(b)
-    var d = await session.getStats()
+    var d = await session._getStats()
     b.innerHTML = '// webviewRefs should be 1\n' + JSON.stringify(d, null, 4)
   }
 }
