@@ -240,25 +240,25 @@ export class SpatialSession {
   }
 
   /**
+   * @hidden
    * Debugging to get internal state from native code
-   * [TODO] make this private
    * @returns data as a js object
    */
-  async getStats() {
+  async _getStats() {
     return (await WebSpatial.getStats()) as any
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
+  async _inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
     return WebSpatial.inspect(spatialObjectId)
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspectRootWindowGroup() {
+  async _inspectRootWindowGroup() {
     return WebSpatial.inspectRootWindowGroup()
   }
 
