@@ -1,5 +1,6 @@
 import { SpatialViewComponent, StyleParam } from './component'
 import { SpatialSession } from './SpatialSession'
+import { Vec3 } from './SpatialTransform'
 
 /**
  * Helper class used to quickly add spatial content to standard web pages
@@ -21,7 +22,7 @@ export class SpatialHelper {
       var boxEntity = await this.session.createEntity()
       await boxEntity.setComponent(customModel)
       boxEntity.transform.position.z = 0
-      boxEntity.transform.scale = new DOMPoint(0.5, 0.5, 0.5)
+      boxEntity.transform.scale = new Vec3(0.5, 0.5, 0.5)
       await boxEntity.updateTransform()
       return boxEntity
     },

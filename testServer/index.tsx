@@ -7,6 +7,7 @@ import {
   SpatialViewComponent,
 } from '@xrsdk/runtime'
 import { SpatialDiv, Model } from '@xrsdk/react'
+import { Vec3 } from '@xrsdk/runtime'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -105,8 +106,8 @@ function App() {
         }>()
         for (var i = 0; i < 7; i++) {
           let e = await session.createEntity()
-          e.transform.position = new DOMPoint(-0.35 + i * 0.1, 0, 0.15)
-          e.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+          e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.15)
+          e.transform.scale = new Vec3(0.1, 0.1, 0.1)
           await e.updateTransform()
           var mat = await session.createPhysicallyBasedMaterial()
           mat.baseColor.r = 0.8
