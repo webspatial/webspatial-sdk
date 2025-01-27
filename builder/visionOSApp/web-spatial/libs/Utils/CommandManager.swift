@@ -28,7 +28,6 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
-        _ = registerCommand(name: "setLogLevel", action: setLogLevel)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -179,10 +178,6 @@ class CommandManager {
 
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
-    }
-
-    private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.setLogLevel(data: jsb.data!)
     }
 }
 
@@ -548,23 +543,11 @@ class CommandDataManager {
     }
 
     public func log(data: JSData) {
-        if let logStringArr: [String] = data.logString,
-           let logLevel: String = data.logLevel
-        {
-            let log = Logger.getLogger()
+        if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
-            switch logLevel {
-            case "TRACE": log.verbose(logString)
-            case "DEBUG": log.debug(logString)
-            case "INFO": log.info(logString)
-            case "WARN": log.warning(logString)
-            case "ERROR": log.error(logString)
-            default: print(logString)
-            }
+            print(logString)
         }
     }
-
-    public func setLogLevel(data: JSData) {}
 }
 
 struct JSBCommand: Codable {
