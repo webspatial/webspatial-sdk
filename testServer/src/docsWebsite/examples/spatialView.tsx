@@ -18,7 +18,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Create model ent and add as a child to the spatialView
         var box = await session.createMeshResource({ shape: 'box' })
-        var mat = await session.createPhysicallyBasedMaterial()
+        var mat = await session.createPhysicallyBasedMaterialResource()
         await mat.update()
         var customModel = await session.createModelComponent()
         customModel.setMaterials([mat])
@@ -32,7 +32,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         {
           var box = await session.createMeshResource({ shape: 'sphere' })
-          var mat = await session.createPhysicallyBasedMaterial()
+          var mat = await session.createPhysicallyBasedMaterialResource()
           await mat.update()
           var customModel = await session.createModelComponent()
           customModel.setMaterials([mat])

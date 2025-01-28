@@ -44,7 +44,7 @@ function MySample(props: { session?: SpatialSession }) {
             await ent.setComponent(vc)
 
             var box = await session.createMeshResource({ shape: 'sphere' })
-            var mat = await session.createPhysicallyBasedMaterial()
+            var mat = await session.createPhysicallyBasedMaterialResource()
             await mat.update()
             var customModel = await session.createModelComponent()
             await customModel.setMaterials([mat])
@@ -89,7 +89,7 @@ function MySample(props: { session?: SpatialSession }) {
             await ent.setComponent(vc)
 
             var box = await session.createMeshResource({ shape: 'sphere' })
-            var mat = await session.createPhysicallyBasedMaterial()
+            var mat = await session.createPhysicallyBasedMaterialResource()
             await mat.update()
             var customModel = await session.createModelComponent()
             await customModel.setMaterials([mat])
