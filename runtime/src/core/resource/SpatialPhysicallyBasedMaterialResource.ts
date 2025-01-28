@@ -5,7 +5,7 @@ import { SpatialObject } from '../SpatialObject'
 /**
  * PBR material which can be set on a SpatialModelComponent
  */
-export class SpatialPhysicallyBasedMaterial extends SpatialObject {
+export class SpatialPhysicallyBasedMaterialResource extends SpatialObject {
   /**
    * Base color of the material containing rgba between 0 and 1
    */
