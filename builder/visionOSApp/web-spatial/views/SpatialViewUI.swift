@@ -105,6 +105,14 @@ struct SpatialViewUI: View {
                             if let windowAttachment = attachments.entity(for: key) {
                                 if e.modelEntity.children.count == 0 {
                                     e.modelEntity.addChild(windowAttachment, preservingWorldTransform: false)
+
+                                    // Scale the window to fit the resolution to unit ratio as defined by setResolution API
+                                    let b = windowAttachment.attachment.bounds
+                                    let wv = e.getComponent(SpatialWindowComponent.self)!
+                                    let scaleFact = (Float(wv.resolutionX) / 1360.0) / (b.max.x - b.min.x)
+                                    windowAttachment.scale.x = scaleFact
+                                    windowAttachment.scale.y = scaleFact
+                                    windowAttachment.scale.z = scaleFact
                                 }
                             }
                         }
