@@ -3,7 +3,10 @@ import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
 import { WindowGroupOptions, WindowStyle } from './types'
 
-import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
+import {
+  SpatialMeshResource,
+  SpatialPhysicallyBasedMaterialResource,
+} from './resource'
 import {
   SpatialModelComponent,
   SpatialInputComponent,
@@ -147,21 +150,21 @@ export class SpatialSession {
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialMesh(entity)
+    return new SpatialMeshResource(entity)
   }
 
   /**
    * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterial(options?: any) {
+  async createPhysicallyBasedMaterialResource(options?: any) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
       WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialPhysicallyBasedMaterial(entity)
+    return new SpatialPhysicallyBasedMaterialResource(entity)
   }
 
   /**
