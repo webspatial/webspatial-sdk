@@ -109,7 +109,7 @@ function App() {
           e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.15)
           e.transform.scale = new Vec3(0.1, 0.1, 0.1)
           await e.updateTransform()
-          var mat = await session.createPhysicallyBasedMaterial()
+          var mat = await session.createPhysicallyBasedMaterialResource()
           mat.baseColor.r = 0.8
           mat.baseColor.g = 0.8
           mat.baseColor.b = 0.8 + Math.random() * 0.2
