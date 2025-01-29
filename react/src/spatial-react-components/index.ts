@@ -18,3 +18,4 @@ export {
 export * from './CSSSpatialDiv'
 
 export * from './Model3D'
+export * from './SpatialView'
