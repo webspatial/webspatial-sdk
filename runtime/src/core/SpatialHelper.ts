@@ -12,7 +12,7 @@ export class SpatialHelper {
   shape = {
     createShapeEntity: async (shape = 'box') => {
       var box = await this.session.createMeshResource({ shape: shape })
-      var mat = await this.session.createPhysicallyBasedMaterial()
+      var mat = await this.session.createPhysicallyBasedMaterialResource()
       await mat.update()
 
       var customModel = await this.session.createModelComponent()
@@ -63,7 +63,6 @@ export class SpatialHelper {
           })
           mutation.addedNodes.forEach(node => {
             if (node instanceof HTMLElement) {
-              console.log('Element added:', node)
               update()
             }
           })
