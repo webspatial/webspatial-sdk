@@ -1,4 +1,5 @@
 import { SpatialViewComponent, StyleParam } from './component'
+import { Spatial } from './Spatial'
 import { SpatialSession } from './SpatialSession'
 import { Vec3 } from './SpatialTransform'
 
@@ -7,6 +8,23 @@ import { Vec3 } from './SpatialTransform'
  * [Experimental] expect APIs to potentially change in future versions
  */
 export class SpatialHelper {
+  private static _instance: SpatialHelper | null = null
+  static get instance() {
+    if (this._instance) {
+      return this._instance
+    } else {
+      let spatial = new Spatial()
+      if (spatial.isSupported()) {
+        let session = spatial.requestSession()
+        if (session) {
+          this._instance = new SpatialHelper(session)
+          return this._instance
+        }
+      }
+    }
+    return null
+  }
+
   constructor(public session: SpatialSession) {}
 
   shape = {
@@ -25,6 +43,23 @@ export class SpatialHelper {
       boxEntity.transform.scale = new Vec3(0.5, 0.5, 0.5)
       await boxEntity.updateTransform()
       return boxEntity
+    },
+  }
+
+  navigation = {
+    openPanel: async (url: string) => {
+      // Create window group
+      var wg = await this.session.createWindowGroup('Plain')
+
+      // Create a root entity displaying a webpage
+      var ent = await this.session!.createEntity()
+      var i = await this.session!.createWindowComponent(wg)
+      await i.loadURL(url)
+      await ent.setCoordinateSpace('Root')
+      await ent.setComponent(i)
+
+      // Add enitity the windowgroup
+      await ent.setParentWindowGroup(wg)
     },
   }
 
