@@ -6,11 +6,52 @@
 
 An easy-to-use library that allows developers to create content for XR Platforms using standard web technology (eg. html/css/js) that can be extended by good integration with popular libraries like ReactJS, BabylonJS, ThreeJS, etc.
 
+### NPM
+```sh
+npm install @XRSDK/runtime
+npm install @XRSDK/react
+```
+
+### Usage
+
+```
+import React, { useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import { SpatialDiv } from '@xrsdk/react'
+
+function App() {
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      {/* Make UI float in front of the page */}
+      <SpatialDiv spatialStyle={{ position: { z: 50 }, cornerRadius: 10, }}>
+        <h1>{count}</h1>
+        <button className='btn' onClick={() => setCount(count + 1)}>
+          Increment
+        </button>
+      </SpatialDiv>
+    </>
+  );
+}
+
+// Initialize react
+var root = document.createElement('div')
+document.body.appendChild(root)
+ReactDOM.createRoot(root).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+
+```
+
+### Documentation
+- [spatial-web.github.io (Coming soon)](https://spatial-web.github.io) 
 
 ### Contribute/Build locally (Internal developers)
 
 #### Get dependencies
- - [NodeJS/NPM](https://nodejs.org/en/download/package-manager) to run local test website [see this if you have permission errors](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally)
+ - [NodeJS/NPM](https://nodejs.org/en/download/package-manager) to run local test website
  - [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
  - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
  - [Download this repo](https://github.com/spatial-web/XRSDK/archive/refs/heads/main.zip) (From this link or using git clone)
@@ -19,6 +60,7 @@ An easy-to-use library that allows developers to create content for XR Platforms
  Be familiar with web development and common tools like react (how to build UI) and libraries like ThreeJS (3D scene management). Would be good to know how to build a standard website first:
  - [ReactJS](https://react.dev/learn)
  - [ThreeJS](https://threejs.org/docs/#manual/en/introduction/Installation)
+ - Ensure you can install npm packages. Try [this](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally) if npm install fails
 
  Know how to build/run an Apple vision pro app in XCode
  - [Hello world](https://developer.apple.com/documentation/visionos/world)
