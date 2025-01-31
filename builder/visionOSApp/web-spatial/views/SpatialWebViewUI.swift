@@ -128,8 +128,20 @@ struct SpatialWebViewUI: View {
                                         let width = CGFloat(viewComponent.resolutionX)
                                         let height = CGFloat(viewComponent.resolutionY)
 
-                                        SpatialViewUI().environment(e).frame(width: width, height: height).position(x: x, y: y)
-                                            .offset(z: z)
+                                        SpatialViewUI().environment(e).frame(width: width, height: height).scaleEffect(
+                                            x: CGFloat(e.modelEntity.scale.x),
+                                            y: CGFloat(e.modelEntity.scale.y),
+                                            z: CGFloat(e.modelEntity.scale.z)
+                                        )
+                                        .rotation3DEffect(
+                                            Rotation3D(simd_quatf(
+                                                ix: e.modelEntity.orientation.vector.x,
+                                                iy: e.modelEntity.orientation.vector.y,
+                                                iz: e.modelEntity.orientation.vector.z,
+                                                r: e.modelEntity.orientation.vector.w
+                                            ))
+                                        ).position(x: x, y: y)
+                                        .offset(z: z)
                                     }
                                 }
                             }
