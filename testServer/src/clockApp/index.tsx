@@ -9,10 +9,7 @@ if (!spatial.isSupported()) {
 }
 
 // Create session if spatial is supported
-var session: SpatialSession | undefined
-if (spatial) {
-  session = spatial.requestSession()
-}
+var session: SpatialSession | null = spatial ? spatial.requestSession() : null
 
 var pageName = new URLSearchParams(window.location.search).get('pageName')
 var transparent = new URLSearchParams(window.location.search).get('transparent')

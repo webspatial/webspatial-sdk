@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {
   Spatial,
   SpatialEntity,
+  SpatialHelper,
   SpatialSession,
   SpatialViewComponent,
 } from '@xrsdk/runtime'
@@ -255,6 +256,19 @@ function App() {
         <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
         <a href="/src/template/index.html">Template</a>
+        <button
+          onClick={() => {
+            if (SpatialHelper.instance) {
+              SpatialHelper.instance.navigation.openPanel(
+                '/src/launcher/index.html',
+              )
+            } else {
+              window.open('/src/launcher/index.html')
+            }
+          }}
+        >
+          Launcher
+        </button>
       </div>
       <div className="m-5 flex flex-row flex-wrap text-white">
         <div
