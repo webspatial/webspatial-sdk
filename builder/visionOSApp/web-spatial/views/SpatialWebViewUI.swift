@@ -109,6 +109,7 @@ struct SpatialWebViewUI: View {
                         // Model3D content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
+                                let _ = e.forceUpdate ? 0 : 0
                                 SpatialModel3DView(parentYOffset: parentYOffset)
                                     .environment(e)
                             }
@@ -119,6 +120,7 @@ struct SpatialWebViewUI: View {
                             if let e = childEntities[key] {
                                 if e.coordinateSpace == .DOM {
                                     if let viewComponent = e.getComponent(SpatialViewComponent.self) {
+                                        let _ = e.forceUpdate ? 0 : 0
                                         let x = CGFloat(e.modelEntity.position.x)
                                         let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                         let z = CGFloat(e.modelEntity.position.z)
