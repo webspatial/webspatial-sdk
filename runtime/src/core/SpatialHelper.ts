@@ -47,7 +47,10 @@ export class SpatialHelper {
   }
 
   navigation = {
-    openPanel: async (url: string) => {
+    openPanel: async (
+      url: string,
+      options?: { dimensions: { x: number; y: number } },
+    ) => {
       // Create window group
       var wg = await this.session.createWindowGroup('Plain')
 
@@ -60,6 +63,37 @@ export class SpatialHelper {
 
       // Add enitity the windowgroup
       await ent.setParentWindowGroup(wg)
+
+      if (options?.dimensions) {
+        await wg.setStyle({ dimensions: options.dimensions })
+      }
+    },
+    openVolume: async (
+      url: string,
+      options?: { dimensions: { x: number; y: number } },
+    ) => {
+      var wg = await this.session.createWindowGroup('Volumetric')
+
+      // Create a root view entity within the window group
+      var rootEnt = await this.session!.createEntity()
+      await rootEnt.setComponent(await this.session!.createViewComponent(wg))
+      await rootEnt.setCoordinateSpace('Root')
+      await rootEnt.setParentWindowGroup(wg)
+
+      // Add webpage to the window group
+      var ent = await this.session!.createEntity()
+      var i = await this.session!.createWindowComponent(wg)
+      await i.loadURL(url)
+      if (options?.dimensions) {
+        await i.setResolution(options.dimensions.x, options.dimensions.y)
+      } else {
+        await i.setResolution(1000, 1000)
+      }
+      ent.transform.position.z = -0.49
+      await ent.updateTransform()
+      await ent.setCoordinateSpace('App')
+      await ent.setComponent(i)
+      await ent.setParent(rootEnt)
     },
   }
 
