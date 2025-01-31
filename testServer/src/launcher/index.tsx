@@ -8,11 +8,21 @@ const apps = [
   // { name: "Browser", url: "", icon: "🌐" },
   { name: 'Home', url: '/', icon: '🏠' },
   { name: 'Clock', url: '/src/clockApp/index.html', icon: '⏰' },
-  { name: 'TikTok', url: 'http://www.tiktok.com/', icon: '▶️' },
+  {
+    name: 'TikTok',
+    url: 'http://www.tiktok.com/',
+    icon: '▶️',
+    options: { dimensions: { x: 400, y: 650 } },
+  },
   // { name: "Game", url: "", icon: "🎮" },
   // { name: "Calculator", url: "", icon: "🧮" },
   // { name: "Weather", url: "", icon: "☀️" },
-  // { name: "ModelViewer", url: "", icon: "📦" },
+  {
+    name: 'ModelViewer',
+    url: '/src/modelViewer/index.html',
+    icon: '📦',
+    options: { type: 'volume' },
+  },
 ]
 function App() {
   useEffect(() => {
@@ -34,13 +44,17 @@ function App() {
 
   return (
     <div className="h-full p-2 flex gap-4 justify-center">
-      {apps.map(({ name, icon, url }) => (
+      {apps.map(({ name, icon, url, options }) => (
         <div
           key={name}
           className={`p-2 flex flex-col items-center cursor-pointer rounded-xl transition-all bg-gray-800"
                         } hover:bg-gray-700`}
           onClick={() => {
-            SpatialHelper.instance?.navigation.openPanel(url)
+            if (options?.type == 'volume') {
+              SpatialHelper.instance?.navigation.openVolume(url)
+            } else {
+              SpatialHelper.instance?.navigation.openPanel(url, options as any)
+            }
           }}
         >
           <span className="text-2xl">{icon}</span>
