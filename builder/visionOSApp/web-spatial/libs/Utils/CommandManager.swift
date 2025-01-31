@@ -533,6 +533,21 @@ class CommandDataManager {
     }
 
     public func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let getRootEntityID = data.update?.getRootEntityID,
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
+        {
+            let rootEntity = wg.getEntities().filter {
+                $0.value.coordinateSpace == .ROOT
+            }.first?.value
+            if rootEntity != nil {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:'" + rootEntity!
+                    .id + "'}")
+            } else {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:''}")
+            }
+            return
+        }
+
         if let dimensions = data.update?.style?.dimensions,
            let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
         {
@@ -596,6 +611,7 @@ struct JSResourceData: Codable {
     var materials: [String]?
     var getEntityID: String?
     var getParentID: String?
+    var getRootEntityID: String?
     var scrollEnabled: Bool?
     var scrollWithParent: Bool?
     var setScrollEdgeInsets: JSRect?
