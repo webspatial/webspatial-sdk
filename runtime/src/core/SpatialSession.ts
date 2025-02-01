@@ -19,7 +19,7 @@ import { RemoteCommand } from './private/remote-command'
 /**
  * Animation callback with timestamp
  */
-type animCallback = (time: DOMHighResTimeStamp) => void
+type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -39,10 +39,12 @@ export class SpatialSession {
 
     if (!this._frameLoopStarted) {
       this._frameLoopStarted = true
-      WebSpatial.onFrame((time: number, delta: number) => {
-        for (var cb of this._engineUpdateListeners) {
-          cb(time)
-        }
+      WebSpatial.onFrame(async (time: number) => {
+        await Promise.all(
+          this._engineUpdateListeners.map(cb => {
+            return cb(time)
+          }),
+        )
       })
     }
   }
