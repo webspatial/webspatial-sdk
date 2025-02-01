@@ -264,16 +264,20 @@ export class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static onFrame(fn: any) {
+  static onFrame(fn: (curTime: number) => Promise<any>) {
     var dt = 0
-    var lastTime = window.performance.now()
-    var loop = () => {
-      setTimeout(() => {
-        loop()
-      }, 1000 / 60)
+    var loop = async () => {
       var curTime = window.performance.now()
-      fn(curTime, curTime - lastTime)
-      lastTime = curTime
+      await fn(curTime)
+      var updateTime = window.performance.now() - curTime
+
+      // Call update loop targetting 60 fps
+      setTimeout(
+        () => {
+          loop()
+        },
+        Math.max(1000 / 60 - updateTime, 0),
+      )
     }
     loop()
   }
