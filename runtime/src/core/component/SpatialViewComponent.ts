@@ -6,6 +6,7 @@ import { SpatialComponent } from './SpatialComponent'
  * Child entities will be added within this volume's space
  * Defaults to having 1x1x1 meter dimensions
  * Resolution defaults to 100x100 pixels
+ * Only will be displayed on entities in "ROOT" or "DOM" space
  */
 export class SpatialViewComponent extends SpatialComponent {
   /**

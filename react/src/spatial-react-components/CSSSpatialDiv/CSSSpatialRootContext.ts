@@ -7,9 +7,9 @@ export class CSSSpatialRootContextObject {
 
   domSpatialId: string | null = null
 
-  private fns: Record<string, (dom: HTMLElement | undefined) => void> = {}
+  private fns: Record<string, (dom: HTMLDivElement | null) => void> = {}
   // cache dom for each spatialId
-  private spatialId2dom: Record<string, HTMLElement> = {}
+  private spatialId2dom: Record<string, HTMLDivElement> = {}
 
   // layer : [standardInstance sequence, portalInstance sequence]
   private layerSequences: Record<number, [number, number]> = {}
@@ -32,21 +32,21 @@ export class CSSSpatialRootContextObject {
 
   public onDomChange(
     spatialId: string,
-    fn: (dom: HTMLElement | undefined) => void,
+    fn: (dom: HTMLDivElement | null) => void,
   ) {
     this.fns[spatialId] = fn
   }
 
   public offDomChange(
     spatialId: string,
-    fn: (dom: HTMLElement | undefined) => void,
+    fn: (dom: HTMLDivElement | null) => void,
   ) {
     delete this.fns[spatialId]
   }
 
   public setCSSParserRef(
     cssSpatialID: string,
-    domElement: HTMLElement | undefined,
+    domElement: HTMLDivElement | null,
   ) {
     if (domElement) {
       this.spatialId2dom[cssSpatialID] = domElement
