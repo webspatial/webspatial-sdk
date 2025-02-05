@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -27,6 +27,15 @@ function App() {
     opacity: 0.8,
   }
 
+  const [contentMode, setContentMode] = useState<'fit' | 'fill'>('fit')
+
+  const handleContentModeChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const contentMode = event.target.value as 'fit' | 'fill'
+    setContentMode(contentMode)
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -39,7 +48,17 @@ function App() {
         ref={ref}
         style={styleOuter}
         modelUrl="/src/assets/FlightHelmet.usdz"
+        contentMode={contentMode}
       />
+
+      <select
+        value={contentMode}
+        onChange={handleContentModeChange}
+        className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
+      >
+        <option value="fit">fit</option>
+        <option value="fill">fill</option>
+      </select>
     </div>
   )
 }
