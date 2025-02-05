@@ -11,11 +11,11 @@ function makeOriginalKey(key: string) {
 
 export function useHijackSpatialDivRef(
   refIn: SpatialReactComponentRef,
-  cssParserRef: MutableRefObject<HTMLElement | undefined>,
+  cssParserRef: MutableRefObject<HTMLDivElement | null>,
 ) {
   const ref = cssParserRef
   const spatialDivRef = useCallback(
-    (domElement: HTMLElement) => {
+    (domElement: HTMLDivElement) => {
       if (domElement && refIn) {
         const domStyle = domElement.style
         const domStyleProxy = new Proxy(domStyle, {

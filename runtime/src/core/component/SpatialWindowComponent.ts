@@ -1,5 +1,6 @@
 import { SpatialComponent } from './SpatialComponent'
-import { Vec3, Vec4, WebSpatial } from '../private/WebSpatial'
+import { WebSpatial } from '../private/WebSpatial'
+import { Vec3 } from '../SpatialTransform'
 
 export type BackgroundMaterialType =
   | 'none'
@@ -40,7 +41,7 @@ export class SpatialWindowComponent extends SpatialComponent {
         windowID: window._webSpatialID,
       })
     } else {
-      await WebSpatial.logger.error(
+      await console.warn(
         'failed to call setFromWindow, window provided is not valid',
       )
     }
@@ -49,6 +50,7 @@ export class SpatialWindowComponent extends SpatialComponent {
   /**
    * Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
    * eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
+   * See 1360 in spatialViewUI.swift for how this ratio works
    * @param x width in pixels
    * @param y height in pixels
    */
@@ -58,6 +60,10 @@ export class SpatialWindowComponent extends SpatialComponent {
     })
   }
 
+  /**
+   * [Experimental] Sets the anchor which the entity this is attached to will rotate around
+   * @param rotationAnchor
+   */
   async setRotationAnchor(rotationAnchor: Vec3) {
     await WebSpatial.updateResource(this._resource, {
       rotationAnchor: rotationAnchor,
@@ -65,7 +71,7 @@ export class SpatialWindowComponent extends SpatialComponent {
   }
 
   /**
-   * Sets the opacity of the window after apply material
+   * [Experimental] Sets the opacity of the window after apply material
    * @param opacity
    */
   async setOpacity(opacity: number) {

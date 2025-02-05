@@ -19,6 +19,15 @@ struct CornerRadius: Codable {
     var bottomLeading: CGFloat = 0
     var topTrailing: CGFloat = 0
     var bottomTrailing: CGFloat = 0
+
+    func toJson() -> [String: Any] {
+        return [
+            "topLeading": topLeading,
+            "bottomLeading": bottomLeading,
+            "topTrailing": topTrailing,
+            "bottomTrailing": bottomTrailing,
+        ]
+    }
 }
 
 struct MaterialWithBorderCornerModifier: ViewModifier {

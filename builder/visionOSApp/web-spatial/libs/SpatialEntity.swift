@@ -92,10 +92,12 @@ class SpatialEntity: SpatialObject {
 
         // Remove from existing parent
         parent?.childEntities.removeValue(forKey: id)
+        parentEnt?.modelEntity.removeChild(modelEntity)
 
         // Set new parent
         if let p = parentEnt {
             parent = p
+            p.modelEntity.addChild(modelEntity)
             p.childEntities[id] = self
         }
     }
