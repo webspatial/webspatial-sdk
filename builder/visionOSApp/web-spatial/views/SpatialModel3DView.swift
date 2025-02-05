@@ -24,6 +24,7 @@ struct SpatialModel3DView: View {
                     let opacity = childModel3DComponent.opacity
 
                     let url = URL(string: childModel3DComponent.modelURL)!
+                    let contentMode = childModel3DComponent.contentMode
 
                     // Matrix = MTranslate X MRotate X MScale
                     Model3D(url: url) { newPhase in
@@ -34,7 +35,7 @@ struct SpatialModel3DView: View {
                         case let .success(resolvedModel3D):
                             resolvedModel3D
                                 .resizable()
-                                .aspectRatio(contentMode: .fit)
+                                .aspectRatio(contentMode: contentMode)
 
                         case let .failure(error):
                             ContentUnavailableView(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
