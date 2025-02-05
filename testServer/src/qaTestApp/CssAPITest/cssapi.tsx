@@ -2,8 +2,34 @@ import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@xrsdk/react'
 import { SpatialDiv } from '@xrsdk/react/dist'
+import styled from 'styled-components'
 
 enableDebugTool()
+
+const StyledElement = styled.div<{
+  opacity: number
+  display: string
+  visibility: string
+  translateX: number
+  rotateZ: number
+  xrBack: number
+  backgroundMaterial: string
+  transformOrigin: string
+}>`
+  color: white;
+  --xr-back: ${props => props.xrBack};
+  --xr-background-material: ${props => props.backgroundMaterial};
+  display: ${props => props.display};
+  visibility: ${props => props.visibility};
+  opacity: ${props => props.opacity};
+  transform: translateX(${props => props.translateX}px)
+    rotateZ(${props => props.rotateZ}deg);
+  transform-origin: ${props => props.transformOrigin};
+  transition: all 0.3s ease-in-out;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40px;
+`
 
 function App() {
   const ref = useRef<HTMLDivElement>(null)
@@ -15,6 +41,7 @@ function App() {
   const [translateX, setTranslateX] = useState(0)
   const [rotateZ, setRotateZ] = useState(0)
   const [xrBack, setXrBack] = useState(0)
+  const [backgroundMaterial, setBackgroundMaterial] = useState(' ')
   const [transformOrigin, setTransformOrigin] = useState('left top')
   const [display, setDisplay] = useState('')
   const [visibility, setVisibility] = useState('')
@@ -27,6 +54,17 @@ function App() {
     display: display,
     visibility: visibility,
   } as CSSProperties)
+
+  const boxStyles = {
+    '--box-opacity': opacity,
+    '--box-translate-x': `${translateX}px`,
+    '--box-rotate-z': `${rotateZ}deg`,
+    '--box-transformOrigin': transformOrigin,
+    '--box-visibility': visibility,
+    '--box-display': display,
+    '--box-xr-back': xrBack,
+    '--box-xr-background-material': backgroundMaterial,
+  }
 
   const [elementState, setElementState] = useState({
     style: '',
@@ -195,7 +233,6 @@ function App() {
 
   // 测试 background-material
   // 存储 backgroundMaterial 的值
-  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // 可以直接修改material
 
   const handleBackgroundMaterialChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -462,26 +499,34 @@ function App() {
               <div
                 enable-xr
                 style={style}
-                className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
               >
                 Test in-line Style
               </div>
             ) : styleMode == 'Css module' ? (
-              <div className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300">
+              <div
+                enable-xr
+                style={boxStyles}
+                className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              >
                 Test CSS Module
               </div>
             ) : (
-              <div>styled Component</div>
+              <StyledElement
+                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+                enable-xr
+                opacity={opacity}
+                display={display}
+                visibility={visibility}
+                translateX={translateX}
+                rotateZ={rotateZ}
+                xrBack={xrBack}
+                backgroundMaterial={backgroundMaterial}
+                transformOrigin={transformOrigin}
+              >
+                styled Component
+              </StyledElement>
             )}
-            {/*<div*/}
-            {/*  enable-xr*/}
-            {/*  className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"*/}
-            {/*  // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值*/}
-            {/*  ref={ref}*/}
-            {/*  style={style}*/}
-            {/*>*/}
-            {/*  Test Element*/}
-            {/*</div>*/}
             <div
               enable-xr
               className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
@@ -514,6 +559,7 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
+              {opacity}
               <button
                 onClick={removeOpacity}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -540,6 +586,7 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
+              {xrBack}
               <button
                 onClick={removeXrBack}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -822,7 +869,15 @@ function App() {
                 padding: '30px',
               }}
             >
-              css class
+              <div
+                enable-xr
+                style={{
+                  '--xr-background-material': 'default',
+                }}
+                className="p-2 text-white rounded-lg transition-colors"
+              >
+                <center>CSS Class</center>
+              </div>
             </div>
             <div
               id="father"
