@@ -8,11 +8,15 @@ import { SpatialComponent } from './component'
  * Entity used to describe an object that can be added to the scene
  */
 export class SpatialEntity extends SpatialObject {
+  /**
+   * Transform corresponding to the entity
+   * note: updateTransform must be called for transform to be synced to rendering
+   */
   transform = new SpatialTransform()
 
   /** @hidden */
   private _destroyed = false
-
+  /** @hidden */
   private get _entity() {
     return this._resource
   }
@@ -35,12 +39,16 @@ export class SpatialEntity extends SpatialObject {
 
   /**
    * Attaches a component to the entity to be displayed
+   * [TODO] review pass by value vs ref and ownership model for this
    */
   async setComponent(component: SpatialComponent) {
     await WebSpatial.setComponent(this._entity, component._resource)
     this.components.set(component.constructor, component)
   }
 
+  /**
+   * Removes a component from the entity
+   */
   async removeComponent<T extends SpatialComponent>(
     type: new (...args: any[]) => T,
   ) {
@@ -51,6 +59,9 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
+  /**
+   * Gets a component from the entity
+   */
   getComponent<T extends SpatialComponent>(
     type: new (...args: any[]) => T,
   ): T | undefined {
@@ -77,10 +88,22 @@ export class SpatialEntity extends SpatialObject {
     })
   }
 
+  /**
+   * Sets the coordinate space of this entity (Default: App)
+   * "App" = game engine style coordinates in meters
+   * "Dom" = Windowing coordinates in dom units (eg. 0,0,0 is top left of window)
+   * "Root" = Coordinate space is ignored and content is displayed and updated as windowGroup's root object, window groups can only have one root entity
+   * [TODO] review this api
+   * @param space coordinate space mode
+   */
   async setCoordinateSpace(space: 'App' | 'Dom' | 'Root') {
     await WebSpatial.updateResource(this._entity, { setCoordinateSpace: space })
   }
 
+  /**
+   * Query the 3d boudning box of the entity
+   * @returns The bounding box of the entity
+   */
   async getBoundingBox() {
     var res: any = await WebSpatial.updateResource(this._entity, {
       getBoundingBox: true,
@@ -91,12 +114,16 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
+  /**
+   * Sets if the entity should be visible (default: True)
+   * @param visible
+   */
   async setVisible(visible: boolean) {
     await WebSpatial.updateResource(this._entity, { visible })
   }
 
   /**
-   * Removes a reference to the entity by the renderer and this object should no longer be used. Attached components will not be destroyed
+   * Removes a reference to the entity by the renderer and this object should no longer be used. [TODO] Attached components will not be destroyed
    */
   async destroy() {
     this._destroyed = true

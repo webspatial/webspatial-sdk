@@ -16,3 +16,6 @@ export {
   type SpatialReactComponentRef as SpatialDivRef,
 } from './SpatialReactComponent'
 export * from './CSSSpatialDiv'
+
+export * from './Model3D'
+export * from './SpatialView'

@@ -63,11 +63,10 @@ async function createWebViewJSAPI() {
       if (e.isDestroyed()) {
         return
       }
-      session!.requestAnimationFrame(loop)
       e.transform.position.x = 500 + Math.sin(time / 1000) * 200
       e.updateTransform()
     }
-    session!.requestAnimationFrame(loop)
+    session!.addOnEngineUpdateEventListener(loop)
 
     //destory
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -121,11 +120,11 @@ async function webViewMemoryLeakTest() {
     return (testResult = ['WebView JS API', false, ''])
   }
 
-  var stats = await session!.getStats()
+  var stats = await session!._getStats()
   if (stats.backend != 'AVP') {
     var e1 = await session!.createEntity()
     var e2 = await session!.createEntity()
-    var stats2 = await session!.getStats()
+    var stats2 = await session!._getStats()
 
     await e1.destroy()
     await e2.destroy()
@@ -162,7 +161,7 @@ async function webViewMemoryLeakTest() {
     ])
     //bind window to entity
     await e.setComponent(i)
-    var webview1 = await session!.getStats()
+    var webview1 = await session!._getStats()
     session!.log('Webview 1 Stats: ' + JSON.stringify(webview1))
     const windowArrayLength = webview1.refObjects.windowArray.length
     session!.log('Webview Ref Counts: ' + windowArrayLength)
@@ -207,7 +206,7 @@ async function webViewMemoryLeakTest() {
     ])
     //bind window to entity
     await e.setComponent(i)
-    var webview2 = await session!.getStats()
+    var webview2 = await session!._getStats()
     const windowArrayLength = webview1.refObjects.windowArray.length
     session!.log('Webview 2 Stats: ' + JSON.stringify(webview2))
     session!.log('Webview Ref Counts: ' + windowArrayLength)
@@ -241,13 +240,13 @@ async function nestedDivsTest() {
   ReactDOM.createRoot(root).render(<NestedDivRender />)
   await getSession()
 
-  var stats = await session!.getStats()
+  var stats = await session!._getStats()
   if (stats.backend != 'AVP') {
     var objCount = 0
     var retry = 0
     while (objCount != 15) {
       await timeout(50)
-      var sessionStats = await session!.getStats()
+      var sessionStats = await session!._getStats()
       objCount = sessionStats.objects.count
       retry++
       if (retry > 100) {
@@ -266,7 +265,7 @@ async function nestedDivsTest() {
   var retry = 0
   while (entityCount != 7) {
     await timeout(50)
-    var sessionStats = await session!.getStats()
+    var sessionStats = await session!._getStats()
     entityCount = sessionStats.objects.entityArray.length
     retry++
     if (retry > 40) {

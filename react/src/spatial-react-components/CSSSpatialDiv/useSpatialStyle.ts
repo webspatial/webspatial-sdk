@@ -115,7 +115,7 @@ function parseSpatialStyle(node: HTMLElement) {
 }
 
 export function useSpatialStyle() {
-  const ref = useRef<HTMLElement>()
+  const ref = useRef<HTMLDivElement | null>(null)
 
   const [spatialStyle, setSpatialStyle] = useState({
     position: { x: 0, y: 0, z: 1 },
