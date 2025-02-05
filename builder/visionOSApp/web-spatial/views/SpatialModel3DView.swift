@@ -66,6 +66,7 @@ struct SpatialModel3DView: View {
                     .position(x: x, y: y)
                     .offset(z: z)
                     .opacity(opacity)
+                    .hidden(!e.visible)
                 }
             }
         }
