@@ -89,10 +89,10 @@ class WindowGroupMgr: ObservableObject {
 
     func setToMainSceneCfg() {
         let cfg = WindowGroupPlainDefaultValues(pwaConfig.mainScene)
-        update(cfg)
+        updateWindowGroupPlainDefaultValues(cfg)
     }
 
-    func update(_ data: WindowGroupPlainDefaultValues) {
+    func updateWindowGroupPlainDefaultValues(_ data: WindowGroupPlainDefaultValues) {
         if let newSize = data.defaultSize {
             wgSetting.defaultSize = newSize
         }
