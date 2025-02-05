@@ -21,6 +21,7 @@
     "@xrsdk/jsx-runtime": "workspace:*",
     "@xrsdk/react": "workspace:*",
     "@xrsdk/runtime": "workspace:*",
+    "@xterm/xterm": "^5.5.0",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
     "gsap": "^3.12.5",
