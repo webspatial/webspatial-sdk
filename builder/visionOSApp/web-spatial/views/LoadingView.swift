@@ -11,8 +11,6 @@ import SwiftUICore
 struct LoadingView: View {
     var body: some View {
         ZStack {
-            Color.black.opacity(0.8)
-                .ignoresSafeArea()
             VStack {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))

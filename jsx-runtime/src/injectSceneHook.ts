@@ -1,10 +1,10 @@
 import { defaultSceneConfig, getSession, XRApp } from '@xrsdk/react'
 
-export function injectSceneHook() {
+export async function injectSceneHook() {
   if (!window.opener) return
   if ((window as any)._SceneHookOff) return
 
-  // getSession()?.setLoading('show')
+  await getSession()?.setLoading('show')
 
   // see this flag, we have done create the root scene
   document.addEventListener('DOMContentLoaded', async () => {
@@ -16,7 +16,13 @@ export function injectSceneHook() {
         console.error(error)
       }
     }
-    // await getSession()?.setLoading('hide')
+    // fixme: this duration is too short so that hide and show is at racing, so add a little delay to avoid
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(null)
+      }, 1000)
+    })
+    await getSession()?.setLoading('hide')
     await XRApp.getInstance().show((window as any)._webSpatialID, cfg)
   })
 }

@@ -412,15 +412,18 @@ class SpatialWindowComponent: SpatialComponent {
         // we should signal to its parent SWC
         // another  onShowRootFn?
         // or we pass its parent windowGroupID instead?
+        // get current windowGroup
+//        let cwg = SpatialWindowGroup.getSpatialWindowGroup("current")
 
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
-            let lwgdata = LoadingWindowGroupData(
-                method: method,
-                windowStyle: nil
-            )
-            wg.setLoadingWindowData
-                .send(lwgdata)
-        }
+        // TODO: we need to enssure that root windowGroup is exist
+        // for testing purpose we assume that root windowGroup always exist
+        let wg = SpatialWindowGroup.getRootWindowGroup()
+        print("wg")
+        let lwgdata = LoadingWindowGroupData(
+            method: method,
+            windowStyle: nil
+        )
+        wg.setLoadingWindowData.send(lwgdata)
     }
 
     func didStartReceivePageContent() {}
