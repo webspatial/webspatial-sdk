@@ -12,6 +12,7 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowGroup: SpatialObject {
+    var wgd: WindowGroupData? = nil
     static func getSpatialWindowGroup(_ name: String) -> SpatialWindowGroup? {
         return SpatialObject.get(name) as? SpatialWindowGroup
     }
