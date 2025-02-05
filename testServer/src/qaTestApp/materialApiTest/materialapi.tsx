@@ -270,7 +270,7 @@ function App() {
           Material API Tests
         </SpatialDiv>
       </h1>
-      {/* 导航栏 */}
+      {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
           返回主页
