@@ -390,6 +390,15 @@ class CommandDataManager {
                 spatialModel3DComponent.opacity = opacity
             }
 
+            if let contentMode: String = data.update?.contentMode {
+                if contentMode == "fill" {
+                    spatialModel3DComponent.contentMode = .fill
+
+                } else if contentMode == "fit" {
+                    spatialModel3DComponent.contentMode = .fit
+                }
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -505,8 +514,11 @@ class CommandDataManager {
                         }
 
                     } else {
-                        // TODO: search for the swc with windowID
-                        // call focusRoot
+                        if let windowGroupID = data.sceneData?.windowGroupID {
+                            target.focusRoot(windowGroupID)
+                        } else {
+                            print("error: no windowGroupID")
+                        }
                     }
 
                     target.completeEvent(requestID: requestID, data: fakeData)
@@ -604,6 +616,7 @@ struct JSResourceData: Codable {
     var url: String?
     var aspectRatio: String?
     var opacity: Double?
+    var contentMode: String?
     var resolution: JSVector2?
     var isPortal: Bool?
     var rotationAnchor: JSVector3?
@@ -677,4 +690,5 @@ struct SceneJSBData: Codable {
     var sceneConfig: WindowGroupOptions?
     var url: String?
     var windowID: String?
+    var windowGroupID: String?
 }

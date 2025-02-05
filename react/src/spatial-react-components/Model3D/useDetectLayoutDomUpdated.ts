@@ -1,14 +1,7 @@
-import { useRef, useLayoutEffect, useEffect } from 'react'
-import { useForceUpdate } from '../hooks/useForceUpdate'
+import { useRef, useEffect } from 'react'
 
 export function useDetectLayoutDomUpdated(onDomUpdated: () => void) {
   const ref = useRef<HTMLDivElement>(null)
-
-  const forceUpdate = useForceUpdate()
-
-  useLayoutEffect(() => {
-    ref.current && onDomUpdated()
-  })
 
   // detect dom resize
   // Trigger native resize on web resize events
@@ -19,7 +12,7 @@ export function useDetectLayoutDomUpdated(onDomUpdated: () => void) {
     }
 
     let ro = new ResizeObserver(elements => {
-      forceUpdate()
+      onDomUpdated()
     })
 
     ro.observe(ref.current!)
@@ -35,11 +28,13 @@ export function useDetectLayoutDomUpdated(onDomUpdated: () => void) {
       return
     }
     let ro = new MutationObserver(elements => {
-      forceUpdate()
+      onDomUpdated()
     })
+
     ro.observe(ref.current!, {
       attributeFilter: ['class', 'style'],
       subtree: true,
+      attributeOldValue: false,
     })
     return () => {
       ro.disconnect()
