@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -54,6 +54,14 @@ function App() {
           : 'visible'
     }
   }
+  const [contentMode, setContentMode] = useState<'fit' | 'fill'>('fit')
+
+  const handleContentModeChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const contentMode = event.target.value as 'fit' | 'fill'
+    setContentMode(contentMode)
+  }
 
   return (
     <div className="w-screen h-screen  ">
@@ -67,6 +75,7 @@ function App() {
         ref={ref}
         style={styleOuter}
         modelUrl="/src/assets/FlightHelmet.usdz"
+        contentMode={contentMode}
       />
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
@@ -79,6 +88,15 @@ function App() {
           display visible
         </button>
       </div>
+
+      <select
+        value={contentMode}
+        onChange={handleContentModeChange}
+        className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
+      >
+        <option value="fit">fit</option>
+        <option value="fill">fill</option>
+      </select>
     </div>
   )
 }

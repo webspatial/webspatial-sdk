@@ -14,6 +14,7 @@ export interface Model3DProps {
   spatialTransform?: PartialSpatialTransformType
   modelUrl: string
   visible: boolean
+  contentMode?: 'fill' | 'fit'
 
   className?: string
   style?: CSSProperties | undefined
@@ -25,7 +26,14 @@ export function Model3DComponent(
   props: Model3DProps,
   refIn: Model3DComponentRef,
 ) {
-  const { className, style = {}, modelUrl, visible, spatialTransform } = props
+  const {
+    className,
+    style = {},
+    modelUrl,
+    visible,
+    spatialTransform,
+    contentMode = 'fit',
+  } = props
 
   const theSpatialTransform =
     PopulatePartialSpatialTransformType(spatialTransform)
@@ -96,6 +104,12 @@ export function Model3DComponent(
     theSpatialTransform.scale.y,
     theSpatialTransform.scale.z,
   ])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setContentMode(contentMode)
+    }
+  }, [model3DNativeRef.current, contentMode])
 
   const layoutDomStyle: CSSProperties = {
     ...style,
