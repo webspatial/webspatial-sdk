@@ -106,11 +106,21 @@ struct SpatialWebViewUI: View {
                             }
                         }
 
+                        // Model3D content
+                        ForEach(Array(childEntities.keys), id: \.self) { key in
+                            if let e = childEntities[key] {
+                                let _ = e.forceUpdate ? 0 : 0
+                                SpatialModel3DView(parentYOffset: parentYOffset)
+                                    .environment(e)
+                            }
+                        }
+
                         // SpatialView content
                         ForEach(Array(childEntities.keys), id: \.self) { key in
                             if let e = childEntities[key] {
                                 if e.coordinateSpace == .DOM {
                                     if let viewComponent = e.getComponent(SpatialViewComponent.self) {
+                                        let _ = e.forceUpdate ? 0 : 0
                                         let x = CGFloat(e.modelEntity.position.x)
                                         let y = CGFloat(e.modelEntity.position.y - parentYOffset)
                                         let z = CGFloat(e.modelEntity.position.z)
@@ -118,13 +128,26 @@ struct SpatialWebViewUI: View {
                                         let width = CGFloat(viewComponent.resolutionX)
                                         let height = CGFloat(viewComponent.resolutionY)
 
-                                        SpatialViewUI().environment(e).frame(width: width, height: height).position(x: x, y: y)
-                                            .offset(z: z)
+                                        SpatialViewUI().environment(e).frame(width: width, height: height).scaleEffect(
+                                            x: CGFloat(e.modelEntity.scale.x),
+                                            y: CGFloat(e.modelEntity.scale.y),
+                                            z: CGFloat(e.modelEntity.scale.z)
+                                        )
+                                        .rotation3DEffect(
+                                            Rotation3D(simd_quatf(
+                                                ix: e.modelEntity.orientation.vector.x,
+                                                iy: e.modelEntity.orientation.vector.y,
+                                                iz: e.modelEntity.orientation.vector.z,
+                                                r: e.modelEntity.orientation.vector.w
+                                            ))
+                                        ).position(x: x, y: y)
+                                        .offset(z: z)
                                     }
                                 }
                             }
                         }
-                    }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
                 }
 
                 // Display the main webview
@@ -138,6 +161,7 @@ struct SpatialWebViewUI: View {
             }
             .opacity(wv.opacity)
             .hidden(!ent.visible)
+//            .hidden(true)
         }
     }
 }

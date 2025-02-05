@@ -4,7 +4,7 @@ import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         let session = props.session
 
@@ -31,7 +31,6 @@ function MySample(props: { session?: SpatialSession }) {
         var dt = 0
         var curTime = Date.now()
         let loop = async () => {
-          session.requestAnimationFrame(loop)
           dt = Date.now() - curTime
           curTime = Date.now()
           // Perform onFrame logic
@@ -41,11 +40,11 @@ function MySample(props: { session?: SpatialSession }) {
             entity.updateTransform()
           })
         }
-        loop()
+        session.addOnEngineUpdateEventListener(loop)
         // CODESAMPLE_END
       }
     })()
   }, [])
-  return <div style={{ height: "400px" }}></div>
+  return <div style={{ height: '400px' }}></div>
 }
 showSample(MySample)
