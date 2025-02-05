@@ -151,13 +151,30 @@ struct SpatialWebViewUI: View {
                 }
 
                 // Display the main webview
-                wv.getView()
-                    .materialWithBorderCorner(
-                        wv.backgroundMaterial,
-                        wv.cornerRadius
-                    )
+                if wv.didFailLoad {
+                    VStack {
+                        Text("Failed to load webpage. Is the server running?")
+                            .foregroundColor(.white)
+                        Button("Reload") {
+                            if let url = wv.getURL() {
+                                wv.navigateToURL(url: url)
+                            } else {
+                                print("ERROR, unable to reload URL")
+                            }
+                        }
+                        .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity).glassBackgroundEffect()
 
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    wv.getView()
+                        .materialWithBorderCorner(
+                            wv.backgroundMaterial,
+                            wv.cornerRadius
+                        )
+
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
             .opacity(wv.opacity)
             .hidden(!ent.visible)
