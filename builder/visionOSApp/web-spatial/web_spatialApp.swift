@@ -120,7 +120,7 @@ struct web_spatialApp: App {
             VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
         }
 
-        WindowGroup(id: "loading", for: LoadingWindowGroupData.self) { _ in
+        WindowGroup(id: "loading") {
             LoadingView()
         }
     }
