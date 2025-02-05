@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { SpatialDiv } from '@xrsdk/react/dist'
 
 function App() {
-  const ref = useRef<HTMLDivElement>(null)
+  // child element
+  const testElementRef = useRef<HTMLDivElement>(null)
   const [elementState, setElementState] = useState({
     style: '',
     className: '',
@@ -12,110 +13,253 @@ function App() {
   const [classNames, setClassNames] = useState(
     'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
   )
+  const [selectedRefMaterial, setSelectedRefMaterial] = useState('default')
+  const [selectedClassNameMaterial, setSelectedClassNameMaterial] =
+    useState('default')
+  const [selectedInlineMaterial, setSelectedInlineMaterial] = useState('none')
+  const [style, setStyle] = useState<CSSProperties>({
+    '--xr-back': '100',
+  } as CSSProperties)
+
+  // html style
+  const [selectedHtmlMaterial, setSelectedHtmlMaterial] = useState('none')
+  const [htmlStyles, setHtmlStyles] = useState<CSSStyleDeclaration | null>(null)
+
+  // parent element
+  const testElementRefParent = useRef<HTMLDivElement>(null)
+  const [elementStateParent, setElementStateParent] = useState({
+    style: '',
+    className: '',
+  })
+  const [testNameParent, setTestNameParent] = useState('testNameParent')
+  const [classNamesParent, setClassNamesParent] = useState(
+    'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
+  )
+  const [selectedRefMaterialParent, setSelectedRefMaterialParent] =
+    useState('default')
+  const [selectedClassNameMaterialParent, setSelectedClassNameMaterialParent] =
+    useState('default')
+  const [selectedInlineMaterialParent, setSelectedInlineMaterialParent] =
+    useState('none')
+  const [styleParent, setStyleParent] = useState<CSSProperties>({
+    '--xr-back': '50',
+  } as CSSProperties)
+
   const removeStyleAttribute = () => {
-    if (ref.current) {
+    if (testElementRef.current) {
       // remove --xr-background-material style property
-      ref.current.style.removeProperty('--xr-background-material')
+      testElementRef.current.style.removeProperty('--xr-background-material')
+    }
+  }
+
+  const removeStyleAttributeParent = () => {
+    if (testElementRefParent.current) {
+      // remove --xr-background-material style property
+      testElementRefParent.current.style.removeProperty(
+        '--xr-background-material',
+      )
     }
   }
 
   const updateElementState = () => {
-    if (ref.current) {
+    if (testElementRef.current) {
       setElementState({
-        style: ref.current.getAttribute('style') || 'None',
-        className: ref.current.className || 'None',
+        style: testElementRef.current.getAttribute('style') || 'None',
+        className: testElementRef.current.className || 'None',
+      })
+    }
+  }
+
+  const updateElementStateParent = () => {
+    if (testElementRefParent.current) {
+      setElementStateParent({
+        style: testElementRefParent.current.getAttribute('style') || 'None',
+        className: testElementRefParent.current.className || 'None',
       })
     }
   }
 
   useEffect(() => {
     updateElementState()
-  }, [ref.current])
+  }, [testElementRef.current])
 
-  const testDefaultMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'default'
-    setTestName('test default Mat ref')
+  useEffect(() => {
+    updateElementStateParent()
+  }, [testElementRefParent.current])
+
+  useEffect(() => {
+    const htmlElement = document.documentElement
+    const computedStyles = window.getComputedStyle(htmlElement)
+    setHtmlStyles(computedStyles)
+  }, [])
+
+  useEffect(() => {
+    const htmlElement = document.documentElement
+
+    // Function to get the computed styles
+    const getHtmlStyles = () => window.getComputedStyle(htmlElement)
+
+    // Initialize with the current styles
+    setHtmlStyles(getHtmlStyles())
+
+    // MutationObserver to listen for style changes
+    const observer = new MutationObserver(() => {
+      setHtmlStyles(getHtmlStyles())
+    })
+
+    // Observe the <html> element for style attribute changes
+    observer.observe(htmlElement, {
+      attributes: true, // Listen for attribute changes
+      attributeFilter: ['style'], // Only observe the "style" attribute
+    })
+
+    // Cleanup observer on component unmount
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  const updateHtmlBackgroundMaterial = (newMaterial: string) => {
+    document.documentElement.style['--xr-background-material'] = newMaterial
+    document.documentElement.style['background-color'] = 'transparent'
+    setSelectedInlineMaterial(newMaterial)
+    console.log(
+      'update html style new material: ' +
+        newMaterial +
+        ',  ' +
+        htmlStyles?.getPropertyValue('--xr-background-material'),
+    )
+  }
+
+  const applyRefMaterial = () => {
+    if (testElementRef.current) {
+      ;(testElementRef.current.style as any)['--xr-background-material'] =
+        selectedRefMaterial
+      setTestName(`test ${selectedRefMaterial} Mat ref`)
+    }
     updateElementState()
   }
 
-  const testThickMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'thick'
-    updateElementState()
-    setTestName('test thick Mat ref')
+  const applyRefMaterialParent = () => {
+    if (testElementRefParent.current) {
+      ;(testElementRefParent.current.style as any)['--xr-background-material'] =
+        selectedRefMaterialParent
+      setTestNameParent(`test ${selectedRefMaterialParent} Mat ref`)
+    }
+    updateElementStateParent()
   }
 
-  const testRegularMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'regular'
-    updateElementState()
-    setTestName('test regular Mat ref')
+  const applyClassNameMaterial = () => {
+    if (testElementRef.current) {
+      let newClassNames =
+        'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
+      if (selectedClassNameMaterial === 'default') {
+        newClassNames = 'defaultMat ' + newClassNames
+      } else if (selectedClassNameMaterial === 'thick') {
+        newClassNames = 'thickMat ' + newClassNames
+      } else if (selectedClassNameMaterial === 'regular') {
+        newClassNames = 'regularMat ' + newClassNames
+      } else if (selectedClassNameMaterial === 'thin') {
+        newClassNames = 'thinMat ' + newClassNames
+      }
+      setClassNames(newClassNames)
+      console.log(`${selectedClassNameMaterial} Mat classNames: ` + classNames)
+      setTestName(`test ${selectedClassNameMaterial} Mat className`)
+    }
   }
 
-  const testThinMatRef = () => {
-    if (!ref.current) return
-    ;(ref.current.style as any)['--xr-background-material'] = 'thin'
-    updateElementState()
-    setTestName('test thin Mat ref')
-  }
-
-  const testDefaultMatClassName = () => {
-    if (!ref.current) return
-    // (ref.current.style as any)['--xr-background-material'] = 'none'
-
-    setClassNames(
-      'defaultMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
+  const applyClassNameMaterialParent = () => {
+    console.log(
+      `${selectedClassNameMaterialParent} Mat classNames: ` + classNamesParent,
     )
-    console.log('DefaultMat classNames: ' + classNames)
-    setTestName('test Default Mat className')
+
+    if (testElementRefParent.current) {
+      let newClassNames =
+        'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
+      if (selectedClassNameMaterialParent === 'default') {
+        newClassNames = 'defaultMat ' + newClassNames
+      } else if (selectedClassNameMaterialParent === 'thick') {
+        newClassNames = 'thickMat ' + newClassNames
+      } else if (selectedClassNameMaterialParent === 'regular') {
+        newClassNames = 'regularMat ' + newClassNames
+      } else if (selectedClassNameMaterialParent === 'thin') {
+        newClassNames = 'thinMat ' + newClassNames
+      }
+      setClassNamesParent(newClassNames)
+      console.log(
+        `${selectedClassNameMaterialParent} Mat classNames: ` +
+          classNamesParent,
+      )
+      setTestNameParent(`test ${selectedClassNameMaterialParent} Mat className`)
+    }
   }
 
-  const testRegularMatClassName = () => {
-    // if (!ref.current) return
-    // (ref.current.style as any)['--xr-background-material'] = 'none'
-    setClassNames(
-      'regularMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('RegularMat classNames: ' + classNames)
-    setTestName('test Regular Mat className')
+  const applyInlineStyleMaterial = () => {
+    const material = selectedInlineMaterial
+    const newStyle: CSSProperties = {
+      '--xr-back': '100',
+      ...(material !== 'none' && { '--xr-background-material': material }),
+    }
+    setStyle(newStyle)
+    setTestName(`test ${material} Mat inline`)
   }
 
-  const testThickMatClassName = () => {
-    // if (!ref.current) return
-    setClassNames(
-      'thickMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('ThickMat classNames: ' + classNames)
-    setTestName('test Thick Mat className')
-  }
-
-  const testThinMatClassName = () => {
-    // if (!ref.current) return
-    setClassNames(
-      'thinMat test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300',
-    )
-    // updateElementState()
-    console.log('ThinMat classNames: ' + classNames)
-    setTestName('test Thin Mat className')
+  const applyInlineStyleMaterialParent = () => {
+    const material = selectedInlineMaterialParent
+    const newStyleParent: CSSProperties = {
+      '--xr-back': '50',
+      ...(material !== 'none' && { '--xr-background-material': material }),
+    }
+    setStyleParent(newStyleParent)
+    setTestNameParent(`test ${material} Mat inline`)
   }
 
   const resetStyles = () => {
-    if (!ref.current) return
-    // ref.current.removeAttribute('style')
+    if (testElementRef.current) {
+      testElementRef.current.className =
+        'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
+      console.log('ResetMat classNames:' + classNames)
+      setTestName('testName')
+    }
     removeStyleAttribute()
-    // ;(ref.current.style as any)['--xr-background-material'] = 'none'  // maybe bug this cannot be used together with className
-    ref.current.className =
-      'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
-    console.log('ResetMat classNames: ' + classNames)
-    // updateElementState()
-    setTestName('testName')
+    // document.documentElement.style.setProperty('--xr-background-material', 'none');  // not working
+    // document.documentElement.style.removeProperty('--xr-background-material')  // not working
+    document.documentElement.style['--xr-background-material'] = 'none'
+  }
+
+  const resetStylesParent = () => {
+    if (testElementRefParent.current) {
+      testElementRefParent.current.className =
+        'test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300'
+      console.log('ResetMat parent classNames:' + classNamesParent)
+      setTestNameParent('testNameParent')
+    }
+    removeStyleAttributeParent()
+    // document.documentElement.style.setProperty('--xr-background-material', 'none');  // not working
+    // document.documentElement.style.removeProperty('--xr-background-material')  // not working
+    document.documentElement.style['--xr-background-material'] = 'none'
+  }
+
+  const applyHtmlInlineStyleMaterial = () => {
+    // document.documentElement.style.setProperty(
+    //   '--xr-background-material',
+    //   selectedHtmlMaterial,
+    // )
+    document.documentElement.style['--xr-background-material'] =
+      selectedHtmlMaterial
+    // document.documentElement.style['background-color'] = 'transparent'
+    console.log(
+      'Get html tag styles getPropertyValue: ' +
+        htmlStyles.getPropertyValue('--xr-background-material'),
+    )
+    console.log(
+      'Get html tag styles: ' +
+        document.documentElement.style['--xr-background-material'],
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-700 p-4">
+    <div className="min-h-screen bg-amber-200 bg-opacity-10 p-4">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
         <SpatialDiv
           spatialStyle={{
@@ -128,10 +272,7 @@ function App() {
       </h1>
       {/* 导航栏 */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
-        <a
-          href="/testServer/public"
-          className="hover:text-blue-400 transition-colors"
-        >
+        <a href="/" className="hover:text-blue-400 transition-colors">
           返回主页
         </a>
         <a
@@ -147,105 +288,346 @@ function App() {
         <div className="bg-gray-800 p-4 rounded-lg min-h-[100px] flex items-center justify-center">
           <div
             enable-xr
-            style={{
-              '--xr-back': 100,
-            }}
-            ref={ref}
-            // className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white transition-all duration-300"
-            className={classNames}
+            style={styleParent}
+            ref={testElementRefParent}
+            className={classNamesParent}
           >
-            <center>{testName}</center>
+            <center>{testNameParent}</center>
+            <div
+              enable-xr
+              style={style}
+              ref={testElementRef}
+              className={classNames}
+            >
+              <center>{testName}</center>
+            </div>
           </div>
         </div>
 
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <div className="grid grid-cols-2 gap-2">
-            <div
-              enable-xr
-              style={{
-                '--xr-background-material': 'default',
-              }}
-              className="p-2 text-white rounded-lg transition-colors col-span-2"
-            >
-              <center>ref test</center>
-            </div>
-            <button
-              onClick={testDefaultMatRef}
-              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Glass Material ref
-            </button>
-            <button
-              onClick={testThickMatRef}
-              className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-            >
-              Thick Material ref
-            </button>
-            <button
-              onClick={testRegularMatRef}
-              className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              Regular Material
-            </button>
-            <button
-              onClick={testThinMatRef}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
-            >
-              Thin Material
-            </button>
-
-            <div
-              enable-xr
-              style={{
-                '--xr-background-material': 'default',
-              }}
-              className="p-2 text-white rounded-lg transition-colors col-span-2"
-            >
-              <center>class name test</center>
-            </div>
-            <button
-              onClick={testDefaultMatClassName}
-              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Glass Material ClassName
-            </button>
-            <button
-              onClick={testThickMatClassName}
-              className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-            >
-              Thick Material ClassName
-            </button>
-            <button
-              onClick={testRegularMatClassName}
-              className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              Regular Material ClassName
-            </button>
-            <button
-              onClick={testThinMatClassName}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
-            >
-              Thin Material ClassName
-            </button>
-
+        {/* child element tests */}
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-gray-800 p-4 rounded-lg col-span-3">
+            <center>child div tests</center>
+          </div>
+          {/* Reset Button */}
+          <div className="flex items-center justify-end">
             <button
               onClick={resetStyles}
-              className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
+              className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
               Reset Material
             </button>
           </div>
         </div>
 
+        <div className="grid grid-cols-4 gap-4">
+          {/* Ref Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>Ref Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                value={selectedRefMaterial}
+                onChange={e => setSelectedRefMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyRefMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          {/* Class Name Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>Class Name Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                value={selectedClassNameMaterial}
+                onChange={e => setSelectedClassNameMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyClassNameMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          {/* In-line Style Test */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>In-line Style Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                onChange={e => setSelectedInlineMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyInlineStyleMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>html In-line Style Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                onChange={e => setSelectedHtmlMaterial(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">None Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyHtmlInlineStyleMaterial}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+              {/*update html style new material: htmlstyles.getpropertyValue: {htmlStyles?.getPropertyValue('--xr-background-material')}*/}
+              {/*document.documentElement.style['--xr-background-material']: {document.documentElement.style['--xr-background-material']}*/}
+            </div>
+          </div>
+        </div>
+
+        {/* Parent element tests */}
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-gray-800 p-4 rounded-lg col-span-3">
+            <center>parent div test</center>
+          </div>
+          {/* Reset Button */}
+          <div className="flex items-center justify-end">
+            <button
+              onClick={resetStylesParent}
+              className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            >
+              Reset parent Material
+            </button>
+          </div>
+        </div>
+
+        {/* parent test element */}
+        <div className="grid grid-cols-4 gap-4">
+          {/* Ref Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>Ref Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                value={selectedRefMaterialParent}
+                onChange={e => setSelectedRefMaterialParent(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyRefMaterialParent}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          {/* Class Name Test Section */}
+          <div className="bg-gray-800 p-4 rounded-lg col-span-1">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>Class Name Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                value={selectedClassNameMaterialParent}
+                onChange={e =>
+                  setSelectedClassNameMaterialParent(e.target.value)
+                }
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyClassNameMaterialParent}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          {/* In-line Style Test */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>In-line Style Test</center>
+            </div>
+            <div className="mt-4">
+              <select
+                onChange={e => setSelectedInlineMaterialParent(e.target.value)}
+                className="w-full p-2 rounded-md"
+              >
+                <option value="none">none Material</option>
+                <option value="default">Glass Material</option>
+                <option value="thick">Thick Material</option>
+                <option value="regular">Regular Material</option>
+                <option value="thin">Thin Material</option>
+              </select>
+              <button
+                onClick={applyInlineStyleMaterialParent}
+                className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Apply Material
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <div
+              enable-xr
+              style={{
+                '--xr-background-material': 'default',
+              }}
+              className="p-2 text-white rounded-lg transition-colors"
+            >
+              <center>html In-line Style Test</center>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-gray-800 p-4 rounded-lg">
           <h3 className="text-base text-white mb-2">Current Element State:</h3>
           <pre className="text-sm text-gray-300 whitespace-pre-wrap">
-            {ref.current
+            {testElementRef.current
               ? `Style: ${elementState.style}
 Class Name: ${elementState.className}`
               : 'Element Not Loaded'}
           </pre>
+          <h3 className="text-base text-white mb-2">
+            Current Parent Element State:
+          </h3>
+          <pre className="text-sm text-gray-300 whitespace-pre-wrap">
+            {testElementRefParent.current
+              ? `Style: ${elementStateParent.style}
+Class Name: ${elementStateParent.className}`
+              : 'Element Not Loaded'}
+          </pre>
         </div>
+
+        {/* Test html page material*/}
+        <div className="grid grid-cols-3 gap-4">
+          {/* html in-line style tests */}
+        </div>
+
+        {/*Get the html style state */}
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-base text-white mb-2">
+            Current html style State:
+          </h3>
+          {htmlStyles ? (
+            <pre>
+              <code>
+                {JSON.stringify(
+                  {
+                    backgroundColor: htmlStyles.backgroundColor,
+                    borderRadius: htmlStyles.borderRadius,
+                    '--xr-background-material':
+                      document.documentElement.style[
+                        '--xr-background-material'
+                      ],
+                  },
+                  null,
+                  2,
+                )}
+              </code>
+            </pre>
+          ) : (
+            <p>Loading styles...</p>
+          )}
+        </div>
+
         <div
           enable-xr
           style={{
