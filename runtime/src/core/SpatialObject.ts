@@ -1,6 +1,10 @@
 import { WebSpatial } from './private/WebSpatial'
 import { WebSpatialResource } from './private/WebSpatial'
 
+/**
+ * @hidden
+ * Parent class of spatial objects, should not be used directly
+ */
 export class SpatialObject {
   /** @hidden */
   constructor(

@@ -7,7 +7,6 @@
 import Foundation
 import RealityKit
 import SwiftUI
-import SwiftyBeaver
 
 class CommandManager {
     static let Instance = CommandManager()
@@ -29,8 +28,6 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
-        _ = registerCommand(name: "setLogLevel", action: setLogLevel)
-        _ = registerCommand(name: "scene", action: handleScene)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -182,14 +179,6 @@ class CommandManager {
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
     }
-
-    private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.setLogLevel(data: jsb.data!)
-    }
-
-    private func handleScene(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.handleScene(target: target, requestID: jsb.requestID, data: jsb.data!)
-    }
 }
 
 class CommandDataManager {
@@ -217,6 +206,12 @@ class CommandDataManager {
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
                 sr = SpatialViewComponent()
+            case "Model3DComponent":
+                let spatialModel3DComponent = SpatialModel3DComponent()
+                if let modelURL: String = data.params?.modelURL {
+                    spatialModel3DComponent.setURL(modelURL)
+                }
+                sr = spatialModel3DComponent
             case "ModelComponent":
                 if var modelURL: String = data.params?.modelURL {
                     modelURL = target.parseURL(url: modelURL)
@@ -326,8 +321,8 @@ class CommandDataManager {
                 entity.setParentWindowGroup(wg: wg)
             }
 
-            if let position: JSVector4 = data.update?.position,
-               let scale: JSVector4 = data.update?.scale,
+            if let position: JSVector3F = data.update?.position,
+               let scale: JSVector3F = data.update?.scale,
                let orientation: JSVector4 = data.update?.orientation
             {
                 entity.modelEntity.position = SIMD3<Float>(position.x, position.y, position.z)
@@ -377,6 +372,24 @@ class CommandDataManager {
                 }
             }
             spatialModelComponent.onUpdate()
+        } else if let spatialModel3DComponent = sr as? SpatialModel3DComponent {
+            if let resolution: JSVector2 = data.update?.resolution {
+                spatialModel3DComponent.resolutionX = resolution.x
+                spatialModel3DComponent.resolutionY = resolution.y
+            }
+
+            if let rotationAnchor = data.update?.rotationAnchor {
+                spatialModel3DComponent.rotationAnchor = UnitPoint3D(
+                    x: rotationAnchor.x,
+                    y: rotationAnchor.y,
+                    z: rotationAnchor.z
+                )
+            }
+
+            if let opacity = data.update?.opacity {
+                spatialModel3DComponent.opacity = opacity
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -446,14 +459,6 @@ class CommandDataManager {
                 )
             }
 
-            if let rotationAnchor = data.update?.rotationAnchor {
-                spatialWindowComponent.rotationAnchor = UnitPoint3D(
-                    x: rotationAnchor.x,
-                    y: rotationAnchor.y,
-                    z: rotationAnchor.z
-                )
-            }
-
             if let opacity = data.update?.opacity {
                 spatialWindowComponent.opacity = opacity
             }
@@ -479,6 +484,42 @@ class CommandDataManager {
 
     public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
+            // windowID exist in SWC
+
+            // TODO: check url scope
+            // in scope: the url is configured in manifest
+            // if not in scope, open in safari
+
+            let fakeData = "{createdID: 'uuid'}"
+
+            if data.sceneData?.method == "createRoot" {
+                if let windowID = data.sceneData?.windowID {
+                    // if windowID in spawned uuid, createRoot
+
+                    if target.spawnedNativeWebviews[windowID] != nil {
+                        // setup windowGroup defaultValues
+                        if let config = data.sceneData?.sceneConfig {
+                            target.createRoot(windowID: windowID, config: config)
+                        } else {
+                            target.createRoot(windowID: windowID)
+                        }
+
+                    } else {
+                        // TODO: search for the swc with windowID
+                        // call focusRoot
+                    }
+
+                    target.completeEvent(requestID: requestID, data: fakeData)
+                    return
+                }
+            } else if data.sceneData?.method == "showRoot" {
+                if let config = data.sceneData?.sceneConfig {
+                    target.showRoot(config: config)
+                }
+                target.completeEvent(requestID: requestID, data: fakeData)
+                return
+            }
+
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
@@ -492,6 +533,21 @@ class CommandDataManager {
     }
 
     public func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let getRootEntityID = data.update?.getRootEntityID,
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
+        {
+            let rootEntity = wg.getEntities().filter {
+                $0.value.coordinateSpace == .ROOT
+            }.first?.value
+            if rootEntity != nil {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:'" + rootEntity!
+                    .id + "'}")
+            } else {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:''}")
+            }
+            return
+        }
+
         if let dimensions = data.update?.style?.dimensions,
            let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
         {
@@ -501,157 +557,10 @@ class CommandDataManager {
         target.completeEvent(requestID: requestID)
     }
 
-    public func handleScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
-        // Extract the method and parameters from data
-        guard let method = data.sceneData?.method else {
-            target.failEvent(requestID: requestID)
-            return
-        }
-
-        // Switch based on the method name
-        switch method {
-        case "open":
-            if let sceneName = data.sceneData?.sceneName,
-               let url = data.sceneData?.url
-            {
-                let success = SceneMgr.Instance.open(
-                    sceneName: sceneName,
-                    url: url,
-                    from: target
-                )
-
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
-                }
-
-            } else {
-                target.failEvent(requestID: requestID, data: "sceneName is required")
-            }
-        case "close":
-            if let sceneName = data.sceneData?.sceneName {
-                let success = SceneMgr.Instance.close(sceneName: sceneName)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID, data: "sceneConfig not found")
-                }
-
-            } else {
-                target.failEvent(requestID: requestID, data: "sceneName is required")
-            }
-        case "getConfig":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to get specific scene config
-                let config = SceneMgr.Instance.getConfig(
-                    sceneName: sceneName
-                )
-                if config != nil,
-                   let ans = JsonParser.serialize(config)
-                {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.completeEvent(requestID: requestID, data: "null")
-                }
-
-            } else {
-                // Call logic to get all scene configs
-                let configs = SceneMgr.Instance.getConfig()
-                if configs.count > 0,
-                   let ans = JsonParser.serialize(configs)
-                {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.completeEvent(requestID: requestID, data: "null")
-                }
-            }
-        case "setConfig":
-            if let sceneName = data.sceneData?.sceneName,
-               let sceneConfig = data.sceneData?.sceneConfig
-            {
-                // Call logic to set the scene config
-                let success = SceneMgr.Instance
-                    .setConfig(sceneName: sceneName, cfg: sceneConfig)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-
-            } else {
-                target.failEvent(requestID: requestID)
-            }
-        case "delConfig":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to remove the scene config
-                let success = SceneMgr.Instance
-                    .delConfig(sceneName: sceneName)
-                if success {
-                    target.completeEvent(requestID: requestID)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-            } else {
-                target.completeEvent(requestID: requestID)
-            }
-        case "getScene":
-            if let sceneName = data.sceneData?.sceneName {
-                // Call logic to get specific scene state
-                if let name = SceneMgr.Instance
-                    .getScene(sceneName: sceneName)
-                {
-                    target.completeEvent(requestID: requestID, data: "true")
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-
-            } else {
-                // Call logic to get all scenes with wgd
-                let scenes = SceneMgr.Instance.getScene()
-                if let ans = JsonParser.serialize(scenes) {
-                    target.completeEvent(requestID: requestID, data: ans)
-                } else {
-                    target.failEvent(requestID: requestID)
-                }
-            }
-        default:
-            // Handle unsupported method
-            target.completeEvent(requestID: requestID)
-        }
-    }
-
     public func log(data: JSData) {
-        if let logStringArr: [String] = data.logString,
-           let logLevel: String = data.logLevel
-        {
-            let log = Logger.getLogger()
+        if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
-            switch logLevel {
-            case "TRACE": log.verbose(logString)
-            case "DEBUG": log.debug(logString)
-            case "INFO": log.info(logString)
-            case "WARN": log.warning(logString)
-            case "ERROR": log.error(logString)
-            default: print(logString)
-            }
-        }
-    }
-
-    public func setLogLevel(data: JSData) {
-        if let logLevel: String = data.logLevel {
-            let levelDict = [
-                "DEBUG": SwiftyBeaver.Level.debug,
-                "ERROR": SwiftyBeaver.Level.error,
-                "TRACE": SwiftyBeaver.Level.verbose,
-                "WARN": SwiftyBeaver.Level.warning,
-                "INFO": SwiftyBeaver.Level.info,
-            ]
-            if let level = levelDict[logLevel] {
-                for destination in SwiftyBeaver.destinations {
-                    destination.minLevel = level
-                }
-            }
+            print(logString)
         }
     }
 }
@@ -686,9 +595,9 @@ struct JSResourceData: Codable {
     var setParent: String?
     var setCoordinateSpace: String?
     var setParentWindowGroupID: String?
-    var position: JSVector4?
+    var position: JSVector3F?
     var orientation: JSVector4?
-    var scale: JSVector4?
+    var scale: JSVector3F?
     var baseColor: JSColor?
     var roughness: JSValue?
     var metallic: JSValue?
@@ -702,6 +611,7 @@ struct JSResourceData: Codable {
     var materials: [String]?
     var getEntityID: String?
     var getParentID: String?
+    var getRootEntityID: String?
     var scrollEnabled: Bool?
     var scrollWithParent: Bool?
     var setScrollEdgeInsets: JSRect?
@@ -731,6 +641,12 @@ struct JSVector3: Codable {
     var z: Double
 }
 
+struct JSVector3F: Codable {
+    var x: Float
+    var y: Float
+    var z: Float
+}
+
 struct JSVector4: Codable {
     var x: Float
     var y: Float
@@ -753,4 +669,12 @@ struct JSEntityStyle: Codable {
     var cornerRadius: CornerRadius?
     var backgroundMaterial: BackgroundMaterial?
     var dimensions: JSVector2?
+}
+
+struct SceneJSBData: Codable {
+    var method: String?
+    var sceneName: String?
+    var sceneConfig: WindowGroupOptions?
+    var url: String?
+    var windowID: String?
 }
