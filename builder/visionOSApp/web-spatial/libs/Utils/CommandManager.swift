@@ -28,7 +28,6 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
-        _ = registerCommand(name: "setLogLevel", action: setLogLevel)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -180,10 +179,6 @@ class CommandManager {
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
     }
-
-    private func setLogLevel(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.setLogLevel(data: jsb.data!)
-    }
 }
 
 class CommandDataManager {
@@ -326,8 +321,8 @@ class CommandDataManager {
                 entity.setParentWindowGroup(wg: wg)
             }
 
-            if let position: JSVector4 = data.update?.position,
-               let scale: JSVector4 = data.update?.scale,
+            if let position: JSVector3F = data.update?.position,
+               let scale: JSVector3F = data.update?.scale,
                let orientation: JSVector4 = data.update?.orientation
             {
                 entity.modelEntity.position = SIMD3<Float>(position.x, position.y, position.z)
@@ -393,6 +388,15 @@ class CommandDataManager {
 
             if let opacity = data.update?.opacity {
                 spatialModel3DComponent.opacity = opacity
+            }
+
+            if let contentMode: String = data.update?.contentMode {
+                if contentMode == "fill" {
+                    spatialModel3DComponent.contentMode = .fill
+
+                } else if contentMode == "fit" {
+                    spatialModel3DComponent.contentMode = .fit
+                }
             }
 
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
@@ -510,8 +514,11 @@ class CommandDataManager {
                         }
 
                     } else {
-                        // TODO: search for the swc with windowID
-                        // call focusRoot
+                        if let windowGroupID = data.sceneData?.windowGroupID {
+                            target.focusRoot(windowGroupID)
+                        } else {
+                            print("error: no windowGroupID")
+                        }
                     }
 
                     target.completeEvent(requestID: requestID, data: fakeData)
@@ -538,6 +545,21 @@ class CommandDataManager {
     }
 
     public func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let getRootEntityID = data.update?.getRootEntityID,
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
+        {
+            let rootEntity = wg.getEntities().filter {
+                $0.value.coordinateSpace == .ROOT
+            }.first?.value
+            if rootEntity != nil {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:'" + rootEntity!
+                    .id + "'}")
+            } else {
+                target.completeEvent(requestID: requestID, data: "{rootEntId:''}")
+            }
+            return
+        }
+
         if let dimensions = data.update?.style?.dimensions,
            let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
         {
@@ -548,23 +570,11 @@ class CommandDataManager {
     }
 
     public func log(data: JSData) {
-        if let logStringArr: [String] = data.logString,
-           let logLevel: String = data.logLevel
-        {
-            let log = Logger.getLogger()
+        if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
-            switch logLevel {
-            case "TRACE": log.verbose(logString)
-            case "DEBUG": log.debug(logString)
-            case "INFO": log.info(logString)
-            case "WARN": log.warning(logString)
-            case "ERROR": log.error(logString)
-            default: print(logString)
-            }
+            print(logString)
         }
     }
-
-    public func setLogLevel(data: JSData) {}
 }
 
 struct JSBCommand: Codable {
@@ -597,15 +607,16 @@ struct JSResourceData: Codable {
     var setParent: String?
     var setCoordinateSpace: String?
     var setParentWindowGroupID: String?
-    var position: JSVector4?
+    var position: JSVector3F?
     var orientation: JSVector4?
-    var scale: JSVector4?
+    var scale: JSVector3F?
     var baseColor: JSColor?
     var roughness: JSValue?
     var metallic: JSValue?
     var url: String?
     var aspectRatio: String?
     var opacity: Double?
+    var contentMode: String?
     var resolution: JSVector2?
     var isPortal: Bool?
     var rotationAnchor: JSVector3?
@@ -613,6 +624,7 @@ struct JSResourceData: Codable {
     var materials: [String]?
     var getEntityID: String?
     var getParentID: String?
+    var getRootEntityID: String?
     var scrollEnabled: Bool?
     var scrollWithParent: Bool?
     var setScrollEdgeInsets: JSRect?
@@ -640,6 +652,12 @@ struct JSVector3: Codable {
     var x: Double
     var y: Double
     var z: Double
+}
+
+struct JSVector3F: Codable {
+    var x: Float
+    var y: Float
+    var z: Float
 }
 
 struct JSVector4: Codable {
@@ -672,4 +690,5 @@ struct SceneJSBData: Codable {
     var sceneConfig: WindowGroupOptions?
     var url: String?
     var windowID: String?
+    var windowGroupID: String?
 }

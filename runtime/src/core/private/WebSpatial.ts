@@ -1,22 +1,6 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
-import { Logger, LoggerLevel, NativeLogger, WebLogger } from './log'
 import { RemoteCommand } from './remote-command'
 import { WindowStyle, WindowGroupOptions } from '../types'
-
-export class Vec3 {
-  constructor(
-    public x = 0,
-    public y = 0,
-    public z = 0,
-  ) {}
-}
-
-export class Vec4 {
-  x = 0
-  y = 0
-  z = 0
-  w = 1
-}
 
 export class WindowGroup {
   id = ''
@@ -98,10 +82,6 @@ export class WebSpatial {
       return
     }
   }
-
-  static logger: Logger = (window as any).WebSpatailEnabled
-    ? new NativeLogger(this.sendCommand)
-    : new WebLogger('WebSpatial')
 
   static getImmersiveWindowGroup() {
     var wg = new WindowGroup()
@@ -284,16 +264,20 @@ export class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static onFrame(fn: any) {
+  static onFrame(fn: (curTime: number) => Promise<any>) {
     var dt = 0
-    var lastTime = window.performance.now()
-    var loop = () => {
-      setTimeout(() => {
-        loop()
-      }, 1000 / 60)
+    var loop = async () => {
       var curTime = window.performance.now()
-      fn(curTime, curTime - lastTime)
-      lastTime = curTime
+      await fn(curTime)
+      var updateTime = window.performance.now() - curTime
+
+      // Call update loop targetting 60 fps
+      setTimeout(
+        () => {
+          loop()
+        },
+        Math.max(1000 / 60 - updateTime, 0),
+      )
     }
     loop()
   }

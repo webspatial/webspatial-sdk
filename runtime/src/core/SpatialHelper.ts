@@ -1,17 +1,36 @@
 import { SpatialViewComponent, StyleParam } from './component'
+import { Spatial } from './Spatial'
 import { SpatialSession } from './SpatialSession'
+import { Vec3 } from './SpatialTransform'
 
 /**
  * Helper class used to quickly add spatial content to standard web pages
  * [Experimental] expect APIs to potentially change in future versions
  */
 export class SpatialHelper {
+  private static _instance: SpatialHelper | null = null
+  static get instance() {
+    if (this._instance) {
+      return this._instance
+    } else {
+      let spatial = new Spatial()
+      if (spatial.isSupported()) {
+        let session = spatial.requestSession()
+        if (session) {
+          this._instance = new SpatialHelper(session)
+          return this._instance
+        }
+      }
+    }
+    return null
+  }
+
   constructor(public session: SpatialSession) {}
 
   shape = {
     createShapeEntity: async (shape = 'box') => {
       var box = await this.session.createMeshResource({ shape: shape })
-      var mat = await this.session.createPhysicallyBasedMaterial()
+      var mat = await this.session.createPhysicallyBasedMaterialResource()
       await mat.update()
 
       var customModel = await this.session.createModelComponent()
@@ -21,9 +40,60 @@ export class SpatialHelper {
       var boxEntity = await this.session.createEntity()
       await boxEntity.setComponent(customModel)
       boxEntity.transform.position.z = 0
-      boxEntity.transform.scale = new DOMPoint(0.5, 0.5, 0.5)
+      boxEntity.transform.scale = new Vec3(0.5, 0.5, 0.5)
       await boxEntity.updateTransform()
       return boxEntity
+    },
+  }
+
+  navigation = {
+    openPanel: async (
+      url: string,
+      options?: { dimensions: { x: number; y: number } },
+    ) => {
+      // Create window group
+      var wg = await this.session.createWindowGroup('Plain')
+
+      // Create a root entity displaying a webpage
+      var ent = await this.session!.createEntity()
+      var i = await this.session!.createWindowComponent(wg)
+      await i.loadURL(url)
+      await ent.setCoordinateSpace('Root')
+      await ent.setComponent(i)
+
+      // Add enitity the windowgroup
+      await ent.setParentWindowGroup(wg)
+
+      if (options?.dimensions) {
+        await wg.setStyle({ dimensions: options.dimensions })
+      }
+    },
+    openVolume: async (
+      url: string,
+      options?: { dimensions: { x: number; y: number } },
+    ) => {
+      var wg = await this.session.createWindowGroup('Volumetric')
+
+      // Create a root view entity within the window group
+      var rootEnt = await this.session!.createEntity()
+      await rootEnt.setComponent(await this.session!.createViewComponent(wg))
+      await rootEnt.setCoordinateSpace('Root')
+      await rootEnt.setParentWindowGroup(wg)
+
+      // Add webpage to the window group
+      var ent = await this.session!.createEntity()
+      var i = await this.session!.createWindowComponent(wg)
+      await i.loadURL(url)
+      if (options?.dimensions) {
+        await i.setResolution(options.dimensions.x, options.dimensions.y)
+      } else {
+        await i.setResolution(1000, 1000)
+      }
+      ent.transform.position.z = -0.49
+      await ent.updateTransform()
+      await ent.setCoordinateSpace('App')
+      await ent.setComponent(i)
+      await ent.setParent(rootEnt)
     },
   }
 
@@ -62,7 +132,6 @@ export class SpatialHelper {
           })
           mutation.addedNodes.forEach(node => {
             if (node instanceof HTMLElement) {
-              console.log('Element added:', node)
               update()
             }
           })
