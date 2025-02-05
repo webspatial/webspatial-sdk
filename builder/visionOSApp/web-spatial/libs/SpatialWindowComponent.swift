@@ -145,6 +145,8 @@ class SpatialWindowComponent: SpatialComponent {
     var loadingStyles = LoadingStyles()
     var isLoading = true
 
+    var didFailLoad = false
+
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     var onCreateRootFn: ((WindowGroupPlainDefaultValues, WindowGroupData) -> Void)?
@@ -289,6 +291,11 @@ class SpatialWindowComponent: SpatialComponent {
         completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
     }
 
+    func didFailLoadPage() {
+        didFailLoad = true
+        didFinishFirstLoad = true
+    }
+
     func didStartLoadPage() {
         if didFinishFirstLoad {
             webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
@@ -420,6 +427,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didFinishLoadPage() {
         didFinishFirstLoad = true
+        didFailLoad = false
         cornerRadius = loadingStyles.cornerRadius
         backgroundMaterial = loadingStyles.backgroundMaterial
 
