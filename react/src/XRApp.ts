@@ -86,6 +86,7 @@ export class XRApp {
                   sceneConfig: cfg,
                   url: url,
                   windowID: (newWindow as any)._webSpatialID,
+                  windowGroupID: (newWindow as any)._webSpatialGroupID,
                 },
               },
             )

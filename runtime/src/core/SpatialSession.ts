@@ -1,10 +1,12 @@
-import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
 import { WindowGroupOptions, WindowStyle } from './types'
 
-import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
+import {
+  SpatialMeshResource,
+  SpatialPhysicallyBasedMaterialResource,
+} from './resource'
 import {
   SpatialModelComponent,
   SpatialInputComponent,
@@ -12,11 +14,12 @@ import {
   SpatialViewComponent,
   SpatialModel3DComponent,
 } from './component'
+import { RemoteCommand } from './private/remote-command'
 
 /**
  * Animation callback with timestamp
  */
-type animCallback = (time: DOMHighResTimeStamp) => void
+type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -36,10 +39,12 @@ export class SpatialSession {
 
     if (!this._frameLoopStarted) {
       this._frameLoopStarted = true
-      WebSpatial.onFrame((time: number, delta: number) => {
-        for (var cb of this._engineUpdateListeners) {
-          cb(time)
-        }
+      WebSpatial.onFrame(async (time: number) => {
+        await Promise.all(
+          this._engineUpdateListeners.map(cb => {
+            return cb(time)
+          }),
+        )
       })
     }
   }
@@ -147,21 +152,21 @@ export class SpatialSession {
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialMesh(entity)
+    return new SpatialMeshResource(entity)
   }
 
   /**
    * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterial(options?: any) {
+  async createPhysicallyBasedMaterialResource(options?: any) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
       WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialPhysicallyBasedMaterial(entity)
+    return new SpatialPhysicallyBasedMaterialResource(entity)
   }
 
   /**
@@ -186,6 +191,7 @@ export class SpatialSession {
         sceneConfig?: WindowGroupOptions
         url?: string
         windowID?: string
+        windowGroupID?: string
       }
     } = {},
   ) {
@@ -224,65 +230,41 @@ export class SpatialSession {
   }
 
   /**
-   * [TODO] should these log apis be private?
-   * @param logLevel
+   * Logs a message to the native apps console
+   * @param msg mesage to log
    */
-  async setLogLevel(logLevel: LoggerLevel) {
-    await WebSpatial.logger.setLevel(logLevel)
-  }
-
   async log(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async info(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async warn(...msg: any[]) {
-    await WebSpatial.logger.warn(...msg)
-  }
-
-  async debug(...msg: any[]) {
-    await WebSpatial.logger.debug(...msg)
-  }
-
-  async error(...msg: any[]) {
-    await WebSpatial.logger.error(...msg)
-  }
-
-  async trace(...msg: any[]) {
-    await WebSpatial.logger.trace(...msg)
+    await WebSpatial.sendCommand(new RemoteCommand('log', { logString: msg }))
   }
 
   /**
+   * @hidden
    * Debugging only, used to ping the native renderer
-   * [TODO] make this private
    */
-  async ping(msg: string) {
+  async _ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
 
   /**
+   * @hidden
    * Debugging to get internal state from native code
-   * [TODO] make this private
    * @returns data as a js object
    */
-  async getStats() {
+  async _getStats() {
     return (await WebSpatial.getStats()) as any
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
+  async _inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
     return WebSpatial.inspect(spatialObjectId)
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspectRootWindowGroup() {
+  async _inspectRootWindowGroup() {
     return WebSpatial.inspectRootWindowGroup()
   }
 

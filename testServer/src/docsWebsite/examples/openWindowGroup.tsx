@@ -1,6 +1,7 @@
 import { SpatialSession } from '@xrsdk/runtime'
 import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
+import { Vec3 } from '@xrsdk/runtime'
 
 function MySample(props: { session?: SpatialSession }) {
   return (
@@ -43,13 +44,13 @@ function MySample(props: { session?: SpatialSession }) {
             await ent.setComponent(vc)
 
             var box = await session.createMeshResource({ shape: 'sphere' })
-            var mat = await session.createPhysicallyBasedMaterial()
+            var mat = await session.createPhysicallyBasedMaterialResource()
             await mat.update()
             var customModel = await session.createModelComponent()
             await customModel.setMaterials([mat])
             await customModel.setMesh(box)
             var e2 = await session.createEntity()
-            e2.transform.scale = new DOMPoint(0.2, 0.2, 0.2)
+            e2.transform.scale = new Vec3(0.2, 0.2, 0.2)
             await e2.setComponent(customModel)
 
             await e2.setParent(ent)
@@ -88,13 +89,13 @@ function MySample(props: { session?: SpatialSession }) {
             await ent.setComponent(vc)
 
             var box = await session.createMeshResource({ shape: 'sphere' })
-            var mat = await session.createPhysicallyBasedMaterial()
+            var mat = await session.createPhysicallyBasedMaterialResource()
             await mat.update()
             var customModel = await session.createModelComponent()
             await customModel.setMaterials([mat])
             await customModel.setMesh(box)
             var e2 = await session.createEntity()
-            e2.transform.scale = new DOMPoint(0.2, 0.2, 0.2)
+            e2.transform.scale = new Vec3(0.2, 0.2, 0.2)
             await e2.setComponent(customModel)
 
             await e2.setParent(ent)

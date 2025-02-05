@@ -1,5 +1,6 @@
 import { SpatialComponent } from './SpatialComponent'
-import { Vec3, WebSpatial } from '../private/WebSpatial'
+import { WebSpatial } from '../private/WebSpatial'
+import { Vec3 } from '../SpatialTransform'
 
 /**
  * Used to position a model3d in 3D space
@@ -27,6 +28,16 @@ export class SpatialModel3DComponent extends SpatialComponent {
   async setOpacity(opacity: number) {
     await WebSpatial.updateResource(this._resource, {
       opacity,
+    })
+  }
+
+  /**
+   * Sets how the model fill the rect
+   * @param contentMode
+   */
+  async setAspectRatio(contentMode: 'fill' | 'fit') {
+    await WebSpatial.updateResource(this._resource, {
+      contentMode,
     })
   }
 }

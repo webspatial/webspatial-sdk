@@ -9,6 +9,7 @@ class SpatialModel3DComponent: SpatialComponent {
     var opacity: Double = 1.0
     var rotationAnchor: UnitPoint3D = .center
     var scrollWithParent = true
+    var contentMode: ContentMode = .fit
 
     public func setURL(_ url: String) {
         modelURL = url
