@@ -19,11 +19,29 @@ export class XRApp {
     }
     return XRApp.instance
   }
+
+  handleATag(event: MouseEvent) {
+    const targetElement = event.target as HTMLElement
+    if (targetElement.tagName === 'A') {
+      const link = targetElement as HTMLAnchorElement
+      const target = link.target
+      const url = link.href
+
+      if (target && target !== '_self') {
+        event.preventDefault()
+        window.open(url, target)
+      }
+    }
+  }
   init() {
     ;(window as any).open = this.open
+
+    document.addEventListener('click', this.handleATag)
   }
   deinit() {
     ;(window as any).open = originalOpen
+
+    document.removeEventListener('click', this.handleATag)
   }
   private configMap: Record<string, WindowGroupOptions> = {} // name=>config
   private getConfig(name?: string) {
