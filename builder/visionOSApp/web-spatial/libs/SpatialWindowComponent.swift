@@ -53,6 +53,7 @@ class SpatialWindowComponent: SpatialComponent {
             "spawnedNativeWebviewsCount": spawnedNativeWebviews.count,
             "childResources": childEntitiesInfo,
             "cornerRadius": cornerRadius.toJson(),
+            "backgroundMaterial": backgroundMaterial.rawValue,
         ]
 
         let baseInspectInfo = super.inspect()
