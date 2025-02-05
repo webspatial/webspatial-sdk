@@ -1,10 +1,11 @@
 import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
+import { Vec3 } from '@xrsdk/runtime'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         let session = props.session
         // Create a spatial view entity to display model in
@@ -28,7 +29,7 @@ function MySample(props: { session?: SpatialSession }) {
         modelEntity.transform.position.x = 0
         modelEntity.transform.position.y = -0.3
         modelEntity.transform.position.z = 0.3 // Place at the front of the volume 1x1x1
-        modelEntity.transform.scale = new DOMPoint(0.8, 0.8, 0.8)
+        modelEntity.transform.scale = new Vec3(0.8, 0.8, 0.8)
         await modelEntity.updateTransform()
 
         // Add model to entity
@@ -43,6 +44,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div style={{ height: "500px" }}></div>
+  return <div style={{ height: '500px' }}></div>
 }
 showSample(MySample)
