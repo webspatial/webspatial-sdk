@@ -359,7 +359,7 @@ class SpatialWindowComponent: SpatialComponent {
         if let config = config {
             // If config is provided, set default values and open window immediately
             let plainDV = WindowGroupPlainDefaultValues(config)
-            WindowGroupMgr.Instance.update(plainDV) // set default values
+            WindowGroupMgr.Instance.updateWindowGroupPlainDefaultValues(plainDV) // set default values
             if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     pwg.openWindowData.send(wgd) // openwindow
@@ -369,7 +369,7 @@ class SpatialWindowComponent: SpatialComponent {
             // If no config is provided, set the onCreateRootFn
             windowComponent.onCreateRootFn = { value, wgd in
                 if let pwg = SpatialWindowGroup.getSpatialWindowGroup(self.parentWindowGroupID) {
-                    WindowGroupMgr.Instance.update(value) // set default values
+                    WindowGroupMgr.Instance.updateWindowGroupPlainDefaultValues(value) // set default values
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         pwg.openWindowData.send(wgd) // openwindow
                     }
