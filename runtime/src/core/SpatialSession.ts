@@ -191,6 +191,7 @@ export class SpatialSession {
         sceneConfig?: WindowGroupOptions
         url?: string
         windowID?: string
+        windowGroupID?: string
       }
     } = {},
   ) {
