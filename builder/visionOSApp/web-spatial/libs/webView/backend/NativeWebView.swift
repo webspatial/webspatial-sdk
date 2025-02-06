@@ -109,7 +109,12 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         print("Navigation failed!!! " + error.localizedDescription)
-        webViewRef?.didFailLoadPage()
+        if let urlError = (error as? URLError) {
+            print("URL ERROR: " + (urlError.failingURL != nil ? (urlError.failingURL!.absoluteString) : "no URL found"))
+            if urlError.code == .cannotConnectToHost {
+                webViewRef?.didFailLoadPage()
+            }
+        }
     }
 
     // Warning this should likeley be removed. There seems to be a bug with SSL loading on simulator https://stackoverflow.com/questions/27100540/allow-unverified-ssl-certificates-in-wkwebview
