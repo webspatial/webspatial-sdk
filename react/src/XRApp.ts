@@ -10,8 +10,8 @@ declare global {
 
 export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {
-    width: 900,
-    height: 700,
+    width: 100,
+    height: 1000,
   },
   resizability: 'automatic',
 }
