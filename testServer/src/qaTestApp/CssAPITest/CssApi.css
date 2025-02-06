@@ -17,6 +17,6 @@
     display: var(--box-display);
     --xr-back: var(--box-xr-back);
     --xr-background-material: var(--box-xr-background-material);
-    transition: all 0.3s ease;
+    /* transition: all 0.3s ease; */
     border-radius: 40px;
 }
