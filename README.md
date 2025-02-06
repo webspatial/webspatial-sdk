@@ -76,7 +76,6 @@ pnpm setup
 
 #### Install packages and link to workspace for local development
 npm run setup
-###### Watch npm libraries and launch test web server
 
 #### Watch npm libraries and launch test web server
 npm run dev
