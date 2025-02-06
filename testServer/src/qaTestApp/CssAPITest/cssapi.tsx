@@ -25,7 +25,7 @@ const StyledElement = styled.div<{
   transform: translateX(${props => props.translateX}px)
     rotateZ(${props => props.rotateZ}deg);
   transform-origin: ${props => props.transformOrigin};
-  transition: all 0.3s ease-in-out;
+
   align-items: center;
   justify-content: center;
   border-radius: 40px;
@@ -499,7 +499,7 @@ function App() {
               <div
                 enable-xr
                 style={style}
-                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white   "
               >
                 Test in-line Style
               </div>
@@ -507,13 +507,13 @@ function App() {
               <div
                 enable-xr
                 style={boxStyles}
-                className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+                className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white   "
               >
                 Test CSS Module
               </div>
             ) : (
               <StyledElement
-                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+                className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white   "
                 enable-xr
                 opacity={opacity}
                 display={display}
@@ -529,7 +529,7 @@ function App() {
             )}
             <div
               enable-xr
-              className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
+              className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white "
               // style={{ color: 'blue' }} // 测试 style样式优先级
               // className="text-red-500" // 测试 style样式优先级
               ref={ref1}
