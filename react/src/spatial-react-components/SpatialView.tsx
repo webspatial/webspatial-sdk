@@ -12,7 +12,7 @@ var runAsync = (fn: any) => {
 }
 
 interface SpatialViewProps extends React.HTMLAttributes<HTMLDivElement> {
-  onViewLoad?: () => void
+  onViewLoad?: (viewEnt: SpatialEntity) => void
   onViewUnload?: () => void
 }
 
@@ -54,7 +54,7 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
         spatialEntity.current = x.entity
 
         if (props.onViewLoad) {
-          props.onViewLoad()
+          props.onViewLoad(x.entity)
         }
       })
       return () => {

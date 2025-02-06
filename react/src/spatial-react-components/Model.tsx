@@ -73,6 +73,10 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
     return (
       <div className={props.className}>
         <model-viewer
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
           src={glbSrc}
           camera-controls
           touch-action="pan-y"
