@@ -49,7 +49,7 @@ export class XRApp {
     return this.configMap[name]
   }
 
-  async show(windowID: string, cfg: WindowGroupOptions) {
+  async show(window: Window, cfg: WindowGroupOptions) {
     try {
       let session = getSession()!
       await session.createScene(
@@ -59,7 +59,7 @@ export class XRApp {
             method: 'showRoot',
             sceneConfig: cfg,
             // url: url,
-            windowID,
+            window,
           },
         },
       )
@@ -103,8 +103,9 @@ export class XRApp {
                   method: 'createRoot',
                   sceneConfig: cfg,
                   url: url,
-                  windowID: (newWindow as any)._webSpatialID,
-                  windowGroupID: (newWindow as any)._webSpatialGroupID,
+                  window: newWindow!,
+                  // windowID: (newWindow as any)._webSpatialID,
+                  // windowGroupID: (newWindow as any)._webSpatialGroupID,
                 },
               },
             )
