@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react/dist'
+import { enableDebugTool, SpatialDiv } from '@xrsdk/react/dist'
+
+enableDebugTool()
 
 function App() {
   // child element
@@ -270,7 +272,7 @@ function App() {
           Material API Tests
         </SpatialDiv>
       </h1>
-      {/* 导航栏 */}
+      {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
           返回主页
@@ -291,6 +293,7 @@ function App() {
             style={styleParent}
             ref={testElementRefParent}
             className={classNamesParent}
+            debugName="parent"
           >
             <center>{testNameParent}</center>
             <div
@@ -298,6 +301,7 @@ function App() {
               style={style}
               ref={testElementRef}
               className={classNames}
+              debugName="child"
             >
               <center>{testName}</center>
             </div>
