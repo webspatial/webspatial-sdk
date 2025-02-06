@@ -530,7 +530,6 @@ class CommandDataManager {
                     return
                 }
             } else if data.sceneData?.method == "showRoot" {
-                print("showRoot")
                 if let config = data.sceneData?.sceneConfig {
                     target.showRoot(config: config)
                 }
@@ -586,14 +585,10 @@ class CommandDataManager {
         if let windowGroupID = data.windowGroupID {
             switch data.loading?.method {
             case "show":
-                print("open loading")
                 target.setLoading(.show, windowGroupID: windowGroupID)
             case "hide":
-                print("hide loading")
                 target.setLoading(.hide, windowGroupID: windowGroupID)
-            case let .some(method):
-                print("Unknown Method: \(method)")
-            case .none:
+            case _:
                 break
             }
         }
