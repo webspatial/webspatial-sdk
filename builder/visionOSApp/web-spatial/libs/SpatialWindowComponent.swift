@@ -340,6 +340,7 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // focusRoot need the windowGroupID
             windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
+            // tell new webview parentWindowGroupID to open loadingview
             windowComponent.evaluateJS(js: "window._webSpatialParentGroupID='\(parentWindowGroupID)';")
 
             if config != nil {
