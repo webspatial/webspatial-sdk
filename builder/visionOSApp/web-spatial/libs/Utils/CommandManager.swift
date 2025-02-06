@@ -579,23 +579,24 @@ class CommandDataManager {
         if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
             print(logString)
-            }
         }
+    }
 
     public func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
-        switch data.loading?.method {
-        case "show":
-            print("open loading")
-            target.setLoading(.show)
-        case "hide":
-            print("hide loading")
-            target.setLoading(.hide)
-        case let .some(method):
-            print("Unknown Method: \(method)")
-        case .none:
-            break
+        if let windowGroupID = data.windowGroupID {
+            switch data.loading?.method {
+            case "show":
+                print("open loading")
+                target.setLoading(.show, windowGroupID: windowGroupID)
+            case "hide":
+                print("hide loading")
+                target.setLoading(.hide, windowGroupID: windowGroupID)
+            case let .some(method):
+                print("Unknown Method: \(method)")
+            case .none:
+                break
+            }
         }
-
         target.completeEvent(requestID: requestID)
     }
 }
