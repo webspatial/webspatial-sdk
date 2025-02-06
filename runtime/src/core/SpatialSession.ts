@@ -168,22 +168,26 @@ export class SpatialSession {
     )
     return new SpatialPhysicallyBasedMaterialResource(entity)
   }
+  /**
+   * Creates a WindowGroup
+   * @returns SpatialWindowGroup
+   * */
+  async createWindowGroup(style: WindowStyle = 'Plain') {
+    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
+  }
 
   /**
-   * Creates a WindowGroup to display content within an anchored area managed by the OS
-   * By default, the windowGroup will act as children of current spatialWindowComponent.
-   * If the cfg param is provided, the windowGroup is standalone.
-   * [TOOD] rename this to be more clear what it does
-   * @param {WindowStyle} [style='Plain'] - The style of the window to be created. Defaults to 'Plain'.
-   * @param {Object} [cfg={}] - Configuration object for the window group. If provided, the window group will be standalone.
-   * @param {Object} [cfg.sceneData] - Configuration for the scene data associated with the window group.
-   * @param {string} [cfg.sceneData.method] - The method to be used for loading the scene.
-   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - Configuration options for the scene.
+   * Creates a Scene to display content within an anchored area managed by the OS
+   * @param {WindowStyle} [style='Plain'] - The style of the Scene container to be created with. Defaults to 'Plain'.
+   * @param {Object} [cfg={}] - Configuration object for the Scene.
+   * @param {string} [cfg.sceneData.method] - The method of Scene operation.
+   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - DefaultValues for create the scene.
    * @param {string} [cfg.sceneData.url] - The URL to load the scene from.
-   * @param {string} [cfg.sceneData.windowID] - The ID of the window to be created.
-   * @returns WindowGroup
+   * @param {string} [cfg.sceneData.windowID] - The windowID of the Scene to be created.
+   * @param {string} [cfg.sceneData.windowGroupID] - The windowGroupID of the Scene.
+   * @returns Boolean
    */
-  async createWindowGroup(
+  async createScene(
     style: WindowStyle = 'Plain',
     cfg: {
       sceneData?: {
@@ -195,9 +199,7 @@ export class SpatialSession {
       }
     } = {},
   ) {
-    return new SpatialWindowGroup(
-      await WebSpatial.createWindowGroup(style, cfg),
-    )
+    return await WebSpatial.createScene(style, cfg)
   }
 
   /**
