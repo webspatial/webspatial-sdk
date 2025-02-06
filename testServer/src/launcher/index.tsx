@@ -16,7 +16,12 @@ const apps = [
   },
   // { name: "Game", url: "", icon: "🎮" },
   // { name: "Calculator", url: "", icon: "🧮" },
-  // { name: "Weather", url: "", icon: "☀️" },
+  {
+    name: 'Terminal',
+    url: '/src/terminal/index.html',
+    icon: '💻',
+    options: { dimensions: { x: 650, y: 400 } },
+  },
   {
     name: 'ModelViewer',
     url: '/src/modelViewer/index.html',
