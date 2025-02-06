@@ -102,10 +102,27 @@ export class WebSpatial {
     return wg
   }
 
-  static async createWindowGroup(style: WindowStyle = 'Plain', cfg: any) {
-    var cmd = new RemoteCommand('createWindowGroup', {
+  static async createScene(style: WindowStyle = 'Plain', cfg: any) {
+    var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
       ...cfg,
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+    })
+
+    try {
+      await new Promise((res, rej) => {
+        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        WebSpatial.sendCommand(cmd)
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  static async createWindowGroup(style: WindowStyle = 'Plain') {
+    var cmd = new RemoteCommand('createWindowGroup', {
+      windowStyle: style,
     })
 
     var result = await new Promise((res, rej) => {
