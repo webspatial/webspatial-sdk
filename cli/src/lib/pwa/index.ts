@@ -21,7 +21,9 @@ export class PWAGenerator {
 
   public static async generator(args:InitArgs):Promise<ManifestInfo>{
     let manifestInfo:ManifestInfo = await this.validate(args);
+    console.log("check manifest.json: ok")
     await this.config(manifestInfo);
+    console.log("reset manifest.json: ok")
     return manifestInfo;
   }
 

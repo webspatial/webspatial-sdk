@@ -69,8 +69,10 @@ export function configDeeplink(manifestJson: Record<string, any>){
         for(var i = 0; i < manifestJson.protocol_handlers.length; i++){
             const item = manifestJson.protocol_handlers[i]
             // deeplink协议必须在安全清单内，或者以web+开头
+            // The DeepLink protocol must be on the security list or start with web+
             if(item.protocol && (safelist.includes(item.protocol) || item.protocol.indexOf("web+") === 0)){
                 // 如果url为绝对路径，则必须在scope范围内
+                // If the URL is an absolute path, it must be within the scope range
                 if(!(validateURL(item.url) && item.url.indexOf(manifestJson.scope) === 0)) continue;
             }
             manifestJson.protocol_handlers.splice(i, 1)

@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "npm run build && bin/bundlepwa.js build --manifest-url=https://microsoftedge.github.io/Demos/pwamp/manifest.json",
-    "test2": "npm run build && bin/bundlepwa.js build --manifest=./test/pwa_test.json --project=./test",
+    "test2": "npm run build && bin/bundlepwa.js build --manifest=../pack-test/pwa_test.json --project=../pack-test",
     "obfuscate": "node obfuscate.js",
     "build": "tsc",
     "build1": "rollup -c ./rollup.config.js",
