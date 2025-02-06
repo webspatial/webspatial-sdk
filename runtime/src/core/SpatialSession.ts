@@ -1,7 +1,12 @@
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { LoadingMethodKind, WindowGroupOptions, WindowStyle } from './types'
+import {
+  LoadingMethodKind,
+  sceneDataShape,
+  WindowGroupOptions,
+  WindowStyle,
+} from './types'
 
 import {
   SpatialMeshResource,
@@ -186,14 +191,8 @@ export class SpatialSession {
   async createScene(
     style: WindowStyle = 'Plain',
     cfg: {
-      sceneData?: {
-        method?: 'createRoot' | 'showRoot'
-        sceneConfig?: WindowGroupOptions
-        url?: string
-        windowID?: string
-        windowGroupID?: string
-      }
-    } = {},
+      sceneData: sceneDataShape
+    },
   ) {
     return await WebSpatial.createScene(style, cfg)
   }

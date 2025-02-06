@@ -1,6 +1,12 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle, WindowGroupOptions, LoadingMethodKind } from '../types'
+import {
+  WindowStyle,
+  WindowGroupOptions,
+  LoadingMethodKind,
+  sceneDataShape,
+  sceneDataJSBShape,
+} from '../types'
 
 export class WindowGroup {
   id = ''
@@ -102,10 +108,21 @@ export class WebSpatial {
     return wg
   }
 
-  static async createScene(style: WindowStyle = 'Plain', cfg: any) {
+  static async createScene(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData: sceneDataShape
+    },
+  ) {
+    const { window: newWindow, ...sceneData } = cfg.sceneData
+    const jsbSceneData: sceneDataJSBShape = {
+      ...sceneData,
+      windowID: (newWindow as any)._webSpatialID,
+      windowGroupID: (newWindow as any)._webSpatialGroupID,
+    }
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
-      ...cfg,
+      sceneData: jsbSceneData,
       windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
     })
 
