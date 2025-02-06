@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react/dist'
+import { enableDebugTool, SpatialDiv } from '@xrsdk/react/dist'
+
+enableDebugTool()
 
 function App() {
   // child element
@@ -291,6 +293,7 @@ function App() {
             style={styleParent}
             ref={testElementRefParent}
             className={classNamesParent}
+            debugName="parent"
           >
             <center>{testNameParent}</center>
             <div
@@ -298,6 +301,7 @@ function App() {
               style={style}
               ref={testElementRef}
               className={classNames}
+              debugName="child"
             >
               <center>{testName}</center>
             </div>

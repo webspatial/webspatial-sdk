@@ -14,7 +14,7 @@ export function CSSModel3DComponent(
   const cssParserDomStyle: CSSProperties = {
     ...style,
     width: 0,
-    position: 'absolute',
+    height: 0,
   }
 
   const { ref: cssParserDomRef, spatialStyle, ready } = useSpatialStyle()
