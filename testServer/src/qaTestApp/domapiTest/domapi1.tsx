@@ -369,7 +369,7 @@ function App() {
         </a>
       </div>
 
-      <div className="max-w-3xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
             id="father"
@@ -418,6 +418,7 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
+              <span className="ml-1.5 text-red-500">{borderRadius}px</span>
               <button
                 onClick={removeBorderRadius}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -443,6 +444,7 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
+              <span className="ml-1.5 text-red-500">{xrBack}px</span>
               <button
                 onClick={removeXrBack}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -571,6 +573,7 @@ function App() {
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   style={{ width: '250px' }}
                 />
+                <span className="ml-1.5 text-red-500">{zIndex}px</span>
                 <button
                   onClick={removeZIndex}
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -595,6 +598,7 @@ function App() {
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   style={{ width: '250px' }}
                 />
+                <span className="ml-1.5 text-red-500">{zIndex1}px</span>
                 <button
                   onClick={removeZIndex1}
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
