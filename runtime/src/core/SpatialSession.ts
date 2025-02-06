@@ -178,13 +178,9 @@ export class SpatialSession {
 
   /**
    * Creates a Scene to display content within an anchored area managed by the OS
+   * @hidden
    * @param {WindowStyle} [style='Plain'] - The style of the Scene container to be created with. Defaults to 'Plain'.
    * @param {Object} [cfg={}] - Configuration object for the Scene.
-   * @param {string} [cfg.sceneData.method] - The method of Scene operation.
-   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - DefaultValues for create the scene.
-   * @param {string} [cfg.sceneData.url] - The URL to load the scene from.
-   * @param {string} [cfg.sceneData.windowID] - The windowID of the Scene to be created.
-   * @param {string} [cfg.sceneData.windowGroupID] - The windowGroupID of the Scene.
    * @returns Boolean
    */
   async createScene(
