@@ -340,6 +340,7 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // focusRoot need the windowGroupID
             windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
+            windowComponent.evaluateJS(js: "window._webSpatialParentGroupID='\(parentWindowGroupID)';")
 
             if config != nil {
                 // signal off hook
@@ -407,23 +408,15 @@ class SpatialWindowComponent: SpatialComponent {
         }
     }
 
-    func setLoading(_ method: LoadingMethod) {
-        // TODO: for first show loading the windowGroup is not visible, so no handler can accept the signal
-        // we should signal to its parent SWC
-        // another  onShowRootFn?
-        // or we pass its parent windowGroupID instead?
-        // get current windowGroup
-//        let cwg = SpatialWindowGroup.getSpatialWindowGroup("current")
-
-        // TODO: we need to enssure that root windowGroup is exist
-        // for testing purpose we assume that root windowGroup always exist
-        let wg = SpatialWindowGroup.getRootWindowGroup()
-        print("wg")
-        let lwgdata = LoadingWindowGroupData(
-            method: method,
-            windowStyle: nil
-        )
-        wg.setLoadingWindowData.send(lwgdata)
+    func setLoading(_ method: LoadingMethod, windowGroupID: String) {
+        // trigger open loading view by parent windowGroup due to current windowGroup isn't visible yet
+        if let wg = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID) {
+            let lwgdata = LoadingWindowGroupData(
+                method: method,
+                windowStyle: nil
+            )
+            wg.setLoadingWindowData.send(lwgdata)
+        }
     }
 
     func didStartReceivePageContent() {}

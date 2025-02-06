@@ -256,6 +256,7 @@ export class WebSpatial {
 
   static async setLoading(method: LoadingMethodKind, style?: string) {
     var cmd = new RemoteCommand('setLoading', {
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
       loading: {
         method,
         style,
