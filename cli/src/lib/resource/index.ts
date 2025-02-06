@@ -5,13 +5,17 @@ import { ManifestInfo } from '../pwa';
 import * as Jimp from 'jimp';
 import { loadImageFromDisk, loadImageFromNet } from './load';
 export const PROJECT_DIRECTORY = join(process.cwd(), "../builder/visionOSApp");
+export const PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, "./build");
+export const PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, "./export");
 export const WEB_PROJECT_DIRECTORY = "web-spatial/web-project";
 export const ASSET_DIRECTORY = "web-spatial/Assets.xcassets";
-export const APPICON_DIRECTORY = "web-spatial/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset";
+export const BACK_APPICON_DIRECTORY = "web-spatial/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset";
+export const MIDDLE_APPICON_DIRECTORY = "web-spatial/Assets.xcassets/AppIcon.solidimagestack/Middle.solidimagestacklayer/Content.imageset";
 
 export class ResourceManager{
     public static async moveProjectFrom(dir:string){
         // 将web工程copy到xcode工程下的web-project目录中
+        // Copy the web project to the web project directory under the xcode project
         const fromDirectory = join(process.cwd(), dir);
         const targetDirctory = join(PROJECT_DIRECTORY, WEB_PROJECT_DIRECTORY);
             // Ensure `targetDirectory` exists.
@@ -20,6 +24,7 @@ export class ResourceManager{
         }
         else{
             // 若已存在目录，先清空
+            // If a directory already exists, clear it first
             clearDir(targetDirctory)
         }
         try{
@@ -36,8 +41,5 @@ export class ResourceManager{
         const icon = !imgUrl.startsWith("http") ? await loadImageFromDisk(imgUrl) : await loadImageFromNet(imgUrl);
         // icon.resize(512, 512);
         return icon;
-        // const fileName = PROJECT_DIRECTORY + "/icon." + icon.getMIME().replace("image/", "");
-        // await icon.writeAsync(fileName)
-        // return fileName;
     }
 }

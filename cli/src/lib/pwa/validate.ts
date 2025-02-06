@@ -42,6 +42,7 @@ export function checkManifestJson(manifestJson: Record<string, any>){
 export function checkStartUrl(manifest: Record<string, any>, manifestUrl: string, isNet:boolean){
     if(isNet){
         // 判断是否与manifest同源
+        // Determine whether it is of the same origin as the manifest
         if(manifest.start_url.indexOf("https://") == 0){
             const urlStart: URL = new URL(manifest.start_url);
             const urlManifest: URL = new URL(manifestUrl);
@@ -53,6 +54,7 @@ export function checkStartUrl(manifest: Record<string, any>, manifestUrl: string
             }
         }
         // start_url必须为https协议
+        // Start_url must be HTTPS protocol
         else if(manifest.start_url.indexOf("http://") == 0){
             throw new CustomError({code: 4000,
                 // eslint-disable-next-line @typescript-eslint/camelcase
@@ -79,6 +81,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
             imgUrl = join(relativeUrl, imgUrl);
         }
         // 若已配置size，则判断size，否则将icon下载进行判断
+        // If size has been configured, determine the size; otherwise, download the icon for judgment
         if(item.sizes){
             const mulSize = item.sizes.split(" ");
             mulSize.forEach((size:string) => {
@@ -103,6 +106,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
         }
         
         // 下载所有用到的icon，检测宽高，并且如果满足尺寸和maskable，最后需要检测alpha
+        // Download all the icons used, check their width and height, and if they meet the size and maskability requirements, finally check their alpha
         if(has1024 && hasMaskable){
             if(imageSize > maxSize){
                 maxSize = imageSize
@@ -113,6 +117,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
         }
     }
     // 没有同时满足size >= 1024和purpose包含maskable的icon
+    // There is no icon that satisfies both size>=1024 and purpose including Maskable
     if(maxSize === 0){
         throw new CustomError({code: 4000,
             // eslint-disable-next-line @typescript-eslint/camelcase
@@ -122,6 +127,7 @@ export async function checkIcons(manifest: Record<string, any>, manifestUrl: str
         maxSizeImage = !maxSizeImageUrl.startsWith("http") ? await loadImageFromDisk(maxSizeImageUrl) : await loadImageFromNet(maxSizeImageUrl);
     }
     // 检测图片是否完全不透明
+    // Check if the image is completely opaque
     if(maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)){
         throw new CustomError({code: 4000,
             // eslint-disable-next-line @typescript-eslint/camelcase
