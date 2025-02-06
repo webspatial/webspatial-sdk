@@ -158,6 +158,10 @@ async function syncParentHeadToChild(
     }
   }
 
+  if (debugName) {
+    childWindow.document.title = debugName
+  }
+
   return Promise.all(styleLoadedPromises)
 }
 
