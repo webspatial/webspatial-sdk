@@ -1,5 +1,6 @@
 import { SpatialViewComponent, StyleParam } from './component'
 import { Spatial } from './Spatial'
+import { SpatialEntity } from './SpatialEntity'
 import { SpatialSession } from './SpatialSession'
 import { Vec3 } from './SpatialTransform'
 
@@ -43,6 +44,35 @@ export class SpatialHelper {
       boxEntity.transform.scale = new Vec3(0.5, 0.5, 0.5)
       await boxEntity.updateTransform()
       return boxEntity
+    },
+    createModelEntity: async (url: string) => {
+      var customModel = await this.session.createModelComponent({ url })
+      var boxEntity = await this.session.createEntity()
+      await boxEntity.setComponent(customModel)
+      await boxEntity.updateTransform()
+      return boxEntity
+    },
+    wrapInBoundingBoxEntity: async (entityToWrap: SpatialEntity) => {
+      var bb = await entityToWrap.getBoundingBox()
+
+      // Scale to fit
+      var targetSize = 1.0
+      var scale =
+        targetSize / Math.max(bb.extents.x, bb.extents.y, bb.extents.z)
+      entityToWrap.transform.scale.x = scale
+      entityToWrap.transform.scale.y = scale
+      entityToWrap.transform.scale.z = scale
+
+      // Center within view
+      entityToWrap.transform.position.x = -bb.center.x * scale
+      entityToWrap.transform.position.y = -bb.center.y * scale
+      entityToWrap.transform.position.z = -bb.center.z * scale
+      await entityToWrap.updateTransform()
+
+      // wrap in boudning box
+      var boudningEntity = await SpatialHelper.instance?.session.createEntity()!
+      await entityToWrap.setParent(boudningEntity!)
+      return boudningEntity
     },
   }
 

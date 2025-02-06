@@ -187,6 +187,7 @@ function checkCSSProperties() {
   checkCornerRadius()
   checkOpacity()
   checkHtmlVisible()
+  window.addEventListener('resize', checkHtmlVisible)
 }
 
 function hijackGetComputedStyle() {
