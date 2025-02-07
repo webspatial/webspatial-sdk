@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "WebSpatialAndroid"
 include(":app")
+include(":webspatiallib")
