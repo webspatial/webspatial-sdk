@@ -6,16 +6,31 @@
 //
 
 import Foundation
-import SwiftyBeaver
 
-enum Logger {
-    static func getLogger() -> SwiftyBeaver.Type {
-        return SwiftyBeaver.self
+class Logger {
+    static func getLogger() -> Logger {
+        return Logger()
     }
 
-    static func initLogger() {
-        let logConsole = ConsoleDestination()
-        logConsole.useTerminalColors = true
-        SwiftyBeaver.addDestination(logConsole)
+    static func initLogger() {}
+
+    func error(_ str: String) {
+        print("error:" + str)
+    }
+
+    func verbose(_ str: String) {
+        print("verbose:" + str)
+    }
+
+    func debug(_ str: String) {
+        print("debug:" + str)
+    }
+
+    func info(_ str: String) {
+        print("info:" + str)
+    }
+
+    func warning(_ str: String) {
+        print("warning:" + str)
     }
 }

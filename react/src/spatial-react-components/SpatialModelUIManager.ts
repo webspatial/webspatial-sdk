@@ -16,17 +16,22 @@ export class SpatialModelUIManager {
     this.viewComponent = await session.createViewComponent()
     await this.entity.setComponent(this.viewComponent)
 
-    // Add model within the view and center within view
+    // Add model within the view based on bounding box
     var e = await session.createEntity()
     var model = await session.createModelComponent({ url: url })
     await e.setComponent(model)
     var bb = await e.getBoundingBox()
-    e.transform.position.x = -bb.center.x
-    e.transform.position.y = -bb.center.y
-    e.transform.position.z = -bb.center.z
-    e.transform.position.x = -bb.center.x
-    e.transform.position.y = -bb.center.y
-    e.transform.position.z = -bb.center.z
+
+    // Scale to fit
+    var scale = 1 / Math.max(bb.extents.x, bb.extents.y, bb.extents.z)
+    e.transform.scale.x = scale
+    e.transform.scale.y = scale
+    e.transform.scale.z = scale
+
+    // Center within view
+    e.transform.position.x = -bb.center.x * scale
+    e.transform.position.y = -bb.center.y * scale
+    e.transform.position.z = -bb.center.z * scale
     await e.updateTransform()
     await e.setParent(this.entity)
 

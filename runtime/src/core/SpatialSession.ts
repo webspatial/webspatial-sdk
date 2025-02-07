@@ -1,52 +1,54 @@
-import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { WindowStyle } from './types'
+import { WindowGroupOptions, WindowStyle } from './types'
 
-import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
+import {
+  SpatialMeshResource,
+  SpatialPhysicallyBasedMaterialResource,
+} from './resource'
 import {
   SpatialModelComponent,
   SpatialInputComponent,
   SpatialWindowComponent,
   SpatialViewComponent,
+  SpatialModel3DComponent,
 } from './component'
-import { SpatialObject } from './SpatialObject'
+import { RemoteCommand } from './private/remote-command'
 
-class SpatialFrame {}
-
-// Types
-type animCallback = (time: DOMHighResTimeStamp, frame: SpatialFrame) => void
+/**
+ * Animation callback with timestamp
+ */
+type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
  */
 export class SpatialSession {
   /** @hidden */
-  _currentFrame = new SpatialFrame()
-  /** @hidden */
-  _animationFrameCallbacks = Array<animCallback>()
+  _engineUpdateListeners = Array<animCallback>()
   /** @hidden */
   _frameLoopStarted = false
 
   /**
-   * Request a callback to be called before the next render update
-   * @param callback callback to be called before next render update
+   * Add event listener callback to be called each frame
+   * @param callback callback to be called each update
    */
-  requestAnimationFrame(callback: animCallback) {
-    this._animationFrameCallbacks.push(callback)
+  addOnEngineUpdateEventListener(callback: animCallback) {
+    this._engineUpdateListeners.push(callback)
 
     if (!this._frameLoopStarted) {
       this._frameLoopStarted = true
-      WebSpatial.onFrame((time: number, delta: number) => {
-        var cbs = this._animationFrameCallbacks
-        this._animationFrameCallbacks = []
-        for (var cb of cbs) {
-          cb(time, this._currentFrame)
-        }
+      WebSpatial.onFrame(async (time: number) => {
+        await Promise.all(
+          this._engineUpdateListeners.map(cb => {
+            return cb(time)
+          }),
+        )
       })
     }
   }
+
   /**
    * Creates a Entity
    * @returns Entity
@@ -62,6 +64,7 @@ export class SpatialSession {
 
   /**
    * Creates a WindowComponent
+   * [TODO] should creation of components be moved to entity? and these made private?
    * @returns WindowComponent
    */
   async createWindowComponent(wg?: SpatialWindowGroup) {
@@ -74,7 +77,7 @@ export class SpatialSession {
   }
 
   /**
-   * Creates a ViewComponent
+   * Creates a ViewComponent used to display 3D content within the entity
    * @returns SpatialViewComponent
    */
   async createViewComponent(wg?: SpatialWindowGroup) {
@@ -87,7 +90,7 @@ export class SpatialSession {
   }
 
   /**
-   * Creates a ModelComponent
+   * Creates a ModelComponent used to display geometry + material of a 3D model
    * @returns ModelComponent
    */
   async createModelComponent(options?: { url: string }) {
@@ -105,7 +108,26 @@ export class SpatialSession {
   }
 
   /**
+   * Creates a Model3DComponent
+   * @returns Model3DComponent
+   */
+  async createModel3DComponent(options?: { url: string }) {
+    var opts = undefined
+    if (options) {
+      opts = { modelURL: options.url }
+    }
+    let entity = await WebSpatial.createResource(
+      'Model3DComponent',
+      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWebPanel(),
+      opts,
+    )
+    return new SpatialModel3DComponent(entity)
+  }
+
+  /**
    * Creates a InputComponent
+   * [Experimental] Creates a InputComponent used to handle click and drag events of the entity containing a model
    * @returns InputComponent
    */
   async createInputComponent() {
@@ -120,7 +142,7 @@ export class SpatialSession {
   }
 
   /**
-   * Creates a MeshResource
+   * Creates a MeshResource containing geometry data
    * @returns MeshResource
    */
   async createMeshResource(options?: any) {
@@ -130,34 +152,58 @@ export class SpatialSession {
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialMesh(entity)
+    return new SpatialMeshResource(entity)
   }
 
   /**
-   * Creates a PhysicallyBasedMaterial
+   * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterial(options?: any) {
+  async createPhysicallyBasedMaterialResource(options?: any) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
       WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialPhysicallyBasedMaterial(entity)
+    return new SpatialPhysicallyBasedMaterialResource(entity)
   }
 
   /**
-   * Creates a WindowGroup
+   * Creates a WindowGroup to display content within an anchored area managed by the OS
+   * By default, the windowGroup will act as children of current spatialWindowComponent.
+   * If the cfg param is provided, the windowGroup is standalone.
+   * [TOOD] rename this to be more clear what it does
+   * @param {WindowStyle} [style='Plain'] - The style of the window to be created. Defaults to 'Plain'.
+   * @param {Object} [cfg={}] - Configuration object for the window group. If provided, the window group will be standalone.
+   * @param {Object} [cfg.sceneData] - Configuration for the scene data associated with the window group.
+   * @param {string} [cfg.sceneData.method] - The method to be used for loading the scene.
+   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - Configuration options for the scene.
+   * @param {string} [cfg.sceneData.url] - The URL to load the scene from.
+   * @param {string} [cfg.sceneData.windowID] - The ID of the window to be created.
    * @returns WindowGroup
    */
-  async createWindowGroup(style: WindowStyle = 'Plain') {
-    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
+  async createWindowGroup(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData?: {
+        method?: 'createRoot' | 'showRoot'
+        sceneConfig?: WindowGroupOptions
+        url?: string
+        windowID?: string
+        windowGroupID?: string
+      }
+    } = {},
+  ) {
+    return new SpatialWindowGroup(
+      await WebSpatial.createWindowGroup(style, cfg),
+    )
   }
 
   /**
    * Retrieves the window for this page
    * @returns the window component corresponding to the js running on this page
+   * [TODO] discuss implications of this not being async
    */
   getCurrentWindowComponent() {
     return new SpatialWindowComponent(WebSpatial.getCurrentWebPanel())
@@ -183,54 +229,42 @@ export class SpatialSession {
     }
   }
 
-  async setLogLevel(logLevel: LoggerLevel) {
-    await WebSpatial.logger.setLevel(logLevel)
-  }
-
+  /**
+   * Logs a message to the native apps console
+   * @param msg mesage to log
+   */
   async log(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async info(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async warn(...msg: any[]) {
-    await WebSpatial.logger.warn(...msg)
-  }
-
-  async debug(...msg: any[]) {
-    await WebSpatial.logger.debug(...msg)
-  }
-
-  async error(...msg: any[]) {
-    await WebSpatial.logger.error(...msg)
-  }
-
-  async trace(...msg: any[]) {
-    await WebSpatial.logger.trace(...msg)
+    await WebSpatial.sendCommand(new RemoteCommand('log', { logString: msg }))
   }
 
   /**
+   * @hidden
    * Debugging only, used to ping the native renderer
    */
-  async ping(msg: string) {
+  async _ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
 
   /**
+   * @hidden
    * Debugging to get internal state from native code
    * @returns data as a js object
    */
-  async getStats() {
+  async _getStats() {
     return (await WebSpatial.getStats()) as any
   }
 
-  async inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
+  /**
+   * @hidden
+   */
+  async _inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
     return WebSpatial.inspect(spatialObjectId)
   }
 
-  async inspectRootWindowGroup() {
+  /**
+   * @hidden
+   */
+  async _inspectRootWindowGroup() {
     return WebSpatial.inspectRootWindowGroup()
   }
 
@@ -244,8 +278,11 @@ export class SpatialSession {
     return await WebSpatial.dismissImmersiveSpace()
   }
 
-  // Retreives the windowgroup corresponding to the Immersive space
   private static _immersiveWindowGroup = null as null | SpatialWindowGroup
+  /**
+   * Retreives the windowgroup corresponding to the Immersive space
+   * @returns the immersive window group
+   */
   async getImmersiveWindowGroup() {
     if (SpatialSession._immersiveWindowGroup) {
       return SpatialSession._immersiveWindowGroup
@@ -259,6 +296,12 @@ export class SpatialSession {
 
   // Retreives the window group that is the parent to this spatial web page
   private static _currentWindowGroup = null as null | SpatialWindowGroup
+
+  /**
+   * Gets the current window group for the window
+   * [TODO] discuss what happens if it doesnt yet have a windowgroup
+   * @returns the current window group for the window
+   */
   getCurrentWindowGroup() {
     if (SpatialSession._currentWindowGroup) {
       return SpatialSession._currentWindowGroup
@@ -270,16 +313,23 @@ export class SpatialSession {
     }
   }
 
-  // Start a transaction that queues up commands to submit them all at once to reduce ipc overhead
+  /**
+   * Start a transaction that queues up commands to submit them all at once to reduce ipc overhead
+   * @param fn function to be run, within this function, promises will not resolve
+   * @returns promise for the entire transaction completion
+   */
   transaction(fn: Function) {
     WebSpatial.startTransaction()
     fn()
     return WebSpatial.sendTransaction()
   }
 
-  // Creates a window context object that is compatable with SpatialWindowComponent's setFromWindow API
+  /**
+   * Creates a window context object that is compatable with SpatialWindowComponent's setFromWindow API
+   * @returns window context
+   */
   async createWindowContext() {
-    let openedWindow = window.open()
+    let openedWindow = window.open('webspatial://createWindowContext')
     if (WebSpatial.getBackend() != 'AVP') {
       // Currently there is a bug with webview which requires us to trigger a navigation before native code can interact with created webview
       var counter = 0

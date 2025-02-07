@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom/client'
 import {
   Spatial,
   SpatialEntity,
+  SpatialHelper,
   SpatialSession,
   SpatialViewComponent,
 } from '@xrsdk/runtime'
 import { SpatialDiv, Model } from '@xrsdk/react'
+import { Vec3 } from '@xrsdk/runtime'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -105,10 +107,10 @@ function App() {
         }>()
         for (var i = 0; i < 7; i++) {
           let e = await session.createEntity()
-          e.transform.position = new DOMPoint(-0.35 + i * 0.1, 0, 0.15)
-          e.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+          e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.15)
+          e.transform.scale = new Vec3(0.1, 0.1, 0.1)
           await e.updateTransform()
-          var mat = await session.createPhysicallyBasedMaterial()
+          var mat = await session.createPhysicallyBasedMaterialResource()
           mat.baseColor.r = 0.8
           mat.baseColor.g = 0.8
           mat.baseColor.b = 0.8 + Math.random() * 0.2
@@ -235,9 +237,8 @@ function App() {
               entity.updateTransform()
             }
           })
-          session!.requestAnimationFrame(loop)
         }
-        session.requestAnimationFrame(loop)
+        session!.addOnEngineUpdateEventListener(loop)
       })()
     } else {
     }
@@ -252,8 +253,22 @@ function App() {
         <a href="/src/docsWebsite/index.html">Docs</a>
         <a href="/src/jsApiTestPages/testList.html">Examples</a>
         <a href="/src/CITest/index.html">Run CI</a>
+        <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
         <a href="/src/template/index.html">Template</a>
+        <button
+          onClick={() => {
+            if (SpatialHelper.instance) {
+              SpatialHelper.instance.navigation.openPanel(
+                '/src/launcher/index.html',
+              )
+            } else {
+              window.open('/src/launcher/index.html')
+            }
+          }}
+        >
+          Launcher
+        </button>
       </div>
       <div className="m-5 flex flex-row flex-wrap text-white">
         <div
@@ -275,22 +290,18 @@ function App() {
         </div>
 
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
-          {spatialSupported ? (
-            <div className="w-full h-52">
-              <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                <source
-                  src="/src/assets/FlightHelmet.usdz"
-                  type="model/vnd.usdz+zip"
-                ></source>
-              </Model>
-            </div>
-          ) : (
-            <div className="w-full h-52">
-              <div className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-                Model goes here
-              </div>
-            </div>
-          )}
+          <div className="w-full h-52">
+            <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
+              <source
+                src="/src/assets/FlightHelmet.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/FlightHelmet.glb"
+                type="model/gltf-binary"
+              />
+            </Model>
+          </div>
           <h3 className="text-xl">Get Started</h3>
           <h3 className="text-2xl">npm i web-spatial</h3>
         </div>

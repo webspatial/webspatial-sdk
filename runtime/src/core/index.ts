@@ -5,6 +5,6 @@ export { SpatialSession } from './SpatialSession'
 export { Spatial } from './Spatial'
 export { SpatialWindowGroup } from './SpatialWindowGroup'
 export { SpatialHelper } from './SpatialHelper'
-
 export { type WindowStyle } from './types'
-export { SpatialTransform } from './SpatialTransform'
+export { SpatialTransform, Vec3, Vec4 } from './SpatialTransform'
+export * from './types'

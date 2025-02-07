@@ -51,7 +51,8 @@ function renderRootCSSSpatialComponent(
   const divRefStyle: CSSProperties = {
     ...style,
     width: 0,
-    position: 'absolute',
+    height: 0,
+    transition: 'none',
   }
 
   const spatialDivStyle: CSSProperties = {
@@ -112,11 +113,11 @@ function renderInStandardInstance(
   }
 
   // hijack SpatialDiv ref
-  var cssParserRef = useRef<HTMLElement>()
+  var cssParserRef = useRef<HTMLDivElement | null>(null)
   const spatialDivRef = useHijackSpatialDivRef(refIn, cssParserRef)
 
   useEffect(() => {
-    const onDomChangeAction = (dom: HTMLElement | undefined) => {
+    const onDomChangeAction = (dom: HTMLDivElement | null) => {
       cssParserRef.current = dom
     }
     cssSpatialRootContextObject.onDomChange(cssSpatialID, onDomChangeAction)
@@ -146,7 +147,8 @@ function renderInPortalInstance(
   const divRefStyle: CSSProperties = {
     ...style,
     width: 0,
-    position: 'absolute',
+    height: 0,
+    transition: 'none',
   }
 
   const spatialDivStyle: CSSProperties = {
