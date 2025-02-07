@@ -177,7 +177,7 @@ function App() {
               await ent.setCoordinateSpace('Root')
               await ent.setComponent(i)
 
-              await ent.setParentWindowGroup(wg)
+              await wg.setRootEntity(ent)
             }
           }}
           className="w-1/3 text-md py-5"
