@@ -62,7 +62,6 @@ struct NavView: View{
                 },label: {
                     Text("X")
                 })
-//                Text("copy").padding().hoverEffect().glassBackgroundEffect(in: .rect).cornerRadius(15)
             }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y:35).opacity(showUrl ? 1 : 0).animation(.easeOut(duration: 0.2))
             
         }

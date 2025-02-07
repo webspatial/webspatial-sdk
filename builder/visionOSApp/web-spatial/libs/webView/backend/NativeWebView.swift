@@ -33,6 +33,8 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
         // Parse the style json string from url
         let url = urlSchemeTask.request.url
+        // 本地web项目通过相对路径访问资源会默认使用file协议
+        // Local web projects accessing resources through relative paths will default to using the file protocol
         if url!.absoluteString.starts(with: "file://") {
             let session = URLSession(configuration: URLSessionConfiguration.default)
             let dataTask = session.dataTask(with: urlSchemeTask.request){ (data, response, error) in
@@ -102,13 +104,10 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        // print("try nav " + navigationAction.request.url!.absoluteString)
         if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
-            print("allow nav")
             decisionHandler(.allow)
         }
         else{
-            print("break nav")
             decisionHandler(.cancel)
             UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
         }
@@ -241,10 +240,11 @@ struct WebViewNative: UIViewRepresentable {
 @available(iOS 11.0, *)
 extension WKWebView {
     /// WKWebView, 支持configuration里设置file scheme
+    /// WKWebView,  Support setting file scheme in configuration
     public private(set) static var isEnableFileSupport = false
-    /// 支持HTTP的URLSchemeHandlers
     public static func enableFileScheme() {
-        /// 这种方式支持通过Configuration适配支持的HTTP，但没法取消(configuration是不可变的)。
+        /// 这种方式支持通过Configuration适配支持的file，但没法取消(configuration是不可变的)。
+        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
         if !isEnableFileSupport {
             switchHandlesURLScheme()
         }
@@ -260,12 +260,10 @@ extension WKWebView {
         }
     }
     /// 返回true如果WKWebview支持处理这种协议, 但WKWebview默认支持http，所以返回false支持用自定义的http Handlers
-    ///
-    /// NOTE: 如果不在configuration里注册http handlers, 则仍然会用WKWebView默认的HTTP进行处理
+    /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
     @objc dynamic
     private static func wrapHandles(urlScheme: String) -> Bool {
         if urlScheme == "file" { return false }
-//        if urlScheme == "http" || urlScheme == "https" || urlScheme == "file" { return false }
         return self.wrapHandles(urlScheme: urlScheme)
     }
 }
