@@ -92,7 +92,7 @@ export class SpatialHelper {
       await ent.setComponent(i)
 
       // Add enitity the windowgroup
-      await ent.setParentWindowGroup(wg)
+      await wg.setRootEntity(ent)
 
       if (options?.dimensions) {
         await wg.setStyle({ dimensions: options.dimensions })
@@ -108,7 +108,7 @@ export class SpatialHelper {
       var rootEnt = await this.session!.createEntity()
       await rootEnt.setComponent(await this.session!.createViewComponent(wg))
       await rootEnt.setCoordinateSpace('Root')
-      await rootEnt.setParentWindowGroup(wg)
+      await wg.setRootEntity(rootEnt)
 
       // Add webpage to the window group
       var ent = await this.session!.createEntity()
