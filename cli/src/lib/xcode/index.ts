@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { BACK_APPICON_DIRECTORY, MIDDLE_APPICON_DIRECTORY, PROJECT_DIRECTORY, PROJECT_OUT_DIRECTORY } from '../resource';
+import { BACK_APPICON_DIRECTORY, MIDDLE_APPICON_DIRECTORY, PROJECT_DIRECTORY, PROJECT_EXPORT_DIRECTORY } from '../resource';
 import { join } from 'path';
 import { loadJsonFromDisk } from '../resource/load';
 import Xcodebuild from './xcodebuild';
@@ -46,8 +46,8 @@ export class XcodeManager{
             console.log(error)
         }
         console.log("write project.pbxproj: ok")
-        if (!fs.existsSync(PROJECT_OUT_DIRECTORY)) {
-            fs.promises.mkdir(PROJECT_OUT_DIRECTORY, {recursive: true});
+        if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
+            fs.promises.mkdir(PROJECT_EXPORT_DIRECTORY, {recursive: true});
         }
         await Xcodebuild.archive();
     }

@@ -22,13 +22,6 @@
     "type": "git",
     "url": ""
   },
-  "maintainers": [
-    {
-      "name": "hongfukang",
-      "email": "hongfukang@bytedance.com",
-      "web": ""
-    }
-  ],
   "files": [
     "dist/lib",
     "dist/index.d.ts",
