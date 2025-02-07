@@ -15,7 +15,7 @@ import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
 // To load a local path, remove http:// eg.  "static-web/"
-//let initialPageToLoad = "http://localhost:5173"
+let initialPageToLoad = "http://localhost:5173/"
 let nativeAPIVersion = "0.0.1"
 
 @main

@@ -5,6 +5,7 @@
 //  Created by ByteDance on 5/9/24.
 //
 
+import Combine
 import Foundation
 import RealityKit
 import RealityKitContent
@@ -24,6 +25,14 @@ struct PreloadStyleSettings: Codable {
     var cornerRadius: CornerRadius? = .init()
     var backgroundMaterial: BackgroundMaterial? = .None
 }
+
+struct WebviewEarlyStyle {
+    let webview: WKWebView
+    let style: PreloadStyleSettings
+}
+
+// event of forcestyle handler
+var webviewGetEarlyStyleData = PassthroughSubject<WebviewEarlyStyle, Never>()
 
 class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     let decoder = JSONDecoder()
@@ -57,7 +66,9 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                     .components(separatedBy: "?").first
             }
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
-            webViewRef?.didGetEarlyStyle(style: styleToSet)
+
+            webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
+
             // Respond with empty css file
             let response = ".ignoreThis{}".data(using: .utf8)
             let mimeType = "text/css"
@@ -119,6 +130,12 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         print("Navigation failed!!! " + error.localizedDescription)
+        if let urlError = (error as? URLError) {
+            print("URL ERROR: " + (urlError.failingURL != nil ? (urlError.failingURL!.absoluteString) : "no URL found"))
+            if urlError.code == .cannotConnectToHost {
+                webViewRef?.didFailLoadPage()
+            }
+        }
     }
 
     // Warning this should likeley be removed. There seems to be a bug with SSL loading on simulator https://stackoverflow.com/questions/27100540/allow-unverified-ssl-certificates-in-wkwebview
@@ -137,10 +154,23 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
+        // check url
+        if let url = navigationAction.request.url {
+            // TODO: pwa logic
+        }
+
         let wvNative = WebViewNative()
+
         _ = wvNative.createResources(configuration: configuration)
+
         webViewRef!.didSpawnWebView(wv: wvNative)
+
         return wvNative.webViewHolder.appleWebView
+    }
+
+    // handle close
+    func webViewDidClose(_ webView: WKWebView) {
+        webViewRef!.didCloseWebView()
     }
 
     // receive message from wkwebview

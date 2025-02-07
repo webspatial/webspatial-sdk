@@ -5,6 +5,7 @@ import { TeenjsTest } from './TeenjsTest'
 import { GSAPTest } from './GSAPTest'
 import { AnimeTest } from './AnimeTest'
 import { ReactSpringTest } from './ReactSpringTest'
+import { ReactSpringModel3DTest } from './ReactSpringModel3DTest'
 
 enableDebugTool()
 
@@ -25,6 +26,8 @@ function App() {
         <AnimeTest />
 
         <ReactSpringTest />
+
+        <ReactSpringModel3DTest />
       </div>
     </div>
   )

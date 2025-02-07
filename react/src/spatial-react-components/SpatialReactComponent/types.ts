@@ -1,19 +1,7 @@
 import { BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime'
 import { SpatialID } from './const'
-import {
-  ReactNode,
-  CSSProperties,
-  Ref,
-  useImperativeHandle,
-  forwardRef,
-  useMemo,
-  ElementType,
-  useContext,
-  ForwardedRef,
-} from 'react'
-
-export type vecType = { x: number; y: number; z: number }
-export type quatType = { x: number; y: number; z: number; w: number }
+import { ReactNode, CSSProperties, ElementType, ForwardedRef } from 'react'
+import { quatType, vecType } from '../types'
 
 export type spatialStyleDef = {
   position: Partial<vecType>
@@ -23,13 +11,6 @@ export type spatialStyleDef = {
   material?: { type: BackgroundMaterialType }
   cornerRadius: number | CornerRadius
   visible?: boolean
-}
-
-export type RectType = {
-  x: number
-  y: number
-  width: number
-  height: number
 }
 
 export interface SpatialReactComponentProps {
@@ -46,7 +27,7 @@ export interface SpatialReactComponentProps {
   debugShowStandardInstance?: boolean
 }
 
-export type SpatialReactComponentRef = ForwardedRef<HTMLElement>
+export type SpatialReactComponentRef = ForwardedRef<HTMLDivElement>
 
 export interface SpatialReactComponentWithUniqueIDProps
   extends SpatialReactComponentProps {

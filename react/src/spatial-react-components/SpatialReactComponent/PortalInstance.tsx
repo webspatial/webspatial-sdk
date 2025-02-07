@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom'
 import { usePortalContainer } from './usePortalContainer'
 import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
 import { SpatialWindowManager } from './SpatialWindowManager'
-import { RectType, spatialStyleDef, vecType } from './types'
+
 import {
   domRect2rectType,
   getInheritedStyleProps,
@@ -23,6 +23,8 @@ import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
 import { CornerRadius } from '@xrsdk/runtime'
+import { RectType, vecType } from '../types'
+import { spatialStyleDef } from './types'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
@@ -56,6 +58,7 @@ function renderJSXPortalInstance(
     marginRight: '0px',
     marginTop: '0px',
     marginBottom: '0px',
+    borderRadius: '0px',
     overflow: '',
   }
   const elWHStyle = {
@@ -153,6 +156,10 @@ async function syncParentHeadToChild(
     } else {
       childWindow.document.head.appendChild(n)
     }
+  }
+
+  if (debugName) {
+    childWindow.document.title = debugName
   }
 
   return Promise.all(styleLoadedPromises)
@@ -428,6 +435,8 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       const spawnedResult = {
         headObserver,
       }
+
+      spatialWindowManager.setDebugName(debugName)
 
       return spawnedResult
     },
