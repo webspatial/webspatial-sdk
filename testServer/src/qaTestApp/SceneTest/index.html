@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Window Group Example</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          padding: 20px;
+          background-color: #f4f4f9;
+      }
+      .window-group {
+          display: flex;
+          gap: 15px;
+      }
+      button {
+          padding: 10px 15px;
+          font-size: 16px;
+          cursor: pointer;
+          background-color: #4CAF50;
+          color: white;
+          border: none;
+          border-radius: 5px;
+      }
+      button:hover {
+          background-color: #45a049;
+      }
+  </style>
+</head>
+<body>
+
+<h1>Window Group</h1>
+
+<div class="window-group">
+  <button onclick="openWindow('window1')">Open Window 1</button>
+  <button onclick="openWindow('window2')">Open Window 2</button>
+  <button onclick="openWindow('window3')">Open Window 3</button>
+</div>
+</body>
+<script src="/dist/src/qaTestApp/SceneTest/scene.js"></script>
+</html>
