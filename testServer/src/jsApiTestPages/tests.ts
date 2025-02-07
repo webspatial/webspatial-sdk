@@ -334,7 +334,8 @@ var main = async () => {
           customModel.setMesh(box)
           await e.setComponent(customModel)
         }
-        await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+        await (await session.getCurrentWindowGroup()).setRootEntity(e)
         entities.push({ e: e, v: 0 })
       }
       var b = document.createElement('button')
