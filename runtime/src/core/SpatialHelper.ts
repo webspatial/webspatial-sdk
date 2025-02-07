@@ -81,6 +81,12 @@ export class SpatialHelper {
       url: string,
       options?: { dimensions: { x: number; y: number } },
     ) => {
+      if (options?.dimensions) {
+        await this.session
+          .getCurrentWindowGroup()
+          ._setOpenSettings({ dimensions: options.dimensions })
+      }
+
       // Create window group
       var wg = await this.session.createWindowGroup('Plain')
 
@@ -94,9 +100,10 @@ export class SpatialHelper {
       // Add enitity the windowgroup
       await ent.setParentWindowGroup(wg)
 
-      if (options?.dimensions) {
-        await wg.setStyle({ dimensions: options.dimensions })
-      }
+      // Restore default size
+      await this.session
+        .getCurrentWindowGroup()
+        ._setOpenSettings({ dimensions: { x: 900, y: 700 } })
     },
     openVolume: async (
       url: string,
