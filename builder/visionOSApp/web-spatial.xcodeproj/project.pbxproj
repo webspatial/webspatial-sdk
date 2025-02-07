@@ -153,7 +153,6 @@
 				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
 				2B2F1D752BEBFAAC006897EE /* Info.plist */,
 				2B2F1D722BEBFAAC006897EE /* Preview Content */,
-				9019285DCB5B4A16987CB399 /* web-project */,
 			);
 			path = "web-spatial";
 			sourceTree = "<group>";
@@ -253,14 +252,6 @@
 				2B9909922C3605A9004826D1 /* Window.swift */,
 			);
 			path = uiKitDelegate;
-			sourceTree = "<group>";
-		};
-		14CCA4D8FC5247E4B0431768 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Resources;
-			path = undefined;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
