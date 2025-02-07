@@ -59,6 +59,12 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
 }
 
 function parseBack(computedStyle: CSSStyleDeclaration) {
+  let useBackProperty =
+    computedStyle.position === 'absolute' ||
+    computedStyle.position === 'relative'
+
+  if (!useBackProperty) return new Matrix4()
+
   let backProperty = computedStyle.getPropertyValue(SpatialCustomVars.back)
   let back: number | undefined = undefined
   try {
@@ -115,7 +121,7 @@ function parseSpatialStyle(node: HTMLElement) {
 }
 
 export function useSpatialStyle() {
-  const ref = useRef<HTMLElement>()
+  const ref = useRef<HTMLDivElement | null>(null)
 
   const [spatialStyle, setSpatialStyle] = useState({
     position: { x: 0, y: 0, z: 1 },

@@ -1,3 +1,11 @@
+import '@google/model-viewer'
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': any
+    }
+  }
+}
 import React, {
   ReactElement,
   useEffect,
@@ -5,6 +13,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   Ref,
+  useState,
 } from 'react'
 // import { AnimationBuilder } from '../core'
 import { initializeSpatialOffset } from './utils'
@@ -43,13 +52,37 @@ export type ModelRef = Ref<{
  */
 export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
   props = { ...{ spatialOffset: { x: 0, y: 0, z: 0 } }, ...props }
+  var [glbSrc, setGlbSrc] = useState('')
   initializeSpatialOffset(props.spatialOffset!)
 
   const opacity = props.opacity ?? 1
 
   let session = getSession()
   if (!session) {
-    return <div className={props.className}> model can display in AVP only</div>
+    useEffect(() => {
+      React.Children.toArray(props.children).some((element: any) => {
+        var src = element.props.src as string
+        var fileExt = src.split('.').pop()
+        if (fileExt == 'glb' || fileExt == 'gltf') {
+          setGlbSrc(src)
+          return true // exit early
+        }
+        return false
+      })
+    }, [])
+    return (
+      <div className={props.className}>
+        <model-viewer
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+          src={glbSrc}
+          camera-controls
+          touch-action="pan-y"
+        ></model-viewer>
+      </div>
+    )
   }
 
   // const animate = (animationBuilder: AnimationBuilder) => {

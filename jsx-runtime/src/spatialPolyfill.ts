@@ -1,4 +1,5 @@
-import { getSession, parseCornerRadius } from '@xrsdk/react'
+import { getSession, parseCornerRadius, XRApp } from '@xrsdk/react'
+import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -119,8 +120,26 @@ function hijackDocumentElementStyle() {
 
       return ret
     },
-    get: function (target, key) {
-      return Reflect.get(target, key)
+    get: function (target, prop: string) {
+      if (typeof target[prop as keyof CSSStyleDeclaration] === 'function') {
+        return function (this: any, ...args: any[]) {
+          if (prop === 'setProperty') {
+            const [property, value] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle(value)
+            }
+          } else if (prop === 'removeProperty') {
+            const [property] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle('none')
+            }
+          }
+          return (target[prop as keyof CSSStyleDeclaration] as Function)(
+            ...args,
+          )
+        }
+      }
+      return Reflect.get(target, prop)
     },
   })
   Object.defineProperty(document.documentElement, 'style', {
@@ -168,6 +187,7 @@ function checkCSSProperties() {
   checkCornerRadius()
   checkOpacity()
   checkHtmlVisible()
+  window.addEventListener('resize', checkHtmlVisible)
 }
 
 function hijackGetComputedStyle() {
@@ -180,10 +200,17 @@ function hijackGetComputedStyle() {
   }
 }
 
+function hijackWindowOpen() {
+  XRApp.getInstance().init()
+}
+
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
   }
+
+  injectSceneHook()
+  hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()
   hijackDocumentElementStyle()

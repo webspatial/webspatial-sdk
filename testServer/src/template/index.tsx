@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Model, SpatialDiv } from '@xrsdk/react'
+import { getSession, Model, SpatialDiv } from '@xrsdk/react'
 
 function App() {
   const [toggle, setToggle] = useState(true)
@@ -10,7 +10,9 @@ function App() {
       <SpatialDiv
         spatialStyle={{
           position: { z: 50 },
-          glassEffect: true,
+          material: {
+            type: 'thin',
+          },
           cornerRadius: 10,
         }}
         style={{ height: '300px' }}
@@ -21,7 +23,9 @@ function App() {
       <SpatialDiv
         spatialStyle={{
           position: { z: 30 },
-          glassEffect: true,
+          material: {
+            type: 'thin',
+          },
           cornerRadius: 10,
         }}
         className={'p-10' + (toggle ? '' : ' bg-slate-400')}

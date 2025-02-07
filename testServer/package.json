@@ -21,6 +21,8 @@
     "@xrsdk/jsx-runtime": "workspace:*",
     "@xrsdk/react": "workspace:*",
     "@xrsdk/runtime": "workspace:*",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
     "animejs": "^3.2.2",
     "autoprefixer": "^10.4.19",
     "gsap": "^3.12.5",
@@ -68,6 +70,11 @@
   "pnpm": {
     "overrides": {
       "nanoid@<3.3.8": ">=3.3.8"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
     }
   }
 }

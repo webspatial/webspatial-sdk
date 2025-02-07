@@ -1,7 +1,7 @@
 import { getSession } from './getSession'
 
 async function getStat() {
-  const statsInfo = await getSession()!.getStats()
+  const statsInfo = await getSession()!._getStats()
 
   return statsInfo
 }
@@ -25,6 +25,7 @@ function simplifyEntityTree(rootTree: any) {
   function visitNode(node: any, parent: any) {
     let newNode = {
       id: node.id,
+      name: node.name,
       children: [],
       position: node.position,
       scale: node.scale,
@@ -32,6 +33,8 @@ function simplifyEntityTree(rootTree: any) {
       height: node.components[0].resolutionY,
       zIndex: node.zIndex,
       visible: node.visible,
+      cornerRadius: node.components[0].cornerRadius,
+      backgroundMaterial: node.components[0].backgroundMaterial,
     }
     nodeMap[node.id] = newNode
 
@@ -49,7 +52,7 @@ function simplifyEntityTree(rootTree: any) {
 }
 
 async function inspectRootWindowGroup(simple?: boolean) {
-  const rootWindowGroupInfo = await getSession()!.inspectRootWindowGroup()
+  const rootWindowGroupInfo = await getSession()!._inspectRootWindowGroup()
   console.log(rootWindowGroupInfo)
 
   if (simple) {
