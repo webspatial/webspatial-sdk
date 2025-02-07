@@ -14,13 +14,13 @@ export class SpatialWindowGroup {
     /** @hidden */
     public _wg: WindowGroup,
   ) {}
-
   /**
-   * Sets the style that should be applied to the windowGroup
+   * @hidden
+   * Sets sets the open configuration for opening new window groups
    * @param options style options
    */
-  async setStyle(options: { dimensions: { x: number; y: number } }) {
-    await WebSpatial.updateWindowGroup(this._wg, { style: options })
+  async _setOpenSettings(options: { dimensions: { x: number; y: number } }) {
+    await WebSpatial.updateWindowGroup(this._wg, { nextOpenSettings: options })
   }
 
   /**
