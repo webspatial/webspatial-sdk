@@ -3,8 +3,8 @@ import { getSession } from './utils/getSession'
 
 export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {
-    width: 100,
-    height: 1000,
+    width: 900,
+    height: 700,
   },
   resizability: 'automatic',
 }
