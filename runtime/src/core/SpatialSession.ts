@@ -188,7 +188,7 @@ export class SpatialSession {
    * @param {Object} [cfg={}] - Configuration object for the Scene.
    * @returns Boolean
    */
-  async createScene(
+  async _createScene(
     style: WindowStyle = 'Plain',
     cfg: {
       sceneData: sceneDataShape

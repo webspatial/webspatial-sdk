@@ -52,7 +52,7 @@ export class XRApp {
   async show(window: Window, cfg: WindowGroupOptions) {
     try {
       let session = getSession()!
-      await session.createScene(
+      await session._createScene(
         'Plain', // only support Plain for now
         {
           sceneData: {
@@ -96,7 +96,7 @@ export class XRApp {
         } else {
           const cfg = this.getConfig(target)
           try {
-            await session.createScene(
+            await session._createScene(
               'Plain', // only support Plain for now
               {
                 sceneData: {
