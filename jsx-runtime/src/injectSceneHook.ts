@@ -23,6 +23,6 @@ export async function injectSceneHook() {
       }, 1000)
     })
     await getSession()?.setLoading('hide')
-    await XRApp.getInstance().show((window as any)._webSpatialID, cfg)
+    await XRApp.getInstance().show(window, cfg)
   })
 }
