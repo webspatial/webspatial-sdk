@@ -577,11 +577,18 @@ class CommandDataManager {
             return
         }
 
-        if let dimensions = data.update?.style?.dimensions,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
-        {
-            target.loadingStyles.windowGroupSize = CGSize(width: dimensions.x, height: dimensions.y)
-            wg.setSize.send(target.loadingStyles.windowGroupSize)
+        if let dimensions = data.update?.nextOpenSettings?.dimensions {
+            sceneStateChangedCB = { _ in
+                // Complete event after scene state change is completed
+                target.completeEvent(requestID: requestID)
+                sceneStateChangedCB = { _ in }
+            }
+
+            // Update scene state
+            var cfg = WindowGroupPlainDefaultValues()
+            cfg.defaultSize = CGSize(width: dimensions.x, height: dimensions.y)
+            WindowGroupMgr.Instance.updateWindowGroupPlainDefaultValues(cfg)
+            return
         }
         target.completeEvent(requestID: requestID)
     }
@@ -662,6 +669,7 @@ struct JSResourceData: Codable {
     var setScrollEdgeInsets: JSRect?
     var windowID: String?
     var style: JSEntityStyle?
+    var nextOpenSettings: JSNextOpen?
     var getBoundingBox: Bool?
     var zIndex: Double?
     var visible: Bool?
@@ -713,6 +721,10 @@ struct JSRect: Codable {
 struct JSEntityStyle: Codable {
     var cornerRadius: CornerRadius?
     var backgroundMaterial: BackgroundMaterial?
+    var dimensions: JSVector2?
+}
+
+struct JSNextOpen: Codable {
     var dimensions: JSVector2?
 }
 
