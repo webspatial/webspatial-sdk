@@ -29,6 +29,7 @@
 		2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */; };
 		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
 		2BC9A2212D1E829B00912170 /* HideViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC9A2202D1E829B00912170 /* HideViewModifier.swift */; };
+		2BD510562D54A30D0001E5E6 /* SceneManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD510552D54A2FF0001E5E6 /* SceneManager.swift */; };
 		2BDBED5F2D3F885A0065443F /* SpatialModel3DComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */; };
 		2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
@@ -81,6 +82,7 @@
 		2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewUI.swift; sourceTree = "<group>"; };
 		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
 		2BC9A2202D1E829B00912170 /* HideViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HideViewModifier.swift; sourceTree = "<group>"; };
+		2BD510552D54A2FF0001E5E6 /* SceneManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManager.swift; sourceTree = "<group>"; };
 		2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModel3DComponent.swift; sourceTree = "<group>"; };
 		2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModel3DView.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 		2B0B1C0E2C494E4100E644F9 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				2BD510552D54A2FF0001E5E6 /* SceneManager.swift */,
 				2B0B43092CBE21540003CEF3 /* CommandManager.swift */,
 				2B0B1C0F2C494E5400E644F9 /* Logger.swift */,
 				2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */,
@@ -385,6 +388,7 @@
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
 				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
 				2B23CB3F2D0BEE6900E70D95 /* WindowGroupMgr.swift in Sources */,
+				2BD510562D54A30D0001E5E6 /* SceneManager.swift in Sources */,
 				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
 				2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */,
 				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
