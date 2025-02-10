@@ -5,6 +5,7 @@ let spatial = new Spatial()
 let _currentSession = null as SpatialSession | null
 /** @hidden */
 export function getSession() {
+  if (__WEB__) return null
   if (!spatial.isSupported()) {
     return null
   }
@@ -15,5 +16,7 @@ export function getSession() {
 
   return _currentSession
 }
+
+// console.log('__WEB__:', __WEB__)
 
 export { spatial }

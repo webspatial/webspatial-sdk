@@ -44,6 +44,7 @@ export class Model3DNative {
     onSuccess: () => void,
     onFailure: (error: string) => void,
   ) {
+    if (__WEB__) return
     var session = getSession()
 
     if (!session) {
