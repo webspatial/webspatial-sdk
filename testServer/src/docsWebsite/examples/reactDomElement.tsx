@@ -1,7 +1,7 @@
 import { SpatialSession } from '@xrsdk/runtime'
 import { useState } from 'react'
 import { showSample } from './sampleLoader'
-import { SpatialDiv } from '@xrsdk/react/dist'
+import { SpatialDiv } from '@xrsdk/react'
 import { Euler, Quaternion } from 'three'
 
 function MySample(_props: { session?: SpatialSession }) {
