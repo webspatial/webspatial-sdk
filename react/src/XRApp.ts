@@ -1,5 +1,12 @@
 import { WindowGroupOptions } from '@xrsdk/runtime/'
 import { getSession } from './utils/getSession'
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: WindowGroupOptions,
+    ) => Promise<WindowGroupOptions>
+  }
+}
 
 export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
-;(window as any).xrCurrentSceneDefaults = async (config: any) => {
+window.xrCurrentSceneDefaults = async config => {
   // const config = await requestDatabase()
   return {
     defaultSize: {
