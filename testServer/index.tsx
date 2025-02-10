@@ -261,6 +261,7 @@ function App() {
             if (SpatialHelper.instance) {
               SpatialHelper.instance.navigation.openPanel(
                 '/src/launcher/index.html',
+                { dimensions: { x: 400, y: 100 } },
               )
             } else {
               window.open('/src/launcher/index.html')
