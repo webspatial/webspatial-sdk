@@ -2,6 +2,21 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
+;(window as any).xrCurrentSceneDefaults = async (config: any) => {
+  // const config = await requestDatabase()
+
+  await new Promise<void>((resolve, reject) => {
+    setTimeout(resolve, 2000)
+  })
+
+  return {
+    defaultSize: {
+      width: 900,
+      height: 900,
+    }, //config.defaultSize,
+    resizability: 'contentSize',
+  }
+}
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -57,30 +72,6 @@ function App() {
   return (
     <div className="pl-5 pt-2">
       <h1 className="text-2xl text-black">openscene</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/loading.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
-        }}
-      >
-        open loading
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/hook.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
-        }}
-      >
-        open hook
-      </button>
 
       <button
         className={btnCls}
@@ -101,7 +92,7 @@ function App() {
           initScene('sa', () => ({
             defaultSize: {
               width: 900,
-              height: 900,
+              height: 500,
             },
           }))
           winARef.current = window.open(

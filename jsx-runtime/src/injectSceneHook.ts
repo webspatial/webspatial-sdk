@@ -1,28 +1,28 @@
-import { defaultSceneConfig, XRApp } from '@xrsdk/react'
+import { defaultSceneConfig, getSession, XRApp } from '@xrsdk/react'
 
-export function injectSceneHook() {
-  if (window.opener) {
-    // see this flag, we have done create the root scene
-    if ((window as any)._SceneHookOff) return
-    document.addEventListener('DOMContentLoaded', async () => {
+export async function injectSceneHook() {
+  if (!window.opener) return
+  if ((window as any)._SceneHookOff) return
+
+  await getSession()?.setLoading('show')
+
+  // see this flag, we have done create the root scene
+  document.addEventListener('DOMContentLoaded', async () => {
+    let cfg = defaultSceneConfig
+    if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
       try {
-        if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
-          const ans = await (window as any).xrCurrentSceneDefaults?.()
-
-          await XRApp.getInstance().show((window as any)._webSpatialID, ans)
-        } else {
-          await XRApp.getInstance().show(
-            (window as any)._webSpatialID,
-            defaultSceneConfig,
-          )
-        }
-      } catch (error: any) {
-        ;(window as any).hehe = error.message
-        console.error(
-          'Error executing xrCurrentSceneDefaults or sending ans:',
-          error,
-        )
+        cfg = await (window as any).xrCurrentSceneDefaults?.()
+      } catch (error) {
+        console.error(error)
       }
+    }
+    // fixme: this duration is too short so that hide and show is at racing, so add a little delay to avoid
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(null)
+      }, 1000)
     })
-  }
+    await getSession()?.setLoading('hide')
+    await XRApp.getInstance().show((window as any)._webSpatialID, cfg)
+  })
 }
