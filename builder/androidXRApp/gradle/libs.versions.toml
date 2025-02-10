@@ -15,6 +15,8 @@ ui = "1.8.0-alpha06"
 compose = "1.0.0-alpha01"
 runtimeVersion = "1.0.0-alpha01"
 scenecore = "1.0.0-alpha01"
+appcompat = "1.7.0"
+material = "1.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,9 +39,12 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-compose = { group = "androidx.xr.compose", name = "compose", version.ref = "compose" }
 runtime = { group = "androidx.xr.runtime", name = "runtime", version.ref = "runtimeVersion" }
 androidx-scenecore = { group = "androidx.xr.scenecore", name = "scenecore", version.ref = "scenecore" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 
