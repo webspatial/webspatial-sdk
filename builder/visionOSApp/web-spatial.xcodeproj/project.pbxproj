@@ -24,6 +24,7 @@
 		2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B67BBAB2D151C1500BBC689 /* manifest.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
+		2BA06D712D4380C60020B505 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA06D702D4380C30020B505 /* LoadingView.swift */; };
 		2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */; };
 		2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */; };
 		2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */; };
@@ -75,6 +76,7 @@
 		2B67BBAB2D151C1500BBC689 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		2BA06D702D4380C30020B505 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewComponent.swift; sourceTree = "<group>"; };
 		2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialViewUI.swift; sourceTree = "<group>"; };
 		2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDismissHandlerUI.swift; sourceTree = "<group>"; };
@@ -233,6 +235,7 @@
 		2B2F1D972BEDA8BD006897EE /* views */ = {
 			isa = PBXGroup;
 			children = (
+				2BA06D702D4380C30020B505 /* LoadingView.swift */,
 				2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */,
 				2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */,
 				2BC9A2202D1E829B00912170 /* HideViewModifier.swift */,
@@ -389,6 +392,7 @@
 				2B9909932C3605A9004826D1 /* Window.swift in Sources */,
 				2BC9A2212D1E829B00912170 /* HideViewModifier.swift in Sources */,
 				2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */,
+				2BA06D712D4380C60020B505 /* LoadingView.swift in Sources */,
 				2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -654,10 +658,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		2B2F1D682BEBFAAA006897EE /* RealityKitContent */ = {

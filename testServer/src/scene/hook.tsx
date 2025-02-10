@@ -103,21 +103,6 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winARef.current = await session?.spatialOpen(
-            'http://localhost:5173/src/scene/xrapp.html',
-            {
-              defaultSize: { width: 900, height: 900 },
-            },
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        spatialOpen sa
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
           winARef.current = window.open(
             'http://localhost:5173/src/scene/xrapp.html',
             'sa',

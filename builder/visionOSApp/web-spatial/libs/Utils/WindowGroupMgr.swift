@@ -30,6 +30,16 @@ struct WindowGroupData: Decodable, Hashable, Encodable {
     let windowGroupID: String
 }
 
+enum LoadingMethod: String, Decodable, Encodable, Hashable {
+    case show
+    case hide
+}
+
+struct LoadingWindowGroupData: Decodable, Hashable, Encodable {
+    let method: LoadingMethod
+    let windowStyle: String?
+}
+
 struct WindowGroupPlainDefaultValues {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?

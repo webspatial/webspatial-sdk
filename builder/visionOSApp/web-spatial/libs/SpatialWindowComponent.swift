@@ -347,6 +347,8 @@ class SpatialWindowComponent: SpatialComponent {
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
             // focusRoot need the windowGroupID
             windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
+            // tell new webview parentWindowGroupID to open loadingview
+            windowComponent.evaluateJS(js: "window._webSpatialParentGroupID='\(parentWindowGroupID)';")
 
             if config != nil {
                 // signal off hook
@@ -411,6 +413,17 @@ class SpatialWindowComponent: SpatialComponent {
            let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID)
         {
             wg.closeWindowData.send(wg.wgd!)
+        }
+    }
+
+    func setLoading(_ method: LoadingMethod, windowGroupID: String) {
+        // trigger open loading view by parent windowGroup due to current windowGroup isn't visible yet
+        if let wg = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID) {
+            let lwgdata = LoadingWindowGroupData(
+                method: method,
+                windowStyle: nil
+            )
+            wg.setLoadingWindowData.send(lwgdata)
         }
     }
 
