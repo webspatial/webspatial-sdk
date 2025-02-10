@@ -255,7 +255,6 @@ function App() {
         <a href="/src/CITest/index.html">Run CI</a>
         <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
-        <a href="/src/template/index.html">Template</a>
         <button
           onClick={() => {
             if (SpatialHelper.instance) {
