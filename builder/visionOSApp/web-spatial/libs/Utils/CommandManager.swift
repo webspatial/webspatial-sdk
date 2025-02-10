@@ -28,6 +28,7 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
+        _ = registerCommand(name: "setLoading", action: setLoading)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -178,6 +179,10 @@ class CommandManager {
 
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
+    }
+
+    private func setLoading(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.setLoading(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 }
 
@@ -575,6 +580,20 @@ class CommandDataManager {
             print(logString)
         }
     }
+
+    public func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let windowGroupID = data.windowGroupID {
+            switch data.loading?.method {
+            case "show":
+                target.setLoading(.show, windowGroupID: windowGroupID)
+            case "hide":
+                target.setLoading(.hide, windowGroupID: windowGroupID)
+            case _:
+                break
+            }
+        }
+        target.completeEvent(requestID: requestID)
+    }
 }
 
 struct JSBCommand: Codable {
@@ -596,6 +615,7 @@ struct JSData: Codable {
     var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
+    var loading: LoadingJSBData?
 }
 
 struct JSParams: Codable {
@@ -691,4 +711,9 @@ struct SceneJSBData: Codable {
     var url: String?
     var windowID: String?
     var windowGroupID: String?
+}
+
+struct LoadingJSBData: Codable {
+    var method: String?
+    var style: String?
 }
