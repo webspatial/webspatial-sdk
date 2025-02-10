@@ -52,13 +52,13 @@ function App() {
     ref: React.MutableRefObject<HTMLDivElement | null>,
     borderRadius: number,
   ) => {
-    console.log('borderRadius:' + borderRadius, ref.current)
     if (!ref.current) return
     // 获取当前的 borderRadius 值
     const currentBorderRadius =
       ref.current.style.getPropertyValue('border-radius')
     console.log('get borderRadius value:', currentBorderRadius)
     ref.current.style.setProperty('border-radius', `${borderRadius}px`)
+    console.log('set borderRadius value:', borderRadius)
     // ref.current.style.setProperty('border-radius', `0px`) //设置为0px
     updateElementState(ref)
   }
@@ -382,13 +382,14 @@ function App() {
             <div
               enable-xr
               className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
-              style={{
-                color: 'blue',
-                fontSize: '24px',
-                margin: '25px',
-                boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
-                position: 'relative',
-              }} //测试常用属性值
+              // style={{
+              //   color: 'blue',
+              //   fontSize: '24px',
+              //   margin: '25px',
+              //   boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
+              //   position: 'relative',
+              // }} //测试常用属性值
+              style={{ position: 'relative' }}
               ref={ref}
             >
               Test Element
