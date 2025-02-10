@@ -29,12 +29,18 @@ function App() {
     winARef: useRef<any>(null),
     winBRef: useRef<any>(null),
     winCRef: useRef<any>(null),
+    winDRef: useRef<any>(null),
+    winERef: useRef<any>(null),
+    winFRef: useRef<any>(null),
   })
 
   const handleOpenWindow = (ref: React.MutableRefObject<any>, url: string) => {
     ref.current = window.open(url)
   }
-
+  // const handleOpenWindow = async (ref: React.MutableRefObject<any>, url: string, sceneName: string) => {
+  //   await initScene(sceneName, defaultConfig => defaultConfig)
+  //   ref.current = window.open(url, sceneName)
+  // }
   const handleCloseWindow = (windowRef: React.MutableRefObject<any>) => {
     try {
       if (!windowRef.current) {
@@ -101,12 +107,18 @@ function App() {
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
-            onClick={() =>
+            onClick={() => {
+              initScene('sa', () => ({
+                defaultSize: {
+                  width: 300,
+                  height: 300,
+                },
+              }))
               handleOpenWindow(
                 windowRefs.winBRef,
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
               )
-            }
+            }}
           >
             open winB
           </button>
@@ -137,6 +149,24 @@ function App() {
             onClick={() => handleCloseWindow(windowRefs.winCRef)}
           >
             close winC
+          </button>
+        </div>
+        {/* 按钮组D */}
+        <div className="flex items-center mt-4">
+          <button
+            className={btnCls}
+            onClick={() =>
+              handleOpenWindow(windowRefs.winDRef, 'http://google.com')
+            }
+          >
+            open google
+          </button>
+          <div className="w-4"></div>
+          <button
+            className={btnCls}
+            onClick={() => handleCloseWindow(windowRefs.winDRef)}
+          >
+            close google
           </button>
         </div>
       </div>
