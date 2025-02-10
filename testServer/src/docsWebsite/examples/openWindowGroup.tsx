@@ -23,7 +23,7 @@ function MySample(props: { session?: SpatialSession }) {
             await ent.setComponent(i)
 
             // Add enitity the windowgroup
-            await ent.setParentWindowGroup(wg)
+            await wg.setRootEntity(ent)
             // CODESAMPLE_END
           }
         }}
@@ -55,7 +55,7 @@ function MySample(props: { session?: SpatialSession }) {
 
             await e2.setParent(ent)
 
-            await ent.setParentWindowGroup(wg)
+            await wg.setRootEntity(ent)
 
             var dt = 0
             var curTime = Date.now()
@@ -100,7 +100,7 @@ function MySample(props: { session?: SpatialSession }) {
 
             await e2.setParent(ent)
 
-            await ent.setParentWindowGroup(wg)
+            await wg.setRootEntity(ent)
 
             await session.openImmersiveSpace()
             var dt = 0

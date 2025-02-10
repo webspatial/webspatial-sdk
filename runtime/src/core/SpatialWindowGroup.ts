@@ -39,4 +39,11 @@ export class SpatialWindowGroup {
       return new SpatialEntity(res)
     }
   }
+  /*
+   * Sets the root entity that this windowGroup will display (this does not effect resource ownership)
+   * @param entity to display
+   */
+  async setRootEntity(entity: SpatialEntity) {
+    await entity._setParentWindowGroup(this)
+  }
 }
