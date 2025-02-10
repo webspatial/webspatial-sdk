@@ -4,6 +4,13 @@ import { SpatialDiv } from '@xrsdk/react/dist'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
 
+// const defaultConfig = {
+//   defaultSize: {
+//     width: 900,
+//     height: 900,
+//   },
+//     resizability:"automatic"
+// }
 const btnCls =
   'p-2 border border-gray-700 hover:text-white bg-gray-700 hover:bg-blue-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 const spatial = new Spatial()
