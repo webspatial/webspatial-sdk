@@ -77,6 +77,7 @@ export const StandardInstance = forwardRef(function (
   const { El, style: inStyle, debugShowStandardInstance, ...props } = inProps
   const extraStyle = {
     visibility: debugShowStandardInstance ? undefined : 'hidden',
+    transition: 'none',
   }
   const style = { ...inStyle, ...extraStyle }
 
