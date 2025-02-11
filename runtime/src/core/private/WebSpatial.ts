@@ -1,6 +1,12 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle, WindowGroupOptions } from '../types'
+import {
+  WindowStyle,
+  WindowGroupOptions,
+  LoadingMethodKind,
+  sceneDataShape,
+  sceneDataJSBShape,
+} from '../types'
 
 export class WindowGroup {
   id = ''
@@ -102,10 +108,38 @@ export class WebSpatial {
     return wg
   }
 
-  static async createWindowGroup(style: WindowStyle = 'Plain', cfg: any) {
+  static async createScene(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData: sceneDataShape
+    },
+  ) {
+    const { window: newWindow, ...sceneData } = cfg.sceneData
+    const jsbSceneData: sceneDataJSBShape = {
+      ...sceneData,
+      windowID: (newWindow as any)._webSpatialID,
+      windowGroupID: (newWindow as any)._webSpatialGroupID,
+    }
+    var cmd = new RemoteCommand('createScene', {
+      windowStyle: style,
+      sceneData: jsbSceneData,
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+    })
+
+    try {
+      await new Promise((res, rej) => {
+        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        WebSpatial.sendCommand(cmd)
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  static async createWindowGroup(style: WindowStyle = 'Plain') {
     var cmd = new RemoteCommand('createWindowGroup', {
       windowStyle: style,
-      ...cfg,
     })
 
     var result = await new Promise((res, rej) => {
@@ -245,6 +279,22 @@ export class WebSpatial {
       windowGroupID: resource.windowGroupId,
       resourceID: resource.id,
       update: data || resource.data,
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
+  static async setLoading(method: LoadingMethodKind, style?: string) {
+    var cmd = new RemoteCommand('setLoading', {
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+      loading: {
+        method,
+        style,
+      },
     })
 
     var result = await new Promise((res, rej) => {

@@ -28,6 +28,8 @@ class CommandManager {
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
+        _ = registerCommand(name: "createScene", action: createScene)
+        _ = registerCommand(name: "setLoading", action: setLoading)
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
@@ -162,6 +164,10 @@ class CommandManager {
         CommandDataManager.Instance.createWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 
+    private func createScene(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.createScene(target: target, requestID: jsb.requestID, data: jsb.data!)
+    }
+
     private func updateWindowGroup(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.updateWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
@@ -178,6 +184,10 @@ class CommandManager {
 
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         CommandDataManager.Instance.log(data: jsb.data!)
+    }
+
+    private func setLoading(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+        CommandDataManager.Instance.setLoading(target: target, requestID: jsb.requestID, data: jsb.data!)
     }
 }
 
@@ -491,15 +501,13 @@ class CommandDataManager {
         }
     }
 
-    public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    public func createScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
             // windowID exist in SWC
 
             // TODO: check url scope
             // in scope: the url is configured in manifest
             // if not in scope, open in safari
-
-            let fakeData = "{createdID: 'uuid'}"
 
             if data.sceneData?.method == "createRoot" {
                 if let windowID = data.sceneData?.windowID {
@@ -508,30 +516,39 @@ class CommandDataManager {
                     if target.spawnedNativeWebviews[windowID] != nil {
                         // setup windowGroup defaultValues
                         if let config = data.sceneData?.sceneConfig {
-                            target.createRoot(windowID: windowID, config: config)
+                            SceneManager.Instance
+                                .createRoot(target: target, windowID: windowID, config: config)
                         } else {
-                            target.createRoot(windowID: windowID)
+                            SceneManager.Instance
+                                .createRoot(target: target, windowID: windowID)
                         }
 
                     } else {
                         if let windowGroupID = data.sceneData?.windowGroupID {
-                            target.focusRoot(windowGroupID)
+                            SceneManager.Instance.focusRoot(target: target, windowGroupID: windowGroupID)
                         } else {
                             print("error: no windowGroupID")
                         }
                     }
 
-                    target.completeEvent(requestID: requestID, data: fakeData)
-                    return
+                    target.completeEvent(requestID: requestID, data: "{}")
                 }
             } else if data.sceneData?.method == "showRoot" {
-                if let config = data.sceneData?.sceneConfig {
-                    target.showRoot(config: config)
+                if let config = data.sceneData?.sceneConfig,
+                   let parentWindowGroupID = data.windowGroupID
+                {
+                    SceneManager.Instance.showRoot(target: target, config: config, parentWindowGroupID: parentWindowGroupID)
                 }
-                target.completeEvent(requestID: requestID, data: fakeData)
-                return
-            }
+                target.completeEvent(requestID: requestID, data: "{}")
 
+            } else {
+                target.failEvent(requestID: requestID, data: "method not supported")
+            }
+        }
+    }
+
+    public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let windowStyle: String = data.windowStyle {
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
 
@@ -575,6 +592,20 @@ class CommandDataManager {
             print(logString)
         }
     }
+
+    public func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+        if let windowGroupID = data.windowGroupID {
+            switch data.loading?.method {
+            case "show":
+                SceneManager.Instance.setLoading(.show, windowGroupID: windowGroupID)
+            case "hide":
+                SceneManager.Instance.setLoading(.hide, windowGroupID: windowGroupID)
+            case _:
+                break
+            }
+        }
+        target.completeEvent(requestID: requestID)
+    }
 }
 
 struct JSBCommand: Codable {
@@ -596,6 +627,7 @@ struct JSData: Codable {
     var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
+    var loading: LoadingJSBData?
 }
 
 struct JSParams: Codable {
@@ -691,4 +723,9 @@ struct SceneJSBData: Codable {
     var url: String?
     var windowID: String?
     var windowGroupID: String?
+}
+
+struct LoadingJSBData: Codable {
+    var method: String?
+    var style: String?
 }
