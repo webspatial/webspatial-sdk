@@ -4,27 +4,21 @@ import {ParsedArgs} from 'minimist';
 const HELP_MESSAGES = new Map<string, string>(
   [
     ['main', [
-      'picoxr-web [command] <options>',
+      'spatial-web [command] <options>',
       '',
       '',
       'help ................ shows this menu',
       'build ................ initializes a new TWA Project'+
-        ' and generates an Android APK from a TWA Project',
-      'check ............ validates if an URL matches the PWA Quality Criteria for Trusted' +
-            ' Web Activity',
+        ' and generates an Apple Vision Pro App from a TWA Project',
     ].join('\n')],
     ['build', [
       'Usage:',
       '',
       '',
-      'picoxr-web build --url=[url]',
-      'picoxr-web build --manifest=[local-manifest-path]',
-    ].join('\n')],
-    ['check', [
-      'Usage:',
+      'spatial-web build --manifest=[local-manifest-path] --project=[local-web-project-path] --teamId=[teamId]',
       '',
       '',
-      'picoxr-web validate --url=[pwa-url]',
+      'spatial-web build --manifest-url=[net-manifest-url] --teamId=[teamId]'
     ].join('\n')],
   ],
 );

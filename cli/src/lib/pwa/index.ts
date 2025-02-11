@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { configDeeplink, configDisplay, configScope, configStartUrl } from './config';
+import { configDeeplink, configDisplay, configId, configScope, configStartUrl } from './config';
 import { loadJsonFromNet, loadJsonFromDisk } from '../resource/load';
 import { checkIcons, checkManifestJson, checkStartUrl } from './validate';
 
@@ -56,6 +56,7 @@ export class PWAGenerator {
   // 生成配置
   public static config(manifestInfo:ManifestInfo){
     configStartUrl(manifestInfo.json, manifestInfo.url, manifestInfo.fromNet);
+    configId(manifestInfo.json);
     configScope(manifestInfo.json, manifestInfo.fromNet);
     configDisplay(manifestInfo.json);
     configDeeplink(manifestInfo.json)

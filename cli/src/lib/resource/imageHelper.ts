@@ -1,12 +1,10 @@
 import Jimp = require("jimp");
 import sharp = require('sharp');
-import { fetchUtils } from "../utils/FetchUtils-1";
-import { CustomError } from "../utils/CustomError";
 import {Resvg, ResvgRenderOptions} from '@resvg/resvg-js';
 
 export class ImageHelper{
-    public static createImg(){
-        return new Jimp(512, 512, 0x00000000);
+    public static createImg(size:number):Jimp{
+        return new Jimp(size, size, 0x00000000);
     }
     public static async webp2PngBuffer(buffer: Buffer): Promise<Buffer> {
         return await sharp(buffer).toFormat('png').toBuffer();
@@ -30,7 +28,6 @@ export class ImageHelper{
         for(var i = 0; i < pixelNum; i++){
             const idx = i * 4 + 3;
             if(image.bitmap.data[idx] < 255){
-                console.log(i, image.bitmap.data[idx])
                 return false;
             }
         }
