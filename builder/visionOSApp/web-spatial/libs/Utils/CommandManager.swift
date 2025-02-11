@@ -12,7 +12,7 @@ class CommandManager {
     static let Instance = CommandManager()
 
     private let decoder = JSONDecoder()
-    private var commandList: [String: (_ target: SpatialWindowComponent, _ jsb: JSBCommand, _ info: CommandInfo) -> Void] = [:]
+    private var commandList: [String: (_ target: SpatialWindowComponent, _ info: CommandInfo) -> Void] = [:]
     private init() {
         _ = registerCommand(name: "multiCommand", action: multiCommand)
         _ = registerCommand(name: "ping", action: ping)
@@ -33,7 +33,7 @@ class CommandManager {
     }
 
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
-        var ret = CommandInfo()
+        var ret = CommandInfo(cmd: jsb)
         ret.requestID = jsb.requestID
         if let windowGroupID = jsb.data?.windowGroupID {
             ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID) // windowGroupID
@@ -50,7 +50,7 @@ class CommandManager {
         return ret
     }
 
-    public func registerCommand(name: String, action: @escaping (_ target: SpatialWindowComponent, _ jsb: JSBCommand, _ info: CommandInfo) -> Void) -> Bool {
+    public func registerCommand(name: String, action: @escaping (_ target: SpatialWindowComponent, _ info: CommandInfo) -> Void) -> Bool {
         if commandList[name] == nil {
             commandList[name] = action
             return true
@@ -63,33 +63,31 @@ class CommandManager {
         do {
             jsbCommand = try decoder.decode(JSBCommand.self, from: jsonData.data(using: .utf8)!)
         } catch {
-//            print(error)
+            print(error)
         }
         return jsbCommand
     }
 
     public func doCommand(target: SpatialWindowComponent, jsb: JSBCommand) {
-//        print("do command:", jsb.command)
         if let action = commandList[jsb.command] {
-//            print("action command:", jsb.command)
             if let info = getInfo(target, jsb) {
-                action(target, jsb, info)
+                action(target, info)
             }
         }
     }
 
-    private func multiCommand(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        for subCommand in jsb.data!.commandList! {
+    private func multiCommand(target: SpatialWindowComponent, info: CommandInfo) {
+        for subCommand in info.cmd.data!.commandList! {
             doCommand(target: target, jsb: subCommand)
         }
         target.completeEvent(requestID: info.requestID)
     }
 
-    private func ping(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func ping(target: SpatialWindowComponent, info: CommandInfo) {
         target.completeEvent(requestID: info.requestID, data: "{ping: 'Complete'}")
     }
 
-    private func inspect(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func inspect(target: SpatialWindowComponent, info: CommandInfo) {
         if let spatialObject = SpatialObject.getRefObject(info.resourceID) {
             let inspectInfo = spatialObject.inspect()
             let isValidJSON = JSONSerialization.isValidJSONObject(inspectInfo)
@@ -97,10 +95,10 @@ class CommandManager {
                 do {
                     let jsonData = try JSONSerialization.data(withJSONObject: inspectInfo, options: [])
                     let jsonString = String(data: jsonData, encoding: .utf8)
-                    target.completeEvent(requestID: jsb.requestID, data: jsonString ?? "Conver failed")
+                    target.completeEvent(requestID: info.requestID, data: jsonString ?? "Conver failed")
                 } catch {
                     print("Error: \(error.localizedDescription)")
-                    target.completeEvent(requestID: jsb.requestID, data: """
+                    target.completeEvent(requestID: info.requestID, data: """
                     error: \(error.localizedDescription)
                     """)
                 }
@@ -113,23 +111,23 @@ class CommandManager {
         }
     }
 
-    private func getStats(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func getStats(target: SpatialWindowComponent, info: CommandInfo) {
         let statsInfo = SpatialObject.stats()
         do {
             let jsonData = try JSONEncoder().encode(statsInfo)
             let jsonString = String(data: jsonData, encoding: .utf8)
-            target.completeEvent(requestID: jsb.requestID, data: jsonString ?? "Conver failed")
+            target.completeEvent(requestID: info.requestID, data: jsonString ?? "Conver failed")
         } catch {
             print("Error: \(error.localizedDescription)")
-            target.completeEvent(requestID: jsb.requestID, data: """
+            target.completeEvent(requestID: info.requestID, data: """
             error: \(error.localizedDescription)
             """)
         }
     }
 
-    private func setComponent(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func setComponent(target: SpatialWindowComponent, info: CommandInfo) {
         if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
-           let entity = target.getChildSpatialObject(name: jsb.data!.entityID!) as? SpatialEntity
+           let entity = target.getChildSpatialObject(name: info.entityID) as? SpatialEntity
         {
             entity.addComponent(component)
         } else {
@@ -137,9 +135,9 @@ class CommandManager {
         }
     }
 
-    private func removeComponent(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func removeComponent(target: SpatialWindowComponent, info: CommandInfo) {
         if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
-           let entity = target.getChildSpatialObject(name: jsb.data!.entityID!) as? SpatialEntity
+           let entity = target.getChildSpatialObject(name: info.entityID) as? SpatialEntity
         {
             entity.removeComponent(component)
         } else {
@@ -147,49 +145,47 @@ class CommandManager {
         }
     }
 
-    private func createResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.createResource(target: target, requestID: jsb.requestID, data: jsb.data!)
+    private func createResource(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.createResource(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
-    private func destroyResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
+    private func destroyResource(target: SpatialWindowComponent, info: CommandInfo) {
         let resourceID = info.resourceID
         target.destroyChild(name: resourceID)
     }
 
-    private func updateResource(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.updateResource(target: target, requestID: jsb.requestID, resourceID: info.resourceID, data: jsb.data!)
+    private func updateResource(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.updateResource(target: target, requestID: info.requestID, resourceID: info.resourceID, data: info.cmd.data!)
     }
 
-    private func createWindowGroup(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.createWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
+    private func createWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.createWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
-    private func createScene(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.createScene(target: target, requestID: jsb.requestID, data: jsb.data!)
+    private func createScene(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.createScene(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
-    private func updateWindowGroup(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.updateWindowGroup(target: target, requestID: jsb.requestID, data: jsb.data!)
+    private func updateWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.updateWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
-    private func openImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        print("openImmersiveSpace")
+    private func openImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
         let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
         wg?.toggleImmersiveSpace.send(true)
     }
 
-    private func dismissImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        print("dismissImmersiveSpace")
+    private func dismissImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
         let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
         wg?.toggleImmersiveSpace.send(false)
     }
 
-    private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.log(data: jsb.data!)
+    private func log(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.log(data: info.cmd.data!)
     }
 
-    private func setLoading(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
-        CommandDataManager.Instance.setLoading(target: target, requestID: jsb.requestID, data: jsb.data!)
+    private func setLoading(target: SpatialWindowComponent, info: CommandInfo) {
+        CommandDataManager.Instance.setLoading(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 }
 
