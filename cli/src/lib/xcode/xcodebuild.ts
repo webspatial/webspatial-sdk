@@ -4,11 +4,6 @@ import { PROJECT_DIRECTORY, PROJECT_BUILD_DIRECTORY, PROJECT_EXPORT_DIRECTORY } 
 const { execSync, exec } = require('child_process'); 
 
 export default class Xcodebuild {
-  static async run(args: string[]) {
-    const output =  execSync('xcodebuild -help')
-    console.log(output)
-  }
-
   static async project(){
     try{
         await new Promise((resolve, reject) => {
@@ -42,18 +37,16 @@ export default class Xcodebuild {
         console.log("start archive")
         return await new Promise((resolve, reject) => {
             const projectFile = PROJECT_DIRECTORY + "/web-spatial.xcodeproj";
-            // const simulatorDevice = "'generic/platform=visionOS'";
-            // const simulatorDevice = "'platform=visionOS Simulator,name=Apple Vision Pro,OS=2.2'";
-            // const execRes = execSync(new XcodebuildCMD().project(projectFile).scheme("web-spatial").archive(PROJECT_OUTPUT_DIRECTORY).destination(simulatorDevice).line)
+            // 进行归档
+            // Archive
             const archiveRes = execSync(new XcodebuildCMD().project(projectFile).scheme("web-spatial").archive(join(PROJECT_BUILD_DIRECTORY, "./pack")).clean().line)
-            // console.log(execRes.toString())
             let resString = archiveRes.toString();
             if(resString.indexOf("ARCHIVE SUCCEEDED") > 0){
                 console.log("------------------- ARCHIVE SUCCEEDED -------------------")
                 console.log("start export")
-
+                // 导出
+                // Export
                 const outRes = execSync(new XcodebuildCMD().output(join(PROJECT_BUILD_DIRECTORY, "pack.xcarchive"), PROJECT_EXPORT_DIRECTORY, join(PROJECT_BUILD_DIRECTORY, "ExportOptions.plist")).line)
-                // console.log(outRes.toString())
                 resString = outRes.toString()
                 if(resString.indexOf("EXPORT SUCCEEDED") > 0){
                     resolve(true);

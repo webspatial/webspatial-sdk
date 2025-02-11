@@ -41,7 +41,24 @@ export async function start(args: ParsedArgs, log: Log = new ConsoleLog('help'))
     }
     const icon = await ResourceManager.generateIcon(manifestInfo)
     console.log("generate icon: ok")
-    await XcodeManager.parseProject({icon});
+    /**
+     * xcode步骤
+     * 1. 解析工程
+     * 2. 配置teamId
+     * 3. 绑定web工程
+     * 4. 配置icon
+     * 5. 配置manifest
+     * 6. 写入工程
+     * 
+     * *Xcode steps
+     * 1.  Parse the project
+     * 2.  Configure teamId
+     * 3.  Bind web project
+     * 4.  Configure icon
+     * 5.  Configure manifest
+     * 6.  Write project
+     **/
+    await XcodeManager.parseProject({icon, manifestInfo, teamId:args["teamId"]});
     console.log("------------------- build end -------------------");
     return true
 }

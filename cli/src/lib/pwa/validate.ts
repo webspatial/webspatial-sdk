@@ -2,8 +2,6 @@ import { join } from "path";
 import { PWAGenerator } from ".";
 import { CustomError } from "../utils/CustomError";
 import { parseRouter } from "../utils/utils";
-import Jimp = require("jimp");
-import { fetchUtils } from "../utils/FetchUtils-1";
 import { ImageHelper } from "../resource/imageHelper";
 import { loadImageFromDisk, loadImageFromNet } from "../resource/load";
 

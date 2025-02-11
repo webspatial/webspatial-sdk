@@ -18,11 +18,11 @@
         "src": "https://microsoftedge.github.io/Demos/pwamp/favicon-512.png"
       },
       {
-        "src": "./icon-1024.jpg",
+        "src": "./icon-1024.png",
         "purpose":"maskable"
       },
       {
-        "src": "./icon-500.jpeg",
+        "src": "./icon-512.png",
         "purpose":"maskable"
       }
     ],
