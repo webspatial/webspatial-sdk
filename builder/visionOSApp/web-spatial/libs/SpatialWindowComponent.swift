@@ -25,6 +25,7 @@ struct CommandInfo {
     var entityID = "notFound"
     var resourceID = "notFound"
     var requestID = -1
+    var cmd: JSBCommand
 }
 
 struct LoadingStyles {
