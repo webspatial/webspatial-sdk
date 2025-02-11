@@ -34,7 +34,7 @@ interface PortalInstanceProps {
   El: React.ElementType
   children?: ReactNode
   style?: CSSProperties | undefined
-  className: string
+  className?: string
 
   [SpatialID]: string
 }
