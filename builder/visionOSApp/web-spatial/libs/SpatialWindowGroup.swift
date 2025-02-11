@@ -76,10 +76,6 @@ extension SpatialWindowGroup {
         return RootID
     }
 
-    static func getRootWindowGroup() -> SpatialWindowGroup {
-        return getSpatialWindowGroup(RootID)!
-    }
-
     static func createRootWindowGroup() -> SpatialWindowGroup {
         if let rootWindowGroup = getSpatialWindowGroup(RootID) {
             print("Root already created! ")
