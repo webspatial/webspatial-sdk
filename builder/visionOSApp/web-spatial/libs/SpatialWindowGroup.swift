@@ -49,6 +49,8 @@ class SpatialWindowGroup: SpatialObject {
     var openWindowData = PassthroughSubject<WindowGroupData, Never>()
     var closeWindowData = PassthroughSubject<WindowGroupData, Never>()
 
+    var setLoadingWindowData = PassthroughSubject<LoadingWindowGroupData, Never>()
+
     override func onDestroy() {
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
