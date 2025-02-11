@@ -2,6 +2,13 @@ import { parseRouter } from "../utils/utils";
 import { validateURL } from "./validate";
 import { join } from "path";
 
+export function configId(manifestJson: Record<string, any>){
+    if(!manifestJson.id){
+        manifestJson.id = manifestJson.start_url;
+    }
+}
+
+
 // start_url配置
 export function configStartUrl(manifestJson: Record<string, any>, manifestUrl: string, fromNet:boolean){
     const isUrl = validateURL(manifestJson.start_url);
@@ -27,18 +34,13 @@ export function configScope(manifestJson: Record<string, any>, fromNet:boolean){
     if(fromNet && isUrl){
         const scopeURL = new URL(manifestJson.scope);
         const startURL = new URL(manifestJson.start_url);
-        if(scopeURL.host !== startURL.host){
+        if(scopeURL.host !== startURL.host || manifestJson.start_url.indexOf(scope) !== 0){
             scope = parseRouter(manifestJson.start_url)
         }
     }
     else{
         scope = join(parseRouter(manifestJson.start_url), manifestJson.scope);
-        if(manifestJson.start_url.indexOf(scope) !== 0){
-            scope = parseRouter(manifestJson.start_url)
-        }
     }
-
-
     manifestJson.scope = scope;
 }
 
@@ -49,8 +51,8 @@ export function configDisplay(manifestJson: Record<string, any>){
         display = "standalone"
     }
     if(manifestJson.display_override && manifestJson.display_override.length > 0){
-        let mIndex = manifestJson.display_override.indexOf("minimal-ui");
-        let sIndex = manifestJson.display_override.indexOf("standalone");
+        const mIndex = manifestJson.display_override.indexOf("minimal-ui");
+        const sIndex = manifestJson.display_override.indexOf("standalone");
         if(mIndex >= 0 && sIndex >= 0){
             display = sIndex > mIndex ? "standalone" : "minimal-ui";
         }
@@ -73,7 +75,7 @@ export function configDeeplink(manifestJson: Record<string, any>){
             if(item.protocol && (safelist.includes(item.protocol) || item.protocol.indexOf("web+") === 0)){
                 // 如果url为绝对路径，则必须在scope范围内
                 // If the URL is an absolute path, it must be within the scope range
-                if(!(validateURL(item.url) && item.url.indexOf(manifestJson.scope) === 0)) continue;
+                if(!(validateURL(item.url) && item.url.indexOf(manifestJson.scope) < 0)) continue;
             }
             manifestJson.protocol_handlers.splice(i, 1)
             i--;
