@@ -50,7 +50,7 @@ class CommandManager {
         return ret
     }
 
-    public func registerCommand(name: String, action: @escaping (_ target: SpatialWindowComponent, _ info: CommandInfo) -> Void) -> Bool {
+    private func registerCommand(name: String, action: @escaping (_ target: SpatialWindowComponent, _ info: CommandInfo) -> Void) -> Bool {
         if commandList[name] == nil {
             commandList[name] = action
             return true
@@ -146,7 +146,7 @@ class CommandManager {
     }
 
     private func createResource(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.createResource(target: target, requestID: info.requestID, data: info.cmd.data!)
+        createResource(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
     private func destroyResource(target: SpatialWindowComponent, info: CommandInfo) {
@@ -155,19 +155,19 @@ class CommandManager {
     }
 
     private func updateResource(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.updateResource(target: target, requestID: info.requestID, resourceID: info.resourceID, data: info.cmd.data!)
+        updateResource(target: target, requestID: info.requestID, resourceID: info.resourceID, data: info.cmd.data!)
     }
 
     private func createWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.createWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
+        createWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
     private func createScene(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.createScene(target: target, requestID: info.requestID, data: info.cmd.data!)
+        createScene(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
     private func updateWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.updateWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
+        updateWindowGroup(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
 
     private func openImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
@@ -181,18 +181,14 @@ class CommandManager {
     }
 
     private func log(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.log(data: info.cmd.data!)
+        log(data: info.cmd.data!)
     }
 
     private func setLoading(target: SpatialWindowComponent, info: CommandInfo) {
-        CommandDataManager.Instance.setLoading(target: target, requestID: info.requestID, data: info.cmd.data!)
+        setLoading(target: target, requestID: info.requestID, data: info.cmd.data!)
     }
-}
 
-class CommandDataManager {
-    static let Instance = CommandDataManager()
-
-    public func createResource(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    private func createResource(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let type = data.type {
             var sr: SpatialObject?
             switch type {
@@ -272,7 +268,7 @@ class CommandDataManager {
         }
     }
 
-    public func updateResource(target: SpatialWindowComponent, requestID: Int, resourceID: String, data: JSData) {
+    private func updateResource(target: SpatialWindowComponent, requestID: Int, resourceID: String, data: JSData) {
         var delayComplete = false
         if SpatialObject.get(resourceID) == nil {
             print("Missing resource:" + resourceID)
@@ -499,7 +495,7 @@ class CommandDataManager {
         }
     }
 
-    public func createScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    private func createScene(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
             // windowID exist in SWC
 
@@ -545,7 +541,7 @@ class CommandDataManager {
         }
     }
 
-    public func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    private func createWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowStyle: String = data.windowStyle {
             let uuid = UUID().uuidString
             let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
@@ -561,7 +557,7 @@ class CommandDataManager {
         }
     }
 
-    public func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    private func updateWindowGroup(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let getRootEntityID = data.update?.getRootEntityID,
            let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
         {
@@ -593,14 +589,14 @@ class CommandDataManager {
         target.completeEvent(requestID: requestID)
     }
 
-    public func log(data: JSData) {
+    private func log(data: JSData) {
         if let logStringArr: [String] = data.logString {
             let logString = logStringArr.joined()
             print(logString)
         }
     }
 
-    public func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
+    private func setLoading(target: SpatialWindowComponent, requestID: Int, data: JSData) {
         if let windowGroupID = data.windowGroupID {
             switch data.loading?.method {
             case "show":
