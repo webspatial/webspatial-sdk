@@ -174,12 +174,14 @@ class CommandManager {
 
     private func openImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         print("openImmersiveSpace")
-        SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(true)
+        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
+        wg?.toggleImmersiveSpace.send(true)
     }
 
     private func dismissImmersiveSpace(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
         print("dismissImmersiveSpace")
-        SpatialWindowGroup.getRootWindowGroup().toggleImmersiveSpace.send(false)
+        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
+        wg?.toggleImmersiveSpace.send(false)
     }
 
     private func log(target: SpatialWindowComponent, jsb: JSBCommand, info: CommandInfo) {
@@ -555,9 +557,11 @@ class CommandDataManager {
             // Force window group creation to happen now so it can be accessed after complete event returns
             _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
 
-            SpatialWindowGroup.getRootWindowGroup().openWindowData.send(wgd)
-            target.setWindowGroup(uuid: uuid, wgd: wgd)
-            target.completeEvent(requestID: requestID, data: "{createdID: '" + uuid + "'}")
+            if var wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID) {
+                wg.openWindowData.send(wgd)
+                target.setWindowGroup(uuid: uuid, wgd: wgd)
+                target.completeEvent(requestID: requestID, data: "{createdID: '" + uuid + "'}")
+            }
         }
     }
 
