@@ -32,8 +32,8 @@ class CommandManager {
         _ = registerCommand(name: "setLoading", action: setLoading)
     }
 
-    private func getInfo(_ target: SpatialWindowComponent, _ jsb: JSBCommand) -> CommandInfo? {
-        var ret = CommandInfo(cmd: jsb)
+    private func getInfo(_ target: SpatialWindowComponent, _ jsb: RawJSBCommand) -> CommandInfo? {
+        var ret = CommandInfo(cmd: JSBCommand(command: jsb.command, data: jsb.data, requestID: jsb.requestID))
         ret.requestID = jsb.requestID
         if let windowGroupID = jsb.data?.windowGroupID {
             ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID) // windowGroupID
@@ -58,17 +58,17 @@ class CommandManager {
         return false
     }
 
-    public func decode(jsonData: String) -> JSBCommand {
-        var jsbCommand = JSBCommand(command: "", data: JSData(), requestID: 0)
+    public func decode(jsonData: String) -> RawJSBCommand {
+        var jsbCommand = RawJSBCommand(command: "", data: RawJSData(), requestID: 0)
         do {
-            jsbCommand = try decoder.decode(JSBCommand.self, from: jsonData.data(using: .utf8)!)
+            jsbCommand = try decoder.decode(RawJSBCommand.self, from: jsonData.data(using: .utf8)!)
         } catch {
             print(error)
         }
         return jsbCommand
     }
 
-    public func doCommand(target: SpatialWindowComponent, jsb: JSBCommand) {
+    public func doCommand(target: SpatialWindowComponent, jsb: RawJSBCommand) {
         if let action = commandList[jsb.command] {
             if let info = getInfo(target, jsb) {
                 action(target, info)
@@ -163,7 +163,7 @@ class CommandManager {
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id: data.windowGroupID!))
+                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id: info.windowGroupID))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
@@ -509,9 +509,8 @@ class CommandManager {
                     target.completeEvent(requestID: info.requestID, data: "{}")
                 }
             } else if data.sceneData?.method == "showRoot" {
-                if let config = data.sceneData?.sceneConfig,
-                   let parentWindowGroupID = data.windowGroupID
-                {
+                if let config = data.sceneData?.sceneConfig {
+                    let parentWindowGroupID = info.windowGroupID
                     SceneManager.Instance.showRoot(target: target, config: config, parentWindowGroupID: parentWindowGroupID)
                 }
                 target.completeEvent(requestID: info.requestID, data: "{}")
@@ -525,7 +524,7 @@ class CommandManager {
     private func updateWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
         if let getRootEntityID = data.update?.getRootEntityID,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: data.windowGroupID!))
+           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: info.windowGroupID))
         {
             let rootEntity = wg.getEntities().filter {
                 $0.value.coordinateSpace == .ROOT
@@ -574,28 +573,45 @@ class CommandManager {
 
     private func setLoading(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
-        if let windowGroupID = data.windowGroupID {
-            switch data.loading?.method {
-            case "show":
-                SceneManager.Instance.setLoading(.show, windowGroupID: windowGroupID)
-            case "hide":
-                SceneManager.Instance.setLoading(.hide, windowGroupID: windowGroupID)
-            case _:
-                break
-            }
+        switch data.loading?.method {
+        case "show":
+            SceneManager.Instance.setLoading(.show, windowGroupID: info.windowGroupID)
+        case "hide":
+            SceneManager.Instance.setLoading(.hide, windowGroupID: info.windowGroupID)
+        case _:
+            break
         }
         target.completeEvent(requestID: info.requestID)
     }
 }
 
-struct JSBCommand: Codable {
+struct RawJSBCommand: Codable {
+    var command: String
+    var data: RawJSData?
+    var requestID: Int
+}
+
+struct JSBCommand {
     var command: String
     var data: JSData?
     var requestID: Int
 }
 
-struct JSData: Codable {
-    var commandList: [JSBCommand]? // multiCommand
+protocol JSData {
+    var commandList: [RawJSBCommand]? { get } // multiCommand
+    var type: String? { get } // createResource
+    var params: JSParams? { get } // createResource
+    var update: JSResourceData? { get }
+    var windowStyle: String? { get }
+    var windowGroupOptions: WindowGroupOptions? { get }
+    var sceneData: SceneJSBData? { get }
+    var logString: [String]? { get }
+    var logLevel: String? { get }
+    var loading: LoadingJSBData? { get }
+}
+
+struct RawJSData: Codable, JSData {
+    var commandList: [RawJSBCommand]? // multiCommand
     var resourceID: String?
     var windowGroupID: String?
     var entityID: String? // setComponent
