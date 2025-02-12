@@ -1,10 +1,10 @@
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
+import { SpatialSession } from '@xrsdk/runtime'
+import { useState } from 'react'
 import { showSample } from './sampleLoader'
 import { SpatialDiv } from '@xrsdk/react/dist'
 import { Euler, Quaternion } from 'three'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   var [rotation, setRotation] = useState(0)
   return (
     <div className="m-10">

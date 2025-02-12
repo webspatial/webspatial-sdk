@@ -58,8 +58,9 @@ export function PortalTest() {
           className="p-10"
           spatialStyle={{
             position: { z: 50, x: 0, y: 0 },
-            glassEffect: true,
-            materialThickness: 'thick',
+            material: {
+              type: "regular"
+            },
           }}
         >
           <p>

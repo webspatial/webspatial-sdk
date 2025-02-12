@@ -1,4 +1,4 @@
-import { Euler, Quaternion, Vector3 } from 'three'
+import { Euler, Quaternion } from 'three'
 import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
 import { Vec3 } from '@xrsdk/runtime'
 
@@ -156,10 +156,10 @@ var main = async () => {
 
       var loop = (time: DOMHighResTimeStamp) => {
         if (w.entity.isDestroyed()) {
-          return
+          return Promise.resolve()
         }
         w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
-        w.entity.updateTransform()
+       return  w.entity.updateTransform()
       }
       session.addOnEngineUpdateEventListener(loop)
 
@@ -396,7 +396,7 @@ var main = async () => {
     document.body.appendChild(b)
 
     var counter = 0
-    let loop = async (time: DOMHighResTimeStamp) => {
+    let loop = async (_time: DOMHighResTimeStamp) => {
       var results = 'Updates per frame: ' + pingCount + '<br>'
 
       // With transactions

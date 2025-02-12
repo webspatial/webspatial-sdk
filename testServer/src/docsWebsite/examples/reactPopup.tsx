@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { showSample } from './sampleLoader'
 import { SpatialDiv } from '@xrsdk/react'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   const [popupEnabled, setPopupEnabled] = useState(false)
 
   return (
@@ -27,7 +27,9 @@ function MySample(props: { session?: SpatialSession }) {
           <SpatialDiv
             spatialStyle={{
               position: { z: 50 },
-              glassEffect: true,
+              material: {
+                type: "default"
+              },
               cornerRadius: 70,
             }}
             style={{

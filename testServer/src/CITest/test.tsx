@@ -1,11 +1,9 @@
-import { Spatial, SpatialEntity } from '@xrsdk/runtime'
+import { Spatial } from '@xrsdk/runtime'
 
 import { SpatialDiv, getSession } from '@xrsdk/react'
 
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BlurShaderUtils } from 'three/examples/jsm/Addons.js'
-import { NestedDivsTest } from '../reactRouter/tests/nestedDivs'
 
 // document.body.style.background = 'red';
 async function createSession() {
@@ -14,9 +12,7 @@ async function createSession() {
   if (!spatial.isSupported()) {
     spatial = null
   }
-  var session
   if (spatial) {
-    session = spatial.requestSession()
     testResult = ['CreateSpatialSession', true]
     return testResult
   } else {
@@ -61,10 +57,10 @@ async function createWebViewJSAPI() {
     //position update
     var loop = (time: DOMHighResTimeStamp) => {
       if (e.isDestroyed()) {
-        return
+        return Promise.resolve()
       }
       e.transform.position.x = 500 + Math.sin(time / 1000) * 200
-      e.updateTransform()
+      return e.updateTransform()
     }
     session!.addOnEngineUpdateEventListener(loop)
 
@@ -319,7 +315,7 @@ class TestRunner {
       this.onTestComplete(tr)
     }
   }
-  onTestComplete = (tr: any) => {}
+  onTestComplete = (_tr: any) => {}
 }
 
 function timeout(delay: number) {
@@ -327,7 +323,7 @@ function timeout(delay: number) {
 }
 
 function NestedDivRender() {
-  const [depth, setDepth] = useState(1)
+  const [depth] = useState(1)
   var redCol = '#cc111144'
   var greenCol = '#11cc1144'
   var blueCol = '#1111cc44'
@@ -338,7 +334,6 @@ function NestedDivRender() {
         debugName="PARENT A ROOT"
         spatialStyle={{
           position: { z: depth * 10, x: 0, y: 0 },
-          glassEffect: false,
         }}
         style={{ height: 300, backgroundColor: redCol }}
       >
@@ -347,7 +342,6 @@ function NestedDivRender() {
           debugName="CHILD A1"
           spatialStyle={{
             position: { z: depth * 30, x: 0, y: 0 },
-            glassEffect: false,
           }}
           style={{ height: 100, backgroundColor: blueCol }}
         >
@@ -358,7 +352,7 @@ function NestedDivRender() {
         debugName="PARENT B ROOT"
         spatialStyle={{
           position: { z: depth * 10, x: 0, y: 0 },
-          glassEffect: true,
+          material: {type: "none"}
         }}
         style={{ height: 300, backgroundColor: redCol }}
       >
@@ -367,7 +361,7 @@ function NestedDivRender() {
           debugName="CHILD B1"
           spatialStyle={{
             position: { z: depth * 20, x: 0, y: 0 },
-            glassEffect: true,
+            material: {type: "none"}
           }}
           style={{ height: 100, backgroundColor: blueCol }}
         >
@@ -376,7 +370,7 @@ function NestedDivRender() {
             debugName="CHILD B2"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              glassEffect: true,
+              material: {type: "none"}
             }}
             style={{ height: 100, backgroundColor: greenCol }}
           >
@@ -386,7 +380,7 @@ function NestedDivRender() {
             debugName="CHILD B3"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              glassEffect: true,
+              material: {type: "none"}
             }}
             style={{ height: 100, backgroundColor: redCol }}
           >

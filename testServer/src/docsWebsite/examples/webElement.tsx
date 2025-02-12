@@ -1,9 +1,8 @@
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
+import { SpatialSession } from '@xrsdk/runtime'
+import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
-  var [supported, setSupported] = useState(false)
   useEffect(() => {
     ; (async () => {
       if (props.session) {
