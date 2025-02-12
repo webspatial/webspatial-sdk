@@ -52,7 +52,7 @@ function App() {
 
   const referenceStyle = {
     '--xr-back': 30,
-    // position: 'absolute',
+    position: 'absolute',
     // position: 'relative',
     width: '100px',
     height: '100px',
@@ -82,16 +82,21 @@ function App() {
       </div>
 
       <div className="max-w-3xl mx-auto space-y-4">
-        <div enable-xr style={containerStyle}>
-          <div enable-xr style={referenceStyle}>
+        {/*<div enable-xr style={containerStyle}>*/}
+        {/*  <div enable-xr style={referenceStyle}>*/}
+        {/*    参考元素*/}
+        {/*  </div>*/}
+        {/*  <div enable-xr style={styleOne} ref={ref}>*/}
+        {/*    one*/}
+        {/*  </div>*/}
+        {/*替换为css类*/}
+        <div enable-xr className="container">
+          <div enable-xr className="reference">
             参考元素
           </div>
-          <div enable-xr style={styleOne} ref={ref}>
+          <div enable-xr className="style-one" ref={ref}>
             one
           </div>
-          {/*<div enable-xr className="container">*/}
-          {/*  <div enable-xr className="reference">参考元素</div>*/}
-          {/*  <div enable-xr className="style-one" ref={ref}>one</div>*/}
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg">
