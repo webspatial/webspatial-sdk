@@ -98,7 +98,7 @@ class WindowGroupMgr: ObservableObject {
     }
 
     func setToMainSceneCfg() {
-        let cfg = WindowGroupPlainDefaultValues(pwaConfig.mainScene)
+        let cfg = WindowGroupPlainDefaultValues(pwaManager.mainScene)
         updateWindowGroupPlainDefaultValues(cfg)
     }
 
