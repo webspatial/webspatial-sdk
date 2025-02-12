@@ -1,8 +1,9 @@
 import '@google/model-viewer'
+import { ModelViewerElement } from '@google/model-viewer'
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': any
+      'model-viewer': ModelViewerElement | { ref: any }
     }
   }
 }
@@ -60,7 +61,7 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
 
   let session = getSession()
   if (!session) {
-    const myModelViewer = useRef(null)
+    const myModelViewer = useRef<ModelViewerElement>(null)
     useEffect(() => {
       React.Children.toArray(props.children).some((element: any) => {
         var src = element.props.src as string
@@ -71,28 +72,27 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
         }
         return false
       })
-      ;(myModelViewer.current! as any).addEventListener(
-        'load',
-        (event: any) => {
-          if (props.onLoad) {
-            props.onLoad({
-              target: {
-                ready: event.returnValue,
-                currentSrc: event.detail.url,
-              },
-            })
-          }
-        },
-      )
+      myModelViewer.current!.addEventListener('load', event => {
+        if (props.onLoad) {
+          props.onLoad({
+            target: {
+              ready: myModelViewer.current!.loaded,
+              currentSrc: myModelViewer.current!.src || '',
+            },
+          })
+        }
+      })
     }, [])
     return (
       <div className={props.className}>
         <model-viewer
           ref={myModelViewer}
-          style={{
-            width: '100%',
-            height: '100%',
-          }}
+          style={
+            {
+              width: '100%',
+              height: '100%',
+            } as any
+          }
           src={glbSrc}
           camera-controls
           touch-action="pan-y"
