@@ -1,15 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-// import { Spatial } from '@xrsdk/runtime'
-import {
-  SpatialDiv,
-  SpatialPrimitive,
-  withSpatial,
-  getSession,
-} from '@xrsdk/react'
-import { SimpleComponent } from './SimpleComponent'
+import { SpatialDiv, getSession } from '@xrsdk/react'
 
-// const spatial = new Spatial()
 const spatialSupported = !!getSession()
 
 if (spatialSupported) {
@@ -18,11 +10,6 @@ if (spatialSupported) {
     .getCurrentWindowComponent()
     .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
 }
-
-const SpatialSimpleComponent = withSpatial(SimpleComponent)
-
-const imgSrc =
-  'https://interactive-examples.mdn.mozilla.net/media/examples/firefox-logo.svg'
 
 function App() {
   const spatialStyle = {
@@ -46,42 +33,8 @@ function App() {
         <div className="flex flex-row pt-5 gap-2">
           <div className={divCls}> this is div </div>
           <SpatialDiv spatialStyle={spatialStyle} className={spaceCls}>
-            {' '}
-            this is spatial div{' '}
+            this is spatial div
           </SpatialDiv>
-        </div>
-
-        <div className="flex flex-row pt-5 gap-2">
-          <p className={divCls}> this is p</p>
-          <SpatialPrimitive.p spatialStyle={spatialStyle} className={spaceCls}>
-            {' '}
-            this is spatial p
-          </SpatialPrimitive.p>
-        </div>
-
-        <div className="flex flex-row pt-5 gap-2">
-          <a className={divCls}> this is a</a>
-          <SpatialPrimitive.a spatialStyle={spatialStyle} className={spaceCls}>
-            {' '}
-            this is spatial a
-          </SpatialPrimitive.a>
-        </div>
-
-        <div className="flex flex-row pt-5 gap-2">
-          <SpatialPrimitive.img
-            spatialStyle={spatialStyle}
-            className={spaceCls}
-            src={imgSrc}
-            width={200}
-          />
-        </div>
-
-        <div className="flex flex-row pt-5 gap-2">
-          <SimpleComponent className={divCls} />
-          <SpatialSimpleComponent
-            spatialStyle={spatialStyle}
-            className={spaceCls}
-          />
         </div>
       </div>
     </div>
