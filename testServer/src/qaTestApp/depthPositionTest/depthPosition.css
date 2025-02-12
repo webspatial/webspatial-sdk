@@ -24,7 +24,7 @@
 
 .reference {
     --xr-back:30;
-    /*position: absolute;*/
+    position: absolute;
     width: 100px;
     height: 100px;
     /*top: 50px;*/
