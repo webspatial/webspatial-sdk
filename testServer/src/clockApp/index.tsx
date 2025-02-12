@@ -84,7 +84,7 @@ function Time(props: { makeShadow?: boolean }) {
   const [minutes, setMinutes] = React.useState(m)
   const [seconds, setSeconds] = React.useState(s)
 
-  useAnimationFrame((deltaTime: number) => {
+  useAnimationFrame((_deltaTime: number) => {
     // Pass on a function to the setter of the state
     // to make sure we always have the latest state
     //setCount(prevCount => (prevCount + deltaTime * 0.01) % 100)
@@ -200,7 +200,7 @@ function Settings() {
                   type="checkbox"
                   className="toggle"
                   checked={settingsData.showSeconds == true}
-                  onChange={e => {
+                  onChange={_e => {
                     let newSettings = { ...settingsData }
                     newSettings.showSeconds = !newSettings.showSeconds
                     saveSettingsDataToStorage(newSettings)
@@ -214,7 +214,7 @@ function Settings() {
                   type="checkbox"
                   className="toggle"
                   checked={settingsData.disableZOffset == true}
-                  onChange={e => {
+                  onChange={_e => {
                     let newSettings = { ...settingsData }
                     newSettings.disableZOffset = !newSettings.disableZOffset
                     saveSettingsDataToStorage(newSettings)

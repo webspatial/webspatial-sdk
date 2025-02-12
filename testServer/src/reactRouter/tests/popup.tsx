@@ -48,7 +48,9 @@ export function PopupTest() {
           <SpatialDiv
             spatialStyle={{
               position: { z: x },
-              glassEffect: true,
+              material: {
+                type: "regular"
+              },
               cornerRadius: 70,
             }}
             style={{

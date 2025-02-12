@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import { SpatialDiv } from '@xrsdk/react'
 
 var redCol = '#cc111144'
-var greenCol = '#11cc1144'
-var blueCol = '#1111cc44'
 
 function cyrb128(str: string) {
   let h1 = 1779033703,
@@ -57,7 +55,7 @@ export function ManyPanelTest() {
   return (
     <>
       <div className="grid grid-cols-10 gap-4">
-        {[...Array(count)].map((v, i) => (
+        {[...Array(count)].map((_v, i) => (
           <SpatialDiv
             key={i}
             spatialStyle={{

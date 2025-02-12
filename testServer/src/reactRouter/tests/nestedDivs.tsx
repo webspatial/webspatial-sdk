@@ -26,7 +26,9 @@ export function NestedDivsTest() {
           debugName="PARENT A ROOT"
           spatialStyle={{
             position: { z: depth * 10, x: 0, y: 0 },
-            glassEffect: true,
+            material: {
+              type: "regular"
+            }
           }}
           style={{ height: 300, backgroundColor: redCol }}
         >
@@ -35,7 +37,9 @@ export function NestedDivsTest() {
             debugName="CHILD A1"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              glassEffect: true,
+              material: {
+              type: "regular"
+            }
             }}
             style={{ height: 100, backgroundColor: blueCol }}
           >
@@ -46,7 +50,9 @@ export function NestedDivsTest() {
           debugName="PARENT B ROOT"
           spatialStyle={{
             position: { z: depth * 10, x: 0, y: 0 },
-            glassEffect: true,
+            material: {
+              type: "regular"
+            }
           }}
           style={{ height: 300, backgroundColor: redCol }}
         >
@@ -55,7 +61,9 @@ export function NestedDivsTest() {
             debugName="CHILD B1"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              glassEffect: true,
+              material: {
+              type: "regular"
+            }
             }}
             style={{ height: 100, backgroundColor: blueCol }}
           >
@@ -64,7 +72,9 @@ export function NestedDivsTest() {
               debugName="CHILD B2"
               spatialStyle={{
                 position: { z: depth * 30, x: 0, y: 0 },
-                glassEffect: true,
+                material: {
+              type: "regular"
+            }
               }}
               style={{ height: 100, backgroundColor: greenCol }}
             >
@@ -73,7 +83,9 @@ export function NestedDivsTest() {
                 debugName="CHILD B3"
                 spatialStyle={{
                   position: { z: depth * 30, x: 0, y: 0 },
-                  glassEffect: true,
+                  material: {
+              type: "regular"
+            }
                 }}
                 style={{ height: 100, backgroundColor: blueCol }}
               >
@@ -82,7 +94,9 @@ export function NestedDivsTest() {
                   debugName="CHILD B3"
                   spatialStyle={{
                     position: { z: depth * 30, x: 0, y: 0 },
-                    glassEffect: true,
+                    material: {
+              type: "regular"
+            }
                   }}
                   style={{ height: 100, backgroundColor: redCol }}
                 >
@@ -91,7 +105,9 @@ export function NestedDivsTest() {
                     debugName="CHILD B3"
                     spatialStyle={{
                       position: { z: depth * 30, x: 0, y: 0 },
-                      glassEffect: true,
+                      material: {
+              type: "regular"
+            }
                     }}
                     style={{ height: 100, backgroundColor: blueCol }}
                   >
@@ -100,7 +116,9 @@ export function NestedDivsTest() {
                       debugName="CHILD B3"
                       spatialStyle={{
                         position: { z: depth * 30, x: 0, y: 0 },
-                        glassEffect: true,
+                        material: {
+              type: "regular"
+            }
                       }}
                       style={{ height: 100, backgroundColor: greenCol }}
                     >
@@ -116,7 +134,6 @@ export function NestedDivsTest() {
           debugName="PARENT C ROOT"
           spatialStyle={{
             position: { z: depth * 10, x: 0, y: 0 },
-            glassEffect: false,
           }}
           style={{ height: 120, backgroundColor: redCol }}
         >
@@ -125,7 +142,6 @@ export function NestedDivsTest() {
             debugName="CHILD C1"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              glassEffect: false,
             }}
             style={{ height: 150, backgroundColor: blueCol }}
           >
