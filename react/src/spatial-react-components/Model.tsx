@@ -30,6 +30,7 @@ export interface ModelProps {
   spatialOffset?: { x?: number; y?: number; z?: number }
   opacity?: number
   onLoad?: (event: { target: { currentSrc: string; ready: boolean } }) => void
+  poster?: string
 }
 
 export type ModelRef = Ref<{
@@ -96,6 +97,7 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
           src={glbSrc}
           camera-controls
           touch-action="pan-y"
+          poster={props.poster}
         ></model-viewer>
       </div>
     )
