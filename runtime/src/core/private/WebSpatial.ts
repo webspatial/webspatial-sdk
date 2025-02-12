@@ -1,22 +1,12 @@
 import { SpatialInputComponent } from '../component/SpatialInputComponent'
-import { Logger, LoggerLevel, NativeLogger, WebLogger } from './log'
 import { RemoteCommand } from './remote-command'
-import { WindowStyle, WindowGroupOptions } from '../types'
-
-export class Vec3 {
-  constructor(
-    public x = 0,
-    public y = 0,
-    public z = 0,
-  ) {}
-}
-
-export class Vec4 {
-  x = 0
-  y = 0
-  z = 0
-  w = 1
-}
+import {
+  WindowStyle,
+  WindowGroupOptions,
+  LoadingMethodKind,
+  sceneDataShape,
+  sceneDataJSBShape,
+} from '../types'
 
 export class WindowGroup {
   id = ''
@@ -99,10 +89,6 @@ export class WebSpatial {
     }
   }
 
-  static logger: Logger = (window as any).WebSpatailEnabled
-    ? new NativeLogger(this.sendCommand)
-    : new WebLogger('WebSpatial')
-
   static getImmersiveWindowGroup() {
     var wg = new WindowGroup()
     wg.id = 'Immersive'
@@ -122,10 +108,38 @@ export class WebSpatial {
     return wg
   }
 
-  static async createWindowGroup(style: WindowStyle = 'Plain', cfg: any) {
+  static async createScene(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData: sceneDataShape
+    },
+  ) {
+    const { window: newWindow, ...sceneData } = cfg.sceneData
+    const jsbSceneData: sceneDataJSBShape = {
+      ...sceneData,
+      windowID: (newWindow as any)._webSpatialID,
+      windowGroupID: (newWindow as any)._webSpatialGroupID,
+    }
+    var cmd = new RemoteCommand('createScene', {
+      windowStyle: style,
+      sceneData: jsbSceneData,
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+    })
+
+    try {
+      await new Promise((res, rej) => {
+        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        WebSpatial.sendCommand(cmd)
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  static async createWindowGroup(style: WindowStyle = 'Plain') {
     var cmd = new RemoteCommand('createWindowGroup', {
       windowStyle: style,
-      ...cfg,
     })
 
     var result = await new Promise((res, rej) => {
@@ -274,6 +288,22 @@ export class WebSpatial {
     return result
   }
 
+  static async setLoading(method: LoadingMethodKind, style?: string) {
+    var cmd = new RemoteCommand('setLoading', {
+      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+      loading: {
+        method,
+        style,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
   static async openImmersiveSpace() {
     var cmd = new RemoteCommand('openImmersiveSpace')
     await WebSpatial.sendCommand(cmd)
@@ -284,16 +314,20 @@ export class WebSpatial {
     await WebSpatial.sendCommand(cmd)
   }
 
-  static onFrame(fn: any) {
+  static onFrame(fn: (curTime: number) => Promise<any>) {
     var dt = 0
-    var lastTime = window.performance.now()
-    var loop = () => {
-      setTimeout(() => {
-        loop()
-      }, 1000 / 60)
+    var loop = async () => {
       var curTime = window.performance.now()
-      fn(curTime, curTime - lastTime)
-      lastTime = curTime
+      await fn(curTime)
+      var updateTime = window.performance.now() - curTime
+
+      // Call update loop targetting 60 fps
+      setTimeout(
+        () => {
+          loop()
+        },
+        Math.max(1000 / 60 - updateTime, 0),
+      )
     }
     loop()
   }

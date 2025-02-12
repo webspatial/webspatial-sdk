@@ -186,6 +186,10 @@ export function useHijackSpatialDivRef(
                     domStyleProxy.cssText = ''
                     return true
                   }
+                  if (property === 'class') {
+                    proxyDomElement.className = ''
+                    return true
+                  }
                 }
                 return (target[prop as keyof HTMLElement] as Function)(...args)
               }

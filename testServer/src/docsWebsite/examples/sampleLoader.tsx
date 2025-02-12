@@ -54,9 +54,7 @@ export function showSample(MySample: any, hasCode = true) {
                   Apple Vision Pro app
                 </div>
               )}
-              <div className="p-5">
-                {props.children}
-              </div>
+              <div className="p-5">{props.children}</div>
               {hasCode ? (
                 <div
                   className="btn m-5"
@@ -186,6 +184,11 @@ export function showSample(MySample: any, hasCode = true) {
                           <li>
                             <a href="/src/docsWebsite/index.html?examplePath=reactModelElement">
                               3D Model Element
+                            </a>
+                          </li>
+                          <li>
+                            <a href="/src/docsWebsite/index.html?examplePath=reactSpatialViewElement">
+                              Spatial View Element (3D Volume)
                             </a>
                           </li>
                           <li>

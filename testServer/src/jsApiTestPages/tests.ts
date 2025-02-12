@@ -1,5 +1,6 @@
 import { Euler, Quaternion, Vector3 } from 'three'
 import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
+import { Vec3 } from '@xrsdk/runtime'
 
 class TimerLog {
   lastTime = Date.now()
@@ -137,7 +138,7 @@ var main = async () => {
   page = page ? page : 'default'
 
   var spatial = new Spatial()
-  let session = await spatial.requestSession()
+  let session = await spatial.requestSession()!
   var testHelper = new TestHelper(session)
   await session.log('        --------------Page loaded: ' + page)
 
@@ -157,11 +158,10 @@ var main = async () => {
         if (w.entity.isDestroyed()) {
           return
         }
-        session.requestAnimationFrame(loop)
         w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
         w.entity.updateTransform()
       }
-      session.requestAnimationFrame(loop)
+      session.addOnEngineUpdateEventListener(loop)
 
       setTimeout(async () => {
         await w.entity.destroy()
@@ -188,7 +188,7 @@ var main = async () => {
 
     // Create model ent and add as a child to the spatialView
     var box = await session.createMeshResource({ shape: 'box' })
-    var mat = await session.createPhysicallyBasedMaterial()
+    var mat = await session.createPhysicallyBasedMaterialResource()
     await mat.update()
     var customModel = await session.createModelComponent()
     customModel.setMaterials([mat])
@@ -196,13 +196,13 @@ var main = async () => {
     var e2 = await session.createEntity()
     await e2.setComponent(customModel)
     e2.transform.position.z = -(0.1 / 2 + 0.00001)
-    e2.transform.scale = new DOMPoint(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
+    e2.transform.scale = new Vec3(1920 / 2 / 1360, 1080 / 2 / 1360, 0.1)
     await e2.updateTransform()
     await e2.setParent(e)
 
     {
       var box = await session.createMeshResource({ shape: 'sphere' })
-      var mat = await session.createPhysicallyBasedMaterial()
+      var mat = await session.createPhysicallyBasedMaterialResource()
       await mat.update()
       var customModel = await session.createModelComponent()
       customModel.setMaterials([mat])
@@ -210,7 +210,7 @@ var main = async () => {
       var e2 = await session.createEntity()
       await e2.setComponent(customModel)
       e2.transform.position.y = 0.3
-      e2.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+      e2.transform.scale = new Vec3(0.1, 0.1, 0.1)
       await e2.updateTransform()
       await e2.setParent(e)
     }
@@ -220,7 +220,7 @@ var main = async () => {
     e3.transform.position.x = 0
     e3.transform.position.y = 0.0
     e3.transform.position.z = 0
-    e3.transform.scale = new DOMPoint(2.0, 2.0, 2.0)
+    e3.transform.scale = new Vec3(2.0, 2.0, 2.0)
     await e3.updateTransform()
     let win = await session.createWindowComponent()
     await Promise.all([
@@ -319,18 +319,14 @@ var main = async () => {
 
       for (var i = 0; i < 7; i++) {
         var e = await session.createEntity()
-        e.transform.position = new DOMPoint(
-          -0.35 + i * 0.1,
-          0,
-          0.2 + 0.00001 * i,
-        )
-        e.transform.scale = new DOMPoint(0.07, 0.07, 0.07)
+        e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.2 + 0.00001 * i)
+        e.transform.scale = new Vec3(0.07, 0.07, 0.07)
         await e.updateTransform()
 
         if (i == 3) {
           await e.setComponent(model)
         } else {
-          var mat = await session.createPhysicallyBasedMaterial()
+          var mat = await session.createPhysicallyBasedMaterialResource()
           mat.baseColor.r = Math.random()
           await mat.update()
           var customModel = await session.createModelComponent()
@@ -338,7 +334,8 @@ var main = async () => {
           customModel.setMesh(box)
           await e.setComponent(customModel)
         }
-        await e.setParentWindowGroup(await session.getCurrentWindowGroup())
+
+        await (await session.getCurrentWindowGroup()).setRootEntity(e)
         entities.push({ e: e, v: 0 })
       }
       var b = document.createElement('button')
@@ -356,7 +353,6 @@ var main = async () => {
       var dt = 0
       var curTime = Date.now()
       let loop = async (time: DOMHighResTimeStamp) => {
-        session.requestAnimationFrame(loop)
         dt = Date.now() - curTime
         curTime = Date.now()
         var floor = -0.1
@@ -380,7 +376,7 @@ var main = async () => {
           }
         })
       }
-      session.requestAnimationFrame(loop)
+      session.addOnEngineUpdateEventListener(loop)
 
       session.log('entity created')
       return
@@ -407,7 +403,7 @@ var main = async () => {
       var startTime = Date.now()
       await session.transaction(() => {
         for (let i = 0; i < pingCount; i++) {
-          session.ping(str)
+          session._ping(str)
         }
       })
       var delta = Date.now() - startTime
@@ -424,9 +420,9 @@ var main = async () => {
       var startTime = Date.now()
       for (let i = 0; i < pingCount; i++) {
         if (i == pingCount - 1) {
-          await session.ping(str)
+          await session._ping(str)
         } else {
-          session.ping(str)
+          session._ping(str)
         }
       }
       var delta = Date.now() - startTime
@@ -441,9 +437,8 @@ var main = async () => {
 
       // Populate results and request animation frame
       b.innerHTML = results
-      session.requestAnimationFrame(loop)
     }
-    session.requestAnimationFrame(loop)
+    session.addOnEngineUpdateEventListener(loop)
 
     session.log('Got response')
   } else if (page == 'winodwInnerHTML') {
@@ -501,7 +496,7 @@ var main = async () => {
     b.style.fontSize = '1em'
     b.innerHTML = 'LOADING'
     document.body.appendChild(b)
-    var d = await session.getStats()
+    var d = await session._getStats()
     b.innerHTML = '// webviewRefs should be 1\n' + JSON.stringify(d, null, 4)
   }
 }
