@@ -8,8 +8,8 @@ import Foundation
 var pwaManager = PWAManager()
 
 struct PWAManager:Codable{
-//    var start_url:String = "http://localhost:5173"
-    var start_url:String = "static-web/index.html"
+    var start_url:String = "http://localhost:5173"
+    // var start_url:String = "static-web/index.html"
     var scope:String = "/static-web/"
     var id:String = ""
     
