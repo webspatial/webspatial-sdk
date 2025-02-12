@@ -38,17 +38,17 @@ struct web_spatialApp: App {
 
         // init global logger
         Logger.initLogger()
-        
+
         // init pwa manager
         pwaManager._init()
-        
+
         // create root SpatialWindowGroup and Immersive SpatialWindowGroup
         rootWGD = SpatialWindowGroup.createRootWindowGroup()
         let _ = SpatialWindowGroup.createImmersiveWindowGroup()
     }
 
     func getFileUrl() -> URL {
-        return URL(string:pwaManager.start_url)!
+        return URL(string: pwaManager.start_url)!
     }
 
     // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
@@ -61,6 +61,7 @@ struct web_spatialApp: App {
             let rootEntity = SpatialEntity()
             rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
             let windowComponent = SpatialWindowComponent(parentWindowGroupID: rootWGD.id, url: fileUrl)
+            windowComponent.isRoot = true
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowGroup(wg: rootWGD)
 
@@ -81,7 +82,7 @@ struct web_spatialApp: App {
                 PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
                     initAppOnViewMount()
                     let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
-                    
+
                     if let url = URL(string: urlToLoad) {
                         root!.navigateToURL(url: url)
                     }
