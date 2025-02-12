@@ -64,7 +64,7 @@ function App() {
                     ent.transform.position.z = -1
                     ent.transform.scale = new Vec3(0.3, 0.3, 0.3)
                     await ent.updateTransform()
-                    await ent.setParentWindowGroup(immersiveWG)
+                    await immersiveWG.setRootEntity(ent)
                     var helmetModel = await session!.createModelComponent({
                       url: '/src/assets/FlightHelmet.usdz',
                     })
@@ -117,7 +117,7 @@ function App() {
               })
               await ent.setComponent(helmetModel)
 
-              await spatialViewEnt.setParentWindowGroup(wg)
+              await wg.setRootEntity(spatialViewEnt)
               volumeModelEnt = ent
             }}
           >
@@ -168,7 +168,7 @@ function App() {
               await ent.setCoordinateSpace('Root')
               await ent.setComponent(i)
 
-              await ent.setParentWindowGroup(wg)
+              await wg.setRootEntity(ent)
 
               // var newPage = await WebSpatial.createWindowGroup("Plain")
               // await WebSpatial.createWebPanel(newPage, "/loadTsx.html?pageName=helloWorldApp/main2.tsx")

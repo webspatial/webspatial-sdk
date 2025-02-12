@@ -37,6 +37,13 @@ struct OpenDismissHandlerUI: View {
             .onReceive(windowGroupContent.closeWindowData) { wd in
                 dismissWindow(id: wd.windowStyle, value: wd)
             }
+            .onReceive(windowGroupContent.setLoadingWindowData) { wd in
+                if wd.method == .show {
+                    openWindow(id: "loading")
+                } else if wd.method == .hide {
+                    dismissWindow(id: "loading")
+                }
+            }
 
             .onChange(of: scenePhase) { oldValue, newValue in
                 print("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
