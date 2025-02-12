@@ -49,6 +49,8 @@ class SpatialWindowGroup: SpatialObject {
     var openWindowData = PassthroughSubject<WindowGroupData, Never>()
     var closeWindowData = PassthroughSubject<WindowGroupData, Never>()
 
+    var setLoadingWindowData = PassthroughSubject<LoadingWindowGroupData, Never>()
+
     override func onDestroy() {
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
@@ -72,10 +74,6 @@ extension SpatialWindowGroup {
     private static let RootID = "root"
     static func getRootID() -> String {
         return RootID
-    }
-
-    static func getRootWindowGroup() -> SpatialWindowGroup {
-        return getSpatialWindowGroup(RootID)!
     }
 
     static func createRootWindowGroup() -> SpatialWindowGroup {

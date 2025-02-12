@@ -7,7 +7,12 @@ const apps = [
   // { name: "Settings", url: "", icon: "⚙️" },
   // { name: "Browser", url: "", icon: "🌐" },
   { name: 'Home', url: '/', icon: '🏠' },
-  { name: 'Clock', url: '/src/clockApp/index.html', icon: '⏰' },
+  {
+    name: 'Clock',
+    url: '/src/clockApp/index.html',
+    icon: '⏰',
+    options: { dimensions: { x: 880, y: 200 } },
+  },
   {
     name: 'TikTok',
     url: 'http://www.tiktok.com/',
@@ -33,9 +38,6 @@ function App() {
   useEffect(() => {
     ;(async () => {
       if (getSession()) {
-        await getSession()!
-          .getCurrentWindowGroup()
-          .setStyle({ dimensions: { x: 500, y: 10 } })
         await getSession()
           ?.getCurrentWindowComponent()
           .setStyle({
