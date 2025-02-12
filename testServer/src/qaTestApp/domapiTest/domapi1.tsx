@@ -318,7 +318,7 @@ function App() {
         console.log('移除translate-y-8 class:', ref1.current.classList.value)
         break
       case 'replace':
-        ref1.current.classList.replace('translate-y-8', 'translate-y-15')
+        ref1.current.classList.replace('translate-y-8', 'translate-x-10')
         console.log(
           '替换translate-y-10 with translate-y-8 class:',
           ref1.current.classList.value,
