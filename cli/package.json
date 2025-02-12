@@ -1,0 +1,70 @@
+{
+  "name": "@xrapp/builder",
+  "version": "0.0.1-alpha",
+  "description": "Client CLI tool to Generate XRApp project for Apple Vision Pro",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=14.15.0"
+  },
+  "bin": {
+    "xrapp-builder": "bin/bundlepwa.js"
+  },
+  "scripts": {
+    "test": "npm run build && bin/bundlepwa.js build --manifest-url=https://microsoftedge.github.io/Demos/pwamp/manifest.json",
+    "test2": "npm run build && bin/bundlepwa.js build --manifest=../pack-test/pwa_test.json --project=../pack-test --teamId=S76Z27JDAB",
+    "obfuscate": "node obfuscate.js",
+    "build": "tsc",
+    "build1": "rollup -c ./rollup.config.js",
+    "clean": "rm -rf dist",
+    "lint": "eslint \"src/**/*.{js,ts}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "files": [
+    "dist/lib",
+    "dist/index.d.ts",
+    "dist/index.js",
+    "bin",
+    "package.json"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "cli-progress": "^3.8.2",
+    "colors": "^1.4.0",
+    "fetch-h2": "^2.5.1",
+    "inquirer": "^8.2.4",
+    "jimp": "^0.22.7",
+    "mime-types": "^2.1.27",
+    "minimist": "^1.2.8",
+    "node-fetch": "2.6.1",
+    "semver": "^7.5.2",
+    "sharp": "^0.33.5",
+    "valid-url": "^1.0.9",
+    "xcode": "^3.0.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "@types/cli-progress": "^3.7.0",
+    "@types/inquirer": "^8.2.6",
+    "@types/mime-types": "^2.1.0",
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^12.20.1",
+    "@types/node-fetch": "^2.5.10",
+    "@types/semver": "^7.3.1",
+    "@types/valid-url": "^1.0.3",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.4",
+    "javascript-obfuscator": "^4.0.1",
+    "rollup": "^3.26.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.1.5"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  }
+}
