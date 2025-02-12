@@ -8,6 +8,14 @@ import Foundation
 import RealityKit
 import SwiftUI
 
+struct CommandInfo {
+    var windowGroupID = "notFound"
+    var entityID = "notFound"
+    var resourceID = "notFound"
+    var requestID = -1
+    var cmd: JSBCommand
+}
+
 class CommandManager {
     static let Instance = CommandManager()
 

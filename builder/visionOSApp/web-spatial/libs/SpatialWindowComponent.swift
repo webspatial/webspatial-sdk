@@ -20,14 +20,6 @@ func getDocumentsDirectory() -> URL {
     return documentsDirectory
 }
 
-struct CommandInfo {
-    var windowGroupID = "notFound"
-    var entityID = "notFound"
-    var resourceID = "notFound"
-    var requestID = -1
-    var cmd: JSBCommand
-}
-
 struct LoadingStyles {
     var cornerRadius: CornerRadius = .init()
     var windowGroupSize = DefaultPlainWindowGroupSize
