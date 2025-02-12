@@ -82,9 +82,6 @@ importers:
       '@types/lodash.isequal':
         specifier: ^4.5.8
         version: 4.5.8
-      '@types/node':
-        specifier: ^22.5.5
-        version: 22.9.1
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.12
