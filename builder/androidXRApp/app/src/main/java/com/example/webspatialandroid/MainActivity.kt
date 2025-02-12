@@ -40,7 +40,7 @@ import androidx.xr.compose.subspace.layout.movable
 import androidx.xr.compose.subspace.layout.resizable
 import androidx.xr.compose.subspace.layout.width
 import com.example.webspatialandroid.ui.theme.WebSpatialAndroidTheme
-import com.example.webspatiallib.SpatialWindowComponent
+import com.example.webspatiallib.NativeWebView
 
 class MainActivity : ComponentActivity() {
 
@@ -98,7 +98,9 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            val s = SpatialWindowComponent(LocalContext.current)
+            val s = NativeWebView(LocalContext.current)
+            s.navigateToURL("https://www.google.com/")
+            SpatialWebViewUI(s, Modifier)
             MainContent(modifier = Modifier.padding(48.dp))
             if (LocalHasXrSpatialFeature.current) {
                 FullSpaceModeIconButton(
