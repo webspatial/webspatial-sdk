@@ -18,9 +18,8 @@ const countSlice = createSlice({
 
 import {
   createStateSyncMiddleware,
-  initMessageListener,
 } from 'redux-state-sync'
-import { configureStore, Tuple } from '@reduxjs/toolkit'
+import { configureStore } from '@reduxjs/toolkit'
 
 var mw = [createStateSyncMiddleware({}) as any]
 

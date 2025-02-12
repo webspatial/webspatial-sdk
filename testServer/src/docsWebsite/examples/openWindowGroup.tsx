@@ -1,5 +1,4 @@
 import { SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 import { Vec3 } from '@xrsdk/runtime'
 
@@ -57,10 +56,8 @@ function MySample(props: { session?: SpatialSession }) {
 
             await wg.setRootEntity(ent)
 
-            var dt = 0
             var curTime = Date.now()
             let loop = async () => {
-              dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
               e2.transform.position.x = 0 + Math.sin(curTime / 1000) * 0.3
@@ -103,10 +100,9 @@ function MySample(props: { session?: SpatialSession }) {
             await wg.setRootEntity(ent)
 
             await session.openImmersiveSpace()
-            var dt = 0
+           
             var curTime = Date.now()
             let loop = async () => {
-              dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
               e2.transform.position.z = -4
