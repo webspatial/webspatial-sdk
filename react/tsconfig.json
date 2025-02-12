@@ -23,5 +23,6 @@
     "jsx": "react-jsx"
   },
   "include": ["src"],
+  "exclude": ["./esbuild.mjs"],
   "references": []
 }
