@@ -99,7 +99,7 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
         ) {
 
             val s = NativeWebView(LocalContext.current)
-            s.navigateToURL("https://www.google.com/")
+            s.navigateToURL("http://localhost:5173/src/jsApiTestPages/standard.html?pageName=pingNativePerf")
             SpatialWebViewUI(s, Modifier)
             MainContent(modifier = Modifier.padding(48.dp))
             if (LocalHasXrSpatialFeature.current) {
