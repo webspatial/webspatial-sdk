@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Deeplink Test</title>
+    <style>
+        html, body{
+            background-color: gray;
+            margin: 0;
+            padding: 0;
+        }
+
+        .root{
+            color:white;
+            width:100%;
+            height:100%;
+        }
+        .title{
+            margin-top: 20px;
+            width:100%;
+            height:50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .content{
+            width:100%;
+            height:300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-wrap: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="root">
+        <div class="title">
+            <div>Deeplink Test</div>
+        </div>
+        <div class="content">
+            <div id="content"></div>
+        </div>
+    </div>
+    <script>
+        const urlParam = new URLSearchParams(window.location.search);
+        const arr = Array.from(urlParam.entries())
+        
+        let str = "";
+        for(var i = 0; i < arr.length; i++){
+            str += arr[i][0] + ": " + arr[i][1] + "</br>"
+        }
+        document.getElementById("content").innerHTML = str;
+    </script>
+</body>
+
+</html>

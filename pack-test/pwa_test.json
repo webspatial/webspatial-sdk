@@ -1,0 +1,62 @@
+{
+    "name": "PWAmp music player",
+    "short_name": "PWAmp",
+    "description": "A skinable music player app to play your favorite mp3 files",
+    "lang": "en-US",
+    "start_url": "static-web/index.html",
+    "scope": "./",
+    "display": "standalone",
+    "display_override": [
+      "window-controls-overlay"
+    ],
+    "icons": [
+      {
+        "src": "https://microsoftedge.github.io/Demos/pwamp/favicon-256.png",
+        "sizes": "256x256"
+      },
+      {
+        "src": "https://microsoftedge.github.io/Demos/pwamp/favicon-512.png"
+      },
+      {
+        "src": "./icon-1024.png",
+        "purpose":"maskable"
+      },
+      {
+        "src": "./icon-512.png",
+        "purpose":"maskable"
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "./screenshot-playlist.png",
+        "sizes": "1280x720",
+        "platform": "wide",
+        "label": "The main PWAmp user interface, showing a list of songs, and playback buttons."
+      },
+      {
+        "src": "./screenshot-visualizer.png",
+        "sizes": "1280x720",
+        "platform": "wide",
+        "label": "The PWAmp visualizer, showing the current song, the playback buttons, and a colorful visualization of the current song."
+      },
+      {
+        "src": "./screenshot-widget.png",
+        "sizes": "600x400",
+        "label": "The PWAmp mini-player widget"
+      }
+    ],
+    "protocol_handlers": [
+      {
+        "protocol": "mailto",
+        "url": "./?cmd=%s"
+      },
+      {
+        "protocol": "xxx",
+        "url": "./?cmd=%s"
+      },
+      {
+        "protocol": "web+amp",
+        "url": "./?cmd=%s"
+      }
+    ]
+  }

@@ -57,7 +57,18 @@ function App() {
   return (
     <div className="pl-5 pt-2">
       <h1 className="text-2xl text-black">openscene</h1>
-
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open no name')
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/loading.html',
+            // 'http://localhost:5173/src/scene/xrapp.html',
+          )
+        }}
+      >
+        open loading
+      </button>
       <button
         className={btnCls}
         onClick={async () => {

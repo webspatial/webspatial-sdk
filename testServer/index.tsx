@@ -255,12 +255,12 @@ function App() {
         <a href="/src/CITest/index.html">Run CI</a>
         <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
-        <a href="/src/template/index.html">Template</a>
         <button
           onClick={() => {
             if (SpatialHelper.instance) {
               SpatialHelper.instance.navigation.openPanel(
                 '/src/launcher/index.html',
+                { dimensions: { x: 400, y: 100 } },
               )
             } else {
               window.open('/src/launcher/index.html')
