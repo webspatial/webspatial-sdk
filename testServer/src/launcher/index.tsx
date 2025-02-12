@@ -33,6 +33,14 @@ const apps = [
     icon: '📦',
     options: { type: 'volume' },
   },
+  {
+    name: 'Memory Stats',
+    icon: '📊',
+    url: '/src/memoryStats/index.html',
+    options: {
+      dimensions: { x: 300, y: 600 },
+    },
+  },
 ]
 function App() {
   useEffect(() => {

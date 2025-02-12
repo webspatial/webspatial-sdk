@@ -248,7 +248,7 @@ export class SpatialSession {
    * @returns data as a js object
    */
   async _getStats() {
-    return (await WebSpatial.getStats()) as any
+    return (await WebSpatial.getStats()) as { objects: any; refObjects: any }
   }
 
   /**
