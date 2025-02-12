@@ -34,8 +34,10 @@ struct SpatialWebViewUI: View {
             let childEntities = ent.getEntities()
 
             // Display child entities of the webview
-            VStack(alignment:.trailing, spacing:20){
-                NavView(wv: wv.getView()?.webViewHolder.appleWebView)
+            VStack(alignment: .trailing, spacing: 20) {
+                if wv.isRoot {
+                    NavView(wv: wv.getView()?.webViewHolder.appleWebView)
+                }
                 ZStack {
                     OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                         ZStack {
@@ -107,29 +109,29 @@ struct SpatialWebViewUI: View {
                                 }
                             }
 
-                        // Model3D content
-                        ForEach(Array(childEntities.keys), id: \.self) { key in
-                            if let e = childEntities[key] {
-                                let _ = e.forceUpdate ? 0 : 0
-                                SpatialModel3DView(parentYOffset: parentYOffset)
-                                    .environment(e)
+                            // Model3D content
+                            ForEach(Array(childEntities.keys), id: \.self) { key in
+                                if let e = childEntities[key] {
+                                    let _ = e.forceUpdate ? 0 : 0
+                                    SpatialModel3DView(parentYOffset: parentYOffset)
+                                        .environment(e)
+                                }
                             }
-                        }
 
-                        // SpatialView content
-                        ForEach(Array(childEntities.keys), id: \.self) { key in
-                            if let e = childEntities[key] {
-                                if e.coordinateSpace == .DOM {
-                                    if let viewComponent = e.getComponent(SpatialViewComponent.self) {
-                                        let _ = e.forceUpdate ? 0 : 0
-                                        let x = CGFloat(e.modelEntity.position.x)
-                                        let y = CGFloat(e.modelEntity.position.y - parentYOffset)
-                                        let z = CGFloat(e.modelEntity.position.z)
+                            // SpatialView content
+                            ForEach(Array(childEntities.keys), id: \.self) { key in
+                                if let e = childEntities[key] {
+                                    if e.coordinateSpace == .DOM {
+                                        if let viewComponent = e.getComponent(SpatialViewComponent.self) {
+                                            let _ = e.forceUpdate ? 0 : 0
+                                            let x = CGFloat(e.modelEntity.position.x)
+                                            let y = CGFloat(e.modelEntity.position.y - parentYOffset)
+                                            let z = CGFloat(e.modelEntity.position.z)
 
-                                        let width = CGFloat(viewComponent.resolutionX)
-                                        let height = CGFloat(viewComponent.resolutionY)
+                                            let width = CGFloat(viewComponent.resolutionX)
+                                            let height = CGFloat(viewComponent.resolutionY)
 
-                                        SpatialViewUI().environment(e).frame(width: width, height: height).scaleEffect(
+                                            SpatialViewUI().environment(e).frame(width: width, height: height).scaleEffect(
                                                 x: CGFloat(e.modelEntity.scale.x),
                                                 y: CGFloat(e.modelEntity.scale.y),
                                                 z: CGFloat(e.modelEntity.scale.z)
@@ -149,36 +151,36 @@ struct SpatialWebViewUI: View {
                             }
                         }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
                     }
-                  
-                // Display the main webview
-                if wv.didFailLoad {
-                    VStack {
-                        Text("Failed to load webpage. Is the server running?")
-                            .foregroundColor(.white)
-                        Button("Reload") {
-                            if let url = wv.getURL() {
-                                wv.navigateToURL(url: url)
-                            } else {
-                                print("ERROR, unable to reload URL")
+
+                    // Display the main webview
+                    if wv.didFailLoad {
+                        VStack {
+                            Text("Failed to load webpage. Is the server running?")
+                                .foregroundColor(.white)
+                            Button("Reload") {
+                                if let url = wv.getURL() {
+                                    wv.navigateToURL(url: url)
+                                } else {
+                                    print("ERROR, unable to reload URL")
+                                }
                             }
+                            .foregroundColor(.white)
                         }
-                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity).glassBackgroundEffect()
+
+                    } else {
+                        wv.getView()
+                            .materialWithBorderCorner(
+                                wv.backgroundMaterial,
+                                wv.cornerRadius
+                            )
+
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity).glassBackgroundEffect()
-
-                } else {
-                    wv.getView()
-                        .materialWithBorderCorner(
-                            wv.backgroundMaterial,
-                            wv.cornerRadius
-                        )
-
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .opacity(wv.opacity)
+                .hidden(!ent.visible)
             }
-            .opacity(wv.opacity)
-            .hidden(!ent.visible)
-//            .hidden(true)
         }
     }
 }
