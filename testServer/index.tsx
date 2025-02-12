@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom/client'
 import {
   Spatial,
   SpatialEntity,
+  SpatialHelper,
   SpatialSession,
   SpatialViewComponent,
 } from '@xrsdk/runtime'
 import { SpatialDiv, Model } from '@xrsdk/react'
+import { Vec3 } from '@xrsdk/runtime'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -105,10 +107,10 @@ function App() {
         }>()
         for (var i = 0; i < 7; i++) {
           let e = await session.createEntity()
-          e.transform.position = new DOMPoint(-0.35 + i * 0.1, 0, 0.15)
-          e.transform.scale = new DOMPoint(0.1, 0.1, 0.1)
+          e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.15)
+          e.transform.scale = new Vec3(0.1, 0.1, 0.1)
           await e.updateTransform()
-          var mat = await session.createPhysicallyBasedMaterial()
+          var mat = await session.createPhysicallyBasedMaterialResource()
           mat.baseColor.r = 0.8
           mat.baseColor.g = 0.8
           mat.baseColor.b = 0.8 + Math.random() * 0.2
@@ -235,9 +237,8 @@ function App() {
               entity.updateTransform()
             }
           })
-          session!.requestAnimationFrame(loop)
         }
-        session.requestAnimationFrame(loop)
+        session!.addOnEngineUpdateEventListener(loop)
       })()
     } else {
     }
@@ -254,7 +255,20 @@ function App() {
         <a href="/src/CITest/index.html">Run CI</a>
         <a href="/src/qaTestApp/qatest.html">QA Test</a>
         <a href="/">Github</a>
-        <a href="/src/template/index.html">Template</a>
+        <button
+          onClick={() => {
+            if (SpatialHelper.instance) {
+              SpatialHelper.instance.navigation.openPanel(
+                '/src/launcher/index.html',
+                { dimensions: { x: 400, y: 100 } },
+              )
+            } else {
+              window.open('/src/launcher/index.html')
+            }
+          }}
+        >
+          Launcher
+        </button>
       </div>
       <div className="m-5 flex flex-row flex-wrap text-white">
         <div

@@ -69,10 +69,11 @@ export class SpatialEntity extends SpatialObject {
   }
 
   /**
+   * @hidden
    * Sets the windowgroup that this entity should be rendered by (this does not effect resource ownership)
    * @param wg the window group that should render this entity
    */
-  async setParentWindowGroup(wg: SpatialWindowGroup) {
+  async _setParentWindowGroup(wg: SpatialWindowGroup) {
     await WebSpatial.updateResource(this._entity, {
       setParentWindowGroupID: wg._wg.id,
     })

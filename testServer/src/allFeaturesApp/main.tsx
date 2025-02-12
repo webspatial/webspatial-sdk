@@ -7,6 +7,7 @@ import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync'
 import { useDispatch, useSelector } from 'react-redux'
 import store, { increment } from './store.ts'
+import { Vec3 } from '@xrsdk/runtime'
 initMessageListener(store)
 
 function App() {
@@ -61,9 +62,9 @@ function App() {
                     ent.transform.position.x = 0
                     ent.transform.position.y = 1.3
                     ent.transform.position.z = -1
-                    ent.transform.scale = new DOMPoint(0.3, 0.3, 0.3)
+                    ent.transform.scale = new Vec3(0.3, 0.3, 0.3)
                     await ent.updateTransform()
-                    await ent.setParentWindowGroup(immersiveWG)
+                    await immersiveWG.setRootEntity(ent)
                     var helmetModel = await session!.createModelComponent({
                       url: '/src/assets/FlightHelmet.usdz',
                     })
@@ -94,7 +95,7 @@ function App() {
               ent.transform.position.x = 0
               ent.transform.position.y = 0
               ent.transform.position.z = 0
-              ent.transform.scale = new DOMPoint(3.0, 3.0, 3.0)
+              ent.transform.scale = new Vec3(3.0, 3.0, 3.0)
               await ent.updateTransform()
               await ent.setParent(spatialViewEnt)
               volumePanelEnt = ent
@@ -108,7 +109,7 @@ function App() {
               ent.transform.position.x = 0
               ent.transform.position.y = -0.4
               ent.transform.position.z = 0
-              ent.transform.scale = new DOMPoint(0.8, 0.8, 0.8)
+              ent.transform.scale = new Vec3(0.8, 0.8, 0.8)
               await ent.updateTransform()
               await ent.setParent(spatialViewEnt)
               var helmetModel = await session!.createModelComponent({
@@ -116,7 +117,7 @@ function App() {
               })
               await ent.setComponent(helmetModel)
 
-              await spatialViewEnt.setParentWindowGroup(wg)
+              await wg.setRootEntity(spatialViewEnt)
               volumeModelEnt = ent
             }}
           >
@@ -129,12 +130,12 @@ function App() {
             // style={{ height: "30px" }}
             onChange={async e => {
               if (volumeModelEnt && volumePanelEnt) {
-                volumeModelEnt.transform.position = new DOMPoint(
+                volumeModelEnt.transform.position = new Vec3(
                   Number(e.target.value) / 1000,
                   -0.4,
                   0,
                 )
-                volumePanelEnt.transform.position = new DOMPoint(
+                volumePanelEnt.transform.position = new Vec3(
                   -(Number(e.target.value) / 1000),
                   0,
                   0,
@@ -167,7 +168,7 @@ function App() {
               await ent.setCoordinateSpace('Root')
               await ent.setComponent(i)
 
-              await ent.setParentWindowGroup(wg)
+              await wg.setRootEntity(ent)
 
               // var newPage = await WebSpatial.createWindowGroup("Plain")
               // await WebSpatial.createWebPanel(newPage, "/loadTsx.html?pageName=helloWorldApp/main2.tsx")

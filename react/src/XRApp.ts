@@ -1,5 +1,12 @@
 import { WindowGroupOptions } from '@xrsdk/runtime/'
 import { getSession } from './utils/getSession'
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: WindowGroupOptions,
+    ) => Promise<WindowGroupOptions>
+  }
+}
 
 export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {
@@ -9,7 +16,7 @@ export const defaultSceneConfig: WindowGroupOptions = {
   resizability: 'automatic',
 }
 
-const CONTEXT_WINDOW_URL = 'webspatial://createContextWindow'
+const CONTEXT_WINDOW_URL = 'webspatial://createWindowContext'
 const originalOpen = window.open
 export class XRApp {
   private static instance: XRApp
@@ -19,11 +26,29 @@ export class XRApp {
     }
     return XRApp.instance
   }
+
+  handleATag(event: MouseEvent) {
+    const targetElement = event.target as HTMLElement
+    if (targetElement.tagName === 'A') {
+      const link = targetElement as HTMLAnchorElement
+      const target = link.target
+      const url = link.href
+
+      if (target && target !== '_self') {
+        event.preventDefault()
+        window.open(url, target)
+      }
+    }
+  }
   init() {
     ;(window as any).open = this.open
+
+    document.addEventListener('click', this.handleATag)
   }
   deinit() {
     ;(window as any).open = originalOpen
+
+    document.removeEventListener('click', this.handleATag)
   }
   private configMap: Record<string, WindowGroupOptions> = {} // name=>config
   private getConfig(name?: string) {
@@ -31,17 +56,17 @@ export class XRApp {
     return this.configMap[name]
   }
 
-  async show(windowID: string, cfg: WindowGroupOptions) {
+  async show(window: Window, cfg: WindowGroupOptions) {
     try {
       let session = getSession()!
-      await session.createWindowGroup(
+      await session._createScene(
         'Plain', // only support Plain for now
         {
           sceneData: {
             method: 'showRoot',
             sceneConfig: cfg,
             // url: url,
-            windowID,
+            window,
           },
         },
       )
@@ -78,14 +103,16 @@ export class XRApp {
         } else {
           const cfg = this.getConfig(target)
           try {
-            await session.createWindowGroup(
+            await session._createScene(
               'Plain', // only support Plain for now
               {
                 sceneData: {
                   method: 'createRoot',
                   sceneConfig: cfg,
                   url: url,
-                  windowID: (newWindow as any)._webSpatialID,
+                  window: newWindow!,
+                  // windowID: (newWindow as any)._webSpatialID,
+                  // windowGroupID: (newWindow as any)._webSpatialGroupID,
                 },
               },
             )
