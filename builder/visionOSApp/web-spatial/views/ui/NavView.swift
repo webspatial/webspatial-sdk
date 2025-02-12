@@ -8,63 +8,65 @@
 import SwiftUI
 import WebKit
 
-struct NavView: View{
-    @State var wv:WKWebView?
-    @State var showUrl:Bool = false
+struct NavView: View {
+    @State var swc: SpatialWindowComponent?
+    @State var showUrl: Bool = false
     var body: some View {
-        ZStack(alignment:.bottomTrailing){
-            VStack(alignment:.trailing, spacing:0){
-                HStack(spacing:10){
+        ZStack(alignment: .bottomTrailing) {
+            VStack(alignment: .trailing, spacing: 0) {
+                HStack(spacing: 10) {
                     Text(pwaManager.name).padding(.trailing, 10)
-                    if pwaManager.display == .minimal{
-                        Button(action:{
+                    if pwaManager.display == .minimal {
+                        Button(action: {
                             print("click back")
-                            wv?.goBack()
-                        },label: {
+                            swc?.goBack()
+                        }, label: {
                             Text("←")
                         })
-                        Button(action:{
+                        Button(action: {
                             print("click forward")
-                            wv?.goForward()
-                        },label: {
+                            swc?.goForward()
+                        }, label: {
                             Text("→")
                         })
-                        Button(action:{
+                        Button(action: {
                             print("click reset")
-                            wv?.reload()
-                        },label: {
+                            swc?.reload()
+                        }, label: {
                             Text("○")
                         })
-                        Button(action:{
+                        Button(action: {
                             print("click home")
-                        },label: {
+                        }, label: {
                             Text("H")
                         })
                     }
-                    Button(action:{
+                    Button(action: {
                         print("click info")
                         showUrl.toggle()
-                    },label: {
+                    }, label: {
                         Text("!")
                     })
                 }
             }.padding().glassBackgroundEffect(in: .rect).cornerRadius(15)
-            HStack(spacing:0){
-                Text(wv?.url?.absoluteString ?? "").padding() // (wv?.url?.absoluteString)
-                Button(action:{
+            HStack(spacing: 0) {
+                Text(
+                    swc?.getURL()?.absoluteString ?? ""
+                )
+                .padding() // (wv?.url?.absoluteString)
+                Button(action: {
                     print("click copy")
-                },label: {
+                }, label: {
                     Text("copy")
                 }).padding(.trailing, 5)
-                Button(action:{
+                Button(action: {
                     print("click close")
                     showUrl = false
-                },label: {
+                }, label: {
                     Text("X")
                 })
-            }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y:35).opacity(showUrl ? 1 : 0).animation(.easeOut(duration: 0.2))
-            
+            }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y: 35).opacity(showUrl ? 1 : 0).animation(.easeOut(duration: 0.2))
         }
-        
+        .zIndex(10) // closer to user
     }
 }
