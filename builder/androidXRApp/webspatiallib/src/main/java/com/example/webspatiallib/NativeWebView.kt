@@ -7,6 +7,8 @@ import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
 
 
