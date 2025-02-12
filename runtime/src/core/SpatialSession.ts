@@ -72,10 +72,12 @@ export class SpatialSession {
    * [TODO] should creation of components be moved to entity? and these made private?
    * @returns WindowComponent
    */
-  async createWindowComponent(wg?: SpatialWindowGroup) {
+  async createWindowComponent(options?: { windowGroup?: SpatialWindowGroup }) {
     let entity = await WebSpatial.createResource(
       'SpatialWebView',
-      wg ? wg._wg : WebSpatial.getCurrentWindowGroup(),
+      options?.windowGroup
+        ? options?.windowGroup._wg
+        : WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
     )
     return new SpatialWindowComponent(entity)
@@ -85,10 +87,12 @@ export class SpatialSession {
    * Creates a ViewComponent used to display 3D content within the entity
    * @returns SpatialViewComponent
    */
-  async createViewComponent(wg?: SpatialWindowGroup) {
+  async createViewComponent(options?: { windowGroup?: SpatialWindowGroup }) {
     let entity = await WebSpatial.createResource(
       'SpatialView',
-      wg ? wg._wg : WebSpatial.getCurrentWindowGroup(),
+      options?.windowGroup
+        ? options?.windowGroup._wg
+        : WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
     )
     return new SpatialViewComponent(entity)
@@ -150,7 +154,7 @@ export class SpatialSession {
    * Creates a MeshResource containing geometry data
    * @returns MeshResource
    */
-  async createMeshResource(options?: any) {
+  async createMeshResource(options?: { shape?: string }) {
     let entity = await WebSpatial.createResource(
       'MeshResource',
       WebSpatial.getCurrentWindowGroup(),
@@ -164,7 +168,7 @@ export class SpatialSession {
    * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterialResource(options?: any) {
+  async createPhysicallyBasedMaterialResource(options?: {}) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
       WebSpatial.getCurrentWindowGroup(),
@@ -177,7 +181,8 @@ export class SpatialSession {
    * Creates a WindowGroup
    * @returns SpatialWindowGroup
    * */
-  async createWindowGroup(style: WindowStyle = 'Plain') {
+  async createWindowGroup(options?: { style: WindowStyle }) {
+    var style = options?.style ? options?.style : 'Plain'
     return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
   }
 
