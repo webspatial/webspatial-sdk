@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Page Title</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="">
+<style>
+    html, body{
+        background-color: gray;
+    }
+    .btn{
+        font-size: 30px;
+        font-weight: 700;
+        background-color: rgb(0.5,0.5,0.5);
+    }
+    #result{
+        margin-top: 5px;
+        background-color: white;
+    }
+</style>
+<body>
+
+    <div class="">
+        <h1>This is a Heading</h1>
+        <p>This is a paragraph.</p>
+        <p>This is another paragraph.</p>
+       <button id="btn" class="btn">Load Json</button>
+       <button id="btn2" class="btn">Scope Page</button>
+       <button id="btn3" class="btn">Baidu</button>
+       <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById("btn").addEventListener("click", loadJson)
+        document.getElementById("btn2").addEventListener("click", openURL1)
+        document.getElementById("btn3").addEventListener("click", openURL2)
+
+        function openURL1(){
+            window.open("build/index.html", "_self")
+        }
+        
+        function openURL2(){
+            window.open("https://www.baidu.com", "_self")
+        }
+
+        function loadJson(){
+            fetch("build/resource/config.json", {mode:"cors"})
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = JSON.stringify(data);
+            })
+            .catch(error => {
+                console.log(error)
+            })
+        }
+    </script>
+
+</body>
+
+</html>

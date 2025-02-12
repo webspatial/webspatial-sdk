@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
-;(window as any).xrCurrentSceneDefaults = async (config: any) => {
+window.xrCurrentSceneDefaults = async config => {
   // const config = await requestDatabase()
   return {
     defaultSize: {
@@ -98,21 +98,6 @@ function App() {
         }}
       >
         window.open with initScene
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winARef.current = await session?.spatialOpen(
-            'http://localhost:5173/src/scene/xrapp.html',
-            {
-              defaultSize: { width: 900, height: 900 },
-            },
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        spatialOpen sa
       </button>
       <button
         className={btnCls}

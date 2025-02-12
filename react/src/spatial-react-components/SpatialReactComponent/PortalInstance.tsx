@@ -34,6 +34,7 @@ interface PortalInstanceProps {
   El: React.ElementType
   children?: ReactNode
   style?: CSSProperties | undefined
+  className?: string
 
   [SpatialID]: string
 }
@@ -46,8 +47,9 @@ function renderJSXPortalInstance(
   elWidth: number,
   elHeight: number,
   inheritedPortalStyle: CSSProperties,
+  className: string,
 ) {
-  const { El, style: inStyle = {}, ...props } = inProps
+  const { El, style: inStyle = {}, className: _, ...props } = inProps
   const extraStyle = {
     visibility: 'visible',
     position: '',
@@ -72,7 +74,9 @@ function renderJSXPortalInstance(
     ...elWHStyle,
   }
 
-  return <El style={style} {...props} />
+  console.log('dbg PortalInstance inProps', props, className)
+
+  return <El style={style} className={className} {...props} />
 }
 
 function setOpenWindowStyle(openedWindow: Window) {
@@ -369,6 +373,8 @@ function useSyncDomRect(spatialId: string) {
 
   const spatialReactContextObject = useContext(SpatialReactContext)
 
+  const inheritedPortalClassNameRef = useRef('')
+
   useEffect(() => {
     const syncDomRect = () => {
       const dom = spatialReactContextObject?.querySpatialDom(spatialId)
@@ -399,6 +405,8 @@ function useSyncDomRect(spatialId: string) {
       const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
       opacityRef.current = opacity
 
+      inheritedPortalClassNameRef.current = dom.className
+
       setDomRect(rectType)
     }
 
@@ -415,6 +423,7 @@ function useSyncDomRect(spatialId: string) {
     anchor: anchorRef.current,
     cornerRadius: cornerRadiusRef.current,
     opacity: opacityRef.current,
+    className: inheritedPortalClassNameRef.current,
   }
 }
 
@@ -458,8 +467,14 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
   const spatialId = props[SpatialID]
 
-  const { domRect, inheritedPortalStyle, anchor, cornerRadius, opacity } =
-    useSyncDomRect(spatialId)
+  const {
+    domRect,
+    inheritedPortalStyle,
+    anchor,
+    cornerRadius,
+    opacity,
+    className,
+  } = useSyncDomRect(spatialId)
 
   useSyncSpatialProps(
     spatialWindowManager,
@@ -480,6 +495,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     domRect.width,
     domRect.height,
     inheritedPortalStyle,
+    className,
   )
 
   return (
