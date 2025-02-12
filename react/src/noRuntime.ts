@@ -2,3 +2,5 @@
 export default {}
 
 export const SpatialHelper = {}
+
+export const Spatial = {}

@@ -51,7 +51,6 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
         if (activePromise.current) {
           await activePromise.current
         }
-
         let sh = new SpatialHelper(getSession()!)
         let x = await sh.dom.attachSpatialView(divRef.current!)
         spatialEntity.current = x.entity
