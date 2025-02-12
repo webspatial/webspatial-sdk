@@ -183,6 +183,21 @@ class SpatialWindowComponent: SpatialComponent {
             .store(in: &cancellables)
     }
 
+    func goBack() {
+        webViewNative?.webViewHolder.appleWebView?.goBack()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func goForward() {
+        webViewNative?.webViewHolder.appleWebView?.goForward()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func reload() {
+        webViewNative?.webViewHolder.appleWebView?.reload()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
     func navigateToURL(url: URL) {
         webViewNative!.url = url
         webViewNative!.webViewHolder.needsUpdate = true
