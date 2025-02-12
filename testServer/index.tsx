@@ -24,7 +24,7 @@ if (spatial) {
 var transparent = new URLSearchParams(window.location.search).get('transparent')
 if (session) {
   session.getCurrentWindowComponent().setStyle({
-    material: { type: transparent ? 'none' : 'default' },
+    material: { type: transparent ? 'transparent' : 'default' },
     cornerRadius: transparent ? 0 : 70,
   })
   document.documentElement.style.backgroundColor = '#1155aa55'
@@ -278,7 +278,13 @@ function App() {
           {spatialSupported ? (
             <div>
               <WebSpatialTitle makeShadow={true} />
-              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
+              <SpatialDiv
+                className=""
+                spatialStyle={{
+                  position: { z: 100 },
+                  material: { type: 'transparent' },
+                }}
+              >
                 <WebSpatialTitle />
               </SpatialDiv>
             </div>
@@ -323,7 +329,13 @@ function App() {
         <div className="grow flex flex-col w-full bg-black bg-opacity-25 p-10 my-10">
           {spatialSupported ? (
             <div>
-              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
+              <SpatialDiv
+                className=""
+                spatialStyle={{
+                  position: { z: 100 },
+                  material: { type: 'transparent' },
+                }}
+              >
                 <FeatureList />
               </SpatialDiv>
             </div>
