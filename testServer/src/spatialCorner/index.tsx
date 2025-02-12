@@ -9,7 +9,7 @@ enableDebugTool()
 let i = 0
 const materialVals = [
   'none',
-  'default',
+  'translucent',
   'transparent',
 ] as BackgroundMaterialType[]
 
@@ -158,7 +158,7 @@ function App() {
           style={{
             position: 'relative',
             '--xr-back': z + '',
-            '--xr-background-material': 'default' as BackgroundMaterialType,
+            '--xr-background-material': 'translucent' as BackgroundMaterialType,
             borderRadius,
             height: '100px',
           }}
