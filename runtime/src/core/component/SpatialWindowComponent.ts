@@ -4,7 +4,7 @@ import { Vec3 } from '../SpatialTransform'
 
 export type BackgroundMaterialType =
   | 'none'
-  | 'default'
+  | 'translucent'
   | 'thick'
   | 'regular'
   | 'thin'
