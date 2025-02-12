@@ -330,7 +330,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -362,7 +362,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -394,7 +394,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -424,7 +424,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -476,7 +476,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -508,7 +508,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -542,7 +542,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -572,7 +572,7 @@ function App() {
             <div
               enable-xr
               style={{
-                '--xr-background-material': 'default',
+                '--xr-background-material': 'translucent',
               }}
               className="p-2 text-white rounded-lg transition-colors"
             >
@@ -635,7 +635,7 @@ Class Name: ${elementStateParent.className}`
         <div
           enable-xr
           style={{
-            '--xr-background-material': 'default',
+            '--xr-background-material': 'translucent',
             '--xr-back': '100',
           }}
           className="p-2 text-white rounded-lg transition-colors col-span-2"
