@@ -28,6 +28,7 @@ export interface ModelProps {
   children: ReactElement | Array<ReactElement>
   spatialOffset?: { x?: number; y?: number; z?: number }
   opacity?: number
+  onLoad?: (event: { target: { currentSrc: string; ready: boolean } }) => void
 }
 
 export type ModelRef = Ref<{
@@ -59,6 +60,7 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
 
   let session = getSession()
   if (!session) {
+    const myModelViewer = useRef(null)
     useEffect(() => {
       React.Children.toArray(props.children).some((element: any) => {
         var src = element.props.src as string
@@ -69,10 +71,24 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
         }
         return false
       })
+      ;(myModelViewer.current! as any).addEventListener(
+        'load',
+        (event: any) => {
+          if (props.onLoad) {
+            props.onLoad({
+              target: {
+                ready: event.returnValue,
+                currentSrc: event.detail.url,
+              },
+            })
+          }
+        },
+      )
     }, [])
     return (
       <div className={props.className}>
         <model-viewer
+          ref={myModelViewer}
           style={{
             width: '100%',
             height: '100%',
