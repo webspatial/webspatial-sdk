@@ -1,5 +1,12 @@
 import { WindowGroupOptions } from '@xrsdk/runtime/'
 import { getSession } from './utils/getSession'
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: WindowGroupOptions,
+    ) => Promise<WindowGroupOptions>
+  }
+}
 
 export const defaultSceneConfig: WindowGroupOptions = {
   defaultSize: {
@@ -49,17 +56,17 @@ export class XRApp {
     return this.configMap[name]
   }
 
-  async show(windowID: string, cfg: WindowGroupOptions) {
+  async show(window: Window, cfg: WindowGroupOptions) {
     try {
       let session = getSession()!
-      await session.createWindowGroup(
+      await session._createScene(
         'Plain', // only support Plain for now
         {
           sceneData: {
             method: 'showRoot',
             sceneConfig: cfg,
             // url: url,
-            windowID,
+            window,
           },
         },
       )
@@ -96,15 +103,16 @@ export class XRApp {
         } else {
           const cfg = this.getConfig(target)
           try {
-            await session.createWindowGroup(
+            await session._createScene(
               'Plain', // only support Plain for now
               {
                 sceneData: {
                   method: 'createRoot',
                   sceneConfig: cfg,
                   url: url,
-                  windowID: (newWindow as any)._webSpatialID,
-                  windowGroupID: (newWindow as any)._webSpatialGroupID,
+                  window: newWindow!,
+                  // windowID: (newWindow as any)._webSpatialID,
+                  // windowGroupID: (newWindow as any)._webSpatialGroupID,
                 },
               },
             )
