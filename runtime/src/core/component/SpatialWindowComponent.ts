@@ -8,6 +8,7 @@ export type BackgroundMaterialType =
   | 'thick'
   | 'regular'
   | 'thin'
+  | 'transparent'
 
 export type CornerRadius = {
   topLeading: number

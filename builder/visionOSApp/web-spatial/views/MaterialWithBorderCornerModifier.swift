@@ -8,6 +8,7 @@ import SwiftUI
 
 enum BackgroundMaterial: String, Codable {
     case None = "none"
+    case Transparent = "transparent"
     case GlassMaterial = "default"
     case ThickMaterial = "thick"
     case RegularMaterial = "regular"
