@@ -1,2 +1,2 @@
-export { SpatialMesh } from './SpatialMesh'
-export { SpatialPhysicallyBasedMaterial } from './SpatialPhysicallyBasedMaterial'
+export { SpatialMeshResource } from './SpatialMeshResource'
+export { SpatialPhysicallyBasedMaterialResource } from './SpatialPhysicallyBasedMaterialResource'

@@ -9,10 +9,7 @@ if (!spatial.isSupported()) {
 }
 
 // Create session if spatial is supported
-var session: SpatialSession | undefined
-if (spatial) {
-  session = spatial.requestSession()
-}
+var session: SpatialSession | null = spatial ? spatial.requestSession() : null
 
 var pageName = new URLSearchParams(window.location.search).get('pageName')
 var transparent = new URLSearchParams(window.location.search).get('transparent')
@@ -21,9 +18,6 @@ if (session) {
     material: { type: transparent ? 'none' : 'default' },
     cornerRadius: transparent ? 0 : 70,
   })
-  if (!pageName) {
-    session.getCurrentWindowGroup().setStyle({ dimensions: { x: 880, y: 200 } })
-  }
 } else {
   console.log('not supported')
 }
@@ -131,13 +125,7 @@ function App() {
   const [settingsData] = useSettingsData()
 
   React.useEffect(() => {
-    ;(async () => {
-      if (session) {
-        await (
-          await session.getCurrentWindowGroup()
-        ).setStyle({ dimensions: { x: 880, y: 200 } })
-      }
-    })()
+    ;(async () => {})()
   }, [])
 
   React.useEffect(() => {
@@ -166,7 +154,6 @@ function App() {
           onClick={async () => {
             if (session) {
               var wg = await session.createWindowGroup('Plain')
-              await wg.setStyle({ dimensions: { x: 300, y: 500 } })
 
               var ent = await session.createEntity()
               ent.transform.position.x = 0
@@ -180,7 +167,7 @@ function App() {
               await ent.setCoordinateSpace('Root')
               await ent.setComponent(i)
 
-              await ent.setParentWindowGroup(wg)
+              await wg.setRootEntity(ent)
             }
           }}
           className="w-1/3 text-md py-5"

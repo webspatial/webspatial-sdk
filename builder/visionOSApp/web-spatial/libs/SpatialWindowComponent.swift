@@ -20,13 +20,6 @@ func getDocumentsDirectory() -> URL {
     return documentsDirectory
 }
 
-struct CommandInfo {
-    var windowGroupID = "notFound"
-    var entityID = "notFound"
-    var resourceID = "notFound"
-    var requestID = -1
-}
-
 struct LoadingStyles {
     var cornerRadius: CornerRadius = .init()
     var windowGroupSize = DefaultPlainWindowGroupSize
@@ -53,6 +46,7 @@ class SpatialWindowComponent: SpatialComponent {
             "spawnedNativeWebviewsCount": spawnedNativeWebviews.count,
             "childResources": childEntitiesInfo,
             "cornerRadius": cornerRadius.toJson(),
+            "backgroundMaterial": backgroundMaterial.rawValue,
         ]
 
         let baseInspectInfo = super.inspect()
@@ -145,9 +139,9 @@ class SpatialWindowComponent: SpatialComponent {
     var loadingStyles = LoadingStyles()
     var isLoading = true
 
-    private var cancellables = Set<AnyCancellable>() // save subscriptions
+    var didFailLoad = false
 
-    var onCreateRootFn: ((WindowGroupPlainDefaultValues, WindowGroupData) -> Void)?
+    private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     init(parentWindowGroupID: String) {
 //        wgManager.wvActiveInstances += 1
@@ -289,6 +283,11 @@ class SpatialWindowComponent: SpatialComponent {
         completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
     }
 
+    func didFailLoadPage() {
+        didFailLoad = true
+        didFinishFirstLoad = true
+    }
+
     func didStartLoadPage() {
         if didFinishFirstLoad {
             webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
@@ -320,115 +319,10 @@ class SpatialWindowComponent: SpatialComponent {
         spawnedNativeWebviews[uuid] = wv
     }
 
-    func createRoot(windowID: String) {
-        let windowGroupID = UUID().uuidString
-        // open window
-        let wgd = WindowGroupData(
-            windowStyle: "Plain",
-            windowGroupID: windowGroupID
-        )
-        let ent = SpatialEntity()
-        ent.coordinateSpace = CoordinateSpaceMode.ROOT
-        let windowComponent = SpatialWindowComponent(
-            parentWindowGroupID: windowGroupID
-        )
-
-        if let spawnedWebView = spawnedNativeWebviews.removeValue(
-            forKey: windowID
-        ) {
-            windowComponent.getView()!.destroy()
-            windowComponent.setView(wv: spawnedWebView)
-            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
-        } else {
-            print("no spawned")
-        }
-
-        windowComponent.isRoot = true // register close
-
-        ent.addComponent(windowComponent)
-
-        let wg = SpatialWindowGroup
-            .getOrCreateSpatialWindowGroup(windowGroupID)
-
-        wg!.wgd = wgd
-        ent.setParentWindowGroup(wg: wg)
-
-        windowComponent.onCreateRootFn = { value, wgd in
-            if let pwg = SpatialWindowGroup.getSpatialWindowGroup(
-                self.parentWindowGroupID
-            ) {
-                WindowGroupMgr.Instance.update(value) // set default values
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    pwg.openWindowData.send(wgd) // openwindow
-                }
-            }
-        }
-    }
-
-    func createRoot(windowID: String, config: WindowGroupOptions) {
-        let windowGroupID = UUID().uuidString
-        // open window
-        let wgd = WindowGroupData(
-            windowStyle: "Plain",
-            windowGroupID: windowGroupID
-        )
-        let ent = SpatialEntity()
-        ent.coordinateSpace = CoordinateSpaceMode.ROOT
-        let windowComponent = SpatialWindowComponent(
-            parentWindowGroupID: windowGroupID
-        )
-
-        if let spawnedWebView = spawnedNativeWebviews.removeValue(
-            forKey: windowID
-        ) {
-            windowComponent.getView()!.destroy()
-            windowComponent.setView(wv: spawnedWebView)
-            windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
-            // signal off hook
-            windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
-        }
-
-        windowComponent.isRoot = true // register close
-
-        ent.addComponent(windowComponent)
-
-        let plainDV = WindowGroupPlainDefaultValues(
-            config
-        )
-
-        let wg = SpatialWindowGroup
-            .getOrCreateSpatialWindowGroup(windowGroupID)
-
-        wg!.wgd = wgd
-        ent.setParentWindowGroup(wg: wg)
-
-        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID) {
-            WindowGroupMgr.Instance.update(plainDV) // set default values
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                pwg.openWindowData.send(wgd) // openwindow
-            }
-        }
-    }
-
-    func showRoot(config: WindowGroupOptions) {
-        let plainDV = WindowGroupPlainDefaultValues(
-            config
-        )
-
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID),
-           let cb = onCreateRootFn
-        {
-            cb(plainDV, wg.wgd!)
-            onCreateRootFn = nil // reset
-        }
-    }
-
     func didCloseWebView() {
         // if need
-        if isRoot,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID)
-        {
-            wg.closeWindowData.send(wg.wgd!)
+        if isRoot {
+            SceneManager.Instance.closeRoot(self)
         }
     }
 
@@ -446,6 +340,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didFinishLoadPage() {
         didFinishFirstLoad = true
+        didFailLoad = false
         cornerRadius = loadingStyles.cornerRadius
         backgroundMaterial = loadingStyles.backgroundMaterial
 

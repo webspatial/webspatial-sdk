@@ -1,10 +1,17 @@
-import { LoggerLevel } from './private/log'
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowGroup } from './SpatialWindowGroup'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
-import { WindowGroupOptions, WindowStyle } from './types'
+import {
+  LoadingMethodKind,
+  sceneDataShape,
+  WindowGroupOptions,
+  WindowStyle,
+} from './types'
 
-import { SpatialMesh, SpatialPhysicallyBasedMaterial } from './resource'
+import {
+  SpatialMeshResource,
+  SpatialPhysicallyBasedMaterialResource,
+} from './resource'
 import {
   SpatialModelComponent,
   SpatialInputComponent,
@@ -12,37 +19,37 @@ import {
   SpatialViewComponent,
   SpatialModel3DComponent,
 } from './component'
+import { RemoteCommand } from './private/remote-command'
 
 /**
  * Animation callback with timestamp
  */
-type animCallback = (time: DOMHighResTimeStamp) => void
+type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
  */
 export class SpatialSession {
   /** @hidden */
-  _animationFrameCallbacks = Array<animCallback>()
+  _engineUpdateListeners = Array<animCallback>()
   /** @hidden */
   _frameLoopStarted = false
 
   /**
-   * Request a callback to be called before the next render update
-   * [TODO] might want to rework this to be triggered by native code or better handle frame timing
-   * @param callback callback to be called before next render update
+   * Add event listener callback to be called each frame
+   * @param callback callback to be called each update
    */
-  requestAnimationFrame(callback: animCallback) {
-    this._animationFrameCallbacks.push(callback)
+  addOnEngineUpdateEventListener(callback: animCallback) {
+    this._engineUpdateListeners.push(callback)
 
     if (!this._frameLoopStarted) {
       this._frameLoopStarted = true
-      WebSpatial.onFrame((time: number, delta: number) => {
-        var cbs = this._animationFrameCallbacks
-        this._animationFrameCallbacks = []
-        for (var cb of cbs) {
-          cb(time)
-        }
+      WebSpatial.onFrame(async (time: number) => {
+        await Promise.all(
+          this._engineUpdateListeners.map(cb => {
+            return cb(time)
+          }),
+        )
       })
     }
   }
@@ -150,51 +157,44 @@ export class SpatialSession {
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialMesh(entity)
+    return new SpatialMeshResource(entity)
   }
 
   /**
    * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterial(options?: any) {
+  async createPhysicallyBasedMaterialResource(options?: any) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
       WebSpatial.getCurrentWindowGroup(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
-    return new SpatialPhysicallyBasedMaterial(entity)
+    return new SpatialPhysicallyBasedMaterialResource(entity)
+  }
+  /**
+   * Creates a WindowGroup
+   * @returns SpatialWindowGroup
+   * */
+  async createWindowGroup(style: WindowStyle = 'Plain') {
+    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
   }
 
   /**
-   * Creates a WindowGroup to display content within an anchored area managed by the OS
-   * By default, the windowGroup will act as children of current spatialWindowComponent.
-   * If the cfg param is provided, the windowGroup is standalone.
-   * [TOOD] rename this to be more clear what it does
-   * @param {WindowStyle} [style='Plain'] - The style of the window to be created. Defaults to 'Plain'.
-   * @param {Object} [cfg={}] - Configuration object for the window group. If provided, the window group will be standalone.
-   * @param {Object} [cfg.sceneData] - Configuration for the scene data associated with the window group.
-   * @param {string} [cfg.sceneData.method] - The method to be used for loading the scene.
-   * @param {WindowGroupOptions} [cfg.sceneData.sceneConfig] - Configuration options for the scene.
-   * @param {string} [cfg.sceneData.url] - The URL to load the scene from.
-   * @param {string} [cfg.sceneData.windowID] - The ID of the window to be created.
-   * @returns WindowGroup
+   * Creates a Scene to display content within an anchored area managed by the OS
+   * @hidden
+   * @param {WindowStyle} [style='Plain'] - The style of the Scene container to be created with. Defaults to 'Plain'.
+   * @param {Object} [cfg={}] - Configuration object for the Scene.
+   * @returns Boolean
    */
-  async createWindowGroup(
+  async _createScene(
     style: WindowStyle = 'Plain',
     cfg: {
-      sceneData?: {
-        method?: 'createRoot' | 'showRoot'
-        sceneConfig?: WindowGroupOptions
-        url?: string
-        windowID?: string
-      }
-    } = {},
+      sceneData: sceneDataShape
+    },
   ) {
-    return new SpatialWindowGroup(
-      await WebSpatial.createWindowGroup(style, cfg),
-    )
+    return await WebSpatial.createScene(style, cfg)
   }
 
   /**
@@ -227,65 +227,41 @@ export class SpatialSession {
   }
 
   /**
-   * [TODO] should these log apis be private?
-   * @param logLevel
+   * Logs a message to the native apps console
+   * @param msg mesage to log
    */
-  async setLogLevel(logLevel: LoggerLevel) {
-    await WebSpatial.logger.setLevel(logLevel)
-  }
-
   async log(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async info(...msg: any[]) {
-    await WebSpatial.logger.info(...msg)
-  }
-
-  async warn(...msg: any[]) {
-    await WebSpatial.logger.warn(...msg)
-  }
-
-  async debug(...msg: any[]) {
-    await WebSpatial.logger.debug(...msg)
-  }
-
-  async error(...msg: any[]) {
-    await WebSpatial.logger.error(...msg)
-  }
-
-  async trace(...msg: any[]) {
-    await WebSpatial.logger.trace(...msg)
+    await WebSpatial.sendCommand(new RemoteCommand('log', { logString: msg }))
   }
 
   /**
+   * @hidden
    * Debugging only, used to ping the native renderer
-   * [TODO] make this private
    */
-  async ping(msg: string) {
+  async _ping(msg: string) {
     return await WebSpatial.ping(msg)
   }
 
   /**
+   * @hidden
    * Debugging to get internal state from native code
-   * [TODO] make this private
    * @returns data as a js object
    */
-  async getStats() {
+  async _getStats() {
     return (await WebSpatial.getStats()) as any
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
+  async _inspect(spatialObjectId: string = WebSpatial.getCurrentWebPanel().id) {
     return WebSpatial.inspect(spatialObjectId)
   }
 
   /**
-   * [TODO] make this private
+   * @hidden
    */
-  async inspectRootWindowGroup() {
+  async _inspectRootWindowGroup() {
     return WebSpatial.inspectRootWindowGroup()
   }
 
@@ -400,5 +376,10 @@ export class SpatialSession {
     entity.transform.scale.z = parseFloat(sz)
 
     return entity
+  }
+  // set loading view.
+  /** @hidden */
+  async setLoading(method: LoadingMethodKind, style?: string) {
+    return WebSpatial.setLoading(method, style)
   }
 }
