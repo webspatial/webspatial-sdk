@@ -13,6 +13,7 @@ function MySample(props: { session?: SpatialSession }) {
             console.log('loaded complete ' + event.target.currentSrc)
           }
         }}
+        poster="/src/assets/FlightHelmet.png"
       >
         <source
           src="/src/assets/FlightHelmet.usdz"
