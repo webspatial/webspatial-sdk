@@ -32,16 +32,9 @@ var ctx = await esbuild.context({
   bundle: true,
   keepNames: true,
   treeShaking: true,
-  minify: true,
+  minify: false,
   sourcemap: true,
   jsx: 'automatic',
-  external: [
-    '@xrsdk/runtime',
-    'three',
-    '@google/model-viewer',
-    'react',
-    'react-dom',
-  ],
   plugins,
   // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
   banner: {
