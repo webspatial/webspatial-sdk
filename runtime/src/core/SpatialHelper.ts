@@ -81,6 +81,12 @@ export class SpatialHelper {
       url: string,
       options?: { dimensions: { x: number; y: number } },
     ) => {
+      if (options?.dimensions) {
+        await this.session
+          .getCurrentWindowGroup()
+          ._setOpenSettings({ dimensions: options.dimensions })
+      }
+
       // Create window group
       var wg = await this.session.createWindowGroup('Plain')
 
@@ -92,11 +98,12 @@ export class SpatialHelper {
       await ent.setComponent(i)
 
       // Add enitity the windowgroup
-      await ent.setParentWindowGroup(wg)
+      await wg.setRootEntity(ent)
 
-      if (options?.dimensions) {
-        await wg.setStyle({ dimensions: options.dimensions })
-      }
+      // Restore default size
+      await this.session
+        .getCurrentWindowGroup()
+        ._setOpenSettings({ dimensions: { x: 900, y: 700 } })
     },
     openVolume: async (
       url: string,
@@ -108,7 +115,7 @@ export class SpatialHelper {
       var rootEnt = await this.session!.createEntity()
       await rootEnt.setComponent(await this.session!.createViewComponent(wg))
       await rootEnt.setCoordinateSpace('Root')
-      await rootEnt.setParentWindowGroup(wg)
+      await wg.setRootEntity(rootEnt)
 
       // Add webpage to the window group
       var ent = await this.session!.createEntity()

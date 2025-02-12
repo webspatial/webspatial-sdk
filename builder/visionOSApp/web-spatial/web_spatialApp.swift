@@ -18,6 +18,10 @@ import SwiftUI
 let initialPageToLoad = "http://localhost:5173/"
 let nativeAPIVersion = "0.0.1"
 
+// detect when app properties like defaultSize change so we can avoid race condition of setting default values and then opening window group
+var sceneStateChangedCB: ((Any) -> Void) = { _ in
+}
+
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -64,6 +68,11 @@ struct web_spatialApp: App {
         }
     }
 
+    func getDefaultSize() -> CGSize {
+        sceneStateChangedCB("")
+        return wgm.getValue().defaultSize!
+    }
+
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
             if windowData.windowGroupID == SpatialWindowGroup.getRootID() {
@@ -101,7 +110,7 @@ struct web_spatialApp: App {
                 }
             }
         }.defaultSize(
-            wgm.getValue().defaultSize!
+            getDefaultSize()
         ).windowResizability(
             wgm.getValue().windowResizability!
         )
@@ -115,6 +124,10 @@ struct web_spatialApp: App {
         ImmersiveSpace(id: "ImmersiveSpace") {
             let wg = SpatialWindowGroup.getImmersiveWindowGroup()
             VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
+        }
+
+        WindowGroup(id: "loading") {
+            LoadingView()
         }
     }
 }

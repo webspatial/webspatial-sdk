@@ -115,6 +115,13 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
+  
+        if let url = navigationAction.request.url,
+           url.absoluteString == "webspatial://createWindowContext"
+        {
+            decisionHandler(.cancel)
+            return
+        }
         if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
             decisionHandler(.allow)
         }
