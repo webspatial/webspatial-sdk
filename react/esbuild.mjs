@@ -33,28 +33,6 @@ function clearDist(dir) {
 // unbundled ESM cannot remove unused import
 
 const targets = [
-  // {
-  //   name: 'ESM + default unbundled',
-  //   entryPoints: allEntryPoints,
-  // dir: 'dist/default',
-  //   outdir: 'dist/default',
-  //   define: { __WEB__: 'false' },
-  //   // outfile: 'dist/default/index.js',
-  //   tsconfig: 'tsconfig.default.json',
-  //   format: 'esm',
-  //   bundle: false,
-  // },
-  // {
-  //   name: 'ESM + web unbundled',
-  //   entryPoints: allEntryPoints,
-  // dir: 'dist/web',
-  //   outdir: 'dist/web',
-  //   define: { __WEB__: 'true' },
-  //   // outfile: 'dist/web/index.js',
-  //   tsconfig: 'tsconfig.web.json',
-  //   format: 'esm',
-  //   bundle: false,
-  // },
   {
     name: 'ESM + default bundled',
     entryPoints: ['./src/index.ts'],
@@ -98,7 +76,7 @@ async function run() {
   const contexts = []
 
   for (const target of targets) {
-    clearDist(target.dir)
+    // clearDist(target.dir)
 
     const ctx = await esbuild.context({
       entryPoints: target.entryPoints, //['./src/index.ts'],
