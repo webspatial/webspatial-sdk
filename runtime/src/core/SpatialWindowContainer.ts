@@ -20,7 +20,9 @@ export class SpatialWindowContainer {
    * @param options style options
    */
   async _setOpenSettings(options: { dimensions: { x: number; y: number } }) {
-    await WebSpatial.updateWindowContainer(this._wg, { nextOpenSettings: options })
+    await WebSpatial.updateWindowContainer(this._wg, {
+      nextOpenSettings: options,
+    })
   }
 
   /**

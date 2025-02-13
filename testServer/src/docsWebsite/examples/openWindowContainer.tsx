@@ -16,7 +16,9 @@ function MySample(props: { session?: SpatialSession }) {
 
             // Create a root entity displaying a webpage
             var ent = await session!.createEntity()
-            var i = await session!.createWindowComponent({ windowContainer: wg })
+            var i = await session!.createWindowComponent({
+              windowContainer: wg,
+            })
             await i.loadURL('http://google.com')
             await ent.setCoordinateSpace('Root')
             await ent.setComponent(i)
@@ -36,7 +38,9 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
 
-            var wg = await session.createWindowContainer({ style: 'Volumetric' })
+            var wg = await session.createWindowContainer({
+              style: 'Volumetric',
+            })
             var ent = await session!.createEntity()
             await ent.setCoordinateSpace('Root')
             var vc = await session.createViewComponent()

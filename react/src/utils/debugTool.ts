@@ -52,7 +52,8 @@ function simplifyEntityTree(rootTree: any) {
 }
 
 async function inspectRootWindowContainer(simple?: boolean) {
-  const rootWindowContainerInfo = await getSession()!._inspectRootWindowContainer()
+  const rootWindowContainerInfo =
+    await getSession()!._inspectRootWindowContainer()
   console.log(rootWindowContainerInfo)
 
   if (simple) {

@@ -161,7 +161,9 @@ function App() {
               ent.transform.position.z = 0
               await ent.updateTransform()
 
-              var i = await session.createWindowComponent({ windowContainer: wg })
+              var i = await session.createWindowComponent({
+                windowContainer: wg,
+              })
               await i.setResolution(300, 300)
               await i.loadURL('index.html?pageName=Settings')
               await ent.setCoordinateSpace('Root')
