@@ -21,6 +21,7 @@ function App() {
   const [selectedInlineMaterial, setSelectedInlineMaterial] = useState('none')
   const [style, setStyle] = useState<CSSProperties>({
     '--xr-back': '100',
+    position: 'absolute',
   } as CSSProperties)
 
   // html style
@@ -45,6 +46,7 @@ function App() {
     useState('none')
   const [styleParent, setStyleParent] = useState<CSSProperties>({
     '--xr-back': '50',
+    position: 'relative',
   } as CSSProperties)
 
   const removeStyleAttribute = () => {
@@ -200,6 +202,7 @@ function App() {
     const material = selectedInlineMaterial
     const newStyle: CSSProperties = {
       '--xr-back': '100',
+      // position: 'absolute',
       ...(material !== 'none' && { '--xr-background-material': material }),
     }
     setStyle(newStyle)
@@ -210,6 +213,7 @@ function App() {
     const material = selectedInlineMaterialParent
     const newStyleParent: CSSProperties = {
       '--xr-back': '50',
+      position: 'relative',
       ...(material !== 'none' && { '--xr-background-material': material }),
     }
     setStyleParent(newStyleParent)
