@@ -4,7 +4,7 @@ import { showSample } from './sampleLoader'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       if (props.session) {
         let session = props.session
         // CODESAMPLE_START
@@ -20,7 +20,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Create a window context we can display html within
         let pageWindow = await session.createWindowContext()
-        pageWindow!.document.documentElement.style.backgroundColor = "#0033aa99"
+        pageWindow!.document.documentElement.style.backgroundColor = '#0033aa99'
         var newDiv = document.createElement('div')
         newDiv.innerHTML = "<div style='color:red;'>Hello world</div>"
         pageWindow!.document.body.appendChild(newDiv)
@@ -39,6 +39,6 @@ function MySample(props: { session?: SpatialSession }) {
       }
     })()
   }, [])
-  return <div className='h-32'></div>
+  return <div className="h-32"></div>
 }
 showSample(MySample)

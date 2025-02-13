@@ -1,4 +1,4 @@
-import {  SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@xrsdk/runtime'
 import { showSample } from './sampleLoader'
 import { Model } from '@xrsdk/react'
 

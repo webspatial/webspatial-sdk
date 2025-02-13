@@ -27,8 +27,8 @@ export function NestedDivsTest() {
           spatialStyle={{
             position: { z: depth * 10, x: 0, y: 0 },
             material: {
-              type: "regular"
-            }
+              type: 'regular',
+            },
           }}
           style={{ height: 300, backgroundColor: redCol }}
         >
@@ -38,8 +38,8 @@ export function NestedDivsTest() {
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
               material: {
-              type: "regular"
-            }
+                type: 'regular',
+              },
             }}
             style={{ height: 100, backgroundColor: blueCol }}
           >
@@ -51,8 +51,8 @@ export function NestedDivsTest() {
           spatialStyle={{
             position: { z: depth * 10, x: 0, y: 0 },
             material: {
-              type: "regular"
-            }
+              type: 'regular',
+            },
           }}
           style={{ height: 300, backgroundColor: redCol }}
         >
@@ -62,8 +62,8 @@ export function NestedDivsTest() {
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
               material: {
-              type: "regular"
-            }
+                type: 'regular',
+              },
             }}
             style={{ height: 100, backgroundColor: blueCol }}
           >
@@ -73,8 +73,8 @@ export function NestedDivsTest() {
               spatialStyle={{
                 position: { z: depth * 30, x: 0, y: 0 },
                 material: {
-              type: "regular"
-            }
+                  type: 'regular',
+                },
               }}
               style={{ height: 100, backgroundColor: greenCol }}
             >
@@ -84,8 +84,8 @@ export function NestedDivsTest() {
                 spatialStyle={{
                   position: { z: depth * 30, x: 0, y: 0 },
                   material: {
-              type: "regular"
-            }
+                    type: 'regular',
+                  },
                 }}
                 style={{ height: 100, backgroundColor: blueCol }}
               >
@@ -95,8 +95,8 @@ export function NestedDivsTest() {
                   spatialStyle={{
                     position: { z: depth * 30, x: 0, y: 0 },
                     material: {
-              type: "regular"
-            }
+                      type: 'regular',
+                    },
                   }}
                   style={{ height: 100, backgroundColor: redCol }}
                 >
@@ -106,8 +106,8 @@ export function NestedDivsTest() {
                     spatialStyle={{
                       position: { z: depth * 30, x: 0, y: 0 },
                       material: {
-              type: "regular"
-            }
+                        type: 'regular',
+                      },
                     }}
                     style={{ height: 100, backgroundColor: blueCol }}
                   >
@@ -117,8 +117,8 @@ export function NestedDivsTest() {
                       spatialStyle={{
                         position: { z: depth * 30, x: 0, y: 0 },
                         material: {
-              type: "regular"
-            }
+                          type: 'regular',
+                        },
                       }}
                       style={{ height: 100, backgroundColor: greenCol }}
                     >

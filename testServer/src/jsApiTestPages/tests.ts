@@ -159,7 +159,7 @@ var main = async () => {
           return Promise.resolve()
         }
         w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
-       return  w.entity.updateTransform()
+        return w.entity.updateTransform()
       }
       session.addOnEngineUpdateEventListener(loop)
 
