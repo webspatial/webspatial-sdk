@@ -160,8 +160,6 @@ class SpatialWindowComponent: SpatialComponent {
                 // it's spatial div
                 webViewNative?.webViewHolder.appleWebView?.isOpaque = false
             }
-
-            print("webViewNative?.webViewHolder.appleWebView?.isOpaque", webViewNative?.webViewHolder.appleWebView?.isOpaque)
         }
     }
 
