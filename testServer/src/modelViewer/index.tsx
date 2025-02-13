@@ -4,7 +4,6 @@ import { getSession } from '@xrsdk/react'
 import { SpatialHelper, SpatialModelComponent } from '@xrsdk/runtime/dist'
 
 function App() {
-
   useEffect(() => {
     ;(async () => {
       // Get volume

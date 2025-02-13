@@ -2,7 +2,6 @@ import { useEffect, useState, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial, SpatialSession } from '@xrsdk/runtime'
 
-
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
   spatial = null

@@ -352,7 +352,7 @@ function NestedDivRender() {
         debugName="PARENT B ROOT"
         spatialStyle={{
           position: { z: depth * 10, x: 0, y: 0 },
-          material: {type: "none"}
+          material: { type: 'none' },
         }}
         style={{ height: 300, backgroundColor: redCol }}
       >
@@ -361,7 +361,7 @@ function NestedDivRender() {
           debugName="CHILD B1"
           spatialStyle={{
             position: { z: depth * 20, x: 0, y: 0 },
-            material: {type: "none"}
+            material: { type: 'none' },
           }}
           style={{ height: 100, backgroundColor: blueCol }}
         >
@@ -370,7 +370,7 @@ function NestedDivRender() {
             debugName="CHILD B2"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              material: {type: "none"}
+              material: { type: 'none' },
             }}
             style={{ height: 100, backgroundColor: greenCol }}
           >
@@ -380,7 +380,7 @@ function NestedDivRender() {
             debugName="CHILD B3"
             spatialStyle={{
               position: { z: depth * 30, x: 0, y: 0 },
-              material: {type: "none"}
+              material: { type: 'none' },
             }}
             style={{ height: 100, backgroundColor: redCol }}
           >

@@ -59,7 +59,7 @@ export function PortalTest() {
           spatialStyle={{
             position: { z: 50, x: 0, y: 0 },
             material: {
-              type: "regular"
+              type: 'regular',
             },
           }}
         >

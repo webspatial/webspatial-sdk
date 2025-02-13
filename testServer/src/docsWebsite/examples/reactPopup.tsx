@@ -28,7 +28,7 @@ function MySample(_props: { session?: SpatialSession }) {
             spatialStyle={{
               position: { z: 50 },
               material: {
-                type: "default"
+                type: 'default',
               },
               cornerRadius: 70,
             }}

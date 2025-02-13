@@ -100,7 +100,7 @@ function MySample(props: { session?: SpatialSession }) {
             await wg.setRootEntity(ent)
 
             await session.openImmersiveSpace()
-           
+
             var curTime = Date.now()
             let loop = async () => {
               curTime = Date.now()

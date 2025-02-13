@@ -49,7 +49,7 @@ export function PopupTest() {
             spatialStyle={{
               position: { z: x },
               material: {
-                type: "regular"
+                type: 'regular',
               },
               cornerRadius: 70,
             }}
