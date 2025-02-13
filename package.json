@@ -15,7 +15,7 @@
     "format": "pnpm -r run format"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+    "pre-commit": "pnpm lint-staged && pnpm test"
   },
   "lint-staged": {
     "*.{js,json}": [
