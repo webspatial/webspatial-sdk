@@ -88,11 +88,11 @@ export class SpatialHelper {
       }
 
       // Create window group
-      var wg = await this.session.createWindowGroup('Plain')
+      var wg = await this.session.createWindowGroup({ style: 'Plain' })
 
       // Create a root entity displaying a webpage
       var ent = await this.session!.createEntity()
-      var i = await this.session!.createWindowComponent(wg)
+      var i = await this.session!.createWindowComponent({ windowGroup: wg })
       await i.loadURL(url)
       await ent.setCoordinateSpace('Root')
       await ent.setComponent(i)
@@ -109,17 +109,19 @@ export class SpatialHelper {
       url: string,
       options?: { dimensions: { x: number; y: number } },
     ) => {
-      var wg = await this.session.createWindowGroup('Volumetric')
+      var wg = await this.session.createWindowGroup({ style: 'Volumetric' })
 
       // Create a root view entity within the window group
       var rootEnt = await this.session!.createEntity()
-      await rootEnt.setComponent(await this.session!.createViewComponent(wg))
+      await rootEnt.setComponent(
+        await this.session!.createViewComponent({ windowGroup: wg }),
+      )
       await rootEnt.setCoordinateSpace('Root')
       await wg.setRootEntity(rootEnt)
 
       // Add webpage to the window group
       var ent = await this.session!.createEntity()
-      var i = await this.session!.createWindowComponent(wg)
+      var i = await this.session!.createWindowComponent({ windowGroup: wg })
       await i.loadURL(url)
       if (options?.dimensions) {
         await i.setResolution(options.dimensions.x, options.dimensions.y)
