@@ -1,5 +1,5 @@
-import { Spatial, SpatialSession, SpatialViewComponent } from '@xrsdk/runtime'
-import { useEffect, useRef, useState } from 'react'
+import { SpatialSession, SpatialViewComponent } from '@xrsdk/runtime'
+import { useEffect, useRef } from 'react'
 import { showSample } from './sampleLoader'
 import { Vec3 } from '@xrsdk/runtime'
 
