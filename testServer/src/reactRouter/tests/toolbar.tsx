@@ -25,8 +25,8 @@ export function ToolbarTest() {
               position: { z: 10, x: 0 },
               cornerRadius: 30,
               material: {
-                type: "regular"
-              }
+                type: 'regular',
+              },
             }}
             style={{
               display: 'flex',
@@ -44,9 +44,12 @@ export function ToolbarTest() {
             <button>💘</button>
           </SpatialDiv>
           <SpatialDiv
-            spatialStyle={{ position: { z: 1, x: 0, y: 0 }, material: {
-              type: "regular"
-            } }}
+            spatialStyle={{
+              position: { z: 1, x: 0, y: 0 },
+              material: {
+                type: 'regular',
+              },
+            }}
             style={{
               height: '100%',
               margin: '0px',
@@ -59,9 +62,12 @@ export function ToolbarTest() {
             }}
           >
             <SpatialDiv
-              spatialStyle={{ position: { z: 20 }, material: {
-                type: "regular"
-              } }}
+              spatialStyle={{
+                position: { z: 20 },
+                material: {
+                  type: 'regular',
+                },
+              }}
               style={{ width: '50%', backgroundColor: '#FFF0F000' }}
             >
               <p>Test</p>
