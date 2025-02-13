@@ -173,7 +173,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
         if webViewRef != nil {
-            let wg = SpatialWindowGroup.getSpatialWindowGroup(webViewRef!.parentWindowGroupID)!
+            let wg = SpatialWindowContainer.getSpatialWindowContainer(webViewRef!.parentWindowContainerID)!
             wg.updateFrame = !(wg.updateFrame)
         }
     }

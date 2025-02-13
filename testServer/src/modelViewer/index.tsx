@@ -7,7 +7,7 @@ function App() {
   useEffect(() => {
     ;(async () => {
       // Get volume
-      var rootEnt = await getSession()?.getCurrentWindowGroup().getRootEntity()!
+      var rootEnt = await getSession()?.getCurrentWindowContainer().getRootEntity()!
 
       // Create platform
       var platform = await SpatialHelper.instance?.shape.createShapeEntity()!
