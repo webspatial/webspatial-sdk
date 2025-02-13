@@ -32,9 +32,17 @@ struct NavView: View {
                         }, label: {
                             Text("○")
                         })
-                        Button(action: {}, label: {
-                            Text("H")
-                        })
+                        Button(
+                            action: {
+                                swc?
+                                    .navigateToURL(
+                                        url: URL(string: pwaManager.start_url)!
+                                    )
+                            },
+                            label: {
+                                Text("H")
+                            }
+                        )
                     }
                     Button(action: {
                         showUrl.toggle()
