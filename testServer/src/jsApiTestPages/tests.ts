@@ -240,7 +240,7 @@ var main = async () => {
       material: { type: 'default' },
       cornerRadius: 50,
     })
-    // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+    // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
     document.documentElement.style.backgroundColor = 'transparent'
     document.body.style.backgroundColor = 'transparent'
     await session.log('set to glass background')
@@ -335,7 +335,7 @@ var main = async () => {
           await e.setComponent(customModel)
         }
 
-        await (await session.getCurrentWindowGroup()).setRootEntity(e)
+        await (await session.getCurrentWindowContainer()).setRootEntity(e)
         entities.push({ e: e, v: 0 })
       }
       var b = document.createElement('button')

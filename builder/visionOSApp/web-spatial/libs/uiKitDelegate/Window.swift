@@ -17,7 +17,7 @@ class SceneDelegate: NSObject, ObservableObject, UIWindowSceneDelegate {
         window = windowScene.keyWindow // << store !!!
     }
 
-    // do memory cleanup after scene removed, otherwise windowGroup cannot destroy content after being dismissed
+    // do memory cleanup after scene removed, otherwise windowContainer cannot destroy content after being dismissed
     func sceneDidDisconnect(_ scene: UIScene) {
         window = nil
     }
