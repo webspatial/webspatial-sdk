@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, SpatialView, SpatialViewRef } from '@xrsdk/react'
+import { getSession } from '@xrsdk/react'
 import { SpatialHelper } from '@xrsdk/runtime'
 
 const apps = [

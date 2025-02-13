@@ -32,7 +32,7 @@ function App() {
 
 if (new Spatial().isSupported()) {
   var session = new Spatial().requestSession()
-  session
+  session!
     .getCurrentWindowComponent()
     .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
 }
