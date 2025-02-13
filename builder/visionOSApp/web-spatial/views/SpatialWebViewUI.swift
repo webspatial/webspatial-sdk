@@ -36,8 +36,9 @@ struct SpatialWebViewUI: View {
             // Display child entities of the webview
             VStack(alignment: .trailing, spacing: 20) {
                 if wv.isRoot {
-                    NavView(wv: wv.getView()?.webViewHolder.appleWebView)
+                    NavView(swc: wv)
                 }
+
                 ZStack {
                     OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                         ZStack {
