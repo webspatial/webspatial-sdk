@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, Model, SpatialDiv } from '@xrsdk/react'
+import { getSession } from '@xrsdk/react'
 import { SpatialHelper, SpatialModelComponent } from '@xrsdk/runtime/dist'
 
 function App() {
-  const [toggle, setToggle] = useState(true)
-
   useEffect(() => {
     ;(async () => {
       // Get volume
