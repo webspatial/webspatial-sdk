@@ -18,31 +18,25 @@ struct NavView: View {
                     Text(pwaManager.name).padding(.trailing, 10)
                     if pwaManager.display == .minimal {
                         Button(action: {
-                            print("click back")
                             swc?.goBack()
                         }, label: {
                             Text("←")
                         })
                         Button(action: {
-                            print("click forward")
                             swc?.goForward()
                         }, label: {
                             Text("→")
                         })
                         Button(action: {
-                            print("click reset")
                             swc?.reload()
                         }, label: {
                             Text("○")
                         })
-                        Button(action: {
-                            print("click home")
-                        }, label: {
+                        Button(action: {}, label: {
                             Text("H")
                         })
                     }
                     Button(action: {
-                        print("click info")
                         showUrl.toggle()
                     }, label: {
                         Text("!")
