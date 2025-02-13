@@ -84,7 +84,7 @@ function App() {
             className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async e => {
               var session = await getSession()
-              var wg = await session!.createWindowGroup('Volumetric')
+              var wg = await session!.createWindowGroup({ style: 'Volumetric' })
 
               var spatialViewEnt = await session!.createEntity()
               await spatialViewEnt.setCoordinateSpace('Root')
@@ -152,7 +152,7 @@ function App() {
             className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async e => {
               var session = await getSession()
-              var wg = await session!.createWindowGroup('Plain')
+              var wg = await session!.createWindowGroup({ style: 'Plain' })
 
               var ent = await session!.createEntity()
               ent.transform.position.x = 0
@@ -162,16 +162,13 @@ function App() {
 
               volumePanelEnt = ent
 
-              var i = await session!.createWindowComponent(wg)
+              var i = await session!.createWindowComponent({ windowGroup: wg })
               await i.setResolution(300, 300)
               await i.loadURL('/src/jsApiTestPages/testList.html')
               await ent.setCoordinateSpace('Root')
               await ent.setComponent(i)
 
               await wg.setRootEntity(ent)
-
-              // var newPage = await WebSpatial.createWindowGroup("Plain")
-              // await WebSpatial.createWebPanel(newPage, "/loadTsx.html?pageName=helloWorldApp/main2.tsx")
             }}
           >
             Click Me

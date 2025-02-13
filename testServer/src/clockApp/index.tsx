@@ -153,7 +153,7 @@ function App() {
           href="#"
           onClick={async () => {
             if (session) {
-              var wg = await session.createWindowGroup('Plain')
+              var wg = await session.createWindowGroup({ style: 'Plain' })
 
               var ent = await session.createEntity()
               ent.transform.position.x = 0
@@ -161,7 +161,7 @@ function App() {
               ent.transform.position.z = 0
               await ent.updateTransform()
 
-              var i = await session.createWindowComponent(wg)
+              var i = await session.createWindowComponent({ windowGroup: wg })
               await i.setResolution(300, 300)
               await i.loadURL('index.html?pageName=Settings')
               await ent.setCoordinateSpace('Root')
