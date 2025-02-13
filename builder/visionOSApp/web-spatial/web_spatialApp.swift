@@ -79,7 +79,7 @@ struct web_spatialApp: App {
             if windowData.windowGroupID == SpatialWindowGroup.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
+                PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
                     initAppOnViewMount()
                     let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
 
