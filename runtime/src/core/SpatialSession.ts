@@ -72,7 +72,9 @@ export class SpatialSession {
    * [TODO] should creation of components be moved to entity? and these made private?
    * @returns WindowComponent
    */
-  async createWindowComponent(options?: { windowContainer?: SpatialWindowContainer }) {
+  async createWindowComponent(options?: {
+    windowContainer?: SpatialWindowContainer
+  }) {
     let entity = await WebSpatial.createResource(
       'SpatialWebView',
       options?.windowContainer
@@ -87,7 +89,9 @@ export class SpatialSession {
    * Creates a ViewComponent used to display 3D content within the entity
    * @returns SpatialViewComponent
    */
-  async createViewComponent(options?: { windowContainer?: SpatialWindowContainer }) {
+  async createViewComponent(options?: {
+    windowContainer?: SpatialWindowContainer
+  }) {
     let entity = await WebSpatial.createResource(
       'SpatialView',
       options?.windowContainer
@@ -183,7 +187,9 @@ export class SpatialSession {
    * */
   async createWindowContainer(options?: { style: WindowStyle }) {
     var style = options?.style ? options?.style : 'Plain'
-    return new SpatialWindowContainer(await WebSpatial.createWindowContainer(style))
+    return new SpatialWindowContainer(
+      await WebSpatial.createWindowContainer(style),
+    )
   }
 
   /**
@@ -280,7 +286,8 @@ export class SpatialSession {
     return await WebSpatial.dismissImmersiveSpace()
   }
 
-  private static _immersiveWindowContainer = null as null | SpatialWindowContainer
+  private static _immersiveWindowContainer =
+    null as null | SpatialWindowContainer
   /**
    * Retreives the window container corresponding to the Immersive space
    * @returns the immersive window container

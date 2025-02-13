@@ -56,7 +56,8 @@ function App() {
                   session!.openImmersiveSpace()
                   if (!created) {
                     setCreated(true)
-                    var immersiveWG = await session!.getImmersiveWindowContainer()
+                    var immersiveWG =
+                      await session!.getImmersiveWindowContainer()
                     var ent = await session!.createEntity()
                     ent.transform.position.x = 0
                     ent.transform.position.y = 1.3
@@ -83,7 +84,9 @@ function App() {
             className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
             onClick={async () => {
               var session = await getSession()
-              var wg = await session!.createWindowContainer({ style: 'Volumetric' })
+              var wg = await session!.createWindowContainer({
+                style: 'Volumetric',
+              })
 
               var spatialViewEnt = await session!.createEntity()
               await spatialViewEnt.setCoordinateSpace('Root')
@@ -161,7 +164,9 @@ function App() {
 
               volumePanelEnt = ent
 
-              var i = await session!.createWindowComponent({ windowContainer: wg })
+              var i = await session!.createWindowComponent({
+                windowContainer: wg,
+              })
               await i.setResolution(300, 300)
               await i.loadURL('/src/jsApiTestPages/testList.html')
               await ent.setCoordinateSpace('Root')
