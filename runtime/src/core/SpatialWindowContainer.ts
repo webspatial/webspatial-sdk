@@ -1,34 +1,34 @@
 import {
   WebSpatial,
   WebSpatialResource,
-  WindowGroup,
+  WindowContainer,
 } from './private/WebSpatial'
 import { SpatialEntity } from './SpatialEntity'
 
 /**
  * Anchored window managed by the OS
  */
-export class SpatialWindowGroup {
+export class SpatialWindowContainer {
   /** @hidden */
   constructor(
     /** @hidden */
-    public _wg: WindowGroup,
+    public _wg: WindowContainer,
   ) {}
   /**
    * @hidden
-   * Sets sets the open configuration for opening new window groups
+   * Sets sets the open configuration for opening new window containers
    * @param options style options
    */
   async _setOpenSettings(options: { dimensions: { x: number; y: number } }) {
-    await WebSpatial.updateWindowGroup(this._wg, { nextOpenSettings: options })
+    await WebSpatial.updateWindowContainer(this._wg, { nextOpenSettings: options })
   }
 
   /**
-   * Retrieves the root entity of the windowGroup
-   * @returns the root entity of the windowGroup if one exists
+   * Retrieves the root entity of the windowContainer
+   * @returns the root entity of the windowContainer if one exists
    */
   async getRootEntity() {
-    let reqResp: any = await WebSpatial.updateWindowGroup(this._wg, {
+    let reqResp: any = await WebSpatial.updateWindowContainer(this._wg, {
       getRootEntityID: '',
     })
     if (reqResp.data.rootEntId === '') {
@@ -40,10 +40,10 @@ export class SpatialWindowGroup {
     }
   }
   /*
-   * Sets the root entity that this windowGroup will display (this does not effect resource ownership)
+   * Sets the root entity that this windowContainer will display (this does not effect resource ownership)
    * @param entity to display
    */
   async setRootEntity(entity: SpatialEntity) {
-    await entity._setParentWindowGroup(this)
+    await entity._setParentWindowContainer(this)
   }
 }

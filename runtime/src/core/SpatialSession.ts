@@ -1,10 +1,10 @@
 import { SpatialEntity } from './SpatialEntity'
-import { SpatialWindowGroup } from './SpatialWindowGroup'
+import { SpatialWindowContainer } from './SpatialWindowContainer'
 import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
 import {
   LoadingMethodKind,
   sceneDataShape,
-  WindowGroupOptions,
+  WindowContainerOptions,
   WindowStyle,
 } from './types'
 
@@ -61,7 +61,7 @@ export class SpatialSession {
   async createEntity() {
     let entity = await WebSpatial.createResource(
       'Entity',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
     )
     return new SpatialEntity(entity)
@@ -72,12 +72,12 @@ export class SpatialSession {
    * [TODO] should creation of components be moved to entity? and these made private?
    * @returns WindowComponent
    */
-  async createWindowComponent(options?: { windowGroup?: SpatialWindowGroup }) {
+  async createWindowComponent(options?: { windowContainer?: SpatialWindowContainer }) {
     let entity = await WebSpatial.createResource(
       'SpatialWebView',
-      options?.windowGroup
-        ? options?.windowGroup._wg
-        : WebSpatial.getCurrentWindowGroup(),
+      options?.windowContainer
+        ? options?.windowContainer._wg
+        : WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
     )
     return new SpatialWindowComponent(entity)
@@ -87,12 +87,12 @@ export class SpatialSession {
    * Creates a ViewComponent used to display 3D content within the entity
    * @returns SpatialViewComponent
    */
-  async createViewComponent(options?: { windowGroup?: SpatialWindowGroup }) {
+  async createViewComponent(options?: { windowContainer?: SpatialWindowContainer }) {
     let entity = await WebSpatial.createResource(
       'SpatialView',
-      options?.windowGroup
-        ? options?.windowGroup._wg
-        : WebSpatial.getCurrentWindowGroup(),
+      options?.windowContainer
+        ? options?.windowContainer._wg
+        : WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
     )
     return new SpatialViewComponent(entity)
@@ -109,7 +109,7 @@ export class SpatialSession {
     }
     let entity = await WebSpatial.createResource(
       'ModelComponent',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
       opts,
     )
@@ -127,7 +127,7 @@ export class SpatialSession {
     }
     let entity = await WebSpatial.createResource(
       'Model3DComponent',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
       opts,
     )
@@ -142,7 +142,7 @@ export class SpatialSession {
   async createInputComponent() {
     let entity = await WebSpatial.createResource(
       'InputComponent',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
     )
     var ic = new SpatialInputComponent(entity)
@@ -157,7 +157,7 @@ export class SpatialSession {
   async createMeshResource(options?: { shape?: string }) {
     let entity = await WebSpatial.createResource(
       'MeshResource',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
@@ -171,19 +171,19 @@ export class SpatialSession {
   async createPhysicallyBasedMaterialResource(options?: {}) {
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
-      WebSpatial.getCurrentWindowGroup(),
+      WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
       options,
     )
     return new SpatialPhysicallyBasedMaterialResource(entity)
   }
   /**
-   * Creates a WindowGroup
-   * @returns SpatialWindowGroup
+   * Creates a WindowContainer
+   * @returns SpatialWindowContainer
    * */
-  async createWindowGroup(options?: { style: WindowStyle }) {
+  async createWindowContainer(options?: { style: WindowStyle }) {
     var style = options?.style ? options?.style : 'Plain'
-    return new SpatialWindowGroup(await WebSpatial.createWindowGroup(style))
+    return new SpatialWindowContainer(await WebSpatial.createWindowContainer(style))
   }
 
   /**
@@ -266,8 +266,8 @@ export class SpatialSession {
   /**
    * @hidden
    */
-  async _inspectRootWindowGroup() {
-    return WebSpatial.inspectRootWindowGroup()
+  async _inspectRootWindowContainer() {
+    return WebSpatial.inspectRootWindowContainer()
   }
 
   /** Opens the immersive space */
@@ -280,38 +280,38 @@ export class SpatialSession {
     return await WebSpatial.dismissImmersiveSpace()
   }
 
-  private static _immersiveWindowGroup = null as null | SpatialWindowGroup
+  private static _immersiveWindowContainer = null as null | SpatialWindowContainer
   /**
-   * Retreives the windowgroup corresponding to the Immersive space
-   * @returns the immersive window group
+   * Retreives the window container corresponding to the Immersive space
+   * @returns the immersive window container
    */
-  async getImmersiveWindowGroup() {
-    if (SpatialSession._immersiveWindowGroup) {
-      return SpatialSession._immersiveWindowGroup
+  async getImmersiveWindowContainer() {
+    if (SpatialSession._immersiveWindowContainer) {
+      return SpatialSession._immersiveWindowContainer
     } else {
-      SpatialSession._immersiveWindowGroup = new SpatialWindowGroup(
-        WebSpatial.getImmersiveWindowGroup(),
+      SpatialSession._immersiveWindowContainer = new SpatialWindowContainer(
+        WebSpatial.getImmersiveWindowContainer(),
       )
-      return SpatialSession._immersiveWindowGroup
+      return SpatialSession._immersiveWindowContainer
     }
   }
 
-  // Retreives the window group that is the parent to this spatial web page
-  private static _currentWindowGroup = null as null | SpatialWindowGroup
+  // Retreives the window container that is the parent to this spatial web page
+  private static _currentWindowContainer = null as null | SpatialWindowContainer
 
   /**
-   * Gets the current window group for the window
-   * [TODO] discuss what happens if it doesnt yet have a windowgroup
-   * @returns the current window group for the window
+   * Gets the current window container for the window
+   * [TODO] discuss what happens if it doesnt yet have a window container
+   * @returns the current window container for the window
    */
-  getCurrentWindowGroup() {
-    if (SpatialSession._currentWindowGroup) {
-      return SpatialSession._currentWindowGroup
+  getCurrentWindowContainer() {
+    if (SpatialSession._currentWindowContainer) {
+      return SpatialSession._currentWindowContainer
     } else {
-      SpatialSession._currentWindowGroup = new SpatialWindowGroup(
-        WebSpatial.getCurrentWindowGroup(),
+      SpatialSession._currentWindowContainer = new SpatialWindowContainer(
+        WebSpatial.getCurrentWindowContainer(),
       )
-      return SpatialSession._currentWindowGroup
+      return SpatialSession._currentWindowContainer
     }
   }
 
@@ -370,7 +370,7 @@ export class SpatialSession {
 
     var res = new WebSpatialResource()
     res.id = id
-    res.windowGroupId = WebSpatial.getCurrentWindowGroup().id
+    res.windowContainerId = WebSpatial.getCurrentWindowContainer().id
     const entity = new SpatialEntity(res)
     entity.transform.position.x = parseFloat(x)
     entity.transform.position.y = parseFloat(y)
