@@ -1,10 +1,13 @@
 import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool } from '@xrsdk/react'
+import { useRef, useState } from 'react'
 
 enableDebugTool()
 
 function App() {
+  const [showInner, setShowInner] = useState(true)
+
   const styleOuter = {
     '--xr-back': 121,
     position: 'relative',
@@ -19,7 +22,8 @@ function App() {
     backgroundColor: 'blue',
     position: 'absolute',
     left: 30,
-    zIndex: 11,
+    zIndex: showInner ? 11 : 1,
+    // zIndex: 0,
   }
 
   const styleInner2 = {
@@ -28,7 +32,18 @@ function App() {
     position: 'absolute',
     left: 0,
     zIndex: 3,
+    // zIndex: 0,
   }
+
+  const onToggle = () => {
+    setShowInner(v => !v)
+  }
+
+  const ref1 = useRef<HTMLDivElement>(null)
+  const ref2 = useRef<HTMLDivElement>(null)
+
+  ;(window as any).ref1 = ref1
+  ;(window as any).ref2 = ref2
 
   return (
     <div className="w-screen h-screen  ">
@@ -40,13 +55,17 @@ function App() {
 
       <div enable-xr style={styleOuter} debugName="OuterDiv">
         OuterDiv
-        <div enable-xr style={styleInner1} debugName="InnerDiv1">
+        <div enable-xr ref={ref1} style={styleInner1} debugName="InnerDiv1">
           Inner Div1
         </div>
-        <div enable-xr style={styleInner2} debugName="InnerDiv2">
+        <div enable-xr ref={ref2} style={styleInner2} debugName="InnerDiv2">
           Inner Div2
         </div>
       </div>
+
+      <button style={{ position: 'relative', top: 100 }} onClick={onToggle}>
+        toggle zIndex
+      </button>
     </div>
   )
 }

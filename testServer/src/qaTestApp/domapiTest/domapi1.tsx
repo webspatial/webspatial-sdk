@@ -8,6 +8,7 @@ function App() {
   const ref = useRef<HTMLDivElement>(null)
   ;(window as any).ref = ref
   const ref1 = useRef<HTMLDivElement>(null)
+  ;(window as any).ref1 = ref1
 
   const [elementState, setElementState] = useState({
     style: '',
@@ -225,9 +226,9 @@ function App() {
     if (!ref.current) return
     console.log(zIndex, ref.current)
     // ref.current.style.zIndex = zIndex.toString() //方式1
-    ref.current.style.setProperty('z-Index', `${zIndex}`) //方式2 技术文档错误
+    ref.current.style.setProperty('z-index', `${zIndex}`) //方式2 技术文档错误
     // 获取当前的 zIndex 值
-    const currentZIndex = ref.current.style.getPropertyValue('z-Index')
+    const currentZIndex = ref.current.style.getPropertyValue('z-index')
     console.log('get zIndex:', currentZIndex)
     updateElementState(ref)
   }
@@ -238,7 +239,7 @@ function App() {
   const setZIndexValue1 = () => {
     if (!ref1.current) return
     console.log(zIndex1, ref1.current)
-    // ref1.current.style.setProperty('z-Index',`${zIndex1}`)
+    // ref1.current.style.setProperty('z-index',`${zIndex1}`)
     ref1.current.style.zIndex = zIndex1.toString()
     updateElementState1(ref1)
   }
@@ -381,7 +382,7 @@ function App() {
           >
             <div
               enable-xr
-              className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              className="relative test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
               // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值
               ref={ref}
             >
@@ -389,7 +390,7 @@ function App() {
             </div>
             <div
               enable-xr
-              className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
+              className="relative test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
               // style={{ color: 'blue' }} // 测试 style样式优先级
               // className="text-red-500" // 测试 style样式优先级
               ref={ref1}

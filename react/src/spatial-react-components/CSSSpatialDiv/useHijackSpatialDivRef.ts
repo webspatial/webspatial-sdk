@@ -39,13 +39,18 @@ export function useHijackSpatialDivRef(
                   } else if (property === 'transform') {
                     ref.current?.style.setProperty(property, value as string)
                     return true
+                  } else if (property === 'z-index') {
+                    ref.current!.style.zIndex = value as string
+                    debugger
+                    return true
                   }
                 } else if (prop === 'removeProperty') {
                   const [property] = args
                   if (
                     property === SpatialCustomVars.backgroundMaterial ||
                     property === SpatialCustomVars.back ||
-                    property === 'transform'
+                    property === 'transform' ||
+                    property === 'z-index'
                   ) {
                     ref.current?.style.removeProperty(property)
                   }
@@ -63,6 +68,10 @@ export function useHijackSpatialDivRef(
 
             if (prop === 'transform') {
               return ref.current?.style[prop]
+            }
+
+            if (prop === 'zIndex') {
+              return ref.current?.style.zIndex
             }
 
             if (prop === 'visibility') {
@@ -91,6 +100,9 @@ export function useHijackSpatialDivRef(
               return true
             } else if (property === 'visibility') {
               ref.current?.style.setProperty(property, value as string)
+              return true
+            } else if (property === 'z-index' || property === 'zIndex') {
+              ref.current!.style.zIndex = value as string
               return true
             } else if (property === 'cssText') {
               // parse cssText, filter out spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
