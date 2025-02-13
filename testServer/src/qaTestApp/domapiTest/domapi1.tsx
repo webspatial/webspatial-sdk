@@ -266,8 +266,8 @@ function App() {
   // 测试class元素操作
   const testClassOperations = () => {
     if (!ref.current) return
-    // // 读取class
-    // console.log('当前class:', ref.current.className)
+    // 读取class
+    console.log('当前class:', ref.current.className)
     // ref.current.className =
     //   'test-element w-20 h-10 bg-white border-2 border-gray-200 rounded-lg '
     // console.log('更新后当前class:', ref.current.className)
@@ -292,7 +292,7 @@ function App() {
         setTimeout(() => {
           if (ref.current) {
             ref.current.className =
-              'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
+              'w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
             console.log('获取更新后当前class:', ref.current.className)
             updateElementState(ref)
           }
@@ -394,7 +394,7 @@ function App() {
               //   boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
               //   position: 'relative',
               // }} //测试常用属性值
-              // style={{ position: 'relative' }}
+              style={{ position: 'relative' }}
               ref={ref}
             >
               Test Element
