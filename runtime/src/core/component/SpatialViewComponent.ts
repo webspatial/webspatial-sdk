@@ -7,6 +7,8 @@ import { SpatialComponent } from './SpatialComponent'
  * Defaults to having 1x1x1 meter dimensions
  * Resolution defaults to 100x100 pixels
  * Only will be displayed on entities in "ROOT" or "DOM" space
+ * If the resolution of the spatial view is not a square, the volume will be larger based on the ratio with the shortest side being 1 meter.
+ * (eg. 200x100 = 2m x 1m x 1m volume)
  */
 export class SpatialViewComponent extends SpatialComponent {
   /**
