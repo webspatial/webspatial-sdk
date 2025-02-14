@@ -6,8 +6,17 @@
     width: 500px;
     height: 300px;
     background-color: rgba(173, 216, 230, 0.2);
-    border: 1px solid red;
+    border: 1px solid blue;
     margin: 50px auto;
+}
+
+.reference {
+    --xr-back:30;
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: green;
+    /*z-Index: 13;*/
 }
 
 .style-one {
@@ -15,20 +24,8 @@
     position: absolute;
     width: 200px;
     height: 78px;
-    /*top: 25px;*/
-    /*left: 20px;*/
     right: 70px;
     background-color: red;
-    /*z-Index: 11;*/
+    /*z-Index: 10;*/
 }
 
-.reference {
-    --xr-back:30;
-    /*position: absolute;*/
-    width: 100px;
-    height: 100px;
-    /*top: 50px;*/
-    /*left: 50px;*/
-    background-color: green;
-    z-Index: 13;
-}
