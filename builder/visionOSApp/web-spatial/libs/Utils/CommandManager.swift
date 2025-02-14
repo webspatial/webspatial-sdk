@@ -379,6 +379,15 @@ class CommandManager {
                 spatialModel3DComponent.resizable = resizable
             }
 
+            if let aspectRatio: Double = data.update?.aspectRatio {
+                if aspectRatio > 0 {
+                    spatialModel3DComponent.aspectRatio = aspectRatio
+
+                } else if aspectRatio == 0 {
+                    spatialModel3DComponent.aspectRatio = nil
+                }
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -654,7 +663,7 @@ struct JSResourceData: Codable {
     var roughness: JSValue?
     var metallic: JSValue?
     var url: String?
-    var aspectRatio: String?
+    var aspectRatio: Double?
     var opacity: Double?
     var contentMode: String?
     var resizable: Bool?
