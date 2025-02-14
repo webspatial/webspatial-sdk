@@ -23,6 +23,7 @@ struct SpatialModel3DView: View {
                     let anchor = childModel3DComponent.rotationAnchor
                     let opacity = childModel3DComponent.opacity
                     let resizable = childModel3DComponent.resizable
+                    let aspectRatio: CGFloat? = childModel3DComponent.aspectRatio == nil ? nil : CGFloat(childModel3DComponent.aspectRatio!)
 
                     let url = URL(string: childModel3DComponent.modelURL)!
                     let contentMode = childModel3DComponent.contentMode
@@ -36,7 +37,10 @@ struct SpatialModel3DView: View {
                         case let .success(resolvedModel3D):
                             resolvedModel3D
                                 .resizable(resizable)
-                                .aspectRatio(contentMode: contentMode)
+                                .aspectRatio(
+                                    aspectRatio,
+                                    contentMode: contentMode
+                                )
 
                         case let .failure(error):
                             ContentUnavailableView(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
