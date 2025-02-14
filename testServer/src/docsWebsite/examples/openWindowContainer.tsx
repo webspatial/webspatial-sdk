@@ -11,23 +11,25 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
             // CODESAMPLE_START
-            // Create window group
-            var wg = await session.createWindowGroup({ style: 'Plain' })
+            // Create window container
+            var wg = await session.createWindowContainer({ style: 'Plain' })
 
             // Create a root entity displaying a webpage
             var ent = await session!.createEntity()
-            var i = await session!.createWindowComponent({ windowGroup: wg })
+            var i = await session!.createWindowComponent({
+              windowContainer: wg,
+            })
             await i.loadURL('http://google.com')
             await ent.setCoordinateSpace('Root')
             await ent.setComponent(i)
 
-            // Add enitity the windowgroup
+            // Add enitity the windowcontainer
             await wg.setRootEntity(ent)
             // CODESAMPLE_END
           }
         }}
       >
-        Open Plain WindowGroup
+        Open Plain WindowContainer
       </div>
 
       <div
@@ -36,7 +38,9 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
 
-            var wg = await session.createWindowGroup({ style: 'Volumetric' })
+            var wg = await session.createWindowContainer({
+              style: 'Volumetric',
+            })
             var ent = await session!.createEntity()
             await ent.setCoordinateSpace('Root')
             var vc = await session.createViewComponent()
@@ -70,7 +74,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Volumetric WindowGroup
+        Open Volumetric WindowContainer
       </div>
 
       <div
@@ -79,7 +83,7 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
 
-            var wg = await session.getImmersiveWindowGroup()
+            var wg = await session.getImmersiveWindowContainer()
             var ent = await session!.createEntity()
             await ent.setCoordinateSpace('Root')
             var vc = await session.createViewComponent()
@@ -117,7 +121,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Immersive WindowGroup
+        Open Immersive WindowContainer
       </div>
     </div>
   )

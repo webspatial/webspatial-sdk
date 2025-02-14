@@ -1,14 +1,15 @@
-import { WindowGroupOptions } from '@xrsdk/runtime/'
+import { WindowContainerOptions } from '@xrsdk/runtime/'
 import { getSession } from './utils/getSession'
+
 declare global {
   interface Window {
     xrCurrentSceneDefaults: (
-      defaultConfig: WindowGroupOptions,
-    ) => Promise<WindowGroupOptions>
+      defaultConfig: WindowContainerOptions,
+    ) => Promise<WindowContainerOptions>
   }
 }
 
-export const defaultSceneConfig: WindowGroupOptions = {
+export const defaultSceneConfig: WindowContainerOptions = {
   defaultSize: {
     width: 900,
     height: 700,
@@ -50,13 +51,13 @@ export class XRApp {
 
     document.removeEventListener('click', this.handleATag)
   }
-  private configMap: Record<string, WindowGroupOptions> = {} // name=>config
+  private configMap: Record<string, WindowContainerOptions> = {} // name=>config
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
   }
 
-  async show(window: Window, cfg: WindowGroupOptions) {
+  async show(window: Window, cfg: WindowContainerOptions) {
     try {
       let session = getSession()!
       await session._createScene(
@@ -112,7 +113,7 @@ export class XRApp {
                   url: url,
                   window: newWindow!,
                   // windowID: (newWindow as any)._webSpatialID,
-                  // windowGroupID: (newWindow as any)._webSpatialGroupID,
+                  // windowContainerID: (newWindow as any)._webSpatialGroupID,
                 },
               },
             )
@@ -130,7 +131,7 @@ export class XRApp {
   }
   initScene(
     name: string,
-    callback: (pre: WindowGroupOptions) => WindowGroupOptions,
+    callback: (pre: WindowContainerOptions) => WindowContainerOptions,
   ) {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
@@ -138,7 +139,7 @@ export class XRApp {
 
 export function initScene(
   name: string,
-  callback: (pre: WindowGroupOptions) => WindowGroupOptions,
+  callback: (pre: WindowContainerOptions) => WindowContainerOptions,
 ) {
   return XRApp.getInstance().initScene(name, callback)
 }
