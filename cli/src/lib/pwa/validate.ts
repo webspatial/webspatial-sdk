@@ -55,12 +55,11 @@ export function checkStartUrl(
   isNet: boolean,
 ) {
   if (isNet) {
-    // 判断是否与manifest同源
     // Determine whether it is of the same origin as the manifest
     if (manifest.start_url.indexOf('https://') == 0) {
       const urlStart: URL = new URL(manifest.start_url)
       const urlManifest: URL = new URL(manifestUrl)
-      // start_url 与 manifest 需要同源
+      // The start_url and manifest need to be of the same origin
       if (urlStart.host !== urlManifest.host) {
         throw new CustomError({
           code: 4000,
