@@ -63,6 +63,12 @@ function App() {
     setContentMode(contentMode)
   }
 
+  const [resizable, setResizable] = useState(true)
+
+  const handleResizableChange = () => {
+    setResizable(v => !v)
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -76,6 +82,7 @@ function App() {
         style={styleOuter}
         modelUrl="/src/assets/FlightHelmet.usdz"
         contentMode={contentMode}
+        resizable={resizable}
       />
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
@@ -86,6 +93,10 @@ function App() {
         </button>
         <button className="btn btn-primary" onClick={onToggleVisible}>
           display visible
+        </button>
+
+        <button className="btn btn-primary" onClick={handleResizableChange}>
+          resizable
         </button>
       </div>
 
