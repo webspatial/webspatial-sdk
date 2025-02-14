@@ -44,8 +44,64 @@ class SpatialBridgeComponent: Component {
 class SpatialEntity: SpatialObject {
     var coordinateSpace = CoordinateSpaceMode.APP
     let modelEntity = ModelEntity()
-    var zIndex: Double = 0
     var visible = true
+
+    private var _zIndex: Double = 0
+    var zIndex: Double {
+        get {
+            return _zIndex
+        }
+        set {
+            _zIndex = newValue
+            updateZIndexBias()
+        }
+    }
+
+    private var _zOffsetBias: Double = 0
+    var zOffsetBias: Double {
+        return _zOffsetBias
+    }
+
+    private func updateZIndexBias() {
+        guard let parentEntity = parent else {
+            _zOffsetBias = 0
+            return
+        }
+
+        let entities = parentEntity.getEntities()
+        if entities.count <= 1 {
+            _zOffsetBias = 0
+            return
+        }
+
+        let sortedEntitiesKey = Array(entities.keys).sorted { key1, key2 in
+            let entity1 = entities[key1]!
+            let entity2 = entities[key2]!
+            let z1 = entity1.modelEntity.position.z
+            let z2 = entity2.modelEntity.position.z
+            if z1 == z2 {
+                return entity1.zIndex < entity2.zIndex
+            } else {
+                return z1 < z2
+            }
+        }
+
+        let bias = 0.1
+        let firstEntity = entities[sortedEntitiesKey[0]]!
+        firstEntity._zOffsetBias = 0
+
+        for i in 1 ..< sortedEntitiesKey.count {
+            let currentEntity = entities[sortedEntitiesKey[i]]!
+
+            let previousEntity = entities[sortedEntitiesKey[i - 1]]!
+
+            if currentEntity.modelEntity.position.z == previousEntity.modelEntity.position.z {
+                currentEntity._zOffsetBias = previousEntity._zOffsetBias + bias
+            } else {
+                currentEntity._zOffsetBias = 0
+            }
+        }
+    }
 
     var forceUpdate = false
 
@@ -160,6 +216,7 @@ class SpatialEntity: SpatialObject {
 
         var inspectInfo: [String: Any] = [
             "position": modelEntity.position.description,
+            "rotation": modelEntity.orientation.vector.description,
             "scale": modelEntity.scale.description,
             "zIndex": zIndex,
             "visible": visible,
@@ -168,6 +225,7 @@ class SpatialEntity: SpatialObject {
             "parent": parent?.id,
             "parentWindowGroup": parentWindowGroup?.id,
             "components": componentsInfo,
+            "bias": zOffsetBias,
         ]
 
         let baseInspectInfo = super.inspect()

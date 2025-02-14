@@ -28,6 +28,7 @@ function simplifyEntityTree(rootTree: any) {
       name: node.name,
       children: [],
       position: node.position,
+      rotation: node.rotation,
       scale: node.scale,
       width: node.components[0].resolutionX,
       height: node.components[0].resolutionY,

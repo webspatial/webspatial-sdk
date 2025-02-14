@@ -385,6 +385,7 @@ function App() {
               className="relative test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
               // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值
               ref={ref}
+              debugName="childA"
             >
               Test Element
             </div>
@@ -394,6 +395,7 @@ function App() {
               // style={{ color: 'blue' }} // 测试 style样式优先级
               // className="text-red-500" // 测试 style样式优先级
               ref={ref1}
+              debugName="childB"
             >
               Test Element1
             </div>
