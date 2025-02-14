@@ -14,7 +14,7 @@ import kotlinx.serialization.json.*
 
 class CommandInfo {
     var command = "notFound"
-    var windowGroupID = "notFound"
+    var windowContainerID = "notFound"
     var entityID = "notFound"
     var resourceID = "notFound"
     var requestID = -1
@@ -37,9 +37,9 @@ class NativeWebView {
             val data = json.get("data")
             if (data != null) {
                 //   Log.i("test", "TREV got data")
-                val windowGroupID = data.jsonObject.get("windowGroupID")
-                if (windowGroupID != null) {
-                    ret.windowGroupID = windowGroupID.jsonPrimitive.content
+                val windowContainerID = data.jsonObject.get("windowContainerID")
+                if (windowContainerID != null) {
+                    ret.windowContainerID = windowContainerID.jsonPrimitive.content
                 }
 
                 val entityID = data.jsonObject.get("entityID")

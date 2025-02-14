@@ -52,14 +52,15 @@ function simplifyEntityTree(rootTree: any) {
   return rootNode
 }
 
-async function inspectRootWindowGroup(simple?: boolean) {
-  const rootWindowGroupInfo = await getSession()!._inspectRootWindowGroup()
-  console.log(rootWindowGroupInfo)
+async function inspectRootWindowContainer(simple?: boolean) {
+  const rootWindowContainerInfo =
+    await getSession()!._inspectRootWindowContainer()
+  console.log(rootWindowContainerInfo)
 
   if (simple) {
-    return simplifyEntityTree(rootWindowGroupInfo)
+    return simplifyEntityTree(rootWindowContainerInfo)
   }
-  return rootWindowGroupInfo
+  return rootWindowContainerInfo
 }
 
 export function enableDebugTool() {
@@ -67,6 +68,6 @@ export function enableDebugTool() {
   Object.assign(window, {
     session,
     getStat,
-    inspectRootWindowGroup,
+    inspectRootWindowContainer,
   })
 }
