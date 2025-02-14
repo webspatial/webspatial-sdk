@@ -375,6 +375,10 @@ class CommandManager {
                 }
             }
 
+            if let resizable: Bool = data.update?.resizable {
+                spatialModel3DComponent.resizable = resizable
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -653,6 +657,7 @@ struct JSResourceData: Codable {
     var aspectRatio: String?
     var opacity: Double?
     var contentMode: String?
+    var resizable: Bool?
     var resolution: JSVector2?
     var isPortal: Bool?
     var rotationAnchor: JSVector3?
