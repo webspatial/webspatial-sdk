@@ -47,6 +47,7 @@ class SpatialWindowComponent: SpatialComponent {
             "childResources": childEntitiesInfo,
             "cornerRadius": cornerRadius.toJson(),
             "backgroundMaterial": backgroundMaterial.rawValue,
+            "isOpaque": webViewNative!.webViewHolder.appleWebView!.isOpaque,
         ]
 
         let baseInspectInfo = super.inspect()
@@ -108,6 +109,17 @@ class SpatialWindowComponent: SpatialComponent {
         removeChildSpatialObject(spatialObject)
     }
 
+    /// Determines whether the current webview is a root webview.
+    ///
+    /// A root webview is created when the Scene is initialized.
+    /// If the webview is created by another `SpatialWebview`, it is not considered a root webview.
+    /// For example, a `SpatialDiv` is not a root webview.
+    ///
+    /// - Returns: `true` if the webview is a root webview (i.e., `parentWebviewID` is empty), otherwise `false`.
+    private func isRootWebview() -> Bool {
+        return parentWebviewID == ""
+    }
+
     private func onWindowGroupDestroyed(_ object: Any, _ data: Any) {
         let spatialObject = object as! SpatialWindowGroup
         spatialObject
@@ -134,7 +146,22 @@ class SpatialWindowComponent: SpatialComponent {
     var gotStyle = false
     var opacity = 1.0
     var cornerRadius: CornerRadius = .init()
-    var backgroundMaterial = BackgroundMaterial.None
+
+    private var _backgroundMaterial = BackgroundMaterial.None
+    var backgroundMaterial: BackgroundMaterial {
+        get {
+            return _backgroundMaterial
+        }
+        set(newValue) {
+            _backgroundMaterial = newValue
+            if isRootWebview() {
+                webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
+            } else {
+                // it's spatial div
+                webViewNative?.webViewHolder.appleWebView?.isOpaque = false
+            }
+        }
+    }
 
     var loadingStyles = LoadingStyles()
     var isLoading = true
