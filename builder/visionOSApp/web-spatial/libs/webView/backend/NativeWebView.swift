@@ -223,7 +223,6 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
-            webViewHolder.appleWebView!.isOpaque = false
             webViewHolder.needsUpdate = (configuration != nil) ? false : true
         }
 
@@ -234,8 +233,6 @@ struct WebViewNative: UIViewRepresentable {
         if webViewHolder.needsUpdate {
             let request = URLRequest(url: url)
             webViewHolder.appleWebView!.load(request)
-            webViewHolder.appleWebView!.isOpaque = false
-            webViewHolder.appleWebView!.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
     }
