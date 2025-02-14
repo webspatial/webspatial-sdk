@@ -1,5 +1,5 @@
 //
-//  SpatialWindowGroup.swift
+//  SpatialWindowContainer.swift
 //  web-spatial
 //
 //  Created by ByteDance on 9/10/24.
@@ -11,18 +11,18 @@ import RealityKit
 import typealias RealityKit.Entity
 
 @Observable
-class SpatialWindowGroup: SpatialObject {
-    var wgd: WindowGroupData? = nil
-    static func getSpatialWindowGroup(_ name: String) -> SpatialWindowGroup? {
-        return SpatialObject.get(name) as? SpatialWindowGroup
+class SpatialWindowContainer: SpatialObject {
+    var wgd: WindowContainerData? = nil
+    static func getSpatialWindowContainer(_ name: String) -> SpatialWindowContainer? {
+        return SpatialObject.get(name) as? SpatialWindowContainer
     }
 
-    static func getOrCreateSpatialWindowGroup(_ name: String) -> SpatialWindowGroup? {
-        if let windowGroup = getSpatialWindowGroup(name) {
-            return windowGroup
+    static func getOrCreateSpatialWindowContainer(_ name: String) -> SpatialWindowContainer? {
+        if let windowContainer = getSpatialWindowContainer(name) {
+            return windowContainer
         }
-        let newWindowGroup = SpatialWindowGroup(name)
-        return newWindowGroup
+        let newWindowContainer = SpatialWindowContainer(name)
+        return newWindowContainer
     }
 
     // Resources
@@ -46,10 +46,10 @@ class SpatialWindowGroup: SpatialObject {
     var setSize = PassthroughSubject<CGSize, Never>()
 
     var updateFrame = false
-    var openWindowData = PassthroughSubject<WindowGroupData, Never>()
-    var closeWindowData = PassthroughSubject<WindowGroupData, Never>()
+    var openWindowData = PassthroughSubject<WindowContainerData, Never>()
+    var closeWindowData = PassthroughSubject<WindowContainerData, Never>()
 
-    var setLoadingWindowData = PassthroughSubject<LoadingWindowGroupData, Never>()
+    var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
     override func onDestroy() {
         childEntities.forEach { $0.value.destroy() }
@@ -70,33 +70,33 @@ class SpatialWindowGroup: SpatialObject {
     }
 }
 
-extension SpatialWindowGroup {
+extension SpatialWindowContainer {
     private static let RootID = "root"
     static func getRootID() -> String {
         return RootID
     }
 
-    static func createRootWindowGroup() -> SpatialWindowGroup {
-        if let rootWindowGroup = getSpatialWindowGroup(RootID) {
+    static func createRootWindowContainer() -> SpatialWindowContainer {
+        if let rootWindowContainer = getSpatialWindowContainer(RootID) {
             print("Root already created! ")
-            return rootWindowGroup
+            return rootWindowContainer
         }
-        return SpatialWindowGroup(RootID)
+        return SpatialWindowContainer(RootID)
     }
 }
 
-extension SpatialWindowGroup {
+extension SpatialWindowContainer {
     private static let ImmersiveID = "Immersive"
 
-    static func getImmersiveWindowGroup() -> SpatialWindowGroup {
-        return getSpatialWindowGroup(ImmersiveID)!
+    static func getImmersiveWindowContainer() -> SpatialWindowContainer {
+        return getSpatialWindowContainer(ImmersiveID)!
     }
 
-    static func createImmersiveWindowGroup() -> SpatialWindowGroup {
-        if let windowGroup = getSpatialWindowGroup(ImmersiveID) {
+    static func createImmersiveWindowContainer() -> SpatialWindowContainer {
+        if let windowContainer = getSpatialWindowContainer(ImmersiveID) {
             print("Immersive already created! ")
-            return windowGroup
+            return windowContainer
         }
-        return SpatialWindowGroup(ImmersiveID)
+        return SpatialWindowContainer(ImmersiveID)
     }
 }

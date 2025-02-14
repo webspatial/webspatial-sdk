@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
-		2B23CB3F2D0BEE6900E70D95 /* WindowGroupMgr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */; };
+		2B23CB3F2D0BEE6900E70D95 /* WindowContainerMgr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */; };
 		2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */; };
@@ -18,8 +18,8 @@
 		2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */; };
 		2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */; };
 		2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D902BED61A8006897EE /* NativeWebView.swift */; };
-		2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */; };
-		2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */; };
+		2B2F1D992BEDA8EF006897EE /* VolumetricWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */; };
+		2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */; };
 		2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */; };
 		2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B67BBAB2D151C1500BBC689 /* manifest.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
@@ -38,7 +38,7 @@
 		2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */; };
 		2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */; };
 		2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */; };
-		2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */; };
+		2BE1E9052C90375F00EAE76A /* SpatialWindowContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9042C90375F00EAE76A /* SpatialWindowContainer.swift */; };
 		2BE1E9072C903E2C00EAE76A /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */; };
 		2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */; };
 		2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */; };
@@ -60,7 +60,7 @@
 /* Begin PBXFileReference section */
 		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
-		2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowGroupMgr.swift; sourceTree = "<group>"; };
+		2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowContainerMgr.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* web-spatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web-spatial.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialApp.swift; sourceTree = "<group>"; };
@@ -72,8 +72,8 @@
 		2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialTests.swift; sourceTree = "<group>"; };
 		2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JsonParser.swift; sourceTree = "<group>"; };
 		2B2F1D902BED61A8006897EE /* NativeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebView.swift; sourceTree = "<group>"; };
-		2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowGroupView.swift; sourceTree = "<group>"; };
-		2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowGroupView.swift; sourceTree = "<group>"; };
+		2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowContainerView.swift; sourceTree = "<group>"; };
+		2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowContainerView.swift; sourceTree = "<group>"; };
 		2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialWithBorderCornerModifier.swift; sourceTree = "<group>"; };
 		2B67BBAB2D151C1500BBC689 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 		2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialEntity.swift; sourceTree = "<group>"; };
 		2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialComponent.swift; sourceTree = "<group>"; };
 		2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialInputComponent.swift; sourceTree = "<group>"; };
-		2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowGroup.swift; sourceTree = "<group>"; };
+		2BE1E9042C90375F00EAE76A /* SpatialWindowContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowContainer.swift; sourceTree = "<group>"; };
 		2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEmitter.swift; sourceTree = "<group>"; };
 		2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWindowComponent.swift; sourceTree = "<group>"; };
 		2BE1E90A2C905DA300EAE76A /* SpatialMeshResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialMeshResource.swift; sourceTree = "<group>"; };
@@ -126,7 +126,7 @@
 				2BD510552D54A2FF0001E5E6 /* SceneManager.swift */,
 				2B0B43092CBE21540003CEF3 /* CommandManager.swift */,
 				2B0B1C0F2C494E5400E644F9 /* Logger.swift */,
-				2B23CB3E2D0BEE6900E70D95 /* WindowGroupMgr.swift */,
+				2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -200,7 +200,7 @@
 				2BE1E9062C903E2C00EAE76A /* EventEmitter.swift */,
 				2BE1E8FE2C90359400EAE76A /* SpatialEntity.swift */,
 				2BE1E9082C90497C00EAE76A /* SpatialWindowComponent.swift */,
-				2BE1E9042C90375F00EAE76A /* SpatialWindowGroup.swift */,
+				2BE1E9042C90375F00EAE76A /* SpatialWindowContainer.swift */,
 				2BE1E9002C9035AB00EAE76A /* SpatialComponent.swift */,
 				2BE1E9022C9035DB00EAE76A /* SpatialInputComponent.swift */,
 				2B0B1C0E2C494E4100E644F9 /* Utils */,
@@ -246,8 +246,8 @@
 				2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */,
 				2BC9A2202D1E829B00912170 /* HideViewModifier.swift */,
 				2BAC1BE12CDC49000022E29B /* SpatialViewUI.swift */,
-				2B2F1D982BEDA8EF006897EE /* VolumetricWindowGroupView.swift */,
-				2B2F1D9A2BEDA975006897EE /* PlainWindowGroupView.swift */,
+				2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */,
+				2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */,
 				2BE1E9142C9194DC00EAE76A /* SpatialWebViewUI.swift */,
 				2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */,
 				2BB28CCB2C747DB0007F4BDC /* OpenDismissHandlerUI.swift */,
@@ -381,7 +381,7 @@
 				2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */,
 				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
 				2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */,
-				2B2F1D9B2BEDA975006897EE /* PlainWindowGroupView.swift in Sources */,
+				2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
 				2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */,
@@ -390,7 +390,7 @@
 				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
 				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
 				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
-				2B2F1D992BEDA8EF006897EE /* VolumetricWindowGroupView.swift in Sources */,
+				2B2F1D992BEDA8EF006897EE /* VolumetricWindowContainerView.swift in Sources */,
 				2BE1E9072C903E2C00EAE76A /* EventEmitter.swift in Sources */,
 				2BDBED5F2D3F885A0065443F /* SpatialModel3DComponent.swift in Sources */,
 				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
@@ -399,10 +399,10 @@
 				2BC261222D38F1DA00BCA977 /* NavView.swift in Sources */,
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
 				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
-				2B23CB3F2D0BEE6900E70D95 /* WindowGroupMgr.swift in Sources */,
+				2B23CB3F2D0BEE6900E70D95 /* WindowContainerMgr.swift in Sources */,
 				2BD510562D54A30D0001E5E6 /* SceneManager.swift in Sources */,
 				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
-				2BE1E9052C90375F00EAE76A /* SpatialWindowGroup.swift in Sources */,
+				2BE1E9052C90375F00EAE76A /* SpatialWindowContainer.swift in Sources */,
 				2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */,
 				2BE1E9112C90795D00EAE76A /* SpatialModelComponent.swift in Sources */,
 				2B9909932C3605A9004826D1 /* Window.swift in Sources */,

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, Model, SpatialDiv } from '@xrsdk/react'
+import { Model, SpatialDiv } from '@xrsdk/react'
 
 function App() {
   const [toggle, setToggle] = useState(true)

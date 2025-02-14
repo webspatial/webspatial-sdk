@@ -1,6 +1,6 @@
 export type WindowStyle = 'Plain' | 'Volumetric'
 
-export interface WindowGroupOptions {
+export interface WindowContainerOptions {
   defaultSize?: {
     width: number // Initial width of the window
     height: number // Initial height of the window
@@ -13,15 +13,15 @@ export type LoadingMethodKind = 'show' | 'hide'
 
 export interface sceneDataShape {
   method?: 'createRoot' | 'showRoot'
-  sceneConfig?: WindowGroupOptions
+  sceneConfig?: WindowContainerOptions
   url?: string
   window: Window
 }
 
 export interface sceneDataJSBShape {
   method?: 'createRoot' | 'showRoot'
-  sceneConfig?: WindowGroupOptions
+  sceneConfig?: WindowContainerOptions
   url?: string
   windowID?: string
-  windowGroupID?: string
+  windowContainerID?: string
 }
