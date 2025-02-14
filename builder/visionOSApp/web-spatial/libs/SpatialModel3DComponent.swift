@@ -11,6 +11,7 @@ class SpatialModel3DComponent: SpatialComponent {
     var scrollWithParent = true
     var contentMode: ContentMode = .fit
     var resizable: Bool = true
+    var aspectRatio: Double? = nil
 
     public func setURL(_ url: String) {
         modelURL = url
@@ -24,6 +25,8 @@ class SpatialModel3DComponent: SpatialComponent {
             "modelURL": modelURL,
             "opacity": opacity,
             "resizable": resizable,
+            "aspectRatio": aspectRatio != nil ? String(describing: aspectRatio!) : "nil",
+            "contentMode": contentMode == .fill ? "fill" : "fit",
         ]
 
         let baseInspectInfo = super.inspect()

@@ -35,9 +35,21 @@ export class SpatialModel3DComponent extends SpatialComponent {
    * Sets how the model fill the rect
    * @param contentMode
    */
-  async setAspectRatio(contentMode: 'fill' | 'fit') {
+  async setContentMode(contentMode: 'fill' | 'fit') {
     await WebSpatial.updateResource(this._resource, {
       contentMode,
+    })
+  }
+
+  /**
+   * Constrains this model dimensions to the specified aspect ratio.
+   * with a value of 0, the model will use the original aspect ratio.
+   *
+   * @param aspectRatio number
+   */
+  async setAspectRatio(aspectRatio: number) {
+    await WebSpatial.updateResource(this._resource, {
+      aspectRatio,
     })
   }
 
