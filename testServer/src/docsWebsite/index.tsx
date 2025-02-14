@@ -1,11 +1,6 @@
-import React, { useEffect, useState, useRef, ReactNode } from 'react'
+import { useEffect, useState, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { Model } from '@xrsdk/react'
-
-function App2() {
-  return <div></div>
-}
+import { Spatial, SpatialSession } from '@xrsdk/runtime'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -59,7 +54,7 @@ function MySample() {
 }
 
 function App(props: { children?: ReactNode }) {
-  var [spatialSupported, setSpatialSupported] = useState(false)
+  var [_spatialSupported, setSpatialSupported] = useState(false)
   useEffect(() => {
     if (session) {
       setSpatialSupported(true)
@@ -162,7 +157,7 @@ function App(props: { children?: ReactNode }) {
   )
 }
 
-document.addEventListener('readystatechange', event => {
+document.addEventListener('readystatechange', () => {
   switch (document.readyState) {
     case 'interactive':
       // Create react root

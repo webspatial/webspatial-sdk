@@ -32,12 +32,12 @@ function App() {
 
 if (new Spatial().isSupported()) {
   var session = new Spatial().requestSession()
-  session
+  session!
     .getCurrentWindowComponent()
     .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
 }
 
-// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
 document.documentElement.style.backgroundColor = 'transparent'
 document.body.style.backgroundColor = 'transparent'
 ReactDOM.createRoot(document.getElementById('root')!).render(

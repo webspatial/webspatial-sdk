@@ -2,19 +2,19 @@ import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
 import {
   WindowStyle,
-  WindowGroupOptions,
+  WindowContainerOptions,
   LoadingMethodKind,
   sceneDataShape,
   sceneDataJSBShape,
 } from '../types'
 
-export class WindowGroup {
+export class WindowContainer {
   id = ''
 }
 
 export class WebSpatialResource {
   id = ''
-  windowGroupId = ''
+  windowContainerId = ''
   data = {} as any
 }
 
@@ -89,14 +89,14 @@ export class WebSpatial {
     }
   }
 
-  static getImmersiveWindowGroup() {
-    var wg = new WindowGroup()
+  static getImmersiveWindowContainer() {
+    var wg = new WindowContainer()
     wg.id = 'Immersive'
     return wg
   }
 
-  static getCurrentWindowGroup() {
-    var wg = new WindowGroup()
+  static getCurrentWindowContainer() {
+    var wg = new WindowContainer()
     wg.id = 'current'
     return wg
   }
@@ -104,7 +104,7 @@ export class WebSpatial {
   static getCurrentWebPanel() {
     var wg = new WebSpatialResource()
     wg.id = 'current'
-    wg.windowGroupId = WebSpatial.getCurrentWindowGroup().id
+    wg.windowContainerId = WebSpatial.getCurrentWindowContainer().id
     return wg
   }
 
@@ -118,12 +118,12 @@ export class WebSpatial {
     const jsbSceneData: sceneDataJSBShape = {
       ...sceneData,
       windowID: (newWindow as any)._webSpatialID,
-      windowGroupID: (newWindow as any)._webSpatialGroupID,
+      windowContainerID: (newWindow as any)._webSpatialGroupID,
     }
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
       sceneData: jsbSceneData,
-      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+      windowContainerID: (window as any)._webSpatialParentGroupID, // parent WindowContainerID
     })
 
     try {
@@ -137,8 +137,8 @@ export class WebSpatial {
     }
   }
 
-  static async createWindowGroup(style: WindowStyle = 'Plain') {
-    var cmd = new RemoteCommand('createWindowGroup', {
+  static async createWindowContainer(style: WindowStyle = 'Plain') {
+    var cmd = new RemoteCommand('createWindowContainer', {
       windowStyle: style,
     })
 
@@ -146,7 +146,7 @@ export class WebSpatial {
       WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
       WebSpatial.sendCommand(cmd)
     })
-    var res = new WindowGroup()
+    var res = new WindowContainer()
     res.id = (result as any).data.createdID
     return res
   }
@@ -154,7 +154,7 @@ export class WebSpatial {
   static async destroyResource(resource: WebSpatialResource) {
     const data = {}
     var cmd = new RemoteCommand('destroyResource', {
-      windowGroupID: resource.windowGroupId,
+      windowContainerID: resource.windowContainerId,
       resourceID: resource.id,
     })
 
@@ -163,7 +163,7 @@ export class WebSpatial {
 
   static async ping(msg: string) {
     var cmd = new RemoteCommand('ping', {
-      windowGroupID: this.getCurrentWindowGroup().id,
+      windowContainerID: this.getCurrentWindowContainer().id,
       resourceID: this.getCurrentWebPanel().id,
       message: msg,
     })
@@ -182,7 +182,7 @@ export class WebSpatial {
 
   static async getStats() {
     var cmd = new RemoteCommand('getStats', {
-      windowGroupID: this.getCurrentWindowGroup().id,
+      windowContainerID: this.getCurrentWindowContainer().id,
       resourceID: this.getCurrentWebPanel().id,
     })
 
@@ -206,7 +206,7 @@ export class WebSpatial {
     return (result as any).data
   }
 
-  static async inspectRootWindowGroup() {
+  static async inspectRootWindowContainer() {
     return this.inspect('root')
   }
 
@@ -215,7 +215,7 @@ export class WebSpatial {
     resource: WebSpatialResource,
   ) {
     var cmd = new RemoteCommand('setComponent', {
-      windowGroupID: entity.windowGroupId,
+      windowContainerID: entity.windowContainerId,
       resourceID: resource.id,
       entityID: entity.id,
     })
@@ -228,7 +228,7 @@ export class WebSpatial {
     resource: WebSpatialResource,
   ) {
     var cmd = new RemoteCommand('removeComponent', {
-      windowGroupID: entity.windowGroupId,
+      windowContainerID: entity.windowContainerId,
       resourceID: resource.id,
       entityID: entity.id,
     })
@@ -236,16 +236,16 @@ export class WebSpatial {
     WebSpatial.sendCommand(cmd)
   }
 
-  // windowGroup is the group the resource will be tied to (if not provided it will use the current window grou)
+  // windowContainer is the group the resource will be tied to (if not provided it will use the current window grou)
   // parentWebView is the SpatialWebView that the resource will be tied to (if not provided, resource will continue to exist even if this page is unloaded)
   static async createResource(
     type: string,
-    windowGroup: WindowGroup,
+    windowContainer: WindowContainer,
     parentWebView: WebSpatialResource,
     params = {} as any,
   ) {
     var cmd = new RemoteCommand('createResource', {
-      windowGroupID: windowGroup.id,
+      windowContainerID: windowContainer.id,
       resourceID: parentWebView.id,
       type: type,
       params: params,
@@ -257,13 +257,13 @@ export class WebSpatial {
     })
     var res = new WebSpatialResource()
     res.id = (result as any).data.createdID
-    res.windowGroupId = cmd.data.windowGroupID
+    res.windowContainerId = cmd.data.windowContainerID
     return res
   }
 
-  static async updateWindowGroup(wg: WindowGroup, data: any) {
-    var cmd = new RemoteCommand('updateWindowGroup', {
-      windowGroupID: wg.id,
+  static async updateWindowContainer(wg: WindowContainer, data: any) {
+    var cmd = new RemoteCommand('updateWindowContainer', {
+      windowContainerID: wg.id,
       update: data,
     })
 
@@ -276,7 +276,7 @@ export class WebSpatial {
 
   static async updateResource(resource: WebSpatialResource, data: any = null) {
     var cmd = new RemoteCommand('updateResource', {
-      windowGroupID: resource.windowGroupId,
+      windowContainerID: resource.windowContainerId,
       resourceID: resource.id,
       update: data || resource.data,
     })
@@ -290,7 +290,7 @@ export class WebSpatial {
 
   static async setLoading(method: LoadingMethodKind, style?: string) {
     var cmd = new RemoteCommand('setLoading', {
-      windowGroupID: (window as any)._webSpatialParentGroupID, // parent WindowGroupID
+      windowContainerID: (window as any)._webSpatialParentGroupID, // parent WindowContainerID
       loading: {
         method,
         style,

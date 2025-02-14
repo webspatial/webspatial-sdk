@@ -63,20 +63,20 @@ class SpatialEntity: SpatialObject {
         return childEntities
     }
 
-    // Window group that this entity will be displayed in (not related to resource ownership)
-    weak var parentWindowGroup: SpatialWindowGroup?
-    public func setParentWindowGroup(wg: SpatialWindowGroup?) {
-        if let g = parentWindowGroup {
+    // Window container that this entity will be displayed in (not related to resource ownership)
+    weak var parentWindowContainer: SpatialWindowContainer?
+    public func setParentWindowContainer(wg: SpatialWindowContainer?) {
+        if let g = parentWindowContainer {
             g.removeEntity(self)
-            parentWindowGroup = nil
+            parentWindowContainer = nil
         }
-        parentWindowGroup = wg
-        if let g = parentWindowGroup {
+        parentWindowContainer = wg
+        if let g = parentWindowContainer {
             g.addEntity(self)
         }
 
         // @Trevor: I add this code to process parent
-        //          I think an entity can be either child of WindowGroup or SpatialEntity
+        //          I think an entity can be either child of WindowContainer or SpatialEntity
         parent?.childEntities.removeValue(forKey: id)
         parent = nil
     }
@@ -86,9 +86,9 @@ class SpatialEntity: SpatialObject {
     }
 
     public func setParent(parentEnt: SpatialEntity?) {
-        // Remove parent windowGroup
-        parentWindowGroup?.removeEntity(self)
-        parentWindowGroup = nil
+        // Remove parent window container
+        parentWindowContainer?.removeEntity(self)
+        parentWindowContainer = nil
 
         // Remove from existing parent
         parent?.childEntities.removeValue(forKey: id)
@@ -133,7 +133,7 @@ class SpatialEntity: SpatialObject {
     }
 
     override func onDestroy() {
-        if let wg = parentWindowGroup {
+        if let wg = parentWindowContainer {
             wg.removeEntity(self)
         }
 
@@ -166,7 +166,7 @@ class SpatialEntity: SpatialObject {
             "childEntities": childEntitiesInfo,
             "coordinateSpace": coordinateSpace.description,
             "parent": parent?.id,
-            "parentWindowGroup": parentWindowGroup?.id,
+            "parentWindowContainer": parentWindowContainer?.id,
             "components": componentsInfo,
         ]
 

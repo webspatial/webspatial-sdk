@@ -21,7 +21,7 @@ struct PWAManager: Codable {
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "web+spatial://", url: "build/deeplink.html?path=%s")]
-    var mainScene: WindowGroupOptions = .init(
+    var mainScene: WindowContainerOptions = .init(
         defaultSize: .init(
             width: 1280,
             height: 1280

@@ -12,7 +12,7 @@ import RealityKit
 import SwiftUI
 import WebKit
 
-let DefaultPlainWindowGroupSize = CGSize(width: 1280, height: 720)
+let DefaultPlainWindowContainerSize = CGSize(width: 1280, height: 720)
 
 func getDocumentsDirectory() -> URL {
     let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
@@ -22,7 +22,7 @@ func getDocumentsDirectory() -> URL {
 
 struct LoadingStyles {
     var cornerRadius: CornerRadius = .init()
-    var windowGroupSize = DefaultPlainWindowGroupSize
+    var windowContainerSize = DefaultPlainWindowContainerSize
     var backgroundMaterial: BackgroundMaterial = .None
 }
 
@@ -41,12 +41,13 @@ class SpatialWindowComponent: SpatialComponent {
             "resolutionX": resolutionX,
             "resolutionY": resolutionY,
             "parentWebviewID": parentWebviewID,
-            "parentWindowGroupID": parentWindowGroupID,
-            "childWindowGroups": childWindowGroups,
+            "parentWindowContainerID": parentWindowContainerID,
+            "childWindowContainers": childWindowContainers,
             "spawnedNativeWebviewsCount": spawnedNativeWebviews.count,
             "childResources": childEntitiesInfo,
             "cornerRadius": cornerRadius.toJson(),
             "backgroundMaterial": backgroundMaterial.rawValue,
+            "isOpaque": webViewNative!.webViewHolder.appleWebView!.isOpaque,
         ]
 
         let baseInspectInfo = super.inspect()
@@ -56,7 +57,7 @@ class SpatialWindowComponent: SpatialComponent {
         return inspectInfo
     }
 
-    // if this is root, close the webview will destroy parent windowGroup
+    // if this is root, close the webview will destroy parent windowContainer
     var isRoot = false
 
     var scrollOffset = CGPoint()
@@ -72,8 +73,8 @@ class SpatialWindowComponent: SpatialComponent {
 
     // ID of the webview that created this or empty if its root
     var parentWebviewID: String = ""
-    var parentWindowGroupID: String
-    var childWindowGroups = [String: WindowGroupData]()
+    var parentWindowContainerID: String
+    var childWindowContainers = [String: WindowContainerData]()
     var spawnedNativeWebviews = [String: WebViewNative]()
 
     private var childResources = [String: SpatialObject]()
@@ -108,21 +109,33 @@ class SpatialWindowComponent: SpatialComponent {
         removeChildSpatialObject(spatialObject)
     }
 
-    private func onWindowGroupDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialWindowGroup
+    private func onWindowContainerDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialWindowContainer
+
         spatialObject
             .off(
                 event: SpatialObject.Events.BeforeDestroyed.rawValue,
-                listener: onWindowGroupDestroyed
+                listener: onWindowContainerDestroyed
             )
-        childWindowGroups.removeValue(forKey: spatialObject.id)
+        childWindowContainers.removeValue(forKey: spatialObject.id)
     }
 
-    public func setWindowGroup(uuid: String, wgd: WindowGroupData) {
-        childWindowGroups[uuid] = wgd
-        SpatialWindowGroup.getSpatialWindowGroup(uuid)!.on(
+    /// Determines whether the current webview is a root webview.
+    ///
+    /// A root webview is created when the Scene is initialized.
+    /// If the webview is created by another `SpatialWebview`, it is not considered a root webview.
+    /// For example, a `SpatialDiv` is not a root webview.
+    ///
+    /// - Returns: `true` if the webview is a root webview (i.e., `parentWebviewID` is empty), otherwise `false`.
+    private func isRootWebview() -> Bool {
+        return parentWebviewID == ""
+    }
+
+    public func setWindowContainer(uuid: String, wgd: WindowContainerData) {
+        childWindowContainers[uuid] = wgd
+        SpatialWindowContainer.getSpatialWindowContainer(uuid)!.on(
             event: SpatialObject.Events.BeforeDestroyed.rawValue,
-            listener: onWindowGroupDestroyed
+            listener: onWindowContainerDestroyed
         )
     }
 
@@ -134,7 +147,22 @@ class SpatialWindowComponent: SpatialComponent {
     var gotStyle = false
     var opacity = 1.0
     var cornerRadius: CornerRadius = .init()
-    var backgroundMaterial = BackgroundMaterial.None
+
+    private var _backgroundMaterial = BackgroundMaterial.None
+    var backgroundMaterial: BackgroundMaterial {
+        get {
+            return _backgroundMaterial
+        }
+        set(newValue) {
+            _backgroundMaterial = newValue
+            if isRootWebview() {
+                webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
+            } else {
+                // it's spatial div
+                webViewNative?.webViewHolder.appleWebView?.isOpaque = false
+            }
+        }
+    }
 
     var loadingStyles = LoadingStyles()
     var isLoading = true
@@ -143,9 +171,9 @@ class SpatialWindowComponent: SpatialComponent {
 
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
-    init(parentWindowGroupID: String) {
+    init(parentWindowContainerID: String) {
 //        wgManager.wvActiveInstances += 1
-        self.parentWindowGroupID = parentWindowGroupID
+        self.parentWindowContainerID = parentWindowContainerID
         super.init()
         webViewNative = WebViewNative()
         webViewNative?.webViewRef = self
@@ -153,9 +181,9 @@ class SpatialWindowComponent: SpatialComponent {
         registerForceStyle()
     }
 
-    init(parentWindowGroupID: String, url: URL) {
+    init(parentWindowContainerID: String, url: URL) {
 //        wgManager.wvActiveInstances += 1
-        self.parentWindowGroupID = parentWindowGroupID
+        self.parentWindowContainerID = parentWindowContainerID
         super.init()
 
         webViewNative = WebViewNative(url: url)
@@ -269,7 +297,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func readWinodwGroupID(id: String) -> String {
         if id == "current" {
-            return parentWindowGroupID
+            return parentWindowContainerID
         } else {
             return id
         }
@@ -319,9 +347,9 @@ class SpatialWindowComponent: SpatialComponent {
         childResources = [String: SpatialObject]()
         spawnedNativeWebviews = [String: WebViewNative]()
 
-        let wgkeys = childWindowGroups.map { $0.key }
+        let wgkeys = childWindowContainers.map { $0.key }
         for k in wgkeys {
-            SpatialWindowGroup.getSpatialWindowGroup(k)!.closeWindowData.send(childWindowGroups[k]!)
+            SpatialWindowContainer.getSpatialWindowContainer(k)!.closeWindowData.send(childWindowContainers[k]!)
         }
         let url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
@@ -364,8 +392,8 @@ class SpatialWindowComponent: SpatialComponent {
         backgroundMaterial = loadingStyles.backgroundMaterial
 
 //        if root {
-//            let wg = wgManager.getWindowGroup(windowGroup: parentWindowGroupID)
-//            wg.setSize.send(loadingStyles.windowGroupSize)
+//            let wg = wgManager.getWindowContainer(windowContainer: parentWindowContainerID)
+//            wg.setSize.send(loadingStyles.windowContainerSize)
 //        }
         if !gotStyle {
             // We didn't get a style update in time (might result in FOUC)
