@@ -40,4 +40,14 @@ export class SpatialModel3DComponent extends SpatialComponent {
       contentMode,
     })
   }
+
+  /**
+   * Sets whether the model appear in original size or fit the rect
+   * @param resizable
+   */
+  async setResizable(resizable: boolean) {
+    await WebSpatial.updateResource(this._resource, {
+      resizable,
+    })
+  }
 }
