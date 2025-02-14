@@ -13,14 +13,14 @@ struct OpenDismissHandlerUI: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
 
-    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
+    @Environment(SpatialWindowContainer.self) var windowContainerContent: SpatialWindowContainer
 
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack {}
             .onAppear()
-            .onReceive(windowGroupContent.toggleImmersiveSpace) { v in
+            .onReceive(windowContainerContent.toggleImmersiveSpace) { v in
                 if v {
                     Task {
                         await openImmersiveSpace(id: "ImmersiveSpace")
@@ -31,13 +31,13 @@ struct OpenDismissHandlerUI: View {
                     }
                 }
             }
-            .onReceive(windowGroupContent.openWindowData) { wd in
+            .onReceive(windowContainerContent.openWindowData) { wd in
                 let _ = openWindow(id: wd.windowStyle, value: wd)
             }
-            .onReceive(windowGroupContent.closeWindowData) { wd in
+            .onReceive(windowContainerContent.closeWindowData) { wd in
                 dismissWindow(id: wd.windowStyle, value: wd)
             }
-            .onReceive(windowGroupContent.setLoadingWindowData) { wd in
+            .onReceive(windowContainerContent.setLoadingWindowData) { wd in
                 if wd.method == .show {
                     openWindow(id: "loading")
                 } else if wd.method == .hide {
@@ -48,7 +48,7 @@ struct OpenDismissHandlerUI: View {
             .onChange(of: scenePhase) { oldValue, newValue in
                 print("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
                 if newValue == .background {
-//                    windowGroupContent.destroy()
+//                    windowContainerContent.destroy()
                 }
             }
     }

@@ -15,27 +15,27 @@ class SceneManager {
     // create scene
     // if config is provided, it show immediately
     // else it won't show until showRoot is called
-    func createRoot(target: SpatialWindowComponent, windowID: String, config: WindowGroupOptions? = nil) {
-        let windowGroupID = UUID().uuidString
+    func createRoot(target: SpatialWindowComponent, windowID: String, config: WindowContainerOptions? = nil) {
+        let windowContainerID = UUID().uuidString
         // open window
-        let wgd = WindowGroupData(
+        let wgd = WindowContainerData(
             windowStyle: "Plain",
-            windowGroupID: windowGroupID
+            windowContainerID: windowContainerID
         )
         let ent = SpatialEntity()
         ent.coordinateSpace = CoordinateSpaceMode.ROOT
         let windowComponent = SpatialWindowComponent(
-            parentWindowGroupID: windowGroupID
+            parentWindowContainerID: windowContainerID
         )
 
         if let spawnedWebView = target.spawnedNativeWebviews.removeValue(forKey: windowID) {
             windowComponent.getView()!.destroy()
             windowComponent.setView(wv: spawnedWebView)
             windowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = windowComponent
-            // focusRoot need the windowGroupID
-            windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowGroupID)';")
-            // tell new webview parentWindowGroupID to open loadingview
-            windowComponent.evaluateJS(js: "window._webSpatialParentGroupID='\(target.parentWindowGroupID)';")
+            // focusRoot need the windowContainerID
+            windowComponent.evaluateJS(js: "window._webSpatialGroupID='\(windowContainerID)';")
+            // tell new webview parentWindowContainerID to open loadingview
+            windowComponent.evaluateJS(js: "window._webSpatialParentGroupID='\(target.parentWindowContainerID)';")
 
             if config != nil {
                 // signal off hook
@@ -49,32 +49,32 @@ class SceneManager {
 
         ent.addComponent(windowComponent)
 
-        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowGroupID)
+        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowContainerID)
         wg!.wgd = wgd
-        ent.setParentWindowGroup(wg: wg)
+        ent.setParentWindowContainer(wg: wg)
 
         if let config = config {
             showRoot(
                 target: windowComponent,
                 config: config,
-                parentWindowGroupID: target.parentWindowGroupID
+                parentWindowContainerID: target.parentWindowContainerID
             )
         }
     }
 
     // set defaultvalues for the scene and show it
-    func showRoot(target: SpatialWindowComponent, config: WindowGroupOptions, parentWindowGroupID: String) {
-        let plainDV = WindowGroupPlainDefaultValues(
+    func showRoot(target: SpatialWindowComponent, config: WindowContainerOptions, parentWindowContainerID: String) {
+        let plainDV = WindowContainerPlainDefaultValues(
             config
         )
 
-        if let pwg = SpatialWindowGroup.getSpatialWindowGroup(parentWindowGroupID),
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(
-               target.parentWindowGroupID
+        if let pwg = SpatialWindowContainer.getSpatialWindowContainer(parentWindowContainerID),
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(
+               target.parentWindowContainerID
            )
         {
-            WindowGroupMgr.Instance
-                .updateWindowGroupPlainDefaultValues(
+            WindowContainerMgr.Instance
+                .updateWindowContainerPlainDefaultValues(
                     plainDV
                 ) // set default values
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -84,17 +84,17 @@ class SceneManager {
     }
 
     // bring the scene to focus
-    func focusRoot(target: SpatialWindowComponent, windowGroupID: String) {
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID) {
+    func focusRoot(target: SpatialWindowComponent, windowContainerID: String) {
+        if let wg = SpatialWindowContainer.getSpatialWindowContainer(windowContainerID) {
             wg.openWindowData.send(wg.wgd!)
         }
     }
 
     // show LodingView when window.xrCurrentSceneDefaults is executing
-    func setLoading(_ method: LoadingMethod, windowGroupID: String) {
-        // trigger open loading view by parent windowGroup due to current windowGroup isn't visible yet
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(windowGroupID) {
-            let lwgdata = LoadingWindowGroupData(
+    func setLoading(_ method: LoadingMethod, windowContainerID: String) {
+        // trigger open loading view by parent windowContainer due to current windowContainer isn't visible yet
+        if let wg = SpatialWindowContainer.getSpatialWindowContainer(windowContainerID) {
+            let lwgdata = LoadingWindowContainerData(
                 method: method,
                 windowStyle: nil
             )
@@ -104,7 +104,7 @@ class SceneManager {
 
     // dismiss the scene content when webview closed
     func closeRoot(_ target: SpatialWindowComponent) {
-        if let wg = SpatialWindowGroup.getSpatialWindowGroup(target.parentWindowGroupID) {
+        if let wg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID) {
             wg.closeWindowData.send(wg.wgd!)
         }
     }

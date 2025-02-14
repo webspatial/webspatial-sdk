@@ -11,7 +11,7 @@
     "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\" \"cd jsx-runtime/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsc -p runtime/tsconfig.json && tsc -p react/tsconfig.json && tsc -p testServer/tsconfig.json",
     "format": "pnpm -r run format"
   },
   "simple-git-hooks": {
@@ -39,9 +39,10 @@
   },
   "homepage": "https://github.com/spatial-web/XRSDK#readme",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "simple-git-hooks": "^2.11.1",
-    "concurrently": "^8.2.2"
+    "typescript": "^5.7.3"
   }
 }

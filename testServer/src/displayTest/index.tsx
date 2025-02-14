@@ -26,7 +26,7 @@ function CustomComponent(props: {
   const childDivVisibleStyle: CSSProperties = {
     display: props.childDivVisible ? 'block' : 'none',
     '--xr-back': 30,
-    '--xr-background-material': 'default',
+    '--xr-background-material': 'translucent',
   }
 
   const childRef = useRef<HTMLDivElement>(null)

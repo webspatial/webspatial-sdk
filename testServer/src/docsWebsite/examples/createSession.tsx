@@ -2,7 +2,7 @@ import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   var [supported, setSupported] = useState(false)
   var [versionDisplay, setVersionDisplay] = useState('')
 
@@ -16,7 +16,6 @@ function MySample(props: { session?: SpatialSession }) {
       spatial.getNativeVersion()
     setVersionDisplay(versionLog)
     if (spatial.isSupported()) {
-      let session = spatial.requestSession()
       setSupported(true)
     }
     // CODESAMPLE_END

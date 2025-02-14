@@ -1,5 +1,5 @@
 //
-//  VolumetricWindowGroupView.swift
+//  VolumetricWindowContainerView.swift
 //  web-spatial
 //
 //  Created by ByteDance on 5/9/24.
@@ -14,15 +14,15 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
-struct VolumetricWindowGroupView: View {
-    @Environment(SpatialWindowGroup.self) var windowGroupContent: SpatialWindowGroup
+struct VolumetricWindowContainerView: View {
+    @Environment(SpatialWindowContainer.self) var windowContainerContent: SpatialWindowContainer
 
     var body: some View {
-        OpenDismissHandlerUI().environment(windowGroupContent).onDisappear {
-            windowGroupContent.destroy()
+        OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
+            windowContainerContent.destroy()
         }
 
-        let entities = windowGroupContent.getEntities().filter { _, entity in
+        let entities = windowContainerContent.getEntities().filter { _, entity in
             entity.coordinateSpace == .ROOT && entity.hasComponent(SpatialViewComponent.self)
         }
 

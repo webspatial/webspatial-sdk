@@ -10,7 +10,7 @@ import Foundation
 struct SpatialObjectInfo: Codable {
     var count: Int
     var windowArray: [String]
-    var windowGroupArray: [String]
+    var windowContainerArray: [String]
     var entityArray: [String]
 }
 
@@ -49,16 +49,16 @@ class SpatialObject: EventEmitter, Equatable {
             $0.value is SpatialEntity
         }
 
-        let windowGroups = objects.filter {
-            $0.value is SpatialWindowGroup
+        let windowContainers = objects.filter {
+            $0.value is SpatialWindowContainer
         }
 
         let weakRefWebviews = weakRefObjects.filter {
             $0.value.value is SpatialWindowComponent
         }
 
-        let weakRefWindowGroups = weakRefObjects.filter {
-            $0.value.value is SpatialWindowGroup
+        let weakRefWindowContainers = weakRefObjects.filter {
+            $0.value.value is SpatialWindowContainer
         }
 
         let weakRefEntities = weakRefObjects.filter {
@@ -69,13 +69,13 @@ class SpatialObject: EventEmitter, Equatable {
             objects: SpatialObjectInfo(
                 count: objects.count,
                 windowArray: Array(webviews.keys),
-                windowGroupArray: Array(windowGroups.keys),
+                windowContainerArray: Array(windowContainers.keys),
                 entityArray: Array(entities.keys)
             ),
             refObjects: SpatialObjectInfo(
                 count: weakRefObjects.count,
                 windowArray: Array(weakRefWebviews.keys),
-                windowGroupArray: Array(weakRefWindowGroups.keys),
+                windowContainerArray: Array(weakRefWindowContainers.keys),
                 entityArray: Array(weakRefEntities.keys)
             )
         )
