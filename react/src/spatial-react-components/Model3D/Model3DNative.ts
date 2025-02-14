@@ -63,6 +63,12 @@ export class Model3DNative {
     }
   }
 
+  async setResizable(resizable: boolean) {
+    if (this.spatialModel3DComponent) {
+      await this.spatialModel3DComponent.setResizable(resizable)
+    }
+  }
+
   async updateByDom(
     dom: HTMLDivElement,
     options: { spatialTransform: SpatialTransformType },
