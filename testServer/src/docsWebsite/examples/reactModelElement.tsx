@@ -1,9 +1,8 @@
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
+import { SpatialSession } from '@xrsdk/runtime'
 import { showSample } from './sampleLoader'
 import { Model } from '@xrsdk/react'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   return (
     <div className="flex flex-col items-center w-full">
       <Model

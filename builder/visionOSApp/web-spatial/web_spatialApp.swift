@@ -17,7 +17,7 @@ import SwiftUI
 // To load a local path, remove http:// eg.  "static-web/"
 let nativeAPIVersion = "0.0.1"
 
-// detect when app properties like defaultSize change so we can avoid race condition of setting default values and then opening window group
+// detect when app properties like defaultSize change so we can avoid race condition of setting default values and then opening window container
 var sceneStateChangedCB: ((Any) -> Void) = { _ in
 }
 
@@ -25,10 +25,10 @@ var sceneStateChangedCB: ((Any) -> Void) = { _ in
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var root: SpatialWindowComponent? = nil
-    @State var rootWGD: SpatialWindowGroup
+    @State var rootWGD: SpatialWindowContainer
     @State var initialLaunch = true
 
-    @ObservedObject var wgm = WindowGroupMgr.Instance
+    @ObservedObject var wgm = WindowContainerMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -41,9 +41,9 @@ struct web_spatialApp: App {
         // init pwa manager
         pwaManager._init()
 
-        // create root SpatialWindowGroup and Immersive SpatialWindowGroup
-        rootWGD = SpatialWindowGroup.createRootWindowGroup()
-        let _ = SpatialWindowGroup.createImmersiveWindowGroup()
+        // create root SpatialWindowContainer and Immersive SpatialWindowContainer
+        rootWGD = SpatialWindowContainer.createRootWindowContainer()
+        let _ = SpatialWindowContainer.createImmersiveWindowContainer()
     }
 
     func getFileUrl() -> URL {
@@ -59,10 +59,10 @@ struct web_spatialApp: App {
             // Create a default entity with webview resource
             let rootEntity = SpatialEntity()
             rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
-            let windowComponent = SpatialWindowComponent(parentWindowGroupID: rootWGD.id, url: fileUrl)
+            let windowComponent = SpatialWindowComponent(parentWindowContainerID: rootWGD.id, url: fileUrl)
             windowComponent.isRoot = true
             rootEntity.addComponent(windowComponent)
-            rootEntity.setParentWindowGroup(wg: rootWGD)
+            rootEntity.setParentWindowContainer(wg: rootWGD)
 
             root = windowComponent
         }
@@ -74,11 +74,11 @@ struct web_spatialApp: App {
     }
 
     var body: some Scene {
-        WindowGroup(id: "Plain", for: WindowGroupData.self) { $windowData in
-            if windowData.windowGroupID == SpatialWindowGroup.getRootID() {
+        WindowGroup(id: "Plain", for: WindowContainerData.self) { $windowData in
+            if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowGroupView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
+                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
                     initAppOnViewMount()
                     let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
 
@@ -87,15 +87,15 @@ struct web_spatialApp: App {
                     }
                 }
             } else {
-                let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(
-                    windowData.windowGroupID
+                let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
+                    windowData.windowContainerID
                 )
-                PlainWindowGroupView().environment(wg)
+                PlainWindowContainerView().environment(wg)
                     // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
                     .handlesExternalEvents(preferring: [], allowing: [])
             }
         } defaultValue: {
-            WindowGroupData(windowStyle: "Plain", windowGroupID: SpatialWindowGroup.getRootID())
+            WindowContainerData(windowStyle: "Plain", windowContainerID: SpatialWindowContainer.getRootID())
 
         }.windowStyle(.plain).onChange(of: scenePhase) { oldPhase, newPhase in
             if oldPhase == .background && newPhase == .inactive {
@@ -106,7 +106,7 @@ struct web_spatialApp: App {
                     // App reopened
                     let fileUrl = getFileUrl()
                     root?.navigateToURL(url: fileUrl)
-                    rootWGD.setSize.send(DefaultPlainWindowGroupSize)
+                    rootWGD.setSize.send(DefaultPlainWindowContainerSize)
                 }
             }
         }.defaultSize(
@@ -115,15 +115,15 @@ struct web_spatialApp: App {
             wgm.getValue().windowResizability!
         )
 
-        WindowGroup(id: "Volumetric", for: WindowGroupData.self) { $windowData in
-            let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(windowData!.windowGroupID)
-            VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
+        WindowGroup(id: "Volumetric", for: WindowContainerData.self) { $windowData in
+            let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowData!.windowContainerID)
+            VolumetricWindowContainerView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
 
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
-            let wg = SpatialWindowGroup.getImmersiveWindowGroup()
-            VolumetricWindowGroupView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
+            let wg = SpatialWindowContainer.getImmersiveWindowContainer()
+            VolumetricWindowContainerView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
         }
 
         WindowGroup(id: "loading") {
