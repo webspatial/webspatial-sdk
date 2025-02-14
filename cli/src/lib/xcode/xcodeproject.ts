@@ -4,7 +4,6 @@ import {
   MIDDLE_APPICON_DIRECTORY,
   PROJECT_BUILD_DIRECTORY,
   PROJECT_DIRECTORY,
-  PROJECT_EXPORT_DIRECTORY,
 } from '../resource'
 import { join } from 'path'
 import { loadJsonFromDisk } from '../resource/load'
@@ -17,7 +16,7 @@ const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 	<key>destination</key>
 	<string>export</string>
 	<key>method</key>
-	<string>release-testing</string>
+	<string>BUILDTYPE</string>
 	<key>signingStyle</key>
 	<string>automatic</string>
 	<key>stripSwiftSymbols</key>
@@ -34,12 +33,21 @@ export default class XcodeProject {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
+    let buildType = 'release-testing'
+    let xml = exportOptionsXML
+    if (option['buildType']) {
+      xml = exportOptionsXML.replace('BUILDTYPE', option['type'])
+    } else {
+      xml = exportOptionsXML.replace('BUILDTYPE', buildType)
+    }
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
     }
-    this.bindWebProject(project)
     await this.bindIcon(option.icon)
     this.bindManifestInfo(project, option.manifestInfo.json)
+    if (option['version']) {
+      this.updateVersion(project, option['version'])
+    }
     try {
       fs.writeFileSync(projectPath, project.writeSync())
     } catch (error) {
@@ -48,7 +56,6 @@ export default class XcodeProject {
   }
 
   private static fixProjectFunction(project: any) {
-    // 原pbxGroupByName方法存在bug，return为null，导致其他方法直接调用.xx会报错
     // The original pbxGroupByName method has a bug where the return is null, causing other methods to call. xx directly and report an error
     project.pbxGroupByName = function (name: string) {
       var groups = this.hash.project.objects['PBXGroup'],
@@ -63,7 +70,6 @@ export default class XcodeProject {
           return groups[groupKey]
         }
       }
-      // 原方法此处返回null，导致其他地方调用project.pbxGroupByName("xxx").xx会报错
       // The original method returns null here, causing errors when calling project.pbxGroupByName ("xxx"). xx elsewhere
       return false
     }
@@ -117,20 +123,8 @@ export default class XcodeProject {
     }
   }
 
-  public static bindWebProject(xcodeProject: any) {
-    const webSpatialKey = xcodeProject.findPBXGroupKey({
-      path: '"web-spatial"',
-    })
-    let file = xcodeProject.addResourceFile('web-project', {
-      lastKnownFileType: 'folder',
-    })
-    xcodeProject.addToPbxGroupType(file, webSpatialKey, 'PBXGroup')
-    // xcodeProject.removeResourceFile("web-project", {lastKnownFileType:"folder"})
-  }
-
-  public static async bindIcon(icon: any) {
+  private static async bindIcon(icon: any) {
     if (icon) {
-      // Apple Vision Pro的应用icon要求必须至少有2张图，其中一张为完全不透明的底图，因此这里要求Spatial Web提供底图，cli会额外生成一张完全透明的图作为中间图层
       // The application icon of Apple Vision Pro requires at least 2 images, one of which is a completely opaque base image. Therefore, Spatial Web is required to provide the base image, and CLI will generate an additional completely transparent image as the middle layer.
       const iconConfigDirectory = join(
         PROJECT_DIRECTORY,
@@ -142,13 +136,12 @@ export default class XcodeProject {
 
       let iconConfig = await loadJsonFromDisk(iconConfigPath)
       /*
-                Xcode中对于icon配置的json格式
-                JSON format for icon configuration in Xcode
-                {
-                    images: [ { filename: 'icon.jpeg', idiom: 'vision', scale: '2x' } ],
-                    info: { author: 'xcode', version: 1 }
-                }
-            */
+          JSON format for icon configuration in Xcode
+          {
+              images: [ { filename: 'icon.jpeg', idiom: 'vision', scale: '2x' } ],
+              info: { author: 'xcode', version: 1 }
+          }
+      */
       iconConfig.images[0]['filename'] = iconFileName
       await icon.writeAsync(iconFullPath)
       await fs.writeFileSync(iconConfigPath, JSON.stringify(iconConfig))
@@ -175,7 +168,7 @@ export default class XcodeProject {
     }
   }
 
-  public static updateTeamId(xcodeProject: any, teamId: string) {
+  private static updateTeamId(xcodeProject: any, teamId: string) {
     xcodeProject.updateBuildProperty('DEVELOPMENT_TEAM', teamId)
     const newXml = exportOptionsXML.replace('YOURTEAMID', teamId)
     fs.writeFileSync(
@@ -184,7 +177,7 @@ export default class XcodeProject {
     )
   }
 
-  public static bindManifestInfo(xcodeProject: any, manifest: any) {
+  private static bindManifestInfo(xcodeProject: any, manifest: any) {
     xcodeProject.updateProductName(manifest.name)
     // set PRODUCT_BUNDLE_IDENTIFIER need ""
     xcodeProject.updateBuildProperty(
@@ -192,5 +185,9 @@ export default class XcodeProject {
       `"${manifest.id}"`,
     )
     // TODO:bind deeplink
+  }
+
+  private static updateVersion(xcodeProject: any, version: string) {
+    xcodeProject.updateBuildProperty('CURRENT_PROJECT_VERSION', version)
   }
 }
