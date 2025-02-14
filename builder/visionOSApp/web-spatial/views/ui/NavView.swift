@@ -22,11 +22,13 @@ struct NavView: View {
                         }, label: {
                             Text("←")
                         })
+                        .disabled(!swc!.canGoBack)
                         Button(action: {
                             swc?.goForward()
                         }, label: {
                             Text("→")
                         })
+                        .disabled(!swc!.canGoForward)
                         Button(action: {
                             swc?.reload()
                         }, label: {
