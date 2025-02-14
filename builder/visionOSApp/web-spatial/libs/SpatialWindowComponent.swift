@@ -77,6 +77,7 @@ class SpatialWindowComponent: SpatialComponent {
     var childWindowContainers = [String: WindowContainerData]()
     var spawnedNativeWebviews = [String: WebViewNative]()
 
+    // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var childResources = [String: SpatialObject]()
     public func addChildSpatialObject(_ spatialObject: SpatialObject) {
         childResources[spatialObject.id] = spatialObject
@@ -316,11 +317,7 @@ class SpatialWindowComponent: SpatialComponent {
         didFinishFirstLoad = true
     }
 
-    func didStartLoadPage() {
-        if didFinishFirstLoad {
-            webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
-        }
-
+    func releaseChildResources() {
         let spatialObjects = childResources.map { $0.value }
         for spatialObject in spatialObjects {
             spatialObject.destroy()
@@ -332,6 +329,14 @@ class SpatialWindowComponent: SpatialComponent {
         for k in wgkeys {
             SpatialWindowContainer.getSpatialWindowContainer(k)!.closeWindowData.send(childWindowContainers[k]!)
         }
+    }
+
+    func didStartLoadPage() {
+        if didFinishFirstLoad {
+            webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
+        }
+
+        releaseChildResources()
         let url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
 
@@ -385,6 +390,7 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     override func onDestroy() {
+        releaseChildResources()
         didCloseWebView()
     }
 }
