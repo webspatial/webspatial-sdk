@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef, ReactNode } from 'react'
+import { useEffect, useState, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { Spatial, SpatialSession } from '@xrsdk/runtime'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark as dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import ReactMarkdown from 'react-markdown'
 
 export function showSample(MySample: any, hasCode = true) {
   var spatial: Spatial | null = new Spatial()
@@ -21,7 +20,6 @@ export function showSample(MySample: any, hasCode = true) {
   function App(props: { children?: ReactNode }) {
     var [spatialSupported, setSpatialSupported] = useState(false)
     var [showCode, setShowCode] = useState('')
-    var [showMarkdown, setShowMarkdown] = useState('')
 
     useEffect(() => {
       if (session) {
@@ -158,8 +156,8 @@ export function showSample(MySample: any, hasCode = true) {
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=openWindowGroup">
-                              Open Window Group
+                            <a href="/src/docsWebsite/index.html?examplePath=openWindowContainer">
+                              Open Window Container
                             </a>
                           </li>
                           <li>
@@ -233,7 +231,7 @@ export function showSample(MySample: any, hasCode = true) {
   }
 
   var root = document.createElement('div')
-  document.addEventListener('readystatechange', event => {
+  document.addEventListener('readystatechange', _event => {
     switch (document.readyState) {
       case 'complete':
         document.body.appendChild(root)

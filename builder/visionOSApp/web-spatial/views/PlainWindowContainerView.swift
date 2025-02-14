@@ -1,5 +1,5 @@
 //
-//  PlainWindowGroupView.swift
+//  PlainWindowContainerView.swift
 //  web-spatial
 //
 //  Created by ByteDance on 5/9/24.
@@ -8,9 +8,9 @@
 import RealityKit
 import SwiftUI
 
-struct PlainWindowGroupView: View {
+struct PlainWindowContainerView: View {
     @EnvironmentObject private var sceneDelegate: SceneDelegate
-    @Environment(SpatialWindowGroup.self) private var windowGroupContent: SpatialWindowGroup
+    @Environment(SpatialWindowContainer.self) private var windowContainerContent: SpatialWindowContainer
 
     @State private var windowResizeInProgress = false
     @State private var timer: Timer?
@@ -20,11 +20,11 @@ struct PlainWindowGroupView: View {
     }
 
     var body: some View {
-        OpenDismissHandlerUI().environment(windowGroupContent).onDisappear {
-            windowGroupContent.destroy()
+        OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
+            windowContainerContent.destroy()
         }
 
-        let rootEntity = windowGroupContent.getEntities().filter {
+        let rootEntity = windowContainerContent.getEntities().filter {
             $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
         }.first?.value
 
@@ -57,7 +57,7 @@ struct PlainWindowGroupView: View {
                     }
                 }
             }
-            .onReceive(windowGroupContent.setSize) { newSize in
+            .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
             }
             .onChange(of: proxy3D.size) {

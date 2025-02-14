@@ -1,6 +1,6 @@
 import { SpatialObject } from './SpatialObject'
 import { SpatialTransform } from './SpatialTransform'
-import { SpatialWindowGroup } from './SpatialWindowGroup'
+import { SpatialWindowContainer } from './SpatialWindowContainer'
 import { WebSpatial } from './private/WebSpatial'
 import { SpatialComponent } from './component'
 
@@ -70,17 +70,17 @@ export class SpatialEntity extends SpatialObject {
 
   /**
    * @hidden
-   * Sets the windowgroup that this entity should be rendered by (this does not effect resource ownership)
-   * @param wg the window group that should render this entity
+   * Sets the window container that this entity should be rendered by (this does not effect resource ownership)
+   * @param wg the window container that should render this entity
    */
-  async _setParentWindowGroup(wg: SpatialWindowGroup) {
+  async _setParentWindowContainer(wg: SpatialWindowContainer) {
     await WebSpatial.updateResource(this._entity, {
-      setParentWindowGroupID: wg._wg.id,
+      setParentWindowContainerID: wg._wg.id,
     })
   }
 
   /**
-   * Sets a parent entity, if that entity or its parents are attached to a window group, this entity will be displayed
+   * Sets a parent entity, if that entity or its parents are attached to a window container, this entity will be displayed
    * @param e parent entity or null to remove current parent
    */
   async setParent(e: SpatialEntity | null) {
@@ -93,7 +93,7 @@ export class SpatialEntity extends SpatialObject {
    * Sets the coordinate space of this entity (Default: App)
    * "App" = game engine style coordinates in meters
    * "Dom" = Windowing coordinates in dom units (eg. 0,0,0 is top left of window)
-   * "Root" = Coordinate space is ignored and content is displayed and updated as windowGroup's root object, window groups can only have one root entity
+   * "Root" = Coordinate space is ignored and content is displayed and updated as window container's root object, window containers can only have one root entity
    * [TODO] review this api
    * @param space coordinate space mode
    */

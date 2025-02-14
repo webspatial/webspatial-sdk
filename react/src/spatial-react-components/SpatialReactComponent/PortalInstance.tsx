@@ -74,8 +74,6 @@ function renderJSXPortalInstance(
     ...elWHStyle,
   }
 
-  console.log('dbg PortalInstance inProps', props, className)
-
   return <El style={style} className={className} {...props} />
 }
 

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, SpatialView, SpatialViewRef } from '@xrsdk/react'
+import { getSession } from '@xrsdk/react'
 import { SpatialHelper } from '@xrsdk/runtime'
 
 const apps = [
@@ -32,6 +32,14 @@ const apps = [
     url: '/src/modelViewer/index.html',
     icon: '📦',
     options: { type: 'volume' },
+  },
+  {
+    name: 'Memory Stats',
+    icon: '📊',
+    url: '/src/memoryStats/index.html',
+    options: {
+      dimensions: { x: 300, y: 600 },
+    },
   },
 ]
 function App() {

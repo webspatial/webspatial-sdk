@@ -1,9 +1,9 @@
 import { SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { showSample } from './sampleLoader'
 import ReactMarkdown from 'react-markdown'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   var [showMarkdown, setShowMarkdown] = useState('')
   fetch('/src/docsWebsite/docs/gettingStarted.md')
     .then(response => response.text())
