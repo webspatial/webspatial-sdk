@@ -2,6 +2,17 @@ import { type BackgroundMaterialType } from '@xrsdk/runtime'
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 
+import { enableDebugTool } from '@xrsdk/react'
+
+enableDebugTool()
+
+let i = 0
+const materialVals = [
+  'none',
+  'translucent',
+  'transparent',
+] as BackgroundMaterialType[]
+
 function App() {
   const z = 100
 
@@ -15,15 +26,9 @@ function App() {
   const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
   const toggleBackgroundMaterial = () => {
-    const backgroundMaterial =
-      document.documentElement.style['--xr-background-material']
-    if (backgroundMaterial !== 'default') {
-      document.documentElement.style['--xr-background-material'] = 'default'
-      document.documentElement.style['background-color'] = 'transparent'
-    } else {
-      document.documentElement.style['--xr-background-material'] = 'none'
-      document.documentElement.style['background-color'] = '#4f4f4f'
-    }
+    i = (i + 1) % materialVals.length
+    document.documentElement.style['--xr-background-material'] = materialVals[i]
+    console.log('dbg materialVals[i]', materialVals[i])
   }
 
   useEffect(() => {
@@ -122,10 +127,26 @@ function App() {
         <div
           enable-xr
           style={{
+            position: 'relative',
             '--xr-back': z + '',
             '--xr-background-material': 'none' as BackgroundMaterialType,
             borderRadius,
             height: '100px',
+          }}
+          className="grow"
+        >
+          this is none material
+        </div>
+
+        <div
+          enable-xr
+          style={{
+            position: 'relative',
+            '--xr-back': z + '',
+            '--xr-background-material': 'transparent' as BackgroundMaterialType,
+            borderRadius,
+            height: '100px',
+            background: 'red',
           }}
           className="grow"
         >
@@ -135,8 +156,9 @@ function App() {
         <div
           enable-xr
           style={{
+            position: 'relative',
             '--xr-back': z + '',
-            '--xr-background-material': 'default' as BackgroundMaterialType,
+            '--xr-background-material': 'translucent' as BackgroundMaterialType,
             borderRadius,
             height: '100px',
           }}
@@ -148,6 +170,7 @@ function App() {
         <div
           enable-xr
           style={{
+            position: 'relative',
             '--xr-back': z + '',
             '--xr-background-material': 'thin' as BackgroundMaterialType,
             borderRadius,
@@ -161,6 +184,7 @@ function App() {
         <div
           enable-xr
           style={{
+            position: 'relative',
             '--xr-back': z + '',
             '--xr-background-material': 'regular' as BackgroundMaterialType,
             borderRadius,
@@ -174,6 +198,7 @@ function App() {
         <div
           enable-xr
           style={{
+            position: 'relative',
             '--xr-back': z + '',
             '--xr-background-material': 'thick' as BackgroundMaterialType,
             borderRadius,
