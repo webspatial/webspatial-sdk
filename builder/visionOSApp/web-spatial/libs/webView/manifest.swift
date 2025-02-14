@@ -9,7 +9,7 @@ let pwaConfig = PWAConfig()
 
 struct PWAConfig: Codable {
     var displayMode: PWADisplayMode = .standalone
-    var mainScene: WindowGroupOptions = .init(
+    var mainScene: WindowContainerOptions = .init(
         defaultSize: .init(
             width: 1280,
             height: 1280

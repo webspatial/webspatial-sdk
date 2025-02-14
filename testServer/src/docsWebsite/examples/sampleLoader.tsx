@@ -156,8 +156,8 @@ export function showSample(MySample: any, hasCode = true) {
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=openWindowGroup">
-                              Open Window Group
+                            <a href="/src/docsWebsite/index.html?examplePath=openWindowContainer">
+                              Open Window Container
                             </a>
                           </li>
                           <li>
