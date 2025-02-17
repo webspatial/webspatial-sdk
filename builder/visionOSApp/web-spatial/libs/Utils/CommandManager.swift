@@ -44,7 +44,7 @@ class CommandManager {
         var ret = CommandInfo(cmd: JSBCommand(command: jsb.command, data: jsb.data, requestID: jsb.requestID))
         ret.requestID = jsb.requestID
         if let windowContainerID = jsb.data?.windowContainerID {
-            ret.windowContainerID = target.readWinodwGroupID(id: windowContainerID) // windowContainerID
+            ret.windowContainerID = target.readWinodwGroupID(id: windowContainerID)
         }
         if let entityID = jsb.data?.entityID {
             ret.entityID = entityID
