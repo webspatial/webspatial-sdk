@@ -57,9 +57,6 @@ class SpatialWindowComponent: SpatialComponent {
         return inspectInfo
     }
 
-    // if this is root, close the webview will destroy parent windowContainer
-    var isRoot = false
-
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
     var resolutionX: Double = 0
@@ -368,7 +365,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didCloseWebView() {
         // if need
-        if isRoot {
+        if isRootWebview() {
             SceneManager.Instance.closeRoot(self)
         }
     }
