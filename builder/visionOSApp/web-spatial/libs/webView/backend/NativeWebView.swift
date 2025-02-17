@@ -59,6 +59,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         var styleJsonString: String? = URLComponents(string: url!.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
 
         do {
+            print(styleJsonString!)
             if styleJsonString?.contains("?") != nil {
                 // remove invalid query string
                 // before "{\"glassEffect\":true,\"cornerRadius\":50}?uniqueURL=0.0010192470591506853"
@@ -69,21 +70,18 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
 
             webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
-
-            // Respond with empty css file
-            let response = ".ignoreThis{}".data(using: .utf8)
-            let mimeType = "text/css"
-            let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
-            let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
-
-            urlSchemeTask.didReceive(resp!)
-            urlSchemeTask.didReceive(response!)
-            urlSchemeTask.didFinish()
-
-            return
         } catch {
             print("Style url parse failure " + error.localizedDescription)
         }
+
+        // Respond with empty css file
+        let response = ".ignoreThis{}".data(using: .utf8)
+        let mimeType = "text/css"
+        let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
+        let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
+
+        urlSchemeTask.didReceive(resp!)
+        urlSchemeTask.didReceive(response!)
         urlSchemeTask.didFinish()
     }
 
