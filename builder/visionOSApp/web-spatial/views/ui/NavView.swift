@@ -57,7 +57,7 @@ struct NavView: View {
                 Text(
                     swc?.getURL()?.absoluteString ?? ""
                 )
-                .padding() // (wv?.url?.absoluteString)
+                .padding()
                 Button(action: {
                     print("click copy")
                 }, label: {
