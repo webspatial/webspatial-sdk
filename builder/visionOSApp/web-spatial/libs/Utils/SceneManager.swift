@@ -45,8 +45,6 @@ class SceneManager {
             print("no spawned")
         }
 
-        windowComponent.isRoot = true // register close
-
         ent.addComponent(windowComponent)
 
         let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowContainerID)
