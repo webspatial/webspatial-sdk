@@ -9,7 +9,7 @@ function App() {
   useEffect(() => {
     // Set background color
     SpatialHelper.instance?.setBackgroundStyle(
-      { material: { type: 'default' }, cornerRadius: 15 },
+      { material: { type: 'translucent' }, cornerRadius: 15 },
       '#00000000',
     )
 
