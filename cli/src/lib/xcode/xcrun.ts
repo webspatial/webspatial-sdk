@@ -15,7 +15,49 @@ export default class Xcrun {
       cmd.authApi(key1, key2)
     }
     cmd.platform('visionos')
-    cmd.verbose()
+    console.log(cmd.line)
+    const res = execSync(cmd.line)
+    console.log(res.toString())
+    return res.toString()
+  }
+  public static async uploadPackage(
+    path: string,
+    key1: string,
+    key2: string,
+    appleId: string,
+    useAccount: boolean,
+  ) {
+    const cmd = new XcrunCMD()
+    cmd.uploadPackage(path)
+    if (useAccount) {
+      cmd.authAccount(key1, key2)
+    } else {
+      cmd.authApi(key1, key2)
+    }
+    cmd.platform('visionos')
+    cmd.appleId(appleId)
+    console.log(cmd.line)
+    const res = execSync(cmd.line)
+    console.log(res.toString())
+    return res.toString()
+  }
+
+  public static async uploadApp(
+    path: string,
+    key1: string,
+    key2: string,
+    appleId: string,
+    useAccount: boolean,
+  ) {
+    const cmd = new XcrunCMD()
+    cmd.uploadApp(path)
+    if (useAccount) {
+      cmd.authAccount(key1, key2)
+    } else {
+      cmd.authApi(key1, key2)
+    }
+    cmd.platform('visionos')
+    cmd.appleId(appleId)
     console.log(cmd.line)
     const res = execSync(cmd.line)
     console.log(res.toString())
@@ -49,8 +91,18 @@ class XcrunCMD {
     return this
   }
 
+  public appleId(id: string) {
+    this.line += ` --apple-id ${id}`
+    return this
+  }
+
   public platform(platform: string) {
     this.line += ` -t ${platform}`
+    return this
+  }
+
+  public version(version: string) {
+    this.line += ` --bundle-version ${version}`
     return this
   }
 

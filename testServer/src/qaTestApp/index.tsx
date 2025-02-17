@@ -9,7 +9,7 @@ const session = spatial.requestSession()
 
 if (session) {
   session.getCurrentWindowComponent().setStyle({
-    material: { type: 'default' },
+    material: { type: 'translucent' },
     cornerRadius: 70,
   })
 }

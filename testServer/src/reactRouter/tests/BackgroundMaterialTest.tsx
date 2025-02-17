@@ -102,7 +102,7 @@ export function BackgroundMaterialTest() {
             position: { z, x: 0 },
             cornerRadius,
             material: {
-              type: 'default',
+              type: 'translucent',
             },
           }}
           style={{
