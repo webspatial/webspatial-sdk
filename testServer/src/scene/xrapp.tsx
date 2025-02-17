@@ -11,7 +11,7 @@ const spatialSupported = spatial.isSupported()
 if (spatialSupported) {
   var session = new Spatial().requestSession()
   session!.getCurrentWindowComponent().setStyle({
-    material: { type: 'default' },
+    material: { type: 'translucent' },
     cornerRadius: 50,
   })
 }
