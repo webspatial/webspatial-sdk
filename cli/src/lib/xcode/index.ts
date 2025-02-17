@@ -1,5 +1,9 @@
 import * as fs from 'fs'
-import { PROJECT_DIRECTORY, PROJECT_EXPORT_DIRECTORY } from '../resource'
+import {
+  PROJECT_DIRECTORY,
+  PROJECT_BUILD_DIRECTORY,
+  PROJECT_EXPORT_DIRECTORY,
+} from '../resource'
 import XcodeProject from './xcodeproject'
 import Xcodebuild from './xcodebuild'
 import Xcrun from './xcrun'
@@ -17,21 +21,23 @@ export class XcodeManager {
     await Xcodebuild.archive()
   }
 
-  public static async upload(option: any) {
+  public static async upload(option: any, appInfo: any) {
     if (option['u'] && option['p']) {
-      // username, password
-      Xcrun.validate(
-        join(PROJECT_EXPORT_DIRECTORY, 'SpatialWebTest.ipa'),
+      // use username, password
+      Xcrun.uploadApp(
+        join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
         option['u'],
         option['p'],
+        option['appleId'],
         true,
       )
     } else if (option['k'] && option['i']) {
-      // apiKey, apiIssuer
-      Xcrun.validate(
-        join(PROJECT_EXPORT_DIRECTORY, 'SpatialWebTest.ipa'),
+      // use apiKey, apiIssuer
+      Xcrun.uploadApp(
+        join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
         option['k'],
         option['i'],
+        option['appleId'],
         false,
       )
     }

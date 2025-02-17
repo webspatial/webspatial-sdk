@@ -11,7 +11,7 @@ if (spatialSupported) {
   const session = new Spatial().requestSession()
   session
     .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
+    .setStyle({ material: { type: 'translucent' }, cornerRadius: 50 })
 }
 
 const SpatialSimpleComponent = withSpatial(SimpleComponent)

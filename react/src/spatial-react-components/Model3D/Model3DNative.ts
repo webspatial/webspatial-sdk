@@ -59,13 +59,19 @@ export class Model3DNative {
 
   async setContentMode(contentMode: 'fill' | 'fit') {
     if (this.spatialModel3DComponent) {
-      await this.spatialModel3DComponent.setAspectRatio(contentMode)
+      await this.spatialModel3DComponent.setContentMode(contentMode)
     }
   }
 
   async setResizable(resizable: boolean) {
     if (this.spatialModel3DComponent) {
       await this.spatialModel3DComponent.setResizable(resizable)
+    }
+  }
+
+  async setAspectRatio(aspectRatio: number) {
+    if (this.spatialModel3DComponent) {
+      await this.spatialModel3DComponent.setAspectRatio(aspectRatio)
     }
   }
 
