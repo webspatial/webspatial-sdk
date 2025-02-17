@@ -10,8 +10,10 @@
     "xrapp-builder": "bin/bundlepwa.js"
   },
   "scripts": {
-    "test": "npm run build && bin/bundlepwa.js build --manifest-url=https://microsoftedge.github.io/Demos/pwamp/manifest.json",
-    "test2": "npm run build && bin/bundlepwa.js build --manifest=../pack-test/pwa_test.json --project=../pack-test --teamId=S76Z27JDAB",
+    "test": "npm run build && bin/bundlepwa.js build --manifest-url=https://microsoftedge.github.io/Demos/pwamp/manifest.json --version=1.1",
+    "test2": "npm run build && bin/bundlepwa.js build --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.5 --teamId=teamId --buildType=app-store",
+    "test3": "npm run build && bin/bundlepwa.js store --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.4 --teamId=teamId --u=username --p=password --appleId=appleId",
+    "test4": "npm run build && bin/bundlepwa.js store --name=SpatialWebTest --version=1.5 --u=username --p=password --appleId=appleId",
     "obfuscate": "node obfuscate.js",
     "build": "tsc",
     "build1": "rollup -c ./rollup.config.js",

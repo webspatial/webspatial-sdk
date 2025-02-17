@@ -1,4 +1,4 @@
-import { Euler, Quaternion, Vector3 } from 'three'
+import { Euler, Quaternion } from 'three'
 import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
 import { Vec3 } from '@xrsdk/runtime'
 
@@ -156,10 +156,10 @@ var main = async () => {
 
       var loop = (time: DOMHighResTimeStamp) => {
         if (w.entity.isDestroyed()) {
-          return
+          return Promise.resolve()
         }
         w.entity.transform.position.x = 500 + Math.sin(time / 1000) * 200
-        w.entity.updateTransform()
+        return w.entity.updateTransform()
       }
       session.addOnEngineUpdateEventListener(loop)
 
@@ -237,10 +237,10 @@ var main = async () => {
     await (
       await session.getCurrentWindowComponent()
     ).setStyle({
-      material: { type: 'default' },
+      material: { type: 'translucent' },
       cornerRadius: 50,
     })
-    // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+    // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
     document.documentElement.style.backgroundColor = 'transparent'
     document.body.style.backgroundColor = 'transparent'
     await session.log('set to glass background')
@@ -289,7 +289,10 @@ var main = async () => {
       openedWindow!.document.documentElement.style.backgroundColor = color
       openedWindow!.window.document.body.innerHTML =
         "<p style='color:white;'>hello world</p>"
-      await webview.setStyle({ material: { type: 'default' }, cornerRadius: 0 })
+      await webview.setStyle({
+        material: { type: 'translucent' },
+        cornerRadius: 0,
+      })
 
       // Attach to entity
       await entity.setComponent(webview)
@@ -335,7 +338,7 @@ var main = async () => {
           await e.setComponent(customModel)
         }
 
-        await (await session.getCurrentWindowGroup()).setRootEntity(e)
+        await (await session.getCurrentWindowContainer()).setRootEntity(e)
         entities.push({ e: e, v: 0 })
       }
       var b = document.createElement('button')
@@ -396,7 +399,7 @@ var main = async () => {
     document.body.appendChild(b)
 
     var counter = 0
-    let loop = async (time: DOMHighResTimeStamp) => {
+    let loop = async (_time: DOMHighResTimeStamp) => {
       var results = 'Updates per frame: ' + pingCount + '<br>'
 
       // With transactions
