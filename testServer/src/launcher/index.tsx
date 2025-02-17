@@ -50,7 +50,7 @@ function App() {
           ?.getCurrentWindowComponent()
           .setStyle({
             cornerRadius: 50,
-            material: { type: 'default' },
+            material: { type: 'translucent' },
           })
         document.body.style.backgroundColor = '#22339933'
       }

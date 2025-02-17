@@ -69,6 +69,11 @@ function App() {
     setResizable(v => !v)
   }
 
+  const [aspectRatio, setAspectRatio] = useState(0)
+  const handleAspectRatioChange = () => {
+    setAspectRatio(v => (v === 0 ? 16 / 9 : 0))
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -83,6 +88,7 @@ function App() {
         modelUrl="/src/assets/FlightHelmet.usdz"
         contentMode={contentMode}
         resizable={resizable}
+        aspectRatio={aspectRatio}
       />
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
@@ -97,6 +103,10 @@ function App() {
 
         <button className="btn btn-primary" onClick={handleResizableChange}>
           resizable
+        </button>
+
+        <button className="btn btn-primary" onClick={handleAspectRatioChange}>
+          aspectRatio
         </button>
       </div>
 
