@@ -36,12 +36,30 @@ var webviewGetEarlyStyleData = PassthroughSubject<WebviewEarlyStyle, Never>()
 
 class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     let decoder = JSONDecoder()
+    override public init() {
+        WKWebView.enableFileScheme() // ensure the handler is usable
+    }
+
     func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
         // Parse the style json string from url
         let url = urlSchemeTask.request.url
+        // 本地web项目通过相对路径访问资源会默认使用file协议
+        // Local web projects accessing resources through relative paths will default to using the file protocol
+        if url!.absoluteString.starts(with: "file://") {
+            let session = URLSession(configuration: URLSessionConfiguration.default)
+            let dataTask = session.dataTask(with: urlSchemeTask.request) { data, response, _ in
+                urlSchemeTask.didReceive(response!)
+                urlSchemeTask.didReceive(data!)
+                urlSchemeTask.didFinish()
+            }
+            dataTask.resume()
+            return
+        }
+
         var styleJsonString: String? = URLComponents(string: url!.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
 
         do {
+            print(styleJsonString!)
             if styleJsonString?.contains("?") != nil {
                 // remove invalid query string
                 // before "{\"glassEffect\":true,\"cornerRadius\":50}?uniqueURL=0.0010192470591506853"
@@ -52,21 +70,18 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
 
             webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
-
-            // Respond with empty css file
-            let response = ".ignoreThis{}".data(using: .utf8)
-            let mimeType = "text/css"
-            let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
-            let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
-
-            urlSchemeTask.didReceive(resp!)
-            urlSchemeTask.didReceive(response!)
-            urlSchemeTask.didFinish()
-
-            return
         } catch {
             print("Style url parse failure " + error.localizedDescription)
         }
+
+        // Respond with empty css file
+        let response = ".ignoreThis{}".data(using: .utf8)
+        let mimeType = "text/css"
+        let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
+        let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
+
+        urlSchemeTask.didReceive(resp!)
+        urlSchemeTask.didReceive(response!)
         urlSchemeTask.didFinish()
     }
 
@@ -99,15 +114,18 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        // print("try nav " + navigationAction.request.url!.absoluteString)
         if let url = navigationAction.request.url,
            url.absoluteString == "webspatial://createWindowContext"
         {
             decisionHandler(.cancel)
             return
         }
-
-        decisionHandler(.allow)
+        if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
+            decisionHandler(.allow)
+        } else {
+            decisionHandler(.cancel)
+            UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+        }
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
@@ -140,9 +158,14 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        // check url
-        if let url = navigationAction.request.url {
-            // TODO: pwa logic
+        let url = navigationAction.request.url?.absoluteString ?? ""
+
+        if url != "webspatial://createWindowContext",
+           !pwaManager.checkInScope(url: url)
+        {
+            // open in safari
+            UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+            return nil
         }
 
         let wvNative = WebViewNative()
@@ -173,7 +196,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         webViewRef?.scrollOffset = scrollView.contentOffset
         if webViewRef != nil {
-            let wg = SpatialWindowGroup.getSpatialWindowGroup(webViewRef!.parentWindowGroupID)!
+            let wg = SpatialWindowContainer.getSpatialWindowContainer(webViewRef!.parentWindowContainerID)!
             wg.updateFrame = !(wg.updateFrame)
         }
     }
@@ -211,11 +234,14 @@ struct WebViewNative: UIViewRepresentable {
             let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
             myConfig.userContentController = userContentController
             myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
+            myConfig.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
 
             if myConfig.urlSchemeHandler(forURLScheme: "forceStyle") == nil {
                 myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "forceStyle")
             }
-
+            if myConfig.urlSchemeHandler(forURLScheme: "file") == nil {
+                myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "file")
+            }
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
@@ -223,7 +249,6 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
-            webViewHolder.appleWebView!.isOpaque = false
             webViewHolder.needsUpdate = (configuration != nil) ? false : true
         }
 
@@ -234,8 +259,6 @@ struct WebViewNative: UIViewRepresentable {
         if webViewHolder.needsUpdate {
             let request = URLRequest(url: url)
             webViewHolder.appleWebView!.load(request)
-            webViewHolder.appleWebView!.isOpaque = false
-            webViewHolder.appleWebView!.backgroundColor = UIColor.clear
             webViewHolder.needsUpdate = false
         }
     }
@@ -246,5 +269,39 @@ struct WebViewNative: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         initialLoad()
+    }
+}
+
+// extend webview to support file://
+@available(iOS 11.0, *)
+extension WKWebView {
+    /// WKWebView, 支持configuration里设置file scheme
+    /// WKWebView,  Support setting file scheme in configuration
+    public private(set) static var isEnableFileSupport = false
+    public static func enableFileScheme() {
+        /// 这种方式支持通过Configuration适配支持的file，但没法取消(configuration是不可变的)。
+        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
+        if !isEnableFileSupport {
+            switchHandlesURLScheme()
+        }
+    }
+
+    private static func switchHandlesURLScheme() {
+        if
+            case let cls = WKWebView.self,
+            let m1 = class_getClassMethod(cls, NSSelectorFromString("handlesURLScheme:")),
+            let m2 = class_getClassMethod(cls, #selector(WKWebView.wrapHandles(urlScheme:)))
+        {
+            method_exchangeImplementations(m1, m2)
+            isEnableFileSupport = !isEnableFileSupport
+        }
+    }
+
+    /// 返回true如果WKWebview支持处理这种协议, 但WKWebview默认支持http，所以返回false支持用自定义的http Handlers
+    /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
+    @objc private dynamic
+    static func wrapHandles(urlScheme: String) -> Bool {
+        if urlScheme == "file" { return false }
+        return wrapHandles(urlScheme: urlScheme)
     }
 }

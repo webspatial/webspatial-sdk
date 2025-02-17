@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
@@ -9,7 +9,7 @@ function App() {
   useEffect(() => {
     // Set background color
     SpatialHelper.instance?.setBackgroundStyle(
-      { material: { type: 'default' }, cornerRadius: 15 },
+      { material: { type: 'translucent' }, cornerRadius: 15 },
       '#00000000',
     )
 

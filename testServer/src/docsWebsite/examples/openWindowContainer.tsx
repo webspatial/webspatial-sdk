@@ -1,5 +1,4 @@
 import { SpatialSession } from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 import { Vec3 } from '@xrsdk/runtime'
 
@@ -12,23 +11,25 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
             // CODESAMPLE_START
-            // Create window group
-            var wg = await session.createWindowGroup('Plain')
+            // Create window container
+            var wg = await session.createWindowContainer({ style: 'Plain' })
 
             // Create a root entity displaying a webpage
             var ent = await session!.createEntity()
-            var i = await session!.createWindowComponent(wg)
+            var i = await session!.createWindowComponent({
+              windowContainer: wg,
+            })
             await i.loadURL('http://google.com')
             await ent.setCoordinateSpace('Root')
             await ent.setComponent(i)
 
-            // Add enitity the windowgroup
+            // Add enitity the windowcontainer
             await wg.setRootEntity(ent)
             // CODESAMPLE_END
           }
         }}
       >
-        Open Plain WindowGroup
+        Open Plain WindowContainer
       </div>
 
       <div
@@ -37,7 +38,9 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
 
-            var wg = await session.createWindowGroup('Volumetric')
+            var wg = await session.createWindowContainer({
+              style: 'Volumetric',
+            })
             var ent = await session!.createEntity()
             await ent.setCoordinateSpace('Root')
             var vc = await session.createViewComponent()
@@ -57,10 +60,8 @@ function MySample(props: { session?: SpatialSession }) {
 
             await wg.setRootEntity(ent)
 
-            var dt = 0
             var curTime = Date.now()
             let loop = async () => {
-              dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
               e2.transform.position.x = 0 + Math.sin(curTime / 1000) * 0.3
@@ -73,7 +74,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Volumetric WindowGroup
+        Open Volumetric WindowContainer
       </div>
 
       <div
@@ -82,7 +83,7 @@ function MySample(props: { session?: SpatialSession }) {
           if (props.session) {
             let session = props.session
 
-            var wg = await session.getImmersiveWindowGroup()
+            var wg = await session.getImmersiveWindowContainer()
             var ent = await session!.createEntity()
             await ent.setCoordinateSpace('Root')
             var vc = await session.createViewComponent()
@@ -103,10 +104,9 @@ function MySample(props: { session?: SpatialSession }) {
             await wg.setRootEntity(ent)
 
             await session.openImmersiveSpace()
-            var dt = 0
+
             var curTime = Date.now()
             let loop = async () => {
-              dt = Date.now() - curTime
               curTime = Date.now()
               // Perform onFrame logic
               e2.transform.position.z = -4
@@ -121,7 +121,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Immersive WindowGroup
+        Open Immersive WindowContainer
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, SpatialView, SpatialViewRef } from '@xrsdk/react'
+import { getSession } from '@xrsdk/react'
 import { SpatialHelper } from '@xrsdk/runtime'
 
 const apps = [
@@ -33,6 +33,14 @@ const apps = [
     icon: '📦',
     options: { type: 'volume' },
   },
+  {
+    name: 'Memory Stats',
+    icon: '📊',
+    url: '/src/memoryStats/index.html',
+    options: {
+      dimensions: { x: 300, y: 600 },
+    },
+  },
 ]
 function App() {
   useEffect(() => {
@@ -42,7 +50,7 @@ function App() {
           ?.getCurrentWindowComponent()
           .setStyle({
             cornerRadius: 50,
-            material: { type: 'default' },
+            material: { type: 'translucent' },
           })
         document.body.style.backgroundColor = '#22339933'
       }

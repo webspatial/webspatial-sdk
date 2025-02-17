@@ -83,43 +83,45 @@ export class SpatialHelper {
     ) => {
       if (options?.dimensions) {
         await this.session
-          .getCurrentWindowGroup()
+          .getCurrentWindowContainer()
           ._setOpenSettings({ dimensions: options.dimensions })
       }
 
-      // Create window group
-      var wg = await this.session.createWindowGroup('Plain')
+      // Create window container
+      var wg = await this.session.createWindowContainer({ style: 'Plain' })
 
       // Create a root entity displaying a webpage
       var ent = await this.session!.createEntity()
-      var i = await this.session!.createWindowComponent(wg)
+      var i = await this.session!.createWindowComponent({ windowContainer: wg })
       await i.loadURL(url)
       await ent.setCoordinateSpace('Root')
       await ent.setComponent(i)
 
-      // Add enitity the windowgroup
+      // Add enitity the window container
       await wg.setRootEntity(ent)
 
       // Restore default size
       await this.session
-        .getCurrentWindowGroup()
+        .getCurrentWindowContainer()
         ._setOpenSettings({ dimensions: { x: 900, y: 700 } })
     },
     openVolume: async (
       url: string,
       options?: { dimensions: { x: number; y: number } },
     ) => {
-      var wg = await this.session.createWindowGroup('Volumetric')
+      var wg = await this.session.createWindowContainer({ style: 'Volumetric' })
 
-      // Create a root view entity within the window group
+      // Create a root view entity within the window container
       var rootEnt = await this.session!.createEntity()
-      await rootEnt.setComponent(await this.session!.createViewComponent(wg))
+      await rootEnt.setComponent(
+        await this.session!.createViewComponent({ windowContainer: wg }),
+      )
       await rootEnt.setCoordinateSpace('Root')
       await wg.setRootEntity(rootEnt)
 
-      // Add webpage to the window group
+      // Add webpage to the window container
       var ent = await this.session!.createEntity()
-      var i = await this.session!.createWindowComponent(wg)
+      var i = await this.session!.createWindowComponent({ windowContainer: wg })
       await i.loadURL(url)
       if (options?.dimensions) {
         await i.setResolution(options.dimensions.x, options.dimensions.y)

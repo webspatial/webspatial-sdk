@@ -11,7 +11,7 @@ if (spatialSupported) {
   const session = new Spatial().requestSession()
   session
     .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
+    .setStyle({ material: { type: 'translucent' }, cornerRadius: 50 })
 }
 
 const SpatialSimpleComponent = withSpatial(SimpleComponent)
@@ -83,7 +83,7 @@ function App() {
   )
 }
 
-// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowGroup(), WebSpatial.getCurrentWebPanel())
+// await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
 document.documentElement.style.backgroundColor = 'transparent'
 document.body.style.backgroundColor = 'transparent'
 ReactDOM.createRoot(document.getElementById('root')!).render(

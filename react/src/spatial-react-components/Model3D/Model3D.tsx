@@ -15,7 +15,8 @@ export interface Model3DProps {
   modelUrl: string
   visible: boolean
   contentMode?: 'fill' | 'fit'
-
+  resizable?: boolean
+  aspectRatio?: number
   className?: string
   style?: CSSProperties | undefined
 }
@@ -33,6 +34,8 @@ export function Model3DComponent(
     visible,
     spatialTransform,
     contentMode = 'fit',
+    resizable = true,
+    aspectRatio = 0,
   } = props
 
   const theSpatialTransform =
@@ -110,6 +113,18 @@ export function Model3DComponent(
       model3DNativeRef.current.setContentMode(contentMode)
     }
   }, [model3DNativeRef.current, contentMode])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setResizable(resizable)
+    }
+  }, [model3DNativeRef.current, resizable])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setAspectRatio(aspectRatio)
+    }
+  }, [model3DNativeRef.current, aspectRatio])
 
   const layoutDomStyle: CSSProperties = {
     ...style,

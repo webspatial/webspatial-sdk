@@ -45,7 +45,7 @@ class JsonParser {
             let jsonData = try encoder.encode(data)
             return String(data: jsonData, encoding: .utf8) // Convert Data to String
         } catch {
-            print("Failed to encode WindowGroupOptions to JSON: \(error)")
+            print("Failed to encode WindowContainerOptions to JSON: \(error)")
             return nil
         }
     }
