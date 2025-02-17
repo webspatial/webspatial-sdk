@@ -163,7 +163,7 @@ function App() {
   }
 
   const referenceStyle = {
-    '--xr-back': 30,
+    '--xr-back': 40,
     position: position_reference,
     width: '100px',
     height: '100px',
@@ -171,7 +171,7 @@ function App() {
   }
 
   const styleOne = {
-    '--xr-back': 30,
+    '--xr-back': 20,
     position: position_styleOne,
     width: '200px',
     height: '78px',
@@ -199,7 +199,7 @@ function App() {
       </div>
 
       <div className="max-w-5xl mx-auto space-y-4">
-        <div className="bg-gray-800 p-4 rounded-lg min-h-[200px]  items-center justify-center">
+        <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
             id="father"
             enable-xr
