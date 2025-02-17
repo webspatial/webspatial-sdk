@@ -486,9 +486,9 @@ class CommandManager {
             let wgd = WindowContainerData(windowStyle: windowStyle, windowContainerID: uuid)
 
             // Force window container creation to happen now so it can be accessed after complete event returns
-            _ = SpatialWindowContainer.getOrCreateSpatialWindowContainer(uuid)
+            _ = SpatialWindowContainer.getOrCreateSpatialWindowContainer(uuid, wgd)
 
-            if var wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID) {
+            if var wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID, wgd) {
                 wg.openWindowData.send(wgd)
                 target.setWindowContainer(uuid: uuid, wgd: wgd)
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + uuid + "'}")
@@ -576,12 +576,12 @@ class CommandManager {
     }
 
     private func openImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
-        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID)
+        let wg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID)
         wg?.toggleImmersiveSpace.send(true)
     }
 
     private func dismissImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
-        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID)
+        let wg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID)
         wg?.toggleImmersiveSpace.send(false)
     }
 
