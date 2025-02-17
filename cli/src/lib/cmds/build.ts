@@ -1,20 +1,10 @@
 import { ParsedArgs } from 'minimist'
-import { ConsoleLog, Log } from '../utils/Log'
 import { InitArgs, PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 
-export async function start(
-  args: ParsedArgs,
-  log: Log = new ConsoleLog('help'),
-): Promise<boolean> {
+export async function start(args: ParsedArgs): Promise<any> {
   /**
-   * pwa步骤
-   * 1. 加载manifest.json
-   * 2. 检测manifest.json参数完整性
-   * 3. 检测start_url规则
-   * 4. 完善start_url、scope、display、deeplink配置
-   *
    * PWA steps
    * 1.  Load manifestion.json
    * 2.  Check the integrity of manifestion.json parameters
@@ -24,12 +14,6 @@ export async function start(
   console.log('------------------- build start -------------------')
   let manifestInfo = await PWAGenerator.generator(args as unknown as InitArgs)
   /**
-   * resource步骤
-   * 1. 若为本地项目，则
-   *  a. 检查并创建项目目录
-   *  b. 移动web工程
-   * 2. 生成icon图标
-   *
    * *Resource steps
    * 1.  If it is a local project, then
    *  A. Check and create project directory
@@ -37,22 +21,14 @@ export async function start(
    * 2.  Generate icon icon
    **/
   if (!manifestInfo.fromNet) {
-    // 如果为本地项目，则需要对项目进行移动
+    // If it is a local project, the project needs to be moved.
     await ResourceManager.moveProjectFrom(args['project'])
     console.log('move web project: ok')
   }
   const icon = await ResourceManager.generateIcon(manifestInfo)
   console.log('generate icon: ok')
   /**
-   * xcode步骤
-   * 1. 解析工程
-   * 2. 配置teamId
-   * 3. 绑定web工程
-   * 4. 配置icon
-   * 5. 配置manifest
-   * 6. 写入工程
-   *
-   * *Xcode steps
+   * Xcode steps
    * 1.  Parse the project
    * 2.  Configure teamId
    * 3.  Bind web project
@@ -64,22 +40,31 @@ export async function start(
     icon,
     manifestInfo,
     teamId: args['teamId'],
+    version: args['version'],
+    buildType: args['buildType'],
   })
   console.log('------------------- build end -------------------')
-  return true
+  return manifestInfo
 }
 
-export async function store(
-  args: ParsedArgs,
-  log: Log = new ConsoleLog('help'),
-  isTest = true,
-): Promise<boolean> {
-  if (!isTest) {
-    const buildRes = await start(args, log)
+export async function store(args: ParsedArgs): Promise<boolean> {
+  /*
+    There are two ways to upload ipa to App Store Connect:
+    1. Using parameters from the build command, then this command will first archive and export before uploading
+    2. Use the name parameter to specify the IPA name, then this command will skip archiving and exporting, and directly find the specified IPA file in the export folder and execute the upload
+  */
+
+  let appInfo = { name: 'SpatialWebTest' }
+  args['buildType'] = 'app-store'
+  if (args['name']) {
+    appInfo.name = args['name']
+  } else {
+    const buildRes = await start(args)
     if (!buildRes) {
       return false
     }
+    appInfo.name = buildRes.json.name
   }
-  await XcodeManager.upload(args)
+  await XcodeManager.upload(args, appInfo)
   return true
 }

@@ -43,7 +43,6 @@ export default class Xcodebuild {
       console.log('start archive')
       return await new Promise((resolve, reject) => {
         const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
-        // 进行归档
         // Archive
         const archiveRes = execSync(
           new XcodebuildCMD()
@@ -58,7 +57,6 @@ export default class Xcodebuild {
             '------------------- ARCHIVE SUCCEEDED -------------------',
           )
           console.log('start export')
-          // 导出
           // Export
           const outRes = execSync(
             new XcodebuildCMD()
