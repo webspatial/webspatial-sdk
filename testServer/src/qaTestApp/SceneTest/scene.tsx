@@ -4,13 +4,6 @@ import { SpatialDiv } from '@xrsdk/react/dist'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
 
-// const defaultConfig = {
-//   defaultSize: {
-//     width: 900,
-//     height: 900,
-//   },
-//     resizability:"automatic"
-// }
 const btnCls =
   'p-2 border border-gray-700 hover:text-white bg-gray-700 hover:bg-blue-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 const spatial = new Spatial()
@@ -34,8 +27,12 @@ function App() {
     winFRef: useRef<any>(null),
   })
 
-  const handleOpenWindow = (ref: React.MutableRefObject<any>, url: string) => {
-    ref.current = window.open(url)
+  const handleOpenWindow = (
+    ref: React.MutableRefObject<any>,
+    url: string,
+    sceneName: string,
+  ) => {
+    ref.current = window.open(url, sceneName)
   }
   // const handleOpenWindow = async (ref: React.MutableRefObject<any>, url: string, sceneName: string) => {
   //   await initScene(sceneName, defaultConfig => defaultConfig)
@@ -89,9 +86,14 @@ function App() {
         <div className="flex items-center">
           <button
             className={btnCls}
-            onClick={() =>
-              handleOpenWindow(windowRefs.winARef, 'http://localhost:5173/')
-            }
+            onClick={() => {
+              console.log('开始执行打开 winA 操作')
+              handleOpenWindow(
+                windowRefs.winARef,
+                'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
+                'sa',
+              )
+            }}
           >
             open winA
           </button>
@@ -108,15 +110,18 @@ function App() {
           <button
             className={btnCls}
             onClick={() => {
-              initScene('sa', () => ({
+              initScene('sb', () => ({
                 defaultSize: {
                   width: 300,
-                  height: 300,
+                  height: 500,
                 },
+                resizability: 'automatic',
               }))
+              console.log('开始执行打开 winB 操作')
               handleOpenWindow(
                 windowRefs.winBRef,
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
+                'sb',
               )
             }}
           >
@@ -134,29 +139,92 @@ function App() {
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
-            onClick={() =>
+            onClick={() => {
+              console.log('开始执行打开 winC 操作')
               handleOpenWindow(
                 windowRefs.winCRef,
-                'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
+                'http://localhost:5173/src/qaTestApp/SceneTest/model.html',
+                'sc',
               )
-            }
+            }}
           >
-            open winC
+            open model
           </button>
+          <div className="w-4"></div>
+          <a
+            href="http://localhost:5173/src/qaTestApp/SceneTest/model.html"
+            target="_blank"
+            className={btnCls}
+          >
+            open model by a tag
+          </a>
           <div className="w-4"></div>
           <button
             className={btnCls}
             onClick={() => handleCloseWindow(windowRefs.winCRef)}
           >
-            close winC
+            close model
           </button>
         </div>
         {/* 按钮组D */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
+            onClick={() => {
+              initScene('sd', () => ({
+                defaultSize: {
+                  width: 300,
+                  height: 500,
+                },
+                resizability: 'automatic',
+              }))
+              console.log('开始执行打开 winD 操作')
+              handleOpenWindow(
+                windowRefs.winDRef,
+                'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
+                'sd',
+              )
+            }}
+          >
+            open child by initScene
+          </button>
+          <div className="w-4"></div>
+          <button
+            className={btnCls}
+            onClick={() => handleCloseWindow(windowRefs.winDRef)}
+          >
+            close child by initScene
+          </button>
+        </div>
+        {/* 按钮组E */}
+        <div className="flex items-center mt-4">
+          <button
+            className={btnCls}
+            onClick={() => {
+              console.log('开始执行打开 winE 操作')
+              handleOpenWindow(
+                windowRefs.winERef,
+                'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
+                'sd',
+              )
+            }}
+          >
+            open child
+          </button>
+          <div className="w-4"></div>
+          <button
+            className={btnCls}
+            onClick={() => handleCloseWindow(windowRefs.winERef)}
+          >
+            close child
+          </button>
+        </div>
+        {/* 按钮组F */}
+        <div className="flex items-center mt-4">
+          <button
+            className={btnCls}
             onClick={() =>
-              handleOpenWindow(windowRefs.winDRef, 'http://google.com')
+              handleOpenWindow(windowRefs.winFRef, 'http://google.com', 'se')
             }
           >
             open google
@@ -164,7 +232,7 @@ function App() {
           <div className="w-4"></div>
           <button
             className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winDRef)}
+            onClick={() => handleCloseWindow(windowRefs.winFRef)}
           >
             close google
           </button>
