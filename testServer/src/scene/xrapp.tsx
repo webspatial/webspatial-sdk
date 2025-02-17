@@ -11,7 +11,7 @@ const spatialSupported = spatial.isSupported()
 if (spatialSupported) {
   var session = new Spatial().requestSession()
   session!.getCurrentWindowComponent().setStyle({
-    material: { type: 'default' },
+    material: { type: 'translucent' },
     cornerRadius: 50,
   })
 }
@@ -195,6 +195,16 @@ function App() {
         }}
       >
         open sc
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('navigate to google')
+          location.href = extUrl
+        }}
+      >
+        navigate to google
       </button>
 
       <button

@@ -211,6 +211,25 @@ class SpatialWindowComponent: SpatialComponent {
             .store(in: &cancellables)
     }
 
+    func goBack() {
+        webViewNative?.webViewHolder.appleWebView?.goBack()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func goForward() {
+        webViewNative?.webViewHolder.appleWebView?.goForward()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func reload() {
+        webViewNative?.webViewHolder.appleWebView?.reload()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    var canGoBack: Bool = false
+
+    var canGoForward: Bool = false
+
     func navigateToURL(url: URL) {
         webViewNative!.url = url
         webViewNative!.webViewHolder.needsUpdate = true
@@ -382,6 +401,12 @@ class SpatialWindowComponent: SpatialComponent {
             //   print("Didn't get SwiftUI styles prior to page finish load")
         }
         isLoading = false
+
+        // update navinfo
+        if let wv = webViewNative?.webViewHolder.appleWebView {
+            canGoBack = wv.canGoBack
+            canGoForward = wv.canGoForward
+        }
     }
 
     override func onDestroy() {
