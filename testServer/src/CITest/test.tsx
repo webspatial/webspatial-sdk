@@ -87,7 +87,7 @@ async function changeWebViewStyle() {
   await (
     await session!.getCurrentWindowComponent()
   ).setStyle({
-    material: { type: 'default' },
+    material: { type: 'translucent' },
     cornerRadius: 50,
   })
   document.documentElement.style.backgroundColor = 'transparent'

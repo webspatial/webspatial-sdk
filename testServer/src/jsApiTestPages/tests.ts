@@ -237,7 +237,7 @@ var main = async () => {
     await (
       await session.getCurrentWindowComponent()
     ).setStyle({
-      material: { type: 'default' },
+      material: { type: 'translucent' },
       cornerRadius: 50,
     })
     // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
@@ -289,7 +289,10 @@ var main = async () => {
       openedWindow!.document.documentElement.style.backgroundColor = color
       openedWindow!.window.document.body.innerHTML =
         "<p style='color:white;'>hello world</p>"
-      await webview.setStyle({ material: { type: 'default' }, cornerRadius: 0 })
+      await webview.setStyle({
+        material: { type: 'translucent' },
+        cornerRadius: 0,
+      })
 
       // Attach to entity
       await entity.setComponent(webview)
