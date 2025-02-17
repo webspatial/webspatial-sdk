@@ -9,7 +9,7 @@ import RealityKit
 import SwiftUI
 
 struct CommandInfo {
-    var windowGroupID = "notFound"
+    var windowContainerID = "notFound"
     var entityID = "notFound"
     var resourceID = "notFound"
     var requestID = -1
@@ -31,8 +31,8 @@ class CommandManager {
         _ = registerCommand(name: "createResource", action: createResource)
         _ = registerCommand(name: "destroyResource", action: destroyResource)
         _ = registerCommand(name: "updateResource", action: updateResource)
-        _ = registerCommand(name: "createWindowGroup", action: createWindowGroup)
-        _ = registerCommand(name: "updateWindowGroup", action: updateWindowGroup)
+        _ = registerCommand(name: "createWindowContainer", action: createWindowContainer)
+        _ = registerCommand(name: "updateWindowContainer", action: updateWindowContainer)
         _ = registerCommand(name: "openImmersiveSpace", action: openImmersiveSpace)
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
@@ -43,8 +43,8 @@ class CommandManager {
     private func getInfo(_ target: SpatialWindowComponent, _ jsb: RawJSBCommand) -> CommandInfo? {
         var ret = CommandInfo(cmd: JSBCommand(command: jsb.command, data: jsb.data, requestID: jsb.requestID))
         ret.requestID = jsb.requestID
-        if let windowGroupID = jsb.data?.windowGroupID {
-            ret.windowGroupID = target.readWinodwGroupID(id: windowGroupID) // windowGroupID
+        if let windowContainerID = jsb.data?.windowContainerID {
+            ret.windowContainerID = target.readWinodwGroupID(id: windowContainerID) // windowContainerID
         }
         if let entityID = jsb.data?.entityID {
             ret.entityID = entityID
@@ -171,7 +171,7 @@ class CommandManager {
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowGroupID: target.readWinodwGroupID(id: info.windowGroupID))
+                sr = SpatialWindowComponent(parentWindowContainerID: target.readWinodwGroupID(id: info.windowContainerID))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
@@ -291,10 +291,10 @@ class CommandManager {
                 entity.visible = visible
             }
 
-            if var newParentID: String = data.update?.setParentWindowGroupID {
+            if var newParentID: String = data.update?.setParentWindowContainerID {
                 newParentID = target.readWinodwGroupID(id: newParentID)
-                let wg = SpatialWindowGroup.getSpatialWindowGroup(newParentID)
-                entity.setParentWindowGroup(wg: wg)
+                let wg = SpatialWindowContainer.getSpatialWindowContainer(newParentID)
+                entity.setParentWindowContainer(wg: wg)
             }
 
             if let position: JSVector3F = data.update?.position,
@@ -372,6 +372,19 @@ class CommandManager {
 
                 } else if contentMode == "fit" {
                     spatialModel3DComponent.contentMode = .fit
+                }
+            }
+
+            if let resizable: Bool = data.update?.resizable {
+                spatialModel3DComponent.resizable = resizable
+            }
+
+            if let aspectRatio: Double = data.update?.aspectRatio {
+                if aspectRatio > 0 {
+                    spatialModel3DComponent.aspectRatio = aspectRatio
+
+                } else if aspectRatio == 0 {
+                    spatialModel3DComponent.aspectRatio = nil
                 }
             }
 
@@ -467,17 +480,17 @@ class CommandManager {
         }
     }
 
-    private func createWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
+    private func createWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         if let windowStyle: String = info.cmd.data!.windowStyle {
             let uuid = UUID().uuidString
-            let wgd = WindowGroupData(windowStyle: windowStyle, windowGroupID: uuid)
+            let wgd = WindowContainerData(windowStyle: windowStyle, windowContainerID: uuid)
 
-            // Force window group creation to happen now so it can be accessed after complete event returns
-            _ = SpatialWindowGroup.getOrCreateSpatialWindowGroup(uuid)
+            // Force window container creation to happen now so it can be accessed after complete event returns
+            _ = SpatialWindowContainer.getOrCreateSpatialWindowContainer(uuid)
 
-            if var wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID) {
+            if var wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID) {
                 wg.openWindowData.send(wgd)
-                target.setWindowGroup(uuid: uuid, wgd: wgd)
+                target.setWindowContainer(uuid: uuid, wgd: wgd)
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + uuid + "'}")
             }
         }
@@ -497,7 +510,7 @@ class CommandManager {
                     // if windowID in spawned uuid, createRoot
 
                     if target.spawnedNativeWebviews[windowID] != nil {
-                        // setup windowGroup defaultValues
+                        // setup windowContainer defaultValues
                         if let config = data.sceneData?.sceneConfig {
                             SceneManager.Instance
                                 .createRoot(target: target, windowID: windowID, config: config)
@@ -507,10 +520,10 @@ class CommandManager {
                         }
 
                     } else {
-                        if let windowGroupID = data.sceneData?.windowGroupID {
-                            SceneManager.Instance.focusRoot(target: target, windowGroupID: windowGroupID)
+                        if let windowContainerID = data.sceneData?.windowContainerID {
+                            SceneManager.Instance.focusRoot(target: target, windowContainerID: windowContainerID)
                         } else {
-                            print("error: no windowGroupID")
+                            print("error: no windowContainerID")
                         }
                     }
 
@@ -518,8 +531,8 @@ class CommandManager {
                 }
             } else if data.sceneData?.method == "showRoot" {
                 if let config = data.sceneData?.sceneConfig {
-                    let parentWindowGroupID = info.windowGroupID
-                    SceneManager.Instance.showRoot(target: target, config: config, parentWindowGroupID: parentWindowGroupID)
+                    let parentWindowContainerID = info.windowContainerID
+                    SceneManager.Instance.showRoot(target: target, config: config, parentWindowContainerID: parentWindowContainerID)
                 }
                 target.completeEvent(requestID: info.requestID, data: "{}")
 
@@ -529,10 +542,10 @@ class CommandManager {
         }
     }
 
-    private func updateWindowGroup(target: SpatialWindowComponent, info: CommandInfo) {
+    private func updateWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
         if let getRootEntityID = data.update?.getRootEntityID,
-           let wg = SpatialWindowGroup.getSpatialWindowGroup(target.readWinodwGroupID(id: info.windowGroupID))
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWinodwGroupID(id: info.windowContainerID))
         {
             let rootEntity = wg.getEntities().filter {
                 $0.value.coordinateSpace == .ROOT
@@ -554,21 +567,21 @@ class CommandManager {
             }
 
             // Update scene state
-            var cfg = WindowGroupPlainDefaultValues()
+            var cfg = WindowContainerPlainDefaultValues()
             cfg.defaultSize = CGSize(width: dimensions.x, height: dimensions.y)
-            WindowGroupMgr.Instance.updateWindowGroupPlainDefaultValues(cfg)
+            WindowContainerMgr.Instance.updateWindowContainerPlainDefaultValues(cfg)
             return
         }
         target.completeEvent(requestID: info.requestID)
     }
 
     private func openImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
-        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
+        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID)
         wg?.toggleImmersiveSpace.send(true)
     }
 
     private func dismissImmersiveSpace(target: SpatialWindowComponent, info: CommandInfo) {
-        let wg = SpatialWindowGroup.getOrCreateSpatialWindowGroup(target.parentWindowGroupID)
+        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID)
         wg?.toggleImmersiveSpace.send(false)
     }
 
@@ -583,9 +596,9 @@ class CommandManager {
         let data = info.cmd.data!
         switch data.loading?.method {
         case "show":
-            SceneManager.Instance.setLoading(.show, windowGroupID: info.windowGroupID)
+            SceneManager.Instance.setLoading(.show, windowContainerID: info.windowContainerID)
         case "hide":
-            SceneManager.Instance.setLoading(.hide, windowGroupID: info.windowGroupID)
+            SceneManager.Instance.setLoading(.hide, windowContainerID: info.windowContainerID)
         case _:
             break
         }
@@ -611,7 +624,7 @@ protocol JSData {
     var params: JSParams? { get } // createResource
     var update: JSResourceData? { get }
     var windowStyle: String? { get }
-    var windowGroupOptions: WindowGroupOptions? { get }
+    var windowContainerOptions: WindowContainerOptions? { get }
     var sceneData: SceneJSBData? { get }
     var logString: [String]? { get }
     var logLevel: String? { get }
@@ -621,13 +634,13 @@ protocol JSData {
 struct RawJSData: Codable, JSData {
     var commandList: [RawJSBCommand]? // multiCommand
     var resourceID: String?
-    var windowGroupID: String?
+    var windowContainerID: String?
     var entityID: String? // setComponent
     var type: String? // createResource
     var params: JSParams? // createResource
     var update: JSResourceData?
     var windowStyle: String?
-    var windowGroupOptions: WindowGroupOptions?
+    var windowContainerOptions: WindowContainerOptions?
     var sceneData: SceneJSBData?
     var logString: [String]?
     var logLevel: String?
@@ -642,7 +655,7 @@ struct JSParams: Codable {
 struct JSResourceData: Codable {
     var setParent: String?
     var setCoordinateSpace: String?
-    var setParentWindowGroupID: String?
+    var setParentWindowContainerID: String?
     var position: JSVector3F?
     var orientation: JSVector4?
     var scale: JSVector3F?
@@ -650,9 +663,10 @@ struct JSResourceData: Codable {
     var roughness: JSValue?
     var metallic: JSValue?
     var url: String?
-    var aspectRatio: String?
+    var aspectRatio: Double?
     var opacity: Double?
     var contentMode: String?
+    var resizable: Bool?
     var resolution: JSVector2?
     var isPortal: Bool?
     var rotationAnchor: JSVector3?
@@ -728,10 +742,10 @@ struct JSNextOpen: Codable {
 struct SceneJSBData: Codable {
     var method: String?
     var sceneName: String?
-    var sceneConfig: WindowGroupOptions?
+    var sceneConfig: WindowContainerOptions?
     var url: String?
     var windowID: String?
-    var windowGroupID: String?
+    var windowContainerID: String?
 }
 
 struct LoadingJSBData: Codable {

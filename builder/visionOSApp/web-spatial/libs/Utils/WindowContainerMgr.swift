@@ -1,12 +1,12 @@
 //
-//  WindowGroupMgr.swift
+//  WindowContainerMgr.swift
 //  web-spatial
 //
 //  Created by ByteDance on 2024/12/13.
 //
 
 //
-//  WindowGroupModel.swift
+//  WindowContainerModel.swift
 //  web-spatial
 //
 //  Created by ByteDance on 2024/11/25.
@@ -17,17 +17,17 @@ import SwiftUI
 import UIKit
 
 // TODO: maybe get input from pwa manifest
-let defaultWindowGroupConfig = WindowGroupOptions(
-    defaultSize: WindowGroupOptions.Size(
-        width: DefaultPlainWindowGroupSize.width,
-        height: DefaultPlainWindowGroupSize.height
+let defaultWindowContainerConfig = WindowContainerOptions(
+    defaultSize: WindowContainerOptions.Size(
+        width: DefaultPlainWindowContainerSize.width,
+        height: DefaultPlainWindowContainerSize.height
     ),
     resizability: nil
 )
 
-struct WindowGroupData: Decodable, Hashable, Encodable {
+struct WindowContainerData: Decodable, Hashable, Encodable {
     let windowStyle: String
-    let windowGroupID: String
+    let windowContainerID: String
 }
 
 enum LoadingMethod: String, Decodable, Encodable, Hashable {
@@ -35,30 +35,30 @@ enum LoadingMethod: String, Decodable, Encodable, Hashable {
     case hide
 }
 
-struct LoadingWindowGroupData: Decodable, Hashable, Encodable {
+struct LoadingWindowContainerData: Decodable, Hashable, Encodable {
     let method: LoadingMethod
     let windowStyle: String?
 }
 
-struct WindowGroupPlainDefaultValues {
+struct WindowContainerPlainDefaultValues {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?
 }
 
-// support WindowGroupOptions => WindowGroupPlainDefaultValues
-extension WindowGroupPlainDefaultValues {
-    init(_ options: WindowGroupOptions) {
+// support WindowContainerOptions => WindowContainerPlainDefaultValues
+extension WindowContainerPlainDefaultValues {
+    init(_ options: WindowContainerOptions) {
         defaultSize = CGSize(
-            width: options.defaultSize?.width ?? DefaultPlainWindowGroupSize.width,
-            height: options.defaultSize?.height ?? DefaultPlainWindowGroupSize.height
+            width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
+            height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
         )
         windowResizability = getWindowResizability(options.resizability)
     }
 }
 
 // incomming JSB data
-struct WindowGroupOptions: Codable {
-    // windowGroup
+struct WindowContainerOptions: Codable {
+    // windowContainer
     let defaultSize: Size?
     let resizability: String?
     struct Size: Codable {
@@ -81,28 +81,28 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 }
 
 @Observable
-class WindowGroupMgr: ObservableObject {
-    static let Instance = WindowGroupMgr()
+class WindowContainerMgr: ObservableObject {
+    static let Instance = WindowContainerMgr()
 
     private init() {
         setToMainSceneCfg()
     }
 
-    private var wgSetting: WindowGroupPlainDefaultValues = .init(
+    private var wgSetting: WindowContainerPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720),
         windowResizability: .automatic
     )
 
-    func getValue() -> WindowGroupPlainDefaultValues {
+    func getValue() -> WindowContainerPlainDefaultValues {
         return wgSetting
     }
 
     func setToMainSceneCfg() {
-        let cfg = WindowGroupPlainDefaultValues(pwaConfig.mainScene)
-        updateWindowGroupPlainDefaultValues(cfg)
+        let cfg = WindowContainerPlainDefaultValues(pwaManager.mainScene)
+        updateWindowContainerPlainDefaultValues(cfg)
     }
 
-    func updateWindowGroupPlainDefaultValues(_ data: WindowGroupPlainDefaultValues) {
+    func updateWindowContainerPlainDefaultValues(_ data: WindowContainerPlainDefaultValues) {
         if let newSize = data.defaultSize {
             wgSetting.defaultSize = newSize
         }

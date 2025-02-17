@@ -22,6 +22,8 @@ struct SpatialModel3DView: View {
                     let height = CGFloat(childModel3DComponent.resolutionY)
                     let anchor = childModel3DComponent.rotationAnchor
                     let opacity = childModel3DComponent.opacity
+                    let resizable = childModel3DComponent.resizable
+                    let aspectRatio: CGFloat? = childModel3DComponent.aspectRatio == nil ? nil : CGFloat(childModel3DComponent.aspectRatio!)
 
                     let url = URL(string: childModel3DComponent.modelURL)!
                     let contentMode = childModel3DComponent.contentMode
@@ -34,8 +36,11 @@ struct SpatialModel3DView: View {
 
                         case let .success(resolvedModel3D):
                             resolvedModel3D
-                                .resizable()
-                                .aspectRatio(contentMode: contentMode)
+                                .resizable(resizable)
+                                .aspectRatio(
+                                    aspectRatio,
+                                    contentMode: contentMode
+                                )
 
                         case let .failure(error):
                             ContentUnavailableView(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
@@ -45,8 +50,6 @@ struct SpatialModel3DView: View {
                         }
                     }
                     .frame(width: width, height: height)
-                    // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-                    .offset(z: 0.0001)
 //                    .background(Color.blue)
                     .scaleEffect(
                         x: CGFloat(e.modelEntity.scale.x),
