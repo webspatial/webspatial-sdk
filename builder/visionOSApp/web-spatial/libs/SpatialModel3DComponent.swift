@@ -13,6 +13,10 @@ class SpatialModel3DComponent: SpatialComponent {
     var resizable: Bool = true
     var aspectRatio: Double? = nil
 
+    // SpatialModel3DView should not have dependency on SpatialWindowComponent.
+    // It just need some JSB communication channel. This need to be refactor in future
+    weak var wv: SpatialWindowComponent?
+
     public func setURL(_ url: String) {
         modelURL = url
     }

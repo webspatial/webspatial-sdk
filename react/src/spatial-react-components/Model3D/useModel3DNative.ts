@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
 
 export function useModel3DNative(
@@ -7,6 +7,11 @@ export function useModel3DNative(
 ) {
   let model3DNativeRef = useRef<Model3DNative | null>(null)
 
+  const [phase, setPhase] = useState<'loading' | 'success' | 'failure'>(
+    'loading',
+  )
+  const [failureReason, setFailureReason] = useState('')
+
   useEffect(() => {
     let isDestroyed = false
 
@@ -14,9 +19,20 @@ export function useModel3DNative(
 
     model3DNativeRef.current = model3DContainer
 
-    model3DContainer.init(modelUrl).then(() => {
-      if (!isDestroyed) [onModel3DNativeReadyCb(model3DContainer)]
-    })
+    model3DContainer
+      .init(
+        modelUrl,
+        () => {
+          setPhase('success')
+        },
+        (error: string) => {
+          setPhase('failure')
+          setFailureReason(error)
+        },
+      )
+      .then(() => {
+        if (!isDestroyed) [onModel3DNativeReadyCb(model3DContainer)]
+      })
 
     return () => {
       isDestroyed = true
@@ -27,5 +43,5 @@ export function useModel3DNative(
     }
   }, [modelUrl])
 
-  return model3DNativeRef
+  return { model3DNativeRef, phase, failureReason }
 }
