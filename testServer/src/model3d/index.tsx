@@ -85,11 +85,20 @@ function App() {
       <CSSModel3D
         ref={ref}
         style={styleOuter}
-        modelUrl="/src/assets/FlightHelmet.usdz"
+        modelUrl="/src/assets/FlightHelmets.usdz"
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-      />
+        onSuccess={() => {
+          console.log('onLoadSuccess')
+        }}
+        onFailure={(errorReason: string) => {
+          console.log('onLoadError', errorReason)
+        }}
+      >
+        <div> this is place holder when failure </div>
+      </CSSModel3D>
+
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
           display toggle

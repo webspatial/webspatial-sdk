@@ -32,7 +32,7 @@ struct SpatialModel3DView: View {
                     Model3D(url: url) { newPhase in
                         switch newPhase {
                         case .empty:
-                            ProgressView()
+                            EmptyView()
 
                         case let .success(resolvedModel3D):
                             resolvedModel3D
@@ -40,10 +40,15 @@ struct SpatialModel3DView: View {
                                 .aspectRatio(
                                     aspectRatio,
                                     contentMode: contentMode
-                                )
+                                ).onAppear {
+                                    onLoadSuccess()
+                                }
 
                         case let .failure(error):
-                            ContentUnavailableView(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
+//                            use UIView.onAppear to notify error phase.
+                            Text("").onAppear {
+                                onLoadFailure(error.localizedDescription)
+                            }
 
                         @unknown default:
                             EmptyView()
@@ -72,6 +77,20 @@ struct SpatialModel3DView: View {
                     .hidden(!e.visible)
                 }
             }
+        }
+    }
+
+    private func onLoadSuccess() {
+        if let model3DComponent = e.getComponent(SpatialModel3DComponent.self) {
+            let data = "{eventType: 'phase', value: 'success'}"
+            model3DComponent.wv?.fireComponentEvent(componentId: model3DComponent.id, data: data)
+        }
+    }
+
+    private func onLoadFailure(_ error: String) {
+        if let model3DComponent = e.getComponent(SpatialModel3DComponent.self) {
+            let data = "{eventType: 'phase', value: 'failure', error: '\(error)'} "
+            model3DComponent.wv?.fireComponentEvent(componentId: model3DComponent.id, data: data)
         }
     }
 }
