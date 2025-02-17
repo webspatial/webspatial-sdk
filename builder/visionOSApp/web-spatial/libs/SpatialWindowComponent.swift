@@ -298,6 +298,10 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'" + inputComponentID + "', data: " + data + "})")
     }
 
+    func fireComponentEvent(componentId: String, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({resourceId:'" + componentId + "', data: " + data + "})")
+    }
+
     func failEvent(requestID: Int, data: String = "{}") {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:" + String(requestID) + ", data: " + data + "})")
     }
