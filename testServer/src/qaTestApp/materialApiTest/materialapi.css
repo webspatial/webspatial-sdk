@@ -17,3 +17,7 @@
 .noMat {
     --xr-background-material: none
 }
+
+.transparentMat {
+    --xr-background-material: transparent
+}
