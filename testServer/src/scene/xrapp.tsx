@@ -200,6 +200,16 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
+          startlog('navigate to google')
+          location.href = extUrl
+        }}
+      >
+        navigate to google
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
           startlog('open')
           winARef.current = window.open(
             'http://localhost:5173/src/scene/xrapp.html',
