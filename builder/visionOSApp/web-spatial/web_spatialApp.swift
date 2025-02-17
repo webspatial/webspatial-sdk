@@ -15,7 +15,6 @@ import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
 // To load a local path, remove http:// eg.  "static-web/"
-let initialPageToLoad = "http://localhost:5173/"
 let nativeAPIVersion = "0.0.1"
 
 // detect when app properties like defaultSize change so we can avoid race condition of setting default values and then opening window container
@@ -39,19 +38,16 @@ struct web_spatialApp: App {
         // init global logger
         Logger.initLogger()
 
+        // init pwa manager
+        pwaManager._init()
+
         // create root SpatialWindowContainer and Immersive SpatialWindowContainer
         rootWGD = SpatialWindowContainer.createRootWindowContainer()
         let _ = SpatialWindowContainer.createImmersiveWindowContainer()
     }
 
     func getFileUrl() -> URL {
-        var useStaticFile = true
-        let urlType = initialPageToLoad.split(separator: "://").first
-        if urlType == "http" || urlType == "https" {
-            useStaticFile = false
-        }
-        let fileUrl = useStaticFile ? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: initialPageToLoad)! : URL(string: initialPageToLoad)!
-        return fileUrl
+        return URL(string: pwaManager.start_url)!
     }
 
     // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
@@ -64,6 +60,7 @@ struct web_spatialApp: App {
             let rootEntity = SpatialEntity()
             rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
             let windowComponent = SpatialWindowComponent(parentWindowContainerID: rootWGD.id, url: fileUrl)
+            windowComponent.isRoot = true
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowContainer(wg: rootWGD)
 
@@ -81,9 +78,9 @@ struct web_spatialApp: App {
             if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).cornerRadius(0).onOpenURL { myURL in
+                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
                     initAppOnViewMount()
-                    let urlToLoad = myURL.absoluteString.replacingOccurrences(of: "webspatial://", with: "").replacingOccurrences(of: "//", with: "://")
+                    let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
 
                     if let url = URL(string: urlToLoad) {
                         root!.navigateToURL(url: url)
