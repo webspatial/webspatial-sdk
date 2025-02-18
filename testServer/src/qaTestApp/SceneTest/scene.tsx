@@ -112,7 +112,7 @@ function App() {
             onClick={() => {
               initScene('sb', () => ({
                 defaultSize: {
-                  width: 300,
+                  width: 2000,
                   height: 500,
                 },
                 resizability: 'automatic',
@@ -150,14 +150,14 @@ function App() {
           >
             open model
           </button>
-          <div className="w-4"></div>
-          <a
-            href="http://localhost:5173/src/qaTestApp/SceneTest/model.html"
-            target="_blank"
-            className={btnCls}
-          >
-            open model by a tag
-          </a>
+          {/*<div className="w-4"></div>*/}
+          {/*<a*/}
+          {/*  href="http://localhost:5173/src/qaTestApp/SceneTest/model.html"*/}
+          {/*  target="_blank"*/}
+          {/*  className={btnCls}*/}
+          {/*>*/}
+          {/*  open model by a tag*/}
+          {/*</a>*/}
           <div className="w-4"></div>
           <button
             className={btnCls}
@@ -224,7 +224,7 @@ function App() {
           <button
             className={btnCls}
             onClick={() =>
-              handleOpenWindow(windowRefs.winFRef, 'http://google.com', 'se')
+              handleOpenWindow(windowRefs.winFRef, 'http://google.com', 'sf')
             }
           >
             open google
