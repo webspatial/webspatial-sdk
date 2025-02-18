@@ -1,11 +1,7 @@
 {
-  "object" : {
-    "artifacts" : [
-
-    ],
-    "dependencies" : [
-
-    ]
+  "object": {
+    "artifacts": [],
+    "dependencies": []
   },
-  "version" : 6
+  "version": 6
 }
