@@ -85,7 +85,7 @@ function App() {
       <CSSModel3D
         ref={ref}
         style={styleOuter}
-        modelUrl="/src/assets/FlightHelmets.usdz"
+        modelUrl="/src/assets/FlightHelmet.usdz"
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
