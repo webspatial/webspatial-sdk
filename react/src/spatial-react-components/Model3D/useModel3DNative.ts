@@ -1,9 +1,19 @@
 import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
+import { ModelDragEvent } from '@xrsdk/runtime'
 
 export function useModel3DNative(
   modelUrl: string,
   onModel3DNativeReadyCb: (model3DNative: Model3DNative) => void,
+
+  eventHandlers: {
+    onDragStart?: (dragEvent: ModelDragEvent) => void
+    onDrag?: (dragEvent: ModelDragEvent) => void
+    onDragEnd?: (dragEvent: ModelDragEvent) => void
+    onTap?: () => void
+    onDoubleTap?: () => void
+    onLongPress?: () => void
+  },
 ) {
   let model3DNativeRef = useRef<Model3DNative | null>(null)
 
@@ -28,6 +38,27 @@ export function useModel3DNative(
         (error: string) => {
           setPhase('failure')
           setFailureReason(error)
+        },
+
+        {
+          onDragStart: (dragEvent: ModelDragEvent) => {
+            eventHandlers.onDragStart?.(dragEvent)
+          },
+          onDrag: (dragEvent: ModelDragEvent) => {
+            eventHandlers.onDrag?.(dragEvent)
+          },
+          onDragEnd: (dragEvent: ModelDragEvent) => {
+            eventHandlers.onDragEnd?.(dragEvent)
+          },
+          onTap: () => {
+            eventHandlers.onTap?.()
+          },
+          onDoubleTap: () => {
+            eventHandlers.onDoubleTap?.()
+          },
+          onLongPress: () => {
+            eventHandlers.onLongPress?.()
+          },
         },
       )
       .then(() => {
