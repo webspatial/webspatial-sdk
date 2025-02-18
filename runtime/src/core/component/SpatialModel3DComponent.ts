@@ -3,18 +3,54 @@ import { WebSpatial } from '../private/WebSpatial'
 import { Vec3 } from '../SpatialTransform'
 
 /**
+ * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
+ */
+export type ModelDragEvent = {
+  eventType: 'dragstart' | 'dragend' | 'drag'
+  translation3D: Vec3
+  startLocation3D: Vec3
+}
+
+export type TapEvent = {
+  eventType: 'tap'
+}
+
+/**
  * Used to position a model3d in 3D space
  */
 export class SpatialModel3DComponent extends EventSpatialComponent {
   protected override onRecvEvent(data: any): void {
-    // console.log('onRecvEvent', data)
+    console.log('onRecvEvent', data)
     const { eventType, value, error } = data
-    if (eventType === 'phase') {
-      if (value === 'success') {
-        this.onSuccess?.()
-      } else {
-        this.onFailure?.(error as string)
-      }
+    switch (eventType) {
+      case 'phase':
+        if (value === 'success') {
+          this.onSuccess?.()
+        } else {
+          this.onFailure?.(error as string)
+        }
+        break
+      case 'dragstart':
+        this.onDragStart?.(value)
+        break
+      case 'dragend':
+        this.onDragEnd?.(value)
+        break
+      case 'drag':
+        this.onDrag?.(value)
+        break
+      case 'tap':
+        this.onTap?.()
+        break
+      case 'doubletap':
+        this.onDoubleTap?.()
+        break
+      case 'longpress':
+        this.onLongPress?.()
+        break
+
+      default:
+        break
     }
   }
   /**
@@ -75,12 +111,42 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
   }
 
   /**
-   * model load success callback
+   * Callback fired when model load success
    */
   public onSuccess?: () => void
 
   /**
-   * model load failure callback
+   * Callback fired when model load failure
+   * @param errorReason
    */
   public onFailure?: (errorReason: string) => void
+
+  /**
+   * Callback fired when model was dragged at the beginning
+   * @param dragEvent
+   */
+  public onDragStart?: (dragEvent: ModelDragEvent) => void
+
+  /**
+   * Callback fired when model was dragged
+   * @param dragEvent
+   */
+  public onDrag?: (dragEvent: ModelDragEvent) => void
+
+  /**
+   * Callback fired when model was dragged at the ending
+   * @param dragEvent
+   */
+  public onDragEnd?: (dragEvent: ModelDragEvent) => void
+
+  /**
+   * Callback fired when model was tapped
+   */
+  public onTap?: () => void
+
+  /** Callback fired when model was double tapped */
+  public onDoubleTap?: () => void
+
+  /** Callback fired when model was long pressed */
+  public onLongPress?: () => void
 }

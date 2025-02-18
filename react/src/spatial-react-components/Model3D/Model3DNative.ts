@@ -1,8 +1,14 @@
-import { SpatialEntity, SpatialModel3DComponent } from '@xrsdk/runtime'
+import {
+  ModelDragEvent,
+  SpatialEntity,
+  SpatialModel3DComponent,
+} from '@xrsdk/runtime'
 import { getSession } from '../../utils'
 import { SpatialTransformType } from './types'
 import { getAbsoluteURL } from './utils'
 import { parseTransformOrigin } from '../SpatialReactComponent/utils'
+
+// const NoOps = (dragEvent: ModelDragEvent | string | void) => {}
 
 export class Model3DNative {
   private initPromise?: Promise<any>
@@ -16,18 +22,43 @@ export class Model3DNative {
   private onSuccess?: () => void
   private onFailure?: (errorReason: string) => void
 
+  private onDragStart?: (dragEvent: ModelDragEvent) => void
+  private onDrag?: (dragEvent: ModelDragEvent) => void
+  private onDragEnd?: (dragEvent: ModelDragEvent) => void
+
+  private onTap?: () => void
+  private onDoubleTap?: () => void
+  private onLongPress?: () => void
+
   async init(
     modelUrl: string,
     onSuccess: () => void,
     onFailure: (error: string) => void,
+    eventHandlers: {
+      onDragStart: (dragEvent: ModelDragEvent) => void
+      onDrag: (dragEvent: ModelDragEvent) => void
+      onDragEnd: (dragEvent: ModelDragEvent) => void
+      onTap: () => void
+      onDoubleTap: () => void
+      onLongPress: () => void
+    },
   ) {
     if (this.isDestroyed) {
       return
     }
 
+    const { onDragStart, onDrag, onDragEnd, onTap, onDoubleTap, onLongPress } =
+      eventHandlers
+
     this.initPromise = this.initInternal(modelUrl)
     this.onSuccess = onSuccess
     this.onFailure = onFailure
+    this.onDragStart = onDragStart
+    this.onDrag = onDrag
+    this.onDragEnd = onDragEnd
+    this.onTap = onTap
+    this.onDoubleTap = onDoubleTap
+    this.onLongPress = onLongPress
 
     return this.initPromise
   }
@@ -62,6 +93,12 @@ export class Model3DNative {
 
     this.spatialModel3DComponent.onSuccess = this.onSuccess
     this.spatialModel3DComponent.onFailure = this.onFailure
+    this.spatialModel3DComponent.onDragStart = this.onDragStart
+    this.spatialModel3DComponent.onDrag = this.onDrag
+    this.spatialModel3DComponent.onDragEnd = this.onDragEnd
+    this.spatialModel3DComponent.onTap = this.onTap
+    this.spatialModel3DComponent.onDoubleTap = this.onDoubleTap
+    this.spatialModel3DComponent.onLongPress = this.onLongPress
   }
 
   async setVisible(visible: boolean) {

@@ -3,29 +3,32 @@ import ReactDOM from 'react-dom/client'
 import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
 import { useRef, useState } from 'react'
+import { ModelDragEvent } from '@xrsdk/runtime'
 
 enableDebugTool()
 
 function App() {
-  const translateX = 100
-  const translateY = 0
-  const rotateZ = 0
+  // const translateX = useState(0)
+  // const translateY = useState(0)
+  // const translateZ = useState(0)
+
+  const [tapFlag, setTapFlag] = useState(true)
 
   const ref = useRef<HTMLDivElement | null>(null)
 
   ;(window as any).ref = ref
 
   const styleOuter: CSSProperties = {
-    // '--xr-back': 31,
+    '--xr-back': tapFlag ? 31 : 100,
     // visibility: 'hidden',
     position: 'relative',
     width: '50%',
     height: '50%',
     marginBottom: '140px',
-    transform: `translateX(${translateX}px) translateY(${translateY}px) rotateZ(${rotateZ}deg)`,
+    // transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}deg)`,
     // transformOrigin: 'top center',
-    backgroundColor: 'red',
-    opacity: 0.8,
+    // backgroundColor: 'red',
+    // opacity: 0.8,
   }
 
   const onToggleDisplay = () => {
@@ -94,6 +97,31 @@ function App() {
         }}
         onFailure={(errorReason: string) => {
           console.log('onLoadError', errorReason)
+        }}
+        onDragStart={(dragEvent: ModelDragEvent) => {
+          console.log('onDragStart', dragEvent)
+        }}
+        onDrag={(dragEvent: ModelDragEvent) => {
+          console.log(
+            'onDrag x',
+            dragEvent.translation3D.x,
+            dragEvent.startLocation3D.x,
+          )
+
+          ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
+        }}
+        onDragEnd={(dragEvent: ModelDragEvent) => {
+          console.log('onDragEnd', dragEvent)
+          // ref.current!.style.transform = 'none'
+        }}
+        onTap={() => {
+          setTapFlag(v => !v)
+        }}
+        onDoubleTap={() => {
+          console.log('onDoubleTap')
+        }}
+        onLongPress={() => {
+          console.log('onLongPress')
         }}
       >
         <div> this is place holder when failure </div>
