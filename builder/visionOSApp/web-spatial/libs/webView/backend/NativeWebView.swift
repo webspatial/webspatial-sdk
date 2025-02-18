@@ -59,7 +59,6 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         var styleJsonString: String? = URLComponents(string: url!.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
 
         do {
-            print(styleJsonString!)
             if styleJsonString?.contains("?") != nil {
                 // remove invalid query string
                 // before "{\"glassEffect\":true,\"cornerRadius\":50}?uniqueURL=0.0010192470591506853"
@@ -71,7 +70,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
             webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
         } catch {
-            print("Style url parse failure " + error.localizedDescription)
+            logger.warning("Style url parse failure " + error.localizedDescription)
         }
 
         // Respond with empty css file
@@ -133,9 +132,9 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        print("Navigation failed!!! " + error.localizedDescription)
+        logger.warning("Navigation failed!!! " + error.localizedDescription)
         if let urlError = (error as? URLError) {
-            print("URL ERROR: " + (urlError.failingURL != nil ? (urlError.failingURL!.absoluteString) : "no URL found"))
+            logger.warning("URL ERROR: " + (urlError.failingURL != nil ? (urlError.failingURL!.absoluteString) : "no URL found"))
             if urlError.code == .cannotConnectToHost {
                 webViewRef?.didFailLoadPage()
             }

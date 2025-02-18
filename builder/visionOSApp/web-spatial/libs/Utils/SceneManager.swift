@@ -42,7 +42,7 @@ class SceneManager {
                 windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
             }
         } else {
-            print("no spawned")
+            logger.warning("Unable to find spawned webview")
         }
 
         ent.addComponent(windowComponent)
