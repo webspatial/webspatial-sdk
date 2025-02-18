@@ -1,19 +1,19 @@
-.defaultMat{
-    --xr-background-material: translucent
+.defaultMat {
+  --xr-background-material: translucent;
 }
 
 .thinMat {
-    --xr-background-material: thin
+  --xr-background-material: thin;
 }
 
 .thickMat {
-    --xr-background-material: thick
+  --xr-background-material: thick;
 }
 
 .regularMat {
-    --xr-background-material: regular
+  --xr-background-material: regular;
 }
 
 .noMat {
-    --xr-background-material: none
+  --xr-background-material: none;
 }
