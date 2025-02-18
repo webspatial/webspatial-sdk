@@ -220,6 +220,7 @@ export default class XcodeProject {
       `"${manifest.id}"`,
     )
     this.updateDeeplink(manifest.protocol_handlers ?? [])
+    this.modifySwift(manifest)
   }
 
   private static updateVersion(xcodeProject: any, version: string) {
@@ -234,5 +235,26 @@ export default class XcodeProject {
     }
     const newInfoPlist = infoPlistXML.replace('DEEPLINK', deeplinkString)
     fs.writeFileSync(infoPlistPath, newInfoPlist)
+  }
+
+  private static modifySwift(manifest: any) {
+    const manifestSwiftPath = join(
+      PROJECT_DIRECTORY,
+      './web-spatial/libs/webView/manifest.swift',
+    )
+    let manifestSwift = fs.readFileSync(manifestSwiftPath, 'utf-8')
+    manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
+    manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
+    if (manifest.protocol_handlers) {
+      let deeplinkString = ''
+      for (let i = 0; i < manifest.protocol_handlers.length; i++) {
+        deeplinkString += `PWADeeplinkFormat(protocolValue: "${manifest.protocol_handlers[i].protocol}", urlValue: "${manifest.protocol_handlers[i].url}"),`
+      }
+      manifestSwift = manifestSwift.replace(
+        'PWADeeplinkFormat(protocolValue: "", urlValue: "")',
+        deeplinkString,
+      )
+    }
+    fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
 }
