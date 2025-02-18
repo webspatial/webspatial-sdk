@@ -170,7 +170,6 @@ class SpatialWindowComponent: SpatialComponent {
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     init(parentWindowContainerID: String) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
         webViewNative = WebViewNative()
@@ -180,7 +179,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     init(parentWindowContainerID: String, url: URL) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
 
@@ -302,7 +300,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     deinit {
-//        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
         cancellables.removeAll()
     }
@@ -322,7 +319,7 @@ class SpatialWindowComponent: SpatialComponent {
     // Request information of webview that request this webview to load
     weak var loadRequestWV: SpatialWindowComponent?
     var loadRequestID = -1
-//    var resourceID = ""
+
     // A load request of a child webview was loaded
     func didLoadChild(loadRequestID: Int, resourceID: String) {
         completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
@@ -393,15 +390,6 @@ class SpatialWindowComponent: SpatialComponent {
         cornerRadius = loadingStyles.cornerRadius
         backgroundMaterial = loadingStyles.backgroundMaterial
 
-//        if root {
-//            let wg = wgManager.getWindowContainer(windowContainer: parentWindowContainerID)
-//            wg.setSize.send(loadingStyles.windowContainerSize)
-//        }
-        if !gotStyle {
-            // We didn't get a style update in time (might result in FOUC)
-            // Set default style
-            //   print("Didn't get SwiftUI styles prior to page finish load")
-        }
         isLoading = false
 
         // update navinfo
