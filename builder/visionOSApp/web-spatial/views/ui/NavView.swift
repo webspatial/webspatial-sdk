@@ -59,7 +59,7 @@ struct NavView: View {
                 Text(
                     swc?.getURL()?.absoluteString ?? ""
                 )
-                .padding() // (wv?.url?.absoluteString)
+                .padding()
                 Button(action: {
                     UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
                     showCopyTip = true

@@ -47,9 +47,6 @@ struct OpenDismissHandlerUI: View {
 
             .onChange(of: scenePhase) { oldValue, newValue in
                 print("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
-                if newValue == .background {
-//                    windowContainerContent.destroy()
-                }
             }
     }
 }
