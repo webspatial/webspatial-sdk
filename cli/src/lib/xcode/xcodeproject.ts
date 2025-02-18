@@ -28,6 +28,41 @@ const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`
 
+const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>web-spatial</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				DEEPLINK
+			</array>
+		</dict>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationPreferredDefaultSceneSessionRole</key>
+		<string>UIWindowSceneSessionRoleApplication</string>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
+</dict>
+</plist>
+`
+
 export default class XcodeProject {
   public static async modify(projectPath: string, option: any) {
     let project = xcode.project(projectPath)
@@ -184,10 +219,20 @@ export default class XcodeProject {
       'PRODUCT_BUNDLE_IDENTIFIER',
       `"${manifest.id}"`,
     )
-    // TODO:bind deeplink
+    this.updateDeeplink(manifest.protocol_handlers ?? [])
   }
 
   private static updateVersion(xcodeProject: any, version: string) {
     xcodeProject.updateBuildProperty('CURRENT_PROJECT_VERSION', version)
+  }
+
+  private static updateDeeplink(deeplinks: Array<any>) {
+    let infoPlistPath = join(PROJECT_DIRECTORY, './web-spatial/Info.plist')
+    let deeplinkString = ''
+    for (let i = 0; i < deeplinks.length; i++) {
+      deeplinkString += `<string>${deeplinks[i].protocol}</string>`
+    }
+    const newInfoPlist = infoPlistXML.replace('DEEPLINK', deeplinkString)
+    fs.writeFileSync(infoPlistPath, newInfoPlist)
   }
 }

@@ -11,6 +11,8 @@ import WebKit
 struct NavView: View {
     @State var swc: SpatialWindowComponent?
     @State var showUrl: Bool = false
+    @State private var showCopyTip = false
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .trailing, spacing: 0) {
@@ -59,12 +61,16 @@ struct NavView: View {
                 )
                 .padding() // (wv?.url?.absoluteString)
                 Button(action: {
-                    print("click copy")
+                    UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
+                    showCopyTip = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showCopyTip = false
+                    }
                 }, label: {
                     Text("copy")
                 }).padding(.trailing, 5)
+
                 Button(action: {
-                    print("click close")
                     showUrl = false
                 }, label: {
                     Text("X")
@@ -72,5 +78,11 @@ struct NavView: View {
             }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y: 35).opacity(showUrl ? 1 : 0).animation(.easeOut(duration: 0.2))
         }
         .zIndex(10) // closer to user
+        .popover(isPresented: $showCopyTip) {
+            Text("copied！")
+                .padding()
+                .background(.ultraThinMaterial)
+                .cornerRadius(10)
+        }
     }
 }
