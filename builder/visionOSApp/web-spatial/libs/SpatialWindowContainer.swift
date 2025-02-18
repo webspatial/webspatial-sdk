@@ -12,17 +12,22 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowContainer: SpatialObject {
-    var wgd: WindowContainerData? = nil
+    var wgd: WindowContainerData
     static func getSpatialWindowContainer(_ name: String) -> SpatialWindowContainer? {
         return SpatialObject.get(name) as? SpatialWindowContainer
     }
 
-    static func getOrCreateSpatialWindowContainer(_ name: String) -> SpatialWindowContainer? {
+    static func getOrCreateSpatialWindowContainer(_ name: String, _ data: WindowContainerData) -> SpatialWindowContainer? {
         if let windowContainer = getSpatialWindowContainer(name) {
             return windowContainer
         }
-        let newWindowContainer = SpatialWindowContainer(name)
+        let newWindowContainer = SpatialWindowContainer(name, data)
         return newWindowContainer
+    }
+
+    init(_ name: String, _ data: WindowContainerData) {
+        wgd = data
+        super.init(name)
     }
 
     // Resources
@@ -54,6 +59,9 @@ class SpatialWindowContainer: SpatialObject {
     override func onDestroy() {
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
+
+        // Close the window group when this object is destroyed
+        SpatialWindowContainer.getSpatialWindowContainer(id)!.closeWindowData.send(wgd)
     }
 
     override func inspect() -> [String: Any] {
@@ -81,7 +89,8 @@ extension SpatialWindowContainer {
             print("Root already created! ")
             return rootWindowContainer
         }
-        return SpatialWindowContainer(RootID)
+        var wgd = WindowContainerData(windowStyle: "Plain", windowContainerID: "root")
+        return SpatialWindowContainer(RootID, wgd)
     }
 }
 
@@ -97,6 +106,7 @@ extension SpatialWindowContainer {
             print("Immersive already created! ")
             return windowContainer
         }
-        return SpatialWindowContainer(ImmersiveID)
+        var wgd = WindowContainerData(windowStyle: "ImmersiveSpace", windowContainerID: "ImmersiveSpace")
+        return SpatialWindowContainer(ImmersiveID, wgd)
     }
 }

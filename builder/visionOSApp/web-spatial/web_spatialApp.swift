@@ -88,7 +88,7 @@ struct web_spatialApp: App {
                 }
             } else {
                 let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
-                    windowData.windowContainerID
+                    windowData.windowContainerID, windowData
                 )
                 PlainWindowContainerView().environment(wg)
                     // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
@@ -116,7 +116,7 @@ struct web_spatialApp: App {
         )
 
         WindowGroup(id: "Volumetric", for: WindowContainerData.self) { $windowData in
-            let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowData!.windowContainerID)
+            let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowData!.windowContainerID, windowData!)
             VolumetricWindowContainerView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
 
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
