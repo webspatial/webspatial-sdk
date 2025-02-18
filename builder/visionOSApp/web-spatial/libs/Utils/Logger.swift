@@ -15,22 +15,22 @@ class Logger {
     static func initLogger() {}
 
     func error(_ str: String) {
-        print("error:" + str)
+        print("error: " + str)
     }
 
     func verbose(_ str: String) {
-        print("verbose:" + str)
+        print("verbose: " + str)
     }
 
     func debug(_ str: String) {
-        print("debug:" + str)
+        print("debug: " + str)
     }
 
     func info(_ str: String) {
-        print("info:" + str)
+        print("info: " + str)
     }
 
     func warning(_ str: String) {
-        print("warning:" + str)
+        print("warning: " + str)
     }
 }
