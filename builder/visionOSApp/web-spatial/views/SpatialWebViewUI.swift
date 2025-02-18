@@ -35,7 +35,7 @@ struct SpatialWebViewUI: View {
 
             // Display child entities of the webview
             VStack(alignment: .trailing, spacing: 20) {
-                if wv.isRoot {
+                if wv.isRootWebview() {
                     NavView(swc: wv)
                 }
 
