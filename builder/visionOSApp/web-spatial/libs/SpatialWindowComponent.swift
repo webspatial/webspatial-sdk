@@ -125,7 +125,7 @@ class SpatialWindowComponent: SpatialComponent {
     /// For example, a `SpatialDiv` is not a root webview.
     ///
     /// - Returns: `true` if the webview is a root webview (i.e., `parentWebviewID` is empty), otherwise `false`.
-    private func isRootWebview() -> Bool {
+    public func isRootWebview() -> Bool {
         return parentWebviewID == ""
     }
 

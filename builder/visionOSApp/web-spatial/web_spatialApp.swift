@@ -60,7 +60,6 @@ struct web_spatialApp: App {
             let rootEntity = SpatialEntity()
             rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
             let windowComponent = SpatialWindowComponent(parentWindowContainerID: rootWGD.id, url: fileUrl)
-            windowComponent.isRoot = true
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowContainer(wg: rootWGD)
 
