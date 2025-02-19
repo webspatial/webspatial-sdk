@@ -77,6 +77,18 @@ function App() {
     setAspectRatio(v => (v === 0 ? 16 / 9 : 0))
   }
 
+  // test toggle model url
+  const [modelUrl, setModelUrl] = useState('/src/assets/FlightHelmet.usdz')
+  const handleToggleModel = () => {
+    if (ref.current) {
+      setModelUrl(v =>
+        v === '/src/assets/FlightHelmet.usdz'
+          ? '/src/assets/ball.usdz'
+          : '/src/assets/FlightHelmet.usdz',
+      )
+    }
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -88,7 +100,7 @@ function App() {
       <CSSModel3D
         ref={ref}
         style={styleOuter}
-        modelUrl="/src/assets/FlightHelmet.usdz"
+        modelUrl={modelUrl}
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
@@ -138,6 +150,10 @@ function App() {
 
         <button className="btn btn-primary" onClick={handleAspectRatioChange}>
           aspectRatio
+        </button>
+
+        <button className="btn btn-primary" onClick={handleToggleModel}>
+          toggle model url
         </button>
       </div>
 
