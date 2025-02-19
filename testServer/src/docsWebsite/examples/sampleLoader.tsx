@@ -194,6 +194,11 @@ export function showSample(MySample: any, hasCode = true) {
                               Popup Element
                             </a>
                           </li>
+                          <li>
+                            <a href="/src/docsWebsite/index.html?examplePath=particleEffect">
+                              Particle Effect
+                            </a>
+                          </li>
                         </ul>
                       </details>
                     </li>
