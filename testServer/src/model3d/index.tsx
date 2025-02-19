@@ -114,15 +114,15 @@ function App() {
           console.log('onDragEnd', dragEvent)
           // ref.current!.style.transform = 'none'
         }}
-        onTap={() => {
-          setTapFlag(v => !v)
-        }}
-        onDoubleTap={() => {
-          console.log('onDoubleTap')
-        }}
-        onLongPress={() => {
-          console.log('onLongPress')
-        }}
+        // onTap={() => {
+        //   setTapFlag(v => !v)
+        // }}
+        // onDoubleTap={() => {
+        //   console.log('onDoubleTap')
+        // }}
+        // onLongPress={() => {
+        //   console.log('onLongPress')
+        // }}
       >
         <div> this is place holder when failure </div>
       </CSSModel3D>
