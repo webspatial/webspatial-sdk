@@ -98,7 +98,7 @@ class WindowContainerMgr: ObservableObject {
     }
 
     func setToMainSceneCfg() {
-        let cfg = WindowContainerPlainDefaultValues(pwaConfig.mainScene)
+        let cfg = WindowContainerPlainDefaultValues(pwaManager.mainScene)
         updateWindowContainerPlainDefaultValues(cfg)
     }
 

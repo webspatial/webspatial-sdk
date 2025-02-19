@@ -57,9 +57,6 @@ class SpatialWindowComponent: SpatialComponent {
         return inspectInfo
     }
 
-    // if this is root, close the webview will destroy parent windowContainer
-    var isRoot = false
-
     var scrollOffset = CGPoint()
     private var webViewNative: WebViewNative?
     var resolutionX: Double = 0
@@ -77,6 +74,7 @@ class SpatialWindowComponent: SpatialComponent {
     var childWindowContainers = [String: WindowContainerData]()
     var spawnedNativeWebviews = [String: WebViewNative]()
 
+    // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var childResources = [String: SpatialObject]()
     public func addChildSpatialObject(_ spatialObject: SpatialObject) {
         childResources[spatialObject.id] = spatialObject
@@ -127,7 +125,7 @@ class SpatialWindowComponent: SpatialComponent {
     /// For example, a `SpatialDiv` is not a root webview.
     ///
     /// - Returns: `true` if the webview is a root webview (i.e., `parentWebviewID` is empty), otherwise `false`.
-    private func isRootWebview() -> Bool {
+    public func isRootWebview() -> Bool {
         return parentWebviewID == ""
     }
 
@@ -172,7 +170,6 @@ class SpatialWindowComponent: SpatialComponent {
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     init(parentWindowContainerID: String) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
         webViewNative = WebViewNative()
@@ -182,7 +179,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     init(parentWindowContainerID: String, url: URL) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
 
@@ -210,6 +206,25 @@ class SpatialWindowComponent: SpatialComponent {
             }
             .store(in: &cancellables)
     }
+
+    func goBack() {
+        webViewNative?.webViewHolder.appleWebView?.goBack()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func goForward() {
+        webViewNative?.webViewHolder.appleWebView?.goForward()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    func reload() {
+        webViewNative?.webViewHolder.appleWebView?.reload()
+        webViewNative?.webViewHolder.needsUpdate = true
+    }
+
+    var canGoBack: Bool = false
+
+    var canGoForward: Bool = false
 
     func navigateToURL(url: URL) {
         webViewNative!.url = url
@@ -285,7 +300,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     deinit {
-//        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
         cancellables.removeAll()
     }
@@ -305,7 +319,7 @@ class SpatialWindowComponent: SpatialComponent {
     // Request information of webview that request this webview to load
     weak var loadRequestWV: SpatialWindowComponent?
     var loadRequestID = -1
-//    var resourceID = ""
+
     // A load request of a child webview was loaded
     func didLoadChild(loadRequestID: Int, resourceID: String) {
         completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
@@ -316,11 +330,7 @@ class SpatialWindowComponent: SpatialComponent {
         didFinishFirstLoad = true
     }
 
-    func didStartLoadPage() {
-        if didFinishFirstLoad {
-            webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
-        }
-
+    func releaseChildResources() {
         let spatialObjects = childResources.map { $0.value }
         for spatialObject in spatialObjects {
             spatialObject.destroy()
@@ -332,6 +342,14 @@ class SpatialWindowComponent: SpatialComponent {
         for k in wgkeys {
             SpatialWindowContainer.getSpatialWindowContainer(k)!.closeWindowData.send(childWindowContainers[k]!)
         }
+    }
+
+    func didStartLoadPage() {
+        if didFinishFirstLoad {
+            webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
+        }
+
+        releaseChildResources()
         let url = webViewNative?.webViewHolder.appleWebView?.url
         webViewNative!.url = url!
 
@@ -349,7 +367,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didCloseWebView() {
         // if need
-        if isRoot {
+        if isRootWebview() {
             SceneManager.Instance.closeRoot(self)
         }
     }
@@ -372,19 +390,17 @@ class SpatialWindowComponent: SpatialComponent {
         cornerRadius = loadingStyles.cornerRadius
         backgroundMaterial = loadingStyles.backgroundMaterial
 
-//        if root {
-//            let wg = wgManager.getWindowContainer(windowContainer: parentWindowContainerID)
-//            wg.setSize.send(loadingStyles.windowContainerSize)
-//        }
-        if !gotStyle {
-            // We didn't get a style update in time (might result in FOUC)
-            // Set default style
-            //   print("Didn't get SwiftUI styles prior to page finish load")
-        }
         isLoading = false
+
+        // update navinfo
+        if let wv = webViewNative?.webViewHolder.appleWebView {
+            canGoBack = wv.canGoBack
+            canGoForward = wv.canGoForward
+        }
     }
 
     override func onDestroy() {
+        releaseChildResources()
         didCloseWebView()
     }
 }
