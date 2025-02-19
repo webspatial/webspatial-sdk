@@ -45,12 +45,9 @@ class SceneManager {
             print("no spawned")
         }
 
-        windowComponent.isRoot = true // register close
-
         ent.addComponent(windowComponent)
 
-        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowContainerID)
-        wg!.wgd = wgd
+        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(windowContainerID, wgd)
         ent.setParentWindowContainer(wg: wg)
 
         if let config = config {
@@ -78,7 +75,7 @@ class SceneManager {
                     plainDV
                 ) // set default values
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                pwg.openWindowData.send(wg.wgd!) // openwindow
+                pwg.openWindowData.send(wg.wgd) // openwindow
             }
         }
     }
@@ -86,7 +83,7 @@ class SceneManager {
     // bring the scene to focus
     func focusRoot(target: SpatialWindowComponent, windowContainerID: String) {
         if let wg = SpatialWindowContainer.getSpatialWindowContainer(windowContainerID) {
-            wg.openWindowData.send(wg.wgd!)
+            wg.openWindowData.send(wg.wgd)
         }
     }
 
@@ -105,7 +102,7 @@ class SceneManager {
     // dismiss the scene content when webview closed
     func closeRoot(_ target: SpatialWindowComponent) {
         if let wg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID) {
-            wg.closeWindowData.send(wg.wgd!)
+            wg.closeWindowData.send(wg.wgd)
         }
     }
 }
