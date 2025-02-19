@@ -44,7 +44,7 @@ class CommandManager {
         var ret = CommandInfo(cmd: JSBCommand(command: jsb.command, data: jsb.data, requestID: jsb.requestID))
         ret.requestID = jsb.requestID
         if let windowContainerID = jsb.data?.windowContainerID {
-            ret.windowContainerID = target.readWinodwGroupID(id: windowContainerID)
+            ret.windowContainerID = target.readWindowGroupID(id: windowContainerID)
         }
         if let entityID = jsb.data?.entityID {
             ret.entityID = entityID
@@ -171,7 +171,7 @@ class CommandManager {
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowContainerID: target.readWinodwGroupID(id: info.windowContainerID))
+                sr = SpatialWindowComponent(parentWindowContainerID: target.readWindowGroupID(id: info.windowContainerID))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
@@ -292,7 +292,7 @@ class CommandManager {
             }
 
             if var newParentID: String = data.update?.setParentWindowContainerID {
-                newParentID = target.readWinodwGroupID(id: newParentID)
+                newParentID = target.readWindowGroupID(id: newParentID)
                 let wg = SpatialWindowContainer.getSpatialWindowContainer(newParentID)
                 entity.setParentWindowContainer(wg: wg)
             }
@@ -545,7 +545,7 @@ class CommandManager {
     private func updateWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
         if let getRootEntityID = data.update?.getRootEntityID,
-           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWinodwGroupID(id: info.windowContainerID))
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWindowGroupID(id: info.windowContainerID))
         {
             let rootEntity = wg.getEntities().filter {
                 $0.value.coordinateSpace == .ROOT
