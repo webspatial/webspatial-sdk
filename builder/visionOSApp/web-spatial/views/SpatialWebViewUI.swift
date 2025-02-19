@@ -162,7 +162,7 @@ struct SpatialWebViewUI: View {
                                 if let url = wv.getURL() {
                                     wv.navigateToURL(url: url)
                                 } else {
-                                    print("ERROR, unable to reload URL")
+                                    logger.warning("Unable to reload URL")
                                 }
                             }
                             .foregroundColor(.white)
