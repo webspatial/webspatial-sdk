@@ -262,7 +262,7 @@ var session = getSession()
 if (session) {
   session!
     .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 70 })
+    .setStyle({ material: { type: 'translucent' }, cornerRadius: 70 })
   document.documentElement.style.backgroundColor = 'transparent'
   document.body.style.backgroundColor = 'transparent'
 } else {
