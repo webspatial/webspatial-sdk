@@ -13,6 +13,11 @@ class SpatialModel3DComponent: SpatialComponent {
     var resizable: Bool = true
     var aspectRatio: Double? = nil
 
+    var enableTapEvent = false
+    var enableDoubleTapEvent = false
+    var enableLongPressEvent = false
+    var enableDragEvent = false
+
     // SpatialModel3DView should not have dependency on SpatialWindowComponent.
     // It just need some JSB communication channel. This need to be refactor in future
     weak var wv: SpatialWindowComponent?

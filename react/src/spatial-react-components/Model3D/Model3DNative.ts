@@ -8,8 +8,6 @@ import { SpatialTransformType } from './types'
 import { getAbsoluteURL } from './utils'
 import { parseTransformOrigin } from '../SpatialReactComponent/utils'
 
-// const NoOps = (dragEvent: ModelDragEvent | string | void) => {}
-
 export class Model3DNative {
   private initPromise?: Promise<any>
   private entity?: SpatialEntity
@@ -22,43 +20,18 @@ export class Model3DNative {
   private onSuccess?: () => void
   private onFailure?: (errorReason: string) => void
 
-  private onDragStart?: (dragEvent: ModelDragEvent) => void
-  private onDrag?: (dragEvent: ModelDragEvent) => void
-  private onDragEnd?: (dragEvent: ModelDragEvent) => void
-
-  private onTap?: () => void
-  private onDoubleTap?: () => void
-  private onLongPress?: () => void
-
   async init(
     modelUrl: string,
     onSuccess: () => void,
     onFailure: (error: string) => void,
-    eventHandlers: {
-      onDragStart: (dragEvent: ModelDragEvent) => void
-      onDrag: (dragEvent: ModelDragEvent) => void
-      onDragEnd: (dragEvent: ModelDragEvent) => void
-      onTap: () => void
-      onDoubleTap: () => void
-      onLongPress: () => void
-    },
   ) {
     if (this.isDestroyed) {
       return
     }
 
-    const { onDragStart, onDrag, onDragEnd, onTap, onDoubleTap, onLongPress } =
-      eventHandlers
-
     this.initPromise = this.initInternal(modelUrl)
     this.onSuccess = onSuccess
     this.onFailure = onFailure
-    this.onDragStart = onDragStart
-    this.onDrag = onDrag
-    this.onDragEnd = onDragEnd
-    this.onTap = onTap
-    this.onDoubleTap = onDoubleTap
-    this.onLongPress = onLongPress
 
     return this.initPromise
   }
@@ -72,7 +45,6 @@ export class Model3DNative {
 
     // Create entity with view component to display the model inside
     const entity = await session.createEntity()
-
     await entity.setCoordinateSpace('Dom')
 
     const spatialModel3DComponent = await session.createModel3DComponent({
@@ -93,12 +65,6 @@ export class Model3DNative {
 
     this.spatialModel3DComponent.onSuccess = this.onSuccess
     this.spatialModel3DComponent.onFailure = this.onFailure
-    this.spatialModel3DComponent.onDragStart = this.onDragStart
-    this.spatialModel3DComponent.onDrag = this.onDrag
-    this.spatialModel3DComponent.onDragEnd = this.onDragEnd
-    this.spatialModel3DComponent.onTap = this.onTap
-    this.spatialModel3DComponent.onDoubleTap = this.onDoubleTap
-    this.spatialModel3DComponent.onLongPress = this.onLongPress
   }
 
   async setVisible(visible: boolean) {
@@ -170,6 +136,47 @@ export class Model3DNative {
   async setOpacity(opacity: number) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.setOpacity(opacity)
+    }
+  }
+
+  public set onDragStart(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onDragStart = callback
+    }
+  }
+
+  public set onDrag(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onDrag = callback
+    }
+  }
+
+  public set onDragEnd(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onDrag = callback
+    }
+  }
+
+  public set onTap(callback: (() => void) | undefined) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onTap = callback
+    }
+  }
+
+  public set onDoubleTap(callback: (() => void) | undefined) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onDoubleTap = callback
+    }
+  }
+  public set onLongPress(callback: (() => void) | undefined) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.onLongPress = callback
     }
   }
 
