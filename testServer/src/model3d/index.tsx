@@ -102,21 +102,15 @@ function App() {
           console.log('onDragStart', dragEvent)
         }}
         onDrag={(dragEvent: ModelDragEvent) => {
-          console.log(
-            'onDrag x',
-            dragEvent.translation3D.x,
-            dragEvent.startLocation3D.x,
-          )
-
           ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
         }}
         onDragEnd={(dragEvent: ModelDragEvent) => {
           console.log('onDragEnd', dragEvent)
-          // ref.current!.style.transform = 'none'
+          ref.current!.style.transform = 'none'
         }}
-        // onTap={() => {
-        //   setTapFlag(v => !v)
-        // }}
+        onTap={() => {
+          setTapFlag(v => !v)
+        }}
         // onDoubleTap={() => {
         //   console.log('onDoubleTap')
         // }}

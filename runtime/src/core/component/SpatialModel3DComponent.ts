@@ -31,19 +31,19 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
         }
         break
       case 'dragstart':
-        this.onDragStart?.(value)
+        this._onDragStart?.(value)
         break
       case 'dragend':
-        this.onDragEnd?.(value)
+        this._onDragEnd?.(value)
         break
       case 'drag':
-        this.onDrag?.(value)
+        this._onDrag?.(value)
         break
       case 'tap':
-        this.onTap?.()
+        this._onTap?.()
         break
       case 'doubletap':
-        this.onDoubleTap?.()
+        this._onDoubleTap?.()
         break
       case 'longpress':
         this._onLongPress?.()
@@ -132,7 +132,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onDragStart !== callback) {
       this._onDragStart = callback
       WebSpatial.updateResource(this._resource, {
-        enableDrag: this.enableDragEvent,
+        enableDragEvent: this.enableDragEvent,
       })
     }
   }
@@ -148,7 +148,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onDrag !== callback) {
       this._onDrag = callback
       WebSpatial.updateResource(this._resource, {
-        enableDrag: this.enableDragEvent,
+        enableDragEvent: this.enableDragEvent,
       })
     }
   }
@@ -164,13 +164,17 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onDragEnd !== callback) {
       this._onDragEnd = callback
       WebSpatial.updateResource(this._resource, {
-        enableDrag: this.enableDragEvent,
+        enableDragEvent: this.enableDragEvent,
       })
     }
   }
 
   private get enableDragEvent(): boolean {
-    return undefined !== this._onDrag || undefined !== this._onDragStart
+    return (
+      undefined !== this._onDrag ||
+      undefined !== this._onDragStart ||
+      undefined !== this._onDragEnd
+    )
   }
 
   /**
@@ -181,7 +185,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onTap !== callback) {
       this._onTap = callback
       WebSpatial.updateResource(this._resource, {
-        enableTap: undefined !== callback,
+        enableTapEvent: undefined !== callback,
       })
     }
   }
@@ -192,7 +196,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onDoubleTap !== callback) {
       this._onDoubleTap = callback
       WebSpatial.updateResource(this._resource, {
-        enableDoubleTap: undefined !== callback,
+        enableDoubleTapEvent: undefined !== callback,
       })
     }
   }
@@ -203,7 +207,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
     if (this._onLongPress !== callback) {
       this._onLongPress = callback
       WebSpatial.updateResource(this._resource, {
-        enableLongPress: undefined !== callback,
+        enableLongPressEvent: undefined !== callback,
       })
     }
   }
