@@ -34,7 +34,7 @@ if (new Spatial().isSupported()) {
   var session = new Spatial().requestSession()
   session!
     .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
+    .setStyle({ material: { type: 'translucent' }, cornerRadius: 50 })
 }
 
 // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())

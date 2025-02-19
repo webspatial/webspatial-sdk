@@ -19,7 +19,7 @@ if (session) {
   if (translucentStyle == 'translucent') {
     session
       .getCurrentWindowComponent()
-      .setStyle({ material: { type: 'default' }, cornerRadius: 0 })
+      .setStyle({ material: { type: 'translucent' }, cornerRadius: 0 })
   }
 
   var backgroundStyle = window
