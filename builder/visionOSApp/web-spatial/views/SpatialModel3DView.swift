@@ -56,6 +56,11 @@ struct SpatialModel3DView: View {
                     let url = URL(string: childModel3DComponent.modelURL)!
                     let contentMode = childModel3DComponent.contentMode
 
+                    let enableTapEvent = childModel3DComponent.enableTapEvent
+                    let enableDoubleTapEvent = childModel3DComponent.enableDoubleTapEvent
+                    let enableDragEvent = childModel3DComponent.enableDragEvent
+                    let enableLongPressEvent = childModel3DComponent.enableLongPressEvent
+
                     // Matrix = MTranslate X MRotate X MScale
                     Model3D(url: url) { newPhase in
                         switch newPhase {
@@ -104,10 +109,10 @@ struct SpatialModel3DView: View {
                     .position(x: x, y: y)
                     .offset(z: z)
                     .opacity(opacity)
-                    .gesture(drag)
-                    .gesture(doubleTapGesture)
-                    .gesture(tapGesture)
-                    .gesture(longPressGesture)
+                    .gesture(enableDragEvent ? drag : nil)
+                    .gesture(enableDoubleTapEvent ?doubleTapGesture : nil)
+                    .gesture(enableTapEvent ? tapGesture : nil)
+                    .gesture(enableLongPressEvent ? longPressGesture : nil)
                     .hidden(!e.visible)
                 }
             }

@@ -39,27 +39,6 @@ export function useModel3DNative(
           setPhase('failure')
           setFailureReason(error)
         },
-
-        {
-          onDragStart: (dragEvent: ModelDragEvent) => {
-            eventHandlers.onDragStart?.(dragEvent)
-          },
-          onDrag: (dragEvent: ModelDragEvent) => {
-            eventHandlers.onDrag?.(dragEvent)
-          },
-          onDragEnd: (dragEvent: ModelDragEvent) => {
-            eventHandlers.onDragEnd?.(dragEvent)
-          },
-          onTap: () => {
-            eventHandlers.onTap?.()
-          },
-          onDoubleTap: () => {
-            eventHandlers.onDoubleTap?.()
-          },
-          onLongPress: () => {
-            eventHandlers.onLongPress?.()
-          },
-        },
       )
       .then(() => {
         if (!isDestroyed) [onModel3DNativeReadyCb(model3DContainer)]
@@ -73,6 +52,38 @@ export function useModel3DNative(
       model3DNativeRef.current = null
     }
   }, [modelUrl])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onDragStart = eventHandlers.onDragStart
+    }
+  }, [model3DNativeRef.current, eventHandlers.onDragStart])
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onDrag = eventHandlers.onDrag
+    }
+  }, [model3DNativeRef.current, eventHandlers.onDrag])
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onDragEnd = eventHandlers.onDragEnd
+    }
+  })
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onTap = eventHandlers.onTap
+    }
+  }, [model3DNativeRef.current, eventHandlers.onTap])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onDoubleTap = eventHandlers.onDoubleTap
+    }
+  }, [model3DNativeRef.current, eventHandlers.onDoubleTap])
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.onLongPress = eventHandlers.onLongPress
+    }
+  }, [model3DNativeRef.current, eventHandlers.onLongPress])
 
   return { model3DNativeRef, phase, failureReason }
 }

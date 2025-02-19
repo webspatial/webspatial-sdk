@@ -46,7 +46,7 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
         this.onDoubleTap?.()
         break
       case 'longpress':
-        this.onLongPress?.()
+        this._onLongPress?.()
         break
 
       default:
@@ -125,28 +125,86 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
    * Callback fired when model was dragged at the beginning
    * @param dragEvent
    */
-  public onDragStart?: (dragEvent: ModelDragEvent) => void
+  private _onDragStart?: (dragEvent: ModelDragEvent) => void
+  public set onDragStart(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this._onDragStart !== callback) {
+      this._onDragStart = callback
+      WebSpatial.updateResource(this._resource, {
+        enableDrag: this.enableDragEvent,
+      })
+    }
+  }
 
   /**
    * Callback fired when model was dragged
    * @param dragEvent
    */
-  public onDrag?: (dragEvent: ModelDragEvent) => void
+  private _onDrag?: (dragEvent: ModelDragEvent) => void
+  public set onDrag(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this._onDrag !== callback) {
+      this._onDrag = callback
+      WebSpatial.updateResource(this._resource, {
+        enableDrag: this.enableDragEvent,
+      })
+    }
+  }
 
   /**
    * Callback fired when model was dragged at the ending
    * @param dragEvent
    */
-  public onDragEnd?: (dragEvent: ModelDragEvent) => void
+  private _onDragEnd?: (dragEvent: ModelDragEvent) => void
+  public set onDragEnd(
+    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+  ) {
+    if (this._onDragEnd !== callback) {
+      this._onDragEnd = callback
+      WebSpatial.updateResource(this._resource, {
+        enableDrag: this.enableDragEvent,
+      })
+    }
+  }
+
+  private get enableDragEvent(): boolean {
+    return undefined !== this._onDrag || undefined !== this._onDragStart
+  }
 
   /**
    * Callback fired when model was tapped
    */
-  public onTap?: () => void
+  private _onTap?: () => void
+  public set onTap(callback: (() => void) | undefined) {
+    if (this._onTap !== callback) {
+      this._onTap = callback
+      WebSpatial.updateResource(this._resource, {
+        enableTap: undefined !== callback,
+      })
+    }
+  }
 
   /** Callback fired when model was double tapped */
-  public onDoubleTap?: () => void
+  private _onDoubleTap?: () => void
+  public set onDoubleTap(callback: (() => void) | undefined) {
+    if (this._onDoubleTap !== callback) {
+      this._onDoubleTap = callback
+      WebSpatial.updateResource(this._resource, {
+        enableDoubleTap: undefined !== callback,
+      })
+    }
+  }
 
   /** Callback fired when model was long pressed */
-  public onLongPress?: () => void
+  private _onLongPress?: () => void
+  public set onLongPress(callback: (() => void) | undefined) {
+    if (this._onLongPress !== callback) {
+      this._onLongPress = callback
+      WebSpatial.updateResource(this._resource, {
+        enableLongPress: undefined !== callback,
+      })
+    }
+  }
 }
