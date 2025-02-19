@@ -70,6 +70,7 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
             content
                 .clipShape(.rect(cornerRadii: radii))
         }
+        content
     }
 }
 
