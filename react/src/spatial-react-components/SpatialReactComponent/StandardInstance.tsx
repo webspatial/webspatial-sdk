@@ -23,6 +23,27 @@ function useDetectDomRectChange() {
     ref.current && spatialReactContextObject?.notifyDomChange(ref.current)
   })
 
+  // listen to webview container size change and notifyDomChange
+  // this cannot be detected by ResizeObserver
+  useEffect(() => {
+    if (!ref.current || !spatialReactContextObject) {
+      console.warn(
+        'Ref is not attached to the DOM or spatialReactContextObject is not available',
+      )
+      return
+    }
+
+    const handleResize = () => {
+      forceUpdate()
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [spatialReactContextObject])
+
   // detect dom resize
   // Trigger native resize on web resize events
   useEffect(() => {
