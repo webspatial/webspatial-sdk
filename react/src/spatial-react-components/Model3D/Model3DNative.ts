@@ -17,8 +17,13 @@ export class Model3DNative {
 
   private isDestroyed = false
 
-  private onSuccess?: () => void
-  private onFailure?: (errorReason: string) => void
+  private _onDragStart?: (dragEvent: ModelDragEvent) => void
+  private _onDrag?: (dragEvent: ModelDragEvent) => void
+  private _onDragEnd?: (dragEvent: ModelDragEvent) => void
+
+  private _onTap?: () => void
+  private _onDoubleTap?: () => void
+  private _onLongPress?: () => void
 
   async init(
     modelUrl: string,
@@ -29,14 +34,16 @@ export class Model3DNative {
       return
     }
 
-    this.initPromise = this.initInternal(modelUrl)
-    this.onSuccess = onSuccess
-    this.onFailure = onFailure
+    this.initPromise = this.initInternal(modelUrl, onSuccess, onFailure)
 
     return this.initPromise
   }
 
-  private async initInternal(modelUrl: string) {
+  private async initInternal(
+    modelUrl: string,
+    onSuccess: () => void,
+    onFailure: (error: string) => void,
+  ) {
     var session = getSession()
 
     if (!session) {
@@ -63,8 +70,14 @@ export class Model3DNative {
     this.entity = entity
     this.spatialModel3DComponent = spatialModel3DComponent
 
-    this.spatialModel3DComponent.onSuccess = this.onSuccess
-    this.spatialModel3DComponent.onFailure = this.onFailure
+    this.spatialModel3DComponent.onSuccess = onSuccess
+    this.spatialModel3DComponent.onFailure = onFailure
+    this.spatialModel3DComponent.onDragStart = this._onDragStart
+    this.spatialModel3DComponent.onDrag = this._onDrag
+    this.spatialModel3DComponent.onDragEnd = this._onDragEnd
+    this.spatialModel3DComponent.onTap = this._onTap
+    this.spatialModel3DComponent.onDoubleTap = this._onDoubleTap
+    this.spatialModel3DComponent.onLongPress = this._onLongPress
   }
 
   async setVisible(visible: boolean) {
@@ -145,6 +158,7 @@ export class Model3DNative {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDragStart = callback
     }
+    this._onDragStart = callback
   }
 
   public set onDrag(
@@ -153,33 +167,45 @@ export class Model3DNative {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDrag = callback
     }
+    this._onDrag = callback
   }
 
   public set onDragEnd(
     callback: ((dragEvent: ModelDragEvent) => void) | undefined,
   ) {
     if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onDrag = callback
+      this.spatialModel3DComponent.onDragEnd = callback
     }
+    this._onDragEnd = callback
   }
 
   public set onTap(callback: (() => void) | undefined) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onTap = callback
     }
+    this._onTap = callback
   }
 
   public set onDoubleTap(callback: (() => void) | undefined) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDoubleTap = callback
     }
+    this._onDoubleTap = callback
   }
   public set onLongPress(callback: (() => void) | undefined) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onLongPress = callback
     }
+    this._onLongPress = callback
   }
 
+  /**
+   * Destroys the current 3D model instance
+   * 1. Marks the instance as destroyed
+   * 2. Waits for initialization to complete (if in progress)
+   * 3. Destroys the spatial entity
+   * 4. Cleans up all related references
+   */
   async destroy() {
     this.isDestroyed = true
     if (this.initPromise) {
