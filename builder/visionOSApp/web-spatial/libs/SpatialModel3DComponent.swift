@@ -36,6 +36,10 @@ class SpatialModel3DComponent: SpatialComponent {
             "resizable": resizable,
             "aspectRatio": aspectRatio != nil ? String(describing: aspectRatio!) : "nil",
             "contentMode": contentMode == .fill ? "fill" : "fit",
+            "enableTapEvent": enableTapEvent,
+            "enableDoubleTapEvent": enableDoubleTapEvent,
+            "enableLongPressEvent": enableLongPressEvent,
+            "enableDragEvent": enableDragEvent,
         ]
 
         let baseInspectInfo = super.inspect()
