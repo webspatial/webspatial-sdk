@@ -209,17 +209,14 @@ class SpatialWindowComponent: SpatialComponent {
 
     func goBack() {
         webViewNative?.webViewHolder.appleWebView?.goBack()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func goForward() {
         webViewNative?.webViewHolder.appleWebView?.goForward()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func reload() {
         webViewNative?.webViewHolder.appleWebView?.reload()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     var canGoBack: Bool = false
@@ -345,6 +342,7 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     func didStartLoadPage() {
+        webViewNative?.webViewHolder.needsUpdate = true
         if didFinishFirstLoad {
             webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
         }
