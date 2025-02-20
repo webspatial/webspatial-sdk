@@ -357,6 +357,11 @@ class SpatialWindowComponent: SpatialComponent {
         gotStyle = false
         isLoading = true
         loadingStyles = LoadingStyles()
+
+        // due to buggy of MaterialWithBorderCornerModifier impl
+        // SwiftUI may not track the state change so
+        // we manually fire it if necessary
+        webViewNative?.initialLoad()
     }
 
     func didSpawnWebView(wv: WebViewNative) {
@@ -391,12 +396,6 @@ class SpatialWindowComponent: SpatialComponent {
         backgroundMaterial = loadingStyles.backgroundMaterial
 
         isLoading = false
-
-        // due to bug of MaterialWithBorderCornerModifier, we will reach here without trigger initialLoad
-        // we manually fire it if necessary
-        if webViewNative!.webViewHolder.needsUpdate {
-            webViewNative!.initialLoad()
-        }
 
         // update navinfo
         if let wv = webViewNative?.webViewHolder.appleWebView {
