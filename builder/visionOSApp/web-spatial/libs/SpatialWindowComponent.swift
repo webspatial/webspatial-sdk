@@ -392,6 +392,12 @@ class SpatialWindowComponent: SpatialComponent {
 
         isLoading = false
 
+        // due to bug of MaterialWithBorderCornerModifier, we will reach here without trigger initialLoad
+        // we manually fire it if necessary
+        if webViewNative!.webViewHolder.needsUpdate {
+            webViewNative!.initialLoad()
+        }
+
         // update navinfo
         if let wv = webViewNative?.webViewHolder.appleWebView {
             canGoBack = wv.canGoBack
