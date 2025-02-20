@@ -4,7 +4,7 @@ import {
   enableDebugTool,
   CSSModel3D,
   ModelElement,
-  ModelLoadEvent,
+  ModelEvent,
   ModelDragEvent,
 } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
@@ -101,7 +101,7 @@ function App() {
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-        onLoad={(event: ModelLoadEvent) => {
+        onLoad={(event: ModelEvent) => {
           console.log('onLoad', event.target.ready, event.target.currentSrc)
         }}
         onDragStart={(dragEvent: ModelDragEvent) => {
@@ -119,14 +119,15 @@ function App() {
           )
           ref.current!.style.transform = 'none'
         }}
-        onTap={() => {
+        onTap={(event: ModelEvent) => {
           setTapFlag(v => !v)
+          console.log('onTap', event)
         }}
-        onDoubleTap={() => {
-          console.log('onDoubleTap')
+        onDoubleTap={(event: ModelEvent) => {
+          console.log('onDoubleTap', event)
         }}
-        onLongPress={() => {
-          console.log('onLongPress')
+        onLongPress={(event: ModelEvent) => {
+          console.log('onLongPress', event)
         }}
       >
         <div> this is place holder when failure </div>

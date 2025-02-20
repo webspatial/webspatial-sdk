@@ -35,24 +35,20 @@ export interface Model3DProps {
   // children will be rendered when failure
   children?: React.ReactNode
 
-  onLoad?: (event: ModelLoadEvent) => void
+  onLoad?: (event: ModelEvent) => void
 
   onDragStart?: (dragEvent: ModelDragEvent) => void
   onDrag?: (dragEvent: ModelDragEvent) => void
   onDragEnd?: (dragEvent: ModelDragEvent) => void
 
-  onTap?: () => void
-  onDoubleTap?: () => void
-  onLongPress?: () => void
+  onTap?: (event: ModelEvent) => void
+  onDoubleTap?: (event: ModelEvent) => void
+  onLongPress?: (event: ModelEvent) => void
 }
 
 export interface ModelElement extends HTMLDivElement {
   ready: boolean
   currentSrc: string
-}
-
-export interface ModelLoadEvent {
-  target: ModelElement
 }
 
 export type Model3DComponentRef = ForwardedRef<ModelElement>
@@ -161,6 +157,33 @@ export function Model3DBase(props: Model3DProps, refIn: Model3DComponentRef) {
     [onDragEnd],
   )
 
+  const onTapCb = useCallback(() => {
+    if (onTap) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onTap(event)
+    }
+  }, [onTap])
+
+  const onDoubleTapCb = useCallback(() => {
+    if (onDoubleTap) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onDoubleTap(event)
+    }
+  }, [onDoubleTap])
+
+  const onLongPressCb = useCallback(() => {
+    if (onLongPress) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onLongPress(event)
+    }
+  }, [onLongPress])
+
   const layoutInstanceRef = useDetectLayoutDomUpdated(onDomUpdated)
   const { model3DNativeRef, phase, failureReason } = useModel3DNative(
     modelUrl,
@@ -170,9 +193,9 @@ export function Model3DBase(props: Model3DProps, refIn: Model3DComponentRef) {
       onDragStart: onDragStart ? onDragStartCb : undefined,
       onDrag: onDrag ? onDragCb : undefined,
       onDragEnd: onDragEnd ? onDragEndCb : undefined,
-      onTap,
-      onDoubleTap,
-      onLongPress,
+      onTap: onTap ? onTapCb : undefined,
+      onDoubleTap: onDoubleTap ? onDoubleTapCb : undefined,
+      onLongPress: onLongPress ? onLongPressCb : undefined,
     },
   )
 
