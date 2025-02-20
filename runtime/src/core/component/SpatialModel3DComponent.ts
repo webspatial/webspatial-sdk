@@ -1,11 +1,22 @@
-import { SpatialComponent } from './SpatialComponent'
+import { EventSpatialComponent } from './EventSpatialComponent'
 import { WebSpatial } from '../private/WebSpatial'
 import { Vec3 } from '../SpatialTransform'
 
 /**
  * Used to position a model3d in 3D space
  */
-export class SpatialModel3DComponent extends SpatialComponent {
+export class SpatialModel3DComponent extends EventSpatialComponent {
+  protected override onRecvEvent(data: any): void {
+    // console.log('onRecvEvent', data)
+    const { eventType, value, error } = data
+    if (eventType === 'phase') {
+      if (value === 'success') {
+        this.onSuccess?.()
+      } else {
+        this.onFailure?.(error as string)
+      }
+    }
+  }
   /**
    * Sets the resolution of the spatial view in dom pixels
    */
@@ -62,4 +73,14 @@ export class SpatialModel3DComponent extends SpatialComponent {
       resizable,
     })
   }
+
+  /**
+   * model load success callback
+   */
+  public onSuccess?: () => void
+
+  /**
+   * model load failure callback
+   */
+  public onFailure?: (errorReason: string) => void
 }

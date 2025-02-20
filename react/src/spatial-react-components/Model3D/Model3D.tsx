@@ -19,6 +19,11 @@ export interface Model3DProps {
   aspectRatio?: number
   className?: string
   style?: CSSProperties | undefined
+
+  children?: React.ReactNode
+
+  onSuccess?: () => void
+  onFailure?: (errorReason: string) => void
 }
 
 export type Model3DComponentRef = ForwardedRef<HTMLDivElement>
@@ -36,6 +41,9 @@ export function Model3DComponent(
     contentMode = 'fit',
     resizable = true,
     aspectRatio = 0,
+    onFailure,
+    onSuccess,
+    children,
   } = props
 
   const theSpatialTransform =
@@ -81,7 +89,18 @@ export function Model3DComponent(
   ])
 
   const layoutInstanceRef = useDetectLayoutDomUpdated(onDomUpdated)
-  const model3DNativeRef = useModel3DNative(modelUrl, onModel3DContainerReadyCb)
+  const { model3DNativeRef, phase, failureReason } = useModel3DNative(
+    modelUrl,
+    onModel3DContainerReadyCb,
+  )
+
+  useEffect(() => {
+    if (phase === 'failure' && onFailure) {
+      onFailure(failureReason)
+    } else if (phase === 'success' && onSuccess) {
+      onSuccess()
+    }
+  }, [phase])
 
   useEffect(() => {
     if (model3DNativeRef.current) {
@@ -128,7 +147,7 @@ export function Model3DComponent(
 
   const layoutDomStyle: CSSProperties = {
     ...style,
-    visibility: 'hidden',
+    visibility: phase === 'failure' ? 'visible' : 'hidden',
     transform: '',
   }
 
@@ -151,7 +170,20 @@ export function Model3DComponent(
     },
   })
 
-  return <div className={className} style={layoutDomStyle} ref={proxyRef} />
+  const onClick = () => {
+    console.log('click')
+  }
+
+  return (
+    <div
+      className={className}
+      style={layoutDomStyle}
+      ref={proxyRef}
+      onClick={onClick}
+    >
+      {phase === 'failure' && children}
+    </div>
+  )
 }
 
 export const Model3D = forwardRef(Model3DComponent)
