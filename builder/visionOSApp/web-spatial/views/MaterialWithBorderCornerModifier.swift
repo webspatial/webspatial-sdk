@@ -42,7 +42,6 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let radii = RectangleCornerRadii(topLeading: cornerRadius.topLeading, bottomLeading: cornerRadius.bottomLeading, bottomTrailing: cornerRadius.bottomTrailing, topTrailing: cornerRadius.topTrailing)
-
         switch backgroundMaterial {
         case .GlassMaterial:
             content
@@ -70,7 +69,6 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
             content
                 .clipShape(.rect(cornerRadii: radii))
         }
-        content
     }
 }
 
