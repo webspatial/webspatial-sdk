@@ -123,9 +123,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
             if navigationAction.navigationType == .backForward {
                 // backward/forward
-                // in JS calling history.go(-1) do not change needUpdate
-                // we should set needUpdate=true to load again other than use the cached one which is disconnected from JSB
-                webViewRef?.shouldUpdate()
+                webViewRef?.didNavBackForward()
             }
             decisionHandler(.allow)
         } else {
