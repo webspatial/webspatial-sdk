@@ -1,4 +1,3 @@
-import { SpatialInputComponent } from '../component/SpatialInputComponent'
 import { RemoteCommand } from './remote-command'
 import {
   WindowStyle,
@@ -22,7 +21,6 @@ export class WebSpatialResource {
 
 export class WebSpatial {
   public static eventPromises: any = {}
-  public static inputComponents: { [key: string]: SpatialInputComponent } = {}
 
   public static transactionStarted = false
   public static transactionCommands = Array<RemoteCommand>()
@@ -47,9 +45,6 @@ export class WebSpatial {
       if (e.resourceId) {
         var callback = WebSpatial.eventReceivers[e.resourceId]
         callback(e.data)
-      } else if (e.inputComponentID) {
-        var obj = WebSpatial.inputComponents[e.inputComponentID]
-        obj._gotEvent(e.data)
       } else {
         var p = WebSpatial.eventPromises[e.requestID]
         if (p) {
