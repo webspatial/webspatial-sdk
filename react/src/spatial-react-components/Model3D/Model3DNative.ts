@@ -13,12 +13,22 @@ export class Model3DNative {
 
   private isDestroyed = false
 
-  async init(modelUrl: string) {
+  private onSuccess?: () => void
+  private onFailure?: (errorReason: string) => void
+
+  async init(
+    modelUrl: string,
+    onSuccess: () => void,
+    onFailure: (error: string) => void,
+  ) {
     if (this.isDestroyed) {
       return
     }
 
     this.initPromise = this.initInternal(modelUrl)
+    this.onSuccess = onSuccess
+    this.onFailure = onFailure
+
     return this.initPromise
   }
 
@@ -49,6 +59,9 @@ export class Model3DNative {
 
     this.entity = entity
     this.spatialModel3DComponent = spatialModel3DComponent
+
+    this.spatialModel3DComponent.onSuccess = this.onSuccess
+    this.spatialModel3DComponent.onFailure = this.onFailure
   }
 
   async setVisible(visible: boolean) {

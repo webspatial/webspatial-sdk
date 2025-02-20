@@ -182,6 +182,7 @@ class CommandManager {
                     spatialModel3DComponent.setURL(modelURL)
                 }
                 sr = spatialModel3DComponent
+                spatialModel3DComponent.wv = target
             case "ModelComponent":
                 if var modelURL: String = data.params?.modelURL {
                     modelURL = target.parseURL(url: modelURL)

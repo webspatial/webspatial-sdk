@@ -16,6 +16,8 @@ export class WebSpatialResource {
   id = ''
   windowContainerId = ''
   data = {} as any
+
+  receiveEvent() {}
 }
 
 export class WebSpatial {
@@ -25,9 +27,27 @@ export class WebSpatial {
   public static transactionStarted = false
   public static transactionCommands = Array<RemoteCommand>()
 
+  // store event receivers
+  private static eventReceivers: { [resourceId: string]: (data: any) => void } =
+    {}
+
+  public static registerEventReceiver(
+    resourceId: string,
+    callback: (data: any) => void,
+  ) {
+    this.eventReceivers[resourceId] = callback
+  }
+
+  public static unregisterEventReceiver(resourceId: string) {
+    delete this.eventReceivers[resourceId]
+  }
+
   static init() {
     ;(window as any).__SpatialWebEvent = (e: any) => {
-      if (e.inputComponentID) {
+      if (e.resourceId) {
+        var callback = WebSpatial.eventReceivers[e.resourceId]
+        callback(e.data)
+      } else if (e.inputComponentID) {
         var obj = WebSpatial.inputComponents[e.inputComponentID]
         obj._gotEvent(e.data)
       } else {
