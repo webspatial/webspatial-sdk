@@ -8,10 +8,6 @@ import { ModelDragEvent } from '@xrsdk/runtime'
 enableDebugTool()
 
 function App() {
-  // const translateX = useState(0)
-  // const translateY = useState(0)
-  // const translateZ = useState(0)
-
   const [tapFlag, setTapFlag] = useState(true)
 
   const ref = useRef<HTMLDivElement | null>(null)
@@ -25,10 +21,6 @@ function App() {
     width: '50%',
     height: '50%',
     marginBottom: '140px',
-    // transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}deg)`,
-    // transformOrigin: 'top center',
-    // backgroundColor: 'red',
-    // opacity: 0.8,
   }
 
   const onToggleDisplay = () => {
@@ -123,12 +115,12 @@ function App() {
         onTap={() => {
           setTapFlag(v => !v)
         }}
-        // onDoubleTap={() => {
-        //   console.log('onDoubleTap')
-        // }}
-        // onLongPress={() => {
-        //   console.log('onLongPress')
-        // }}
+        onDoubleTap={() => {
+          console.log('onDoubleTap')
+        }}
+        onLongPress={() => {
+          console.log('onLongPress')
+        }}
       >
         <div> this is place holder when failure </div>
       </CSSModel3D>
