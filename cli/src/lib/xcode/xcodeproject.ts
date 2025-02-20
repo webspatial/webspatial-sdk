@@ -63,17 +63,22 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>
 `
 
+let useExportOptionsXML = ''
+
 export default class XcodeProject {
   public static async modify(projectPath: string, option: any) {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
     let buildType = 'release-testing'
-    let xml = exportOptionsXML
+    useExportOptionsXML = exportOptionsXML
     if (option['buildType']) {
-      xml = exportOptionsXML.replace('BUILDTYPE', option['type'])
+      useExportOptionsXML = exportOptionsXML.replace(
+        'BUILDTYPE',
+        option['buildType'],
+      )
     } else {
-      xml = exportOptionsXML.replace('BUILDTYPE', buildType)
+      useExportOptionsXML = exportOptionsXML.replace('BUILDTYPE', buildType)
     }
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
@@ -205,7 +210,10 @@ export default class XcodeProject {
 
   private static updateTeamId(xcodeProject: any, teamId: string) {
     xcodeProject.updateBuildProperty('DEVELOPMENT_TEAM', teamId)
-    const newXml = exportOptionsXML.replace('YOURTEAMID', teamId)
+    const newXml = useExportOptionsXML.replace('YOURTEAMID', teamId)
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.promises.mkdir(PROJECT_BUILD_DIRECTORY, { recursive: true })
+    }
     fs.writeFileSync(
       join(PROJECT_BUILD_DIRECTORY, 'ExportOptions.plist'),
       newXml,
