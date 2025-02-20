@@ -389,6 +389,22 @@ class CommandManager {
                 }
             }
 
+            if let enableTapEvent: Bool = data.update?.enableTapEvent {
+                spatialModel3DComponent.enableTapEvent = enableTapEvent
+            }
+
+            if let enableDoubleTapEvent: Bool = data.update?.enableDoubleTapEvent {
+                spatialModel3DComponent.enableDoubleTapEvent = enableDoubleTapEvent
+            }
+
+            if let enableDragEvent: Bool = data.update?.enableDragEvent {
+                spatialModel3DComponent.enableDragEvent = enableDragEvent
+            }
+
+            if let enableLongPressEvent: Bool = data.update?.enableLongPressEvent {
+                spatialModel3DComponent.enableLongPressEvent = enableLongPressEvent
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
@@ -686,6 +702,11 @@ struct JSResourceData: Codable {
     var zIndex: Double?
     var visible: Bool?
     var name: String?
+
+    var enableTapEvent: Bool?
+    var enableDoubleTapEvent: Bool?
+    var enableDragEvent: Bool?
+    var enableLongPressEvent: Bool?
 }
 
 struct JSColor: Codable {

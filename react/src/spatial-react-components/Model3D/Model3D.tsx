@@ -9,6 +9,7 @@ import { useDetectLayoutDomUpdated } from './useDetectLayoutDomUpdated'
 import { useModel3DNative } from './useModel3DNative'
 import { PartialSpatialTransformType } from './types'
 import { PopulatePartialSpatialTransformType } from './utils'
+import { ModelDragEvent } from '@xrsdk/runtime'
 
 export interface Model3DProps {
   spatialTransform?: PartialSpatialTransformType
@@ -20,10 +21,19 @@ export interface Model3DProps {
   className?: string
   style?: CSSProperties | undefined
 
+  // children will be rendered when failure
   children?: React.ReactNode
 
   onSuccess?: () => void
   onFailure?: (errorReason: string) => void
+
+  onDragStart?: (dragEvent: ModelDragEvent) => void
+  onDrag?: (dragEvent: ModelDragEvent) => void
+  onDragEnd?: (dragEvent: ModelDragEvent) => void
+
+  onTap?: () => void
+  onDoubleTap?: () => void
+  onLongPress?: () => void
 }
 
 export type Model3DComponentRef = ForwardedRef<HTMLDivElement>
@@ -44,6 +54,14 @@ export function Model3DComponent(
     onFailure,
     onSuccess,
     children,
+
+    onDragStart,
+    onDrag,
+    onDragEnd,
+
+    onTap,
+    onDoubleTap,
+    onLongPress,
   } = props
 
   const theSpatialTransform =
@@ -92,6 +110,15 @@ export function Model3DComponent(
   const { model3DNativeRef, phase, failureReason } = useModel3DNative(
     modelUrl,
     onModel3DContainerReadyCb,
+
+    {
+      onDragStart,
+      onDrag,
+      onDragEnd,
+      onTap,
+      onDoubleTap,
+      onLongPress,
+    },
   )
 
   useEffect(() => {
@@ -170,17 +197,8 @@ export function Model3DComponent(
     },
   })
 
-  const onClick = () => {
-    console.log('click')
-  }
-
   return (
-    <div
-      className={className}
-      style={layoutDomStyle}
-      ref={proxyRef}
-      onClick={onClick}
-    >
+    <div className={className} style={layoutDomStyle} ref={proxyRef}>
       {phase === 'failure' && children}
     </div>
   )
