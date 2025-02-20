@@ -291,7 +291,7 @@ class SpatialWindowComponent: SpatialComponent {
         return targetUrl
     }
 
-    func readWindowGroupID(id: String) -> String {
+    func readWindowContainerID(id: String) -> String {
         if id == "current" {
             return parentWindowContainerID
         } else {
