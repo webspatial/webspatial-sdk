@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import {
   enableDebugTool,
-  CSSModel3D,
+  ModelNew,
   ModelElement,
   ModelEvent,
   ModelDragEvent,
@@ -94,10 +94,10 @@ function App() {
         </a>
       </div>
 
-      <CSSModel3D
+      <ModelNew
         ref={ref}
         style={styleOuter}
-        modelUrl={modelUrl}
+        // modelUrl={modelUrl}
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
@@ -130,8 +130,10 @@ function App() {
           console.log('onLongPress', event)
         }}
       >
+        <source src={modelUrl} type="model/vnd.usdz+zip" />
+
         <div> this is place holder when failure </div>
-      </CSSModel3D>
+      </ModelNew>
 
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
