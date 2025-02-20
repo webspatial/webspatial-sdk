@@ -83,6 +83,7 @@ export default class XcodeProject {
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
     }
+    this.updateExportOptions()
     await this.bindIcon(option.icon)
     this.bindManifestInfo(project, option.manifestInfo.json)
     if (option['version']) {
@@ -210,13 +211,16 @@ export default class XcodeProject {
 
   private static updateTeamId(xcodeProject: any, teamId: string) {
     xcodeProject.updateBuildProperty('DEVELOPMENT_TEAM', teamId)
-    const newXml = useExportOptionsXML.replace('YOURTEAMID', teamId)
+    useExportOptionsXML = useExportOptionsXML.replace('YOURTEAMID', teamId)
+  }
+
+  private static updateExportOptions() {
     if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
-      fs.promises.mkdir(PROJECT_BUILD_DIRECTORY, { recursive: true })
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY, { recursive: true })
     }
     fs.writeFileSync(
       join(PROJECT_BUILD_DIRECTORY, 'ExportOptions.plist'),
-      newXml,
+      useExportOptionsXML,
     )
   }
 

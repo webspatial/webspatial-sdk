@@ -13,7 +13,7 @@ export function copyDir(from: string, to: string) {
       }
     } else if (stat.isDirectory()) {
       if (!fs.existsSync(_to)) {
-        fs.promises.mkdir(_to, { recursive: true })
+        fs.mkdirSync(_to, { recursive: true })
       }
       copyDir(_from, _to)
     }
