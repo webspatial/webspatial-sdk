@@ -16,7 +16,7 @@ export class XcodeManager {
     await XcodeProject.modify(projectPath, option)
     console.log('write project.pbxproj: ok')
     if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
-      fs.promises.mkdir(PROJECT_EXPORT_DIRECTORY, { recursive: true })
+      fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
     }
     await Xcodebuild.archive()
   }
