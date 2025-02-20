@@ -24,8 +24,7 @@ export interface Model3DProps {
   // children will be rendered when failure
   children?: React.ReactNode
 
-  onSuccess?: () => void
-  onFailure?: (errorReason: string) => void
+  onLoad?: (event: ModelLoadEvent) => void
 
   onDragStart?: (dragEvent: ModelDragEvent) => void
   onDrag?: (dragEvent: ModelDragEvent) => void
@@ -36,12 +35,18 @@ export interface Model3DProps {
   onLongPress?: () => void
 }
 
-export type Model3DComponentRef = ForwardedRef<HTMLDivElement>
+export interface ModelElement extends HTMLDivElement {
+  ready: boolean
+  currentSrc: string
+}
 
-export function Model3DComponent(
-  props: Model3DProps,
-  refIn: Model3DComponentRef,
-) {
+export interface ModelLoadEvent {
+  target: ModelElement
+}
+
+export type Model3DComponentRef = ForwardedRef<ModelElement>
+
+export function Model3DBase(props: Model3DProps, refIn: Model3DComponentRef) {
   const {
     className,
     style = {},
@@ -51,8 +56,10 @@ export function Model3DComponent(
     contentMode = 'fit',
     resizable = true,
     aspectRatio = 0,
-    onFailure,
-    onSuccess,
+    // onFailure,
+    // onSuccess,
+    onLoad,
+
     children,
 
     onDragStart,
@@ -121,10 +128,31 @@ export function Model3DComponent(
     },
   )
 
+  const onSuccess = useCallback(() => {
+    ;(layoutInstanceRef.current! as ModelElement).ready = true
+    if (onLoad) {
+      onLoad({
+        target: layoutInstanceRef.current! as ModelElement,
+      })
+    }
+  }, [onLoad])
+
+  const onFailure = useCallback(
+    (_: string) => {
+      ;(layoutInstanceRef.current! as ModelElement).ready = false
+      if (onLoad) {
+        onLoad({
+          target: layoutInstanceRef.current! as ModelElement,
+        })
+      }
+    },
+    [onLoad],
+  )
+
   useEffect(() => {
-    if (phase === 'failure' && onFailure) {
+    if (phase === 'failure') {
       onFailure(failureReason)
-    } else if (phase === 'success' && onSuccess) {
+    } else if (phase === 'success') {
       onSuccess()
     }
   }, [phase])
@@ -184,7 +212,13 @@ export function Model3DComponent(
     },
     set(target, prop, value, receiver) {
       if (prop === 'current') {
-        const domElement = value as HTMLDivElement
+        const domElement = value as ModelElement
+
+        if (domElement) {
+          domElement.ready = false
+          domElement.currentSrc = modelUrl
+        }
+
         if (refIn) {
           if (typeof refIn === 'function') {
             refIn(domElement)
@@ -197,6 +231,16 @@ export function Model3DComponent(
     },
   })
 
+  useEffect(() => {
+    return () => {
+      if (layoutInstanceRef.current) {
+        const modelElement = layoutInstanceRef.current as ModelElement
+        modelElement.ready = false
+        modelElement.currentSrc = modelUrl
+      }
+    }
+  }, [modelUrl])
+
   return (
     <div className={className} style={layoutDomStyle} ref={proxyRef}>
       {phase === 'failure' && children}
@@ -204,6 +248,6 @@ export function Model3DComponent(
   )
 }
 
-export const Model3D = forwardRef(Model3DComponent)
+export const Model3D = forwardRef(Model3DBase)
 
 Model3D.displayName = 'Model3D'

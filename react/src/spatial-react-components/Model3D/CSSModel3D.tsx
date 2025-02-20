@@ -1,5 +1,5 @@
-import React, { CSSProperties, forwardRef } from 'react'
-import { Model3D, Model3DProps, Model3DComponentRef } from './Model3D'
+import { CSSProperties, ForwardedRef, forwardRef } from 'react'
+import { Model3D, Model3DProps, type Model3DComponentRef } from './Model3D'
 import { useSpatialStyle } from '../CSSSpatialDiv/useSpatialStyle'
 import { useHijackSpatialDivRef } from '../CSSSpatialDiv/useHijackSpatialDivRef'
 
@@ -20,7 +20,10 @@ export function CSSModel3DComponent(
   const { ref: cssParserDomRef, spatialStyle, ready } = useSpatialStyle()
 
   // hijack SpatialDiv ref
-  const ref = useHijackSpatialDivRef(refIn, cssParserDomRef)
+  const ref = useHijackSpatialDivRef(
+    refIn as ForwardedRef<HTMLDivElement>,
+    cssParserDomRef,
+  ) as Model3DComponentRef
 
   const spatialTransform = {
     position: spatialStyle.position,

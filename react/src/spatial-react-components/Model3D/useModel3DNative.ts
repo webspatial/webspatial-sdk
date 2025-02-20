@@ -50,6 +50,8 @@ export function useModel3DNative(
       model3DContainer.destroy()
 
       model3DNativeRef.current = null
+
+      setPhase('loading')
     }
   }, [modelUrl])
 

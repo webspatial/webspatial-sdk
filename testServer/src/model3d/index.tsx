@@ -1,6 +1,11 @@
 import ReactDOM from 'react-dom/client'
 
-import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
+import {
+  enableDebugTool,
+  CSSModel3D,
+  ModelElement,
+  ModelLoadEvent,
+} from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
 import { useRef, useState } from 'react'
 import { ModelDragEvent } from '@xrsdk/runtime'
@@ -10,7 +15,7 @@ enableDebugTool()
 function App() {
   const [tapFlag, setTapFlag] = useState(true)
 
-  const ref = useRef<HTMLDivElement | null>(null)
+  const ref = useRef<ModelElement | null>(null)
 
   ;(window as any).ref = ref
 
@@ -96,11 +101,8 @@ function App() {
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-        onSuccess={() => {
-          console.log('onLoadSuccess')
-        }}
-        onFailure={(errorReason: string) => {
-          console.log('onLoadError', errorReason)
+        onLoad={(event: ModelLoadEvent) => {
+          console.log('onLoad', event.target.ready, event.target.currentSrc)
         }}
         onDragStart={(dragEvent: ModelDragEvent) => {
           console.log('onDragStart', dragEvent)
