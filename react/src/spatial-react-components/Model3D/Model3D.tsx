@@ -21,6 +21,7 @@ export interface Model3DProps {
   className?: string
   style?: CSSProperties | undefined
 
+  // children will be rendered when failure
   children?: React.ReactNode
 
   onSuccess?: () => void
