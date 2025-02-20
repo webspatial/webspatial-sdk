@@ -24,7 +24,9 @@ function useDetectDomRectChange() {
   })
 
   // listen to webview container size change and notifyDomChange
-  // this cannot be detected by ResizeObserver
+  // document.body.clientWidth may change as page loads.
+  // when creating a new scene, clientWidth changes from 0 to some positive value.
+  // this cannot be detected by ResizeObserver which only observe the dom element itself
   useEffect(() => {
     if (!ref.current || !spatialReactContextObject) {
       console.warn(
