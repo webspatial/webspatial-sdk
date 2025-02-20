@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
