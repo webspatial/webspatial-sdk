@@ -55,7 +55,7 @@ export async function store(args: ParsedArgs): Promise<boolean> {
   */
 
   let appInfo = { name: 'SpatialWebTest' }
-  args['buildType'] = 'app-store'
+  args['buildType'] = 'app-store-connect'
   if (args['name']) {
     appInfo.name = args['name']
   } else {
