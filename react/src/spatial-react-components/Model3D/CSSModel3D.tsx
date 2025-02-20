@@ -1,5 +1,5 @@
 import { CSSProperties, ForwardedRef, forwardRef } from 'react'
-import { Model3D, Model3DProps, type Model3DComponentRef } from './Model3D'
+import { Model3D, Model3DProps, type ModelElementRef } from './Model3D'
 import { useSpatialStyle } from '../CSSSpatialDiv/useSpatialStyle'
 import { useHijackSpatialDivRef } from '../CSSSpatialDiv/useHijackSpatialDivRef'
 
@@ -7,7 +7,7 @@ export type CSSModel3DProps = Omit<Model3DProps, 'spatialTransform' | 'visible'>
 
 export function CSSModel3DComponent(
   inProps: CSSModel3DProps,
-  refIn: Model3DComponentRef,
+  refIn: ModelElementRef,
 ) {
   const { className, style = {}, ...props } = inProps
 
@@ -23,7 +23,7 @@ export function CSSModel3DComponent(
   const ref = useHijackSpatialDivRef(
     refIn as ForwardedRef<HTMLDivElement>,
     cssParserDomRef,
-  ) as Model3DComponentRef
+  ) as ModelElementRef
 
   const spatialTransform = {
     position: spatialStyle.position,
