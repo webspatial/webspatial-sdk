@@ -14,6 +14,8 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
+let logger = Logger()
+
 // To load a local path, remove http:// eg.  "static-web/"
 let nativeAPIVersion = "0.0.1"
 
@@ -33,7 +35,7 @@ struct web_spatialApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        print("WebSpatial App Started --------")
+        logger.debug("WebSpatial App Started --------")
 
         // init global logger
         Logger.initLogger()
