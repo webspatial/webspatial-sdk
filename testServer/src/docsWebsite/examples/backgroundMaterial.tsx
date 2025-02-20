@@ -10,7 +10,7 @@ function MySample(props: { session?: SpatialSession }) {
       // CODESAMPLE_START
       session
         .getCurrentWindowComponent()
-        .setStyle({ material: { type: toggle ? 'default' : 'none' } })
+        .setStyle({ material: { type: toggle ? 'translucent' : 'none' } })
       // CODESAMPLE_END
     }
   }, [toggle])
