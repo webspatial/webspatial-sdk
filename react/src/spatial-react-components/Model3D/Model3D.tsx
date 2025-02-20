@@ -51,9 +51,9 @@ export interface ModelElement extends HTMLDivElement {
   currentSrc: string
 }
 
-export type Model3DComponentRef = ForwardedRef<ModelElement>
+export type ModelElementRef = ForwardedRef<ModelElement>
 
-export function Model3DBase(props: Model3DProps, refIn: Model3DComponentRef) {
+export function Model3DBase(props: Model3DProps, refIn: ModelElementRef) {
   const {
     className,
     style = {},

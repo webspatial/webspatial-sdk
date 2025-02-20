@@ -1,5 +1,7 @@
 export {
   Model3D,
+  type Model3DProps,
+  type ModelElementRef,
   type ModelElement,
   type ModelEvent,
   type ModelDragEvent,
