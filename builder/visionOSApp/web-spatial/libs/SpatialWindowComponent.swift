@@ -342,7 +342,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     func didStartLoadPage() {
-        webViewNative?.webViewHolder.needsUpdate = true
         if didFinishFirstLoad {
             webViewNative!.webViewHolder.appleWebView!.evaluateJavaScript("window.__WebSpatialUnloaded = true")
         }
@@ -406,5 +405,9 @@ class SpatialWindowComponent: SpatialComponent {
     override func onDestroy() {
         releaseChildResources()
         didCloseWebView()
+    }
+
+    func shouldUpdate() {
+        webViewNative?.webViewHolder.needsUpdate = true
     }
 }
