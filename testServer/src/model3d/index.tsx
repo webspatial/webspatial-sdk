@@ -89,7 +89,16 @@ function App() {
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-      />
+        onSuccess={() => {
+          console.log('onLoadSuccess')
+        }}
+        onFailure={(errorReason: string) => {
+          console.log('onLoadError', errorReason)
+        }}
+      >
+        <div> this is place holder when failure </div>
+      </CSSModel3D>
+
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
           display toggle

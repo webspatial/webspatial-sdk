@@ -17,5 +17,8 @@ export class SpatialObject {
    */
   async destroy() {
     await WebSpatial.destroyResource(this._resource)
+    await this.onDestroy()
   }
+
+  protected async onDestroy() {}
 }
