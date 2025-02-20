@@ -260,7 +260,7 @@ function App() {
             if (SpatialHelper.instance) {
               SpatialHelper.instance.navigation.openPanel(
                 '/src/launcher/index.html',
-                { dimensions: { x: 600, y: 100 } },
+                { resolution: { width: 600, height: 100 } },
               )
             } else {
               window.open('/src/launcher/index.html')

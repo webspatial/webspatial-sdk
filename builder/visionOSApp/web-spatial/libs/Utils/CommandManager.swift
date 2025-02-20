@@ -576,7 +576,7 @@ class CommandManager {
             return
         }
 
-        if let dimensions = data.update?.nextOpenSettings?.dimensions {
+        if let resolution = data.update?.nextOpenSettings?.resolution {
             sceneStateChangedCB = { _ in
                 // Complete event after scene state change is completed
                 target.completeEvent(requestID: info.requestID)
@@ -585,7 +585,7 @@ class CommandManager {
 
             // Update scene state
             var cfg = WindowContainerPlainDefaultValues()
-            cfg.defaultSize = CGSize(width: dimensions.x, height: dimensions.y)
+            cfg.defaultSize = CGSize(width: resolution.width, height: resolution.height)
             WindowContainerMgr.Instance.updateWindowContainerPlainDefaultValues(cfg)
             return
         }
@@ -721,6 +721,11 @@ struct JSVector2: Codable {
     var y: Double
 }
 
+struct JSResolution: Codable {
+    var width: Double
+    var height: Double
+}
+
 struct JSVector3: Codable {
     var x: Double
     var y: Double
@@ -758,7 +763,7 @@ struct JSEntityStyle: Codable {
 }
 
 struct JSNextOpen: Codable {
-    var dimensions: JSVector2?
+    var resolution: JSResolution?
 }
 
 struct SceneJSBData: Codable {
