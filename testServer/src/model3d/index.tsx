@@ -5,10 +5,10 @@ import {
   CSSModel3D,
   ModelElement,
   ModelLoadEvent,
+  ModelDragEvent,
 } from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
 import { useRef, useState } from 'react'
-import { ModelDragEvent } from '@xrsdk/runtime'
 
 enableDebugTool()
 
@@ -111,7 +111,12 @@ function App() {
           ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
         }}
         onDragEnd={(dragEvent: ModelDragEvent) => {
-          console.log('onDragEnd', dragEvent)
+          console.log(
+            'onDragEnd',
+            dragEvent,
+            dragEvent.target.ready,
+            dragEvent.target.currentSrc,
+          )
           ref.current!.style.transform = 'none'
         }}
         onTap={() => {
