@@ -60,7 +60,7 @@ struct PWAManager: Codable {
                 linkUrl = item.url.replacingOccurrences(of: "%s", with: item.protocolValue + queryString)
             }
         }
-        print(linkUrl)
+        logger.debug(linkUrl)
         return linkUrl
     }
 }

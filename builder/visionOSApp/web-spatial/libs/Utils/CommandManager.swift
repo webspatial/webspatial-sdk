@@ -71,7 +71,7 @@ class CommandManager {
         do {
             jsbCommand = try decoder.decode(RawJSBCommand.self, from: jsonData.data(using: .utf8)!)
         } catch {
-            print(error)
+            logger.error("\(error)")
         }
         return jsbCommand
     }
@@ -105,16 +105,16 @@ class CommandManager {
                     let jsonString = String(data: jsonData, encoding: .utf8)
                     target.completeEvent(requestID: info.requestID, data: jsonString ?? "Conver failed")
                 } catch {
-                    print("Error: \(error.localizedDescription)")
+                    logger.error("Error: \(error.localizedDescription)")
                     target.completeEvent(requestID: info.requestID, data: """
                     error: \(error.localizedDescription)
                     """)
                 }
             } else {
-                print(inspectInfo)
+                logger.warning("\(inspectInfo)")
             }
         } else {
-            print("Missing spatialObject resource")
+            logger.warning("Missing spatialObject resource")
             return
         }
     }
@@ -126,7 +126,7 @@ class CommandManager {
             let jsonString = String(data: jsonData, encoding: .utf8)
             target.completeEvent(requestID: info.requestID, data: jsonString ?? "Conver failed")
         } catch {
-            print("Error: \(error.localizedDescription)")
+            logger.error("Error: \(error.localizedDescription)")
             target.completeEvent(requestID: info.requestID, data: """
             error: \(error.localizedDescription)
             """)
@@ -139,7 +139,7 @@ class CommandManager {
         {
             entity.addComponent(component)
         } else {
-            print("missing resource, setComponent not processed")
+            logger.warning("missing resource, setComponent not processed")
         }
     }
 
@@ -149,7 +149,7 @@ class CommandManager {
         {
             entity.removeComponent(component)
         } else {
-            print("missing resource, removeComponent not processed")
+            logger.warning("missing resource, removeComponent not processed")
         }
     }
 
@@ -195,9 +195,9 @@ class CommandManager {
                         do {
                             let fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
                             try FileManager.default.copyItem(at: a!, to: fileURL)
-                            print("Downloaded and copied model")
+                            logger.debug("Downloaded and copied model")
                         } catch {
-                            print("Model already exists")
+                            logger.warning("Model already exists")
                         }
 
                         Task {
@@ -211,10 +211,10 @@ class CommandManager {
                                     // Update state on main thread
                                     target.completeEvent(requestID: info.requestID, data: "{createdID: '" + spatialModelComponent.id + "'}")
                                     target.addChildSpatialObject(spatialModelComponent)
-                                    print("Model load success!")
+                                    logger.debug("Model load success!")
                                 }
                             } catch {
-                                print("failed to load model: " + error.localizedDescription)
+                                logger.warning("failed to load model: " + error.localizedDescription)
                             }
                         }
                     })
@@ -224,13 +224,13 @@ class CommandManager {
                     let modelComponent = ModelComponent(mesh: .generateBox(size: 0.0), materials: [])
                     sr = SpatialModelComponent(modelComponent)
                 }
-            default: print("failed to create sr of type", type)
+            default: logger.warning("failed to create sr of type \(type)")
             }
             if let srObject = sr {
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + srObject.id + "'}")
                 target.addChildSpatialObject(srObject)
             } else {
-                print("failed to create sr of type", type)
+                logger.warning("failed to create sr of type: \(type)")
             }
         }
     }
@@ -244,7 +244,7 @@ class CommandManager {
         let data = info.cmd.data!
         var delayComplete = false
         if SpatialObject.get(info.resourceID) == nil {
-            print("Missing resource:" + info.resourceID)
+            logger.warning("Missing resource:" + info.resourceID)
             return
         }
         let sr = SpatialObject.get(info.resourceID)!
@@ -256,7 +256,7 @@ class CommandManager {
                     if let parentEntity = SpatialObject.get(setParentID) as? SpatialEntity {
                         entity.setParent(parentEnt: parentEntity)
                     } else {
-                        print("Invalid setParentID", setParentID)
+                        logger.warning("Invalid setParentID: \(setParentID)")
                     }
                 }
             }
@@ -336,7 +336,7 @@ class CommandManager {
                 if let spatialMeshResource = target.getChildSpatialObject(name: meshResourceId) as? SpatialMeshResource {
                     spatialModelComponent.modelComponent.mesh = spatialMeshResource.meshResource
                 } else {
-                    print("invalid  meshResource")
+                    logger.warning("invalid  meshResource")
                 }
             }
 
@@ -540,7 +540,7 @@ class CommandManager {
                         if let windowContainerID = data.sceneData?.windowContainerID {
                             SceneManager.Instance.focusRoot(target: target, windowContainerID: windowContainerID)
                         } else {
-                            print("error: no windowContainerID")
+                            logger.error("error: no windowContainerID")
                         }
                     }
 
@@ -605,7 +605,7 @@ class CommandManager {
     private func log(target: SpatialWindowComponent, info: CommandInfo) {
         if let logStringArr: [String] = info.cmd.data!.logString {
             let logString = logStringArr.joined()
-            print(logString)
+            logger.debug(logString)
         }
     }
 
