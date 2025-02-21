@@ -28,10 +28,8 @@ function MySample(props: { session?: SpatialSession }) {
         await entity.setParent(rootEntity!)
 
         // CODESAMPLE_START
-        var dt = 0
         var curTime = Date.now()
         let loop = async () => {
-          dt = Date.now() - curTime
           curTime = Date.now()
           // Perform onFrame logic
           entity.transform.position.x = 500 + Math.sin(curTime / 1000) * 100

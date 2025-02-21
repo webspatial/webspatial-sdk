@@ -1,14 +1,9 @@
-import {
-  SpatialHelper,
-  SpatialModelComponent,
-  SpatialPhysicallyBasedMaterialResource,
-  SpatialSession,
-} from '@xrsdk/runtime'
-import { useEffect, useState } from 'react'
+import { SpatialHelper, SpatialSession } from '@xrsdk/runtime'
+import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
 import { SpatialView } from '@xrsdk/react'
 
-function MySample(props: { session?: SpatialSession }) {
+function MySample(_props: { session?: SpatialSession }) {
   let animating = false
   useEffect(() => {}, [])
   return (
