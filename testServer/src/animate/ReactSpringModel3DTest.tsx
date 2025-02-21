@@ -7,7 +7,7 @@ import { animated, useSpring } from '@react-spring/web'
 const AnimatedModel3D = animated(CSSModel3D)
 
 export function ReactSpringModel3DTest() {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<any>(null)
 
   const [springProps, setSpringProps] = useSpring(() => ({
     opacity: 1,
