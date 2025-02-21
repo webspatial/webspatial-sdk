@@ -79,12 +79,12 @@ export class SpatialHelper {
   navigation = {
     openPanel: async (
       url: string,
-      options?: { dimensions: { x: number; y: number } },
+      options?: { resolution: { width: number; height: number } },
     ) => {
-      if (options?.dimensions) {
+      if (options?.resolution) {
         await this.session
           .getCurrentWindowContainer()
-          ._setOpenSettings({ dimensions: options.dimensions })
+          ._setOpenSettings({ resolution: options.resolution })
       }
 
       // Create window container
@@ -103,11 +103,11 @@ export class SpatialHelper {
       // Restore default size
       await this.session
         .getCurrentWindowContainer()
-        ._setOpenSettings({ dimensions: { x: 900, y: 700 } })
+        ._setOpenSettings({ resolution: { width: 900, height: 700 } })
     },
     openVolume: async (
       url: string,
-      options?: { dimensions: { x: number; y: number } },
+      options?: { resolution: { width: number; height: number } },
     ) => {
       var wg = await this.session.createWindowContainer({ style: 'Volumetric' })
 
@@ -123,8 +123,8 @@ export class SpatialHelper {
       var ent = await this.session!.createEntity()
       var i = await this.session!.createWindowComponent({ windowContainer: wg })
       await i.loadURL(url)
-      if (options?.dimensions) {
-        await i.setResolution(options.dimensions.x, options.dimensions.y)
+      if (options?.resolution) {
+        await i.setResolution(options.resolution.width, options.resolution.height)
       } else {
         await i.setResolution(1000, 1000)
       }
