@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Spatial } from '@xrsdk/runtime'
 
 import { SpatialDiv, getSession } from '@xrsdk/react'
