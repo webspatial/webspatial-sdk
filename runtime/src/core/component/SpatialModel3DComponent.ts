@@ -20,7 +20,6 @@ export type TapEvent = {
  */
 export class SpatialModel3DComponent extends EventSpatialComponent {
   protected override onRecvEvent(data: any): void {
-    // console.log('onRecvEvent', data)
     const { eventType, value, error } = data
     switch (eventType) {
       case 'phase':
