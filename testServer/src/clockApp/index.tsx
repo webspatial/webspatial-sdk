@@ -15,7 +15,7 @@ var pageName = new URLSearchParams(window.location.search).get('pageName')
 var transparent = new URLSearchParams(window.location.search).get('transparent')
 if (session) {
   session.getCurrentWindowComponent().setStyle({
-    material: { type: transparent ? 'none' : 'default' },
+    material: { type: transparent ? 'transparent' : 'translucent' },
     cornerRadius: transparent ? 0 : 70,
   })
 } else {

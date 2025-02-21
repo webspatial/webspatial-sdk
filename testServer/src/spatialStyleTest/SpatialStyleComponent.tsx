@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const SpatialStyleComponent = () => {
   const divCls = 'text-amber-600	'
   const spaceCls = divCls + 'bg-zinc-400'
