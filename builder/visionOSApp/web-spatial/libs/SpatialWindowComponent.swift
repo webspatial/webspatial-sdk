@@ -408,8 +408,7 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     func didNavBackForward() {
-        // in JS calling history.go(-1) do not change needUpdate
-        // we should set needUpdate=true to load again other than use the cached one which is disconnected from JSB
+        // in JS calling history.go(-1) we should set needUpdate=true
         webViewNative?.webViewHolder.needsUpdate = true
     }
 }
