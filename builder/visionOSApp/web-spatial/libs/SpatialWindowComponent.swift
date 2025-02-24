@@ -358,9 +358,9 @@ class SpatialWindowComponent: SpatialComponent {
         isLoading = true
         loadingStyles = LoadingStyles()
 
-        // due to buggy of MaterialWithBorderCornerModifier impl
-        // SwiftUI may not track the state change so
-        // we manually fire it if necessary
+        // with materialWithBorderCorner
+        // SwiftUI not updating UIViewRepresentable when its deps update
+        // we trigger it by manually
         webViewNative?.initialLoad()
     }
 
