@@ -39,83 +39,90 @@ struct SpatialModel3DView: View {
             .onEnded(onLonePressEnded)
     }
 
+    @ViewBuilder
     var body: some View {
         if e.coordinateSpace == .DOM {
-            if let childModel3DComponent = e.getComponent(SpatialModel3DComponent.self) {
-                if e.coordinateSpace == .DOM {
-                    let x = CGFloat(e.modelEntity.position.x)
-                    let y = CGFloat(e.modelEntity.position.y - (childModel3DComponent.scrollWithParent ? parentYOffset : 0))
-                    let z = CGFloat(e.modelEntity.position.z)
-                    let width = CGFloat(childModel3DComponent.resolutionX)
-                    let height = CGFloat(childModel3DComponent.resolutionY)
-                    let anchor = childModel3DComponent.rotationAnchor
-                    let opacity = childModel3DComponent.opacity
-                    let resizable = childModel3DComponent.resizable
-                    let aspectRatio: CGFloat? = childModel3DComponent.aspectRatio == nil ? nil : CGFloat(childModel3DComponent.aspectRatio!)
+            if let childModel3DComponent = e.getComponent(SpatialModel3DComponent.self),
+               let url = URL(string: childModel3DComponent.modelURL)
+            {
+                let x = CGFloat(e.modelEntity.position.x)
+                let y = CGFloat(e.modelEntity.position.y - (childModel3DComponent.scrollWithParent ? parentYOffset : 0))
+                let z = CGFloat(e.modelEntity.position.z)
+                let width = CGFloat(childModel3DComponent.resolutionX)
+                let height = CGFloat(childModel3DComponent.resolutionY)
+                let anchor = childModel3DComponent.rotationAnchor
+                let opacity = childModel3DComponent.opacity
+                let resizable = childModel3DComponent.resizable
+                let aspectRatio: CGFloat? = childModel3DComponent.aspectRatio == nil ? nil : CGFloat(childModel3DComponent.aspectRatio!)
 
-                    let url = URL(string: childModel3DComponent.modelURL)!
-                    let contentMode = childModel3DComponent.contentMode
+                //                    let url = URL(string: childModel3DComponent.modelURL)!
+                let contentMode = childModel3DComponent.contentMode
 
-                    let enableTapEvent = childModel3DComponent.enableTapEvent
-                    let enableDoubleTapEvent = childModel3DComponent.enableDoubleTapEvent
-                    let enableDragEvent = childModel3DComponent.enableDragEvent
-                    let enableLongPressEvent = childModel3DComponent.enableLongPressEvent
+                let enableTapEvent = childModel3DComponent.enableTapEvent
+                let enableDoubleTapEvent = childModel3DComponent.enableDoubleTapEvent
+                let enableDragEvent = childModel3DComponent.enableDragEvent
+                let enableLongPressEvent = childModel3DComponent.enableLongPressEvent
 
-                    // Matrix = MTranslate X MRotate X MScale
-                    Model3D(url: url) { newPhase in
-                        switch newPhase {
-                        case .empty:
-                            ProgressView()
+                // Matrix = MTranslate X MRotate X MScale
+                Model3D(url: url) { newPhase in
+                    switch newPhase {
+                    case .empty:
+                        ProgressView()
 
-                        case let .success(resolvedModel3D):
-                            resolvedModel3D
-                                .resizable(resizable)
-                                .aspectRatio(
-                                    aspectRatio,
-                                    contentMode: contentMode
-                                )
+                    case let .success(resolvedModel3D):
+                        resolvedModel3D
+                            .resizable(resizable)
+                            .aspectRatio(
+                                aspectRatio,
+                                contentMode: contentMode
+                            )
 
-                                .onAppear {
-                                    self.onLoadSuccess()
-                                }
-
-                        case let .failure(error):
-//                            use UIView.onAppear to notify error phase.
-                            Text("").onAppear {
-                                self.onLoadFailure(error.localizedDescription)
+                            .onAppear {
+                                self.onLoadSuccess()
                             }
 
-                        @unknown default:
-                            EmptyView()
+                    case let .failure(error):
+                        //                            use UIView.onAppear to notify error phase.
+                        Text("").onAppear {
+                            self.onLoadFailure(error.localizedDescription)
                         }
+
+                    @unknown default:
+                        EmptyView()
                     }
-                    .frame(width: width, height: height)
-//                    .background(Color.blue)
-                    .scaleEffect(
-                        x: CGFloat(e.modelEntity.scale.x),
-                        y: CGFloat(e.modelEntity.scale.y),
-                        z: CGFloat(e.modelEntity.scale.z),
-                        anchor: anchor
-                    )
-                    .rotation3DEffect(
-                        Rotation3D(simd_quatf(
-                            ix: e.modelEntity.orientation.vector.x,
-                            iy: e.modelEntity.orientation.vector.y,
-                            iz: e.modelEntity.orientation.vector.z,
-                            r: e.modelEntity.orientation.vector.w
-                        )),
-                        anchor: anchor
-                    )
-                    .position(x: x, y: y)
-                    .offset(z: z)
-                    .opacity(opacity)
-                    .gesture(enableDragEvent ? drag : nil)
-                    .gesture(enableDoubleTapEvent ?doubleTapGesture : nil)
-                    .gesture(enableTapEvent ? tapGesture : nil)
-                    .gesture(enableLongPressEvent ? longPressGesture : nil)
-                    .hidden(!e.visible)
+                }
+                .frame(width: width, height: height)
+                //                    .background(Color.blue)
+                .scaleEffect(
+                    x: CGFloat(e.modelEntity.scale.x),
+                    y: CGFloat(e.modelEntity.scale.y),
+                    z: CGFloat(e.modelEntity.scale.z),
+                    anchor: anchor
+                )
+                .rotation3DEffect(
+                    Rotation3D(simd_quatf(
+                        ix: e.modelEntity.orientation.vector.x,
+                        iy: e.modelEntity.orientation.vector.y,
+                        iz: e.modelEntity.orientation.vector.z,
+                        r: e.modelEntity.orientation.vector.w
+                    )),
+                    anchor: anchor
+                )
+                .position(x: x, y: y)
+                .offset(z: z)
+                .opacity(opacity)
+                .gesture(enableDragEvent ? drag : nil)
+                .gesture(enableDoubleTapEvent ?doubleTapGesture : nil)
+                .gesture(enableTapEvent ? tapGesture : nil)
+                .gesture(enableLongPressEvent ? longPressGesture : nil)
+                .hidden(!e.visible)
+            } else {
+                Text("").onAppear {
+                    self.onLoadFailure("invalid URL")
                 }
             }
+        } else {
+            EmptyView()
         }
     }
 
