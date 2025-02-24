@@ -22,9 +22,10 @@ export function configStartUrl(
     }
   } else {
     if (!isUrl) {
-      start_url = join(parseRouter(manifestUrl), manifestJson.start_url)
+      start_url = join('./static-web', manifestJson.start_url)
     }
   }
+  console.log(manifestUrl, manifestJson.start_url, start_url)
   manifestJson.start_url = start_url
 }
 
