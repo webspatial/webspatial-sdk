@@ -12,6 +12,8 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowContainer: SpatialObject {
+    // save active plain windowGroup ids, used to find the last one
+    static var activeWindowPlainContainerIds: Set<String> = []
     // Resources that will be destroyed when this window group is removed
     private var childResources = [String: SpatialObject]()
     public var childContainers = [String: SpatialWindowContainer]()
@@ -31,6 +33,10 @@ class SpatialWindowContainer: SpatialObject {
 
     init(_ name: String, _ data: WindowContainerData) {
         wgd = data
+        if data.windowStyle == "Plain" {
+            SpatialWindowContainer.activeWindowPlainContainerIds.insert(data.windowContainerID)
+        }
+
         super.init(name)
     }
 
@@ -82,6 +88,9 @@ class SpatialWindowContainer: SpatialObject {
 
         // Close the window group when this object is destroyed
         SpatialWindowContainer.getSpatialWindowContainer(id)!.closeWindowData.send(wgd)
+        if wgd.windowStyle == "Plain" {
+            SpatialWindowContainer.activeWindowPlainContainerIds.remove(wgd.windowContainerID)
+        }
     }
 
     override func inspect() -> [String: Any] {
@@ -95,6 +104,11 @@ class SpatialWindowContainer: SpatialObject {
             inspectInfo[key] = value
         }
         return inspectInfo
+    }
+
+    // get one active windowContainer
+    static var activeWindowContainerId: String? {
+        return activeWindowPlainContainerIds.first
     }
 }
 
