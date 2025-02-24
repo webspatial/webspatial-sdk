@@ -92,8 +92,9 @@ struct web_spatialApp: App {
                     windowData.windowContainerID, windowData
                 )
                 PlainWindowContainerView().environment(wg)
-                    // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
-                    .handlesExternalEvents(preferring: [], allowing: [])
+                // we no longer need the initial windowGroup to live all the time
+                // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+//                    .handlesExternalEvents(preferring: [], allowing: [])
             }
         } defaultValue: {
             WindowContainerData(windowStyle: "Plain", windowContainerID: SpatialWindowContainer.getRootID())
