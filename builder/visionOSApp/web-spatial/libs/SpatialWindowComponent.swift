@@ -209,17 +209,14 @@ class SpatialWindowComponent: SpatialComponent {
 
     func goBack() {
         webViewNative?.webViewHolder.appleWebView?.goBack()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func goForward() {
         webViewNative?.webViewHolder.appleWebView?.goForward()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func reload() {
         webViewNative?.webViewHolder.appleWebView?.reload()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     var canGoBack: Bool = false
@@ -408,5 +405,10 @@ class SpatialWindowComponent: SpatialComponent {
     override func onDestroy() {
         releaseChildResources()
         didCloseWebView()
+    }
+
+    func didNavBackForward() {
+        // in JS calling history.go(-1) we should set needUpdate=true
+        webViewNative?.webViewHolder.needsUpdate = true
     }
 }
