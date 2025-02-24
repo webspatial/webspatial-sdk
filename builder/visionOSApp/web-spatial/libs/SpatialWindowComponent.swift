@@ -357,6 +357,12 @@ class SpatialWindowComponent: SpatialComponent {
         gotStyle = false
         isLoading = true
         loadingStyles = LoadingStyles()
+
+        // FIXME:
+        // This is a workaround to force run UIViewRepresentable.update()
+        // SwiftUI not trigger it when go back from example page.
+        // Warning of `AttributeGraph: cycle detected through attribute` fired when goes to example page
+        webViewNative?.initialLoad()
     }
 
     func didSpawnWebView(wv: WebViewNative) {
