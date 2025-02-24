@@ -54,8 +54,6 @@ struct SpatialModel3DView: View {
                 let opacity = childModel3DComponent.opacity
                 let resizable = childModel3DComponent.resizable
                 let aspectRatio: CGFloat? = childModel3DComponent.aspectRatio == nil ? nil : CGFloat(childModel3DComponent.aspectRatio!)
-
-                //                    let url = URL(string: childModel3DComponent.modelURL)!
                 let contentMode = childModel3DComponent.contentMode
 
                 let enableTapEvent = childModel3DComponent.enableTapEvent
