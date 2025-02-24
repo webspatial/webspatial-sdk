@@ -358,9 +358,10 @@ class SpatialWindowComponent: SpatialComponent {
         isLoading = true
         loadingStyles = LoadingStyles()
 
-        // with materialWithBorderCorner
-        // SwiftUI not updating UIViewRepresentable when its deps update
-        // we trigger it by manually
+        // FIXME:
+        // This is a workaround to force run UIViewRepresentable.update()
+        // SwiftUI not trigger it when go back from example page.
+        // Warning of `AttributeGraph: cycle detected through attribute` fired when goes to example page
         webViewNative?.initialLoad()
     }
 
