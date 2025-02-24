@@ -120,6 +120,10 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             return
         }
         if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
+            if navigationAction.navigationType == .backForward {
+                // backward/forward
+                webViewRef?.didNavBackForward()
+            }
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)
