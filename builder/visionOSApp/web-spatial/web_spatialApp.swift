@@ -114,7 +114,7 @@ struct web_spatialApp: App {
                     // App reopened
 
                     let fileUrl = getFileUrl()
-                    if let awid = SpatialWindowContainer.activeWindowContainerId,
+                    if let awid = SpatialWindowContainer.firstActivePlainWindowContainerId,
                        let wc = SpatialWindowContainer.getSpatialWindowContainer(
                            awid
                        )
