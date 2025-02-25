@@ -83,11 +83,14 @@ function parseChildren(child: ModelChildren) {
     throw new Error('children with at least one <source> required  ')
   }
 
-  const gltfSources = sourceElements.filter(
-    node => (node as ReactElement).props?.type === 'model/gltf-binary',
-  )
-  const usdzSources = sourceElements.filter(
-    node => (node as ReactElement).props?.type === 'model/vnd.usdz+zip',
+  const gltfSources = sourceElements.filter(node => {
+    const type = (node as ReactElement).props?.type.trim()
+    return (
+      type.startsWith('model/gltf-binary') || type.startsWith('model/gltf+json')
+    )
+  })
+  const usdzSources = sourceElements.filter(node =>
+    (node as ReactElement).props?.type.trim().startsWith('model/vnd.usdz+zip'),
   )
   let lastChild = children[children.length - 1]
   const placeHolder =
