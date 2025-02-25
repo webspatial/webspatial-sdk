@@ -2,13 +2,21 @@
   "name": "@xrsdk/react",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/type/index.d.ts",
+  "main": "npm/index.js",
+  "types": "npm/index.d.ts",
   "exports": {
-    "./web": "./dist/cjs/index.web.js",
-    "./default": "./dist/cjs/index.default.js",
-    ".": "./dist/index.js"
+    ".": "./npm/index.js",
+    "./default": "./dist/cjs/default/index.js",
+    "./web": "./dist/cjs/web/index.js",
+    "./plugin-esbuild.js": "./npm/plugin/esbuild.js",
+    "./plugin-vite.js": "./npm/plugin/vite.js",
+    "./plugin-rollup.js": "./npm/plugin/rollup.js",
+    "./plugin-webpack.js": "./npm/plugin/webpack.js"
   },
+  "files": [
+    "dist",
+    "npm"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node esbuild.mjs --watch",
@@ -56,6 +64,7 @@
     "@types/unist": "^3.0.2",
     "esbuild": "^0.23.1",
     "esbuild-plugin-d.ts": "^1.3.1",
+    "esbuild-plugin-define": "^0.5.0",
     "tiny-glob": "^0.2.9",
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
