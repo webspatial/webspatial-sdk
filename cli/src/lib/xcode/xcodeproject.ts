@@ -254,7 +254,7 @@ export default class XcodeProject {
       PROJECT_DIRECTORY,
       './web-spatial/libs/webView/manifest.swift',
     )
-    let manifestSwift = manifestSwiftTemplate //fs.readFileSync(manifestSwiftPath, 'utf-8')
+    let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     if (manifest.protocol_handlers) {
