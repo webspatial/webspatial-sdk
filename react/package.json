@@ -2,16 +2,12 @@
   "name": "@xrsdk/react",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/default/index.js",
-  "types": "dist/default/index.d.ts",
-  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/type/index.d.ts",
   "exports": {
-    "./web": "./dist/web/index.js",
-    "./default": "./dist/default/index.js",
-    ".": "./dist/default/index.js"
-  },
-  "bin": {
-    "xrsdk-switch": "./bin/switch-export.cjs"
+    "./web": "./dist/cjs/index.web.js",
+    "./default": "./dist/cjs/index.default.js",
+    ".": "./dist/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -54,6 +50,7 @@
     "@types/hast": "^3.0.4",
     "@types/lodash": "^4.17.13",
     "@types/lodash.isequal": "^4.5.8",
+    "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/unist": "^3.0.2",

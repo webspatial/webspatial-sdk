@@ -6,9 +6,7 @@ const spatialSupported = !!getSession()
 
 if (spatialSupported) {
   const session = getSession()!
-  session
-    .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
+  session.getCurrentWindowComponent()
 }
 
 function App() {
