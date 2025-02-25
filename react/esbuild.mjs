@@ -38,7 +38,7 @@ const targets = [
   {
     name: 'CJS + default bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/cjs/index.default.js',
+    outfile: 'dist/cjs/default/index.js',
     dir: 'dist/cjs',
     define: { __WEB__: 'false' },
     tsconfig: 'tsconfig.default.json',
@@ -56,7 +56,7 @@ const targets = [
   {
     name: 'CJS + web bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/cjs/index.web.js',
+    outfile: 'dist/cjs/web/index.js',
     dir: 'dist/cjs',
     define: { __WEB__: 'true' },
     tsconfig: 'tsconfig.web.json',
@@ -142,8 +142,8 @@ async function run() {
     contexts.push(ctx)
   }
 
-  mkDistDir()
-  copyNpmToDist()
+  // mkDistDir()
+  // copyNpmToDist()
 
   // Check if --watch flag is provided in the command line arguments
   const watchMode = process.argv.includes('--watch')
