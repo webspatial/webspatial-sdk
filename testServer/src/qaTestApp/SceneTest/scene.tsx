@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { SpatialDiv } from '@xrsdk/react/dist'
 import { Spatial } from '@xrsdk/runtime'
@@ -10,7 +10,7 @@ const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
-  var session = new Spatial().requestSession()
+  const session = new Spatial().requestSession()
   session!.getCurrentWindowComponent().setStyle({
     material: { type: 'default' },
     cornerRadius: 50,
@@ -18,27 +18,16 @@ if (spatialSupported) {
 }
 
 function App() {
-  const [windowRefs, setWindowRefs] = useState({
-    winARef: useRef<any>(null),
-    winBRef: useRef<any>(null),
-    winCRef: useRef<any>(null),
-    winDRef: useRef<any>(null),
-    winERef: useRef<any>(null),
-    winFRef: useRef<any>(null),
-  })
+  const winARef = useRef<any>(null)
+  const winBRef = useRef<any>(null)
+  const winCRef = useRef<any>(null)
+  const winDRef = useRef<any>(null)
+  const winERef = useRef<any>(null)
+  const winFRef = useRef<any>(null)
 
-  const handleOpenWindow = (
-    ref: React.MutableRefObject<any>,
-    url: string,
-    sceneName: string,
+  const handleCloseWindow = (
+    windowRef: React.MutableRefObject<Window | null>,
   ) => {
-    ref.current = window.open(url, sceneName)
-  }
-  // const handleOpenWindow = async (ref: React.MutableRefObject<any>, url: string, sceneName: string) => {
-  //   await initScene(sceneName, defaultConfig => defaultConfig)
-  //   ref.current = window.open(url, sceneName)
-  // }
-  const handleCloseWindow = (windowRef: React.MutableRefObject<any>) => {
     try {
       if (!windowRef.current) {
         console.log('no window')
@@ -88,8 +77,7 @@ function App() {
             className={btnCls}
             onClick={() => {
               console.log('开始执行打开 winA 操作')
-              handleOpenWindow(
-                windowRefs.winARef,
+              winARef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
                 'sa',
               )
@@ -98,10 +86,7 @@ function App() {
             open winA
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winARef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winARef)}>
             close winA
           </button>
         </div>
@@ -118,8 +103,7 @@ function App() {
                 resizability: 'automatic',
               }))
               console.log('开始执行打开 winB 操作')
-              handleOpenWindow(
-                windowRefs.winBRef,
+              winBRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
                 'sb',
               )
@@ -128,10 +112,7 @@ function App() {
             open winB
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winBRef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winBRef)}>
             close winB
           </button>
         </div>
@@ -141,8 +122,7 @@ function App() {
             className={btnCls}
             onClick={() => {
               console.log('开始执行打开 winC 操作')
-              handleOpenWindow(
-                windowRefs.winCRef,
+              winCRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/model.html',
                 'sc',
               )
@@ -159,10 +139,7 @@ function App() {
           {/*  open model by a tag*/}
           {/*</a>*/}
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winCRef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winCRef)}>
             close model
           </button>
         </div>
@@ -179,8 +156,7 @@ function App() {
                 resizability: 'automatic',
               }))
               console.log('开始执行打开 winD 操作')
-              handleOpenWindow(
-                windowRefs.winDRef,
+              winDRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
                 'sd',
               )
@@ -189,10 +165,7 @@ function App() {
             open child by initScene
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winDRef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winDRef)}>
             close child by initScene
           </button>
         </div>
@@ -202,8 +175,7 @@ function App() {
             className={btnCls}
             onClick={() => {
               console.log('开始执行打开 winE 操作')
-              handleOpenWindow(
-                windowRefs.winERef,
+              winERef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
                 'sd',
               )
@@ -212,10 +184,7 @@ function App() {
             open child
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winERef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winERef)}>
             close child
           </button>
         </div>
@@ -224,16 +193,13 @@ function App() {
           <button
             className={btnCls}
             onClick={() =>
-              handleOpenWindow(windowRefs.winFRef, 'http://google.com', 'sf')
+              (winFRef.current = window.open('http://google.com', 'sf'))
             }
           >
             open google
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winFRef)}
-          >
+          <button className={btnCls} onClick={() => handleCloseWindow(winFRef)}>
             close google
           </button>
         </div>
@@ -245,3 +211,6 @@ function App() {
 const root = document.createElement('div')
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(<App />)
+
+// const root = ReactDOM.createRoot(document.getElementById('root')!)
+// root.render(<App />)
