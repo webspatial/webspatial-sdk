@@ -1,10 +1,9 @@
 import * as esbuild from 'esbuild'
 import dtsPlugin from 'esbuild-plugin-d.ts'
 import glob from 'tiny-glob'
-//@ts-ignore
 import path from 'path'
-//@ts-ignore
 import fs from 'fs'
+import { exec } from 'child_process'
 
 const entryPoints = await glob('./src/**/*.tsx')
 const entryPointsTs = await glob('./src/**/*.ts')
@@ -16,6 +15,9 @@ function clearDist(dir) {
     console.log(`Cleared ${distPath}`)
   }
 }
+
+// for dynamic choose version we should ship 2 kinds of cjs output and switch by env variable
+
 // for developer to use, we should ship 2 kinds of output
 // 1. ESM unbundled, used with compiling tools (this not treeshaking well for unused import)
 // 2. ESM bundled, used by <script> tag
@@ -34,13 +36,13 @@ function clearDist(dir) {
 
 const targets = [
   {
-    name: 'ESM + default bundled',
+    name: 'CJS + default bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/default/index.js',
-    dir: 'dist/default',
+    outfile: 'dist/cjs/index.default.js',
+    dir: 'dist/cjs',
     define: { __WEB__: 'false' },
     tsconfig: 'tsconfig.default.json',
-    format: 'esm',
+    format: 'cjs',
     bundle: true,
     external: [
       'react',
@@ -52,13 +54,13 @@ const targets = [
     ],
   },
   {
-    name: 'ESM + web bundled',
+    name: 'CJS + web bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/web/index.js',
-    dir: 'dist/web',
+    outfile: 'dist/cjs/index.web.js',
+    dir: 'dist/cjs',
     define: { __WEB__: 'true' },
     tsconfig: 'tsconfig.web.json',
-    format: 'esm',
+    format: 'cjs',
     bundle: true,
     external: [
       'react',
@@ -70,6 +72,43 @@ const targets = [
     ],
     alias: { '@xrsdk/runtime': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
   },
+  // {
+  //   name: 'ESM + default bundled',
+  //   entryPoints: ['./src/index.ts'],
+  //   outfile: 'dist/default/index.js',
+  //   dir: 'dist/default',
+  //   define: { __WEB__: 'false' },
+  //   tsconfig: 'tsconfig.default.json',
+  //   format: 'esm',
+  //   bundle: true,
+  //   external: [
+  //     'react',
+  //     'react-dom',
+  //     'three',
+  //     '@xrsdk/runtime',
+  //     'lodash.isequal',
+  //     '@google/model-viewer',
+  //   ],
+  // },
+  // {
+  //   name: 'ESM + web bundled',
+  //   entryPoints: ['./src/index.ts'],
+  //   outfile: 'dist/web/index.js',
+  //   dir: 'dist/web',
+  //   define: { __WEB__: 'true' },
+  //   tsconfig: 'tsconfig.web.json',
+  //   format: 'esm',
+  //   bundle: true,
+  //   external: [
+  //     'react',
+  //     'react-dom',
+  //     'three',
+  //     '@xrsdk/runtime',
+  //     'lodash.isequal',
+  //     '@google/model-viewer',
+  //   ],
+  //   alias: { '@xrsdk/runtime': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
+  // },
 ]
 
 async function run() {
@@ -103,6 +142,9 @@ async function run() {
     contexts.push(ctx)
   }
 
+  mkDistDir()
+  copyNpmToDist()
+
   // Check if --watch flag is provided in the command line arguments
   const watchMode = process.argv.includes('--watch')
 
@@ -116,8 +158,27 @@ async function run() {
       await ctx.rebuild()
     }
     console.log('All builds completed!')
+
     process.exit(0)
   }
+}
+
+function mkDistDir() {
+  const distPath = path.resolve('dist')
+  if (!fs.existsSync(distPath)) {
+    fs.mkdirSync(distPath, { recursive: true })
+    console.log(`Created dist directory at ${distPath}`)
+  }
+}
+
+function copyNpmToDist() {
+  exec('cp -rf npm/* dist/', (err, stdout, stderr) => {
+    if (err) {
+      console.error('Error copying npm folder:', err)
+      return
+    }
+    console.log('Copied npm folder to dist:', stdout)
+  })
 }
 
 run()
