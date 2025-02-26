@@ -71,3 +71,16 @@ export async function store(args: ParsedArgs): Promise<boolean> {
   await XcodeManager.upload(args, appInfo)
   return true
 }
+
+// build and run on simulator
+export async function dev(args: ParsedArgs): Promise<boolean> {
+  let appInfo = { name: 'SpatialWebTest', id: 'com.SpatialWeb.test' }
+  const buildRes = await start(args)
+  if (!buildRes) {
+    return false
+  }
+  appInfo.name = buildRes.json.name
+  appInfo.id = buildRes.json.id
+  await XcodeManager.runWithSimulator(appInfo)
+  return true
+}
