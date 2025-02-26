@@ -8,6 +8,7 @@ import {
 import { join } from 'path'
 import { loadJsonFromDisk } from '../resource/load'
 import { ImageHelper } from '../resource/imageHelper'
+import { manifestSwiftTemplate } from './manifestSwiftTemplate'
 const xcode = require('xcode')
 const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -62,6 +63,7 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>
 `
+let useExportOptionsXML = ''
 
 export default class XcodeProject {
   public static async modify(projectPath: string, option: any) {
@@ -69,15 +71,19 @@ export default class XcodeProject {
     this.fixProjectFunction(project)
     project.parseSync()
     let buildType = 'release-testing'
-    let xml = exportOptionsXML
+    useExportOptionsXML = exportOptionsXML
     if (option['buildType']) {
-      xml = exportOptionsXML.replace('BUILDTYPE', option['type'])
+      useExportOptionsXML = exportOptionsXML.replace(
+        'BUILDTYPE',
+        option['type'],
+      )
     } else {
-      xml = exportOptionsXML.replace('BUILDTYPE', buildType)
+      useExportOptionsXML = exportOptionsXML.replace('BUILDTYPE', buildType)
     }
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
     }
+    this.updateExportOptions()
     await this.bindIcon(option.icon)
     this.bindManifestInfo(project, option.manifestInfo.json)
     if (option['version']) {
@@ -205,10 +211,16 @@ export default class XcodeProject {
 
   private static updateTeamId(xcodeProject: any, teamId: string) {
     xcodeProject.updateBuildProperty('DEVELOPMENT_TEAM', teamId)
-    const newXml = exportOptionsXML.replace('YOURTEAMID', teamId)
+    useExportOptionsXML = useExportOptionsXML.replace('YOURTEAMID', teamId)
+  }
+
+  private static updateExportOptions() {
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY, { recursive: true })
+    }
     fs.writeFileSync(
       join(PROJECT_BUILD_DIRECTORY, 'ExportOptions.plist'),
-      newXml,
+      useExportOptionsXML,
     )
   }
 
@@ -220,6 +232,7 @@ export default class XcodeProject {
       `"${manifest.id}"`,
     )
     this.updateDeeplink(manifest.protocol_handlers ?? [])
+    this.modifySwift(manifest)
   }
 
   private static updateVersion(xcodeProject: any, version: string) {
@@ -234,5 +247,26 @@ export default class XcodeProject {
     }
     const newInfoPlist = infoPlistXML.replace('DEEPLINK', deeplinkString)
     fs.writeFileSync(infoPlistPath, newInfoPlist)
+  }
+
+  private static modifySwift(manifest: any) {
+    const manifestSwiftPath = join(
+      PROJECT_DIRECTORY,
+      './web-spatial/libs/webView/manifest.swift',
+    )
+    let manifestSwift = manifestSwiftTemplate
+    manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
+    manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
+    if (manifest.protocol_handlers) {
+      let deeplinkString = ''
+      for (let i = 0; i < manifest.protocol_handlers.length; i++) {
+        deeplinkString += `PWAProtocol(protocolValue: "${manifest.protocol_handlers[i].protocol}", url: "${manifest.protocol_handlers[i].url}"),`
+      }
+      manifestSwift = manifestSwift.replace(
+        'PWAProtocol(protocolValue: "", url: "")',
+        deeplinkString,
+      )
+    }
+    fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
 }
