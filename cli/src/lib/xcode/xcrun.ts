@@ -64,7 +64,9 @@ export default class Xcrun {
     // find visionOS simulator
     let cmd = new XcrunCMD().simctl()
     cmd.listDevices('Apple Vision Pro')
-    const res = execSync(cmd.line)
+    let res = execSync(cmd.line)
+    console.log('-------- show devices --------')
+    console.log(res.toString())
     const simList = this.parseListDevices(res.toString())
     if (simList.length === 0) {
       throw new Error('no visionOS simulator found')
@@ -76,16 +78,20 @@ export default class Xcrun {
         break
       }
     }
+    console.log(device)
     // boot visionOS simulator if not booted
     if (device.state === 'Shutdown') {
       cmd = new XcrunCMD().simctl()
       cmd.boot(device.deviceId)
-      execSync(cmd.line)
+      res = execSync(cmd.line)
+
+      console.log(res.toString())
     }
     // open simulator
-    execSync(
+    res = execSync(
       'open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app/',
     )
+    console.log(res.toString())
     // install app
     const appPath = join(PROJECT_EXPORT_DIRECTORY, 'Payload')
     const ipaFile = join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`)
@@ -102,16 +108,19 @@ export default class Xcrun {
       }
       // unzip and find app
       if (fs.existsSync(zipFile)) {
-        execSync(`unzip -o ${zipFile} -d ${PROJECT_EXPORT_DIRECTORY}`)
+        res = execSync(`unzip -o ${zipFile} -d ${PROJECT_EXPORT_DIRECTORY}`)
+        console.log(res.toString())
         // install app to simulator
         if (fs.existsSync(appPath) && fs.existsSync(appFile)) {
           cmd = new XcrunCMD().simctl()
           cmd.install(device.deviceId, appFile)
-          execSync(cmd.line)
+          res = execSync(cmd.line)
+          console.log(res.toString())
           // launch app
           cmd = new XcrunCMD().simctl()
           cmd.launch(device.deviceId, appInfo.id)
-          execSync(cmd.line)
+          res = execSync(cmd.line)
+          console.log(res.toString())
         }
       }
     } catch (e) {}
