@@ -54,8 +54,8 @@ export async function loadJsonFromNet(
 export async function loadJsonFromDisk(
   url: String,
 ): Promise<Record<string, any>> {
-  const jsonString = await fs.promises.readFile(url.toString())
-  return JSON.parse(jsonString.toString())
+  const jsonString = await loadFileString(url.toString())
+  return JSON.parse(jsonString)
 }
 
 export async function loadImageFromNet(src: string): Promise<Jimp> {
@@ -125,4 +125,9 @@ export async function loadImageFromNet(src: string): Promise<Jimp> {
 
 export async function loadImageFromDisk(src: string): Promise<Jimp> {
   return await Jimp.read(src)
+}
+
+export async function loadFileString(url: String): Promise<string> {
+  let file = await fs.promises.readFile(url.toString())
+  return file.toString()
 }

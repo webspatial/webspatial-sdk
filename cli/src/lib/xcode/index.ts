@@ -16,7 +16,7 @@ export class XcodeManager {
     await XcodeProject.modify(projectPath, option)
     console.log('write project.pbxproj: ok')
     if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
-      fs.promises.mkdir(PROJECT_EXPORT_DIRECTORY, { recursive: true })
+      fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
     }
     await Xcodebuild.archive()
   }
@@ -28,7 +28,6 @@ export class XcodeManager {
         join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
         option['u'],
         option['p'],
-        option['appleId'],
         true,
       )
     } else if (option['k'] && option['i']) {
@@ -37,7 +36,6 @@ export class XcodeManager {
         join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
         option['k'],
         option['i'],
-        option['appleId'],
         false,
       )
     }
