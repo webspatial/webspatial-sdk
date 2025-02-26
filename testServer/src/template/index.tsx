@@ -42,7 +42,7 @@ function App() {
       <div style={{ height: '100px', width: '100px' }}>
         <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
           <source
-            src="/src/assets/FlightHelmet.usdz"
+            src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
             type="model/vnd.usdz+zip"
           ></source>
         </Model>
