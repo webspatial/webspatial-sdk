@@ -6,11 +6,9 @@ const spatialSupported = !!getSession()
 
 if (spatialSupported) {
   const session = getSession()!
-  session
-    .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'default' }, cornerRadius: 50 })
+  session.getCurrentWindowComponent()
 }
-
+console.log('testServer XR_ENV:', process.env.XR_ENV)
 function App() {
   const spatialStyle = {
     position: { x: 0, y: 0, z: 10.000001 },
