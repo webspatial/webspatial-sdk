@@ -128,6 +128,7 @@ export default class Xcrun {
 
   private static parseListDevices(devices: string) {
     let res = devices.split('\n')
+    console.log(res)
     let list: any[] = []
     let findIndex = -1
     for (let i = 0; i < res.length; i++) {
@@ -138,7 +139,9 @@ export default class Xcrun {
           // end add visionOS simulator
           break
         }
+        console.log(res[i])
         const info = res[i].split('(')
+        console.log(info)
         const deviceInfo = {
           name: info[0].trim(),
           deviceId: info[1].split(')')[0].trim(),
