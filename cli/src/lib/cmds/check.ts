@@ -12,9 +12,6 @@ export function checkBuildParams(args: ParsedArgs) {
 }
 
 export function checkStoreParams(args: ParsedArgs) {
-  if (!args['name']) {
-    throw new Error('name is required')
-  }
   if (!(args['u'] && args['p']) && !(args['k'] && args['i'])) {
     throw new Error('u and p or k and i is required')
   }
