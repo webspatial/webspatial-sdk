@@ -18,4 +18,7 @@ export function checkStoreParams(args: ParsedArgs) {
   if (!(args['u'] && args['p']) || !(args['k'] && args['i'])) {
     throw new Error('u and p or k and i is required')
   }
+  if (!args['version']) {
+    throw new Error('version is required')
+  }
 }

@@ -40,4 +40,8 @@ export class XcodeManager {
       )
     }
   }
+
+  public static async runWithSimulator(appInfo: any) {
+    await Xcrun.runWithSimulator(appInfo)
+  }
 }
