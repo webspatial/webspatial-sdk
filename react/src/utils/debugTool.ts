@@ -1,6 +1,7 @@
 import { getSession } from './getSession'
 
 async function getStat() {
+  if (__WEB__) return
   const statsInfo = await getSession()!._getStats()
 
   return statsInfo
@@ -64,6 +65,7 @@ async function inspectRootWindowContainer(simple?: boolean) {
 }
 
 export function enableDebugTool() {
+  if (__WEB__) return
   const session = getSession()
   Object.assign(window, {
     session,
