@@ -1,10 +1,9 @@
 import * as esbuild from 'esbuild'
 import dtsPlugin from 'esbuild-plugin-d.ts'
 import glob from 'tiny-glob'
-//@ts-ignore
 import path from 'path'
-//@ts-ignore
 import fs from 'fs'
+import { exec } from 'child_process'
 
 const entryPoints = await glob('./src/**/*.tsx')
 const entryPointsTs = await glob('./src/**/*.ts')
@@ -16,31 +15,18 @@ function clearDist(dir) {
     console.log(`Cleared ${distPath}`)
   }
 }
-// for developer to use, we should ship 2 kinds of output
-// 1. ESM unbundled, used with compiling tools (this not treeshaking well for unused import)
-// 2. ESM bundled, used by <script> tag
 
-// to target platforms we provide:
-// 1. default. AVP impl
-// 2. web.
-
-// so we have 2*2 matrix as follow:
-// - ESM + default unbundled ❌
-// - ESM + web unbundled ❌(this not treeshaking well for unused import)
-// - ESM + default bundled ✅
-// - ESM + web bundled ✅
-
-// unbundled ESM cannot remove unused import
+// for dynamic choose version we should ship 2 kinds of cjs output and switch by env variable
 
 const targets = [
   {
-    name: 'ESM + default bundled',
+    name: 'CJS + default bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/default/index.js',
-    dir: 'dist/default',
+    outfile: 'dist/cjs/default/index.js',
+    dir: 'dist/cjs',
     define: { __WEB__: 'false' },
     tsconfig: 'tsconfig.default.json',
-    format: 'esm',
+    format: 'cjs',
     bundle: true,
     external: [
       'react',
@@ -52,13 +38,13 @@ const targets = [
     ],
   },
   {
-    name: 'ESM + web bundled',
+    name: 'CJS + web bundled',
     entryPoints: ['./src/index.ts'],
-    outfile: 'dist/web/index.js',
-    dir: 'dist/web',
+    outfile: 'dist/cjs/web/index.js',
+    dir: 'dist/cjs',
     define: { __WEB__: 'true' },
     tsconfig: 'tsconfig.web.json',
-    format: 'esm',
+    format: 'cjs',
     bundle: true,
     external: [
       'react',
@@ -116,6 +102,7 @@ async function run() {
       await ctx.rebuild()
     }
     console.log('All builds completed!')
+
     process.exit(0)
   }
 }

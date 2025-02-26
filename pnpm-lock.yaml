@@ -82,6 +82,9 @@ importers:
       '@types/lodash.isequal':
         specifier: ^4.5.8
         version: 4.5.8
+      '@types/node':
+        specifier: ^22.5.5
+        version: 22.9.1
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.12
@@ -97,6 +100,9 @@ importers:
       esbuild-plugin-d.ts:
         specifier: ^1.3.1
         version: 1.3.1(typescript@5.6.3)
+      esbuild-plugin-define:
+        specifier: ^0.5.0
+        version: 0.5.0(esbuild@0.23.1)
       tiny-glob:
         specifier: ^0.2.9
         version: 0.2.9
@@ -1544,6 +1550,12 @@ packages:
     engines: {node: '>=12.0.0'}
     peerDependencies:
       typescript: '*'
+
+  esbuild-plugin-define@0.5.0:
+    resolution: {integrity: sha512-GNchZYjo8nQHLYbvTIi9w6MXj1lzi1yPEnfsHpeTRbTx2g0+g79ngoU0N5hS5EQwfpzTUzZKETx16UO8W8dW0g==}
+    engines: {node: '>=18.14.0'}
+    peerDependencies:
+      esbuild: '>=0.15'
 
   esbuild-plugin-tailwindcss@1.2.1:
     resolution: {integrity: sha512-vPVSWBvUcxqBjObNTNA5vH0OhivbnQBeFfji4Q1QdyfaHUFd66R1ztskkTr8G1ipkGck/YsAZpgcQUdbGPofNQ==}
@@ -4468,6 +4480,10 @@ snapshots:
       lodash.merge: 4.6.2
       type-fest: 4.33.0
       typescript: 5.6.3
+
+  esbuild-plugin-define@0.5.0(esbuild@0.23.1):
+    dependencies:
+      esbuild: 0.23.1
 
   esbuild-plugin-tailwindcss@1.2.1:
     dependencies:
