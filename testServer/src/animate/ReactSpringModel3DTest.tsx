@@ -49,7 +49,7 @@ export function ReactSpringModel3DTest() {
         ref={ref}
         style={springProps}
         className="box"
-        modelUrl="/src/assets/FlightHelmet.usdz"
+        modelUrl="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
       />
 
       <button className="btn btn-primary" onClick={onChangeBack}>
