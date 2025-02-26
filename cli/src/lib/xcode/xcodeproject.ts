@@ -88,6 +88,8 @@ export default class XcodeProject {
     this.bindManifestInfo(project, option.manifestInfo.json)
     if (option['version']) {
       this.updateVersion(project, option['version'])
+    } else {
+      this.updateVersion(project, '1.0')
     }
     try {
       fs.writeFileSync(projectPath, project.writeSync())

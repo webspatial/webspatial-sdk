@@ -28,7 +28,7 @@ struct PWAManager: Codable {
         let urlType = start_url.split(separator: "://").first
         if !(urlType == "http" || urlType == "https") {
             start_url = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")!.absoluteString
-            scope = "file://" + Bundle.main.bundlePath + scope
+            scope = "file://" + Bundle.main.bundlePath + "/" + scope
         }
 
         if display_override.count > 0 {
