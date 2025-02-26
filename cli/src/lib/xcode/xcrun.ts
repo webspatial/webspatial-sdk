@@ -64,9 +64,7 @@ export default class Xcrun {
     // find visionOS simulator
     let cmd = new XcrunCMD().simctl()
     cmd.listDevices('Apple Vision Pro')
-    let res = execSync(cmd.line)
-    console.log('-------- show devices --------')
-    console.log(res.toString())
+    const res = execSync(cmd.line)
     const simList = this.parseListDevices(res.toString())
     if (simList.length === 0) {
       throw new Error('no visionOS simulator found')
@@ -78,20 +76,16 @@ export default class Xcrun {
         break
       }
     }
-    console.log(device)
     // boot visionOS simulator if not booted
     if (device.state === 'Shutdown') {
       cmd = new XcrunCMD().simctl()
       cmd.boot(device.deviceId)
-      res = execSync(cmd.line)
-
-      console.log(res.toString())
+      execSync(cmd.line)
     }
     // open simulator
-    res = execSync(
+    execSync(
       'open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app/',
     )
-    console.log(res.toString())
     // install app
     const appPath = join(PROJECT_EXPORT_DIRECTORY, 'Payload')
     const ipaFile = join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`)
@@ -108,19 +102,16 @@ export default class Xcrun {
       }
       // unzip and find app
       if (fs.existsSync(zipFile)) {
-        res = execSync(`unzip -o ${zipFile} -d ${PROJECT_EXPORT_DIRECTORY}`)
-        console.log(res.toString())
+        execSync(`unzip -o ${zipFile} -d ${PROJECT_EXPORT_DIRECTORY}`)
         // install app to simulator
         if (fs.existsSync(appPath) && fs.existsSync(appFile)) {
           cmd = new XcrunCMD().simctl()
           cmd.install(device.deviceId, appFile)
-          res = execSync(cmd.line)
-          console.log(res.toString())
+          execSync(cmd.line)
           // launch app
           cmd = new XcrunCMD().simctl()
           cmd.launch(device.deviceId, appInfo.id)
-          res = execSync(cmd.line)
-          console.log(res.toString())
+          execSync(cmd.line)
         }
       }
     } catch (e) {}
@@ -128,7 +119,6 @@ export default class Xcrun {
 
   private static parseListDevices(devices: string) {
     let res = devices.split('\n')
-    console.log(res)
     let list: any[] = []
     let findIndex = -1
     for (let i = 0; i < res.length; i++) {
@@ -139,15 +129,15 @@ export default class Xcrun {
           // end add visionOS simulator
           break
         }
-        console.log(res[i])
-        const info = res[i].split('(')
-        console.log(info)
-        const deviceInfo = {
-          name: info[0].trim(),
-          deviceId: info[1].split(')')[0].trim(),
-          state: info[2].split(')')[0].trim(),
+        if (res[i].length > 0) {
+          const info = res[i].split('(')
+          const deviceInfo = {
+            name: info[0].trim(),
+            deviceId: info[1].split(')')[0].trim(),
+            state: info[2].split(')')[0].trim(),
+          }
+          list.push(deviceInfo)
         }
-        list.push(deviceInfo)
       }
     }
     return list
