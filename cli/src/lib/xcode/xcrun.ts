@@ -1,8 +1,12 @@
 import { execFile, execSync } from 'child_process'
-import { PROJECT_EXPORT_DIRECTORY } from '../resource'
+import {
+  PROJECT_EXPORT_DIRECTORY,
+  PROJECT_BUILD_DIRECTORY,
+  PROJECT_DIRECTORY,
+} from '../resource'
 import { join } from 'path'
 import * as fs from 'fs'
-import { clearDir } from '../resource/file'
+import { XcodebuildCMD } from './xcodebuild'
 
 export default class Xcrun {
   public static async validate(
@@ -76,6 +80,21 @@ export default class Xcrun {
         break
       }
     }
+    console.log(`find simulator: ${device.deviceId}`)
+    const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
+    const testPath = PROJECT_BUILD_DIRECTORY + '/test'
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY, { recursive: true })
+    }
+    if (!fs.existsSync(testPath)) {
+      fs.mkdirSync(testPath, { recursive: true })
+    }
+    const buildCMD =
+      new XcodebuildCMD().project(projectFile).line +
+      ` build -scheme web-spatial -destination 'platform=visionOS Simulator,id=${device.deviceId}' -derivedDataPath ${testPath}`
+    console.log('start building')
+    execSync(buildCMD)
+    console.log('build success')
     // boot visionOS simulator if not booted
     if (device.state === 'Shutdown') {
       cmd = new XcrunCMD().simctl()
@@ -87,34 +106,20 @@ export default class Xcrun {
       'open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app/',
     )
     // install app
-    const appPath = join(PROJECT_EXPORT_DIRECTORY, 'Payload')
-    const ipaFile = join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`)
-    const zipFile = join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.zip`)
-    const appFile = join(appPath, `${appInfo.name}.app`)
-    try {
-      // clear dir
-      if (fs.existsSync(appPath)) {
-        clearDir(appPath)
-      }
-      // rename .ipa to .zip
-      if (fs.existsSync(ipaFile)) {
-        fs.renameSync(ipaFile, zipFile)
-      }
-      // unzip and find app
-      if (fs.existsSync(zipFile)) {
-        execSync(`unzip -o ${zipFile} -d ${PROJECT_EXPORT_DIRECTORY}`)
-        // install app to simulator
-        if (fs.existsSync(appPath) && fs.existsSync(appFile)) {
-          cmd = new XcrunCMD().simctl()
-          cmd.install(device.deviceId, appFile)
-          execSync(cmd.line)
-          // launch app
-          cmd = new XcrunCMD().simctl()
-          cmd.launch(device.deviceId, appInfo.id)
-          execSync(cmd.line)
-        }
-      }
-    } catch (e) {}
+    console.log('installing app')
+    const appFile = join(
+      testPath,
+      `Build/Products/Debug-xrsimulator/${appInfo.name}.app`,
+    )
+    cmd = new XcrunCMD().simctl()
+    cmd.install(device.deviceId, appFile)
+    execSync(cmd.line)
+    console.log('install success')
+    // launch app
+    console.log('launch app')
+    cmd = new XcrunCMD().simctl()
+    cmd.launch(device.deviceId, appInfo.id)
+    execSync(cmd.line)
   }
 
   private static parseListDevices(devices: string) {

@@ -87,7 +87,7 @@ export default class Xcodebuild {
   }
 }
 
-class XcodebuildCMD {
+export class XcodebuildCMD {
   public line = 'xcodebuild'
   public project(xcodeproj: string) {
     this.line += ` -project ${xcodeproj}`
