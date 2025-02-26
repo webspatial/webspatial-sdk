@@ -518,7 +518,9 @@ class CommandManager {
                 }
 
                 if info.windowContainerID != "notFound" {
-                    // Todo tie this container to the passed in window container ID
+                    if var parentContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+                        parentContainer.childContainers[uuid] = wg
+                    }
                 }
 
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + uuid + "'}")
