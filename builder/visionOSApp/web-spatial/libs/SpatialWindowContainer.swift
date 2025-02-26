@@ -12,6 +12,10 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowContainer: SpatialObject {
+    // Resources that will be destroyed when this window group is removed
+    private var childResources = [String: SpatialObject]()
+    public var childContainers = [String: SpatialWindowContainer]()
+
     var wgd: WindowContainerData
     static func getSpatialWindowContainer(_ name: String) -> SpatialWindowContainer? {
         return SpatialObject.get(name) as? SpatialWindowContainer
@@ -59,6 +63,22 @@ class SpatialWindowContainer: SpatialObject {
     override func onDestroy() {
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
+
+        // Destroy resources
+        let spatialObjects = childResources.map { $0.value }
+        for spatialObject in spatialObjects {
+            spatialObject.destroy()
+        }
+        childResources = [String: SpatialObject]()
+
+        // Destroy spatial containers
+        let spatialContainers = childContainers.map { $0.value }
+        for spatialObject in spatialContainers {
+            if spatialObject != self {
+                spatialObject.destroy()
+            }
+        }
+        childContainers = [String: SpatialWindowContainer]()
 
         // Close the window group when this object is destroyed
         SpatialWindowContainer.getSpatialWindowContainer(id)!.closeWindowData.send(wgd)
