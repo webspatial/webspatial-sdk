@@ -8,7 +8,7 @@ const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
 const classFlag = '__enableXr__'
 
-function replaceToSpatialPrimitiveType(
+export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
@@ -36,20 +36,16 @@ function replaceToSpatialPrimitiveType(
   return type
 }
 
-function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
+export function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props)
   return reactJSXRuntime.jsxs(type, props, key)
 }
 
-function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
+export function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props)
   return reactJSXRuntime.jsx(type, props, key)
 }
 
 spatialPolyfill()
 
-module.exports = {
-  jsxs: jsxs,
-  jsx: jsx,
-  Fragment: reactJSXRuntime.Fragment,
-}
+export { Fragment } from 'react/jsx-runtime'
