@@ -259,6 +259,10 @@ export default class XcodeProject {
     let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
+    manifestSwift = manifestSwift.replace(
+      '.minimal',
+      manifest.display == 'minimal-ui' ? '.minimal' : '.standalone',
+    )
     if (manifest.protocol_handlers) {
       let deeplinkString = ''
       for (let i = 0; i < manifest.protocol_handlers.length; i++) {
