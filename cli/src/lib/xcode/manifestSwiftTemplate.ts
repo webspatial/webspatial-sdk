@@ -6,11 +6,11 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var start_url: String = "START_URL"
     var scope: String = "SCOPE"
-    var id: String = ""
+    var id: String = "AppID"
 
     var name: String = "AppName"
     var short_name: String = "name"
-    var description: String = "description"
+    var description: String = "Description"
 
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
