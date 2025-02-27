@@ -10,7 +10,7 @@ import Foundation
 import RealityKit
 import RealityKitContent
 import SwiftUI
-import WebKit
+@preconcurrency import WebKit
 
 class WebViewHolder {
     var needsUpdate = false
