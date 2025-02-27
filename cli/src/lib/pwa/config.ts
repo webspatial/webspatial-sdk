@@ -70,6 +70,33 @@ export function configDisplay(manifestJson: Record<string, any>) {
   }
 }
 
+export function configMainScene(manifestJson: Record<string, any>) {
+  const resizabilities = ['automatic', 'contentMinSize', 'contentSize']
+  let mainScene = {
+    defaultSize: {
+      width: 1280,
+      height: 1280,
+    },
+    resizability: 'automatic',
+  }
+  if (manifestJson.mainScene) {
+    mainScene.defaultSize.width =
+      Number(manifestJson.mainScene.defaultSize?.width) > 0
+        ? manifestJson.mainScene.defaultSize.width
+        : 1280
+    mainScene.defaultSize.height =
+      Number(manifestJson.mainScene.defaultSize?.height) > 0
+        ? manifestJson.mainScene.defaultSize.height
+        : 1280
+    mainScene.resizability = resizabilities.includes(
+      manifestJson.mainScene.resizability,
+    )
+      ? manifestJson.mainScene.resizability
+      : 'automatic'
+  }
+  manifestJson.mainScene = mainScene
+}
+
 export function configDeeplink(manifestJson: Record<string, any>) {
   if (
     manifestJson.protocol_handlers &&

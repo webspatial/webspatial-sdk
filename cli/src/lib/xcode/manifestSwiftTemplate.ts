@@ -17,10 +17,10 @@ struct PWAManager: Codable {
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "", url: "")]
     var mainScene: WindowContainerOptions = .init(
         defaultSize: .init(
-            width: 1280,
-            height: 1280
+            width: SceneWidth,
+            height: SceneHeight
         ),
-        resizability: "automatic"
+        resizability: SceneResizability
     )
     var useMainScene: Bool = true
 
