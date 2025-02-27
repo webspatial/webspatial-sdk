@@ -65,6 +65,8 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 `
 let useExportOptionsXML = ''
 
+let useExportOptionsXML = ''
+
 export default class XcodeProject {
   public static async modify(projectPath: string, option: any) {
     let project = xcode.project(projectPath)
@@ -75,7 +77,7 @@ export default class XcodeProject {
     if (option['buildType']) {
       useExportOptionsXML = exportOptionsXML.replace(
         'BUILDTYPE',
-        option['type'],
+        option['buildType'],
       )
     } else {
       useExportOptionsXML = exportOptionsXML.replace('BUILDTYPE', buildType)
