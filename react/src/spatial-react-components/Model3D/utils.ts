@@ -20,6 +20,9 @@ export function PopulatePartialSpatialTransformType(
 }
 
 export function getAbsoluteURL(url: string) {
+  if (!url) {
+    return ''
+  }
   if (url.startsWith('http')) {
     return url
   }

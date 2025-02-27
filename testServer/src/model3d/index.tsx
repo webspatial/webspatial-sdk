@@ -1,16 +1,22 @@
+// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
-import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
+import {
+  enableDebugTool,
+  ModelNew,
+  ModelElement,
+  ModelEvent,
+  ModelDragEvent,
+} from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
 import { useRef, useState } from 'react'
-import { ModelDragEvent } from '@xrsdk/runtime'
 
 enableDebugTool()
 
 function App() {
   const [tapFlag, setTapFlag] = useState(true)
 
-  const ref = useRef<HTMLDivElement | null>(null)
+  const ref = useRef<ModelElement | null>(null)
 
   ;(window as any).ref = ref
 
@@ -89,18 +95,15 @@ function App() {
         </a>
       </div>
 
-      <CSSModel3D
+      <ModelNew
         ref={ref}
         style={styleOuter}
-        modelUrl={modelUrl}
+        // modelUrl={modelUrl}
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-        onSuccess={() => {
-          console.log('onLoadSuccess')
-        }}
-        onFailure={(errorReason: string) => {
-          console.log('onLoadError', errorReason)
+        onLoad={(event: ModelEvent) => {
+          console.log('onLoad', event.target.ready, event.target.currentSrc)
         }}
         onDragStart={(dragEvent: ModelDragEvent) => {
           console.log('onDragStart', dragEvent)
@@ -109,21 +112,29 @@ function App() {
           ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
         }}
         onDragEnd={(dragEvent: ModelDragEvent) => {
-          console.log('onDragEnd', dragEvent)
+          console.log(
+            'onDragEnd',
+            dragEvent,
+            dragEvent.target.ready,
+            dragEvent.target.currentSrc,
+          )
           ref.current!.style.transform = 'none'
         }}
-        onTap={() => {
+        onTap={(event: ModelEvent) => {
           setTapFlag(v => !v)
+          console.log('onTap', event)
         }}
-        onDoubleTap={() => {
-          console.log('onDoubleTap')
+        onDoubleTap={(event: ModelEvent) => {
+          console.log('onDoubleTap', event)
         }}
-        onLongPress={() => {
-          console.log('onLongPress')
+        onLongPress={(event: ModelEvent) => {
+          console.log('onLongPress', event)
         }}
       >
+        <source src={modelUrl} type="model/vnd.usdz+zip" />
+
         <div> this is place holder when failure </div>
-      </CSSModel3D>
+      </ModelNew>
 
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>

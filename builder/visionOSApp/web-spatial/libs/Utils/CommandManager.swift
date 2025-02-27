@@ -44,7 +44,7 @@ class CommandManager {
         var ret = CommandInfo(cmd: JSBCommand(command: jsb.command, data: jsb.data, requestID: jsb.requestID))
         ret.requestID = jsb.requestID
         if let windowContainerID = jsb.data?.windowContainerID {
-            ret.windowContainerID = target.readWinodwGroupID(id: windowContainerID)
+            ret.windowContainerID = target.readWindowContainerID(id: windowContainerID)
         }
         if let entityID = jsb.data?.entityID {
             ret.entityID = entityID
@@ -171,7 +171,7 @@ class CommandManager {
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowContainerID: target.readWinodwGroupID(id: info.windowContainerID))
+                sr = SpatialWindowComponent(parentWindowContainerID: target.readWindowContainerID(id: info.windowContainerID))
                 let spatialWindowComponent = sr as! SpatialWindowComponent
                 spatialWindowComponent.parentWebviewID = target.id
             case "SpatialView":
@@ -293,7 +293,7 @@ class CommandManager {
             }
 
             if var newParentID: String = data.update?.setParentWindowContainerID {
-                newParentID = target.readWinodwGroupID(id: newParentID)
+                newParentID = target.readWindowContainerID(id: newParentID)
                 let wg = SpatialWindowContainer.getSpatialWindowContainer(newParentID)
                 entity.setParentWindowContainer(wg: wg)
             }
@@ -562,7 +562,7 @@ class CommandManager {
     private func updateWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
         if let getRootEntityID = data.update?.getRootEntityID,
-           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWinodwGroupID(id: info.windowContainerID))
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWindowContainerID(id: info.windowContainerID))
         {
             let rootEntity = wg.getEntities().filter {
                 $0.value.coordinateSpace == .ROOT
@@ -576,7 +576,7 @@ class CommandManager {
             return
         }
 
-        if let dimensions = data.update?.nextOpenSettings?.dimensions {
+        if let resolution = data.update?.nextOpenSettings?.resolution {
             sceneStateChangedCB = { _ in
                 // Complete event after scene state change is completed
                 target.completeEvent(requestID: info.requestID)
@@ -585,7 +585,7 @@ class CommandManager {
 
             // Update scene state
             var cfg = WindowContainerPlainDefaultValues()
-            cfg.defaultSize = CGSize(width: dimensions.x, height: dimensions.y)
+            cfg.defaultSize = CGSize(width: resolution.width, height: resolution.height)
             WindowContainerMgr.Instance.updateWindowContainerPlainDefaultValues(cfg)
             return
         }
@@ -721,6 +721,11 @@ struct JSVector2: Codable {
     var y: Double
 }
 
+struct JSResolution: Codable {
+    var width: Double
+    var height: Double
+}
+
 struct JSVector3: Codable {
     var x: Double
     var y: Double
@@ -758,7 +763,7 @@ struct JSEntityStyle: Codable {
 }
 
 struct JSNextOpen: Codable {
-    var dimensions: JSVector2?
+    var resolution: JSResolution?
 }
 
 struct SceneJSBData: Codable {

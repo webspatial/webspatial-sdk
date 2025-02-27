@@ -19,7 +19,7 @@ export class SpatialWindowContainer {
    * Sets sets the open configuration for opening new window containers
    * @param options style options
    */
-  async _setOpenSettings(options: { dimensions: { x: number; y: number } }) {
+  async _setOpenSettings(options: { resolution: { width: number; height: number } }) {
     await WebSpatial.updateWindowContainer(this._wg, {
       nextOpenSettings: options,
     })

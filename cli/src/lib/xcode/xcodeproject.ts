@@ -8,6 +8,7 @@ import {
 import { join } from 'path'
 import { loadJsonFromDisk } from '../resource/load'
 import { ImageHelper } from '../resource/imageHelper'
+import { manifestSwiftTemplate } from './manifestSwiftTemplate'
 const xcode = require('xcode')
 const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -62,6 +63,7 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>
 `
+let useExportOptionsXML = ''
 
 let useExportOptionsXML = ''
 
@@ -254,16 +256,16 @@ export default class XcodeProject {
       PROJECT_DIRECTORY,
       './web-spatial/libs/webView/manifest.swift',
     )
-    let manifestSwift = fs.readFileSync(manifestSwiftPath, 'utf-8')
+    let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     if (manifest.protocol_handlers) {
       let deeplinkString = ''
       for (let i = 0; i < manifest.protocol_handlers.length; i++) {
-        deeplinkString += `PWADeeplinkFormat(protocolValue: "${manifest.protocol_handlers[i].protocol}", urlValue: "${manifest.protocol_handlers[i].url}"),`
+        deeplinkString += `PWAProtocol(protocolValue: "${manifest.protocol_handlers[i].protocol}", url: "${manifest.protocol_handlers[i].url}"),`
       }
       manifestSwift = manifestSwift.replace(
-        'PWADeeplinkFormat(protocolValue: "", urlValue: "")',
+        'PWAProtocol(protocolValue: "", url: "")',
         deeplinkString,
       )
     }
