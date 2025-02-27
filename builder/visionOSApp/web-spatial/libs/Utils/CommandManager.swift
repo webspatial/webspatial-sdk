@@ -507,7 +507,22 @@ class CommandManager {
 
             if let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID, wgd) {
                 wg.openWindowData.send(wgd)
-                target.setWindowContainer(uuid: uuid, wgd: wgd)
+
+                // If the parent window component  isn't set, the new container can continue to exist even after other window is closed
+                if info.resourceID != "notFound" {
+                    var rid = info.resourceID
+                    let so = SpatialObject.get(rid)
+                    if let parentWindowComponent = so as? SpatialWindowComponent {
+                        parentWindowComponent.setWindowContainer(uuid: uuid, wgd: wgd)
+                    }
+                }
+
+                if info.windowContainerID != "notFound" {
+                    if var parentContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+                        parentContainer.childContainers[uuid] = wg
+                    }
+                }
+
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + uuid + "'}")
             }
         }
