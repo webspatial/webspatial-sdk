@@ -2,8 +2,10 @@ import { ParsedArgs } from 'minimist'
 import { InitArgs, PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
+import { checkBuildParams, checkStoreParams } from './check'
 
 export async function start(args: ParsedArgs): Promise<any> {
+  checkBuildParams(args)
   /**
    * PWA steps
    * 1.  Load manifestion.json
@@ -48,6 +50,7 @@ export async function start(args: ParsedArgs): Promise<any> {
 }
 
 export async function store(args: ParsedArgs): Promise<boolean> {
+  checkStoreParams(args)
   /*
     There are two ways to upload ipa to App Store Connect:
     1. Using parameters from the build command, then this command will first archive and export before uploading

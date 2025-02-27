@@ -1,6 +1,7 @@
+// @ts-nocheck
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool, SpatialDiv } from '@xrsdk/react/dist'
+import { enableDebugTool, SpatialDiv } from '@xrsdk/react'
 
 enableDebugTool()
 
@@ -21,6 +22,7 @@ function App() {
   const [selectedInlineMaterial, setSelectedInlineMaterial] = useState('none')
   const [style, setStyle] = useState<CSSProperties>({
     '--xr-back': '100',
+    position: 'absolute',
   } as CSSProperties)
 
   // html style
@@ -45,6 +47,7 @@ function App() {
     useState('none')
   const [styleParent, setStyleParent] = useState<CSSProperties>({
     '--xr-back': '50',
+    position: 'relative',
   } as CSSProperties)
 
   const removeStyleAttribute = () => {
@@ -163,6 +166,8 @@ function App() {
         newClassNames = 'regularMat ' + newClassNames
       } else if (selectedClassNameMaterial === 'thin') {
         newClassNames = 'thinMat ' + newClassNames
+      } else if (selectedClassNameMaterial == 'transparent') {
+        newClassNames = 'transparentMat' + newClassNames
       }
       setClassNames(newClassNames)
       console.log(`${selectedClassNameMaterial} Mat classNames: ` + classNames)
@@ -186,6 +191,8 @@ function App() {
         newClassNames = 'regularMat ' + newClassNames
       } else if (selectedClassNameMaterialParent === 'thin') {
         newClassNames = 'thinMat ' + newClassNames
+      } else if (selectedClassNameMaterialParent == 'transparent') {
+        newClassNames = 'transparentMat' + newClassNames
       }
       setClassNamesParent(newClassNames)
       console.log(
@@ -200,6 +207,7 @@ function App() {
     const material = selectedInlineMaterial
     const newStyle: CSSProperties = {
       '--xr-back': '100',
+      // position: 'absolute',
       ...(material !== 'none' && { '--xr-background-material': material }),
     }
     setStyle(newStyle)
@@ -210,6 +218,7 @@ function App() {
     const material = selectedInlineMaterialParent
     const newStyleParent: CSSProperties = {
       '--xr-back': '50',
+      position: 'relative',
       ...(material !== 'none' && { '--xr-background-material': material }),
     }
     setStyleParent(newStyleParent)
@@ -343,10 +352,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">none Material</option>
-                <option value="default">Glass Material</option>
+                <option value="translucent">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyRefMaterial}
@@ -375,10 +385,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">none Material</option>
-                <option value="default">Glass Material</option>
+                <option value="default">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyClassNameMaterial}
@@ -406,10 +417,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">none Material</option>
-                <option value="default">Glass Material</option>
+                <option value="translucent">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyInlineStyleMaterial}
@@ -436,10 +448,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">None Material</option>
-                <option value="default">Glass Material</option>
+                <option value="translucent">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyHtmlInlineStyleMaterial}
@@ -489,10 +502,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">none Material</option>
-                <option value="default">Glass Material</option>
+                <option value="translucent">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyRefMaterialParent}
@@ -527,6 +541,7 @@ function App() {
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyClassNameMaterialParent}
@@ -554,10 +569,11 @@ function App() {
                 className="w-full p-2 rounded-md"
               >
                 <option value="none">none Material</option>
-                <option value="default">Glass Material</option>
+                <option value="translucent">translucent Material</option>
                 <option value="thick">Thick Material</option>
                 <option value="regular">Regular Material</option>
                 <option value="thin">Thin Material</option>
+                <option value="transparent">transparent Material</option>
               </select>
               <button
                 onClick={applyInlineStyleMaterialParent}

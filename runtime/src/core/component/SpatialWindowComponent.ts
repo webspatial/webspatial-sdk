@@ -66,12 +66,12 @@ export class SpatialWindowComponent extends SpatialComponent {
    * Sets the resolution of the window, the resulting dimensions when rendered will be equal to 1/1360 units
    * eg. if the resolution is set to 1360x1360 it will be a 1x1 plane
    * See 1360 in spatialViewUI.swift for how this ratio works
-   * @param x width in pixels
-   * @param y height in pixels
+   * @param width width in pixels
+   * @param height height in pixels
    */
-  async setResolution(x: number, y: number) {
+  async setResolution(width: number, height: number) {
     await WebSpatial.updateResource(this._resource, {
-      resolution: { x: x, y: y },
+      resolution: { x: width, y: height },
     })
   }
 

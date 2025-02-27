@@ -22,6 +22,6 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/index.ts"],
+  "include": ["src/index.ts", "esbuild.mjs"],
   "references": []
 }
