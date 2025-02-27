@@ -66,7 +66,7 @@ function App() {
                     await ent.updateTransform()
                     await immersiveWG.setRootEntity(ent)
                     var helmetModel = await session!.createModelComponent({
-                      url: '/src/assets/FlightHelmet.usdz',
+                      url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
                     })
                     await ent.setComponent(helmetModel)
                   }
@@ -115,7 +115,7 @@ function App() {
               await ent.updateTransform()
               await ent.setParent(spatialViewEnt)
               var helmetModel = await session!.createModelComponent({
-                url: '/src/assets/FlightHelmet.usdz',
+                url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
               })
               await ent.setComponent(helmetModel)
 
@@ -192,7 +192,7 @@ function App() {
 
           <Model className="w-full h-full bg-purple-500 bg-opacity-50 rounded-xl text-center">
             <source
-              src="/src/assets/FlightHelmet.usdz"
+              src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
               type="model/vnd.usdz+zip"
             ></source>
           </Model>

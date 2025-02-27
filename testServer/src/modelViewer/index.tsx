@@ -27,7 +27,7 @@ function App() {
 
       // Create model
       var box = await SpatialHelper.instance?.shape.createModelEntity(
-        '/src/assets/FlightHelmet.usdz',
+        'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
       )!
       var meshBox =
         await SpatialHelper.instance!.shape.wrapInBoundingBoxEntity(box)
