@@ -68,12 +68,27 @@ function App() {
           <h2 className="text-xl font-bold mb-2">CSS API Test</h2>
           <p className="text-sm opacity-80">测试CSS API</p>
         </a>
+
+        <a
+          href="/src/qaTestApp/SceneTest/index.html"
+          className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
+        >
+          <h2 className="text-xl font-bold mb-2">Scene Test</h2>
+          <p className="text-sm opacity-80">测试spatial layout JS API</p>
+        </a>
         <a
           href="/src/qaTestApp/transformTest/transformTest.html"
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
           <h2 className="text-xl font-bold mb-2">Transform Test</h2>
           <p className="text-sm opacity-80">Transform API Tests</p>
+        </a>
+        <a
+          href="/src/qaTestApp/jsAnimationTest/jsAnimationTest.html"
+          className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
+        >
+          <h2 className="text-xl font-bold mb-2">Animation Test</h2>
+          <p className="text-sm opacity-80">3rd party JS Animation Tests</p>
         </a>
       </div>
     </div>

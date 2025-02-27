@@ -61,7 +61,7 @@ export const Model = forwardRef((props: ModelProps, ref: ModelRef) => {
   const opacity = props.opacity ?? 1
 
   let session = getSession()
-  if (!session) {
+  if (__WEB__ || !session) {
     const myModelViewer = useRef<ModelViewerElement>(null)
     useEffect(() => {
       React.Children.toArray(props.children).some((element: any) => {

@@ -43,7 +43,7 @@ export default class Xcodebuild {
     try {
       console.log('start archive')
       if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
-        fs.promises.mkdir(PROJECT_EXPORT_DIRECTORY, { recursive: true })
+        fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
       }
       return await new Promise((resolve, reject) => {
         const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'

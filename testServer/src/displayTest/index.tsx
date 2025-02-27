@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { enableDebugTool } from '@xrsdk/react'
