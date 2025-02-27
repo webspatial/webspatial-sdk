@@ -254,7 +254,7 @@ var main = async () => {
     b.onclick = async () => {
       glassState = !glassState
       await wc.setStyle({
-        material: { type: !glassState ? 'none' : 'default' },
+        material: { type: !glassState ? 'none' : 'translucent' },
         cornerRadius: 50,
       })
     }

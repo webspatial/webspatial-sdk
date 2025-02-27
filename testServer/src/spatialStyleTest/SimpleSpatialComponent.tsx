@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react'
 export const SimpleSpatialComponent = () => {
   const [isPrimary, setIsPrimary] = useState(true)

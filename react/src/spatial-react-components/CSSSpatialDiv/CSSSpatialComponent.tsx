@@ -192,7 +192,7 @@ function CSSSpatialComponentBase(
   ref: SpatialReactComponentRef,
 ) {
   const { [CSSSpatialID]: cssSpatialID, ...props } = inProps
-  const isWebEnv = !getSession()
+  const isWebEnv = __WEB__ || !getSession()
   if (isWebEnv) {
     return renderInWebEnv(props, ref)
   } else {
