@@ -34,7 +34,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Add model to entity
         var model = await session.createModelComponent({
-          url: '/src/assets/FlightHelmet.usdz',
+          url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
         })
         await modelEntity.setComponent(model)
 
