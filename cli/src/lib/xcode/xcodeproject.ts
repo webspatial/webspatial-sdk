@@ -259,6 +259,9 @@ export default class XcodeProject {
     let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
+    manifestSwift = manifestSwift.replace('AppName', manifest.name)
+    manifestSwift = manifestSwift.replace('Description', manifest.description)
+    manifestSwift = manifestSwift.replace('AppID', manifest.id)
     manifestSwift = manifestSwift.replace(
       '.minimal',
       manifest.display == 'minimal-ui' ? '.minimal' : '.standalone',
