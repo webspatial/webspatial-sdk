@@ -23,7 +23,7 @@ export class ResourceManager {
     const targetDirctory = join(PROJECT_DIRECTORY, WEB_PROJECT_DIRECTORY)
     // Ensure `targetDirectory` exists.
     if (!fs.existsSync(targetDirctory)) {
-      fs.promises.mkdir(targetDirctory, { recursive: true })
+      fs.mkdirSync(targetDirctory, { recursive: true })
     } else {
       // If a directory already exists, clear it first
       clearDir(targetDirctory)

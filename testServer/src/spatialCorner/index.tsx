@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { type BackgroundMaterialType } from '@xrsdk/runtime'
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'

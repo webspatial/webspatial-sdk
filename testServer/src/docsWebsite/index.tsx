@@ -36,7 +36,7 @@ function MySample() {
     if (session) {
       session
         .getCurrentWindowComponent()
-        .setStyle({ material: { type: toggle ? 'default' : 'none' } })
+        .setStyle({ material: { type: toggle ? 'translucent' : 'none' } })
     }
   }, [toggle])
   return (
