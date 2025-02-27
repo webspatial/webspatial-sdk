@@ -108,14 +108,14 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     private func onWindowContainerDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialWindowContainer
-
-        spatialObject
-            .off(
-                event: SpatialObject.Events.BeforeDestroyed.rawValue,
-                listener: onWindowContainerDestroyed
-            )
-        childWindowContainers.removeValue(forKey: spatialObject.id)
+        if let spatialObject = object as? SpatialWindowContainer {
+            spatialObject
+                .off(
+                    event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                    listener: onWindowContainerDestroyed
+                )
+            childWindowContainers.removeValue(forKey: spatialObject.id)
+        }
     }
 
     /// Determines whether the current webview is a root webview.
