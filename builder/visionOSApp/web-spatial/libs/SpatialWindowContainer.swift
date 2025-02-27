@@ -89,7 +89,7 @@ extension SpatialWindowContainer {
             logger.warning("Root already created! ")
             return rootWindowContainer
         }
-        var wgd = WindowContainerData(windowStyle: "Plain", windowContainerID: "root")
+        let wgd = WindowContainerData(windowStyle: "Plain", windowContainerID: "root")
         return SpatialWindowContainer(RootID, wgd)
     }
 }
@@ -106,7 +106,7 @@ extension SpatialWindowContainer {
             logger.warning("Immersive already created! ")
             return windowContainer
         }
-        var wgd = WindowContainerData(windowStyle: "ImmersiveSpace", windowContainerID: "ImmersiveSpace")
+        let wgd = WindowContainerData(windowStyle: "ImmersiveSpace", windowContainerID: "ImmersiveSpace")
         return SpatialWindowContainer(ImmersiveID, wgd)
     }
 }
