@@ -4,7 +4,10 @@ import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
 
-export async function start(args: ParsedArgs): Promise<any> {
+export async function start(
+  args: ParsedArgs,
+  isDev: boolean = false,
+): Promise<any> {
   checkBuildParams(args)
   /**
    * PWA steps
@@ -38,13 +41,16 @@ export async function start(args: ParsedArgs): Promise<any> {
    * 5.  Configure manifest
    * 6.  Write project
    **/
-  await XcodeManager.parseProject({
-    icon,
-    manifestInfo,
-    teamId: args['teamId'],
-    version: args['version'],
-    buildType: args['buildType'],
-  })
+  await XcodeManager.parseProject(
+    {
+      icon,
+      manifestInfo,
+      teamId: args['teamId'],
+      version: args['version'],
+      buildType: args['buildType'],
+    },
+    isDev,
+  )
   console.log('------------------- build end -------------------')
   return manifestInfo
 }
@@ -75,7 +81,7 @@ export async function store(args: ParsedArgs): Promise<boolean> {
 // build and run on simulator
 export async function dev(args: ParsedArgs): Promise<boolean> {
   let appInfo = { name: 'SpatialWebTest', id: 'com.SpatialWeb.test' }
-  const buildRes = await start(args)
+  const buildRes = await start(args, true)
   if (!buildRes) {
     return false
   }
