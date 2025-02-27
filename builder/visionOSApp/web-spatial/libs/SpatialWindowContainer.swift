@@ -86,7 +86,7 @@ extension SpatialWindowContainer {
 
     static func createRootWindowContainer() -> SpatialWindowContainer {
         if let rootWindowContainer = getSpatialWindowContainer(RootID) {
-            print("Root already created! ")
+            logger.warning("Root already created! ")
             return rootWindowContainer
         }
         var wgd = WindowContainerData(windowStyle: "Plain", windowContainerID: "root")
@@ -103,7 +103,7 @@ extension SpatialWindowContainer {
 
     static func createImmersiveWindowContainer() -> SpatialWindowContainer {
         if let windowContainer = getSpatialWindowContainer(ImmersiveID) {
-            print("Immersive already created! ")
+            logger.warning("Immersive already created! ")
             return windowContainer
         }
         var wgd = WindowContainerData(windowStyle: "ImmersiveSpace", windowContainerID: "ImmersiveSpace")

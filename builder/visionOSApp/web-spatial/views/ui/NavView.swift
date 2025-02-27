@@ -22,19 +22,19 @@ struct NavView: View {
                         Button(action: {
                             swc?.goBack()
                         }, label: {
-                            Text("←")
+                            Image(systemName: "arrow.left")
                         })
                         .disabled(!swc!.canGoBack)
                         Button(action: {
                             swc?.goForward()
                         }, label: {
-                            Text("→")
+                            Image(systemName: "arrow.right")
                         })
                         .disabled(!swc!.canGoForward)
                         Button(action: {
                             swc?.reload()
                         }, label: {
-                            Text("○")
+                            Image(systemName: "arrow.clockwise")
                         })
                         Button(
                             action: {
@@ -44,14 +44,14 @@ struct NavView: View {
                                     )
                             },
                             label: {
-                                Text("H")
+                                Image(systemName: "house.fill")
                             }
                         )
                     }
                     Button(action: {
                         showUrl.toggle()
                     }, label: {
-                        Text("!")
+                        Image(systemName: "info.circle")
                     })
                 }
             }.padding().glassBackgroundEffect(in: .rect).cornerRadius(15)
@@ -59,7 +59,7 @@ struct NavView: View {
                 Text(
                     swc?.getURL()?.absoluteString ?? ""
                 )
-                .padding() // (wv?.url?.absoluteString)
+                .padding()
                 Button(action: {
                     UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
                     showCopyTip = true

@@ -170,7 +170,6 @@ class SpatialWindowComponent: SpatialComponent {
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     init(parentWindowContainerID: String) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
         webViewNative = WebViewNative()
@@ -180,7 +179,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     init(parentWindowContainerID: String, url: URL) {
-//        wgManager.wvActiveInstances += 1
         self.parentWindowContainerID = parentWindowContainerID
         super.init()
 
@@ -211,17 +209,14 @@ class SpatialWindowComponent: SpatialComponent {
 
     func goBack() {
         webViewNative?.webViewHolder.appleWebView?.goBack()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func goForward() {
         webViewNative?.webViewHolder.appleWebView?.goForward()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func reload() {
         webViewNative?.webViewHolder.appleWebView?.reload()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     var canGoBack: Bool = false
@@ -293,7 +288,7 @@ class SpatialWindowComponent: SpatialComponent {
         return targetUrl
     }
 
-    func readWinodwGroupID(id: String) -> String {
+    func readWindowContainerID(id: String) -> String {
         if id == "current" {
             return parentWindowContainerID
         } else {
@@ -302,7 +297,6 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     deinit {
-//        wgManager.wvActiveInstances -= 1
         webViewNative!.destroy()
         cancellables.removeAll()
     }
@@ -311,8 +305,8 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: true, requestID:" + String(requestID) + ", data: " + data + "})")
     }
 
-    func fireGestureEvent(inputComponentID: String, data: String = "{}") {
-        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({inputComponentID:'" + inputComponentID + "', data: " + data + "})")
+    func fireComponentEvent(componentId: String, data: String = "{}") {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({resourceId:'" + componentId + "', data: " + data + "})")
     }
 
     func failEvent(requestID: Int, data: String = "{}") {
@@ -322,7 +316,7 @@ class SpatialWindowComponent: SpatialComponent {
     // Request information of webview that request this webview to load
     weak var loadRequestWV: SpatialWindowComponent?
     var loadRequestID = -1
-//    var resourceID = ""
+
     // A load request of a child webview was loaded
     func didLoadChild(loadRequestID: Int, resourceID: String) {
         completeEvent(requestID: loadRequestID, data: "{createdID: '" + id + "'}")
@@ -360,6 +354,12 @@ class SpatialWindowComponent: SpatialComponent {
         gotStyle = false
         isLoading = true
         loadingStyles = LoadingStyles()
+
+        // FIXME:
+        // This is a workaround to force run UIViewRepresentable.update()
+        // SwiftUI not trigger it when go back from example page.
+        // Warning of `AttributeGraph: cycle detected through attribute` fired when goes to example page
+        webViewNative?.initialLoad()
     }
 
     func didSpawnWebView(wv: WebViewNative) {
@@ -393,15 +393,6 @@ class SpatialWindowComponent: SpatialComponent {
         cornerRadius = loadingStyles.cornerRadius
         backgroundMaterial = loadingStyles.backgroundMaterial
 
-//        if root {
-//            let wg = wgManager.getWindowContainer(windowContainer: parentWindowContainerID)
-//            wg.setSize.send(loadingStyles.windowContainerSize)
-//        }
-        if !gotStyle {
-            // We didn't get a style update in time (might result in FOUC)
-            // Set default style
-            //   print("Didn't get SwiftUI styles prior to page finish load")
-        }
         isLoading = false
 
         // update navinfo
@@ -414,5 +405,10 @@ class SpatialWindowComponent: SpatialComponent {
     override func onDestroy() {
         releaseChildResources()
         didCloseWebView()
+    }
+
+    func didNavBackForward() {
+        // in JS calling history.go(-1) we should set needUpdate=true
+        webViewNative?.webViewHolder.needsUpdate = true
     }
 }

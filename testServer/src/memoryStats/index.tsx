@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { getSession } from '@xrsdk/react'
-import { SpatialHelper } from '@xrsdk/runtime'
 import ReactDOM from 'react-dom/client'
 
 interface MemoryStats {

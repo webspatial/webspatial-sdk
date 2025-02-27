@@ -15,9 +15,7 @@ export default class Xcrun {
       cmd.authApi(key1, key2)
     }
     cmd.platform('visionos')
-    console.log(cmd.line)
     const res = execSync(cmd.line)
-    console.log(res.toString())
     return res.toString()
   }
   public static async uploadPackage(
@@ -36,9 +34,7 @@ export default class Xcrun {
     }
     cmd.platform('visionos')
     cmd.appleId(appleId)
-    console.log(cmd.line)
     const res = execSync(cmd.line)
-    console.log(res.toString())
     return res.toString()
   }
 
@@ -46,7 +42,6 @@ export default class Xcrun {
     path: string,
     key1: string,
     key2: string,
-    appleId: string,
     useAccount: boolean,
   ) {
     const cmd = new XcrunCMD()
@@ -57,10 +52,7 @@ export default class Xcrun {
       cmd.authApi(key1, key2)
     }
     cmd.platform('visionos')
-    cmd.appleId(appleId)
-    console.log(cmd.line)
     const res = execSync(cmd.line)
-    console.log(res.toString())
     return res.toString()
   }
 }

@@ -1,7 +1,8 @@
+// @ts-nocheck
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@xrsdk/react'
-import { SpatialDiv } from '@xrsdk/react/dist'
+import { SpatialDiv } from '@xrsdk/react'
 import styled from 'styled-components'
 
 enableDebugTool()

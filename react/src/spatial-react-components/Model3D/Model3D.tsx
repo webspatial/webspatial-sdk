@@ -4,11 +4,23 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
 } from 'react'
 import { useDetectLayoutDomUpdated } from './useDetectLayoutDomUpdated'
 import { useModel3DNative } from './useModel3DNative'
 import { PartialSpatialTransformType } from './types'
 import { PopulatePartialSpatialTransformType } from './utils'
+import { ModelDragEvent as XRSDKModelDragEvent, Vec3 } from '@xrsdk/runtime'
+
+export interface ModelEvent {
+  target: ModelElement
+}
+
+export interface ModelDragEvent extends ModelEvent {
+  eventType: 'dragstart' | 'dragend' | 'drag'
+  translation3D: Vec3
+  startLocation3D: Vec3
+}
 
 export interface Model3DProps {
   spatialTransform?: PartialSpatialTransformType
@@ -19,14 +31,29 @@ export interface Model3DProps {
   aspectRatio?: number
   className?: string
   style?: CSSProperties | undefined
+
+  // children will be rendered when failure
+  children?: React.ReactNode
+
+  onLoad?: (event: ModelEvent) => void
+
+  onDragStart?: (dragEvent: ModelDragEvent) => void
+  onDrag?: (dragEvent: ModelDragEvent) => void
+  onDragEnd?: (dragEvent: ModelDragEvent) => void
+
+  onTap?: (event: ModelEvent) => void
+  onDoubleTap?: (event: ModelEvent) => void
+  onLongPress?: (event: ModelEvent) => void
 }
 
-export type Model3DComponentRef = ForwardedRef<HTMLDivElement>
+export interface ModelElement extends HTMLDivElement {
+  ready: boolean
+  currentSrc: string
+}
 
-export function Model3DComponent(
-  props: Model3DProps,
-  refIn: Model3DComponentRef,
-) {
+export type ModelElementRef = ForwardedRef<ModelElement>
+
+export function Model3DBase(props: Model3DProps, refIn: ModelElementRef) {
   const {
     className,
     style = {},
@@ -36,6 +63,17 @@ export function Model3DComponent(
     contentMode = 'fit',
     resizable = true,
     aspectRatio = 0,
+    onLoad,
+
+    children,
+
+    onDragStart,
+    onDrag,
+    onDragEnd,
+
+    onTap,
+    onDoubleTap,
+    onLongPress,
   } = props
 
   const theSpatialTransform =
@@ -80,8 +118,116 @@ export function Model3DComponent(
     theSpatialTransform.scale.z,
   ])
 
+  const onDragStartCb = useCallback(
+    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+      if (onDragStart) {
+        const dragEvent: ModelDragEvent = {
+          ...xrSDKDragEvent,
+          target: layoutInstanceRef.current! as ModelElement,
+        }
+        onDragStart(dragEvent)
+      }
+    },
+    [onDragStart],
+  )
+
+  const onDragCb = useCallback(
+    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+      if (onDrag) {
+        const dragEvent: ModelDragEvent = {
+          ...xrSDKDragEvent,
+          target: layoutInstanceRef.current! as ModelElement,
+        }
+        onDrag(dragEvent)
+      }
+    },
+    [onDrag],
+  )
+
+  const onDragEndCb = useCallback(
+    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+      if (onDragEnd) {
+        const dragEvent: ModelDragEvent = {
+          ...xrSDKDragEvent,
+          target: layoutInstanceRef.current! as ModelElement,
+        }
+        onDragEnd(dragEvent)
+      }
+    },
+    [onDragEnd],
+  )
+
+  const onTapCb = useCallback(() => {
+    if (onTap) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onTap(event)
+    }
+  }, [onTap])
+
+  const onDoubleTapCb = useCallback(() => {
+    if (onDoubleTap) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onDoubleTap(event)
+    }
+  }, [onDoubleTap])
+
+  const onLongPressCb = useCallback(() => {
+    if (onLongPress) {
+      const event: ModelEvent = {
+        target: layoutInstanceRef.current! as ModelElement,
+      }
+      onLongPress(event)
+    }
+  }, [onLongPress])
+
   const layoutInstanceRef = useDetectLayoutDomUpdated(onDomUpdated)
-  const model3DNativeRef = useModel3DNative(modelUrl, onModel3DContainerReadyCb)
+  const { model3DNativeRef, phase, failureReason } = useModel3DNative(
+    modelUrl,
+    onModel3DContainerReadyCb,
+
+    {
+      onDragStart: onDragStart ? onDragStartCb : undefined,
+      onDrag: onDrag ? onDragCb : undefined,
+      onDragEnd: onDragEnd ? onDragEndCb : undefined,
+      onTap: onTap ? onTapCb : undefined,
+      onDoubleTap: onDoubleTap ? onDoubleTapCb : undefined,
+      onLongPress: onLongPress ? onLongPressCb : undefined,
+    },
+  )
+
+  const onSuccess = useCallback(() => {
+    ;(layoutInstanceRef.current! as ModelElement).ready = true
+    if (onLoad) {
+      onLoad({
+        target: layoutInstanceRef.current! as ModelElement,
+      })
+    }
+  }, [onLoad])
+
+  const onFailure = useCallback(
+    (_: string) => {
+      const modelElement = layoutInstanceRef.current! as ModelElement
+      modelElement.ready = false
+      if (onLoad) {
+        onLoad({
+          target: layoutInstanceRef.current! as ModelElement,
+        })
+      }
+    },
+    [onLoad],
+  )
+
+  useEffect(() => {
+    if (phase === 'failure') {
+      onFailure(failureReason)
+    } else if (phase === 'success') {
+      onSuccess()
+    }
+  }, [phase])
 
   useEffect(() => {
     if (model3DNativeRef.current) {
@@ -128,32 +274,57 @@ export function Model3DComponent(
 
   const layoutDomStyle: CSSProperties = {
     ...style,
-    visibility: 'hidden',
+    visibility: phase === 'failure' ? 'visible' : 'hidden',
     transform: '',
   }
 
-  const proxyRef = new Proxy<typeof layoutInstanceRef>(layoutInstanceRef, {
-    get(target, prop, receiver) {
-      return Reflect.get(target, prop, receiver)
-    },
-    set(target, prop, value, receiver) {
-      if (prop === 'current') {
-        const domElement = value as HTMLDivElement
-        if (refIn) {
-          if (typeof refIn === 'function') {
-            refIn(domElement)
-          } else {
-            refIn.current = domElement
-          }
-        }
-      }
-      return Reflect.set(target, prop, value, receiver)
-    },
-  })
+  const proxyRef = useMemo(
+    () =>
+      new Proxy<typeof layoutInstanceRef>(layoutInstanceRef, {
+        get(target, prop, receiver) {
+          return Reflect.get(target, prop, receiver)
+        },
+        set(target, prop, value, receiver) {
+          if (prop === 'current') {
+            const domElement = value as ModelElement
 
-  return <div className={className} style={layoutDomStyle} ref={proxyRef} />
+            if (domElement) {
+              domElement.ready = false
+              domElement.currentSrc = modelUrl
+            }
+
+            if (refIn) {
+              if (typeof refIn === 'function') {
+                refIn(domElement)
+              } else {
+                refIn.current = domElement
+              }
+            }
+          }
+          return Reflect.set(target, prop, value, receiver)
+        },
+      }),
+    [layoutInstanceRef, refIn],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (layoutInstanceRef.current) {
+        const modelElement = layoutInstanceRef.current as ModelElement
+
+        modelElement.ready = false
+        modelElement.currentSrc = modelUrl
+      }
+    }
+  }, [modelUrl])
+
+  return (
+    <div className={className} style={layoutDomStyle} ref={proxyRef}>
+      {phase === 'failure' && children}
+    </div>
+  )
 }
 
-export const Model3D = forwardRef(Model3DComponent)
+export const Model3D = forwardRef(Model3DBase)
 
 Model3D.displayName = 'Model3D'

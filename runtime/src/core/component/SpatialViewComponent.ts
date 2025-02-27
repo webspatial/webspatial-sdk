@@ -14,9 +14,9 @@ export class SpatialViewComponent extends SpatialComponent {
   /**
    * Sets the resolution of the spatial view in dom pixels
    */
-  async setResolution(x: number, y: number) {
+  async setResolution(width: number, height: number) {
     await WebSpatial.updateResource(this._resource, {
-      resolution: { x: x, y: y },
+      resolution: { x: width, y: height },
     })
   }
 
