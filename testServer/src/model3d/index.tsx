@@ -132,6 +132,12 @@ function App() {
         }}
       >
         <source src={modelUrl} type="model/vnd.usdz+zip" />
+        <source
+          src={
+            'https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb'
+          }
+          type="model/gltf-binary"
+        />
 
         <div> this is place holder when failure </div>
       </ModelNew>
