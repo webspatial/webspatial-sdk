@@ -76,13 +76,16 @@ function App() {
   }
 
   // test toggle model url
-  const [modelUrl, setModelUrl] = useState('/src/assets/FlightHelmet.usdz')
+  const [modelUrl, setModelUrl] = useState(
+    'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
+  )
   const handleToggleModel = () => {
     if (ref.current) {
       setModelUrl(v =>
-        v === '/src/assets/FlightHelmet.usdz'
+        v ===
+        'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz'
           ? '/src/assets/ball.usdz'
-          : '/src/assets/FlightHelmet.usdz',
+          : 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
       )
     }
   }
