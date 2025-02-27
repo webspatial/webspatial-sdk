@@ -52,13 +52,13 @@ function App() {
     ref: React.MutableRefObject<HTMLDivElement | null>,
     borderRadius: number,
   ) => {
+    console.log('borderRadius:' + borderRadius, ref.current)
     if (!ref.current) return
     // 获取当前的 borderRadius 值
     const currentBorderRadius =
       ref.current.style.getPropertyValue('border-radius')
     console.log('get borderRadius value:', currentBorderRadius)
     ref.current.style.setProperty('border-radius', `${borderRadius}px`)
-    console.log('set borderRadius value:', borderRadius)
     // ref.current.style.setProperty('border-radius', `0px`) //设置为0px
     updateElementState(ref)
   }
@@ -109,7 +109,7 @@ function App() {
 
   // 测试 background-material
   // 存储 backgroundMaterial 的值
-  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // 测试使用可以直接修改material
+  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // 可以直接修改material
 
   const handleBackgroundMaterialChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -263,85 +263,80 @@ function App() {
     }
   }
 
-  // 测试class元素操作
+  // 测试class操作
   const testClassOperations = () => {
     if (!ref.current) return
     // 读取class
-    console.log('当前class:', ref.current.className)
+    const currentClass = ref.current.className
+    console.log('当前class:', currentClass)
     // ref.current.className =
-    //   'test-element w-20 h-10 bg-white border-2 border-gray-200 rounded-lg '
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white  duration-300 '
     // console.log('更新后当前class:', ref.current.className)
-    // // ref.current.className = ' ' //元素class name 设为空字符串后，web端与avp文本内容颜色不一致，bug？
-    // // console.log('更新为空字符串后 当前class:', ref.current.className)
-    // updateElementState(ref)
+    // 元素class name 设为空字符串
+    // ref.current.className = '' //元素class name 设为空字符串后，web端与avp文本内容颜色不一致，bug？
+    // // 读取class
+    // const currentClassNone = ref.current.className
+    // console.log('更新为空后 当前class:', currentClassNone)
+    updateElementState(ref)
 
-    // 自动修改class name
     setTimeout(() => {
       if (ref.current) {
-        ref.current.className = ' '
-        console.log('获取更新后当前class:', ref.current.className)
+        ref.current.classList.add('translate-y-10', 'translate-x-8')
+        console.log('添加translate-y-8 class:', ref.current.classList.value)
         updateElementState(ref)
       }
       setTimeout(() => {
         if (ref.current) {
-          ref.current.className =
-            'w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white'
-          console.log('获取更新后当前class:', ref.current.className)
+          ref.current.classList.remove('translate-y-10')
+          console.log('移除translate-y-8 class:', ref.current.classList.value)
           updateElementState(ref)
         }
         setTimeout(() => {
           if (ref.current) {
-            ref.current.className =
-              'w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
-            console.log('获取更新后当前class:', ref.current.className)
+            ref.current.classList.toggle('translate-y-8')
+            console.log('反转translate-y-8 class:', ref.current.classList.value)
             updateElementState(ref)
           }
-        }, 3000)
-      }, 3000)
-    }, 3000)
+        }, 2000)
+      }, 2000)
+    }, 2000)
   }
   // 测试Test Element1 元素clas list单个操作
-  const handleClassOperation = (operation: string) => {
+  const ClassListTest = () => {
     if (!ref1.current) return
+    // ref1.current.style.fontSize = '2rem'
+    // ref1.current.style.width = '200px'
+    // ref1.current.style.height = '200px'
+    // updateElementState(ref1)
 
-    switch (operation) {
-      case 'add':
-        ref1.current.classList.add('translate-y-8')
-        console.log(
-          '添加translate-y-8 class:',
-          ref1.current,
-          ref1.current.classList.value,
-        )
-        break
-      case 'remove':
-        ref1.current.classList.remove('translate-y-8')
-        console.log('移除translate-y-8 class:', ref1.current.classList.value)
-        break
-      case 'replace':
-        ref1.current.classList.replace('translate-y-8', 'translate-x-10')
-        console.log(
-          '替换translate-y-10 with translate-y-8 class:',
-          ref1.current.classList.value,
-        )
-        break
-      case 'toggle':
-        ref1.current.classList.toggle('translate-y-8')
-        console.log('反转translate-y-8 class:', ref1.current.classList.value)
-        break
-      default:
-        console.log('无效的操作')
-    }
+    //添加类名
+    // ref1.current.classList.add('translate-y-8')
+    // console.log('添加translate-y-8 class:',ref1.current, ref1.current.classList.value)
+    // updateElementState(ref1)
 
+    //移除类名
+    // ref1.current.classList.remove('translate-y-10')
+    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
+    // updateElementState(ref1)
+
+    //替换类名
+    // ref1.current.classList.replace('translate-y-10','translate-y-8')
+    // console.log('移除translate-y-8 class:', ref1.current.classList.value)
+    // updateElementState(ref1)
+
+    //反转类名
+    ref1.current.classList.toggle('translate-y-8')
+    console.log('反转translate-y-8 class:', ref1.current.classList.value)
     updateElementState(ref1)
   }
 
   const resetStyles = () => {
     if (!ref.current) return
     ref.current.removeAttribute('style')
-    ref.current.removeAttribute('class')
-    console.log('移除Element classList:', ref.current.classList.value)
-    ref.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300'
+    // ref.current.removeAttribute('class')
+    // console.log('移除Element classList:', ref.current.classList.value)
+    // ref.current.className =
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref)
   }
   const resetStyles1 = () => {
@@ -350,8 +345,8 @@ function App() {
     // ref1.current.classList.remove('translate-y-8')
     ref1.current.removeAttribute('class')
     console.log('移除Element1 classList:', ref1.current.classList.value)
-    ref1.current.className =
-      'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
+    // ref.current.className =
+    //   'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref1)
   }
 
@@ -374,7 +369,7 @@ function App() {
         </a>
       </div>
 
-      <div className="max-w-5xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
             id="father"
@@ -386,15 +381,8 @@ function App() {
           >
             <div
               enable-xr
-              className="test-element w-32 h-32  bg-gradient-to-r bg-opacity-15 bg-red-200/30 rounded-lg flex items-center justify-center text-white  duration-300"
-              // style={{
-              //   color: 'blue',
-              //   fontSize: '24px',
-              //   margin: '25px',
-              //   boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
-              //   position: 'relative',
-              // }} //测试常用属性值
-              style={{ position: 'relative' }}
+              className="test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300"
+              // style={{ color: 'blue',fontSize: '24px',margin: '25px', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}} //测试常用属性值
               ref={ref}
             >
               Test Element
@@ -430,7 +418,6 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
-              <span className="ml-1.5 text-red-500">{borderRadius}px</span>
               <button
                 onClick={removeBorderRadius}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -456,7 +443,6 @@ function App() {
                 className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 style={{ width: '250px' }}
               />
-              <span className="ml-1.5 text-red-500">{xrBack}px</span>
               <button
                 onClick={removeXrBack}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -540,6 +526,11 @@ function App() {
                   value={transformOrigin}
                   onChange={handleTransformOriginChange}
                 >
+                  <option value="left">元素的左边缘: left</option>
+                  <option value="right">元素的右边缘: right</option>
+                  <option value="top">元素的上边缘: top</option>
+                  <option value="bottom">元素的下边缘: bottom</option>
+                  <option value="center">元素的中心: center</option>
                   <option value="left top">元素左上角: left top</option>
                   <option value="left center">元素左侧中心: left center</option>
                   <option value="left bottom">元素左下角: left bottom</option>
@@ -580,7 +571,6 @@ function App() {
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   style={{ width: '250px' }}
                 />
-                <span className="ml-1.5 text-red-500">{zIndex}px</span>
                 <button
                   onClick={removeZIndex}
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -605,7 +595,6 @@ function App() {
                   className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   style={{ width: '250px' }}
                 />
-                <span className="ml-1.5 text-red-500">{zIndex1}px</span>
                 <button
                   onClick={removeZIndex1}
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -621,21 +610,14 @@ function App() {
               onClick={testClassOperations}
               className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
             >
-              Class Name Test
+              Class Operations Test
             </button>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <select
-                className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
-                style={{ flex: 1, width: '250px' }}
-                onChange={e => handleClassOperation(e.target.value)}
-              >
-                <option value="">Class List Test 下拉选择操作</option>
-                <option value="add">添加类名</option>
-                <option value="remove">移除类名</option>
-                <option value="replace">替换类名</option>
-                <option value="toggle">反转类名</option>
-              </select>
-            </div>
+            <button
+              onClick={ClassListTest}
+              className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
+            >
+              ClassList Test
+            </button>
             <button
               onClick={resetStyles}
               className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors col-span-2"
