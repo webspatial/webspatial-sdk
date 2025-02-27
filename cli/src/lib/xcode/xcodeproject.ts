@@ -276,6 +276,18 @@ export default class XcodeProject {
         deeplinkString,
       )
     }
+    manifestSwift = manifestSwift.replace(
+      'SceneWidth',
+      manifest.mainScene.defaultSize.width,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneHeight',
+      manifest.mainScene.defaultSize.height,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneResizability',
+      manifest.mainScene.resizability,
+    )
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
 }
