@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react/dist'
+import { SpatialDiv } from '@xrsdk/react'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
 
