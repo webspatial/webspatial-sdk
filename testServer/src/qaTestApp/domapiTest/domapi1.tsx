@@ -44,61 +44,61 @@ function App() {
     updateElementState1(ref1)
   }, [ref, ref1])
 
-  // 测试BorderRadius
-  // 存储 borderRadius 的值
+  // Test BorderRadius
+  // Store the value of borderRadius
   const [borderRadius, setBorderRadius] = useState(0)
-  // 设置 borderRadius 的函数
+  // Function to set borderRadius
   const SetBorderRadius = (
     ref: React.MutableRefObject<HTMLDivElement | null>,
     borderRadius: number,
   ) => {
     if (!ref.current) return
-    // 获取当前的 borderRadius 值
+    // Get the current borderRadius value
     const currentBorderRadius =
       ref.current.style.getPropertyValue('border-radius')
-    console.log('get borderRadius value:', currentBorderRadius)
+    console.log('Get borderRadius value:', currentBorderRadius)
     ref.current.style.setProperty('border-radius', `${borderRadius}px`)
-    console.log('set borderRadius value:', borderRadius)
-    // ref.current.style.setProperty('border-radius', `0px`) //设置为0px
+    console.log('Set borderRadius value:', borderRadius)
+    // ref.current.style.setProperty('border-radius', `0px`) // Set to 0px
     updateElementState(ref)
   }
-  // 处理滑动条值变化的事件处理函数
+  // Event handler for slider value change
   const handleBorderRadiusChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    // 将滑动条的值转换为整数并更新 borderRadius 状态
+    // Convert the slider value to an integer and update the borderRadius state
     setBorderRadius(parseInt(event.target.value, 10))
   }
-  // 移除 borderRadius 的函数
+  // Function to remove borderRadius
   const removeBorderRadius = () => {
     if (ref.current) {
       ref.current.style.removeProperty('border-radius')
       updateElementState(ref)
-      // 重置滑动条值
+      // Reset the slider value
       setBorderRadius(0)
     }
   }
 
-  // 测试XrBack
-  // 存储 xrBack 的值
+  // Test XrBack
+  // Store the value of xrBack
   const [xrBack, setXrBack] = useState(0)
-  // 设置 xrBack 的函数
+  // Function to set xrBack
   const SetXrBack = () => {
     if (!ref.current) return
-    // 获取当前的 --xr-back 值
+    // Get the current --xr-back value
     const currentXrBack = ref.current.style.getPropertyValue('--xr-back')
-    console.log('get xrBack value:', currentXrBack)
-    // 设置新的 --xr-back 值
-    ref.current.style.setProperty('--xr-back', `${xrBack}`) //方式2
-    console.log('set xrBack value: ' + xrBack)
+    console.log('Get xrBack value:', currentXrBack)
+    // Set the new --xr-back value
+    ref.current.style.setProperty('--xr-back', `${xrBack}`) // Method 2
+    console.log('Set xrBack value: ' + xrBack)
     updateElementState(ref)
   }
-  // 处理滑动条值变化的事件处理函数
+  // Event handler for slider value change
   const handleXrBackChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // 将滑动条的值转换为整数并更新 xrBack 状态
+    // Convert the slider value to an integer and update the xrBack state
     setXrBack(parseInt(event.target.value, 10))
   }
-  // 移除 xrBack 的函数
+  // Function to remove xrBack
   const removeXrBack = () => {
     if (ref.current) {
       ref.current.style.removeProperty('--xr-back')
@@ -107,9 +107,9 @@ function App() {
     }
   }
 
-  // 测试 background-material
-  // 存储 backgroundMaterial 的值
-  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // 测试使用可以直接修改material
+  // Test background-material
+  // Store the value of backgroundMaterial
+  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // Can directly modify the material for testing
 
   const handleBackgroundMaterialChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -117,25 +117,25 @@ function App() {
     const selectedMaterial = event.target.value
     setBackgroundMaterial(selectedMaterial)
     if (!ref.current) return
-    console.log('selected', selectedMaterial)
+    console.log('Selected', selectedMaterial)
     ref.current.style.setProperty('--xr-background-material', selectedMaterial)
     updateElementState(ref)
   }
-  // 设置 backgroundMaterial 的函数
+  // Function to set backgroundMaterial
   const setBackgroundMaterialValue = (value: string) => {
     setBackgroundMaterial(value)
     if (!ref.current) return
-    console.log('selected', value)
-    // 获取当前的 backgroundMaterial 值
+    console.log('Selected', value)
+    // Get the current backgroundMaterial value
     const currentBackgroundMaterial = ref.current.style.getPropertyValue(
       '--xr-background-material',
     )
-    console.log('get xrBack value:', currentBackgroundMaterial)
+    console.log('Get xrBack value:', currentBackgroundMaterial)
     ref.current.style.setProperty('--xr-background-material', value)
     updateElementState(ref)
   }
 
-  // 移除 backgroundMaterial 的函数
+  // Function to remove backgroundMaterial
   const removeBackgroundMaterial = () => {
     if (ref.current) {
       ref.current.style.removeProperty('--xr-background-material')
@@ -143,23 +143,23 @@ function App() {
       // setBackgroundMaterialValue('default')
     }
   }
-  // 测试 Transform
-  // 存储 translateX 和 rotateZ 的值
+  // Test Transform
+  // Store the values of translateX and rotateZ
   const [translateX, setTranslateX] = useState(0)
   const [rotateZ, setRotateZ] = useState(0)
 
-  // 设置 Transform 的函数
+  // Function to set Transform
   const testTransform = () => {
     if (!ref.current) return
     // console.log('testTransform:', ref.current, `translateX(${translateX}px) rotateZ(${rotateZ}deg)`)
-    // 获取当前的 testTransform 值
+    // Get the current testTransform value
     const currentTransform = ref.current.style.getPropertyValue('transform')
-    console.log('get transform value:', currentTransform)
-    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` //方式1
-    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,) //方式2
+    console.log('Get transform value:', currentTransform)
+    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` // Method 1
+    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,) // Method 2
     updateElementState(ref)
   }
-  // 处理滑动条值变化的事件处理函数
+  // Event handler for slider value change
   const handleTranslateXChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -169,24 +169,24 @@ function App() {
     setRotateZ(parseInt(event.target.value, 10))
   }
 
-  // 移除 Transform 的函数
+  // Function to remove Transform
   const removeTestTransform = () => {
     if (ref.current) {
       ref.current.style.removeProperty('transform')
-      // 获取当前的 testTransform 值
+      // Get the current testTransform value
       const currentTransform = ref.current.style.getPropertyValue('transform')
-      console.log('get transform value:', currentTransform)
+      console.log('Get transform value:', currentTransform)
       updateElementState(ref)
       setTranslateX(0)
       setRotateZ(0)
     }
   }
 
-  //  测试transform-origin
-  // 存储 transformOrigin 的值
+  // Test transform-origin
+  // Store the value of transformOrigin
   const [transformOrigin, setTransformOrigin] = useState('left top')
 
-  // 处理下拉框值变化的事件处理函数
+  // Event handler for dropdown value change
   const handleTransformOriginChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
@@ -194,47 +194,47 @@ function App() {
     setTransformOrigin(selectedOrigin)
     if (!ref.current) return
     console.log('ref.current:', ref.current, selectedOrigin)
-    // ref.current.style.transformOrigin = selectedOrigin //方式1
-    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`) //方式2
+    // ref.current.style.transformOrigin = selectedOrigin // Method 1
+    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`) // Method 2
     // ref.current.style.setProperty('transform-Origin', `left`)
-    // 获取当前的 TransformOrigin 值
+    // Get the current TransformOrigin value
     const currentTransformOrigin =
       ref.current.style.getPropertyValue('transform-Origin')
-    console.log('get transform value:', currentTransformOrigin)
+    console.log('Get transform value:', currentTransformOrigin)
     updateElementState(ref)
   }
-  // 移除 TransformOrigin 的函数
+  // Function to remove TransformOrigin
   const removeTransformOrigin = () => {
     if (ref.current) {
       ref.current.style.removeProperty('Transform-Origin')
-      // 获取当前的 TransformOrigin 值
+      // Get the current TransformOrigin value
       const currentTransformOrigin =
         ref.current.style.getPropertyValue('transform-Origin')
-      console.log('get transform value:', currentTransformOrigin)
+      console.log('Get transform value:', currentTransformOrigin)
       updateElementState(ref)
       setTransformOrigin('left center')
     }
   }
-  // 测试zIndex   //AVP上没有效果 bug??
-  // 存储 zIndex 的值
+  // Test zIndex   // No effect on AVP, bug??
+  // Store the value of zIndex
   const [zIndex, setZIndex] = useState(0)
   const [zIndex1, setZIndex1] = useState(0)
 
-  // 设置 zIndex 的函数
+  // Function to set zIndex
   const setZIndexValue = () => {
     if (!ref.current) return
     console.log(zIndex, ref.current)
-    // ref.current.style.zIndex = zIndex.toString() //方式1
-    ref.current.style.setProperty('z-Index', `${zIndex}`) //方式2 技术文档错误
-    // 获取当前的 zIndex 值
+    // ref.current.style.zIndex = zIndex.toString() // Method 1
+    ref.current.style.setProperty('z-Index', `${zIndex}`) // Method 2, technical documentation error
+    // Get the current zIndex value
     const currentZIndex = ref.current.style.getPropertyValue('z-Index')
-    console.log('get zIndex:', currentZIndex)
+    console.log('Get zIndex:', currentZIndex)
     updateElementState(ref)
   }
   const handleZIndexChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setZIndex(parseInt(event.target.value, 10))
   }
-  // 设置 zIndex1 的函数
+  // Function to set zIndex1
   const setZIndexValue1 = () => {
     if (!ref1.current) return
     console.log(zIndex1, ref1.current)
@@ -246,61 +246,61 @@ function App() {
     setZIndex1(parseInt(event.target.value, 10))
   }
 
-  // 移除 zIndex 的函数
+  // Function to remove zIndex
   const removeZIndex = () => {
     if (ref.current) {
-      console.log('removeZIndex', ref.current)
+      console.log('Remove zIndex', ref.current)
       ref.current.style.removeProperty('z-Index')
       updateElementState(ref)
     }
   }
-  // 移除 zIndex1 的函数
+  // Function to remove zIndex1
   const removeZIndex1 = () => {
     if (ref1.current) {
-      console.log('removeZIndex1', ref1.current)
+      console.log('Remove zIndex1', ref1.current)
       ref1.current.style.removeProperty('z-Index')
       updateElementState1(ref1)
     }
   }
 
-  // 测试class元素操作
+  // Test class element operations
   const testClassOperations = () => {
     if (!ref.current) return
-    // 读取class
-    console.log('当前class:', ref.current.className)
+    // Read the class
+    console.log('Current class:', ref.current.className)
     // ref.current.className =
     //   'test-element w-20 h-10 bg-white border-2 border-gray-200 rounded-lg '
-    // console.log('更新后当前class:', ref.current.className)
-    // // ref.current.className = ' ' //元素class name 设为空字符串后，web端与avp文本内容颜色不一致，bug？
-    // // console.log('更新为空字符串后 当前class:', ref.current.className)
+    // console.log('Updated current class:', ref.current.className)
+    // // ref.current.className = ' ' // After setting the element class name to an empty string, the text content color on the web and AVP is inconsistent, bug?
+    // // console.log('Current class after updating to an empty string:', ref.current.className)
     // updateElementState(ref)
 
-    // 自动修改class name
+    // Automatically modify the class name
     setTimeout(() => {
       if (ref.current) {
         ref.current.className = ' '
-        console.log('获取更新后当前class:', ref.current.className)
+        console.log('Get the updated current class:', ref.current.className)
         updateElementState(ref)
       }
       setTimeout(() => {
         if (ref.current) {
           ref.current.className =
             'w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white'
-          console.log('获取更新后当前class:', ref.current.className)
+          console.log('Get the updated current class:', ref.current.className)
           updateElementState(ref)
         }
         setTimeout(() => {
           if (ref.current) {
             ref.current.className =
               'w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
-            console.log('获取更新后当前class:', ref.current.className)
+            console.log('Get the updated current class:', ref.current.className)
             updateElementState(ref)
           }
         }, 3000)
       }, 3000)
     }, 3000)
   }
-  // 测试Test Element1 元素clas list单个操作
+  // Test single operation of the class list of the Test Element1 element
   const handleClassOperation = (operation: string) => {
     if (!ref1.current) return
 
@@ -308,28 +308,28 @@ function App() {
       case 'add':
         ref1.current.classList.add('translate-y-8')
         console.log(
-          '添加translate-y-8 class:',
+          'Add translate-y-8 class:',
           ref1.current,
           ref1.current.classList.value,
         )
         break
       case 'remove':
         ref1.current.classList.remove('translate-y-8')
-        console.log('移除translate-y-8 class:', ref1.current.classList.value)
+        console.log('Remove translate-y-8 class:', ref1.current.classList.value)
         break
       case 'replace':
         ref1.current.classList.replace('translate-y-8', 'translate-x-10')
         console.log(
-          '替换translate-y-10 with translate-y-8 class:',
+          'Replace translate-y-10 with translate-y-8 class:',
           ref1.current.classList.value,
         )
         break
       case 'toggle':
         ref1.current.classList.toggle('translate-y-8')
-        console.log('反转translate-y-8 class:', ref1.current.classList.value)
+        console.log('Toggle translate-y-8 class:', ref1.current.classList.value)
         break
       default:
-        console.log('无效的操作')
+        console.log('Invalid operation')
     }
 
     updateElementState(ref1)
@@ -339,7 +339,7 @@ function App() {
     if (!ref.current) return
     ref.current.removeAttribute('style')
     ref.current.removeAttribute('class')
-    console.log('移除Element classList:', ref.current.classList.value)
+    console.log('Remove Element classList:', ref.current.classList.value)
     ref.current.className =
       'test-element w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white  duration-300'
     updateElementState(ref)
@@ -349,7 +349,7 @@ function App() {
     ref1.current.removeAttribute('style')
     // ref1.current.classList.remove('translate-y-8')
     ref1.current.removeAttribute('class')
-    console.log('移除Element1 classList:', ref1.current.classList.value)
+    console.log('Remove Element1 classList:', ref1.current.classList.value)
     ref1.current.className =
       'test-element w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white duration-300'
     updateElementState(ref1)
@@ -357,20 +357,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
-      {/* 导航栏 */}
+      {/* Navigation bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
-        <a
-          href="/testServer/public"
-          className="hover:text-blue-400 transition-colors"
-        >
-          返回主页
-        </a>
         <a
           href="#"
           onClick={() => history.go(-1)}
           className="hover:text-blue-400 transition-colors"
         >
-          返回上一级
+          Go Back
         </a>
       </div>
 
@@ -393,7 +387,7 @@ function App() {
               //   margin: '25px',
               //   boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)',
               //   position: 'relative',
-              // }} //测试常用属性值
+              // }} // Test common property values
               style={{ position: 'relative' }}
               ref={ref}
             >
@@ -402,8 +396,8 @@ function App() {
             <div
               enable-xr
               className="test-element w-32 h-32 bg-pink-500 hover:bg-pink-500 rounded-lg flex items-center justify-center text-white duration-300"
-              // style={{ color: 'blue' }} // 测试 style样式优先级
-              // className="text-red-500" // 测试 style样式优先级
+              // style={{ color: 'blue' }} // Test style priority
+              // className="text-red-500" // Test style priority
               ref={ref1}
             >
               Test Element1
@@ -413,7 +407,7 @@ function App() {
 
         <div className="bg-gray-800 p-4 rounded-lg">
           <div className="grid grid-cols-2 gap-2">
-            {/*渲染BorderRadius*/}
+            {/* Render BorderRadius */}
             <button
               onClick={() => SetBorderRadius(ref, borderRadius)}
               className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -436,10 +430,10 @@ function App() {
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
-                remove
+                Remove
               </button>
             </div>
-            {/*渲染XrBack*/}
+            {/* Render XrBack */}
             <button
               onClick={SetXrBack}
               className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -462,10 +456,10 @@ function App() {
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
-                remove
+                Remove
               </button>
             </div>
-            {/* 渲染 background-material */}
+            {/* Render background-material */}
             <button
               onClick={() => setBackgroundMaterialValue(backgroundMaterial)}
               className="p-2 bg-pink-500 hover:bg-pink-500 text-white rounded-lg transition-colors"
@@ -481,21 +475,21 @@ function App() {
                 className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
                 style={{ flex: 1 }}
               >
-                <option value="default">default</option>
-                <option value="none">none</option>
-                <option value="thin">thin</option>
-                <option value="regular">regular</option>
-                <option value="thick">thick</option>
+                <option value="default">Default</option>
+                <option value="none">None</option>
+                <option value="thin">Thin</option>
+                <option value="regular">Regular</option>
+                <option value="thick">Thick</option>
               </select>
               <button
                 onClick={removeBackgroundMaterial}
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 style={{ width: '100px', marginLeft: '10px' }}
               >
-                remove
+                Remove
               </button>
             </div>
-            {/* 渲染Transform */}
+            {/* Render Transform */}
             <button
               onClick={testTransform}
               className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
@@ -528,11 +522,11 @@ function App() {
                 className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 // style={{ width: '100px', marginLeft: '10px' }}
               >
-                remove
+                Remove
               </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {/* 渲染 transformOrigin */}
+              {/* Render transformOrigin */}
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <select
                   className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
@@ -540,29 +534,39 @@ function App() {
                   value={transformOrigin}
                   onChange={handleTransformOriginChange}
                 >
-                  <option value="left top">元素左上角: left top</option>
-                  <option value="left center">元素左侧中心: left center</option>
-                  <option value="left bottom">元素左下角: left bottom</option>
-                  <option value="center top">元素的顶部中心: center top</option>
+                  <option value="left top">
+                    Top left of the element: left top
+                  </option>
+                  <option value="left center">
+                    Left center of the element: left center
+                  </option>
+                  <option value="left bottom">
+                    Bottom left of the element: left bottom
+                  </option>
+                  <option value="center top">
+                    Top center of the element: center top
+                  </option>
                   <option value="right center">
-                    元素的右侧中心: right center
+                    Right center of the element: right center
                   </option>
                   <option value="right bottom">
-                    元素的右下角: right bottom
+                    Bottom right of the element: right bottom
                   </option>
-                  <option value="50% 50%">元素的中心: 50% 50%</option>
-                  <option value="0% 0%">元素的左上角: 0% 0%</option>
+                  <option value="50% 50%">
+                    Center of the element: 50% 50%
+                  </option>
+                  <option value="0% 0%">Top left of the element: 0% 0%</option>
                 </select>
                 <button
                   onClick={removeTransformOrigin}
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                   style={{ width: '100px', marginLeft: '10px' }}
                 >
-                  remove
+                  Remove
                 </button>
               </div>
             </div>
-            {/* 渲染zIndex */}
+            {/* Render zIndex */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={setZIndexValue}
@@ -586,7 +590,7 @@ function App() {
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                   style={{ width: '100px', marginLeft: '10px' }}
                 >
-                  remove
+                  Remove
                 </button>
               </div>
               <button
@@ -611,12 +615,12 @@ function App() {
                   className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                   style={{ width: '100px', marginLeft: '10px' }}
                 >
-                  remove
+                  Remove
                 </button>
               </div>
             </div>
 
-            {/* 渲染Class Operations */}
+            {/* Render Class Operations */}
             <button
               onClick={testClassOperations}
               className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -629,11 +633,11 @@ function App() {
                 style={{ flex: 1, width: '250px' }}
                 onChange={e => handleClassOperation(e.target.value)}
               >
-                <option value="">Class List Test 下拉选择操作</option>
-                <option value="add">添加类名</option>
-                <option value="remove">移除类名</option>
-                <option value="replace">替换类名</option>
-                <option value="toggle">反转类名</option>
+                <option value="">Class List Test - Select an operation</option>
+                <option value="add">Add class name</option>
+                <option value="remove">Remove class name</option>
+                <option value="replace">Replace class name</option>
+                <option value="toggle">Toggle class name</option>
               </select>
             </div>
             <button

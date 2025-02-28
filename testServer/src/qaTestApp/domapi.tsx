@@ -84,17 +84,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
-      {/* 导航栏 */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
-          返回主页
+          Return to Home Page
         </a>
         <a
           href="#"
           onClick={() => history.go(-1)}
           className="hover:text-blue-400 transition-colors"
         >
-          返回上一级
+          Go Back
         </a>
       </div>
 
