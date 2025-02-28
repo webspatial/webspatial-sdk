@@ -17,7 +17,7 @@ function App() {
     <div className="p-8">
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-8 gap-5 mb-8">
         <a href="/" className="hover:text-blue-400">
-          返回首页
+          Return to Home Page
         </a>
       </div>
 
@@ -26,22 +26,26 @@ function App() {
           href="/src/qaTestApp/index.html"
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
-          <h2 className="text-xl font-bold mb-2">3D文字测试</h2>
-          <p className="text-sm opacity-80">测试空间文字渲染效果</p>
+          <h2 className="text-xl font-bold mb-2">3D Text Test</h2>
+          <p className="text-sm opacity-80">
+            Test the rendering effect of spatial text
+          </p>
         </a>
 
         <a
           href="/src/qaTestApp/domapi.html"
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
-          <h2 className="text-xl font-bold mb-2">DOM API测试</h2>
-          <p className="text-sm opacity-80">测试DOM样式和类操作</p>
+          <h2 className="text-xl font-bold mb-2">DOM API Test</h2>
+          <p className="text-sm opacity-80">
+            Test DOM style and class operations
+          </p>
         </a>
         <a
           href="/src/qaTestApp/materialApiTest/materialapi.html"
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
-          <h2 className="text-xl font-bold mb-2">Material API测试</h2>
+          <h2 className="text-xl font-bold mb-2">Material API Test</h2>
           <p className="text-sm opacity-80">Tests for Material APIs</p>
         </a>
 
@@ -50,7 +54,9 @@ function App() {
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
           <h2 className="text-xl font-bold mb-2">DOM API Test</h2>
-          <p className="text-sm opacity-80">测试DOM样式和类操作</p>
+          <p className="text-sm opacity-80">
+            Test DOM style and class operations
+          </p>
         </a>
 
         <a
@@ -58,7 +64,7 @@ function App() {
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
           <h2 className="text-xl font-bold mb-2">Depth Position</h2>
-          <p className="text-sm opacity-80">测试SpatialDiv depth position</p>
+          <p className="text-sm opacity-80">Test SpatialDiv depth position</p>
         </a>
 
         <a
@@ -66,7 +72,7 @@ function App() {
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
           <h2 className="text-xl font-bold mb-2">CSS API Test</h2>
-          <p className="text-sm opacity-80">测试CSS API</p>
+          <p className="text-sm opacity-80">Test CSS API</p>
         </a>
 
         <a
@@ -74,7 +80,7 @@ function App() {
           className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-white hover:bg-opacity-40 transition-all"
         >
           <h2 className="text-xl font-bold mb-2">Scene Test</h2>
-          <p className="text-sm opacity-80">测试spatial layout JS API</p>
+          <p className="text-sm opacity-80">Test spatial layout JS API</p>
         </a>
         <a
           href="/src/qaTestApp/transformTest/transformTest.html"
@@ -95,7 +101,7 @@ function App() {
   )
 }
 
-// 创建根元素并渲染
+// Create the root element and render
 const root = document.createElement('div')
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
