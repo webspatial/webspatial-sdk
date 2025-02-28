@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession } from '@xrsdk/react'
-import { SpatialHelper, SpatialModelComponent } from '@xrsdk/runtime/dist'
+import { getSession } from '@webspatial/react-sdk'
+import { SpatialHelper, SpatialModelComponent } from '@webspatial/core-sdk/dist'
 
 function App() {
   useEffect(() => {

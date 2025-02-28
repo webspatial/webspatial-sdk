@@ -1,4 +1,4 @@
-import { SpatialEntity, SpatialViewComponent } from '@xrsdk/runtime'
+import { SpatialEntity, SpatialViewComponent } from '@webspatial/core-sdk'
 import { getSession } from '../utils'
 import { vecType } from './types'
 

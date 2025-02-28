@@ -2,7 +2,7 @@ import {
   ModelDragEvent,
   SpatialEntity,
   SpatialModel3DComponent,
-} from '@xrsdk/runtime'
+} from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { SpatialTransformType } from './types'
 import { getAbsoluteURL } from './utils'

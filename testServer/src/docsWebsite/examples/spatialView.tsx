@@ -1,7 +1,7 @@
-import { SpatialSession, SpatialViewComponent } from '@xrsdk/runtime'
+import { SpatialSession, SpatialViewComponent } from '@webspatial/core-sdk'
 import { useEffect, useRef } from 'react'
 import { showSample } from './sampleLoader'
-import { Vec3 } from '@xrsdk/runtime'
+import { Vec3 } from '@webspatial/core-sdk'
 
 function MySample(props: { session?: SpatialSession }) {
   let divRef = useRef(null)

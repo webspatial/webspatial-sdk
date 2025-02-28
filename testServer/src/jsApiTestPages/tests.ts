@@ -1,6 +1,6 @@
 import { Euler, Quaternion } from 'three'
-import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { Vec3 } from '@xrsdk/runtime'
+import { Spatial, SpatialEntity, SpatialSession } from '@webspatial/core-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
 
 class TimerLog {
   lastTime = Date.now()

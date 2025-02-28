@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 
-import { CSSSpatialDiv } from '@xrsdk/react'
+import { CSSSpatialDiv } from '@webspatial/react-sdk'
 
 import { animated, useSpring } from '@react-spring/web'
 

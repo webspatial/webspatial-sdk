@@ -22,7 +22,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius } from '@xrsdk/runtime'
+import { CornerRadius } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
 
