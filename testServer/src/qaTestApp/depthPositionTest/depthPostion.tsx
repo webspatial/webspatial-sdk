@@ -44,18 +44,18 @@ function App() {
     updateElementState1(ref1)
   }, [ref, ref1])
 
-  // 测试zIndex   //AVP上没有效果 bug??
-  // 存储 zIndex 的值
+  // Test zIndex
+  // Store the value of zIndex
   const [zIndex, setZIndex] = useState(0)
   const [zIndex1, setZIndex1] = useState(0)
 
-  // 设置 zIndex 的函数
+  // Function to set zIndex
   const setZIndexValue = () => {
     if (!ref.current) return
     console.log(zIndex, ref.current)
-    // ref.current.style.zIndex = zIndex.toString() //方式1
-    ref.current.style.setProperty('z-Index', `${zIndex}`) //方式2 技术文档错误
-    // 获取当前的 zIndex 值
+    // ref.current.style.zIndex = zIndex.toString() // Method 1
+    ref.current.style.setProperty('z-Index', `${zIndex}`) // Method 2. Technical documentation error
+    // Get the current zIndex value
     const currentZIndex = ref.current.style.getPropertyValue('z-Index')
     console.log('get zIndex:', currentZIndex)
     updateElementState(ref)
@@ -63,7 +63,7 @@ function App() {
   const handleZIndexChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setZIndex(parseInt(event.target.value, 10))
   }
-  // 设置 zIndex1 的函数
+  // Function to set zIndex1
   const setZIndexValue1 = () => {
     if (!ref1.current) return
     console.log(zIndex1, ref1.current)
@@ -75,7 +75,7 @@ function App() {
     setZIndex1(parseInt(event.target.value, 10))
   }
 
-  // 移除 zIndex 的函数
+  // Function to remove zIndex
   const removeZIndex = () => {
     if (ref.current) {
       console.log('removeZIndex', ref.current)
@@ -83,7 +83,7 @@ function App() {
       updateElementState(ref)
     }
   }
-  // 移除 zIndex1 的函数
+  // Function to remove zIndex1
   const removeZIndex1 = () => {
     if (ref1.current) {
       console.log('removeZIndex1', ref1.current)
@@ -92,23 +92,23 @@ function App() {
     }
   }
 
-  // 设置 Transform
-  // 存储 translateX 和 rotateZ 的值
+  // Set Transform
+  // Store the values of translateX and rotateZ
   const [translateX, setTranslateX] = useState(0)
   const [rotateZ, setRotateZ] = useState(0)
 
-  // 设置 Transform 的函数
+  // Function to test Transform
   const testTransform = () => {
     if (!ref.current) return
     // console.log('testTransform:', ref.current, `translateX(${translateX}px) rotateZ(${rotateZ}deg)`)
-    // 获取当前的 testTransform 值
+    // Get the current testTransform value
     const currentTransform = ref.current.style.getPropertyValue('transform')
     console.log('get transform value:', currentTransform)
-    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` //方式1
-    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,) //方式2
+    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` // Method 1
+    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,) // Method 2
     updateElementState(ref)
   }
-  // 处理滑动条值变化的事件处理函数
+  // Event handler for slider value change
   const handleTranslateXChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -118,11 +118,11 @@ function App() {
     setRotateZ(parseInt(event.target.value, 10))
   }
 
-  // 移除 Transform 的函数
+  // Function to remove Transform
   const removeTestTransform = () => {
     if (ref.current) {
       ref.current.style.removeProperty('transform')
-      // 获取当前的 testTransform 值
+      // Get the current testTransform value
       const currentTransform = ref.current.style.getPropertyValue('transform')
       console.log('get transform value:', currentTransform)
       updateElementState(ref)
@@ -130,21 +130,21 @@ function App() {
       setRotateZ(0)
     }
   }
-  const [position_container, setPosition1] = useState('') // 初始位置为相对定位
+  const [position_container, setPosition1] = useState('') // Initial position is relative positioning
   const handlePositionChangeContainer = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setPosition1(e.target.value)
     console.log('position_container:', position_container)
   }
-  const [position_reference, setPosition3] = useState('') // 初始位置为相对定位
+  const [position_reference, setPosition3] = useState('') // Initial position is relative positioning
   const handlePositionChangeReference = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setPosition3(e.target.value)
     console.log('position_reference:', position_reference, ref.current)
   }
-  const [position_styleOne, setPosition2] = useState('') // 初始位置为相对定位
+  const [position_styleOne, setPosition2] = useState('') // Initial position is relative positioning
   const handlePositionChangeStyleOne = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
@@ -181,20 +181,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
-      {/* 导航栏 */}
+      {/* Navigation bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
-        <a
-          href="/testServer/public"
-          className="hover:text-blue-400 transition-colors"
-        >
-          返回主页
-        </a>
         <a
           href="#"
           onClick={() => history.go(-1)}
           className="hover:text-blue-400 transition-colors"
         >
-          返回上一级
+          Go Back
         </a>
       </div>
 
@@ -203,21 +197,21 @@ function App() {
           <div
             id="father"
             enable-xr
-            // className="container" // 测试 CSS Classes
-            style={containerStyle} // 测试 Inline Styles
+            // className="container" // Test CSS Classes
+            style={containerStyle} // Test Inline Styles
           >
             <div
               enable-xr
-              // className="reference" // 测试 CSS Classes
-              style={referenceStyle} // 测试 Inline Styles
+              // className="reference" // Test CSS Classes
+              style={referenceStyle} // Test Inline Styles
               ref={ref}
             >
               Test Element
             </div>
             <div
               enable-xr
-              // className="style-one" //  测试 CSS Classes
-              style={styleOne} // 测试 Inline Styles
+              // className="style-one" //  Test CSS Classes
+              style={styleOne} // Test Inline Styles
               ref={ref1}
             >
               Test Element1
@@ -231,30 +225,30 @@ function App() {
             value={position_container}
             onChange={handlePositionChangeContainer}
           >
-            <option value="">父元素position：none</option>
-            <option value="relative">父元素position：相对定位</option>
-            <option value="absolute">父元素position：绝对定位</option>
+            <option value="">Parent Element Position: None</option>
+            <option value="relative">Parent Element Position: Relative</option>
+            <option value="absolute">Parent Element Position: Absolute</option>
           </select>
           <select
             className="p-4  bg-purple-50 text-black rounded-lg transition-colors"
             value={position_reference}
             onChange={handlePositionChangeReference}
           >
-            <option value="">子Element position：none</option>
-            <option value="relative">子Element position：相对定位</option>
-            <option value="absolute">子Element position：绝对定位</option>
+            <option value="">Child Element Position: None</option>
+            <option value="relative">Child Element Position: Relative</option>
+            <option value="absolute">Child Element Position: Absolute</option>
           </select>
           <select
             className="p-4  bg-purple-50 text-black rounded-lg transition-colors"
             value={position_styleOne}
             onChange={handlePositionChangeStyleOne}
           >
-            <option value="">子Element1 position：none</option>
-            <option value="relative">子Element1 position:相对定位</option>
-            <option value="absolute">子Element1 position：绝对定位</option>
+            <option value="">Child Element1 Position: None</option>
+            <option value="relative">Child Element1 Position: Relative</option>
+            <option value="absolute">Child Element1 Position: Absolute</option>
           </select>
           <div className="grid grid-cols-2 gap-2">
-            {/* 渲染zIndex */}
+            {/* Render zIndex */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={setZIndexValue}
@@ -309,7 +303,7 @@ function App() {
               </div>
             </div>
             <div className="w-4"></div>
-            {/* 渲染Transform */}
+            {/* Render Transform */}
             <button
               onClick={testTransform}
               className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
