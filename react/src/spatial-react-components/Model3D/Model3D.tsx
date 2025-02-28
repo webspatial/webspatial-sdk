@@ -10,7 +10,10 @@ import { useDetectLayoutDomUpdated } from './useDetectLayoutDomUpdated'
 import { useModel3DNative } from './useModel3DNative'
 import { PartialSpatialTransformType } from './types'
 import { PopulatePartialSpatialTransformType } from './utils'
-import { ModelDragEvent as XRSDKModelDragEvent, Vec3 } from '@xrsdk/runtime'
+import {
+  ModelDragEvent as SpatialModelDragEvent,
+  Vec3,
+} from '@webspatial/core-sdk'
 
 export interface ModelEvent {
   target: ModelElement
@@ -119,10 +122,10 @@ export function Model3DBase(props: Model3DProps, refIn: ModelElementRef) {
   ])
 
   const onDragStartCb = useCallback(
-    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDragStart) {
         const dragEvent: ModelDragEvent = {
-          ...xrSDKDragEvent,
+          ...spatialDragEvent,
           target: layoutInstanceRef.current! as ModelElement,
         }
         onDragStart(dragEvent)
@@ -132,10 +135,10 @@ export function Model3DBase(props: Model3DProps, refIn: ModelElementRef) {
   )
 
   const onDragCb = useCallback(
-    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDrag) {
         const dragEvent: ModelDragEvent = {
-          ...xrSDKDragEvent,
+          ...spatialDragEvent,
           target: layoutInstanceRef.current! as ModelElement,
         }
         onDrag(dragEvent)
@@ -145,10 +148,10 @@ export function Model3DBase(props: Model3DProps, refIn: ModelElementRef) {
   )
 
   const onDragEndCb = useCallback(
-    (xrSDKDragEvent: XRSDKModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDragEnd) {
         const dragEvent: ModelDragEvent = {
-          ...xrSDKDragEvent,
+          ...spatialDragEvent,
           target: layoutInstanceRef.current! as ModelElement,
         }
         onDragEnd(dragEvent)

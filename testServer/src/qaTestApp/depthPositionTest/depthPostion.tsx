@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useRef, useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
+import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 

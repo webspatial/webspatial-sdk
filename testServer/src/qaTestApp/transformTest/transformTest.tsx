@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
-import { Model, SpatialDiv } from '@xrsdk/react'
+import { enableDebugTool } from '@webspatial/react-sdk'
+import { Model, SpatialDiv } from '@webspatial/react-sdk'
 import styled from 'styled-components'
 
 enableDebugTool()

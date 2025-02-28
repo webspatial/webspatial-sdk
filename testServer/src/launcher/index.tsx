@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession } from '@xrsdk/react'
-import { SpatialHelper } from '@xrsdk/runtime'
+import { getSession } from '@webspatial/react-sdk'
+import { SpatialHelper } from '@webspatial/core-sdk'
 
 const apps = [
   // { name: "Settings", url: "", icon: "⚙️" },
