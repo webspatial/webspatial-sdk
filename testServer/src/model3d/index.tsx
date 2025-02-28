@@ -1,31 +1,32 @@
+// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
-import { enableDebugTool, CSSModel3D } from '@xrsdk/react'
+import {
+  enableDebugTool,
+  ModelNew,
+  ModelElement,
+  ModelEvent,
+  ModelDragEvent,
+} from '@xrsdk/react'
 import { CSSProperties } from 'styled-components'
 import { useRef, useState } from 'react'
 
 enableDebugTool()
 
 function App() {
-  const translateX = 100
-  const translateY = 0
-  const rotateZ = 0
+  const [tapFlag, setTapFlag] = useState(true)
 
-  const ref = useRef<HTMLDivElement | null>(null)
+  const ref = useRef<ModelElement | null>(null)
 
   ;(window as any).ref = ref
 
   const styleOuter: CSSProperties = {
-    // '--xr-back': 31,
+    '--xr-back': tapFlag ? 31 : 100,
     // visibility: 'hidden',
     position: 'relative',
     width: '50%',
     height: '50%',
     marginBottom: '140px',
-    transform: `translateX(${translateX}px) translateY(${translateY}px) rotateZ(${rotateZ}deg)`,
-    // transformOrigin: 'top center',
-    backgroundColor: 'red',
-    opacity: 0.8,
   }
 
   const onToggleDisplay = () => {
@@ -74,6 +75,18 @@ function App() {
     setAspectRatio(v => (v === 0 ? 16 / 9 : 0))
   }
 
+  // test toggle model url
+  const [modelUrl, setModelUrl] = useState('/src/assets/FlightHelmet.usdz')
+  const handleToggleModel = () => {
+    if (ref.current) {
+      setModelUrl(v =>
+        v === '/src/assets/FlightHelmet.usdz'
+          ? '/src/assets/ball.usdz'
+          : '/src/assets/FlightHelmet.usdz',
+      )
+    }
+  }
+
   return (
     <div className="w-screen h-screen  ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
@@ -82,14 +95,47 @@ function App() {
         </a>
       </div>
 
-      <CSSModel3D
+      <ModelNew
         ref={ref}
         style={styleOuter}
-        modelUrl="/src/assets/FlightHelmet.usdz"
+        // modelUrl={modelUrl}
         contentMode={contentMode}
         resizable={resizable}
         aspectRatio={aspectRatio}
-      />
+        onLoad={(event: ModelEvent) => {
+          console.log('onLoad', event.target.ready, event.target.currentSrc)
+        }}
+        onDragStart={(dragEvent: ModelDragEvent) => {
+          console.log('onDragStart', dragEvent)
+        }}
+        onDrag={(dragEvent: ModelDragEvent) => {
+          ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
+        }}
+        onDragEnd={(dragEvent: ModelDragEvent) => {
+          console.log(
+            'onDragEnd',
+            dragEvent,
+            dragEvent.target.ready,
+            dragEvent.target.currentSrc,
+          )
+          ref.current!.style.transform = 'none'
+        }}
+        onTap={(event: ModelEvent) => {
+          setTapFlag(v => !v)
+          console.log('onTap', event)
+        }}
+        onDoubleTap={(event: ModelEvent) => {
+          console.log('onDoubleTap', event)
+        }}
+        onLongPress={(event: ModelEvent) => {
+          console.log('onLongPress', event)
+        }}
+      >
+        <source src={modelUrl} type="model/vnd.usdz+zip" />
+
+        <div> this is place holder when failure </div>
+      </ModelNew>
+
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
           display toggle
@@ -107,6 +153,10 @@ function App() {
 
         <button className="btn btn-primary" onClick={handleAspectRatioChange}>
           aspectRatio
+        </button>
+
+        <button className="btn btn-primary" onClick={handleToggleModel}>
+          toggle model url
         </button>
       </div>
 

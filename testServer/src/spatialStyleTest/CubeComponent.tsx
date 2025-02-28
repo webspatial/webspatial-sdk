@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react'
 import './CubeComponent.scss'
 import { CSSProperties } from 'styled-components'

@@ -14,9 +14,9 @@ struct PWAManager: Codable {
     var scope: String = ""
     var id: String = ""
 
-    var name: String = "应用名称"
-    var short_name: String = "名称"
-    var description: String = "应用描述"
+    var name: String = "AppName"
+    var short_name: String = "name"
+    var description: String = "description"
 
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
@@ -60,7 +60,7 @@ struct PWAManager: Codable {
                 linkUrl = item.url.replacingOccurrences(of: "%s", with: item.protocolValue + queryString)
             }
         }
-        print(linkUrl)
+        logger.debug(linkUrl)
         return linkUrl
     }
 }

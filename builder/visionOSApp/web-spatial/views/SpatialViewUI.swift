@@ -51,17 +51,17 @@ struct SpatialViewUI: View {
                     let delta = translate - ic.trackedPosition
                     ic.trackedPosition = translate
 
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
+                    ic.wv!.fireComponentEvent(componentId: ic.id, data: "{eventType: 'dragstart', translate: " + toJson(val: delta) + "}")
                 } else {
                     let delta = translate - ic.trackedPosition
                     ic.trackedPosition = translate
-                    ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'drag', translate: " + toJson(val: delta) + "}")
+                    ic.wv!.fireComponentEvent(componentId: ic.id, data: "{eventType: 'drag', translate: " + toJson(val: delta) + "}")
                 }
             }
             .onEnded { value in
                 let spatialEntity = value.entity.components[SpatialBridgeComponent.self]!.spatialEntity
                 let ic = spatialEntity.getComponent(SpatialInputComponent.self)!
-                ic.wv!.fireGestureEvent(inputComponentID: ic.id, data: "{eventType: 'dragend'}")
+                ic.wv!.fireComponentEvent(componentId: ic.id, data: "{eventType: 'dragend'}")
                 ic.isDragging = false
             }
     }
