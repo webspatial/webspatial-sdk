@@ -286,7 +286,7 @@ export default class XcodeProject {
     )
     manifestSwift = manifestSwift.replace(
       'SceneResizability',
-      manifest.mainScene.resizability,
+      '.' + manifest.mainScene.resizability,
     )
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
