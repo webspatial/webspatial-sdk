@@ -1,4 +1,4 @@
-import { WindowContainerOptions } from '@xrsdk/runtime/'
+import { WindowContainerOptions } from '@webspatial/core-sdk/'
 import { getSession } from './utils/getSession'
 
 declare global {

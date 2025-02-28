@@ -1,4 +1,4 @@
-import { SpatialEntity, SpatialWindowComponent } from '@xrsdk/runtime'
+import { SpatialEntity, SpatialWindowComponent } from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { vecType, quatType, RectType } from '../types'
 

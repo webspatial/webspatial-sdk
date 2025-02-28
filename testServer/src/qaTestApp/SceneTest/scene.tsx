@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react'
-import { Spatial } from '@xrsdk/runtime'
-import { initScene } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
+import { Spatial } from '@webspatial/core-sdk'
+import { initScene } from '@webspatial/react-sdk'
 
 const btnCls =
   'p-2 border border-gray-700 hover:text-white bg-gray-700 hover:bg-blue-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
