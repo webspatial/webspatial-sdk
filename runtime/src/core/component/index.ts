@@ -8,4 +8,7 @@ export {
 export { SpatialInputComponent } from './SpatialInputComponent'
 export { SpatialModelComponent } from './SpatialModelComponent'
 export { SpatialViewComponent } from './SpatialViewComponent'
-export { SpatialModel3DComponent } from './SpatialModel3DComponent'
+export {
+  SpatialModel3DComponent,
+  type ModelDragEvent,
+} from './SpatialModel3DComponent'

@@ -149,9 +149,7 @@ export class SpatialSession {
       WebSpatial.getCurrentWindowContainer(),
       WebSpatial.getCurrentWebPanel(),
     )
-    var ic = new SpatialInputComponent(entity)
-    WebSpatial.inputComponents[ic._resource.id] = ic
-    return ic
+    return new SpatialInputComponent(entity)
   }
 
   /**

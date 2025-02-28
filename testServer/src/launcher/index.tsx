@@ -11,13 +11,13 @@ const apps = [
     name: 'Clock',
     url: '/src/clockApp/index.html',
     icon: '⏰',
-    options: { dimensions: { x: 880, y: 200 } },
+    options: { resolution: { width: 880, height: 200 } },
   },
   {
     name: 'TikTok',
     url: 'http://www.tiktok.com/',
     icon: '▶️',
-    options: { dimensions: { x: 400, y: 650 } },
+    options: { resolution: { width: 400, height: 650 } },
   },
   // { name: "Game", url: "", icon: "🎮" },
   // { name: "Calculator", url: "", icon: "🧮" },
@@ -25,7 +25,7 @@ const apps = [
     name: 'Terminal',
     url: '/src/terminal/index.html',
     icon: '💻',
-    options: { dimensions: { x: 650, y: 400 } },
+    options: { resolution: { width: 650, height: 400 } },
   },
   {
     name: 'ModelViewer',
@@ -38,7 +38,7 @@ const apps = [
     icon: '📊',
     url: '/src/memoryStats/index.html',
     options: {
-      dimensions: { x: 300, y: 600 },
+      resolution: { width: 300, height: 600 },
     },
   },
 ]

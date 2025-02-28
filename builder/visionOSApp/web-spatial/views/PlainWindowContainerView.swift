@@ -71,7 +71,7 @@ struct PlainWindowContainerView: View {
                         timer!.invalidate()
                     }
                     // If we don't detect resolution change after x seconds we treat the resize as complete
-                    timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
+                    timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
                         windowResizeInProgress = false
                     }
 

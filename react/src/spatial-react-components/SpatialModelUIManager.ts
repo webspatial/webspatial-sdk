@@ -8,6 +8,7 @@ export class SpatialModelUIManager {
   viewComponent?: SpatialViewComponent
 
   async initInternal(url: string) {
+    if (__WEB__) return
     var session = getSession()!
 
     // Create entity with view component to display the model inside

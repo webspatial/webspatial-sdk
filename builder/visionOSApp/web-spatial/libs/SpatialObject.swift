@@ -123,7 +123,7 @@ class SpatialObject: EventEmitter, Equatable {
 
     func destroy() {
         if _isDestroyed {
-            print("SpatialObject already destroyed", self)
+            logger.warning("SpatialObject already destroyed \(self)")
             return
         }
         emit(event: Events.BeforeDestroyed.rawValue, data: ["object": self])

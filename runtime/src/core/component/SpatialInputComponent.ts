@@ -1,5 +1,5 @@
 import { Vec3 } from '../SpatialTransform'
-import { SpatialComponent } from './SpatialComponent'
+import { EventSpatialComponent } from './EventSpatialComponent'
 
 /**
  * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
@@ -11,9 +11,8 @@ type TranslateEvent = {
 /**
  * Used to handle input events on an entity
  */
-export class SpatialInputComponent extends SpatialComponent {
-  /** @hidden */
-  public _gotEvent(data: any) {
+export class SpatialInputComponent extends EventSpatialComponent {
+  protected override onRecvEvent(data: any): void {
     this.onTranslate(data)
   }
 

@@ -1,6 +1,7 @@
+// @ts-nocheck
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool, SpatialDiv } from '@xrsdk/react/dist'
+import { enableDebugTool, SpatialDiv } from '@xrsdk/react'
 
 enableDebugTool()
 
