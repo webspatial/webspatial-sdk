@@ -70,16 +70,11 @@ export default class XcodeProject {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
-    let buildType = 'release-testing'
-    useExportOptionsXML = exportOptionsXML
-    if (option['buildType']) {
-      useExportOptionsXML = exportOptionsXML.replace(
-        'BUILDTYPE',
-        option['type'],
-      )
-    } else {
-      useExportOptionsXML = exportOptionsXML.replace('BUILDTYPE', buildType)
-    }
+    useExportOptionsXML = exportOptionsXML.replace(
+      'BUILDTYPE',
+      option['buildType'] ?? 'release-testing',
+    )
+
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
     }
