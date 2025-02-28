@@ -48,6 +48,9 @@ export function getInheritedStyleProps(
     'wordSpacing',
     // background also need to be synced
     'background',
+
+    // position also need to be synced
+    'position',
   ]
   var props = {} as any
   for (var cssName of propNames) {
