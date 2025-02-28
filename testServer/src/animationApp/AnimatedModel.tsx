@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { Model, type ModelProps } from '@xrsdk/react'
+import { Model, type ModelProps } from '@webspatial/react-sdk'
 import animejs from 'animejs'
 import { Easing } from './types'
 

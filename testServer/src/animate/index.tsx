@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
+import { enableDebugTool } from '@webspatial/react-sdk'
 import { PopmotionTest } from './PopmotionTest'
 import { TeenjsTest } from './TeenjsTest'
 import { GSAPTest } from './GSAPTest'
