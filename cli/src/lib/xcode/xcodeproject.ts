@@ -70,9 +70,16 @@ export default class XcodeProject {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
+    let buildType = option['buildType']
+    const buildTypeOptions = [
+      'release-testing',
+      'app-store-connect',
+      'debugging',
+      'enterprise',
+    ]
     useExportOptionsXML = exportOptionsXML.replace(
       'BUILDTYPE',
-      option['buildType'] ?? 'release-testing',
+      buildTypeOptions.includes(buildType) ? buildType : 'release-testing',
     )
 
     if (option['teamId']) {
