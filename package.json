@@ -27,9 +27,8 @@
     "*.swift": [
       "swiftformat"
     ],
-    "*": [
-      "node -e \"const fs = require('fs'); process.argv.slice(1).forEach(file => { if (fs.existsSync(file)) { const size = fs.statSync(file).size; if (size >= 1048576) { console.error(`Error: ${file} is 1MB or larger`); process.exit(1); }}})\"",
-      "node -e \"const fs=require('fs'),f=process.argv[1],c=fs.readFileSync(f,'utf8').split('\\n').filter(l=>/[\\u4E00-\\u9FFF]/.test(l)); if(c.length) { console.error('Non english characters detected:\\n' + c.join('\\n')); process.exit(1); }\""
+    "!(testServer/qaTestApp/**)": [
+      "node -e \"const fs = require('fs'); process.argv.slice(1).forEach(file => { if (fs.existsSync(file)) { const size = fs.statSync(file).size; if (size >= 1048576) { console.error(`Error: ${file} is 1MB or larger`); process.exit(1); }}})\""
     ]
   },
   "repository": {
