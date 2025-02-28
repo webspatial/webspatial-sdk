@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
-import { ModelDragEvent } from '@xrsdk/runtime'
+import { ModelDragEvent } from '@webspatial/core-sdk'
 
 export function useModel3DNative(
   modelUrl: string,
