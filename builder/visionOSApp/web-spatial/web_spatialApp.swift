@@ -126,8 +126,9 @@ struct web_spatialApp: App {
                         if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
                             wv.navigateToURL(url: fileUrl)
                         }
-
-                        wc.setSize.send(DefaultPlainWindowContainerSize)
+                        // reset to mainScene size
+                        wgm.setToMainSceneCfg()
+                        wc.setSize.send(getDefaultSize())
                     }
                 }
             }
