@@ -1,6 +1,6 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { showSample } from './sampleLoader'
-import { Model } from '@xrsdk/react'
+import { Model } from '@webspatial/react-sdk'
 
 function MySample(_props: { session?: SpatialSession }) {
   return (

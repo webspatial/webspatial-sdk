@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
 import { PopmotionTest } from './popMotion.tsx'
 import { ReactSpringTest } from './reactSpringTest.tsx'
 import { GSAPTest } from './GSAPTest.tsx'

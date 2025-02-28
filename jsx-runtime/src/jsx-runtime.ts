@@ -1,7 +1,7 @@
 'use strict'
 
 import reactJSXRuntime from 'react/jsx-runtime'
-import { withCSSSpatial } from '@xrsdk/react'
+import { withCSSSpatial } from '@webspatial/react-sdk'
 import { spatialPolyfill } from './spatialPolyfill'
 
 const attributeFlag = 'enable-xr'

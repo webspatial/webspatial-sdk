@@ -1,7 +1,7 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
-import { Vec3 } from '@xrsdk/runtime'
+import { Vec3 } from '@webspatial/core-sdk'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
