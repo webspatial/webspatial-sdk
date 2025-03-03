@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@xrsdk/runtime'
-import { SpatialDiv } from '@xrsdk/react'
+import { Spatial } from '@webspatial/core-sdk'
+import { SpatialDiv } from '@webspatial/react-sdk'
 
 // 初始化空间会话
 const spatial = new Spatial()

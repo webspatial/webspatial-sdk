@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react/dist'
-import { Spatial } from '@xrsdk/runtime'
-// import { initScene } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
+import { Spatial } from '@webspatial/core-sdk'
+// import { initScene } from '@webspatial/react-sdk'
 window.xrCurrentSceneDefaults = async config => {
   // const config = await requestDatabase()
   return {

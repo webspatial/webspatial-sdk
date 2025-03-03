@@ -1,13 +1,13 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-import { SpatialEntity } from '@xrsdk/runtime'
-import { Model, SpatialDiv, getSession } from '@xrsdk/react'
+import { SpatialEntity } from '@webspatial/core-sdk'
+import { Model, SpatialDiv, getSession } from '@webspatial/react-sdk'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync'
 import { useDispatch, useSelector } from 'react-redux'
 import store, { increment } from './store.ts'
-import { Vec3 } from '@xrsdk/runtime'
+import { Vec3 } from '@webspatial/core-sdk'
 initMessageListener(store)
 
 function App() {

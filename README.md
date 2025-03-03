@@ -9,8 +9,8 @@ An easy-to-use library that allows developers to create content for XR Platforms
 ### NPM
 
 ```sh
-npm install @XRSDK/runtime
-npm install @XRSDK/react
+npm install @webspatial/core-sdk
+npm install @webspatial/react-sdk
 ```
 
 ### Usage
@@ -18,7 +18,7 @@ npm install @XRSDK/react
 ```
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
 
 function App() {
   const [count, setCount] = useState(0);
@@ -48,7 +48,7 @@ ReactDOM.createRoot(root).render(
 
 ### Documentation
 
-- [spatial-web.github.io (Coming soon)](https://spatial-web.github.io)
+- [webspatial.github.io (Coming soon)](https://webspatial.github.io)
 
 ### Contribute/Build locally (Internal developers)
 
@@ -57,7 +57,7 @@ ReactDOM.createRoot(root).render(
 - [NodeJS/NPM](https://nodejs.org/en/download/package-manager) to run local test website
 - [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
-- [Download this repo](https://github.com/spatial-web/XRSDK/archive/refs/heads/main.zip) (From this link or using git clone)
+- [Download this repo](https://github.com/webspatial/webspatial-sdk/archive/refs/heads/main.zip) (From this link or using git clone)
 
 #### Recommended reading:
 
@@ -75,7 +75,7 @@ Know how to build/run an Apple vision pro app in XCode
 
 ```sh
 #### cd into the project folder in the terminal
-cd XRSDK
+cd webspatial-sdk
 
 #### We use pnpm for development (instead of yarn or npm)
 npm install pnpm -g
@@ -101,7 +101,7 @@ npm run dev
 
 This project uses the following third-party libraries:
 
-- [@xrsdk/runtime@1.0.0](https://github.com/spatial-web/XRSDK) - Licensed under the ISC
+- [@webspatial/core-sdk@1.0.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
 - [loglevel@1.9.2](https://github.com/pimterry/loglevel) - Licensed under the MIT
 - [typescript@5.6.3](https://github.com/microsoft/TypeScript) - Licensed under the Apache-2.0
 - [@types/hast@3.0.4](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
@@ -111,7 +111,7 @@ This project uses the following third-party libraries:
 - [@types/react@18.3.12](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
 - [@types/three@0.170.0](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
 - [@types/unist@3.0.3](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
-- [@xrsdk/react@1.0.0](https://github.com/spatial-web/XRSDK) - Licensed under the ISC
+- [@webspatial/react-sdk@1.0.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
 - [lodash.isequal@4.5.0](https://github.com/lodash/lodash) - Licensed under the MIT
 - [react-dom@18.3.1](https://github.com/facebook/react) - Licensed under the MIT
 - [react@18.3.1](https://github.com/facebook/react) - Licensed under the MIT
@@ -119,7 +119,7 @@ This project uses the following third-party libraries:
 - [typedoc-plugin-markdown@4.2.10](https://github.com/typedoc2md/typedoc-plugin-markdown) - Licensed under the MIT
 - [typedoc@0.26.11](https://github.com/TypeStrong/TypeDoc) - Licensed under the Apache-2.0
 - [@types/node@22.9.1](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
-- [@xrsdk/jsx-runtime@1.0.0](No repository link) - Licensed under the ISC
+- [@webspatial/jsx-runtime@1.0.0](No repository link) - Licensed under the ISC
 - [@reduxjs/toolkit@2.3.0](https://github.com/reduxjs/redux-toolkit) - Licensed under the MIT
 - [@tailwindcss/typography@0.5.15](https://github.com/tailwindlabs/tailwindcss-typography) - Licensed under the MIT
 - [@types/animejs@3.1.12](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
@@ -172,4 +172,3 @@ This project uses the following third-party libraries:
 - [lint-staged@15.2.10](https://github.com/lint-staged/lint-staged) - Licensed under the MIT
 - [prettier@3.3.3](https://github.com/prettier/prettier) - Licensed under the MIT
 - [simple-git-hooks@2.11.1](https://github.com/toplenboren/simple-git-hooks) - Licensed under the MIT
-- [xrsdk@1.0.0](https://github.com/spatial-web/XRSDK) - Licensed under the ISC
