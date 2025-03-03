@@ -1,6 +1,6 @@
+// @ts-nocheck
 import React, { useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@xrsdk/react'
 import { Spatial } from '@xrsdk/runtime'
 import { initScene } from '@xrsdk/react'
 
@@ -47,14 +47,15 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 p-44">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <SpatialDiv
-          spatialStyle={{
-            position: { z: 100 }, // z direction protrusion 50
+        <div
+          enable-xr
+          style={{
+            position: { z: 50 }, // Bulge 50 in the z direction
           }}
           className="text-6xl font-bold text-white p-8 rounded-xl"
         >
           Window Group
-        </SpatialDiv>
+        </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
@@ -129,6 +130,14 @@ function App() {
           >
             Open Model
           </button>
+          {/*<div className="w-4"></div>*/}
+          {/*<a*/}
+          {/*  href="http://localhost:5173/src/qaTestApp/SceneTest/model.html"*/}
+          {/*  target="_blank"*/}
+          {/*  className={btnCls}*/}
+          {/*>*/}
+          {/*  open model by a tag*/}
+          {/*</a>*/}
           <div className="w-4"></div>
           <button className={btnCls} onClick={() => handleCloseWindow(winCRef)}>
             Close Model
