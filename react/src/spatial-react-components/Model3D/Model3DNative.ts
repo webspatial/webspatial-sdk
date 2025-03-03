@@ -7,8 +7,14 @@ import { getSession } from '../../utils'
 import { SpatialTransformType } from './types'
 import { getAbsoluteURL } from './utils'
 import { parseTransformOrigin } from '../SpatialReactComponent/utils'
+import { RectType } from '../types'
 
 export class Model3DNative {
+  constructor(parentEntity?: SpatialEntity) {
+    this.parentEntity = parentEntity
+  }
+
+  private parentEntity?: SpatialEntity
   private initPromise?: Promise<any>
   private entity?: SpatialEntity
   private spatialModel3DComponent?: SpatialModel3DComponent
@@ -63,10 +69,14 @@ export class Model3DNative {
     if (this.isDestroyed) {
       return
     }
-    // Add entity to the window
-    var wc = session.getCurrentWindowComponent()
-    var ent = await wc.getEntity()
-    await entity.setParent(ent!)
+    if (this.parentEntity) {
+      await entity.setParent(this.parentEntity)
+    } else {
+      // Add entity to the window
+      var wc = session.getCurrentWindowComponent()
+      var ent = await wc.getEntity()
+      await entity.setParent(ent!)
+    }
 
     this.entity = entity
     this.spatialModel3DComponent = spatialModel3DComponent
@@ -145,6 +155,38 @@ export class Model3DNative {
 
     const anchor = parseTransformOrigin(computedStyle)
     await spatialModel3DComponent.setRotationAnchor(anchor)
+  }
+
+  async updateRectAndTransform(
+    rect: RectType,
+    spatialTransform: SpatialTransformType,
+  ) {
+    if (!this.entity || !this.spatialModel3DComponent) {
+      return
+    }
+    const targetPosX = rect.x + (rect.width - rect.x) / 2
+    const targetPosY = rect.y + (rect.height - rect.y) / 2 + window.scrollY
+    const { position, rotation, scale } = spatialTransform
+    const entity = this.entity
+    entity.transform.position.x = targetPosX + position.x
+    entity.transform.position.y = targetPosY + position.y
+    entity.transform.position.z = position.z
+    entity.transform.orientation.x = rotation.x
+    entity.transform.orientation.y = rotation.y
+    entity.transform.orientation.z = rotation.z
+    entity.transform.orientation.w = rotation.w
+    entity.transform.scale.x = scale.x
+    entity.transform.scale.y = scale.y
+    entity.transform.scale.z = scale.z
+    await entity.updateTransform()
+    const spatialModel3DComponent = this.spatialModel3DComponent
+    await spatialModel3DComponent.setResolution(rect.width, rect.height)
+  }
+
+  async setRotationAnchor(anchor: { x: number; y: number; z: number }) {
+    if (this.spatialModel3DComponent) {
+      await this.spatialModel3DComponent.setRotationAnchor(anchor)
+    }
   }
 
   async setOpacity(opacity: number) {
