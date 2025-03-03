@@ -1,7 +1,8 @@
 import { CSSProperties, ForwardedRef, forwardRef } from 'react'
-import { Model3D, Model3DProps, type ModelElementRef } from './Model3D'
+import { Model3D } from './Model3D'
 import { useSpatialStyle } from '../CSSSpatialDiv/useSpatialStyle'
 import { useHijackSpatialDivRef } from '../CSSSpatialDiv/useHijackSpatialDivRef'
+import { Model3DProps, ModelElementRef } from './types'
 
 export type CSSModel3DProps = Omit<Model3DProps, 'spatialTransform' | 'visible'>
 
