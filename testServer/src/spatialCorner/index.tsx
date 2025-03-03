@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { type BackgroundMaterialType } from '@xrsdk/runtime'
+import { type BackgroundMaterialType } from '@webspatial/core-sdk'
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 
-import { enableDebugTool } from '@xrsdk/react'
+import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 

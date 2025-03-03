@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@xrsdk",
+    "jsxImportSource": "@webspatial/jsx-runtime",
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

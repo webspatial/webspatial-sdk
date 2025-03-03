@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Spatial } from '@xrsdk/runtime'
+import { Spatial } from '@webspatial/core-sdk'
 
-import { SpatialDiv, getSession } from '@xrsdk/react'
+import { SpatialDiv, getSession } from '@webspatial/react-sdk'
 
 import { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'

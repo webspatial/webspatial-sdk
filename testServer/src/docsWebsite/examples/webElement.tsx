@@ -1,4 +1,4 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
 

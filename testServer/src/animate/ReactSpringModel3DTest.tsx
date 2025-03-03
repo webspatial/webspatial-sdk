@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 
-import { CSSModel3D } from '@xrsdk/react'
+import { CSSModel3D } from '@webspatial/react-sdk'
 
 import { animated, useSpring } from '@react-spring/web'
 
