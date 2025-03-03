@@ -352,7 +352,7 @@ function useSyncDomRect(spatialId: string) {
     height: 0,
   })
 
-  const inheritedPortalStyleRef = useRef({})
+  const inheritedPortalStyleRef = useRef<CSSProperties>({})
 
   const anchorRef = useRef({
     x: 0.5,
@@ -496,8 +496,20 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     className,
   )
 
+  const needRenderPlaceHolder = inheritedPortalStyle.position !== 'absolute'
+
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
+      {needRenderPlaceHolder && (
+        <div
+          className={className}
+          style={{
+            position: 'relative',
+            width: `${domRect.width}px`,
+            height: `${domRect.height}px`,
+          }}
+        />
+      )}
       {spatialWindowManager &&
         spatialWindowManager.window &&
         createPortal(
