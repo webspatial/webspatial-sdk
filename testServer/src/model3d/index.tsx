@@ -105,10 +105,10 @@ function App() {
         className="w-[600px] h-[400px]"
         style={{ position: 'relative', '--xr-back': 100 }}
       >
-        <CSSModel3D
+        <ModelNew
           ref={ref}
           style={styleOuter}
-          modelUrl={modelUrl}
+          // modelUrl={modelUrl}
           contentMode={contentMode}
           resizable={resizable}
           aspectRatio={aspectRatio}
@@ -144,7 +144,18 @@ function App() {
           <source src={modelUrl} type="model/vnd.usdz+zip" />
 
           <div> this is place holder when failure </div>
-        </CSSModel3D>
+        </ModelNew>
+
+        <ModelNew
+          style={styleOuter}
+          contentMode={contentMode}
+          resizable={resizable}
+          aspectRatio={aspectRatio}
+        >
+          <source src={modelUrl} type="model/vnd.usdz+zip" />
+
+          <div> this is place holder when failure </div>
+        </ModelNew>
       </div>
 
       <div>
