@@ -1,4 +1,4 @@
-import { SpatialEntity, SpatialWindowComponent } from '@xrsdk/runtime'
+import { SpatialEntity, SpatialWindowComponent } from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { vecType, quatType, RectType } from '../types'
 
@@ -14,6 +14,7 @@ export class SpatialWindowManager {
   }
 
   private async initInternal(url: string) {
+    if (__WEB__) return
     this.entity = await getSession()!.createEntity()
     this.webview = await getSession()!.createWindowComponent()
     await this.webview.loadURL(url)
@@ -30,6 +31,7 @@ export class SpatialWindowManager {
   private async initInternalFromWindow(
     parentSpatialWindowManager?: SpatialWindowManager | null,
   ) {
+    if (__WEB__) return
     var w = await getSession()!.createWindowContext()
     this.window = w
     this.entity = await getSession()!.createEntity()

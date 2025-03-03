@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@xrsdk",
+    "jsxImportSource": "@webspatial",
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -23,6 +23,7 @@
       "web-spatial": ["../npmLib/src"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "src/qaTestApp"]
   // "references": [{ "path": "./tsconfig.node.json" }]
 }
