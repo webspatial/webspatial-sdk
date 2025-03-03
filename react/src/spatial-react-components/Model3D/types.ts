@@ -57,3 +57,5 @@ export interface ModelElement extends HTMLDivElement {
 }
 
 export type ModelElementRef = ForwardedRef<ModelElement>
+
+export type CSSModel3DProps = Omit<Model3DProps, 'spatialTransform' | 'visible'>
