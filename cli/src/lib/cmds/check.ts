@@ -1,12 +1,12 @@
 import { ParsedArgs } from 'minimist'
-export function checkBuildParams(args: ParsedArgs) {
+export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   if (!args['manifest'] && !args['manifest-url']) {
     throw new Error('manifest or manifest-url is required')
   }
   if (args['manifest'] && args['manifest-url']) {
     throw new Error('manifest and manifest-url cannot be used at the same time')
   }
-  if (!args['teamId']) {
+  if (!args['teamId'] && !isDev) {
     throw new Error('teamId is required')
   }
 }

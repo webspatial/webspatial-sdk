@@ -8,7 +8,7 @@ export async function start(
   args: ParsedArgs,
   isDev: boolean = false,
 ): Promise<any> {
-  checkBuildParams(args)
+  checkBuildParams(args, isDev)
   /**
    * PWA steps
    * 1.  Load manifestion.json
