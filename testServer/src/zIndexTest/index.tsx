@@ -18,16 +18,16 @@ function App() {
   const styleInner1 = {
     '--xr-back': 36,
     backgroundColor: 'blue',
-    position: 'absolute',
+    position: 'relative',
     left: 30,
     zIndex: 11,
   }
 
   const styleInner2 = {
-    '--xr-back': 36,
+    '--xr-back': 6,
     backgroundColor: 'green',
     position: 'absolute',
-    left: 0,
+    left: 120,
     zIndex: 3,
   }
 
@@ -47,6 +47,7 @@ function App() {
         <div enable-xr style={styleInner2} debugName="InnerDiv2">
           Inner Div2
         </div>
+        End sss
       </div>
     </div>
   )
