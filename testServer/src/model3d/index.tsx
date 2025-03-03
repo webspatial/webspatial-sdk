@@ -24,8 +24,8 @@ function App() {
     '--xr-back': tapFlag ? 31 : 100,
     // visibility: 'hidden',
     position: 'relative',
-    width: '50%',
-    height: '50%',
+    width: '30%',
+    height: '30%',
     marginBottom: '140px',
   }
 
@@ -98,46 +98,67 @@ function App() {
         </a>
       </div>
 
-      <ModelNew
-        ref={ref}
-        style={styleOuter}
-        // modelUrl={modelUrl}
-        contentMode={contentMode}
-        resizable={resizable}
-        aspectRatio={aspectRatio}
-        onLoad={(event: ModelEvent) => {
-          console.log('onLoad', event.target.ready, event.target.currentSrc)
-        }}
-        onDragStart={(dragEvent: ModelDragEvent) => {
-          console.log('onDragStart', dragEvent)
-        }}
-        onDrag={(dragEvent: ModelDragEvent) => {
-          ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
-        }}
-        onDragEnd={(dragEvent: ModelDragEvent) => {
-          console.log(
-            'onDragEnd',
-            dragEvent,
-            dragEvent.target.ready,
-            dragEvent.target.currentSrc,
-          )
-          ref.current!.style.transform = 'none'
-        }}
-        onTap={(event: ModelEvent) => {
-          setTapFlag(v => !v)
-          console.log('onTap', event)
-        }}
-        onDoubleTap={(event: ModelEvent) => {
-          console.log('onDoubleTap', event)
-        }}
-        onLongPress={(event: ModelEvent) => {
-          console.log('onLongPress', event)
-        }}
-      >
-        <source src={modelUrl} type="model/vnd.usdz+zip" />
+      <div className="flex w-[400px] h-[400px]">
+        <ModelNew
+          ref={ref}
+          style={styleOuter}
+          // modelUrl={modelUrl}
+          contentMode={contentMode}
+          resizable={resizable}
+          aspectRatio={aspectRatio}
+          onLoad={(event: ModelEvent) => {
+            console.log('onLoad', event.target.ready, event.target.currentSrc)
+          }}
+          onDragStart={(dragEvent: ModelDragEvent) => {
+            console.log('onDragStart', dragEvent)
+          }}
+          onDrag={(dragEvent: ModelDragEvent) => {
+            ref.current!.style.transform = `translateX(${dragEvent.translation3D.x}px) translateY(${dragEvent.translation3D.y}px) translateZ(${dragEvent.translation3D.z}px)`
+          }}
+          onDragEnd={(dragEvent: ModelDragEvent) => {
+            console.log(
+              'onDragEnd',
+              dragEvent,
+              dragEvent.target.ready,
+              dragEvent.target.currentSrc,
+            )
+            ref.current!.style.transform = 'none'
+          }}
+          onTap={(event: ModelEvent) => {
+            setTapFlag(v => !v)
+            console.log('onTap', event)
+          }}
+          onDoubleTap={(event: ModelEvent) => {
+            console.log('onDoubleTap', event)
+          }}
+          onLongPress={(event: ModelEvent) => {
+            console.log('onLongPress', event)
+          }}
+        >
+          <source src={modelUrl} type="model/vnd.usdz+zip" />
 
-        <div> this is place holder when failure </div>
-      </ModelNew>
+          <div> this is place holder when failure </div>
+        </ModelNew>
+
+        <ModelNew
+          style={styleOuter}
+          // modelUrl={modelUrl}
+          contentMode={contentMode}
+          resizable={resizable}
+          aspectRatio={aspectRatio}
+          onLoad={(event: ModelEvent) => {
+            console.log(
+              'onLoad model 2',
+              event.target.ready,
+              event.target.currentSrc,
+            )
+          }}
+        >
+          <source src={modelUrl} type="model/vnd.usdz+zip" />
+
+          <div> this is place holder when failure </div>
+        </ModelNew>
+      </div>
 
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
