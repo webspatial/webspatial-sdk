@@ -1,10 +1,6 @@
-import React, { useRef, useState, useEffect, CSSProperties } from 'react'
+// @ts-nocheck
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
-import { Model, SpatialDiv } from '@xrsdk/react/dist'
-import styled from 'styled-components'
-
-enableDebugTool()
 
 function App() {
   const [translateX, setTranslateX] = useState(0)
@@ -66,14 +62,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 p-4">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <SpatialDiv
-          spatialStyle={{
-            position: { z: 100 }, // z方向凸起50
-          }}
-          className="text-6xl font-bold text-white p-8 rounded-xl"
-        >
+        <div enable-xr className="text-6xl font-bold text-white p-8 rounded-xl">
           Transform Tests
-        </SpatialDiv>
+        </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">

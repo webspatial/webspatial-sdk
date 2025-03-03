@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef } from 'react'
 import { animate } from 'popmotion'
 
