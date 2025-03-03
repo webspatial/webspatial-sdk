@@ -1,9 +1,6 @@
 // @ts-nocheck
 import React, { useRef, useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
-
-enableDebugTool()
 
 function App() {
   const ref = useRef<HTMLDivElement>(null)
@@ -182,6 +179,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
+      <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
+        <div
+          enable-xr
+          style={{
+            position: { z: 50 }, // Bulge 50 in the z direction
+          }}
+          className="text-6xl font-bold text-white p-8 rounded-xl"
+        >
+          Depth Position
+        </div>
+      </h1>
       {/* Navigation bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a

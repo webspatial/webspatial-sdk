@@ -272,14 +272,14 @@ function App() {
   return (
     <div className="min-h-screen bg-amber-200 bg-opacity-10 p-4">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <SpatialDiv
-          spatialStyle={{
+        <div
+          style={{
             position: { z: 100 }, // z方向凸起50
           }}
           className="text-6xl font-bold text-white p-8 rounded-xl"
         >
           Material API Tests
-        </SpatialDiv>
+        </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
