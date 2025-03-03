@@ -108,14 +108,14 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     private func onWindowContainerDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialWindowContainer
-
-        spatialObject
-            .off(
-                event: SpatialObject.Events.BeforeDestroyed.rawValue,
-                listener: onWindowContainerDestroyed
-            )
-        childWindowContainers.removeValue(forKey: spatialObject.id)
+        if let spatialObject = object as? SpatialWindowContainer {
+            spatialObject
+                .off(
+                    event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                    listener: onWindowContainerDestroyed
+                )
+            childWindowContainers.removeValue(forKey: spatialObject.id)
+        }
     }
 
     /// Determines whether the current webview is a root webview.
@@ -209,17 +209,14 @@ class SpatialWindowComponent: SpatialComponent {
 
     func goBack() {
         webViewNative?.webViewHolder.appleWebView?.goBack()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func goForward() {
         webViewNative?.webViewHolder.appleWebView?.goForward()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     func reload() {
         webViewNative?.webViewHolder.appleWebView?.reload()
-        webViewNative?.webViewHolder.needsUpdate = true
     }
 
     var canGoBack: Bool = false
@@ -357,6 +354,12 @@ class SpatialWindowComponent: SpatialComponent {
         gotStyle = false
         isLoading = true
         loadingStyles = LoadingStyles()
+
+        // FIXME:
+        // This is a workaround to force run UIViewRepresentable.update()
+        // SwiftUI not trigger it when go back from example page.
+        // Warning of `AttributeGraph: cycle detected through attribute` fired when goes to example page
+        webViewNative?.initialLoad()
     }
 
     func didSpawnWebView(wv: WebViewNative) {
@@ -402,5 +405,10 @@ class SpatialWindowComponent: SpatialComponent {
     override func onDestroy() {
         releaseChildResources()
         didCloseWebView()
+    }
+
+    func didNavBackForward() {
+        // in JS calling history.go(-1) we should set needUpdate=true
+        webViewNative?.webViewHolder.needsUpdate = true
     }
 }

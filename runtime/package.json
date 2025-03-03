@@ -1,28 +1,29 @@
 {
-  "name": "@xrsdk/runtime",
+  "name": "@webspatial/core-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "tsc --watch",
-    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=xrsdkRuntime",
+    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialRuntime",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spatial-web/XRSDK.git"
+    "url": "git+https://github.com/webspatial/webspatial-sdk.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/spatial-web/XRSDK/issues"
+    "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
-  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "typescript": "^5.6.3",
     "typedoc": "^0.26.5",

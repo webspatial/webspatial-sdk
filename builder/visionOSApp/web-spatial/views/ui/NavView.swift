@@ -75,7 +75,7 @@ struct NavView: View {
                 }, label: {
                     Text("X")
                 })
-            }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y: 35).opacity(showUrl ? 1 : 0).animation(.easeOut(duration: 0.2))
+            }.glassBackgroundEffect(in: .rect).cornerRadius(15).offset(y: 35).opacity(showUrl ? 1 : 0).animation(.easeOut, value: 0.2)
         }
         .zIndex(10) // closer to user
         .popover(isPresented: $showCopyTip) {

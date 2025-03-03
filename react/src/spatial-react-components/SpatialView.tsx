@@ -1,4 +1,5 @@
-import { SpatialEntity, SpatialHelper } from '@xrsdk/runtime/dist'
+import { SpatialHelper } from '@webspatial/core-sdk'
+import type { SpatialEntity } from '@webspatial/core-sdk'
 import React, {
   useRef,
   useImperativeHandle,
@@ -45,6 +46,7 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
       )
     }
     useEffect(() => {
+      if (__WEB__) return // not supported
       activePromise.current = runAsync(async () => {
         if (activePromise.current) {
           await activePromise.current
@@ -58,6 +60,7 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
         }
       })
       return () => {
+        if (__WEB__) return // not supported
         runAsync(async () => {
           await activePromise.current
           spatialEntity.current?.destroy()

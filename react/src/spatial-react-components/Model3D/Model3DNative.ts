@@ -2,7 +2,7 @@ import {
   ModelDragEvent,
   SpatialEntity,
   SpatialModel3DComponent,
-} from '@xrsdk/runtime'
+} from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { SpatialTransformType } from './types'
 import { getAbsoluteURL } from './utils'
@@ -44,6 +44,7 @@ export class Model3DNative {
     onSuccess: () => void,
     onFailure: (error: string) => void,
   ) {
+    if (__WEB__) return
     var session = getSession()
 
     if (!session) {

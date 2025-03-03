@@ -1,8 +1,12 @@
 // @ts-nocheck
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@xrsdk/runtime'
-import { SpatialDiv, SpatialPrimitive, withSpatial } from '@xrsdk/react'
+import { Spatial } from '@webspatial/core-sdk'
+import {
+  SpatialDiv,
+  SpatialPrimitive,
+  withSpatial,
+} from '@webspatial/react-sdk'
 import { SimpleComponent } from './SimpleComponent'
 
 const spatial = new Spatial()
