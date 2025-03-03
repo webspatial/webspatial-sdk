@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
@@ -278,9 +279,9 @@ function App() {
           {spatialSupported ? (
             <div>
               <WebSpatialTitle makeShadow={true} />
-              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
+              <div enable-xr className="" style={{ position: { z: 100 } }}>
                 <WebSpatialTitle />
-              </SpatialDiv>
+              </div>
             </div>
           ) : (
             <div>
