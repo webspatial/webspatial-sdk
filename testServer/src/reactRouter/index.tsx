@@ -7,7 +7,7 @@ import { ToolbarTest } from './tests/toolbar'
 import { PopupTest } from './tests/popup'
 import { ManyPanelTest } from './tests/manyPanels'
 import { BackgroundMaterialTest } from './tests/BackgroundMaterialTest'
-import { SpatialDiv } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
 
 function HomePage() {
   return <>This is the homepage with nothing</>

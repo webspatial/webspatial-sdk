@@ -1,5 +1,5 @@
 {
-  "name": "@xrsdk/jsx-runtime",
+  "name": "@webspatial/jsx-runtime",
   "version": "1.0.0",
   "scripts": {
     "start": "tsc  --watch",
@@ -12,7 +12,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@xrsdk/react": "workspace:*",
+    "@webspatial/react-sdk": "workspace:*",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.5",
     "typescript": "^5.6.2"

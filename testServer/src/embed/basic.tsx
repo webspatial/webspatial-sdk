@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@xrsdk/runtime'
+import { Spatial } from '@webspatial/core-sdk'
 
 //(window as any).wx = WebSpatial
 

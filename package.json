@@ -1,5 +1,5 @@
 {
-  "name": "xrsdk",
+  "name": "webspatial-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -28,20 +28,22 @@
       "swiftformat"
     ],
     "*": [
-      "node -e \"const fs = require('fs'); process.argv.slice(1).forEach(file => { if (fs.existsSync(file)) { const size = fs.statSync(file).size; if (size >= 1048576) { console.error(`Error: ${file} is 1MB or larger`); process.exit(1); }}})\"",
+      "node -e \"const fs = require('fs'); process.argv.slice(1).forEach(file => { if (fs.existsSync(file)) { const size = fs.statSync(file).size; if (size >= 1048576) { console.error(`Error: ${file} is 1MB or larger`); process.exit(1); }}})\""
+    ],
+    "!(src/qaTestApp/**)": [
       "node -e \"const fs=require('fs'),f=process.argv[1],c=fs.readFileSync(f,'utf8').split('\\n').filter(l=>/[\\u4E00-\\u9FFF]/.test(l)); if(c.length) { console.error('Non english characters detected:\\n' + c.join('\\n')); process.exit(1); }\""
     ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spatial-web/XRSDK.git"
+    "url": "git+https://github.com/webspatial/webspatial-sdk.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/spatial-web/XRSDK/issues"
+    "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
-  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",

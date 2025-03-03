@@ -1,4 +1,4 @@
-import { getSession, parseCornerRadius, XRApp } from '@xrsdk/react'
+import { getSession, parseCornerRadius, XRApp } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
@@ -50,6 +50,7 @@ function setCornerRadius(cornerRadius: any) {
     htmlCornerRadius.bottomTrailing !== cornerRadius.bottomTrailing
   ) {
     const session = getSession()!
+    if (!session) return
     session.getCurrentWindowComponent().setStyle({
       cornerRadius,
     })
@@ -62,6 +63,7 @@ function setCornerRadius(cornerRadius: any) {
 
 function setOpacity(opacity: number) {
   const session = getSession()!
+  if (!session) return
   session.getCurrentWindowComponent().setOpacity(opacity)
 }
 
@@ -73,6 +75,7 @@ function checkOpacity() {
 
 async function setHtmlVisible(visible: boolean) {
   const session = getSession()!
+  if (!session) return
   const wc = session.getCurrentWindowComponent()
   const ent = await wc.getEntity()
   ent?.setVisible(visible)

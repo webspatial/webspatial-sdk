@@ -1,4 +1,4 @@
-import { SpatialEntity, SpatialViewComponent } from '@xrsdk/runtime'
+import { SpatialEntity, SpatialViewComponent } from '@webspatial/core-sdk'
 import { getSession } from '../utils'
 import { vecType } from './types'
 
@@ -8,6 +8,7 @@ export class SpatialModelUIManager {
   viewComponent?: SpatialViewComponent
 
   async initInternal(url: string) {
+    if (__WEB__) return
     var session = getSession()!
 
     // Create entity with view component to display the model inside

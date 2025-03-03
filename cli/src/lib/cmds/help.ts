@@ -5,7 +5,7 @@ const HELP_MESSAGES = new Map<string, string>([
   [
     'main',
     [
-      'spatial-web [command] <options>',
+      'webspatial [command] <options>',
       '',
       '',
       'help ................ shows this menu',
@@ -19,10 +19,10 @@ const HELP_MESSAGES = new Map<string, string>([
       'Usage:',
       '',
       '',
-      'spatial-web build --manifest=[local-manifest-path] --project=[local-web-project-path] --teamId=[teamId]',
+      'webspatial build --manifest=[local-manifest-path] --project=[local-web-project-path] --teamId=[teamId]',
       '',
       '',
-      'spatial-web build --manifest-url=[net-manifest-url] --teamId=[teamId]',
+      'webspatial build --manifest-url=[net-manifest-url] --teamId=[teamId]',
     ].join('\n'),
   ],
 ])
