@@ -5,6 +5,7 @@ import {
   enableDebugTool,
   ModelNew,
   Model3D,
+  CSSModel3D,
   ModelElement,
   ModelEvent,
   ModelDragEvent,
@@ -104,7 +105,7 @@ function App() {
         className="w-[600px] h-[400px]"
         style={{ position: 'relative', '--xr-back': 100 }}
       >
-        <Model3D
+        <CSSModel3D
           ref={ref}
           style={styleOuter}
           modelUrl={modelUrl}
@@ -143,7 +144,7 @@ function App() {
           <source src={modelUrl} type="model/vnd.usdz+zip" />
 
           <div> this is place holder when failure </div>
-        </Model3D>
+        </CSSModel3D>
       </div>
 
       <div>
