@@ -7,6 +7,10 @@
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "main": "dist/jsx-runtime.js",
+  "exports": {
+    "./jsx-runtime": "./dist/jsx-runtime.js",
+    "./jsx-dev-runtime": "./dist/jsx-dev-runtime.js"
+  },
   "types": "dist/jsx-runtime.d.js",
   "author": "",
   "license": "ISC",
