@@ -9,6 +9,7 @@ import Foundation
 var pwaManager = PWAManager()
 
 struct PWAManager: Codable {
+    var isLocal: Bool = false
     var start_url: String = "http://localhost:5173"
     // var start_url:String = "static-web/index.html"
     var scope: String = ""
@@ -35,6 +36,7 @@ struct PWAManager: Codable {
         if !(urlType == "http" || urlType == "https") {
             start_url = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")!.absoluteString
             scope = "file://" + Bundle.main.bundlePath + scope
+            isLocal = true
         }
 
         if display_override.count > 0 {
@@ -62,6 +64,21 @@ struct PWAManager: Codable {
         }
         logger.debug(linkUrl)
         return linkUrl
+    }
+
+    func getLocalResourceURL(url: String) -> String {
+        let path = String(url.split(separator: "file://").first!.split(separator: "?").first!)
+        let root = String(url.split(separator: "?").first!)
+        let params = String(url.split(separator: "file://" + root).first!)
+        var resource: String = Bundle.main.url(forResource: path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
+        if resource == "" {
+            resource = Bundle.main.url(forResource: "static-web" + path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
+        }
+        if resource == "" {
+            return url
+        }
+        resource += "?" + params
+        return resource
     }
 }
 

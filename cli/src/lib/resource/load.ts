@@ -51,11 +51,6 @@ export async function loadJsonFromNet(
   }
 }
 
-export async function loadFileString(url: String): Promise<string> {
-  let file = await fs.promises.readFile(url.toString())
-  return file.toString()
-}
-
 export async function loadJsonFromDisk(
   url: String,
 ): Promise<Record<string, any>> {
