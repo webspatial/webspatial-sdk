@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import xrsdkPlugin from '@xrsdk/react/plugin-vite.js'
+import xrsdkPlugin from '@webspatial/react-sdk/plugin-vite.js'
 
 // https://vite.dev/config/
 

@@ -13,9 +13,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@xrsdk/jsx-runtime": "workspace:*",
-    "@xrsdk/react": "workspace:*",
-    "@xrsdk/runtime": "workspace:*",
+    "@webspatial/jsx-runtime": "workspace:*",
+    "@webspatial/react-sdk": "workspace:*",
+    "@webspatial/core-sdk": "workspace:*",
     "react": "^18",
     "react-dom": "^18",
     "three": "^0.173.0"

@@ -15,7 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    "jsxImportSource": "@xrsdk/jsx-runtime",
+    "jsxImportSource": "@webspatial/jsx-runtime",
 
     /* Linting */
     "strict": false,
