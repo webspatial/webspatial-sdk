@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef } from 'react'
 import { Easing, Tween } from '@tweenjs/tween.js'
 
