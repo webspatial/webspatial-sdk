@@ -108,6 +108,7 @@ struct SpatialModel3DView: View {
                 )
                 .position(x: x, y: y)
                 .offset(z: z)
+                .frame(maxDepth: 0, alignment: .back)
                 .opacity(opacity)
                 .gesture(enableDragEvent ? drag : nil)
                 .gesture(enableDoubleTapEvent ?doubleTapGesture : nil)

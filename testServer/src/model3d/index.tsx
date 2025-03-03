@@ -25,8 +25,8 @@ function App() {
     '--xr-back': tapFlag ? 31 : 100,
     // visibility: 'hidden',
     position: 'relative',
-    width: '50%',
-    height: '50%',
+    width: '30%',
+    height: '30%',
     marginBottom: '140px',
   }
 
