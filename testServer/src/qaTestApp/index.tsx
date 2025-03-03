@@ -1,7 +1,7 @@
+// @ts-nocheck
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@xrsdk/runtime'
-import { SpatialDiv } from '@xrsdk/react'
 
 const spatial = new Spatial()
 const session = spatial.requestSession()
@@ -30,14 +30,15 @@ function App() {
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-gray-800">
-        <SpatialDiv
-          spatialStyle={{
+        <div
+          enable-xr
+          style={{
             position: { z: 50 }, // Bulge 50 in the z direction
           }}
           className="text-6xl font-bold text-white p-8 bg-blue-500 rounded-xl"
         >
           Floating on the Z-axis -- 50
-        </SpatialDiv>
+        </div>
       </div>
     </div>
   )
