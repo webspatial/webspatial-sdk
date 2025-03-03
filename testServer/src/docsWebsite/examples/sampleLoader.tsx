@@ -1,7 +1,7 @@
 import { useEffect, useState, ReactNode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { flushSync } from 'react-dom'
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
+import { Spatial, SpatialSession } from '@webspatial/core-sdk'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark as dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 

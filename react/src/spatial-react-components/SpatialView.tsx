@@ -1,5 +1,5 @@
-import { SpatialHelper } from '@xrsdk/runtime'
-import type { SpatialEntity } from '@xrsdk/runtime'
+import { SpatialHelper } from '@webspatial/core-sdk'
+import type { SpatialEntity } from '@webspatial/core-sdk'
 import React, {
   useRef,
   useImperativeHandle,

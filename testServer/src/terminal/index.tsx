@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
-import { SpatialHelper } from '@xrsdk/runtime/dist'
+import { SpatialHelper } from '@webspatial/core-sdk/dist'
 
 function App() {
   const termDiv = useRef<HTMLDivElement>(null)
