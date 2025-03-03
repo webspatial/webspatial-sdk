@@ -25,11 +25,11 @@ function injectProcessEnv() {
           emptyOutDir: xrEnv === 'web', // keep dist folder
           rollupOptions: { output },
           commonjsOptions: {
-            include: [/react/, /node_modules/],
+            include: [/@webspatial\/react-sdk/, /node_modules/],
           },
         },
         optimizeDeps: {
-          include: ['@xrsdk/react'], // prebuild cjs to esm
+          include: ['@webspatial/react-sdk'], // prebuild cjs to esm
         },
       }
     },
