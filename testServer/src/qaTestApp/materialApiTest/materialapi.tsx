@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useRef, useState, useEffect, CSSProperties } from 'react'
+import { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool, SpatialDiv } from '@xrsdk/react'
 
@@ -123,18 +123,6 @@ function App() {
       observer.disconnect()
     }
   }, [])
-
-  const updateHtmlBackgroundMaterial = (newMaterial: string) => {
-    document.documentElement.style['--xr-background-material'] = newMaterial
-    document.documentElement.style['background-color'] = 'transparent'
-    setSelectedInlineMaterial(newMaterial)
-    console.log(
-      'update html style new material: ' +
-        newMaterial +
-        ',  ' +
-        htmlStyles?.getPropertyValue('--xr-background-material'),
-    )
-  }
 
   const applyRefMaterial = () => {
     if (testElementRef.current) {
@@ -272,26 +260,21 @@ function App() {
   return (
     <div className="min-h-screen bg-amber-200 bg-opacity-10 p-4">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <div
-          style={{
-            position: { z: 100 }, // z方向凸起50
-          }}
-          className="text-6xl font-bold text-white p-8 rounded-xl"
-        >
+        <div className="text-6xl font-bold text-white p-8 rounded-xl">
           Material API Tests
         </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
-          返回主页
+          return to home page
         </a>
         <a
           href="#"
           onClick={() => history.go(-1)}
           className="hover:text-blue-400 transition-colors"
         >
-          返回上一级
+          back
         </a>
       </div>
 
@@ -677,7 +660,7 @@ Class Name: ${elementStateParent.className}`
 
         <SpatialDiv
           spatialStyle={{
-            position: { z: 30 }, // z方向凸起50
+            position: { z: 30 },
           }}
           className="defaultMat text-6xl font-bold text-white p-7 bg-opacity-25 rounded-xl"
         >
@@ -685,7 +668,7 @@ Class Name: ${elementStateParent.className}`
         </SpatialDiv>
         <SpatialDiv
           spatialStyle={{
-            position: { z: 50 }, // z方向凸起50
+            position: { z: 50 },
           }}
           className="thinMat text-6xl font-bold text-white p-7 rounded-xl"
         >
