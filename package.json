@@ -1,5 +1,5 @@
 {
-  "name": "xrsdk",
+  "name": "webspatial-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -34,14 +34,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spatial-web/XRSDK.git"
+    "url": "git+https://github.com/webspatial/webspatial-sdk.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/spatial-web/XRSDK/issues"
+    "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
-  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",

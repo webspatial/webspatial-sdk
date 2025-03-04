@@ -9,6 +9,7 @@
   --box-xr-back: 0;
   --box-xr-background-material: ;
 
+
   opacity: var(--box-opacity);
   transform: translate3d(var(--box-translate-x), 0, 0)
     rotateZ(var(--box-rotate-z));
@@ -17,6 +18,6 @@
   display: var(--box-display);
   --xr-back: var(--box-xr-back);
   --xr-background-material: var(--box-xr-background-material);
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */
   border-radius: 40px;
 }

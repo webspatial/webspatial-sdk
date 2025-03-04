@@ -14,14 +14,14 @@ npx create-next-app@latest
 ## Install packages for js and/or react APIs
 
 ```
-npm install @xrsdk/runtime
-npm install @xrsdk/react
+npm install @webspatial/core-sdk
+npm install @webspatial/react-sdk
 ```
 
 ## Import the library in your script and create a session
 
 ```javascript
-import { Spatial, SpatialSession } from '@xrsdk/runtime'
+import { Spatial, SpatialSession } from '@webspatial/core-sdk'
 
 let spatial = new Spatial()
 let session = spatial.requestSession()
