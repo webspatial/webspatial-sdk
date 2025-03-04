@@ -11,7 +11,9 @@
     "./plugin-esbuild.js": "./npm/plugin/esbuild.js",
     "./plugin-vite.js": "./npm/plugin/vite.js",
     "./plugin-rollup.js": "./npm/plugin/rollup.js",
-    "./plugin-webpack.js": "./npm/plugin/webpack.js"
+    "./plugin-webpack.js": "./npm/plugin/webpack.js",
+    "./jsx-runtime": "./dist/cjs/jsx-runtime.js",
+    "./jsx-dev-runtime": "./dist/cjs/jsx-dev-runtime.js"
   },
   "files": [
     "dist",
@@ -35,6 +37,7 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "dependencies": {
+    "@webspatial/react-sdk": "workspace:*",
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
     "@webspatial/core-sdk": "workspace:*",
