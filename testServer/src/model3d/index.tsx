@@ -105,6 +105,7 @@ function App() {
         className="w-[600px] h-[400px]"
         style={{ position: 'relative', '--xr-back': 100 }}
       >
+
         <ModelNew
           ref={ref}
           style={styleOuter}
@@ -153,10 +154,17 @@ function App() {
           aspectRatio={aspectRatio}
         >
           <source src={modelUrl} type="model/vnd.usdz+zip" />
+          <source
+          src={
+            'https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb'
+          }
+          type="model/gltf-binary"
+        />
 
           <div> this is place holder when failure </div>
         </ModelNew>
       </div>
+
 
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>
