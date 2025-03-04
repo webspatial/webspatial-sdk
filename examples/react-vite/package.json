@@ -13,7 +13,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@webspatial/jsx-runtime": "workspace:*",
     "@webspatial/react-sdk": "workspace:*",
     "@webspatial/core-sdk": "workspace:*",
     "react": "^18",
