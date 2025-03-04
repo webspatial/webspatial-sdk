@@ -39,9 +39,10 @@ var ctx = await esbuild.context({
   // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
   banner: {
     js: `
-            document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +
-  ':${liveReloadServerPort}/livereload.js?snipver=1"></' + 'script>')
-            `,
+        let liveReloadScript = document.createElement("script")
+        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
+        document.head.append(liveReloadScript)
+       `,
   },
   // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
   alias: {
