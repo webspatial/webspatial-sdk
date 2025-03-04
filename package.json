@@ -43,6 +43,7 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.28.1",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
