@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@xrsdk/runtime'
+import { Spatial } from '@webspatial/core-sdk'
 
 const spatial = new Spatial()
 const session = spatial.requestSession()

@@ -1,5 +1,5 @@
 {
-  "name": "@xrsdk/react",
+  "name": "@webspatial/react-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "npm/index.js",
@@ -26,18 +26,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spatial-web/XRSDK.git"
+    "url": "git+https://github.com/webspatial/webspatial-sdk.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/spatial-web/XRSDK/issues"
+    "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
-  "homepage": "https://github.com/spatial-web/XRSDK#readme",
+  "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "dependencies": {
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
-    "@xrsdk/runtime": "workspace:*",
+    "@webspatial/core-sdk": "workspace:*",
     "lodash.isequal": "^4.5.0",
     "loglevel": "^1.9.1",
     "three": "^0.170.0"

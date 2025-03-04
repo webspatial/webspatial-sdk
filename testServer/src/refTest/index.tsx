@@ -1,6 +1,6 @@
 // @ts-nocheck
 import ReactDOM from 'react-dom/client'
-import { enableDebugTool } from '@xrsdk/react'
+import { enableDebugTool } from '@webspatial/react-sdk'
 import { TestClassComponent } from './TestClassComponent'
 import { TestStyleComponent } from './TestStyleComponent'
 import { TestNestedClassComponent } from './TestNestedClassComponent'

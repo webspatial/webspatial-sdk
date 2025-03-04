@@ -152,9 +152,15 @@ export class WebSpatial {
     }
   }
 
-  static async createWindowContainer(style: WindowStyle = 'Plain') {
+  static async createWindowContainer(
+    style: WindowStyle = 'Plain',
+    windowContainer: WindowContainer | null,
+    parentWebView: WebSpatialResource | null,
+  ) {
     var cmd = new RemoteCommand('createWindowContainer', {
       windowStyle: style,
+      windowContainerID: windowContainer ? windowContainer.id : undefined,
+      resourceID: parentWebView ? parentWebView.id : undefined,
     })
 
     var result = await new Promise((res, rej) => {

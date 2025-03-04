@@ -3,6 +3,7 @@ import {
   configDeeplink,
   configDisplay,
   configId,
+  configMainScene,
   configScope,
   configStartUrl,
 } from './config'
@@ -64,5 +65,6 @@ export class PWAGenerator {
     configScope(manifestInfo.json, manifestInfo.fromNet)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
+    configMainScene(manifestInfo.json)
   }
 }

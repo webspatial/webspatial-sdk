@@ -1,7 +1,7 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { useState } from 'react'
 import { showSample } from './sampleLoader'
-import { SpatialDiv } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
 
 function MySample(_props: { session?: SpatialSession }) {
   const [popupEnabled, setPopupEnabled] = useState(false)
