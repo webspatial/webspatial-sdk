@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -16,7 +15,7 @@ if (spatialSupported) {
     cornerRadius: 50,
   })
 }
-document.documentElement.style.backgroundColor = 'transparent'
+// document.documentElement.style.backgroundColor = 'transparent'
 function App() {
   const [count, setCount] = useState(0)
   const spatialStyle = {
@@ -24,7 +23,7 @@ function App() {
     backgrondColor: 'black',
     position: { x: 0, y: 0, z: 1.000001 },
     transparentEffect: false,
-    glassEffect: false,
+    glassEffect: true,
     // materialThickness: "none"
   }
   return (
@@ -44,10 +43,7 @@ function App() {
           count is {count}
         </button>
 
-        <SpatialDiv spatialStyle={spatialStyle}>
-          {' '}
-          this is spatial div{' '}
-        </SpatialDiv>
+        <SpatialDiv spatialStyle={spatialStyle}>this is spatial div</SpatialDiv>
 
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
