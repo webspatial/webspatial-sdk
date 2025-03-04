@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom/client'
 import {
   enableDebugTool,
   ModelNew,
+  Model3D,
+  CSSModel3D,
   ModelElement,
   ModelEvent,
   ModelDragEvent,
@@ -98,7 +100,11 @@ function App() {
         </a>
       </div>
 
-      <div className="flex w-[400px] h-[400px]">
+      <div
+        enable-xr
+        className="w-[600px] h-[400px]"
+        style={{ position: 'relative', '--xr-back': 100 }}
+      >
         <ModelNew
           ref={ref}
           style={styleOuter}
@@ -142,17 +148,9 @@ function App() {
 
         <ModelNew
           style={styleOuter}
-          // modelUrl={modelUrl}
           contentMode={contentMode}
           resizable={resizable}
           aspectRatio={aspectRatio}
-          onLoad={(event: ModelEvent) => {
-            console.log(
-              'onLoad model 2',
-              event.target.ready,
-              event.target.currentSrc,
-            )
-          }}
         >
           <source src={modelUrl} type="model/vnd.usdz+zip" />
 
