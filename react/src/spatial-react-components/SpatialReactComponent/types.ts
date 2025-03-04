@@ -1,4 +1,4 @@
-import { BackgroundMaterialType, CornerRadius } from '@xrsdk/runtime'
+import { BackgroundMaterialType, CornerRadius } from '@webspatial/core-sdk'
 import { SpatialID } from './const'
 import { ReactNode, CSSProperties, ElementType, ForwardedRef } from 'react'
 import { quatType, vecType } from '../types'

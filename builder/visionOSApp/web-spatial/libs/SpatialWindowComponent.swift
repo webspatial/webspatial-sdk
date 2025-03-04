@@ -108,14 +108,14 @@ class SpatialWindowComponent: SpatialComponent {
     }
 
     private func onWindowContainerDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialWindowContainer
-
-        spatialObject
-            .off(
-                event: SpatialObject.Events.BeforeDestroyed.rawValue,
-                listener: onWindowContainerDestroyed
-            )
-        childWindowContainers.removeValue(forKey: spatialObject.id)
+        if let spatialObject = object as? SpatialWindowContainer {
+            spatialObject
+                .off(
+                    event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                    listener: onWindowContainerDestroyed
+                )
+            childWindowContainers.removeValue(forKey: spatialObject.id)
+        }
     }
 
     /// Determines whether the current webview is a root webview.
@@ -265,25 +265,31 @@ class SpatialWindowComponent: SpatialComponent {
     func parseURL(url: String) -> String {
         // Compute target url depending if the url is relative or not
         var targetUrl = url
-        if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
-            // Absolute path
-            var port = ""
-            if let p = webViewNative?.url.port {
-                port = ":" + String(p)
-            }
-            let domain = webViewNative!.url.scheme! + "://" + webViewNative!.url.host()! + port + "/"
-            targetUrl = domain + String(url[url.index(url.startIndex, offsetBy: 1)...])
-        } else {
-            // Full url eg. http://domain.com
-            if let parsed = URL(string: url) {
-                if parsed.scheme != nil {
-                    return url
+        if !pwaManager.isLocal {
+            if url[...url.index(url.startIndex, offsetBy: 0)] == "/" {
+                // Absolute path
+                var port = ""
+                if let p = webViewNative?.url.port {
+                    port = ":" + String(p)
                 }
+                let domain = webViewNative!.url.scheme! + "://" + webViewNative!.url.host()! + port + "/"
+                targetUrl = domain + String(url[url.index(url.startIndex, offsetBy: 1)...])
+            } else {
+                // Full url eg. http://domain.com
+                if let parsed = URL(string: url) {
+                    if parsed.scheme != nil {
+                        return url
+                    }
+                }
+                // Reletive path
+                let localDir = NSString(string: webViewNative!.url.absoluteString)
+                let relPath = String(localDir.deletingLastPathComponent) + "/" + targetUrl
+                return relPath
             }
-            // Reletive path
-            let localDir = NSString(string: webViewNative!.url.absoluteString)
-            let relPath = String(localDir.deletingLastPathComponent) + "/" + targetUrl
-            return relPath
+        } else {
+            if !(targetUrl.starts(with: "http://") || targetUrl.starts(with: "https://")) {
+                targetUrl = pwaManager.getLocalResourceURL(url: targetUrl)
+            }
         }
         return targetUrl
     }

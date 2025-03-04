@@ -10,7 +10,7 @@ import Foundation
 import RealityKit
 import RealityKitContent
 import SwiftUI
-import WebKit
+@preconcurrency import WebKit
 
 class WebViewHolder {
     var needsUpdate = false
@@ -46,8 +46,16 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
 
         // Local web projects accessing resources through relative paths will default to using the file protocol
         if url!.absoluteString.starts(with: "file://") {
+            let resource: String = pwaManager.getLocalResourceURL(url: url!.absoluteString)
+            var urlRequest = urlSchemeTask.request
+
+            if resource != "" {
+                urlRequest = URLRequest(url: URL(string: resource)!)
+            } else {
+                return
+            }
             let session = URLSession(configuration: URLSessionConfiguration.default)
-            let dataTask = session.dataTask(with: urlSchemeTask.request) { data, response, _ in
+            let dataTask = session.dataTask(with: urlRequest) { data, response, _ in
                 urlSchemeTask.didReceive(response!)
                 urlSchemeTask.didReceive(data!)
                 urlSchemeTask.didFinish()
@@ -118,6 +126,10 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         {
             decisionHandler(.cancel)
             return
+        }
+        var resource = navigationAction.request.url!.absoluteString
+        if pwaManager.isLocal {
+            resource = pwaManager.getLocalResourceURL(url: resource)
         }
         if pwaManager.checkInScope(url: navigationAction.request.url!.absoluteString) {
             if navigationAction.navigationType == .backForward {
