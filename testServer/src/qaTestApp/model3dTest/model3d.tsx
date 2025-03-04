@@ -7,7 +7,7 @@ import {
   ModelElement,
   ModelEvent,
   ModelDragEvent,
-} from '@xrsdk/react'
+} from '@webspatial/react-sdk'
 import { CSSProperties } from 'styled-components'
 import React, { useRef, useState } from 'react'
 
