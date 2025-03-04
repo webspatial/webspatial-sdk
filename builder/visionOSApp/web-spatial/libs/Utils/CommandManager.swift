@@ -208,10 +208,11 @@ class CommandManager {
                                 let m = try await ModelEntity(contentsOf: fileURL)
 
                                 let modelComponent = await m.model!
-                                let spatialModelComponent = SpatialModelComponent(modelComponent)
 
                                 Task.detached { @MainActor in
                                     // Update state on main thread
+                                    // Note: even creating an object like SpatialModelComponent causes SpatialObject.objects to be modified so this must be done on the main thread
+                                    let spatialModelComponent = SpatialModelComponent(modelComponent)
                                     target.completeEvent(requestID: info.requestID, data: "{createdID: '" + spatialModelComponent.id + "'}")
                                     target.addChildSpatialObject(spatialModelComponent)
                                     logger.debug("Model load success!")
