@@ -127,7 +127,7 @@ export const StandardInstance = forwardRef(function (
 
   return (
     <SpatialIsStandardInstanceContext.Provider value={true}>
-      <El ref={proxyRef} style={style} {...props} />
+      <El data-standardinstance ref={proxyRef} style={style} {...props} />
     </SpatialIsStandardInstanceContext.Provider>
   )
 })

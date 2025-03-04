@@ -1,7 +1,7 @@
-import { SpatialHelper, SpatialSession } from '@xrsdk/runtime'
+import { SpatialHelper, SpatialSession } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
-import { SpatialView } from '@xrsdk/react'
+import { SpatialView } from '@webspatial/react-sdk'
 
 function MySample(_props: { session?: SpatialSession }) {
   let animating = false

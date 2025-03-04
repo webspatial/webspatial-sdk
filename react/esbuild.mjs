@@ -32,7 +32,7 @@ const targets = [
       'react',
       'react-dom',
       'three',
-      '@xrsdk/runtime',
+      '@webspatial/core-sdk',
       'lodash.isequal',
       '@google/model-viewer',
     ],
@@ -50,11 +50,11 @@ const targets = [
       'react',
       'react-dom',
       'three',
-      '@xrsdk/runtime',
+      '@webspatial/core-sdk',
       'lodash.isequal',
       '@google/model-viewer',
     ],
-    alias: { '@xrsdk/runtime': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
+    alias: { '@webspatial/core-sdk': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
   },
 ]
 

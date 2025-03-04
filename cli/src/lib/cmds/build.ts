@@ -4,8 +4,11 @@ import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
 
-export async function start(args: ParsedArgs): Promise<any> {
-  checkBuildParams(args)
+export async function start(
+  args: ParsedArgs,
+  isDev: boolean = false,
+): Promise<any> {
+  checkBuildParams(args, isDev)
   /**
    * PWA steps
    * 1.  Load manifestion.json
@@ -38,13 +41,16 @@ export async function start(args: ParsedArgs): Promise<any> {
    * 5.  Configure manifest
    * 6.  Write project
    **/
-  await XcodeManager.parseProject({
-    icon,
-    manifestInfo,
-    teamId: args['teamId'],
-    version: args['version'],
-    buildType: args['buildType'],
-  })
+  await XcodeManager.parseProject(
+    {
+      icon,
+      manifestInfo,
+      teamId: args['teamId'],
+      version: args['version'],
+      buildType: args['buildType'],
+    },
+    isDev,
+  )
   console.log('------------------- build end -------------------')
   return manifestInfo
 }
@@ -58,7 +64,7 @@ export async function store(args: ParsedArgs): Promise<boolean> {
   */
 
   let appInfo = { name: 'SpatialWebTest' }
-  args['buildType'] = 'app-store'
+  args['buildType'] = 'app-store-connect'
   if (args['name']) {
     appInfo.name = args['name']
   } else {
@@ -69,5 +75,18 @@ export async function store(args: ParsedArgs): Promise<boolean> {
     appInfo.name = buildRes.json.name
   }
   await XcodeManager.upload(args, appInfo)
+  return true
+}
+
+// build and run on simulator
+export async function dev(args: ParsedArgs): Promise<boolean> {
+  let appInfo = { name: 'SpatialWebTest', id: 'com.SpatialWeb.test' }
+  const buildRes = await start(args, true)
+  if (!buildRes) {
+    return false
+  }
+  appInfo.name = buildRes.json.name
+  appInfo.id = buildRes.json.id
+  await XcodeManager.runWithSimulator(appInfo)
   return true
 }
