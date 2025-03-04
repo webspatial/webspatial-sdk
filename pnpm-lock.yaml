@@ -39,7 +39,7 @@ importers:
       '@types/react':
         specifier: ^18.3.5
         version: 18.3.12
-      '@xrsdk/react':
+      '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../react
       typescript:
@@ -54,7 +54,7 @@ importers:
       '@types/three':
         specifier: ^0.170.0
         version: 0.170.0
-      '@xrsdk/runtime':
+      '@webspatial/core-sdk':
         specifier: workspace:*
         version: link:../runtime
       lodash.isequal:
@@ -155,13 +155,13 @@ importers:
       '@types/three':
         specifier: ^0.164.0
         version: 0.164.1
-      '@xrsdk/jsx-runtime':
+      '@webspatial/jsx-runtime':
         specifier: workspace:*
         version: link:../jsx-runtime
-      '@xrsdk/react':
+      '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../react
-      '@xrsdk/runtime':
+      '@webspatial/core-sdk':
         specifier: workspace:*
         version: link:../runtime
       '@xterm/addon-fit':

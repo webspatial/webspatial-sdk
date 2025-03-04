@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useRef, useCallback, useEffect, useState } from 'react'
-import { SpatialDiv, SpatialDivProps } from '@xrsdk/react'
+import { SpatialDiv, SpatialDivProps } from '@webspatial/react-sdk'
 import animejs from 'animejs'
 import { Easing } from './types'
 

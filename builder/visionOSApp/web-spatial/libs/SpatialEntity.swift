@@ -165,8 +165,8 @@ class SpatialEntity: SpatialObject {
             "visible": visible,
             "childEntities": childEntitiesInfo,
             "coordinateSpace": coordinateSpace.description,
-            "parent": parent?.id,
-            "parentWindowContainer": parentWindowContainer?.id,
+            "parent": parent != nil ? parent!.id : "null",
+            "parentWindowContainer": parentWindowContainer != nil ? parentWindowContainer!.id : "null",
             "components": componentsInfo,
         ]
 

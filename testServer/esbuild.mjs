@@ -47,7 +47,6 @@ var ctx = await esbuild.context({
   alias: {
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
-    '@xrsdk/jsx-runtime': path.resolve('../jsx-runtime/src/jsx-runtime'),
   },
 })
 
