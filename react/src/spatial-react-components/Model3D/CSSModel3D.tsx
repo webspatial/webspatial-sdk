@@ -1,62 +1,36 @@
-import { CSSProperties, ForwardedRef, forwardRef } from 'react'
-import { Model3D, Model3DProps, type ModelElementRef } from './Model3D'
-import { useSpatialStyle } from '../CSSSpatialDiv/useSpatialStyle'
-import { useHijackSpatialDivRef } from '../CSSSpatialDiv/useHijackSpatialDivRef'
+import { forwardRef, useContext, useMemo } from 'react'
+import { CSSModel3DProps, ModelElementRef } from './types'
+import { SpatialReactContext } from '../SpatialReactComponent/SpatialReactContext'
+import { SpatialLayerContext } from '../SpatialReactComponent/SpatialLayerContext'
+import { SpatialIsStandardInstanceContext } from '../SpatialReactComponent/SpatialIsStandardInstanceContext'
+import { renderCSSModel3DNotInSpatialDiv } from './CSSModel3DNotInSpatialDiv'
+import { renderCSSModel3DStandardInstance } from './CSSModel3DStandardInstance'
+import { renderCSSModel3DPortalInstance } from './CSSModel3DPortalInstance'
 
-export type CSSModel3DProps = Omit<Model3DProps, 'spatialTransform' | 'visible'>
+export function CSSModel3DBase(props: CSSModel3DProps, refIn: ModelElementRef) {
+  const rootSpatialReactContextObject = useContext(SpatialReactContext)
+  const isInSpatialDiv = !!rootSpatialReactContextObject
 
-export function CSSModel3DComponent(
-  inProps: CSSModel3DProps,
-  refIn: ModelElementRef,
-) {
-  const { className, style = {}, ...props } = inProps
-
-  const cssParserDomStyle: CSSProperties = {
-    ...style,
-    width: 0,
-    height: 0,
+  if (isInSpatialDiv) {
+    const layer = useContext(SpatialLayerContext) + 1
+    const isInStandardInstance = !!useContext(SpatialIsStandardInstanceContext)
+    const spatialId = useMemo(() => {
+      return rootSpatialReactContextObject.getSubDivSpatialID(
+        layer,
+        isInStandardInstance,
+        'CSSModel3D',
+      )
+    }, [])
+    if (isInStandardInstance) {
+      return renderCSSModel3DStandardInstance(spatialId, props, refIn)
+    } else {
+      return renderCSSModel3DPortalInstance(spatialId, props)
+    }
+  } else {
+    return renderCSSModel3DNotInSpatialDiv(props, refIn)
   }
-
-  const { ref: cssParserDomRef, spatialStyle, ready } = useSpatialStyle()
-
-  // hijack SpatialDiv ref
-  const ref = useHijackSpatialDivRef(
-    refIn as ForwardedRef<HTMLDivElement>,
-    cssParserDomRef,
-  ) as ModelElementRef
-
-  const spatialTransform = {
-    position: spatialStyle.position,
-    rotation: spatialStyle.rotation,
-    scale: spatialStyle.scale,
-  }
-  const visible = spatialStyle.visible
-
-  const model3DStyle: CSSProperties = {
-    ...style,
-    transform: 'none',
-  }
-  return (
-    <>
-      {ready && (
-        <Model3D
-          className={className}
-          style={model3DStyle}
-          ref={ref}
-          spatialTransform={spatialTransform}
-          visible={visible}
-          {...props}
-        />
-      )}
-      <div
-        className={className}
-        style={cssParserDomStyle}
-        ref={cssParserDomRef}
-      />
-    </>
-  )
 }
 
-export const CSSModel3D = forwardRef(CSSModel3DComponent)
+export const CSSModel3D = forwardRef(CSSModel3DBase)
 
 CSSModel3D.displayName = 'CSSModel3D'

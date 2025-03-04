@@ -98,6 +98,44 @@ export class SpatialReactContextObject {
     }
     return null
   }
+
+  // Used for CSSModel3D
+  // layer : [standardInstance sequence, portalInstance sequence]
+  private subDivLayerSequences: Record<number, [number, number]> = {}
+  private subDivEventHandlers: Record<string, (args: any) => void> = {}
+
+  public getSubDivSpatialID(
+    layer: number,
+    isInStandardInstance: boolean,
+    prefix: string = '',
+  ): string {
+    if (this.subDivLayerSequences[layer] === undefined) {
+      this.subDivLayerSequences[layer] = [0, 0]
+    }
+    const idx = isInStandardInstance ? 0 : 1
+    const sequenceId = this.subDivLayerSequences[layer][idx]
+    this.subDivLayerSequences[layer][idx] = sequenceId + 1
+    const spatialId = `${prefix}_${layer}_${sequenceId}`
+
+    return spatialId
+  }
+
+  public onSubDivEvent(
+    subSpatialId: string,
+    eventHandler: (args: any) => void,
+  ) {
+    this.subDivEventHandlers[subSpatialId] = eventHandler
+  }
+
+  public offSubDivEvent(subSpatialId: string) {
+    delete this.subDivEventHandlers[subSpatialId]
+  }
+  public notifySubDivEvent(subSpatialId: string, args: any) {
+    const eventHandler = this.subDivEventHandlers[subSpatialId]
+    if (eventHandler) {
+      eventHandler(args)
+    }
+  }
 }
 
 export const SpatialReactContext =
