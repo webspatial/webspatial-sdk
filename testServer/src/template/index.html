@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" style="background-color: #00000000; --xr-background-material: translucent;">
+
 <head>
     <meta charset="UTF-8">
     <title>WebSpatial</title>
@@ -10,6 +11,10 @@
 <body>
 </body>
 
-<script src="../../dist/src/template/index.js"></script>
+<script>
+    let pageScript = document.createElement("script")
+    pageScript.src = "../../dist" + window.location.pathname.split(".")[0] + ".js"
+    document.head.append(pageScript)
+</script>
 
 </html>
