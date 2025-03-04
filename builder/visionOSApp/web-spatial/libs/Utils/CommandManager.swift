@@ -190,19 +190,22 @@ class CommandManager {
                     let url = URL(string: modelURL)!
                     let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
                     let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
-                        // Copy temp file to documentes directory
-                        let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
-                        do {
-                            let fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
-                            try FileManager.default.copyItem(at: a!, to: fileURL)
-                            logger.debug("Downloaded and copied model")
-                        } catch {
-                            logger.warning("Model already exists")
+                        var fileURL = url
+                        if !pwaManager.isLocal {
+                            // Copy temp file to documentes directory
+                            let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
+                            do {
+                                fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
+                                try FileManager.default.copyItem(at: a!, to: fileURL)
+                                logger.debug("Downloaded and copied model")
+                            } catch {
+                                logger.warning("Model already exists")
+                            }
                         }
 
                         Task {
                             do {
-                                let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent(fileStr))
+                                let m = try await ModelEntity(contentsOf: fileURL)
 
                                 let modelComponent = await m.model!
                                 let spatialModelComponent = SpatialModelComponent(modelComponent)
