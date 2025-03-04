@@ -1,6 +1,6 @@
 import { Euler, Quaternion } from 'three'
-import { Spatial, SpatialEntity, SpatialSession } from '@xrsdk/runtime'
-import { Vec3 } from '@xrsdk/runtime'
+import { Spatial, SpatialEntity, SpatialSession } from '@webspatial/core-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
 
 class TimerLog {
   lastTime = Date.now()
@@ -317,7 +317,7 @@ var main = async () => {
 
       var box = await session.createMeshResource({ shape: 'box' })
       var model = await session.createModelComponent({
-        url: '/src/assets/FlightHelmet.usdz',
+        url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
       })
 
       for (var i = 0; i < 7; i++) {

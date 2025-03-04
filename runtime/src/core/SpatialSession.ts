@@ -1,6 +1,10 @@
 import { SpatialEntity } from './SpatialEntity'
 import { SpatialWindowContainer } from './SpatialWindowContainer'
-import { WebSpatial, WebSpatialResource } from './private/WebSpatial'
+import {
+  WebSpatial,
+  WebSpatialResource,
+  WindowContainer,
+} from './private/WebSpatial'
 import {
   LoadingMethodKind,
   sceneDataShape,
@@ -25,6 +29,32 @@ import { RemoteCommand } from './private/remote-command'
  * Animation callback with timestamp
  */
 type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
+
+/**
+ * Parses the resource owners of the created object. If unedfined, will use the current window container and web panel. If null the created resource will not be destroyed unless explicitly destroyed.
+ * @param options
+ * @returns parsed results
+ */
+function _parseParentResources(options?: {
+  windowContainer?: SpatialWindowContainer | null
+  windowComponent?: SpatialWindowComponent | null
+}): [WindowContainer | null, WebSpatialResource | null] {
+  var parentWindowContainer: WindowContainer | null = null
+  if (options?.windowContainer !== null) {
+    parentWindowContainer = options?.windowContainer
+      ? options?.windowContainer._wg
+      : WebSpatial.getCurrentWindowContainer()
+  }
+
+  var parentWindow: WebSpatialResource | null = null
+  if (options?.windowComponent !== null) {
+    parentWindow = options?.windowComponent
+      ? options?.windowComponent._resource
+      : WebSpatial.getCurrentWebPanel()
+  }
+
+  return [parentWindowContainer, parentWindow]
+}
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -183,10 +213,19 @@ export class SpatialSession {
    * Creates a WindowContainer
    * @returns SpatialWindowContainer
    * */
-  async createWindowContainer(options?: { style: WindowStyle }) {
+  async createWindowContainer(options?: {
+    style: WindowStyle
+    windowContainer?: SpatialWindowContainer | null
+    windowComponent?: SpatialWindowComponent | null
+  }) {
     var style = options?.style ? options?.style : 'Plain'
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     return new SpatialWindowContainer(
-      await WebSpatial.createWindowContainer(style),
+      await WebSpatial.createWindowContainer(
+        style,
+        parentWindowContainer,
+        parentWindow,
+      ),
     )
   }
 
