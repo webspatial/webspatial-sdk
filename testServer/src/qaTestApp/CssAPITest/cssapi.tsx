@@ -29,8 +29,7 @@ const StyledElement = styled.div<{
   border-radius: 40px;
 `
 function App() {
-  const ref = useRef<HTMLDivElement>(null)
-  ;(window as any).ref = ref
+  const ref = (useRef<HTMLDivElement>(null)(window as any).ref = ref)
   const ref1 = useRef<HTMLDivElement>(null)
 
   const [styleMode, setStyleMode] = useState('In-line style')
