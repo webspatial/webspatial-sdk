@@ -1,6 +1,6 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { showSample } from './sampleLoader'
-import { Model } from '@xrsdk/react'
+import { Model } from '@webspatial/react-sdk'
 
 function MySample(_props: { session?: SpatialSession }) {
   return (
@@ -12,13 +12,16 @@ function MySample(_props: { session?: SpatialSession }) {
             console.log('loaded complete ' + event.target.currentSrc)
           }
         }}
-        poster="/src/assets/FlightHelmet.png"
+        poster="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.png"
       >
         <source
-          src="/src/assets/FlightHelmet.usdz"
+          src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
           type="model/vnd.usdz+zip"
         ></source>
-        <source src="/src/assets/FlightHelmet.glb" type="model/gltf-binary" />
+        <source
+          src="https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb"
+          type="model/gltf-binary"
+        />
       </Model>
     </div>
   )

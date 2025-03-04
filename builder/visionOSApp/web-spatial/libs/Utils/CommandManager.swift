@@ -190,19 +190,22 @@ class CommandManager {
                     let url = URL(string: modelURL)!
                     let downloadSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
                     let downloadTask = downloadSession.downloadTask(with: url, completionHandler: { a, _, _ in
-                        // Copy temp file to documentes directory
-                        let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
-                        do {
-                            let fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
-                            try FileManager.default.copyItem(at: a!, to: fileURL)
-                            logger.debug("Downloaded and copied model")
-                        } catch {
-                            logger.warning("Model already exists")
+                        var fileURL = url
+                        if !pwaManager.isLocal {
+                            // Copy temp file to documentes directory
+                            let fileStr = modelURL.replacingOccurrences(of: ":", with: "__").replacingOccurrences(of: "/", with: "_x_")
+                            do {
+                                fileURL = getDocumentsDirectory().appendingPathComponent(fileStr)
+                                try FileManager.default.copyItem(at: a!, to: fileURL)
+                                logger.debug("Downloaded and copied model")
+                            } catch {
+                                logger.warning("Model already exists")
+                            }
                         }
 
                         Task {
                             do {
-                                let m = try await ModelEntity(contentsOf: getDocumentsDirectory().appendingPathComponent(fileStr))
+                                let m = try await ModelEntity(contentsOf: fileURL)
 
                                 let modelComponent = await m.model!
                                 let spatialModelComponent = SpatialModelComponent(modelComponent)
@@ -262,9 +265,9 @@ class CommandManager {
             }
 
             if let _ = data.update?.getBoundingBox {
-                var b = entity.modelEntity.visualBounds(relativeTo: nil)
-                var exts = "x:" + String(b.extents.x) + "," + "y:" + String(b.extents.y) + "," + "z:" + String(b.extents.z)
-                var center = "x:" + String(b.center.x) + "," + "y:" + String(b.center.y) + "," + "z:" + String(b.center.z)
+                let b = entity.modelEntity.visualBounds(relativeTo: nil)
+                let exts = "x:" + String(b.extents.x) + "," + "y:" + String(b.extents.y) + "," + "z:" + String(b.extents.z)
+                let center = "x:" + String(b.center.x) + "," + "y:" + String(b.center.y) + "," + "z:" + String(b.center.z)
                 target.completeEvent(requestID: info.requestID, data: "{center: {" + center + "}, extents: {" + exts + "}}")
                 return
             }
@@ -505,9 +508,24 @@ class CommandManager {
             // Force window container creation to happen now so it can be accessed after complete event returns
             _ = SpatialWindowContainer.getOrCreateSpatialWindowContainer(uuid, wgd)
 
-            if var wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID, wgd) {
+            if let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(target.parentWindowContainerID, wgd) {
                 wg.openWindowData.send(wgd)
-                target.setWindowContainer(uuid: uuid, wgd: wgd)
+
+                // If the parent window component  isn't set, the new container can continue to exist even after other window is closed
+                if info.resourceID != "notFound" {
+                    var rid = info.resourceID
+                    let so = SpatialObject.get(rid)
+                    if let parentWindowComponent = so as? SpatialWindowComponent {
+                        parentWindowComponent.setWindowContainer(uuid: uuid, wgd: wgd)
+                    }
+                }
+
+                if info.windowContainerID != "notFound" {
+                    if var parentContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+                        parentContainer.childContainers[uuid] = wg
+                    }
+                }
+
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + uuid + "'}")
             }
         }
@@ -515,7 +533,7 @@ class CommandManager {
 
     private func createScene(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
-        if let windowStyle: String = data.windowStyle {
+        if let _: String = data.windowStyle {
             // windowID exist in SWC
 
             // TODO: check url scope
@@ -561,7 +579,7 @@ class CommandManager {
 
     private func updateWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
-        if let getRootEntityID = data.update?.getRootEntityID,
+        if let _ = data.update?.getRootEntityID,
            let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWindowContainerID(id: info.windowContainerID))
         {
             let rootEntity = wg.getEntities().filter {
