@@ -1,11 +1,10 @@
 import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
-import { ModelDragEvent } from '@xrsdk/runtime'
+import { ModelDragEvent, SpatialEntity } from '@webspatial/core-sdk'
 
 export function useModel3DNative(
   modelUrl: string,
-  onModel3DNativeReadyCb: (model3DNative: Model3DNative) => void,
-
+  parentEntity: SpatialEntity | undefined,
   eventHandlers: {
     onDragStart?: (dragEvent: ModelDragEvent) => void
     onDrag?: (dragEvent: ModelDragEvent) => void
@@ -13,7 +12,8 @@ export function useModel3DNative(
     onTap?: () => void
     onDoubleTap?: () => void
     onLongPress?: () => void
-  },
+  } = {},
+  onModel3DNativeReadyCb?: (model3DNative: Model3DNative) => void,
 ) {
   let model3DNativeRef = useRef<Model3DNative | null>(null)
 
@@ -25,9 +25,7 @@ export function useModel3DNative(
   useEffect(() => {
     let isDestroyed = false
 
-    const model3DContainer = new Model3DNative()
-
-    model3DNativeRef.current = model3DContainer
+    const model3DContainer = new Model3DNative(parentEntity)
 
     model3DContainer
       .init(
@@ -41,7 +39,12 @@ export function useModel3DNative(
         },
       )
       .then(() => {
-        if (!isDestroyed) [onModel3DNativeReadyCb(model3DContainer)]
+        if (!isDestroyed) {
+          model3DNativeRef.current = model3DContainer
+          if (onModel3DNativeReadyCb) {
+            onModel3DNativeReadyCb(model3DContainer)
+          }
+        }
       })
 
     return () => {

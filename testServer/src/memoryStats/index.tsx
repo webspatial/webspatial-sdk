@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getSession } from '@xrsdk/react'
+import { getSession } from '@webspatial/react-sdk'
 import ReactDOM from 'react-dom/client'
 
 interface MemoryStats {
