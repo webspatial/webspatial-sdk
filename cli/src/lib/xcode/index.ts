@@ -10,7 +10,7 @@ import Xcrun from './xcrun'
 import { join } from 'path'
 
 export class XcodeManager {
-  public static async parseProject(option: any) {
+  public static async parseProject(option: any, isDev: boolean = false) {
     const projectPath =
       PROJECT_DIRECTORY + '/web-spatial.xcodeproj/project.pbxproj'
     await XcodeProject.modify(projectPath, option)
@@ -18,7 +18,7 @@ export class XcodeManager {
     if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
       fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
     }
-    await Xcodebuild.archive()
+    if (!isDev) await Xcodebuild.archive()
   }
 
   public static async upload(option: any, appInfo: any) {
@@ -39,5 +39,9 @@ export class XcodeManager {
         false,
       )
     }
+  }
+
+  public static async runWithSimulator(appInfo: any) {
+    await Xcrun.runWithSimulator(appInfo)
   }
 }
