@@ -8,6 +8,12 @@ import { exec } from 'child_process'
 const entryPoints = await glob('./src/**/*.tsx')
 const entryPointsTs = await glob('./src/**/*.ts')
 const allEntryPoints = entryPoints.concat(entryPointsTs)
+
+async function getJsxEntryPoints() {
+  const ans = await glob('./src/jsx/*.ts')
+  return ans
+}
+
 function clearDist(dir) {
   const distPath = path.resolve(dir)
   if (fs.existsSync(distPath)) {
@@ -55,6 +61,25 @@ const targets = [
       '@google/model-viewer',
     ],
     alias: { '@webspatial/core-sdk': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
+  },
+  {
+    name: 'CJS + default bundled',
+    entryPoints: await getJsxEntryPoints(), //['./src/index.ts'], // todo: jsx/*.ts
+    // outfile: 'dist/cjs/default/index.js',
+    outdir: 'dist/cjs',
+    dir: 'dist/cjs',
+    define: { __WEB__: 'false' },
+    tsconfig: 'tsconfig.default.json',
+    format: 'cjs',
+    bundle: true,
+    external: [
+      'react',
+      'react-dom',
+      'three',
+      '@webspatial/core-sdk',
+      'lodash.isequal',
+      '@google/model-viewer',
+    ],
   },
 ]
 
