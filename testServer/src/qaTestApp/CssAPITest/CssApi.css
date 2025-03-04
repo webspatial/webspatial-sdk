@@ -20,4 +20,5 @@
   --xr-background-material: var(--box-xr-background-material);
   /* transition: all 0.3s ease; */
   border-radius: 40px;
+  position: relative;
 }

@@ -23,6 +23,7 @@ const StyledElement = styled.div<{
     rotateZ(${props => props.rotateZ}deg);
   transform-origin: ${props => props.transformOrigin};
 
+  position: relative;
   align-items: center;
   justify-content: center;
   border-radius: 40px;
@@ -44,6 +45,7 @@ function App() {
   const [style, setStyle] = useState<CSSProperties>({
     borderRadius: 40,
     opacity: opacity,
+    position: 'relative',
     '--xr-back': xrBack,
     transform: `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,
     transformOrigin: transformOrigin,
@@ -201,18 +203,6 @@ function App() {
   }
 
   // Test XrBack
-  // Store the value of xrBack
-  // Function to set xrBack
-  const SetXrBack = () => {
-    if (!ref.current) return
-    // Get the current --xr-back value
-    const currentXrBack = ref.current.style.getPropertyValue('--xr-back')
-    console.log('Get xrBack value:', currentXrBack)
-    // Set the new --xr-back value
-    ref.current.style.setProperty('--xr-back', `${xrBack}`) // Way 2
-    console.log('Set xrBack value: ' + xrBack)
-    updateElementState(ref)
-  }
   // Event handler for slider value change
   const handleXrBackChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Convert the slider value to an integer and update the xrBack state
@@ -240,19 +230,6 @@ function App() {
     ref.current.style.setProperty('--xr-background-material', selectedMaterial)
     updateElementState(ref)
   }
-  // Function to set backgroundMaterial
-  const setBackgroundMaterialValue = (value: string) => {
-    setBackgroundMaterial(value)
-    if (!ref.current) return
-    console.log('Selected', value)
-    // Get the current backgroundMaterial value
-    const currentBackgroundMaterial = ref.current.style.getPropertyValue(
-      '--xr-background-material',
-    )
-    console.log('Get xrBack value:', currentBackgroundMaterial)
-    ref.current.style.setProperty('--xr-background-material', value)
-    updateElementState(ref)
-  }
 
   // Function to remove backgroundMaterial
   const removeBackgroundMaterial = () => {
@@ -263,19 +240,6 @@ function App() {
     })
   }
   // Test Transform
-  // Store the values of translateX and rotateZ
-
-  // Function to set Transform
-  const testTransform = () => {
-    if (!ref.current) return
-    // console.log('testTransform:', ref.current, `translateX(${translateX}px) rotateZ(${rotateZ}deg)`);
-    // Get the current testTransform value
-    const currentTransform = ref.current.style.getPropertyValue('transform')
-    console.log('Get transform value:', currentTransform)
-    ref.current.style.transform = `translateX(${translateX}px) rotateZ(${rotateZ}deg)` // Way 1
-    // ref.current.style.setProperty('transform', `translateX(${translateX}px) rotateZ(${rotateZ}deg)`); // Way 2
-    updateElementState(ref)
-  }
   // Event handler for slider value change
   const handleTranslateXChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -307,22 +271,6 @@ function App() {
 
   // Test transform-origin
   // Store the value of transformOrigin
-
-  const handleTransformOriginChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    const selectedOrigin = event.target.value
-    setTransformOrigin(selectedOrigin)
-    if (!ref.current) return
-    console.log('ref.current:', ref.current, selectedOrigin)
-    // ref.current.style.transformOrigin = selectedOrigin;
-    ref.current.style.setProperty('transform-Origin', `${selectedOrigin}`)
-    // ref.current.style.setProperty('transform-Origin', `left`);
-    const currentTransformOrigin =
-      ref.current.style.getPropertyValue('transform-Origin')
-    console.log('Get transform value:', currentTransformOrigin)
-    updateElementState(ref)
-  }
   const removeTransformOrigin = () => {
     if (ref.current) {
       ref.current.style.removeProperty('Transform-Origin')
@@ -642,7 +590,7 @@ function App() {
                 className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
                 style={{ flex: 1 }}
               >
-                <option value="default">default</option>
+                <option value="translucent">translucent</option>
                 <option value="none">none</option>
                 <option value="thin">thin</option>
                 <option value="regular">regular</option>
