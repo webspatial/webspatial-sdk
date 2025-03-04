@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@xrsdk/runtime'
+import { Spatial } from '@webspatial/core-sdk'
 import { AnimatedSpatialDiv } from './AnimatedSpatialDiv'
 import { AnimatedModel } from './AnimatedModel'
 
@@ -32,7 +32,7 @@ function App() {
             opacityFromTo={[1, 0]}
           >
             <source
-              src="/src/assets/FlightHelmet.usdz"
+              src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
               type="model/vnd.usdz+zip"
             ></source>
           </AnimatedModel>
@@ -43,7 +43,7 @@ function App() {
             spaceTranslateZ={100}
           >
             <source
-              src="/src/assets/FlightHelmet.usdz"
+              src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
               type="model/vnd.usdz+zip"
             ></source>
           </AnimatedModel>
@@ -55,7 +55,7 @@ function App() {
             opacityFromTo={[1, 0]}
           >
             <source
-              src="/src/assets/FlightHelmet.usdz"
+              src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
               type="model/vnd.usdz+zip"
             ></source>
           </AnimatedModel>

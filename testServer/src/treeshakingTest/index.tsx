@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv, getSession } from '@xrsdk/react'
+import { SpatialDiv, getSession } from '@webspatial/react-sdk'
 
 const spatialSupported = !!getSession()
 
