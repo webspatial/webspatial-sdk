@@ -25,11 +25,19 @@ function injectProcessEnv() {
           emptyOutDir: xrEnv === 'web', // keep dist folder
           rollupOptions: { output },
           commonjsOptions: {
-            include: [/@webspatial\/react-sdk/, /node_modules/],
+            include: [/@webspatial\/react-sdk\/.*/, /node_modules/],
           },
         },
         optimizeDeps: {
-          include: ['@webspatial/react-sdk'], // prebuild cjs to esm
+          force: true, // ignore cache
+          include: [
+            '@webspatial/react-sdk',
+            '@webspatial/react-sdk/jsx-dev-runtime',
+            '@webspatial/react-sdk/jsx-runtime',
+            '@webspatial/core-sdk',
+            // force to use prebuild package completely
+            // hybrid cjs&esm will cause the static variable like requestCounter be reset
+          ], // prebuild cjs to esm
         },
       }
     },
