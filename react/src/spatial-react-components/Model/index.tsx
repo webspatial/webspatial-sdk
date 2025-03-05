@@ -15,11 +15,20 @@ import {
   ModelElementRef,
   ModelEvent,
   ModelDragEvent,
+  ModelElement,
 } from '../Model3D'
 import { getAbsoluteURL } from '../Model3D/utils'
 
 import '@google/model-viewer'
 import { ModelViewerElement } from '@google/model-viewer'
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': ModelViewerElement | { ref: any }
+    }
+  }
+}
 
 type ModelChildren =
   | React.ReactElement<{ type: string; src: string }>
@@ -115,20 +124,68 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     const { className, style = {}, ...props } = inProps
 
     useEffect(() => {
+      myModelViewer.current!.addEventListener('load', event => {
+        if (props.onLoad) {
+          props.onLoad({
+            target: { ready: true, currentSrc: gltfSourceURL } as any,
+          })
+        }
+      })
+
+      myModelViewer.current!.addEventListener('pointerdown', event => {
+        if (props.onDragStart) {
+          props.onDragStart({
+            eventType: 'dragstart',
+            translation3D: { x: 0, y: 0, z: 0 },
+            startLocation3D: { x: 0, y: 0, z: 0 },
+            target: (ref as any).current as ModelElement,
+          })
+        }
+      })
+
+      myModelViewer.current!.addEventListener('pointermove', event => {
+        if (props.onDrag) {
+          props.onDrag({
+            eventType: 'drag',
+            translation3D: { x: 0, y: 0, z: 0 },
+            startLocation3D: { x: 0, y: 0, z: 0 },
+            target: (ref as any).current as ModelElement,
+          })
+        }
+      })
+
+      myModelViewer.current!.addEventListener('pointerup', event => {
+        if (props.onDragEnd) {
+          props.onDragEnd({
+            eventType: 'dragend',
+            translation3D: { x: 0, y: 0, z: 0 },
+            startLocation3D: { x: 0, y: 0, z: 0 },
+            target: (ref as any).current as ModelElement,
+          })
+        }
+      })
+    }, [])
+
+    useEffect(() => {
       if (props.contentMode !== undefined && props.contentMode !== 'fit') {
         console.warn(
           "Model element contentMode != fit isn't supported on 2D screens",
         )
       }
-      myModelViewer.current!.addEventListener('load', event => {
-        if (props.onLoad) {
-          props.onLoad({ target: null as any })
-        }
-      })
-    }, [])
+      if (props.resizable !== undefined && props.resizable !== false) {
+        console.warn(
+          "Model element resizable != false isn't supported on 2D screens",
+        )
+      }
+      if (props.aspectRatio !== undefined && props.aspectRatio !== 1) {
+        console.warn(
+          "Model element aspectRatio != 1 isn't supported on 2D screens",
+        )
+      }
+    }, [props.contentMode, props.resizable, props.aspectRatio])
 
     return (
-      <div className={className}>
+      <div ref={ref} className={className} style={style}>
         <model-viewer
           ref={myModelViewer}
           style={
@@ -149,5 +206,5 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   }
 }
 
-export const ModelNew = forwardRef(ModelBase)
-ModelNew.displayName = 'Model'
+export const Model = forwardRef(ModelBase)
+Model.displayName = 'Model'

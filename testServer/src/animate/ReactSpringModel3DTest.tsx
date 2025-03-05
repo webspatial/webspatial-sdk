@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 
-import { CSSModel3D } from '@xrsdk/react'
+import { CSSModel3D } from '@webspatial/react-sdk'
 
 import { animated, useSpring } from '@react-spring/web'
 
@@ -49,7 +49,7 @@ export function ReactSpringModel3DTest() {
         ref={ref}
         style={springProps}
         className="box"
-        modelUrl="/src/assets/FlightHelmet.usdz"
+        modelUrl="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
       />
 
       <button className="btn btn-primary" onClick={onChangeBack}>

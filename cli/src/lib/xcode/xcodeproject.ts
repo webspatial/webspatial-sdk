@@ -70,16 +70,17 @@ export default class XcodeProject {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
-    let buildType = 'release-testing'
-    useExportOptionsXML = exportOptionsXML
-    if (option['buildType']) {
-      useExportOptionsXML = exportOptionsXML.replace(
-        'BUILDTYPE',
-        option['type'],
-      )
-    } else {
-      useExportOptionsXML = exportOptionsXML.replace('BUILDTYPE', buildType)
-    }
+    let buildType = option['buildType']
+    const buildTypeOptions = [
+      'release-testing',
+      'app-store-connect',
+      'debugging',
+      'enterprise',
+    ]
+    useExportOptionsXML = exportOptionsXML.replace(
+      'BUILDTYPE',
+      buildTypeOptions.includes(buildType) ? buildType : 'release-testing',
+    )
     if (option['teamId']) {
       this.updateTeamId(project, option['teamId'])
     }
@@ -88,6 +89,8 @@ export default class XcodeProject {
     this.bindManifestInfo(project, option.manifestInfo.json)
     if (option['version']) {
       this.updateVersion(project, option['version'])
+    } else {
+      this.updateVersion(project, '1.0')
     }
     try {
       fs.writeFileSync(projectPath, project.writeSync())
@@ -257,6 +260,13 @@ export default class XcodeProject {
     let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
+    manifestSwift = manifestSwift.replace('AppName', manifest.name)
+    manifestSwift = manifestSwift.replace('Description', manifest.description)
+    manifestSwift = manifestSwift.replace('AppID', manifest.id)
+    manifestSwift = manifestSwift.replace(
+      '.minimal',
+      manifest.display == 'minimal-ui' ? '.minimal' : '.standalone',
+    )
     if (manifest.protocol_handlers) {
       let deeplinkString = ''
       for (let i = 0; i < manifest.protocol_handlers.length; i++) {
@@ -267,6 +277,18 @@ export default class XcodeProject {
         deeplinkString,
       )
     }
+    manifestSwift = manifestSwift.replace(
+      'SceneWidth',
+      manifest.mainScene.defaultSize.width,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneHeight',
+      manifest.mainScene.defaultSize.height,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneResizability',
+      `"${manifest.mainScene.resizability}"`,
+    )
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
 }

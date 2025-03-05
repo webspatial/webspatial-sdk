@@ -6,9 +6,9 @@ import {
   SpatialHelper,
   SpatialSession,
   SpatialViewComponent,
-} from '@xrsdk/runtime'
-import { SpatialDiv, Model } from '@xrsdk/react'
-import { Vec3 } from '@xrsdk/runtime'
+} from '@webspatial/core-sdk'
+import { SpatialDiv, Model } from '@webspatial/react-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {
@@ -299,11 +299,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/FlightHelmet.usdz"
+                src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/FlightHelmet.glb"
+                src="https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb"
                 type="model/gltf-binary"
               />
             </Model>
