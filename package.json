@@ -12,7 +12,8 @@
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
     "test": "tsc -p runtime/tsconfig.json && tsc -p react/tsconfig.json && tsc -p testServer/tsconfig.json",
-    "format": "pnpm -r run format"
+    "format": "pnpm -r run format",
+    "ci:publish": "pnpm publish -r --access=public"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm test"
@@ -43,6 +44,7 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.28.1",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
