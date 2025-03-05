@@ -70,7 +70,7 @@ function renderSpatialReactComponent(
   return (
     <SpatialReactContext.Provider value={spatialReactContextObject}>
       <StandardInstance {...standardInstanceProps} ref={ref} />
-      <PortalInstance {...portalInstanceProps} />
+      <PortalInstance isSubPortal={false} {...portalInstanceProps} />
     </SpatialReactContext.Provider>
   )
 }
@@ -85,7 +85,7 @@ function renderSubPortalInstance(
     ...spatialDesc,
   }
 
-  return <PortalInstance {...portalInstanceProps} />
+  return <PortalInstance isSubPortal={true} {...portalInstanceProps} />
 }
 
 function SpatialReactComponentRefactor(
