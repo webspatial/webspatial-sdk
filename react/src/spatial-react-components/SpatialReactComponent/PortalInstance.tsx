@@ -36,6 +36,8 @@ interface PortalInstanceProps {
   style?: CSSProperties | undefined
   className?: string
 
+  isSubPortal?: boolean
+
   [SpatialID]: string
 }
 
@@ -426,7 +428,8 @@ function useSyncDomRect(spatialId: string) {
 }
 
 export function PortalInstance(inProps: PortalInstanceProps) {
-  const { allowScroll, scrollWithParent, spatialStyle, ...props } = inProps
+  const { allowScroll, scrollWithParent, spatialStyle, isSubPortal, ...props } =
+    inProps
 
   const debugName = useContext(SpatialDebugNameContext)
 
@@ -496,7 +499,8 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     className,
   )
 
-  const needRenderPlaceHolder = inheritedPortalStyle.position !== 'absolute'
+  const needRenderPlaceHolder =
+    isSubPortal && inheritedPortalStyle.position !== 'absolute'
 
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
