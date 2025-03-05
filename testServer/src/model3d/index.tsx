@@ -3,9 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 import {
   enableDebugTool,
-  ModelNew,
-  Model3D,
-  CSSModel3D,
+  Model,
   ModelElement,
   ModelEvent,
   ModelDragEvent,
@@ -105,8 +103,7 @@ function App() {
         className="w-[600px] h-[400px]"
         style={{ position: 'relative', '--xr-back': 100 }}
       >
-
-        <ModelNew
+        <Model
           ref={ref}
           style={styleOuter}
           // modelUrl={modelUrl}
@@ -145,9 +142,9 @@ function App() {
           <source src={modelUrl} type="model/vnd.usdz+zip" />
 
           <div> this is place holder when failure </div>
-        </ModelNew>
+        </Model>
 
-        <ModelNew
+        <Model
           style={styleOuter}
           contentMode={contentMode}
           resizable={resizable}
@@ -155,16 +152,15 @@ function App() {
         >
           <source src={modelUrl} type="model/vnd.usdz+zip" />
           <source
-          src={
-            'https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb'
-          }
-          type="model/gltf-binary"
-        />
+            src={
+              'https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb'
+            }
+            type="model/gltf-binary"
+          />
 
           <div> this is place holder when failure </div>
-        </ModelNew>
+        </Model>
       </div>
-
 
       <div>
         <button className="btn btn-primary" onClick={onToggleDisplay}>

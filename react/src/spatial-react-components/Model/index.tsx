@@ -22,6 +22,14 @@ import { getAbsoluteURL } from '../Model3D/utils'
 import '@google/model-viewer'
 import { ModelViewerElement } from '@google/model-viewer'
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': ModelViewerElement | { ref: any }
+    }
+  }
+}
+
 type ModelChildren =
   | React.ReactElement<{ type: string; src: string }>
   | [React.ReactElement<{ type: string; src: string }>, React.ReactElement]
@@ -198,5 +206,5 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   }
 }
 
-export const ModelNew = forwardRef(ModelBase)
-ModelNew.displayName = 'Model'
+export const Model = forwardRef(ModelBase)
+Model.displayName = 'Model'
