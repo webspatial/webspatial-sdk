@@ -6,7 +6,7 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "postinstall": "simple-git-hooks",
-    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. ",
+    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. && cd jsx-runtime/ && npm run build && cd ..",
     "setup": "pnpm install && npm run buildPackages",
     "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\" \"cd jsx-runtime/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
