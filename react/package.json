@@ -12,8 +12,8 @@
     "./plugin-vite.js": "./npm/plugin/vite.js",
     "./plugin-rollup.js": "./npm/plugin/rollup.js",
     "./plugin-webpack.js": "./npm/plugin/webpack.js",
-    "./jsx-runtime": "./dist/cjs/jsx-runtime.js",
-    "./jsx-dev-runtime": "./dist/cjs/jsx-dev-runtime.js"
+    "./jsx-runtime": "./dist/jsx/jsx-runtime.js",
+    "./jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.js"
   },
   "files": [
     "dist",
