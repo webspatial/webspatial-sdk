@@ -2,3 +2,4 @@ packages:
   - 'react'
   - 'runtime'
   - 'testServer'
+  - 'cli'
