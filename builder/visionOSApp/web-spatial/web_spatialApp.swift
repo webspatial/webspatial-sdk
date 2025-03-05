@@ -92,24 +92,47 @@ struct web_spatialApp: App {
                     windowData.windowContainerID, windowData
                 )
                 PlainWindowContainerView().environment(wg)
-                    // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
-                    .handlesExternalEvents(preferring: [], allowing: [])
+                // we no longer need the initial windowGroup to live all the time
+                // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+//                    .handlesExternalEvents(preferring: [], allowing: [])
             }
-        } defaultValue: {
-            WindowContainerData(windowStyle: "Plain", windowContainerID: SpatialWindowContainer.getRootID())
-
-        }.windowStyle(.plain).onChange(of: scenePhase) { oldPhase, newPhase in
+        }
+        defaultValue: {
+            WindowContainerData(
+                windowStyle: "Plain",
+                windowContainerID: SpatialWindowContainer.getRootID()
+            )
+        }
+        .windowStyle(.plain).onChange(of: scenePhase) {
+            oldPhase,
+                newPhase in
             if oldPhase == .background && newPhase == .inactive {
                 if initialLaunch {
                     // App initial open
                     initialLaunch = false
                 } else {
                     // App reopened
+
                     let fileUrl = getFileUrl()
-                    root?.navigateToURL(url: fileUrl)
-                    rootWGD.setSize.send(DefaultPlainWindowContainerSize)
+                    if let awid = SpatialWindowContainer.firstActivePlainWindowContainerId,
+                       let wc = SpatialWindowContainer.getSpatialWindowContainer(
+                           awid
+                       )
+                    {
+                        let rootEntity = wc.getEntities().filter {
+                            $0.value.getComponent(SpatialWindowComponent.self) != nil && $0.value.coordinateSpace == .ROOT
+                        }.first?.value
+
+                        if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
+                            wv.navigateToURL(url: fileUrl)
+                        }
+                        // reset to mainScene size
+                        wgm.setToMainSceneCfg()
+                        wc.setSize.send(getDefaultSize())
+                    }
                 }
             }
+
         }.defaultSize(
             getDefaultSize()
         ).windowResizability(

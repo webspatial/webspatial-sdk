@@ -1,5 +1,5 @@
-import { SpatialDiv } from '@xrsdk/react'
-import { CornerRadius } from '@xrsdk/runtime'
+import { SpatialDiv } from '@webspatial/react-sdk'
+import { CornerRadius } from '@webspatial/core-sdk'
 import { useState } from 'react'
 
 export function BackgroundMaterialTest() {

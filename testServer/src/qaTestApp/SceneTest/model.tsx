@@ -7,9 +7,9 @@ import {
   SpatialHelper,
   SpatialSession,
   SpatialViewComponent,
-} from '@xrsdk/runtime'
-import { SpatialDiv, Model } from '@xrsdk/react'
-import { Vec3 } from '@xrsdk/runtime'
+} from '@webspatial/core-sdk'
+import { SpatialDiv, Model } from '@webspatial/react-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
 
 var spatial: Spatial | null = new Spatial()
 if (!spatial.isSupported()) {

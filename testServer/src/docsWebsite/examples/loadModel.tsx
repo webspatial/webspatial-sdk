@@ -1,7 +1,7 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import { showSample } from './sampleLoader'
-import { Vec3 } from '@xrsdk/runtime'
+import { Vec3 } from '@webspatial/core-sdk'
 
 function MySample(props: { session?: SpatialSession }) {
   useEffect(() => {
@@ -34,7 +34,7 @@ function MySample(props: { session?: SpatialSession }) {
 
         // Add model to entity
         var model = await session.createModelComponent({
-          url: '/src/assets/FlightHelmet.usdz',
+          url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
         })
         await modelEntity.setComponent(model)
 

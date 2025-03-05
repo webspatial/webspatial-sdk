@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession } from '@xrsdk/react'
-import { SpatialHelper, SpatialModelComponent } from '@xrsdk/runtime/dist'
+import { getSession } from '@webspatial/react-sdk'
+import { SpatialHelper, SpatialModelComponent } from '@webspatial/core-sdk/dist'
 
 function App() {
   useEffect(() => {
@@ -27,7 +27,7 @@ function App() {
 
       // Create model
       var box = await SpatialHelper.instance?.shape.createModelEntity(
-        '/src/assets/FlightHelmet.usdz',
+        'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
       )!
       var meshBox =
         await SpatialHelper.instance!.shape.wrapInBoundingBoxEntity(box)

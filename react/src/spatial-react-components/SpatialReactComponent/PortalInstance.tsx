@@ -22,7 +22,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius } from '@xrsdk/runtime'
+import { CornerRadius } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
 
@@ -35,6 +35,8 @@ interface PortalInstanceProps {
   children?: ReactNode
   style?: CSSProperties | undefined
   className?: string
+
+  isSubPortal?: boolean
 
   [SpatialID]: string
 }
@@ -352,7 +354,7 @@ function useSyncDomRect(spatialId: string) {
     height: 0,
   })
 
-  const inheritedPortalStyleRef = useRef({})
+  const inheritedPortalStyleRef = useRef<CSSProperties>({})
 
   const anchorRef = useRef({
     x: 0.5,
@@ -426,7 +428,8 @@ function useSyncDomRect(spatialId: string) {
 }
 
 export function PortalInstance(inProps: PortalInstanceProps) {
-  const { allowScroll, scrollWithParent, spatialStyle, ...props } = inProps
+  const { allowScroll, scrollWithParent, spatialStyle, isSubPortal, ...props } =
+    inProps
 
   const debugName = useContext(SpatialDebugNameContext)
 
@@ -496,8 +499,21 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     className,
   )
 
+  const needRenderPlaceHolder =
+    isSubPortal && inheritedPortalStyle.position !== 'absolute'
+
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
+      {needRenderPlaceHolder && (
+        <div
+          className={className}
+          style={{
+            position: 'relative',
+            width: `${domRect.width}px`,
+            height: `${domRect.height}px`,
+          }}
+        />
+      )}
       {spatialWindowManager &&
         spatialWindowManager.window &&
         createPortal(

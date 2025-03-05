@@ -1,4 +1,4 @@
-import { SpatialSession } from '@xrsdk/runtime'
+import { SpatialSession } from '@webspatial/core-sdk'
 import { useState } from 'react'
 import { showSample } from './sampleLoader'
 import ReactMarkdown from 'react-markdown'

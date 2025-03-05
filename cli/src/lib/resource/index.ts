@@ -41,6 +41,7 @@ export class ResourceManager {
     const icon = !imgUrl.startsWith('http')
       ? await loadImageFromDisk(imgUrl)
       : await loadImageFromNet(imgUrl)
+    icon.resize(1024, 1024)
     return icon
   }
 }
