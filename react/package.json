@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/react-sdk",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "npm/index.js",
   "types": "npm/index.d.ts",
