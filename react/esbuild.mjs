@@ -3,14 +3,13 @@ import dtsPlugin from 'esbuild-plugin-d.ts'
 import glob from 'tiny-glob'
 import path from 'path'
 import fs from 'fs'
-import { exec } from 'child_process'
 
 const entryPoints = await glob('./src/**/*.tsx')
 const entryPointsTs = await glob('./src/**/*.ts')
 const allEntryPoints = entryPoints.concat(entryPointsTs)
 
 async function getJsxEntryPoints() {
-  const ans = await glob('./src/jsx/*.ts')
+  const ans = await glob('./src/jsx/*runtime.ts')
   return ans
 }
 
@@ -65,11 +64,9 @@ const targets = [
   {
     name: 'CJS + default bundled',
     entryPoints: await getJsxEntryPoints(), //['./src/index.ts'], // todo: jsx/*.ts
-    // outfile: 'dist/cjs/default/index.js',
-    outdir: 'dist/cjs',
-    dir: 'dist/cjs',
+    outdir: 'dist/jsx',
     define: { __WEB__: 'false' },
-    tsconfig: 'tsconfig.default.json',
+    tsconfig: 'tsconfig.jsx.json',
     format: 'cjs',
     bundle: true,
     external: [
