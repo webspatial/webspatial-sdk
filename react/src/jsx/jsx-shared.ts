@@ -1,14 +1,12 @@
-'use strict'
-
+import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
-import { withCSSSpatial } from '@xrsdk/react'
-import { spatialPolyfill } from './spatialPolyfill'
-
+import { withCSSSpatial } from '@webspatial/react-sdk'
+// import { withCSSSpatial } from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
 const classFlag = '__enableXr__'
 
-function replaceToSpatialPrimitiveType(
+export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
@@ -36,20 +34,24 @@ function replaceToSpatialPrimitiveType(
   return type
 }
 
-function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
+export function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props)
   return reactJSXRuntime.jsxs(type, props, key)
 }
 
-function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
+export function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
   type = replaceToSpatialPrimitiveType(type, props)
   return reactJSXRuntime.jsx(type, props, key)
 }
 
-spatialPolyfill()
-
-module.exports = {
-  jsxs: jsxs,
-  jsx: jsx,
-  Fragment: reactJSXRuntime.Fragment,
+export function jsxDEV(
+  type: React.ElementType,
+  props: unknown,
+  key: React.Key,
+  isStatic: boolean,
+  source?: JSXSource,
+  self?: unknown,
+) {
+  type = replaceToSpatialPrimitiveType(type, props)
+  return _jsxDEV(type, props, key, isStatic, source, self)
 }

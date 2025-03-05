@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample'
-import { SpatialMonitor, enableDebugTool } from '@xrsdk/react'
+import { SpatialMonitor, enableDebugTool } from '@webspatial/react-sdk'
 import { SpatialTagComponent } from './SpatialTagComponent'
 import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'

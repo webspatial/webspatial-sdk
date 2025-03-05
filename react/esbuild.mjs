@@ -3,11 +3,16 @@ import dtsPlugin from 'esbuild-plugin-d.ts'
 import glob from 'tiny-glob'
 import path from 'path'
 import fs from 'fs'
-import { exec } from 'child_process'
 
 const entryPoints = await glob('./src/**/*.tsx')
 const entryPointsTs = await glob('./src/**/*.ts')
 const allEntryPoints = entryPoints.concat(entryPointsTs)
+
+async function getJsxEntryPoints() {
+  const ans = await glob('./src/jsx/*runtime.ts')
+  return ans
+}
+
 function clearDist(dir) {
   const distPath = path.resolve(dir)
   if (fs.existsSync(distPath)) {
@@ -32,7 +37,7 @@ const targets = [
       'react',
       'react-dom',
       'three',
-      '@xrsdk/runtime',
+      '@webspatial/core-sdk',
       'lodash.isequal',
       '@google/model-viewer',
     ],
@@ -50,11 +55,28 @@ const targets = [
       'react',
       'react-dom',
       'three',
-      '@xrsdk/runtime',
+      '@webspatial/core-sdk',
       'lodash.isequal',
       '@google/model-viewer',
     ],
-    alias: { '@xrsdk/runtime': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
+    alias: { '@webspatial/core-sdk': './src/noRuntime.ts' }, // replace the reference to runtime with empty module
+  },
+  {
+    name: 'CJS + default bundled',
+    entryPoints: await getJsxEntryPoints(), //['./src/index.ts'], // todo: jsx/*.ts
+    outdir: 'dist/jsx',
+    define: { __WEB__: 'false' },
+    tsconfig: 'tsconfig.jsx.json',
+    format: 'cjs',
+    bundle: true,
+    external: [
+      'react',
+      'react-dom',
+      'three',
+      '@webspatial/core-sdk',
+      'lodash.isequal',
+      '@google/model-viewer',
+    ],
   },
 ]
 

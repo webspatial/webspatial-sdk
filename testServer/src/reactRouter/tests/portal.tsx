@@ -1,4 +1,4 @@
-import { SpatialDiv } from '@xrsdk/react'
+import { SpatialDiv } from '@webspatial/react-sdk'
 
 export function PortalTest() {
   return (

@@ -1,13 +1,13 @@
 import ReactDOM from 'react-dom/client'
 import React, { useState } from 'react'
-import { SpatialEntity } from '@xrsdk/runtime'
-import { Model, SpatialDiv, getSession } from '@xrsdk/react'
+import { SpatialEntity } from '@webspatial/core-sdk'
+import { Model, SpatialDiv, getSession } from '@webspatial/react-sdk'
 
 import { Provider } from 'react-redux'
 import { initMessageListener } from 'redux-state-sync'
 import { useDispatch, useSelector } from 'react-redux'
 import store, { increment } from './store.ts'
-import { Vec3 } from '@xrsdk/runtime'
+import { Vec3 } from '@webspatial/core-sdk'
 initMessageListener(store)
 
 function App() {
@@ -66,7 +66,7 @@ function App() {
                     await ent.updateTransform()
                     await immersiveWG.setRootEntity(ent)
                     var helmetModel = await session!.createModelComponent({
-                      url: '/src/assets/FlightHelmet.usdz',
+                      url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
                     })
                     await ent.setComponent(helmetModel)
                   }
@@ -115,7 +115,7 @@ function App() {
               await ent.updateTransform()
               await ent.setParent(spatialViewEnt)
               var helmetModel = await session!.createModelComponent({
-                url: '/src/assets/FlightHelmet.usdz',
+                url: 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
               })
               await ent.setComponent(helmetModel)
 
@@ -192,7 +192,7 @@ function App() {
 
           <Model className="w-full h-full bg-purple-500 bg-opacity-50 rounded-xl text-center">
             <source
-              src="/src/assets/FlightHelmet.usdz"
+              src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
               type="model/vnd.usdz+zip"
             ></source>
           </Model>
