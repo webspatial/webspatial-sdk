@@ -19,6 +19,7 @@
     "@tweenjs/tween.js": "^25.0.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.164.0",
+    "@webspatial/jsx-runtime": "workspace:*",
     "@webspatial/react-sdk": "workspace:*",
     "@webspatial/core-sdk": "workspace:*",
     "@xterm/addon-fit": "^0.10.0",
