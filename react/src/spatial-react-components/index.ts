@@ -1,4 +1,3 @@
-export { Model, type ModelProps, type ModelRef } from './Model'
 export { SpatialPrimitive, withSpatial } from './SpatialPrimitive'
 export {
   type SpatialReactComponentProps,

@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/react-sdk",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "npm/index.js",
   "types": "npm/index.d.ts",
@@ -11,7 +11,9 @@
     "./plugin-esbuild.js": "./npm/plugin/esbuild.js",
     "./plugin-vite.js": "./npm/plugin/vite.js",
     "./plugin-rollup.js": "./npm/plugin/rollup.js",
-    "./plugin-webpack.js": "./npm/plugin/webpack.js"
+    "./plugin-webpack.js": "./npm/plugin/webpack.js",
+    "./jsx-runtime": "./dist/jsx/jsx-runtime.js",
+    "./jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.js"
   },
   "files": [
     "dist",
@@ -35,6 +37,7 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "dependencies": {
+    "@webspatial/react-sdk": "workspace:*",
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
     "@webspatial/core-sdk": "workspace:*",
@@ -68,6 +71,7 @@
     "tiny-glob": "^0.2.9",
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "webpack": "^5.98.0"
   }
 }
