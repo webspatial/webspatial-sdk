@@ -1,4 +1,5 @@
-import { defaultSceneConfig, getSession, XRApp } from '@webspatial/react-sdk'
+import { getSession } from '../utils'
+import { defaultSceneConfig, XRApp } from '../XRApp'
 
 export async function injectSceneHook() {
   if (!window.opener) return

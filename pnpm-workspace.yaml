@@ -1,5 +1,4 @@
 packages:
-  - 'jsx-runtime'
   - 'react'
   - 'runtime'
   - 'testServer'
