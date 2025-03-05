@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import './style.scss'
 import { PopmotionTest } from './PopmotionTest'
 import { TeenjsTest } from './TeenjsTest'
 import { GSAPTest } from './GSAPTest'
@@ -13,7 +14,9 @@ function App() {
   return (
     <div className="w-screen h-screen ">
       <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
-        <a href="#">Go Back</a>
+        <a href="#" onClick={() => history.go(-1)}>
+          Go Back
+        </a>
       </div>
 
       <div className="m-10">
