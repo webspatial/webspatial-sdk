@@ -1,5 +1,5 @@
 {
-  "name": "@xrapp/builder",
+  "name": "@webspatial/builder",
   "version": "0.0.1-alpha",
   "description": "Client CLI tool to Generate XRApp project for Apple Vision Pro",
   "type": "commonjs",
@@ -7,16 +7,15 @@
     "node": ">=14.15.0"
   },
   "bin": {
-    "xrapp-builder": "bin/bundlepwa.js"
+    "webspatial-builder": "bin/bundlepwa.js"
   },
   "scripts": {
-    "test": "npm run build && bin/bundlepwa.js build --manifest-url=https://microsoftedge.github.io/Demos/pwamp/manifest.json --version=1.1",
-    "test2": "npm run build && bin/bundlepwa.js build --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.5 --teamId=teamId --buildType=app-store",
-    "test3": "npm run build && bin/bundlepwa.js store --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.4 --teamId=teamId --u=username --p=password",
-    "test4": "npm run build && bin/bundlepwa.js store --name=SpatialWebTest --version=1.5 --u=username --p=password",
-    "test5": "npm run build && bin/bundlepwa.js dev --manifest=../pack-test/pwa_test.json --project=../pack-test --teamId=teamId",
+    "test1": "npm run build && bin/bundlepwa.js build --manifest=../testLocal/manifest.json --project=../testLocal --version=1.0 --teamId=Y3N9MZ2AHY",
+    "test2": "npm run build && bin/bundlepwa.js publish --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.0 --teamId=teamId --u=username --p=password",
+    "test3": "npm run build && bin/bundlepwa.js publish --name=webspatial --version=1.0 --u=username --p=password",
+    "test4": "npm run build && bin/bundlepwa.js dev --manifest=../pack-test/pwa_test.json --project=../pack-test --teamId=teamId",
     "obfuscate": "node obfuscate.js",
-    "build": "tsc",
+    "build": "tsc && npm run obfuscate",
     "build1": "rollup -c ./rollup.config.js",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{js,ts}\""
@@ -33,7 +32,7 @@
     "package.json"
   ],
   "author": "",
-  "license": "Apache-2.0",
+  "license": "ISC",
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "cli-progress": "^3.8.2",

@@ -5,6 +5,7 @@ import {
   PROJECT_BUILD_DIRECTORY,
   PROJECT_EXPORT_DIRECTORY,
 } from '../resource'
+import { clean } from 'semver'
 
 const { execSync, exec } = require('child_process')
 
@@ -78,6 +79,7 @@ export default class Xcodebuild {
               '------------------- EXPORT SUCCEEDED -------------------',
             )
           }
+          clean(PROJECT_BUILD_DIRECTORY)
         }
         resolve(false)
       })

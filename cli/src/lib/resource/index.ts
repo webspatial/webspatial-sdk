@@ -4,7 +4,7 @@ import { clearDir, copyDir } from './file'
 import { ManifestInfo } from '../pwa'
 import * as Jimp from 'jimp'
 import { loadImageFromDisk, loadImageFromNet } from './load'
-export const PROJECT_DIRECTORY = join(process.cwd(), '../builder/visionOSApp')
+export const PROJECT_DIRECTORY = join(process.cwd(), './template/visionOSApp')
 export const PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
 export const PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
 export const WEB_PROJECT_DIRECTORY = 'web-spatial/static-web'
