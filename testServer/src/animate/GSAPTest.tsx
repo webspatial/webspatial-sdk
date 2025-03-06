@@ -15,7 +15,7 @@ export function GSAPTest() {
   const onChangeBack = contextSafe(() => {
     gsap.to(ref.current as HTMLElement, {
       rotation: 200,
-      '--xr-back': 100,
+      '--xr-back': 200,
       duration: 1,
       clearProps: 'all',
     })
@@ -33,7 +33,7 @@ export function GSAPTest() {
   return (
     <div>
       <div className="text-white">this is GSAP test</div>
-      <div enable-xr>
+      <div>
         this is parent
         <div ref={ref} enable-xr className="box" />
       </div>
