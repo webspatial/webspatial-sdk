@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.3
+
+### Patch Changes
+
+- b890f50: The dev command relaxes the detection criteria.
+
 ## 0.0.2
 
 ### Patch Changes
