@@ -94,12 +94,14 @@ export function PopmotionTest() {
       <div
         enable-xr
         ref={ref}
+        style={{ position: 'relative' }}
         className="test-element w-64 h-32 rounded-lg bg-blue-50 bg-opacity-10 flex items-center justify-center text-white"
       >
         this is spatial div
         <div
           enable-xr
           ref={refChild}
+          style={{ position: 'relative' }}
           className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white"
         >
           This is child spatial div
