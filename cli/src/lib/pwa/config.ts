@@ -35,7 +35,7 @@ export function configScope(
   let scope = ''
   const isUrl = validateURL(manifestJson.scope)
   if (fromNet && isUrl) {
-    const scopeURL = new URL(manifestJson.scope)
+    const scopeURL = new URL(manifestJson.scope ?? '')
     const startURL = new URL(manifestJson.start_url)
     if (
       scopeURL.host !== startURL.host ||
@@ -46,10 +46,13 @@ export function configScope(
   } else if (fromNet && !isUrl) {
     const head =
       manifestJson.start_url.indexOf('http://') === 0 ? 'http://' : 'https://'
-    scope = join(manifestJson.start_url.replace(head, ''), manifestJson.scope)
+    scope = join(
+      manifestJson.start_url.replace(head, ''),
+      manifestJson.scope ?? '',
+    )
     scope = head + scope
   } else {
-    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope)
+    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope ?? '')
   }
   manifestJson.scope = scope
 }
