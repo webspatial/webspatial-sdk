@@ -20,7 +20,7 @@
     "npm"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsc -p ./tsconfig.json",
     "dev": "node esbuild.mjs --watch",
     "build": "node esbuild.mjs",
     "start": "npm run dev",
