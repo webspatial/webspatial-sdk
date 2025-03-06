@@ -29,6 +29,7 @@
     "dist/index.d.ts",
     "dist/index.js",
     "bin",
+    "template",
     "package.json"
   ],
   "author": "",
