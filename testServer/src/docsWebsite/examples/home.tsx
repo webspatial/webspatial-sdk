@@ -1,15 +1,23 @@
 import { SpatialSession } from '@webspatial/core-sdk'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { showSample } from './sampleLoader'
 import ReactMarkdown from 'react-markdown'
 
 function MySample(_props: { session?: SpatialSession }) {
   var [showMarkdown, setShowMarkdown] = useState('')
-  fetch('/src/docsWebsite/docs/gettingStarted.md')
-    .then(response => response.text())
-    .then(text => {
-      setShowMarkdown(text)
-    })
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    var docFile = urlParams.get('docFile')
+    if (!docFile) {
+      docFile = 'gettingStarted.md'
+    }
+    fetch('/src/docsWebsite/docs/' + docFile)
+      .then(response => response.text())
+      .then(text => {
+        setShowMarkdown(text)
+      })
+  }, [])
 
   return (
     <div className="w-full">
