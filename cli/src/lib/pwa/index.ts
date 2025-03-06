@@ -26,15 +26,21 @@ export class PWAGenerator {
   // Supported display modes for TWA
   static DisplayModes: string[] = ['standalone', 'minimal-ui']
 
-  public static async generator(args: InitArgs): Promise<ManifestInfo> {
-    let manifestInfo: ManifestInfo = await this.validate(args)
+  public static async generator(
+    args: InitArgs,
+    isDev: boolean = false,
+  ): Promise<ManifestInfo> {
+    let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
     await this.config(manifestInfo)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
 
-  public static async validate(args: InitArgs): Promise<ManifestInfo> {
+  public static async validate(
+    args: InitArgs,
+    isDev: boolean = false,
+  ): Promise<ManifestInfo> {
     let manifest: Record<string, any> = {}
     let url: string = ''
     let fromNet: boolean = false
@@ -49,12 +55,12 @@ export class PWAGenerator {
     }
     // check manifest.json
     checkManifestJson(manifest)
-    checkStartUrl(manifest, url, fromNet)
+    var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
     await checkIcons(manifest, url)
     return {
       json: manifest,
       url,
-      fromNet,
+      fromNet: isNetWeb,
     }
   }
 
