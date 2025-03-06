@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.2
+
+### Patch Changes
+
+- 75d4eab: Supplement packaging information
+
 ## 0.0.1
 
 ### Patch Changes
