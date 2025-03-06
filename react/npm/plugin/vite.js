@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const { getEnv, infix } = require('./shared')
+const { getEnv, AVP } = require('./shared')
 
 function injectProcessEnv() {
   return {
@@ -8,10 +8,10 @@ function injectProcessEnv() {
     config: () => {
       const xrEnv = getEnv()
       const output =
-        xrEnv !== 'web'
+        xrEnv === AVP
           ? {
-              entryFileNames: `assets/[name]-[hash].${infix}.js`, // no share js entry
-              chunkFileNames: `assets/[name]-[hash].${infix}.js`, // no share js chunk
+              entryFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js entry
+              chunkFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js chunk
               assetFileNames: 'assets/[name]-[hash][extname]', // shared css image
             }
           : {}
@@ -22,7 +22,7 @@ function injectProcessEnv() {
           'import.meta.env.XR_ENV': JSON.stringify(xrEnv), // visible in development
         },
         build: {
-          emptyOutDir: xrEnv === 'web', // keep dist folder
+          emptyOutDir: xrEnv !== AVP, // keep dist folder
           rollupOptions: { output },
           commonjsOptions: {
             include: [/@webspatial\/react-sdk\/.*/, /node_modules/],
@@ -44,7 +44,7 @@ function injectProcessEnv() {
     renderStart(outputOptions) {
       // rename index.html to index.avp.html
       const xrEnv = getEnv()
-      if (xrEnv === 'web') {
+      if (xrEnv !== AVP) {
         return
       }
 
@@ -61,7 +61,7 @@ function injectProcessEnv() {
     },
     writeBundle(outputOptions) {
       const xrEnv = getEnv()
-      if (xrEnv === 'web') {
+      if (xrEnv !== AVP) {
         return
       }
       const outDir = outputOptions.dir || 'dist'
