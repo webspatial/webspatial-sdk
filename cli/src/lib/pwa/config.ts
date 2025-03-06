@@ -3,9 +3,9 @@ import { validateURL } from './validate'
 import { join } from 'path'
 
 export function configId(manifestJson: Record<string, any>) {
-  if (!manifestJson.id) {
-    manifestJson.id = manifestJson.start_url
-  }
+  const url = new URL(manifestJson.id)
+  let arr = url.host.split('.').reverse()
+  manifestJson.id = arr.join('.')
 }
 
 export function configStartUrl(
