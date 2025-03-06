@@ -9,8 +9,10 @@ const HELP_MESSAGES = new Map<string, string>([
       '',
       '',
       'help ................ shows this menu',
-      'build ................ initializes a new TWA Project' +
-        ' and generates an Apple Vision Pro App from a TWA Project',
+      'build ................ initializes a new WebSpatial Project' +
+        ' and generates an Apple Vision Pro App from a WebSpatial Project',
+      'dev ................ build and run WebSpatial Project on Apple Vision Pro simulator',
+      'publish.............. upload WebSpatial Project to App Store Connect',
     ].join('\n'),
   ],
   [
@@ -19,10 +21,37 @@ const HELP_MESSAGES = new Map<string, string>([
       'Usage:',
       '',
       '',
-      'webspatial build --manifest=[local-manifest-path] --project=[local-web-project-path] --teamId=[teamId]',
+      'webspatial build --manifest=<local-manifest-path> --project=<local-web-project-path> --teamId=<teamId> [--version=version] [--buildType=release-testing]',
       '',
       '',
-      'webspatial build --manifest-url=[net-manifest-url] --teamId=[teamId]',
+      'webspatial build --manifest-url=<net-manifest-url> --teamId=<teamId> [--version=version] [--buildType=release-testing]',
+    ].join('\n'),
+  ],
+  [
+    'dev',
+    [
+      'Usage:',
+      '',
+      '',
+      'webspatial dev --manifest=<local-manifest-path> --project=<local-web-project-path>',
+      '',
+      '',
+      'webspatial dev --manifest-url=<net-manifest-url>',
+    ].join('\n'),
+  ],
+  [
+    'publish',
+    [
+      'Usage:',
+      '',
+      '',
+      'webspatial publish --manifest=<local-manifest-path> --project=<local-web-project-path> --teamId=<teamId> --version=<version> --u=<username> --p=<password>',
+      '',
+      '',
+      'webspatial publish --manifest-url=<net-manifest-url> --teamId=<teamId> --version=<version> --u=<username> --p=<password>',
+      '',
+      '',
+      'webspatial publish --name=<app-name> --version=<version> --u=<username> --p=<password>',
     ].join('\n'),
   ],
 ])

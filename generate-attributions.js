@@ -28,9 +28,6 @@ var main = async () => {
   var reactDeps = await getLicense(
     'cd react && npx license-checker --json && cd ..',
   )
-  var jsxRuntimeDeps = await getLicense(
-    'cd jsx-runtime && npx license-checker --json && cd ..',
-  )
   var testServerDeps = await getLicense(
     'cd testServer && npx license-checker --json && cd ..',
   )
@@ -39,7 +36,6 @@ var main = async () => {
   var dependencies = {
     ...runtimeDeps,
     ...reactDeps,
-    ...jsxRuntimeDeps,
     ...testServerDeps,
     ...rootDeps,
   }

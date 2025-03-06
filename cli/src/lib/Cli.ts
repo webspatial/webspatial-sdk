@@ -41,7 +41,7 @@ export class Cli {
         return await help(parsedArgs)
       case 'build':
         return await start(parsedArgs)
-      case 'store':
+      case 'publish':
         return await store(parsedArgs)
       case 'dev':
         return await dev(parsedArgs)
