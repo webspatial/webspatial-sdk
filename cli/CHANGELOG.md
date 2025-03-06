@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.5
+
+### Patch Changes
+
+- cf1fa9e: Update the method for checking start_url and optimize the method of generating bundle IDs based on the IDs in the manifest.
+
 ## 0.0.4
 
 ### Patch Changes
