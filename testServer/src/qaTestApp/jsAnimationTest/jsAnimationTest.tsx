@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useRef, useState, useEffect, CSSProperties } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { PopmotionTest } from './popMotion.tsx'
 import { ReactSpringTest } from './reactSpringTest.tsx'

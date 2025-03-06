@@ -14,6 +14,7 @@ export function ReactSpringTest() {
     opacity: 1,
     transform: 'translateX(0px)',
     '--xr-back': '10',
+    position: 'relative',
   }))
 
   const onChangeBack = () => {
