@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.6
+
+### Patch Changes
+
+- 6442bf7: Enhance compatibility of configuration scope
+
 ## 0.0.5
 
 ### Patch Changes
