@@ -1,5 +1,13 @@
 # @webspatial/react-sdk
 
+## 0.0.3
+
+### Patch Changes
+
+- 0b74270: let process.env.xrEnv default to not avp
+- Updated dependencies [0b74270]
+  - @webspatial/react-sdk@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
