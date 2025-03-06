@@ -53,7 +53,15 @@ export function checkStartUrl(
   manifest: Record<string, any>,
   manifestUrl: string,
   isNet: boolean,
-) {
+  isDev: boolean = false,
+): boolean {
+  var isNetWeb = false
+  if (isDev) {
+    isNetWeb =
+      manifest.start_url.indexOf('https://') === 0 ||
+      manifest.start_url.indexOf('http://') === 0
+    return isNetWeb
+  }
   if (isNet) {
     // Determine whether it is of the same origin as the manifest
     if (manifest.start_url.indexOf('https://') == 0) {
@@ -80,6 +88,7 @@ export function checkStartUrl(
       })
     }
   }
+  return isNetWeb
 }
 
 export async function checkIcons(
