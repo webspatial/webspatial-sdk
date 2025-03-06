@@ -51,6 +51,7 @@ export async function start(
       teamId: args['teamId'],
       version: args['version'],
       buildType: args['buildType'],
+      export: args['export'],
     },
     isDev,
   )
