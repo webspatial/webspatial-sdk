@@ -119,7 +119,6 @@ This project uses the following third-party libraries:
 - [typedoc-plugin-markdown@4.2.10](https://github.com/typedoc2md/typedoc-plugin-markdown) - Licensed under the MIT
 - [typedoc@0.26.11](https://github.com/TypeStrong/TypeDoc) - Licensed under the Apache-2.0
 - [@types/node@22.9.1](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
-- [@webspatial/jsx-runtime@1.0.0](No repository link) - Licensed under the ISC
 - [@reduxjs/toolkit@2.3.0](https://github.com/reduxjs/redux-toolkit) - Licensed under the MIT
 - [@tailwindcss/typography@0.5.15](https://github.com/tailwindlabs/tailwindcss-typography) - Licensed under the MIT
 - [@types/animejs@3.1.12](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
