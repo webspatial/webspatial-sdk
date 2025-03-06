@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.4
+
+### Patch Changes
+
+- 5db4321: Fix dir path & support export param when use build command
+
 ## 0.0.3
 
 ### Patch Changes
