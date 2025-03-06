@@ -146,8 +146,9 @@ struct web_spatialApp: App {
         }.windowStyle(.volumetric).defaultSize(width: 1, height: 1, depth: 1, in: .meters)
 
         ImmersiveSpace(id: "ImmersiveSpace") {
-            let wg = SpatialWindowContainer.getImmersiveWindowContainer()
-            VolumetricWindowContainerView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
+            if let wg = SpatialWindowContainer.getImmersiveWindowContainer() {
+                VolumetricWindowContainerView().environment(wg).handlesExternalEvents(preferring: [], allowing: [])
+            }
         }
 
         WindowGroup(id: "loading") {
