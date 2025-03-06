@@ -8,7 +8,12 @@ import {
   configStartUrl,
 } from './config'
 import { loadJsonFromNet, loadJsonFromDisk } from '../resource/load'
-import { checkIcons, checkManifestJson, checkStartUrl } from './validate'
+import {
+  checkIcons,
+  checkId,
+  checkManifestJson,
+  checkStartUrl,
+} from './validate'
 
 export interface InitArgs {
   'manifest-url'?: string // remote manifest url
@@ -32,7 +37,7 @@ export class PWAGenerator {
   ): Promise<ManifestInfo> {
     let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
-    await this.config(manifestInfo)
+    await this.config(manifestInfo, isDev)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
@@ -56,6 +61,7 @@ export class PWAGenerator {
     // check manifest.json
     checkManifestJson(manifest)
     var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
+    if (!isDev) checkId(manifest)
     await checkIcons(manifest, url)
     return {
       json: manifest,
@@ -65,9 +71,9 @@ export class PWAGenerator {
   }
 
   // generate manifest
-  public static config(manifestInfo: ManifestInfo) {
+  public static config(manifestInfo: ManifestInfo, isDev: boolean) {
     configStartUrl(manifestInfo.json, manifestInfo.url, manifestInfo.fromNet)
-    configId(manifestInfo.json)
+    if (!isDev) configId(manifestInfo.json)
     configScope(manifestInfo.json, manifestInfo.fromNet)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
