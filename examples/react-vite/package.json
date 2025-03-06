@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:web": "XR_ENV=web vite",
+    "dev": "XR_ENV=avp vite",
+    "dev:web": "vite",
     "build": "npm run build:web && npm run build:avp",
-    "build:web": "tsc -b && XR_ENV=web vite build",
-    "build:avp": "tsc -b && vite build",
+    "build:web": "tsc -b && vite build",
+    "build:avp": "tsc -b && XR_ENV=avp vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
