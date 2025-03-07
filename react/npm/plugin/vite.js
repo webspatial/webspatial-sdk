@@ -7,38 +7,39 @@ function injectProcessEnv() {
     name: 'vite-plugin-inject-env',
     config: () => {
       const xrEnv = getEnv()
-      const output =
-        xrEnv === AVP
-          ? {
-              entryFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js entry
-              chunkFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js chunk
-              assetFileNames: 'assets/[name]-[hash][extname]', // shared css image
-            }
-          : {}
+
+      const isAVP = xrEnv === AVP
+
+      const output = isAVP
+        ? {
+            entryFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js entry
+            chunkFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js chunk
+            assetFileNames: 'assets/[name]-[hash][extname]', // shared css image
+          }
+        : {}
 
       return {
+        resolve: {
+          alias: [
+            {
+              find: /^@webspatial\/react-sdk$/,
+              replacement: isAVP
+                ? '@webspatial/react-sdk/default'
+                : '@webspatial/react-sdk/web',
+            },
+          ],
+        },
         define: {
           'process.env.XR_ENV': JSON.stringify(xrEnv),
           'import.meta.env.XR_ENV': JSON.stringify(xrEnv), // visible in development
         },
         build: {
           emptyOutDir: xrEnv !== AVP, // keep dist folder
-          rollupOptions: { output },
-          commonjsOptions: {
-            include: [/@webspatial\/react-sdk\/.*/, /node_modules/],
+          rollupOptions: {
+            output,
           },
         },
-        optimizeDeps: {
-          force: true, // ignore cache
-          include: [
-            '@webspatial/react-sdk',
-            '@webspatial/react-sdk/jsx-dev-runtime',
-            '@webspatial/react-sdk/jsx-runtime',
-            '@webspatial/core-sdk',
-            // force to use prebuild package completely
-            // hybrid cjs&esm will cause the static variable like requestCounter be reset
-          ], // prebuild cjs to esm
-        },
+        optimizeDeps: {},
       }
     },
     renderStart(outputOptions) {
