@@ -11,7 +11,7 @@
     "setup": "pnpm install && npm run buildPackages",
     "watchNPM": "concurrently \"pnpm -r --filter '@webspatial/*' run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
-    "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
+    "dev": "npm run testServer",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
     "format": "pnpm -r run format",
     "ci:publish": "pnpm publish -r --access=public"
