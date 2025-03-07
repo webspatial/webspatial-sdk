@@ -30,6 +30,7 @@ struct PWAManager: Codable {
         if !(urlType == "http" || urlType == "https") {
             start_url = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")!.absoluteString
             scope = "file://" + Bundle.main.bundlePath + "/" + scope
+            scope = scope.replacingOccurrences(of: " ", with: "%20")
             isLocal = true
         }
 
