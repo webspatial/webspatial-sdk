@@ -52,7 +52,6 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "dependencies": {
-    "@webspatial/react-sdk": "workspace:*",
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
     "@webspatial/core-sdk": "workspace:*",
