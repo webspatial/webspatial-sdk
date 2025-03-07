@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.0.5
+
+### Patch Changes
+
+- 0eded09: react-sdk ship both esm/cjs,vite plugin use resolve instead of cjs entry
+
 ## 0.0.4
 
 ### Patch Changes

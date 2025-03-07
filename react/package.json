@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/react-sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "React components for WebSpatial",
   "main": "./dist/default/index.js",
   "types": "./dist/default/index.d.ts",
