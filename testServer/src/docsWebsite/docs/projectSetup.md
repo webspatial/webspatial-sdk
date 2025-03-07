@@ -1,4 +1,4 @@
-# Getting Started
+# Project Setup
 
 ## Starting a new project
 
