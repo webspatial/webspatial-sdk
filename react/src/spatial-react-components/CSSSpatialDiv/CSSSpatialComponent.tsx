@@ -52,6 +52,7 @@ function renderRootCSSSpatialComponent(
     ...style,
     width: 0,
     height: 0,
+    padding: 0,
     transition: 'none',
   }
 
@@ -87,6 +88,7 @@ function renderRootCSSSpatialComponent(
         className={divRefClassName}
         {...props}
         ref={ref}
+        data-cssparser
       />
     </CSSSpatialRootContext.Provider>
   )
@@ -148,6 +150,7 @@ function renderInPortalInstance(
     ...style,
     width: 0,
     height: 0,
+    padding: 0,
     transition: 'none',
   }
 
