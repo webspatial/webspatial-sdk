@@ -67,11 +67,6 @@
     "postcss-modules": "^6.0.0",
     "typescript": "^5.2.2"
   },
-  "pnpm": {
-    "overrides": {
-      "nanoid@<3.3.8": ">=3.3.8"
-    }
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
