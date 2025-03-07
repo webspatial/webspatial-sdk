@@ -1,5 +1,15 @@
 # @webspatial/react-sdk
 
+## 0.0.4
+
+### Patch Changes
+
+- 511d42b: support css fixed position for SpatialDiv
+- e3aabbd: check DOMContentLoaded in more robust way
+- Updated dependencies [511d42b]
+- Updated dependencies [e3aabbd]
+  - @webspatial/react-sdk@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes
