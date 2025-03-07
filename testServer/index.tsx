@@ -19,7 +19,7 @@ function App() {
           <div className="flex items-center space-x-6">
             <span className="text-xl font-bold">WebSpatial</span>
             <a
-              href="/src/docsWebsite/index.html"
+              href="/src/docsWebsite/index.html?docFile=helloWorld.md"
               className="text-gray-300 hover:text-white"
             >
               Docs
