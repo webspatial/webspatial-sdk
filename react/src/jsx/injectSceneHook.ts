@@ -19,7 +19,6 @@ export async function injectSceneHook() {
   }
 
   onContentLoaded(async () => {
-    console.log('DOMContentLoaded is ready.')
     let cfg = defaultSceneConfig
     if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
       try {
