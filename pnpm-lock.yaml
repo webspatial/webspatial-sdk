@@ -129,9 +129,6 @@ importers:
       '@webspatial/core-sdk':
         specifier: workspace:*
         version: link:../runtime
-      '@webspatial/react-sdk':
-        specifier: workspace:*
-        version: 'link:'
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
