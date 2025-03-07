@@ -37,7 +37,7 @@ var ctx = await esbuild.context({
   jsx: 'automatic',
   plugins,
   define: {
-    '__WEB__': '"false"',
+    '__WEB__': 'false',
   },
   // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
   banner: {
