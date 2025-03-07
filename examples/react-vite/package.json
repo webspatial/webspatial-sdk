@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "XR_ENV=avp vite",
+    "dev": "XR_ENV=avp vite --force",
     "dev:web": "vite",
     "build": "npm run build:web && npm run build:avp",
     "build:web": "tsc -b && vite build",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@webspatial/react-sdk": "workspace:*",
     "@webspatial/core-sdk": "workspace:*",
+    "@webspatial/react-plugin-vite": "workspace:*",
     "react": "^18",
     "react-dom": "^18",
     "three": "^0.173.0"
