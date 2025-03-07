@@ -48,7 +48,7 @@ function App() {
           <p className="text-xl text-gray-400 mb-8">
             Build cross-platform XR apps with JavaScript, React, HTML, and CSS
           </p>
-          <a href="/src/docsWebsite/index.html">
+          <a href="/src/docsWebsite/index.html?docFile=helloWorld.md">
             <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium py-3 px-8 rounded-full hover:opacity-90 transition duration-300">
               Get Started
             </button>
