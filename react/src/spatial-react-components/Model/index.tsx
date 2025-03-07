@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useRef,
   useEffect,
+  useState,
 } from 'react'
 
 import { getSession } from '../../utils'
@@ -19,7 +20,6 @@ import {
 } from '../Model3D'
 import { getAbsoluteURL } from '../Model3D/utils'
 
-import '@google/model-viewer'
 import { ModelViewerElement } from '@google/model-viewer'
 
 declare global {
@@ -122,8 +122,17 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   if (isWebEnv) {
     const myModelViewer = useRef<ModelViewerElement>(null)
     const { className, style = {}, ...props } = inProps
+    let [modelViewerExists, setModelViewerExists] = useState(false)
+    useEffect(() => {
+      customElements.whenDefined('model-viewer').then(function () {
+        setModelViewerExists(true)
+      })
+    }, [])
 
     useEffect(() => {
+      if (!modelViewerExists) {
+        return
+      }
       myModelViewer.current!.addEventListener('load', event => {
         if (props.onLoad) {
           props.onLoad({
@@ -164,7 +173,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
           })
         }
       })
-    }, [])
+    }, [modelViewerExists])
 
     useEffect(() => {
       if (props.contentMode !== undefined && props.contentMode !== 'fit') {
@@ -186,19 +195,23 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
 
     return (
       <div ref={ref} className={className} style={style}>
-        <model-viewer
-          ref={myModelViewer}
-          style={
-            {
-              width: '100%',
-              height: '100%',
-            } as any
-          }
-          src={gltfSourceURL}
-          camera-controls
-          touch-action="pan-y"
-          poster={props.poster}
-        />
+        {modelViewerExists ? (
+          <model-viewer
+            ref={myModelViewer}
+            style={
+              {
+                width: '100%',
+                height: '100%',
+              } as any
+            }
+            src={gltfSourceURL}
+            camera-controls
+            touch-action="pan-y"
+            poster={props.poster}
+          />
+        ) : (
+          <></>
+        )}
       </div>
     )
   } else {
