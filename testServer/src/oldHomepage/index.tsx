@@ -357,7 +357,6 @@ var names = {
 
 var pageName = new URLSearchParams(window.location.search).get('pageName')
 if (pageName) {
-  isEmbed = true
   // Clear the background
   document.documentElement.style.backgroundColor = '#FFFFFF00'
 }
