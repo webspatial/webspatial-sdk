@@ -3,6 +3,17 @@ import { useRef, useEffect } from 'react'
 export function useDetectLayoutDomUpdated(onDomUpdated: () => void) {
   const ref = useRef<HTMLDivElement>(null)
 
+  // detect window resize
+  useEffect(() => {
+    const handleResize = () => {
+      onDomUpdated()
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
   // detect dom resize
   // Trigger native resize on web resize events
   useEffect(() => {
