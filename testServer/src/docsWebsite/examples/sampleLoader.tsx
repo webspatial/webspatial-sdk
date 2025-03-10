@@ -109,19 +109,23 @@ export function showSample(MySample: any, hasCode = true) {
               </a>
               <li>
                 <details open>
-                  <summary style={{ cursor: 'pointer' }}>Docs</summary>
+                  <summary style={{ cursor: 'pointer' }}>
+                    Getting started
+                  </summary>
                   <ul>
                     <li>
-                      <a href="/src/docsWebsite/index.html">Getting started</a>
-                    </li>
-                    <li>
-                      <a href="/src/docsWebsite/index.html?examplePath=helloWorld">
-                        Hello world
+                      <a href="/src/docsWebsite/index.html?docFile=whatIsWebSpatial.md">
+                        What is WebSpatial?
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=modelFileSupport.md">
-                        Model File Support
+                      <a href="/src/docsWebsite/index.html?docFile=helloWorld.md">
+                        Quick Start (Hello world)
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/src/docsWebsite/index.html?docFile=projectSetup.md">
+                        Project Setup
                       </a>
                     </li>
                   </ul>
@@ -212,23 +216,39 @@ export function showSample(MySample: any, hasCode = true) {
               </li>
               <li>
                 <details open>
-                  <summary style={{ cursor: 'pointer' }}>Showcases</summary>
+                  <summary style={{ cursor: 'pointer' }}>Learn</summary>
                   <ul>
                     <li>
-                      <a>Ecommerce Website</a>
+                      <a href="/src/docsWebsite/index.html?docFile=debuggingGuide.md">
+                        Debugging Guide
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/src/docsWebsite/index.html?docFile=modelFileSupport.md">
+                        Model File Support
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/src/docsWebsite/index.html?docFile=publishOnAppStore.md">
+                        Publish on app store
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/src/docsWebsite/index.html?docFile=architecture.md">
+                        Architecture
+                      </a>
                     </li>
                   </ul>
                 </details>
               </li>
               <li>
                 <details open>
-                  <summary style={{ cursor: 'pointer' }}>Code</summary>
+                  <summary style={{ cursor: 'pointer' }}>API Reference</summary>
                   <ul>
                     <li>
-                      <a>Github</a>
-                    </li>
-                    <li>
-                      <a>NPM</a>
+                      <a href="https://github.com/webspatial/webspatial.github.io/blob/main/docs/globals.md">
+                        Generated Docs
+                      </a>
                     </li>
                   </ul>
                 </details>
