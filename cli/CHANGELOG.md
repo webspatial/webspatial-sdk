@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.0.7
+
+### Patch Changes
+
+- update nav layout
+- 0138ec0: Optimize the navigation UI and modify the mainScene parameter in the manifest to xr_main_scene
+
 ## 0.0.6
 
 ### Patch Changes
