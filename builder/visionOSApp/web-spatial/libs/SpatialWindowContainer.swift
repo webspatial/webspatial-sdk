@@ -14,7 +14,7 @@ import typealias RealityKit.Entity
 class SpatialWindowContainer: SpatialObject {
     // save active plain windowContainer ids
     static var activePlainWindowContainerIds: Set<String> = []
-	// get first active plain WindowContainerId
+    // get first active plain WindowContainerId
     static var firstActivePlainWindowContainerId: String? {
         return activePlainWindowContainerIds.first
     }
@@ -72,6 +72,9 @@ class SpatialWindowContainer: SpatialObject {
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
     override func onDestroy() {
+        // Note that destroy wont be called on immersive window container
+        // as there should only ever be one in existance
+
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
 
@@ -129,10 +132,10 @@ extension SpatialWindowContainer {
 }
 
 extension SpatialWindowContainer {
-    private static let ImmersiveID = "Immersive"
+    static let ImmersiveID = "Immersive"
 
-    static func getImmersiveWindowContainer() -> SpatialWindowContainer {
-        return getSpatialWindowContainer(ImmersiveID)!
+    static func getImmersiveWindowContainer() -> SpatialWindowContainer? {
+        return getSpatialWindowContainer(ImmersiveID)
     }
 
     static func createImmersiveWindowContainer() -> SpatialWindowContainer {

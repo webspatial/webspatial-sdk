@@ -53,7 +53,15 @@ export function checkStartUrl(
   manifest: Record<string, any>,
   manifestUrl: string,
   isNet: boolean,
-) {
+  isDev: boolean = false,
+): boolean {
+  var isNetWeb = false
+  if (isDev) {
+    isNetWeb =
+      manifest.start_url.indexOf('https://') === 0 ||
+      manifest.start_url.indexOf('http://') === 0
+    return isNetWeb
+  }
   if (isNet) {
     // Determine whether it is of the same origin as the manifest
     if (manifest.start_url.indexOf('https://') == 0) {
@@ -65,7 +73,7 @@ export function checkStartUrl(
           code: 4000,
           // eslint-disable-next-line @typescript-eslint/camelcase
           message:
-            'In the Web App Manifest, the start_url must be the same origin with manifest',
+            'In the WebSpatial App Manifest, the start_url must be the same origin with manifest',
           message_staring_params: {},
         })
       }
@@ -75,11 +83,24 @@ export function checkStartUrl(
       throw new CustomError({
         code: 4000,
         // eslint-disable-next-line @typescript-eslint/camelcase
-        message: 'In the Web App Manifest, the start_url must use https',
+        message: 'In the WebSpatial App Manifest, the start_url must use https',
+        message_staring_params: {},
+      })
+    }
+  } else {
+    if (
+      manifest.start_url.indexOf('https://') == 0 ||
+      manifest.start_url.indexOf('http://') == 0
+    ) {
+      throw new CustomError({
+        code: 4000,
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        message: 'Local manifest cannot package network project',
         message_staring_params: {},
       })
     }
   }
+  return isNetWeb
 }
 
 export async function checkIcons(
@@ -167,6 +188,21 @@ export async function checkIcons(
       purpose: maxSizePurpose,
     },
   ]
+}
+
+export function checkId(manifest: Record<string, any>) {
+  if (!manifest.id) {
+    manifest.id = manifest.start_url
+  }
+  if (!validateURL(manifest.id)) {
+    throw new CustomError({
+      code: 4000,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      message:
+        'In the WebSpatial App Manifest, the id or start_url must be a valid URL',
+      message_staring_params: {},
+    })
+  }
 }
 
 export function validateURL(url: string): boolean {

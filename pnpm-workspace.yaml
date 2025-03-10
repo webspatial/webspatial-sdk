@@ -3,3 +3,6 @@ packages:
   - 'runtime'
   - 'testServer'
   - 'cli'
+  - 'examples/*'
+  - 'react-plugin-vite'
+

@@ -200,6 +200,7 @@ function useSyncSpatialProps(
   anchor: vecType,
   cornerRadiusFromStyle: CornerRadius,
   opacity: number,
+  stylePosition: string | undefined,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -210,7 +211,7 @@ function useSyncSpatialProps(
     cornerRadius = cornerRadiusFromStyle,
     zIndex = 0,
   } = spatialStyle
-  let stylePosition = style?.position
+
   let styleOverflow = style?.overflow
 
   const visible = useMemo(() => {
@@ -489,6 +490,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     anchor,
     cornerRadius,
     opacity,
+    inheritedPortalStyle.position,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(
@@ -500,7 +502,9 @@ export function PortalInstance(inProps: PortalInstanceProps) {
   )
 
   const needRenderPlaceHolder =
-    isSubPortal && inheritedPortalStyle.position !== 'absolute'
+    isSubPortal &&
+    inheritedPortalStyle.position !== 'absolute' &&
+    inheritedPortalStyle.position !== 'fixed'
 
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>

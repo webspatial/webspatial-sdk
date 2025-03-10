@@ -17,7 +17,10 @@ export async function start(
    * 4.  Improve start_url, scope, display, and deeplink configurations
    **/
   console.log('------------------- build start -------------------')
-  let manifestInfo = await PWAGenerator.generator(args as unknown as InitArgs)
+  let manifestInfo = await PWAGenerator.generator(
+    args as unknown as InitArgs,
+    isDev,
+  )
   /**
    * *Resource steps
    * 1.  If it is a local project, then
@@ -48,6 +51,7 @@ export async function start(
       teamId: args['teamId'],
       version: args['version'],
       buildType: args['buildType'],
+      export: args['export'],
     },
     isDev,
   )

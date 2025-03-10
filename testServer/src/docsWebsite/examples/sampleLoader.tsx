@@ -119,6 +119,11 @@ export function showSample(MySample: any, hasCode = true) {
                         Hello world
                       </a>
                     </li>
+                    <li>
+                      <a href="/src/docsWebsite/index.html?docFile=modelFileSupport.md">
+                        Model File Support
+                      </a>
+                    </li>
                   </ul>
                 </details>
               </li>
