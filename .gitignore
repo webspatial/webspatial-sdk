@@ -17,4 +17,5 @@ coverage
 .vscode
 coverage
 temp
+.idea
 dist

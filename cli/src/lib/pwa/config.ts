@@ -87,19 +87,19 @@ export function configMainScene(manifestJson: Record<string, any>) {
     },
     resizability: 'automatic',
   }
-  if (manifestJson.mainScene) {
+  if (manifestJson.xr_main_scene) {
     mainScene.defaultSize.width =
-      Number(manifestJson.mainScene.defaultSize?.width) > 0
-        ? manifestJson.mainScene.defaultSize.width
+      Number(manifestJson.xr_main_scene.default_size?.width) > 0
+        ? manifestJson.xr_main_scene.default_size.width
         : 1280
     mainScene.defaultSize.height =
-      Number(manifestJson.mainScene.defaultSize?.height) > 0
-        ? manifestJson.mainScene.defaultSize.height
+      Number(manifestJson.xr_main_scene.default_size?.height) > 0
+        ? manifestJson.xr_main_scene.default_size.height
         : 1280
     mainScene.resizability = resizabilities.includes(
-      manifestJson.mainScene.resizability,
+      manifestJson.xr_main_scene.resizability,
     )
-      ? manifestJson.mainScene.resizability
+      ? manifestJson.xr_main_scene.resizability
       : 'automatic'
   }
   manifestJson.mainScene = mainScene
