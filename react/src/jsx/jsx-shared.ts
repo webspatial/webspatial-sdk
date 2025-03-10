@@ -1,6 +1,6 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
-import { withCSSSpatial } from '../'
+import { withCSSSpatial } from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
 const classFlag = '__enableXr__'
