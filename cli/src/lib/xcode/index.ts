@@ -18,7 +18,7 @@ export class XcodeManager {
     if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
       fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
     }
-    if (!isDev) await Xcodebuild.archive()
+    if (!isDev) await Xcodebuild.archive(option['export'])
   }
 
   public static async upload(option: any, appInfo: any) {

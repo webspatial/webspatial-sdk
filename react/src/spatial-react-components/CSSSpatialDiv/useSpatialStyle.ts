@@ -61,7 +61,8 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
 function parseBack(computedStyle: CSSStyleDeclaration) {
   let useBackProperty =
     computedStyle.position === 'absolute' ||
-    computedStyle.position === 'relative'
+    computedStyle.position === 'relative' ||
+    computedStyle.position === 'fixed'
 
   if (!useBackProperty) return new Matrix4()
 

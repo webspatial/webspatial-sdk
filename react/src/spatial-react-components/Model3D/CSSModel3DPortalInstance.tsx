@@ -30,6 +30,7 @@ export function renderCSSModel3DPortalInstance(
     ...style,
     width: 0,
     height: 0,
+    padding: 0,
   }
 
   const model3DStyle: CSSProperties = {
