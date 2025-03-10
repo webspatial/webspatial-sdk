@@ -133,6 +133,17 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
       if (!modelViewerExists) {
         return
       }
+
+      myModelViewer.current!.addEventListener('error', event => {
+        if ((event as any).detail.type == 'loadfailure') {
+          if (props.onLoad) {
+            props.onLoad({
+              target: { ready: false, currentSrc: gltfSourceURL } as any,
+            })
+          }
+        }
+      })
+
       myModelViewer.current!.addEventListener('load', event => {
         if (props.onLoad) {
           props.onLoad({
