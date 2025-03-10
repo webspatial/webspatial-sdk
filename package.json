@@ -14,7 +14,7 @@
     "dev": "npm run testServer",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
     "format": "pnpm -r run format",
-    "ci:publish": "pnpm publish -r --access=public",
+    "ci:publish": "changeset publish",
     "changeset": "changeset"
   },
   "simple-git-hooks": {
