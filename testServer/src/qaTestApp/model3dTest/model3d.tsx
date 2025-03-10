@@ -16,7 +16,6 @@ enableDebugTool()
 function App() {
   const [tapFlag, setTapFlag] = useState(true)
 
-  // 为每个Model组件创建ref
   const ref1 = useRef<ModelElement | null>(null)
   const ref2 = useRef<ModelElement | null>(null)
   const ref3 = useRef<ModelElement | null>(null)
