@@ -2,4 +2,4 @@
 '@webspatial/builder': patch
 ---
 
-Supplement packaging information
+update nav layout

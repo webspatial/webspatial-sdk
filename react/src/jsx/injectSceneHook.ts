@@ -1,13 +1,24 @@
-import { defaultSceneConfig, XRApp, getSession } from '@webspatial/react-sdk'
+import { defaultSceneConfig, XRApp, getSession } from '../index'
 
 export async function injectSceneHook() {
   if (!window.opener) return
   if ((window as any)._SceneHookOff) return
 
   await getSession()?.setLoading('show')
-
   // see this flag, we have done create the root scene
-  document.addEventListener('DOMContentLoaded', async () => {
+
+  function onContentLoaded(callback: any) {
+    if (
+      document.readyState === 'interactive' ||
+      document.readyState === 'complete'
+    ) {
+      callback()
+    } else {
+      document.addEventListener('DOMContentLoaded', callback)
+    }
+  }
+
+  onContentLoaded(async () => {
     let cfg = defaultSceneConfig
     if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
       try {
