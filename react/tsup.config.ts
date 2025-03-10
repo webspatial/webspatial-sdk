@@ -21,7 +21,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: '"true"',
+        __WEB__: 'true',
       }
     },
   },
@@ -37,7 +37,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: '"false"',
+        __WEB__: 'false',
       }
     },
   },
@@ -54,7 +54,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: '"false"',
+        __WEB__: 'false',
       }
     },
   },
