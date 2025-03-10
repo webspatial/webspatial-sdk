@@ -4,7 +4,7 @@ import { Vec3 } from '@webspatial/core-sdk'
 
 function MySample(props: { session?: SpatialSession }) {
   return (
-    <div>
+    <div className="flex flex-row gap-4">
       <div
         className="btn"
         onClick={async () => {
@@ -29,7 +29,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Plain WindowContainer
+        Open Plain Window
       </div>
 
       <div
@@ -74,7 +74,7 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Volumetric WindowContainer
+        Open Volumetric Window
       </div>
 
       <div
@@ -121,7 +121,18 @@ function MySample(props: { session?: SpatialSession }) {
           }
         }}
       >
-        Open Immersive WindowContainer
+        Open Immersive Space
+      </div>
+      <div
+        className="btn"
+        onClick={async () => {
+          if (props.session) {
+            let session = props.session!
+            session.dismissImmersiveSpace()
+          }
+        }}
+      >
+        Close Immersive Space
       </div>
     </div>
   )

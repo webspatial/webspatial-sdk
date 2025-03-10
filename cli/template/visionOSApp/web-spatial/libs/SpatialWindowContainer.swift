@@ -12,6 +12,13 @@ import typealias RealityKit.Entity
 
 @Observable
 class SpatialWindowContainer: SpatialObject {
+    // save active plain windowContainer ids
+    static var activePlainWindowContainerIds: Set<String> = []
+    // get first active plain WindowContainerId
+    static var firstActivePlainWindowContainerId: String? {
+        return activePlainWindowContainerIds.first
+    }
+
     // Resources that will be destroyed when this window group is removed
     private var childResources = [String: SpatialObject]()
     public var childContainers = [String: SpatialWindowContainer]()
@@ -31,6 +38,10 @@ class SpatialWindowContainer: SpatialObject {
 
     init(_ name: String, _ data: WindowContainerData) {
         wgd = data
+        if data.windowStyle == "Plain" {
+            SpatialWindowContainer.activePlainWindowContainerIds.insert(data.windowContainerID)
+        }
+
         super.init(name)
     }
 
@@ -61,6 +72,9 @@ class SpatialWindowContainer: SpatialObject {
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
     override func onDestroy() {
+        // Note that destroy wont be called on immersive window container
+        // as there should only ever be one in existance
+
         childEntities.forEach { $0.value.destroy() }
         childEntities = [:]
 
@@ -82,6 +96,9 @@ class SpatialWindowContainer: SpatialObject {
 
         // Close the window group when this object is destroyed
         SpatialWindowContainer.getSpatialWindowContainer(id)!.closeWindowData.send(wgd)
+        if wgd.windowStyle == "Plain" {
+            SpatialWindowContainer.activePlainWindowContainerIds.remove(wgd.windowContainerID)
+        }
     }
 
     override func inspect() -> [String: Any] {
@@ -115,10 +132,10 @@ extension SpatialWindowContainer {
 }
 
 extension SpatialWindowContainer {
-    private static let ImmersiveID = "Immersive"
+    static let ImmersiveID = "Immersive"
 
-    static func getImmersiveWindowContainer() -> SpatialWindowContainer {
-        return getSpatialWindowContainer(ImmersiveID)!
+    static func getImmersiveWindowContainer() -> SpatialWindowContainer? {
+        return getSpatialWindowContainer(ImmersiveID)
     }
 
     static func createImmersiveWindowContainer() -> SpatialWindowContainer {
