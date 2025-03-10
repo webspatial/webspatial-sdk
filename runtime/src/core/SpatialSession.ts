@@ -279,7 +279,13 @@ export class SpatialSession {
    * @param msg mesage to log
    */
   async log(...msg: any[]) {
-    await WebSpatial.sendCommand(new RemoteCommand('log', { logString: msg }))
+    await WebSpatial.sendCommand(
+      new RemoteCommand('log', {
+        logString: msg.map(x => {
+          return JSON.stringify(x)
+        }),
+      }),
+    )
   }
 
   /**
