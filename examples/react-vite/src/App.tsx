@@ -43,6 +43,14 @@ function App() {
           count is {count}
         </button>
 
+        <button
+          onClick={() => {
+            window.open('http://localhost:5173/')
+          }}
+        >
+          open url
+        </button>
+
         <SpatialDiv spatialStyle={spatialStyle}>this is spatial div</SpatialDiv>
 
         <p>
