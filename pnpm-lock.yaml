@@ -123,6 +123,9 @@ importers:
       '@webspatial/core-sdk':
         specifier: workspace:*
         version: link:../../runtime
+      '@webspatial/react-plugin-vite':
+        specifier: workspace:*
+        version: link:../../react-plugin-vite
       '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../../react
