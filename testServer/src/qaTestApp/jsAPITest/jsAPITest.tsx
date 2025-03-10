@@ -104,6 +104,27 @@ function App() {
     setTestResult('Open Panel')
   }
 
+  const volumetric = async () => {
+    let sh = SpatialHelper.instance!
+    if (sh) {
+      // Create new window container
+      var container = await sh.session.createWindowContainer({
+        style: 'Volumetric',
+      })
+      // setup volume for the entity
+      var rootEntity = await sh.session.createEntity()
+      await rootEntity.setCoordinateSpace('Root')
+      rootEntity.setComponent(await sh.session.createViewComponent())
+
+      //Create a mesh, and add it into the root volume
+      var box = await sh.shape.createShapeEntity('box')
+      await box.setParent(rootEntity)
+
+      // add the volume to window
+      await container.setRootEntity(rootEntity)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 p-44">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
@@ -166,6 +187,9 @@ function App() {
           </button>
           <button className="btn btn-primary" onClick={spatialHelper}>
             helper sss
+          </button>
+          <button className="btn btn-primary" onClick={volumetric}>
+            Volumetric
           </button>
         </div>
       </div>
