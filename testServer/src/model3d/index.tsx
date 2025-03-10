@@ -26,7 +26,6 @@ function App() {
     position: 'relative',
     width: '30%',
     height: '30%',
-    marginBottom: '140px',
   }
 
   const onToggleDisplay = () => {
@@ -99,9 +98,10 @@ function App() {
       </div>
 
       <div
+        className="w-[100%] h-[400px] flex justify-center  items-center bg-base-100	 "
+        style={{ position: 'relative', '--xr-back': 300 }}
         enable-xr
-        className="w-[600px] h-[400px]"
-        style={{ position: 'relative', '--xr-back': 100 }}
+        debugShowStandardInstance={true}
       >
         <Model
           ref={ref}
