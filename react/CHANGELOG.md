@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.0.6
+
+### Patch Changes
+
+- d47def5: fix define data type error
+
 ## 0.0.5
 
 ### Patch Changes
