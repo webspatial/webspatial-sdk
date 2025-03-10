@@ -1,3 +1,4 @@
+
 //
 //  VolumetricWindowContainerView.swift
 //  web-spatial
@@ -19,7 +20,10 @@ struct VolumetricWindowContainerView: View {
 
     var body: some View {
         OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
-            windowContainerContent.destroy()
+            // Don't destroy immersive space content as it is reused next time its opened
+            if windowContainerContent.id != SpatialWindowContainer.ImmersiveID {
+                windowContainerContent.destroy()
+            }
         }
 
         let entities = windowContainerContent.getEntities().filter { _, entity in

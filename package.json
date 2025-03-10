@@ -7,14 +7,15 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "postinstall": "simple-git-hooks",
-    "buildPackages": "cd runtime/ && npm run build && cd .. && cd react/ && npm run build && cd .. && cd cli/ && npm run build && cd .. ",
+    "buildPackages": "pnpm -r --filter \"@webspatial/*\" run build",
     "setup": "pnpm install && npm run buildPackages",
-    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\" ",
+    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
-    "dev": "concurrently \"npm run watchNPM\" \"npm run testServer\"",
-    "test": "tsc -p runtime/tsconfig.json && tsc -p react/tsconfig.json && tsc -p testServer/tsconfig.json",
+    "dev": "npm run testServer",
+    "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
     "format": "pnpm -r run format",
-    "ci:publish": "pnpm publish -r --access=public"
+    "ci:publish": "pnpm publish -r --access=public",
+    "changeset": "changeset"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm test"
@@ -52,5 +53,5 @@
     "simple-git-hooks": "^2.11.1",
     "typescript": "^5.7.3"
   },
-  "packageManager": "pnpm@^9.0.0"
+  "packageManager": "pnpm@9.0.0"
 }
