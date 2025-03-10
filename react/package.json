@@ -1,28 +1,43 @@
 {
   "name": "@webspatial/react-sdk",
-  "version": "0.0.0",
+  "version": "0.0.6",
   "description": "React components for WebSpatial",
-  "main": "npm/index.js",
-  "types": "npm/index.d.ts",
+  "main": "./dist/default/index.js",
+  "types": "./dist/default/index.d.ts",
   "exports": {
-    ".": "./npm/index.js",
-    "./default": "./dist/cjs/default/index.js",
-    "./web": "./dist/cjs/web/index.js",
+    ".": {
+      "import": "./dist/default/index.mjs",
+      "require": "./dist/default/index.js"
+    },
+    "./default": {
+      "import": "./dist/default/index.mjs",
+      "require": "./dist/default/index.js"
+    },
+    "./web": {
+      "import": "./dist/web/index.mjs",
+      "require": "./dist/web/index.js"
+    },
     "./plugin-esbuild.js": "./npm/plugin/esbuild.js",
     "./plugin-vite.js": "./npm/plugin/vite.js",
     "./plugin-rollup.js": "./npm/plugin/rollup.js",
     "./plugin-webpack.js": "./npm/plugin/webpack.js",
-    "./jsx-runtime": "./dist/jsx/jsx-runtime.js",
-    "./jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.js"
+    "./jsx-runtime": {
+      "import": "./dist/jsx/jsx-runtime.mjs",
+      "require": "./dist/jsx/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "import": "./dist/jsx/jsx-dev-runtime.mjs",
+      "require": "./dist/jsx/jsx-dev-runtime.js"
+    }
   },
   "files": [
     "dist",
     "npm"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node esbuild.mjs --watch",
-    "build": "node esbuild.mjs",
+    "test": "tsc -p ./tsconfig.json",
+    "dev": "tsup --watch",
+    "build": "tsup",
     "start": "npm run dev",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
@@ -37,7 +52,6 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "dependencies": {
-    "@webspatial/react-sdk": "workspace:*",
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
     "@webspatial/core-sdk": "workspace:*",
@@ -46,8 +60,8 @@
     "three": "^0.170.0"
   },
   "peerDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -69,6 +83,7 @@
     "esbuild-plugin-d.ts": "^1.3.1",
     "esbuild-plugin-define": "^0.5.0",
     "tiny-glob": "^0.2.9",
+    "tsup": "^8.4.0",
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
     "typescript": "^5.5.4",

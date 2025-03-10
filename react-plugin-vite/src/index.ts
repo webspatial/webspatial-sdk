@@ -1,10 +1,11 @@
-const path = require('path')
-const fs = require('fs')
-const { getEnv, AVP } = require('./shared')
+import * as path from 'path'
+import * as fs from 'fs'
+import { PluginOption, UserConfig } from 'vite'
+import { getEnv, AVP } from './shared'
 
-function injectProcessEnv() {
+export default function injectProcessEnv(): PluginOption {
   return {
-    name: 'vite-plugin-inject-env',
+    name: 'react-vite-plugin-for-webspatial',
     config: () => {
       const xrEnv = getEnv()
 
@@ -83,4 +84,3 @@ function injectProcessEnv() {
     },
   }
 }
-module.exports = injectProcessEnv
