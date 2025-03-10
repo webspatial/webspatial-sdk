@@ -3,9 +3,9 @@ import { validateURL } from './validate'
 import { join } from 'path'
 
 export function configId(manifestJson: Record<string, any>) {
-  if (!manifestJson.id) {
-    manifestJson.id = manifestJson.start_url
-  }
+  const url = new URL(manifestJson.id)
+  let arr = url.host.split('.').reverse()
+  manifestJson.id = arr.join('.')
 }
 
 export function configStartUrl(
@@ -35,7 +35,7 @@ export function configScope(
   let scope = ''
   const isUrl = validateURL(manifestJson.scope)
   if (fromNet && isUrl) {
-    const scopeURL = new URL(manifestJson.scope)
+    const scopeURL = new URL(manifestJson.scope ?? '')
     const startURL = new URL(manifestJson.start_url)
     if (
       scopeURL.host !== startURL.host ||
@@ -43,8 +43,16 @@ export function configScope(
     ) {
       scope = parseRouter(manifestJson.start_url)
     }
+  } else if (fromNet && !isUrl) {
+    const head =
+      manifestJson.start_url.indexOf('http://') === 0 ? 'http://' : 'https://'
+    scope = join(
+      manifestJson.start_url.replace(head, ''),
+      manifestJson.scope ?? '',
+    )
+    scope = head + scope
   } else {
-    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope)
+    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope ?? '')
   }
   manifestJson.scope = scope
 }

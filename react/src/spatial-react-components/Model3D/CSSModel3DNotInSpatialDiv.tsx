@@ -14,6 +14,7 @@ export function renderCSSModel3DNotInSpatialDiv(
     ...style,
     width: 0,
     height: 0,
+    padding: 0,
   }
 
   const { ref: cssParserDomRef, spatialStyle, ready } = useSpatialStyle()

@@ -8,7 +8,12 @@ import {
   configStartUrl,
 } from './config'
 import { loadJsonFromNet, loadJsonFromDisk } from '../resource/load'
-import { checkIcons, checkManifestJson, checkStartUrl } from './validate'
+import {
+  checkIcons,
+  checkId,
+  checkManifestJson,
+  checkStartUrl,
+} from './validate'
 
 export interface InitArgs {
   'manifest-url'?: string // remote manifest url
@@ -26,15 +31,21 @@ export class PWAGenerator {
   // Supported display modes for TWA
   static DisplayModes: string[] = ['standalone', 'minimal-ui']
 
-  public static async generator(args: InitArgs): Promise<ManifestInfo> {
-    let manifestInfo: ManifestInfo = await this.validate(args)
+  public static async generator(
+    args: InitArgs,
+    isDev: boolean = false,
+  ): Promise<ManifestInfo> {
+    let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
-    await this.config(manifestInfo)
+    await this.config(manifestInfo, isDev)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
 
-  public static async validate(args: InitArgs): Promise<ManifestInfo> {
+  public static async validate(
+    args: InitArgs,
+    isDev: boolean = false,
+  ): Promise<ManifestInfo> {
     let manifest: Record<string, any> = {}
     let url: string = ''
     let fromNet: boolean = false
@@ -49,19 +60,20 @@ export class PWAGenerator {
     }
     // check manifest.json
     checkManifestJson(manifest)
-    checkStartUrl(manifest, url, fromNet)
+    var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
+    if (!isDev) checkId(manifest)
     await checkIcons(manifest, url)
     return {
       json: manifest,
       url,
-      fromNet,
+      fromNet: isNetWeb,
     }
   }
 
   // generate manifest
-  public static config(manifestInfo: ManifestInfo) {
+  public static config(manifestInfo: ManifestInfo, isDev: boolean) {
     configStartUrl(manifestInfo.json, manifestInfo.url, manifestInfo.fromNet)
-    configId(manifestInfo.json)
+    if (!isDev) configId(manifestInfo.json)
     configScope(manifestInfo.json, manifestInfo.fromNet)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)

@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node esbuild.mjs",
-    "dev:web": "XR_ENV=web  node esbuild.mjs",
+    "dev": "XR_ENV=avp node esbuild.mjs",
+    "dev:web": "node esbuild.mjs",
     "start": "npm run dev",
     "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -66,11 +66,6 @@
     "eslint-plugin-react-refresh": "^0.4.6",
     "postcss-modules": "^6.0.0",
     "typescript": "^5.2.2"
-  },
-  "pnpm": {
-    "overrides": {
-      "nanoid@<3.3.8": ">=3.3.8"
-    }
   },
   "husky": {
     "hooks": {

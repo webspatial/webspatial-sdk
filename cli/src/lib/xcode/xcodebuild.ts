@@ -6,6 +6,7 @@ import {
   PROJECT_EXPORT_DIRECTORY,
 } from '../resource'
 import { clean } from 'semver'
+import { copyDir } from '../resource/file'
 
 const { execSync, exec } = require('child_process')
 
@@ -40,7 +41,7 @@ export default class Xcodebuild {
     }
   }
 
-  static async archive() {
+  static async archive(exportPath: string) {
     try {
       console.log('start archive')
       if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
@@ -74,10 +75,17 @@ export default class Xcodebuild {
           )
           resString = outRes.toString()
           if (resString.indexOf('EXPORT SUCCEEDED') > 0) {
-            resolve(true)
+            if (exportPath) {
+              const path = join(process.cwd(), exportPath)
+              if (!fs.existsSync(path)) {
+                fs.mkdirSync(path, { recursive: true })
+              }
+              copyDir(PROJECT_EXPORT_DIRECTORY, path)
+            }
             console.log(
               '------------------- EXPORT SUCCEEDED -------------------',
             )
+            resolve(true)
           }
           clean(PROJECT_BUILD_DIRECTORY)
         }
