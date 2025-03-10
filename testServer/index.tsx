@@ -1,347 +1,121 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import {
-  Spatial,
-  SpatialEntity,
-  SpatialHelper,
-  SpatialSession,
-  SpatialViewComponent,
-} from '@webspatial/core-sdk'
-import { SpatialDiv, Model } from '@webspatial/react-sdk'
-import { Vec3 } from '@webspatial/core-sdk'
-
-var spatial: Spatial | null = new Spatial()
-if (!spatial.isSupported()) {
-  spatial = null
-}
-
-// Create session if spatial is supported
-var session: SpatialSession | null = null
-if (spatial) {
-  session = spatial.requestSession()
-}
-
-var transparent = new URLSearchParams(window.location.search).get('transparent')
-if (session) {
-  session.getCurrentWindowComponent().setStyle({
-    material: { type: transparent ? 'transparent' : 'translucent' },
-    cornerRadius: transparent ? 0 : 70,
-  })
-  document.documentElement.style.backgroundColor = '#1155aa55'
-} else {
-  console.log('not supported')
-  document.documentElement.style.backgroundColor = '#1155aa55'
-}
-
-function WebSpatialTitle(props: { makeShadow?: boolean }) {
-  return (
-    <div
-      className={
-        props.makeShadow ? 'absolute text-black' : 'text-white bg-opacity-0'
-      }
-      style={
-        props.makeShadow
-          ? { zIndex: -1, filter: 'blur(10px)', opacity: '50%' }
-          : {}
-      }
-    >
-      <h1 className="text-9xl">WebSpatial</h1>
-      <h3 className="text-2xl py-10">
-        Build cross-platform XR apps with JavaScript, HTML, and CSS
-      </h3>
-    </div>
-  )
-}
-
-function FeatureList() {
-  return (
-    <div className="text-white text-sm sm:text-xl">
-      <h3 className="text-sm sm:text-2xl text-center mx-10">Features</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 m-10 text-center">
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">🛰</div>
-          Embed 3D models
-        </div>
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">🚀</div>
-          Place IFrames in 3D space
-        </div>
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">🕹️</div>
-          Get input from 3D elements
-        </div>
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">🍷</div>
-          Glass Background Effect
-        </div>
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">🖼</div>
-          Open spatial windows
-        </div>
-        <div className="p-10 bg-black bg-opacity-25">
-          <div className="text-sm sm:text-5xl w-full">⚛️</div>
-          Compatable with ReactJS
-        </div>
-      </div>
-    </div>
-  )
-}
+import { Model, SpatialDiv } from '@webspatial/react-sdk'
+import { Spatial } from '@webspatial/core-sdk'
 
 function App() {
-  var header = useRef(null)
-  var [spatialSupported, setSpatialSupported] = useState(false)
+  let [supported, setSupported] = useState(false)
   useEffect(() => {
-    if (session) {
-      setSpatialSupported(true)
-      ;(async () => {
-        // Create SpatialView
-        var viewEnt = await session.createEntity()
-        await viewEnt.setCoordinateSpace('Dom') // Set coordinate space so its transform is relative to the webpage's pixels
-        await viewEnt.setComponent(await session.createViewComponent())
-
-        // Create entities
-        var meshResource = await session.createMeshResource({ shape: 'sphere' })
-        var entities = new Array<{
-          e: SpatialEntity
-          v: { x: number; y: number; z: number }
-        }>()
-        for (var i = 0; i < 7; i++) {
-          let e = await session.createEntity()
-          e.transform.position = new Vec3(-0.35 + i * 0.1, 0, 0.15)
-          e.transform.scale = new Vec3(0.1, 0.1, 0.1)
-          await e.updateTransform()
-          var mat = await session.createPhysicallyBasedMaterialResource()
-          mat.baseColor.r = 0.8
-          mat.baseColor.g = 0.8
-          mat.baseColor.b = 0.8 + Math.random() * 0.2
-          mat.metallic.value = 0.0
-          mat.roughness.value = 1.0
-          await mat.update()
-          var customModel = await session.createModelComponent()
-          customModel.setMaterials([mat])
-          customModel.setMesh(meshResource)
-          await e.setComponent(customModel)
-
-          // Handle input
-          let v = {
-            x: (Math.random() - 0.5) * 0.01,
-            y: (Math.random() - 0.5) * 0.01,
-            z: (Math.random() - 0.5) * 0.01,
-          }
-          var input = await session.createInputComponent()
-          await e.setComponent(input)
-          input.onTranslate = (data: any) => {
-            if (data.translate && data.translate.x) {
-              v.x = data.translate.x
-              v.y = data.translate.y
-              v.z = data.translate.z
-              e.updateTransform()
-            }
-          }
-
-          await e.setParent(viewEnt)
-          entities.push({ e: e, v: v })
-        }
-        // Add to the root window component to display
-        var wc = await session.getCurrentWindowComponent()
-        var ent = await wc.getEntity()
-        await viewEnt.setParent(ent!)
-
-        // Watch for updates
-        // Keep spatialView positioned where the div is
-        var update = () => {
-          var rect = (header.current! as HTMLElement).getBoundingClientRect()
-          viewEnt.transform.position.x = rect.x + rect.width / 2
-          viewEnt.transform.position.y =
-            rect.y + rect.height / 2 + window.scrollY
-          viewEnt.updateTransform()
-          viewEnt
-            .getComponent(SpatialViewComponent)!
-            .setResolution(rect.width, rect.height)
-        }
-        var mo = new MutationObserver(update)
-        mo.observe(header.current!, { attributes: true })
-        var ro = new ResizeObserver(update)
-        ro.observe(header.current!)
-        const addRemoveObserver = new MutationObserver(mutations => {
-          mutations.forEach(mutation => {
-            mutation.removedNodes.forEach(node => {
-              if (node instanceof HTMLElement) {
-                update()
-              }
-            })
-            mutation.addedNodes.forEach(node => {
-              if (node instanceof HTMLElement) {
-                console.log('Element added:', node)
-                update()
-              }
-            })
-          })
-        })
-        addRemoveObserver.observe(document.body, {
-          childList: true,
-          subtree: true,
-        })
-        update()
-
-        // Update loop for entities
-        var dt = 0
-        var curTime = Date.now() - 60
-        var loop = async (time: DOMHighResTimeStamp) => {
-          dt = Date.now() - curTime
-          curTime = Date.now()
-          if (dt <= 0 || dt > 1000) {
-            dt = 60
-            console.log('invalid frame delta')
-          }
-
-          await session!.transaction(() => {
-            for (var i = 0; i < entities.length; i++) {
-              var entity = entities[i].e
-              var timeMultiplier = dt / (1000 / 90)
-              entity.transform.position.x += entities[i].v.x * timeMultiplier
-              entity.transform.position.y += entities[i].v.y * timeMultiplier
-              entity.transform.position.z += entities[i].v.z * timeMultiplier
-
-              entities[i].v.x *= 0.96 * Math.min(timeMultiplier, 1)
-              entities[i].v.y *= 0.96 * Math.min(timeMultiplier, 1)
-              entities[i].v.z *= 0.96 * Math.min(timeMultiplier, 1)
-
-              if (entity.transform.position.x < -0.5) {
-                entity.transform.position.x = -0.5
-                entities[i].v.x = Math.abs(entities[i].v.x)
-              }
-              if (entity.transform.position.x > 0.5) {
-                entity.transform.position.x = 0.5
-                entities[i].v.x = -Math.abs(entities[i].v.x)
-              }
-
-              if (entity.transform.position.y < -0.3) {
-                entity.transform.position.y = -0.3
-                entities[i].v.y = Math.abs(entities[i].v.y)
-              }
-              if (entity.transform.position.y > 0.3) {
-                entity.transform.position.y = 0.3
-                entities[i].v.y = -Math.abs(entities[i].v.y)
-              }
-
-              if (entity.transform.position.z < -0) {
-                entity.transform.position.z = -0
-                entities[i].v.z = Math.abs(entities[i].v.z)
-              }
-              if (entity.transform.position.z > 0.3) {
-                entity.transform.position.z = 0.3
-                entities[i].v.z = -Math.abs(entities[i].v.z)
-              }
-
-              entity.updateTransform()
-            }
-          })
-        }
-        session!.addOnEngineUpdateEventListener(loop)
-      })()
-    } else {
-    }
+    setSupported(new Spatial().isSupported())
   }, [])
 
   return (
-    <div>
-      <div className="flex text-white text-lg bg-black bg-opacity-25 p-8 gap-5">
-        <a href="/" className="font-bold">
-          WebSpatial
-        </a>
-        <a href="/src/docsWebsite/index.html">Docs</a>
-        <a href="/src/jsApiTestPages/testList.html">Examples</a>
-        <a href="/src/CITest/index.html">Run CI</a>
-        <a href="/src/qaTestApp/qatest.html">QA Test</a>
-        <a href="/">Github</a>
-        <button
-          onClick={() => {
-            if (SpatialHelper.instance) {
-              SpatialHelper.instance.navigation.openPanel(
-                '/src/launcher/index.html',
-                { resolution: { width: 600, height: 100 } },
-              )
-            } else {
-              window.open('/src/launcher/index.html')
-            }
-          }}
-        >
-          Launcher
-        </button>
-      </div>
-      <div className="m-5 flex flex-row flex-wrap text-white">
-        <div
-          className="grow flex flex-col  items-center justify-center p-20"
-          ref={header}
-        >
-          {spatialSupported ? (
-            <div>
-              <WebSpatialTitle makeShadow={true} />
-              <SpatialDiv
-                className=""
-                spatialStyle={{
-                  position: { z: 100 },
-                  material: { type: 'transparent' },
-                }}
-              >
-                <WebSpatialTitle />
-              </SpatialDiv>
-            </div>
-          ) : (
-            <div>
-              <WebSpatialTitle />
-            </div>
-          )}
-        </div>
-
-        <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
-          <div className="w-full h-52">
-            <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source
-                src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
-                type="model/vnd.usdz+zip"
-              />
-              <source
-                src="https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb"
-                type="model/gltf-binary"
-              />
-            </Model>
-          </div>
-          <h3 className="text-xl">Get Started</h3>
-          <h3 className="text-2xl">npm i web-spatial</h3>
-        </div>
-
-        {spatialSupported ? null : (
-          <div className="grow flex flex-col items-center justify-center p-20">
-            <h3 className="text-2xl py-10">
-              This browser doesn't support WebSpatial.
-            </h3>
+    <div
+      className={`min-h-screen ${supported ? 'bg-[#11111177]' : 'bg-[#111111]'} text-white`}
+    >
+      {/* Navigation */}
+      <nav className="fixed w-full bg-[#111111] z-50">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-6">
+            <span className="text-xl font-bold">WebSpatial</span>
             <a
-              href={'webSpatial://' + window.location.href}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              href="/src/docsWebsite/index.html"
+              className="text-gray-300 hover:text-white"
             >
-              Click Here to Open In Spatial Viewer app
+              Docs
+            </a>
+            <a
+              href="https://github.com/webspatial/webspatial-sdk"
+              className="text-gray-300 hover:text-white"
+            >
+              Github
             </a>
           </div>
-        )}
+        </div>
+      </nav>
 
-        <div className="grow flex flex-col w-full bg-black bg-opacity-25 p-10 my-10">
-          {spatialSupported ? (
-            <div>
-              <SpatialDiv
-                className=""
-                spatialStyle={{
-                  position: { z: 100 },
-                  material: { type: 'transparent' },
-                }}
-              >
-                <FeatureList />
-              </SpatialDiv>
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 pt-32 pb-20">
+        <div className="text-center max-w-4xl mx-auto">
+          <div className="bg-[#222222] inline-block px-4 py-1 rounded-full mb-8">
+            <span className="text-sm">
+              ✨ WebSpatial Alpha is available now! ✨
+            </span>
+          </div>
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-300 to-blue-500 text-transparent bg-clip-text">
+            Ship XR apps with WebSpatial
+          </h1>
+          <p className="text-xl text-gray-400 mb-8">
+            Build cross-platform XR apps with JavaScript, React, HTML, and CSS
+          </p>
+          <a href="/src/docsWebsite/index.html">
+            <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium py-3 px-8 rounded-full hover:opacity-90 transition duration-300">
+              Get Started
+            </button>
+          </a>
+
+          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
+            {/* Window Header */}
+            <div className="bg-[#222222] px-4 py-3 flex items-center">
+              <div className="flex space-x-2">
+                <div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
+              </div>
+              <div className="mx-auto text-gray-400 text-sm">Example.jsx</div>
             </div>
-          ) : (
-            <FeatureList />
-          )}
+
+            {/* Window Content */}
+            <div className="p-6 text-left">
+              <pre className="text-sm text-gray-300">
+                <code>{`import { Model, SpatialDiv } from '@webspatial/react-sdk'
+
+function App() {
+  return (
+      <SpatialDiv 
+        spatialStyle={{ position: { z: 50 } }} 
+        style={{color: "blue"}}>
+          <h1>3D UI on XR devices and embeded 3D models</h1>
+      </SpatialDiv>
+      
+      <Model>
+        <source
+          src="/assets/3DFile.usdz"
+          type="model/vnd.usdz+zip" />
+        <source
+          src="/assets/3DFile.glb"
+          type="model/gltf-binary" />
+      </Model>
+  )
+}`}</code>
+              </pre>
+            </div>
+          </div>
+          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
+            <div className="p-6 flex flex-col items-center space-y-8">
+              <SpatialDiv
+                spatialStyle={{ position: { z: 50 } }}
+                style={{ color: 'blue-400' }}
+              >
+                <h1 className="text-xl font-medium">
+                  3D UI on XR devices and embeded 3D models
+                </h1>
+              </SpatialDiv>
+
+              <div className="w-64 h-64 bg-[#2A2A2A] rounded-lg p-4 flex items-center justify-center">
+                <Model style={{ width: '200px', height: '200px' }}>
+                  <source
+                    src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
+                    type="model/vnd.usdz+zip"
+                  />
+                  <source
+                    src="https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb"
+                    type="model/gltf-binary"
+                  />
+                </Model>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -351,30 +125,19 @@ function App() {
 document.addEventListener('readystatechange', event => {
   switch (document.readyState) {
     case 'interactive':
-      // Components mapp
-      var names = {
-        App: App,
-        WebSpatialTitle: WebSpatialTitle,
-        FeatureList: FeatureList,
-      }
-
-      var isEmbed = false
-      var pageName = new URLSearchParams(window.location.search).get('pageName')
-      if (pageName) {
-        isEmbed = true
-        // Clear the background
-        document.documentElement.style.backgroundColor = '#FFFFFF00'
-      }
-      var MyTag = names[pageName ? pageName : 'App']
-
-      // Create react root
+      // Initialize react
       var root = document.createElement('div')
       document.body.appendChild(root)
       ReactDOM.createRoot(root).render(
-        // <React.StrictMode>
-        <MyTag></MyTag>,
-        // </React.StrictMode >,
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
       )
+
+      // Force page height to 100% to get centering to work
+      document.documentElement.style.height = '100%'
+      document.body.style.height = '100%'
+      root.style.height = '100%'
 
       break
   }
