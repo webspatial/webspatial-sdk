@@ -1,5 +1,5 @@
 import {
-  ModelDragEvent,
+  NativeModelDragEvent,
   SpatialEntity,
   SpatialModel3DComponent,
 } from '@webspatial/core-sdk'
@@ -23,9 +23,9 @@ export class Model3DNative {
 
   private isDestroyed = false
 
-  private _onDragStart?: (dragEvent: ModelDragEvent) => void
-  private _onDrag?: (dragEvent: ModelDragEvent) => void
-  private _onDragEnd?: (dragEvent: ModelDragEvent) => void
+  private _onDragStart?: (dragEvent: NativeModelDragEvent) => void
+  private _onDrag?: (dragEvent: NativeModelDragEvent) => void
+  private _onDragEnd?: (dragEvent: NativeModelDragEvent) => void
 
   private _onTap?: () => void
   private _onDoubleTap?: () => void
@@ -198,7 +198,7 @@ export class Model3DNative {
   }
 
   public set onDragStart(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDragStart = callback
@@ -207,7 +207,7 @@ export class Model3DNative {
   }
 
   public set onDrag(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDrag = callback
@@ -216,7 +216,7 @@ export class Model3DNative {
   }
 
   public set onDragEnd(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this.spatialModel3DComponent) {
       this.spatialModel3DComponent.onDragEnd = callback

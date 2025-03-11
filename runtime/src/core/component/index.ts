@@ -10,5 +10,5 @@ export { SpatialModelComponent } from './SpatialModelComponent'
 export { SpatialViewComponent } from './SpatialViewComponent'
 export {
   SpatialModel3DComponent,
-  type ModelDragEvent,
+  type NativeModelDragEvent,
 } from './SpatialModel3DComponent'
