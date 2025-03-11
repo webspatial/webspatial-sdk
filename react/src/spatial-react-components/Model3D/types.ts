@@ -1,9 +1,6 @@
 import { CSSProperties, ForwardedRef } from 'react'
 import { vecType, quatType } from '../types'
-import {
-  ModelDragEvent as SpatialModelDragEvent,
-  Vec3,
-} from '@webspatial/core-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
 
 export type SpatialTransformType = {
   position: vecType

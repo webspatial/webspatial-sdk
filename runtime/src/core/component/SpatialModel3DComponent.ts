@@ -5,7 +5,7 @@ import { Vec3 } from '../SpatialTransform'
 /**
  * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
  */
-export type ModelDragEvent = {
+export type NativeModelDragEvent = {
   eventType: 'dragstart' | 'dragend' | 'drag'
   translation3D: Vec3
   startLocation3D: Vec3
@@ -124,9 +124,9 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
    * Callback fired when model was dragged at the beginning
    * @param dragEvent
    */
-  private _onDragStart?: (dragEvent: ModelDragEvent) => void
+  private _onDragStart?: (dragEvent: NativeModelDragEvent) => void
   public set onDragStart(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this._onDragStart !== callback) {
       this._onDragStart = callback
@@ -140,9 +140,9 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
    * Callback fired when model was dragged
    * @param dragEvent
    */
-  private _onDrag?: (dragEvent: ModelDragEvent) => void
+  private _onDrag?: (dragEvent: NativeModelDragEvent) => void
   public set onDrag(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this._onDrag !== callback) {
       this._onDrag = callback
@@ -156,9 +156,9 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
    * Callback fired when model was dragged at the ending
    * @param dragEvent
    */
-  private _onDragEnd?: (dragEvent: ModelDragEvent) => void
+  private _onDragEnd?: (dragEvent: NativeModelDragEvent) => void
   public set onDragEnd(
-    callback: ((dragEvent: ModelDragEvent) => void) | undefined,
+    callback: ((dragEvent: NativeModelDragEvent) => void) | undefined,
   ) {
     if (this._onDragEnd !== callback) {
       this._onDragEnd = callback
