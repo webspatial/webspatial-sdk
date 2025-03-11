@@ -164,6 +164,10 @@ function monitorExternalStyleChange() {
           ) {
             needCheck = true
           }
+
+          if (node.nodeName === 'STYLE') {
+            needCheck = true
+          }
         })
 
         mutation.removedNodes.forEach(node => {
