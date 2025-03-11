@@ -20,7 +20,10 @@
     "noFallthroughCasesInSwitch": true,
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@webspatial/react-sdk": ["./src"]
+    }
   },
   "include": ["src/index.ts", "esbuild.mjs"],
   "references": []

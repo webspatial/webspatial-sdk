@@ -1,4 +1,4 @@
-import { getSession, parseCornerRadius, XRApp } from '../'
+import { getSession, parseCornerRadius, XRApp } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
