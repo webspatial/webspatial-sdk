@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react'
+// @ts-nocheck
+import React, { useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@webspatial/react-sdk'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
 
@@ -10,7 +10,7 @@ const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
-  var session = new Spatial().requestSession()
+  const session = new Spatial().requestSession()
   session!.getCurrentWindowComponent().setStyle({
     material: { type: 'default' },
     cornerRadius: 50,
@@ -18,27 +18,16 @@ if (spatialSupported) {
 }
 
 function App() {
-  const [windowRefs, setWindowRefs] = useState({
-    winARef: useRef<any>(null),
-    winBRef: useRef<any>(null),
-    winCRef: useRef<any>(null),
-    winDRef: useRef<any>(null),
-    winERef: useRef<any>(null),
-    winFRef: useRef<any>(null),
-  })
+  const winARef = useRef<Window | null>(null)
+  const winBRef = useRef<Window | null>(null)
+  const winCRef = useRef<Window | null>(null)
+  const winDRef = useRef<Window | null>(null)
+  const winERef = useRef<Window | null>(null)
+  const winFRef = useRef<Window | null>(null)
 
-  const handleOpenWindow = (
-    ref: React.MutableRefObject<any>,
-    url: string,
-    sceneName: string,
+  const handleCloseWindow = (
+    windowRef: React.MutableRefObject<Window | null>,
   ) => {
-    ref.current = window.open(url, sceneName)
-  }
-  // const handleOpenWindow = async (ref: React.MutableRefObject<any>, url: string, sceneName: string) => {
-  //   await initScene(sceneName, defaultConfig => defaultConfig)
-  //   ref.current = window.open(url, sceneName)
-  // }
-  const handleCloseWindow = (windowRef: React.MutableRefObject<any>) => {
     try {
       if (!windowRef.current) {
         console.log('no window')
@@ -50,62 +39,58 @@ function App() {
         windowRef.current?.close?.()
         console.log('close success')
       }
-    } catch (error: any) {
-      console.log(error.message)
+    } catch (error) {
+      console.log((error as Error).message)
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-900 p-44">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <SpatialDiv
-          spatialStyle={{
-            position: { z: 100 }, // z方向凸起50
+        <div
+          enable-xr
+          style={{
+            position: { z: 50 }, // Bulge 50 in the z direction
           }}
           className="text-6xl font-bold text-white p-8 rounded-xl"
         >
           Window Group
-        </SpatialDiv>
+        </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
-          返回主页
+          Return to Home Page
         </a>
         <a
           href="#"
           onClick={() => history.go(-1)}
           className="hover:text-blue-400 transition-colors"
         >
-          返回上一级
+          Go Back
         </a>
       </div>
       <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] ">
-        {/*<div >*/}
-        {/* 按钮组A */}
+        {/* Button Group A */}
         <div className="flex items-center">
           <button
             className={btnCls}
             onClick={() => {
-              console.log('开始执行打开 winA 操作')
-              handleOpenWindow(
-                windowRefs.winARef,
+              console.log('Start the operation to open winA')
+              winARef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
                 'sa',
               )
             }}
           >
-            open winA
+            Open winA
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winARef)}
-          >
-            close winA
+          <button className={btnCls} onClick={() => handleCloseWindow(winARef)}>
+            Close winA
           </button>
         </div>
-        {/* 按钮组B */}
+        {/* Button Group B */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
@@ -117,38 +102,33 @@ function App() {
                 },
                 resizability: 'automatic',
               }))
-              console.log('开始执行打开 winB 操作')
-              handleOpenWindow(
-                windowRefs.winBRef,
+              console.log('Start the operation to open winB')
+              winBRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
                 'sb',
               )
             }}
           >
-            open winB
+            Open winB
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winBRef)}
-          >
-            close winB
+          <button className={btnCls} onClick={() => handleCloseWindow(winBRef)}>
+            Close winB
           </button>
         </div>
-        {/* 按钮组C */}
+        {/* Button Group C */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
             onClick={() => {
-              console.log('开始执行打开 winC 操作')
-              handleOpenWindow(
-                windowRefs.winCRef,
+              console.log('Start the operation to open winC')
+              winCRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/model.html',
                 'sc',
               )
             }}
           >
-            open model
+            Open Model
           </button>
           {/*<div className="w-4"></div>*/}
           {/*<a*/}
@@ -159,14 +139,11 @@ function App() {
           {/*  open model by a tag*/}
           {/*</a>*/}
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winCRef)}
-          >
-            close model
+          <button className={btnCls} onClick={() => handleCloseWindow(winCRef)}>
+            Close Model
           </button>
         </div>
-        {/* 按钮组D */}
+        {/* Button Group D */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
@@ -178,63 +155,52 @@ function App() {
                 },
                 resizability: 'automatic',
               }))
-              console.log('开始执行打开 winD 操作')
-              handleOpenWindow(
-                windowRefs.winDRef,
+              console.log('Start the operation to open winD')
+              winDRef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
                 'sd',
               )
             }}
           >
-            open child by initScene
+            Open Child by initScene
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winDRef)}
-          >
-            close child by initScene
+          <button className={btnCls} onClick={() => handleCloseWindow(winDRef)}>
+            Close Child by initScene
           </button>
         </div>
-        {/* 按钮组E */}
+        {/* Button Group E */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
             onClick={() => {
-              console.log('开始执行打开 winE 操作')
-              handleOpenWindow(
-                windowRefs.winERef,
+              console.log('Start the operation to open winE')
+              winERef.current = window.open(
                 'http://localhost:5173/src/qaTestApp/SceneTest/child.html',
                 'sd',
               )
             }}
           >
-            open child
+            Open Child
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winERef)}
-          >
-            close child
+          <button className={btnCls} onClick={() => handleCloseWindow(winERef)}>
+            Close Child
           </button>
         </div>
-        {/* 按钮组F */}
+        {/* Button Group F */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
             onClick={() =>
-              handleOpenWindow(windowRefs.winFRef, 'http://google.com', 'sf')
+              (winFRef.current = window.open('http://google.com', 'sf'))
             }
           >
-            open google
+            Open Google
           </button>
           <div className="w-4"></div>
-          <button
-            className={btnCls}
-            onClick={() => handleCloseWindow(windowRefs.winFRef)}
-          >
-            close google
+          <button className={btnCls} onClick={() => handleCloseWindow(winFRef)}>
+            Close Google
           </button>
         </div>
       </div>
