@@ -45,6 +45,7 @@ export default defineConfig([
   {
     // JSX
     ...baseConfig,
+    external: ['@webspatial/react-sdk'],
     entry: ['src/jsx/jsx-dev-runtime.ts', 'src/jsx/jsx-runtime.ts'],
     format: ['cjs', 'esm'],
     outDir: 'dist/jsx',

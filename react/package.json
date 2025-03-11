@@ -3,6 +3,7 @@
   "version": "0.0.6",
   "description": "React components for WebSpatial",
   "main": "./dist/default/index.js",
+  "module": "./dist/default/index.mjs",
   "types": "./dist/default/index.d.ts",
   "exports": {
     ".": {
