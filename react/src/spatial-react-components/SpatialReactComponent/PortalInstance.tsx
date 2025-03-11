@@ -513,10 +513,12 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       {needRenderPlaceHolder && (
         <div
           className={className}
+          data-subportal-spatialid={spatialId}
           style={{
             position: 'relative',
             width: `${domRect.width}px`,
             height: `${domRect.height}px`,
+            visibility: 'hidden',
           }}
         />
       )}
