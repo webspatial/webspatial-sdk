@@ -1,5 +1,15 @@
 # @webspatial/react-sdk
 
+## 0.0.7
+
+### Patch Changes
+
+- 7c01263: hide placeholder in sub portalinstance
+- 2641c6c: jsx runtime should external react-sdk
+- 155300b: Fix scene api support in portalInstance
+- 2e2bc94: fix model position calculation error
+- 2b4e19b: fix: Resizing webpage seems to cause issues with <Model> #369
+
 ## 0.0.6
 
 ### Patch Changes
