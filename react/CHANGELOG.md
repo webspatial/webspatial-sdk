@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.0.8
+
+### Patch Changes
+
+- 193427e: monitor exteral stylesheet change in html header
+- c1e7126: sync html className to PortalInstance
+
 ## 0.0.7
 
 ### Patch Changes
