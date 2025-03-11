@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef } from 'react'
 
 import { CSSSpatialDiv } from '@webspatial/react-sdk'
@@ -13,6 +14,7 @@ export function ReactSpringTest() {
     opacity: 1,
     transform: 'translateX(0px)',
     '--xr-back': '10',
+    position: 'relative',
   }))
 
   const onChangeBack = () => {

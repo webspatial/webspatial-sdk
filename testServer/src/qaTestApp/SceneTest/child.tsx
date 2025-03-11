@@ -1,6 +1,6 @@
+// @ts-nocheck
 import React, { useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { SpatialDiv } from '@webspatial/react-sdk'
 import { Spatial } from '@webspatial/core-sdk'
 // import { initScene } from '@webspatial/react-sdk'
 window.xrCurrentSceneDefaults = async config => {
@@ -67,36 +67,30 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 p-44">
       <h1 style={{ textAlign: 'center', fontSize: '36px' }}>
-        <SpatialDiv
-          spatialStyle={{
-            position: { z: 100 }, // z方向凸起50
+        <div
+          enable-xr
+          style={{
+            position: { z: 50 }, // Bulge 50 in the z direction
           }}
           className="text-6xl font-bold text-white p-8 rounded-xl"
         >
           Window Group
-        </SpatialDiv>
+        </div>
       </h1>
       {/* Navigation Bar */}
       <div className="flex text-white text-lg bg-black bg-opacity-25 p-4 gap-5 mb-4">
         <a href="/" className="hover:text-blue-400 transition-colors">
-          返回主页
-        </a>
-        <a
-          href="#"
-          onClick={() => history.go(-1)}
-          className="hover:text-blue-400 transition-colors"
-        >
-          返回上一级
+          Return to Home Page
         </a>
       </div>
       <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] ">
         {/*<div >*/}
-        {/* 按钮组A */}
+        {/* Button Group A */}
         <div className="flex items-center">
           <button
             className={btnCls}
             onClick={() => {
-              console.log('开始执行打开 winA 操作')
+              console.log('Start executing the operation to open winA')
               handleOpenWindow(
                 windowRefs.winARef,
                 'http://localhost:5173/src/qaTestApp/domapiTest/domapi1.html',
@@ -114,7 +108,7 @@ function App() {
             close winA
           </button>
         </div>
-        {/* 按钮组B */}
+        {/* Button Group B */}
         {/*<div className="flex items-center mt-4">*/}
         {/*<button*/}
         {/*  className={btnCls}*/}
@@ -142,7 +136,7 @@ function App() {
         {/*    close winB*/}
         {/*  </button>*/}
         {/*</div>*/}
-        {/* 按钮组C */}
+        {/* Button Group C */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}
@@ -172,7 +166,7 @@ function App() {
             close model
           </button>
         </div>
-        {/* 按钮组D */}
+        {/* Button Group D */}
         <div className="flex items-center mt-4">
           <button
             className={btnCls}

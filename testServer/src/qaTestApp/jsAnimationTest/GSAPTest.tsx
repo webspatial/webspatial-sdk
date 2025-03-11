@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -36,12 +37,16 @@ export function GSAPTest() {
       </div>
       <div
         enable-xr
+        style={{ position: 'relative' }}
         className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white"
       >
         this is parent
         <div
           enable-xr
-          style={{ '--xr-back': '100' }}
+          style={{
+            position: 'relative',
+            '--xr-back': '100',
+          }}
           ref={ref}
           className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white"
         >
