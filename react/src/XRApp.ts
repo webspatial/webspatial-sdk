@@ -38,6 +38,8 @@ export class XRApp {
       if (target && target !== '_self') {
         event.preventDefault()
         window.open(url, target)
+      } else {
+        window.location.href = url
       }
     }
   }
