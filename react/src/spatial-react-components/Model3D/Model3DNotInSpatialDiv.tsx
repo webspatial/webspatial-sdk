@@ -1,4 +1,4 @@
-import { ModelDragEvent as SpatialModelDragEvent } from '@webspatial/core-sdk'
+import { NativeModelDragEvent } from '@webspatial/core-sdk'
 
 import {
   ModelEvent,
@@ -81,7 +81,7 @@ export function renderModel3DNotInSpatialDiv(
   ])
 
   const onDragStartCb = useCallback(
-    (spatialDragEvent: SpatialModelDragEvent) => {
+    (spatialDragEvent: NativeModelDragEvent) => {
       if (onDragStart) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
@@ -94,7 +94,7 @@ export function renderModel3DNotInSpatialDiv(
   )
 
   const onDragCb = useCallback(
-    (spatialDragEvent: SpatialModelDragEvent) => {
+    (spatialDragEvent: NativeModelDragEvent) => {
       if (onDrag) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
@@ -107,7 +107,7 @@ export function renderModel3DNotInSpatialDiv(
   )
 
   const onDragEndCb = useCallback(
-    (spatialDragEvent: SpatialModelDragEvent) => {
+    (spatialDragEvent: NativeModelDragEvent) => {
       if (onDragEnd) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
