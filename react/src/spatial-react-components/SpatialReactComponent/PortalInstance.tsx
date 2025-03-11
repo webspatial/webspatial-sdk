@@ -168,6 +168,10 @@ async function syncParentHeadToChild(
     childWindow.document.title = debugName
   }
 
+  // sync className
+  childWindow.document.documentElement.className =
+    document.documentElement.className
+
   return Promise.all(styleLoadedPromises)
 }
 
