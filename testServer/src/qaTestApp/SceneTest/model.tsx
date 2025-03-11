@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
@@ -278,9 +279,9 @@ function App() {
           {spatialSupported ? (
             <div>
               <WebSpatialTitle makeShadow={true} />
-              <SpatialDiv className="" spatialStyle={{ position: { z: 100 } }}>
+              <div enable-xr className="" style={{ position: { z: 100 } }}>
                 <WebSpatialTitle />
-              </SpatialDiv>
+              </div>
             </div>
           ) : (
             <div>
@@ -294,8 +295,12 @@ function App() {
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
                 src="/src/assets/FlightHelmet.usdz" //avp
+                type="model/vnd.usdz+zip"
               />
-              <source src="/src/assets/FlightHelmet.glb" />
+              <source
+                src="/src/assets/FlightHelmet.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>
@@ -305,8 +310,14 @@ function App() {
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source src="/src/assets/2016_BMW_X6M.usdz" />
-              <source src="/src/assets/2016_bmw_x6m.glb" />
+              <source
+                src="/src/assets/2016_BMW_X6M.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/2016_bmw_x6m.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>
@@ -316,8 +327,14 @@ function App() {
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source src="/src/assets/Size_comparison_coloured.usdz" />
-              <source src="/src/assets/size_comparison_coloured.glb" />
+              <source
+                src="/src/assets/Size_comparison_coloured.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/size_comparison_coloured.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>
@@ -327,8 +344,14 @@ function App() {
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source src="/src/assets/NASB_2_-_SpongeBob.usdz" />
-              <source src="/src/assets/nasb_2_-_spongebob.glb" />
+              <source
+                src="/src/assets/NASB_2_-_SpongeBob.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/nasb_2_-_spongebob.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>
@@ -338,8 +361,14 @@ function App() {
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source src="/src/assets/2016_BMW_X6M.usdz" />
-              <source src="/src/assets/2016_bmw_x6m.glb" />
+              <source
+                src="/src/assets/2016_BMW_X6M.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/2016_bmw_x6m.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>
@@ -349,8 +378,14 @@ function App() {
         <div className="grow bg-black bg-opacity-25 flex flex-col h-96  items-center justify-center p-20">
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
-              <source src="/src/assets/Real-time_Bones_Demo_Phoenix_Bird.usdz" />
-              <source src="/src/assets/real-time_bones_demo_phoenix_bird.glb" />
+              <source
+                src="/src/assets/Real-time_Bones_Demo_Phoenix_Bird.usdz"
+                type="model/vnd.usdz+zip"
+              />
+              <source
+                src="/src/assets/real-time_bones_demo_phoenix_bird.glb"
+                type="model/gltf-binary"
+              />
             </Model>
           </div>
           <h3 className="text-xl">Get Started</h3>

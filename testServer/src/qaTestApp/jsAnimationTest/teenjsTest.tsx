@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef } from 'react'
 import { Easing, Tween } from '@tweenjs/tween.js'
 
@@ -61,6 +62,7 @@ export function TeenjsTest() {
       <div
         enable-xr
         ref={ref}
+        style={{ position: 'relative' }}
         className="test-element w-64 h-32 rounded-lg bg-white bg-opacity-10 flex items-center justify-center text-white"
       >
         test Box
