@@ -105,11 +105,11 @@ function App() {
               <div className="w-64 h-64 bg-[#2A2A2A] rounded-lg p-4 flex items-center justify-center">
                 <Model style={{ width: '200px', height: '200px' }}>
                   <source
-                    src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz"
+                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                     type="model/vnd.usdz+zip"
                   />
                   <source
-                    src="https://raw.githubusercontent.com/BabylonJS/MeshesLibrary/master/flightHelmet.glb"
+                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                     type="model/gltf-binary"
                   />
                 </Model>
