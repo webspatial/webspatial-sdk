@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.0.9
+
+### Patch Changes
+
+- 2bb9cfc: when load failure occurs, we should fire an onLoad event with ready: …
+
 ## 0.0.8
 
 ### Patch Changes
