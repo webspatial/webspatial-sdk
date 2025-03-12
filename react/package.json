@@ -4,6 +4,7 @@
   "description": "React components for WebSpatial",
   "main": "./dist/default/index.js",
   "module": "./dist/default/index.mjs",
+  "type": "module",
   "types": "./dist/default/index.d.ts",
   "exports": {
     ".": {
