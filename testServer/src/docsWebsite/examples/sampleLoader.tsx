@@ -114,17 +114,17 @@ export function showSample(MySample: any, hasCode = true) {
                   </summary>
                   <ul>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=whatIsWebSpatial.md">
+                      <a href="/src/docsWebsite?docFile=whatIsWebSpatial.md">
                         What is WebSpatial?
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=helloWorld.md">
+                      <a href="/src/docsWebsite?docFile=helloWorld.md">
                         Quick Start (Hello world)
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=projectSetup.md">
+                      <a href="/src/docsWebsite?docFile=projectSetup.md">
                         Project Setup
                       </a>
                     </li>
@@ -140,37 +140,37 @@ export function showSample(MySample: any, hasCode = true) {
                         <summary style={{ cursor: 'pointer' }}>JS API</summary>
                         <ul>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=createSession">
+                            <a href="/src/docsWebsite?examplePath=createSession">
                               Create Session
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=backgroundMaterial">
+                            <a href="/src/docsWebsite?examplePath=backgroundMaterial">
                               BackgroundMaterial
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=webElement">
+                            <a href="/src/docsWebsite?examplePath=webElement">
                               3D Web Element
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=spatialView">
+                            <a href="/src/docsWebsite?examplePath=spatialView">
                               Spatial View
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=loadModel">
+                            <a href="/src/docsWebsite?examplePath=loadModel">
                               Load model file
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=openWindowContainer">
+                            <a href="/src/docsWebsite?examplePath=openWindowContainer">
                               Open Window Container
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=gameLoop">
+                            <a href="/src/docsWebsite?examplePath=gameLoop">
                               Game loop
                             </a>
                           </li>
@@ -184,27 +184,27 @@ export function showSample(MySample: any, hasCode = true) {
                         </summary>
                         <ul>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=reactDomElement">
+                            <a href="/src/docsWebsite?examplePath=reactDomElement">
                               Spatial Dom Elements
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=reactModelElement">
+                            <a href="/src/docsWebsite?examplePath=reactModelElement">
                               3D Model Element
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=reactSpatialViewElement">
+                            <a href="/src/docsWebsite?examplePath=reactSpatialViewElement">
                               Spatial View Element (3D Volume)
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=reactPopup">
+                            <a href="/src/docsWebsite?examplePath=reactPopup">
                               Popup Element
                             </a>
                           </li>
                           <li>
-                            <a href="/src/docsWebsite/index.html?examplePath=particleEffect">
+                            <a href="/src/docsWebsite?examplePath=particleEffect">
                               Particle Effect
                             </a>
                           </li>
@@ -219,22 +219,22 @@ export function showSample(MySample: any, hasCode = true) {
                   <summary style={{ cursor: 'pointer' }}>Learn</summary>
                   <ul>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=debuggingGuide.md">
+                      <a href="/src/docsWebsite?docFile=debuggingGuide.md">
                         Debugging Guide
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=modelFileSupport.md">
+                      <a href="/src/docsWebsite?docFile=modelFileSupport.md">
                         Model File Support
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=publishOnAppStore.md">
+                      <a href="/src/docsWebsite?docFile=publishOnAppStore.md">
                         Publish on app store
                       </a>
                     </li>
                     <li>
-                      <a href="/src/docsWebsite/index.html?docFile=architecture.md">
+                      <a href="/src/docsWebsite?docFile=architecture.md">
                         Architecture
                       </a>
                     </li>
