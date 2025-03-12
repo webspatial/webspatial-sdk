@@ -89,8 +89,13 @@ function parseChildren(child: ModelChildren) {
 
   const gltfSources = sourceElements.filter(node => {
     const type = (node as ReactElement).props?.type.trim()
+    const source = (node as ReactElement).props?.src.trim().toLowerCase()
+    const isGLFT = source.endsWith('.gltf')
+    const isGLB = source.endsWith('.glb')
+
     return (
-      type.startsWith('model/gltf-binary') || type.startsWith('model/gltf+json')
+      (type.startsWith('model/gltf-binary') && isGLB) ||
+      (type.startsWith('model/gltf+json') && isGLFT)
     )
   })
   const usdzSources = sourceElements.filter(node =>
@@ -101,9 +106,9 @@ function parseChildren(child: ModelChildren) {
     sourceElements.indexOf(lastChild) < 0 ? lastChild : undefined
 
   const gltfSourceURL =
-    gltfSources.length > 0 && (gltfSources[0] as ReactElement).props?.src
+    gltfSources.length > 0 ? (gltfSources[0] as ReactElement).props?.src : ''
   const usdzSourceURL =
-    usdzSources.length > 0 && (usdzSources[0] as ReactElement).props?.src
+    usdzSources.length > 0 ? (usdzSources[0] as ReactElement).props?.src : ''
 
   return {
     placeHolder,
