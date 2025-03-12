@@ -1,5 +1,14 @@
 const fs = require('fs')
-var inputFile = process.argv[1]
+var inputFile = process.argv[2]
+
+if (!inputFile) {
+    console.error("No input file specified.")
+    process.exit(1)
+}
+
+console.error("Scanning file: " + inputFile)
+
+
 var scanResults = fs.readFileSync(inputFile, 'utf8')
     .split('\n')
     .filter((line) => {
