@@ -6,13 +6,16 @@ import { Spatial } from '@webspatial/core-sdk'
 function App() {
   let [supported, setSupported] = useState(false)
   useEffect(() => {
-    setSupported(new Spatial().isSupported())
+    var isSupported = new Spatial().isSupported()
+    setSupported(isSupported)
+
+    if (!isSupported) {
+      document.documentElement.style.backgroundColor = '#111111'
+    }
   }, [])
 
   return (
-    <div
-      className={`min-h-screen ${supported ? 'bg-[#11111177]' : 'bg-[#111111]'} text-white`}
-    >
+    <div className={`min-h-screen text-white`}>
       {/* Navigation */}
       <nav className="fixed w-full bg-[#111111] z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
