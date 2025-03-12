@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.8
+
+### Patch Changes
+
+- 7c1825b: Update navigation UI and expand animation.
+
 ## 0.0.7
 
 ### Patch Changes
