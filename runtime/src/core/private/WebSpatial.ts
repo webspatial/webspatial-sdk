@@ -6,6 +6,7 @@ import {
   sceneDataShape,
   sceneDataJSBShape,
 } from '../types'
+import { SpatialWindowContainer } from '../SpatialWindowContainer'
 
 export class WindowContainer {
   id = ''
@@ -139,6 +140,22 @@ export class WebSpatial {
       windowStyle: style,
       sceneData: jsbSceneData,
       windowContainerID: (window as any)._webSpatialParentGroupID, // parent WindowContainerID
+    })
+
+    try {
+      await new Promise((res, rej) => {
+        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        WebSpatial.sendCommand(cmd)
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  static async closeScene(container: SpatialWindowContainer) {
+    var cmd = new RemoteCommand('closeScene', {
+      windowContainerID: container._wg.id,
     })
 
     try {

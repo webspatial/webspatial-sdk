@@ -37,6 +37,7 @@ class CommandManager {
         _ = registerCommand(name: "dismissImmersiveSpace", action: dismissImmersiveSpace)
         _ = registerCommand(name: "log", action: log)
         _ = registerCommand(name: "createScene", action: createScene)
+        _ = registerCommand(name: "closeScene", action: closeScene)
         _ = registerCommand(name: "setLoading", action: setLoading)
     }
 
@@ -532,6 +533,16 @@ class CommandManager {
         }
     }
 
+    private func closeScene(target: SpatialWindowComponent, info: CommandInfo) {
+        let data = info.cmd.data!
+        let windowContainerID = info.windowContainerID
+
+        if windowContainerID != "notFound" {
+            SceneManager.Instance
+                .closeWindowContainer(target, windowContainerID)
+        }
+    }
+
     private func createScene(target: SpatialWindowComponent, info: CommandInfo) {
         let data = info.cmd.data!
         if let _: String = data.windowStyle {
@@ -562,6 +573,11 @@ class CommandManager {
                             logger.error("error: no windowContainerID")
                         }
                     }
+
+                    target.completeEvent(requestID: info.requestID, data: "{}")
+                } else {
+                    // no windowID, we create wrapper for the root swc
+                    SceneManager.Instance.moveECIntoNewContainer(target: target)
 
                     target.completeEvent(requestID: info.requestID, data: "{}")
                 }

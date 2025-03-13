@@ -12,6 +12,36 @@ class SceneManager {
 
     private init() {}
 
+    // create new container and move EC into it
+    func moveECIntoNewContainer(target rootSWC: SpatialWindowComponent) {
+        /// before:
+        ///     rootWindowContainer -> [rootEntity -> rootSwc]
+        /// after:
+        ///     newWindowContainer -> [rootEntity -> rootSwc]
+        ///
+
+        // EC already exist
+        let newWindowContainerID = UUID().uuidString
+        // open window
+        let wgd = WindowContainerData(
+            windowStyle: "Plain",
+            windowContainerID: newWindowContainerID
+        )
+
+        rootSWC.evaluateJS(js: "window._webSpatialGroupID='\(newWindowContainerID)';")
+
+        let rootWindowContainerID = SpatialWindowContainer.getRootID()
+
+        rootSWC.evaluateJS(js: "window._webSpatialParentGroupID='\(rootWindowContainerID)';")
+
+        let rootEntity = rootSWC.entity!
+
+        rootSWC.parentWindowContainerID = newWindowContainerID // E should point to new container
+
+        let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(newWindowContainerID, wgd)
+        rootEntity.setParentWindowContainer(wg: wg)
+    }
+
     // create scene
     // if config is provided, it show immediately
     // else it won't show until showRoot is called
@@ -39,7 +69,7 @@ class SceneManager {
 
             if config != nil {
                 // signal off hook
-                windowComponent.evaluateJS(js: "window._SceneHookOff=true;")
+                windowComponent.setWebviewSceneHookFlag()
             }
         } else {
             logger.warning("Unable to find spawned webview")
@@ -65,15 +95,20 @@ class SceneManager {
             config
         )
 
-        if let pwg = SpatialWindowContainer.getSpatialWindowContainer(parentWindowContainerID),
-           let wg = SpatialWindowContainer.getSpatialWindowContainer(
-               target.parentWindowContainerID
-           )
+        let parentID = parentWindowContainerID
+        let childID = target.parentWindowContainerID
+
+        if let pwg = SpatialWindowContainer.getSpatialWindowContainer(parentID),
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(childID)
         {
             WindowContainerMgr.Instance
                 .updateWindowContainerPlainDefaultValues(
                     plainDV
                 ) // set default values
+            if target.isDynamicRoot {
+                WindowContainerMgr.Instance.memorizedMainSceneConfig = plainDV
+            }
+
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pwg.openWindowData.send(wg.wgd) // openwindow
             }
@@ -103,6 +138,19 @@ class SceneManager {
     func closeRoot(_ target: SpatialWindowComponent) {
         if let wg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID) {
             wg.closeWindowData.send(wg.wgd)
+        }
+    }
+
+    func closeWindowContainer(_ target: SpatialWindowComponent, _ windowContainerID: String) {
+        if let cwg = SpatialWindowContainer.getSpatialWindowContainer(target.parentWindowContainerID),
+           let wgToBeClosed = SpatialWindowContainer.getSpatialWindowContainer(
+               windowContainerID
+           )
+        {
+            if cwg == wgToBeClosed {
+                print("closeWindowContainer: cannot close self")
+            }
+            cwg.closeWindowData.send(wgToBeClosed.wgd)
         }
     }
 }

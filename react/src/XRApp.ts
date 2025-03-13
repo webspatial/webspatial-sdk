@@ -1,4 +1,7 @@
-import { WindowContainerOptions } from '@webspatial/core-sdk/'
+import {
+  SpatialWindowContainer,
+  WindowContainerOptions,
+} from '@webspatial/core-sdk/'
 import { getSession } from './utils/getSession'
 
 declare global {
@@ -136,6 +139,35 @@ export class XRApp {
     callback: (pre: WindowContainerOptions) => WindowContainerOptions,
   ) {
     this.configMap[name] = callback({ ...defaultSceneConfig })
+  }
+
+  async moveECIntoNewContainer() {
+    let session = getSession()
+    if (!session) return
+    await session._createScene(
+      'Plain', // only support Plain for now
+      {
+        sceneData: {
+          method: 'createRoot',
+          window, // pass self
+          // windowID: (newWindow as any)._webSpatialID,
+          // windowContainerID: (newWindow as any)._webSpatialGroupID,
+        },
+      },
+    )
+  }
+
+  async closeRootScene() {
+    // for after dynamic scene loaded, should close the loading things
+    let session = getSession()
+    if (!session) return
+
+    let curWindowContainer = session.getCurrentWindowContainer()
+
+    curWindowContainer._wg.id = 'root'
+
+    let rootWindowContainer = curWindowContainer
+    await session._closeScene(rootWindowContainer)
   }
 }
 

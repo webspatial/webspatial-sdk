@@ -246,6 +246,17 @@ export class SpatialSession {
   }
 
   /**
+   * close scene
+   *
+   * @static
+   * @param {SpatialWindowContainer} container
+   * @memberof SpatialSession
+   */
+  async _closeScene(container: SpatialWindowContainer) {
+    return await WebSpatial.closeScene(container)
+  }
+
+  /**
    * Retrieves the window for this page
    * @returns the window component corresponding to the js running on this page
    * [TODO] discuss implications of this not being async
