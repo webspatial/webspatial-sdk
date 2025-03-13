@@ -84,6 +84,9 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 class WindowContainerMgr: ObservableObject {
     static let Instance = WindowContainerMgr()
 
+    // cache for dynamic loading scene reopen
+    var memorizedMainSceneConfig: WindowContainerPlainDefaultValues? = nil
+
     private init() {
         setToMainSceneCfg()
     }
@@ -98,8 +101,9 @@ class WindowContainerMgr: ObservableObject {
     }
 
     func setToMainSceneCfg() {
-        let cfg = WindowContainerPlainDefaultValues(pwaManager.mainScene)
-        updateWindowContainerPlainDefaultValues(cfg)
+        if let cfg = memorizedMainSceneConfig != nil ? memorizedMainSceneConfig : WindowContainerPlainDefaultValues(pwaManager.mainScene) {
+            updateWindowContainerPlainDefaultValues(cfg)
+        }
     }
 
     func updateWindowContainerPlainDefaultValues(_ data: WindowContainerPlainDefaultValues) {
