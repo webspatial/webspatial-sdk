@@ -5,7 +5,7 @@ import { Spatial, SpatialEntity, SpatialHelper, SpatialViewComponent, Vec3 } fro
 
 function App() {
   let [_supported, setSupported] = useState(false)
-  var header = useRef(null)
+  var header = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     var isSupported = new Spatial().isSupported()
@@ -118,6 +118,10 @@ function App() {
               console.log('invalid frame delta')
             }
 
+            let w = header.current!.clientWidth
+            let h = header.current!.clientHeight
+            let wScale = w > h ? w / h : 1.0
+
             await session!.transaction(() => {
               for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i].e
@@ -130,12 +134,12 @@ function App() {
                 entities[i].v.y *= 0.96 * Math.min(timeMultiplier, 1)
                 entities[i].v.z *= 0.96 * Math.min(timeMultiplier, 1)
 
-                if (entity.transform.position.x < -0.5) {
-                  entity.transform.position.x = -0.5
+                if (entity.transform.position.x < -(wScale / 2)) {
+                  entity.transform.position.x = -(wScale / 2)
                   entities[i].v.x = Math.abs(entities[i].v.x)
                 }
-                if (entity.transform.position.x > 0.5) {
-                  entity.transform.position.x = 0.5
+                if (entity.transform.position.x > (wScale / 2)) {
+                  entity.transform.position.x = (wScale / 2)
                   entities[i].v.x = -Math.abs(entities[i].v.x)
                 }
 
