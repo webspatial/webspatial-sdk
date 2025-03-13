@@ -58,14 +58,14 @@ function App() {
     <div enable-xr className="pl-5 pt-2">
       <h1 className="text-2xl text-black">a tag</h1>
       <a className={btnCls} href={`http://localhost:5173/src/scene/hook.html`}>
-        open in place
+        open hook in place
       </a>
       <a
         className={btnCls}
         href={`http://localhost:5173/src/scene/hook.html`}
         target="_blank"
       >
-        open _blank
+        open hook _blank
       </a>
       <a
         className={btnCls}
@@ -75,7 +75,7 @@ function App() {
           console.log('click on', e)
         }}
       >
-        open _blank with onClick
+        open hook _blank with onClick
       </a>
       <h1 className="text-2xl text-black">openscene</h1>
       <button

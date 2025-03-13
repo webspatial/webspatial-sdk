@@ -14,6 +14,8 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
+let isDynamic = !pwaManager.useMainScene // flag of dynamic load first scene
+
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
@@ -66,6 +68,10 @@ struct web_spatialApp: App {
             rootEntity.setParentWindowContainer(wg: rootWGD)
 
             root = windowComponent
+
+            if isDynamic {
+                windowComponent.isDynamicRoot = true
+            }
         }
     }
 
@@ -79,14 +85,31 @@ struct web_spatialApp: App {
             if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
-                    initAppOnViewMount()
-                    let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
+                // do check for dynamic
+                if isDynamic {
+                    LoadingView()
+                    PlainWindowContainerView().environment(rootWGD).background(Color.clear
+                        .opacity(0))
+                        .frame(width: 0.0, height: 0.0) // not visible
+                        .onOpenURL { myURL in
+                            initAppOnViewMount()
+                            let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
 
-                    if let url = URL(string: urlToLoad) {
-                        root!.navigateToURL(url: url)
+                            if let url = URL(string: urlToLoad) {
+                                root!.navigateToURL(url: url)
+                            }
+                        }
+                } else {
+                    PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
+                        initAppOnViewMount()
+                        let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
+
+                        if let url = URL(string: urlToLoad) {
+                            root!.navigateToURL(url: url)
+                        }
                     }
                 }
+
             } else {
                 let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
                     windowData.windowContainerID, windowData

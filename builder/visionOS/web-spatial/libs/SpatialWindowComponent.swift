@@ -167,6 +167,8 @@ class SpatialWindowComponent: SpatialComponent {
 
     var didFailLoad = false
 
+    var isDynamicRoot = false // mark for dynamic loading the 1st scene
+
     private var cancellables = Set<AnyCancellable>() // save subscriptions
 
     init(parentWindowContainerID: String) {
@@ -224,6 +226,10 @@ class SpatialWindowComponent: SpatialComponent {
     var canGoForward: Bool = false
 
     func navigateToURL(url: URL) {
+        if webViewNative!.url == url {
+            // abort same url
+            return
+        }
         webViewNative!.url = url
         webViewNative!.webViewHolder.needsUpdate = true
         webViewNative!.initialLoad()
@@ -319,6 +325,14 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.__SpatialWebEvent({success: false, requestID:" + String(requestID) + ", data: " + data + "})")
     }
 
+    func setWebviewSceneHookFlag() {
+        evaluateJS(js: "window._SceneHookOff=true;")
+    }
+
+    func setWebviewSceneHookRootFlag() {
+        evaluateJS(js: "window._isDynamicRoot=true;")
+    }
+
     // Request information of webview that request this webview to load
     weak var loadRequestWV: SpatialWindowComponent?
     var loadRequestID = -1
@@ -381,7 +395,11 @@ class SpatialWindowComponent: SpatialComponent {
         }
     }
 
-    func didStartReceivePageContent() {}
+    func didStartReceivePageContent() {
+        if isDynamicRoot {
+            setWebviewSceneHookRootFlag()
+        }
+    }
 
     func didGetEarlyStyle(style: PreloadStyleSettings) {
         if let cornerRadius = style.cornerRadius {
