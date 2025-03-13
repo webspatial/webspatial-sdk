@@ -23,7 +23,7 @@ struct PWAManager: Codable {
         ),
         resizability: SceneResizability
     )
-    var useMainScene: Bool = true
+    var useMainScene: Bool = USE_MAIN_SCENE
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first

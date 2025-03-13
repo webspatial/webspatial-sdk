@@ -277,18 +277,30 @@ export default class XcodeProject {
         deeplinkString,
       )
     }
-    manifestSwift = manifestSwift.replace(
-      'SceneWidth',
-      manifest.mainScene.defaultSize.width,
-    )
-    manifestSwift = manifestSwift.replace(
-      'SceneHeight',
-      manifest.mainScene.defaultSize.height,
-    )
-    manifestSwift = manifestSwift.replace(
-      'SceneResizability',
-      `"${manifest.mainScene.resizability}"`,
-    )
+
+    if (typeof manifest.mainScene === 'object') {
+      manifestSwift = manifestSwift.replace(
+        'SceneWidth',
+        manifest.mainScene.defaultSize.width,
+      )
+      manifestSwift = manifestSwift.replace(
+        'SceneHeight',
+        manifest.mainScene.defaultSize.height,
+      )
+      manifestSwift = manifestSwift.replace(
+        'SceneResizability',
+        `"${manifest.mainScene.resizability}"`,
+      )
+      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'true')
+    } else {
+      // string or other type
+      // set these to bypass lint
+      manifestSwift = manifestSwift.replace('SceneWidth', '1280')
+      manifestSwift = manifestSwift.replace('SceneHeight', '1280')
+      manifestSwift = manifestSwift.replace('SceneResizability', `"automatic"`)
+      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'false')
+    }
+
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
 }
