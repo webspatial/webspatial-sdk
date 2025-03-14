@@ -3,4 +3,4 @@
 '@webspatial/react-sdk': patch
 ---
 
-change ModelDragEvent to NativeModelDragEvent in coresdk
+change ModelDragEvent to SpatialModelDragEvent in coresdk
