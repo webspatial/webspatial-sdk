@@ -158,15 +158,10 @@ export class WebSpatial {
       windowContainerID: container._wg.id,
     })
 
-    try {
-      await new Promise((res, rej) => {
-        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-        WebSpatial.sendCommand(cmd)
-      })
-      return true
-    } catch (error) {
-      return false
-    }
+    await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
   }
 
   static async createWindowContainer(
