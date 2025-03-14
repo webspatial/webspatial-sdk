@@ -55,16 +55,19 @@
   "dependencies": {
     "@google/model-viewer": "^4.0.0",
     "@types/three": "^0.170.0",
-    "@webspatial/core-sdk": "workspace:*",
     "lodash.isequal": "^4.5.0",
     "loglevel": "^1.9.1",
     "three": "^0.170.0"
   },
   "peerDependencies": {
+    "@webspatial/core-sdk": "workspace:*",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
+    "@webspatial/core-sdk": {
+      "optional": false
+    },
     "react": {
       "optional": true
     },
