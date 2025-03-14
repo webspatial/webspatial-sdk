@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.0.10
+
+### Patch Changes
+
+- f0da37e: more strict model source validation
+- 4d727ab: set @webspatial/core-sdk as peerdep
+
 ## 0.0.9
 
 ### Patch Changes
