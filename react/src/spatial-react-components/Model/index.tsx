@@ -127,6 +127,8 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   if (isWebEnv) {
     const myModelViewer = useRef<ModelViewerElement>(null)
     const { className, style = {}, ...props } = inProps
+
+    const isDragging = useRef(false)
     let [modelViewerExists, setModelViewerExists] = useState(false)
     useEffect(() => {
       customElements.whenDefined('model-viewer').then(function () {
@@ -158,6 +160,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
       })
 
       myModelViewer.current!.addEventListener('pointerdown', event => {
+        isDragging.current = true
         if (props.onDragStart) {
           props.onDragStart({
             eventType: 'dragstart',
@@ -169,6 +172,9 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
       })
 
       myModelViewer.current!.addEventListener('pointermove', event => {
+        if (!isDragging.current) {
+          return
+        }
         if (props.onDrag) {
           props.onDrag({
             eventType: 'drag',
@@ -180,6 +186,10 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
       })
 
       myModelViewer.current!.addEventListener('pointerup', event => {
+        if (!isDragging.current) {
+          return
+        }
+        isDragging.current = false
         if (props.onDragEnd) {
           props.onDragEnd({
             eventType: 'dragend',
