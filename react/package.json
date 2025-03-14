@@ -51,7 +51,7 @@
   },
   "peerDependenciesMeta": {
     "@webspatial/core-sdk": {
-      "optional": true
+      "optional": false
     },
     "react": {
       "optional": true
