@@ -1,14 +1,14 @@
 import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
-import { NativeModelDragEvent, SpatialEntity } from '@webspatial/core-sdk'
+import { SpatialModelDragEvent, SpatialEntity } from '@webspatial/core-sdk'
 
 export function useModel3DNative(
   modelUrl: string,
   parentEntity: SpatialEntity | undefined,
   eventHandlers: {
-    onDragStart?: (dragEvent: NativeModelDragEvent) => void
-    onDrag?: (dragEvent: NativeModelDragEvent) => void
-    onDragEnd?: (dragEvent: NativeModelDragEvent) => void
+    onDragStart?: (dragEvent: SpatialModelDragEvent) => void
+    onDrag?: (dragEvent: SpatialModelDragEvent) => void
+    onDragEnd?: (dragEvent: SpatialModelDragEvent) => void
     onTap?: () => void
     onDoubleTap?: () => void
     onLongPress?: () => void

@@ -10,7 +10,7 @@ import { useSyncDomInfoFromStandardInstance } from './useSyncDomInfoFromStandard
 import { useModel3DNative } from './useModel3DNative'
 import { PopulatePartialSpatialTransformType } from './utils'
 import { SpatialWindowManagerContext } from '../SpatialReactComponent/SpatialWindowManagerContext'
-import { type NativeModelDragEvent } from '@webspatial/core-sdk'
+import { type SpatialModelDragEvent } from '@webspatial/core-sdk'
 
 function useModelEvents(
   props: Model3DProps,
@@ -27,7 +27,7 @@ function useModelEvents(
   } = props
 
   const onDragStartCb = useCallback(
-    (spatialDragEvent: NativeModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDragStart) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
@@ -40,7 +40,7 @@ function useModelEvents(
   )
 
   const onDragCb = useCallback(
-    (spatialDragEvent: NativeModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDrag) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
@@ -53,7 +53,7 @@ function useModelEvents(
   )
 
   const onDragEndCb = useCallback(
-    (spatialDragEvent: NativeModelDragEvent) => {
+    (spatialDragEvent: SpatialModelDragEvent) => {
       if (onDragEnd) {
         const dragEvent: ModelDragEvent = {
           ...spatialDragEvent,
