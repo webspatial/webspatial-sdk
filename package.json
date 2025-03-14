@@ -15,7 +15,8 @@
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "generateStaticSite": "./devScripts/generateWebsite.sh"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm test"
