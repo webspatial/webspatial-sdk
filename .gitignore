@@ -19,3 +19,4 @@ coverage
 temp
 .idea
 dist
+/cli/template/visionOSApp/web-spatial.xcodeproj/xcuserdata/
