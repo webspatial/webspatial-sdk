@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.9
+
+### Patch Changes
+
+- 8dc1869: spatial view model rotation example
+
 ## 0.0.8
 
 ### Patch Changes
