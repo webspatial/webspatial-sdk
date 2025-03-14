@@ -167,6 +167,28 @@ class SpatialWindowComponent: SpatialComponent {
 
     var didFailLoad = false
 
+    /// to controlls the behavior of the root SpatialWindowComponent and its container.
+    ///
+    ///  If pwa manifest's `xr_main_scene` is `dynamic`, then the `isDynamicRoot` of the root SpatialWindowComponent is  `true`
+    ///
+    ///  we have a workflow inside `injectSceneHook.js`:
+    ///  [createRoot] --> [showLoading] --> run window.xrCurrentSceneDefaults --> [showRoot] --> [hideLoading]
+    ///
+    /// it tells the script how each block should work, which command it should fire.
+    ///
+    ///  if it is true, the workflow is going to:
+    ///  1.[createRoot] create a new windowContainer and move the entites and components inside into the new windowContainer
+    ///  2.[showLoading]do nothing, the first plain scene includes loadingview already
+    ///  3. [showRoot] show new scene with config resolved (same)
+    ///  4.[hideLoading]dismiss first plain scene
+    ///
+    ///  if it is false the workflow  is to:
+    ///  1.[createRoot]open loading scene create new entites and components
+    ///  2.[showLoading]open loading scene
+    ///  3. [showRoot] show new scene with config resolved (same)
+    ///  4.[hideLoading]dismiss loading scene
+    ///
+
     var isDynamicRoot = false // mark for dynamic loading the 1st scene
 
     private var cancellables = Set<AnyCancellable>() // save subscriptions

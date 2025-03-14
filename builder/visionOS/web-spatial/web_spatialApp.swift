@@ -85,7 +85,7 @@ struct web_spatialApp: App {
             if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                // do check for dynamic
+                // for dynamic first scene, should show loading
                 if isDynamic {
                     LoadingView()
                     PlainWindowContainerView().environment(rootWGD).background(Color.clear
