@@ -25,6 +25,11 @@ import {
 } from './component'
 import { RemoteCommand } from './private/remote-command'
 
+type CreateResourceOptions = {
+  windowContainer?: SpatialWindowContainer | null
+  windowComponent?: SpatialWindowComponent | null
+}
+
 /**
  * Animation callback with timestamp
  */
@@ -35,10 +40,7 @@ type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
  * @param options
  * @returns parsed results
  */
-function _parseParentResources(options?: {
-  windowContainer?: SpatialWindowContainer | null
-  windowComponent?: SpatialWindowComponent | null
-}): [WindowContainer | null, WebSpatialResource | null] {
+function _parseParentResources(options?: CreateResourceOptions): [WindowContainer | null, WebSpatialResource | null] {
   var parentWindowContainer: WindowContainer | null = null
   if (options?.windowContainer !== null) {
     parentWindowContainer = options?.windowContainer
@@ -88,11 +90,12 @@ export class SpatialSession {
    * Creates a Entity
    * @returns Entity
    */
-  async createEntity() {
+  async createEntity(options?: CreateResourceOptions) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'Entity',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
     )
     return new SpatialEntity(entity)
   }
@@ -102,15 +105,12 @@ export class SpatialSession {
    * [TODO] should creation of components be moved to entity? and these made private?
    * @returns WindowComponent
    */
-  async createWindowComponent(options?: {
-    windowContainer?: SpatialWindowContainer
-  }) {
+  async createWindowComponent(options?: CreateResourceOptions) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'SpatialWebView',
-      options?.windowContainer
-        ? options?.windowContainer._wg
-        : WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
     )
     return new SpatialWindowComponent(entity)
   }
@@ -215,9 +215,7 @@ export class SpatialSession {
    * */
   async createWindowContainer(options?: {
     style: WindowStyle
-    windowContainer?: SpatialWindowContainer | null
-    windowComponent?: SpatialWindowComponent | null
-  }) {
+  } & CreateResourceOptions) {
     var style = options?.style ? options?.style : 'Plain'
     var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     return new SpatialWindowContainer(
@@ -398,7 +396,7 @@ export class SpatialSession {
 
         await new Promise(resolve => setTimeout(resolve, 10))
       }
-      ;(openedWindow! as any)._webSpatialID = (
+      ; (openedWindow! as any)._webSpatialID = (
         openedWindow!.window as any
       ).testAPI.getWindowID()
     } else {

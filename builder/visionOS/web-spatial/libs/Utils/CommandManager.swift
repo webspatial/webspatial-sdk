@@ -128,8 +128,8 @@ class CommandManager {
     }
 
     private func setComponent(target: SpatialWindowComponent, info: CommandInfo) {
-        if let component = target.getChildSpatialObject(name: info.resourceID) as? SpatialComponent,
-           let entity = target.getChildSpatialObject(name: info.entityID) as? SpatialEntity
+        if let component = SpatialObject.get(info.resourceID) as? SpatialComponent,
+           let entity = SpatialObject.get(info.entityID) as? SpatialEntity
         {
             entity.addComponent(component)
         } else {
@@ -144,6 +144,15 @@ class CommandManager {
             entity.removeComponent(component)
         } else {
             logger.warning("missing resource, removeComponent not processed")
+        }
+    }
+
+    private static func setParentResourceDependencies(object: SpatialObject, info: CommandInfo) {
+        if let parentWindowComponent = SpatialObject.get(info.resourceID) as? SpatialWindowComponent {
+            parentWindowComponent.addChildSpatialObject(object)
+        }
+        if let parentWindowContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+            parentWindowContainer.childResources[object.id] = object
         }
     }
 
@@ -165,9 +174,11 @@ class CommandManager {
             case "PhysicallyBasedMaterial":
                 sr = SpatialPhysicallyBasedMaterial(PhysicallyBasedMaterial())
             case "SpatialWebView":
-                sr = SpatialWindowComponent(parentWindowContainerID: target.readWindowContainerID(id: info.windowContainerID))
-                let spatialWindowComponent = sr as! SpatialWindowComponent
-                spatialWindowComponent.parentWebviewID = target.id
+                if let parentWindowContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+                    sr = SpatialWindowComponent(parentWindowContainerID: parentWindowContainer.id)
+                    let spatialWindowComponent = sr as! SpatialWindowComponent
+                    spatialWindowComponent.parentWebviewID = target.id
+                }
             case "SpatialView":
                 sr = SpatialViewComponent()
             case "Model3DComponent":
@@ -206,8 +217,8 @@ class CommandManager {
 
                                 Task.detached { @MainActor in
                                     // Update state on main thread
+                                    CommandManager.setParentResourceDependencies(object: spatialModelComponent, info: info)
                                     target.completeEvent(requestID: info.requestID, data: "{createdID: '" + spatialModelComponent.id + "'}")
-                                    target.addChildSpatialObject(spatialModelComponent)
                                     logger.debug("Model load success!")
                                 }
                             } catch {
@@ -224,8 +235,8 @@ class CommandManager {
             default: logger.warning("failed to create sr of type \(type)")
             }
             if let srObject = sr {
+                CommandManager.setParentResourceDependencies(object: srObject, info: info)
                 target.completeEvent(requestID: info.requestID, data: "{createdID: '" + srObject.id + "'}")
-                target.addChildSpatialObject(srObject)
             } else {
                 logger.warning("failed to create sr of type: \(type)")
             }
