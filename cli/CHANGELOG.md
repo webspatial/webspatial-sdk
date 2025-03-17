@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.10
+
+### Patch Changes
+
+- 0d16e4f: support manifest.xr_main_scene="dynamic"
+
 ## 0.0.9
 
 ### Patch Changes
