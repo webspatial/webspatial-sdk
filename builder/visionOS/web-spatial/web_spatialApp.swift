@@ -11,6 +11,8 @@ let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
 let nativeAPIVersion = "0.0.1"
+// start URL
+let startURL = pwaManager.start_url
 
 // detect when app properties like defaultSize change so we can avoid race condition of setting default values and then opening window container
 var sceneStateChangedCB: ((Any) -> Void) = { _ in
@@ -28,7 +30,7 @@ struct web_spatialApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        logger.debug("WebSpatial App Started --------")
+        logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
 
         // init global logger
         Logger.initLogger()
