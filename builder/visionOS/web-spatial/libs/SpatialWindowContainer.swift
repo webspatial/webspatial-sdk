@@ -13,7 +13,7 @@ class SpatialWindowContainer: SpatialObject {
     }
 
     // Resources that will be destroyed when this window group is removed
-    private var childResources = [String: SpatialObject]()
+    public var childResources = [String: SpatialObject]()
     public var childContainers = [String: SpatialWindowContainer]()
 
     var wgd: WindowContainerData
