@@ -314,6 +314,7 @@ class CommandManager {
         } else if let spatialPhysicallyBasedMaterial = sr as? SpatialPhysicallyBasedMaterial {
             if let baseColor: JSColor = data.update?.baseColor {
                 spatialPhysicallyBasedMaterial.physicallyBasedMaterial.baseColor = PhysicallyBasedMaterial.BaseColor(tint: UIColor(red: baseColor.r, green: baseColor.g, blue: baseColor.b, alpha: baseColor.a))
+                spatialPhysicallyBasedMaterial.physicallyBasedMaterial.opacityThreshold = 0.0
             }
 
             if let roughness: Double = data.update?.roughness?.value {
