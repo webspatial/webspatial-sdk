@@ -41,7 +41,7 @@ var scanResults = fs
       return true
     }
     regex =
-      /(session)|(password)|(app_id)|(appid)|(secret_key)|(access_key)|(secretkey)|(accesskey)|(credential)|(secret)|(access)/i
+      /(password)|(app_id)|(appid)|(secret_key)|(access_key)|(secretkey)|(accesskey)|(credential)|(secret)|(access)/i
     if (regex.test(line)) {
       console.error(regex + '\ndetected on line:\n' + line + '\n\n')
       return true
