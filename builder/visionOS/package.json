@@ -1,0 +1,26 @@
+{
+  "name": "@webspatial/platform-avp",
+  "version": "0.0.0",
+  "description": "Used to publish WebSpatial projects to Apple Vision Pro",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=14.15.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "files": [
+    "Packages",
+    "web-spatial",
+    "web-spatial.xcodeproj",
+    "package.json"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  }
+}
