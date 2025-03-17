@@ -5,4 +5,5 @@ packages:
   - 'cli'
   - 'examples/*'
   - 'react-plugin-vite'
+  - 'builder/visionOS'
 
