@@ -26,7 +26,7 @@ export class SpatialHelper {
     return null
   }
 
-  constructor(public session: SpatialSession) {}
+  constructor(public session: SpatialSession) { }
 
   shape = {
     createShapeEntity: async (shape = 'box') => {
@@ -88,10 +88,10 @@ export class SpatialHelper {
       }
 
       // Create window container
-      var wg = await this.session.createWindowContainer({ style: 'Plain' })
+      var wg = await this.session.createWindowContainer({ style: 'Plain', windowComponent: null, windowContainer: null })
 
       // Create a root entity displaying a webpage
-      var ent = await this.session!.createEntity()
+      var ent = await this.session!.createEntity({ windowComponent: null, windowContainer: wg })
       var i = await this.session!.createWindowComponent({ windowContainer: wg })
       await i.loadURL(url)
       await ent.setCoordinateSpace('Root')

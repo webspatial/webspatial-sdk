@@ -16,7 +16,7 @@ export class WebSpatialResource {
   windowContainerId = ''
   data = {} as any
 
-  receiveEvent() {}
+  receiveEvent() { }
 }
 
 export class WebSpatial {
@@ -41,7 +41,7 @@ export class WebSpatial {
   }
 
   static init() {
-    ;(window as any).__SpatialWebEvent = (e: any) => {
+    ; (window as any).__SpatialWebEvent = (e: any) => {
       if (e.resourceId) {
         var callback = WebSpatial.eventReceivers[e.resourceId]
         callback(e.data)
@@ -96,10 +96,10 @@ export class WebSpatial {
     var msg = JSON.stringify(cmd)
 
     if (WebSpatial.getBackend() == 'AVP') {
-      ;(window as any).webkit.messageHandlers.bridge.postMessage(msg)
+      ; (window as any).webkit.messageHandlers.bridge.postMessage(msg)
       return
     } else {
-      ;(window as any).bridge.nativeMessage(msg)
+      ; (window as any).bridge.nativeMessage(msg)
       return
     }
   }
@@ -261,13 +261,13 @@ export class WebSpatial {
   // parentWebView is the SpatialWebView that the resource will be tied to (if not provided, resource will continue to exist even if this page is unloaded)
   static async createResource(
     type: string,
-    windowContainer: WindowContainer,
-    parentWebView: WebSpatialResource,
+    windowContainer: WindowContainer | null,
+    parentWebView: WebSpatialResource | null,
     params = {} as any,
   ) {
     var cmd = new RemoteCommand('createResource', {
-      windowContainerID: windowContainer.id,
-      resourceID: parentWebView.id,
+      windowContainerID: windowContainer ? windowContainer.id : undefined,
+      resourceID: parentWebView ? parentWebView.id : undefined,
       type: type,
       params: params,
     })
