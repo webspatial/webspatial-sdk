@@ -59,13 +59,6 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
 }
 
 function parseBack(computedStyle: CSSStyleDeclaration) {
-  let useBackProperty =
-    computedStyle.position === 'absolute' ||
-    computedStyle.position === 'relative' ||
-    computedStyle.position === 'fixed'
-
-  if (!useBackProperty) return new Matrix4()
-
   let backProperty = computedStyle.getPropertyValue(SpatialCustomVars.back)
   let back: number | undefined = undefined
   try {
