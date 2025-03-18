@@ -1,4 +1,4 @@
-import { ModelDragEvent as SpatialModelDragEvent } from '@webspatial/core-sdk'
+import { SpatialModelDragEvent } from '@webspatial/core-sdk'
 
 import {
   ModelEvent,

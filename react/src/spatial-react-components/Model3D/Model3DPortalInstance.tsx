@@ -10,7 +10,7 @@ import { useSyncDomInfoFromStandardInstance } from './useSyncDomInfoFromStandard
 import { useModel3DNative } from './useModel3DNative'
 import { PopulatePartialSpatialTransformType } from './utils'
 import { SpatialWindowManagerContext } from '../SpatialReactComponent/SpatialWindowManagerContext'
-import { ModelDragEvent as SpatialModelDragEvent } from '@webspatial/core-sdk'
+import { type SpatialModelDragEvent } from '@webspatial/core-sdk'
 
 function useModelEvents(
   props: Model3DProps,
