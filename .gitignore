@@ -1,6 +1,5 @@
 # builder/visionOS/web-spatial/static-web
-builder/visionOS/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-builder/visionOS/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
+**/*/xcuserdata
 builder/visionOS/web-spatial/web-project
 builder/visionOS/icon.*
 old/
