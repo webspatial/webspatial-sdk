@@ -3,7 +3,7 @@ export {
   type SpatialReactComponentProps,
   type SpatialReactComponentRef,
 } from './SpatialReactComponent'
-export { SpatialMonitor } from './SpatialMonitor'
+export { withSpatialMonitor } from './SpatialMonitor'
 export { notifyUpdateStandInstanceLayout } from './notifyUpdateStandInstanceLayout'
 
 export { parseCornerRadius } from './SpatialReactComponent/utils'
