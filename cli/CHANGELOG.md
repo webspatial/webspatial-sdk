@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.0.11
+
+### Patch Changes
+
+- 38aea07: Make the cli tool lighter, and change the dev command to run.
+- 50ea768: add getAVPVersionUrl to transform web url to avp version
+
 ## 0.0.10
 
 ### Patch Changes
