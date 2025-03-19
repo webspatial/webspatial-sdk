@@ -37,7 +37,6 @@
   "license": "ISC",
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@webspatial/platform-avp": "^0.0.2",
     "cli-progress": "^3.8.2",
     "colors": "^1.4.0",
     "fetch-h2": "^2.5.1",
