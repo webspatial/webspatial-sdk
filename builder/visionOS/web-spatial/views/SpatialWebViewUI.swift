@@ -78,25 +78,30 @@ struct SpatialWebViewUI: View {
                                                 DragGesture()
                                                     .onChanged { gesture in
                                                         let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled, wv.isScrollEnabled() {
-                                                            if !view.dragStarted {
-                                                                view.dragStarted = true
-                                                                view.dragStart = (gesture.translation.height)
-                                                            }
+                                                        if !scrollEnabled {
+                                                            if let targetScrollWV = wv.findNearestScrollEnabledSpatialWindowComponent() {
+                                                                if !view.dragStarted {
+                                                                    view.dragStarted = true
+                                                                    view.dragStart = (gesture.translation.height)
+                                                                }
 
-                                                            // TODO: this should have velocity
-                                                            let delta = view.dragStart - gesture.translation.height
-                                                            view.dragStart = gesture.translation.height
-                                                            wv.updateScrollOffset(delta: delta)
+                                                                // TODO: this should have velocity
+                                                                let delta = view.dragStart - gesture.translation.height
+                                                                view.dragStart = gesture.translation.height
+                                                                targetScrollWV.updateScrollOffset(delta: delta)
+                                                            }
                                                         }
                                                     }
                                                     .onEnded { _ in
                                                         let scrollEnabled = view.isScrollEnabled()
-                                                        if !scrollEnabled, wv.isScrollEnabled() {
-                                                            view.dragStarted = false
-                                                            view.dragStart = 0
 
-                                                            wv.stopScrolling()
+                                                        if !scrollEnabled {
+                                                            if let targetScrollWV = wv.findNearestScrollEnabledSpatialWindowComponent() {
+                                                                view.dragStarted = false
+                                                                view.dragStart = 0
+
+                                                                targetScrollWV.stopScrolling()
+                                                            }
                                                         }
                                                     }
                                             )
