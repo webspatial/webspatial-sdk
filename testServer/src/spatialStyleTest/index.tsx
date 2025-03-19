@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { CSSModelSample } from './CSSModelSample'
-import { SpatialMonitor, enableDebugTool } from '@webspatial/react-sdk'
+import { enableDebugTool } from '@webspatial/react-sdk'
 import { SpatialTagComponent } from './SpatialTagComponent'
 import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'
@@ -18,7 +18,7 @@ function App() {
         </a>
       </div>
 
-      <SpatialMonitor className="w-screen h-screen  ">
+      <div enable-xr-monitor className="w-screen h-screen  ">
         <div className="flex flex-col">
           <SimpleSpatialComponent />
           <SpatialTagComponent />
@@ -27,7 +27,7 @@ function App() {
           <CSSModelSample />
           <CubeComponent />
         </div>
-      </SpatialMonitor>
+      </div>
     </div>
   )
 }
