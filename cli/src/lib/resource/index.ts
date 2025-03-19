@@ -4,12 +4,10 @@ import { clearDir, copyDir } from './file'
 import { ManifestInfo } from '../pwa'
 import * as Jimp from 'jimp'
 import { loadImageFromDisk, loadImageFromNet } from './load'
-export const PROJECT_DIRECTORY = join(
-  __dirname,
-  '../../../template/visionOSApp',
-)
-export const PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
-export const PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
+import { execSync } from 'child_process'
+export let PROJECT_DIRECTORY = ''
+export let PROJECT_BUILD_DIRECTORY = ''
+export let PROJECT_EXPORT_DIRECTORY = ''
 export const WEB_PROJECT_DIRECTORY = 'web-spatial/static-web'
 export const ASSET_DIRECTORY = 'web-spatial/Assets.xcassets'
 export const BACK_APPICON_DIRECTORY =
@@ -18,6 +16,8 @@ export const BACK_APPICON_DIRECTORY =
 export const MIDDLE_APPICON_DIRECTORY =
   ASSET_DIRECTORY +
   '/AppIcon.solidimagestack/Middle.solidimagestacklayer/Content.imageset'
+
+const supportPlatform = ['avp']
 
 export class ResourceManager {
   public static async moveProjectFrom(dir: string) {
@@ -46,5 +46,41 @@ export class ResourceManager {
       : await loadImageFromNet(imgUrl)
     icon.resize(1024, 1024)
     return icon
+  }
+
+  /**
+   * @description Check and set the platform path to ensure the existence of the specified platform module.
+   * If the module does not exist, it will be installed automatically.
+   * Also set the project directory, build directory, and export directory.
+   * @param platform The name of the platform to check, defaulting to 'avp'
+   */
+  public static checkPlatformPath(platform: string) {
+    if (!platform) platform = 'avp'
+    if (!supportPlatform.includes(platform)) {
+      throw new Error(
+        `not support platform ${platform}, now WebSpatial only support ${supportPlatform.join(',')}`,
+      )
+    }
+    let modulePath = join(
+      process.cwd(),
+      'node_modules/@webspatial/platform-avp',
+    )
+    // If the module does not exist in the current working directory, try to get it from the cli directory
+    if (!fs.existsSync(modulePath)) {
+      modulePath = join(
+        __dirname,
+        '../../../node_modules/@webspatial/platform-avp',
+      )
+    }
+    const hasModule = fs.existsSync(modulePath)
+    // If the module does not exist, execute the npm installation command
+    if (!hasModule) {
+      execSync(
+        `cd ${join(__dirname, '../../../')} && npm i @webspatial/platform-avp`,
+      )
+    }
+    PROJECT_DIRECTORY = modulePath
+    PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
+    PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
   }
 }
