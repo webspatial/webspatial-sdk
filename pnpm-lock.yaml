@@ -27,6 +27,8 @@ importers:
         specifier: ^5.7.3
         version: 5.7.3
 
+  builder/visionOS: {}
+
   cli:
     dependencies:
       '@resvg/resvg-js':
@@ -6731,7 +6733,7 @@ snapshots:
 
   centra@2.7.0:
     dependencies:
-      follow-redirects: 1.15.9
+      follow-redirects: 1.15.9(debug@4.4.0)
     transitivePeerDependencies:
       - debug
 
@@ -7335,7 +7337,9 @@ snapshots:
 
   flatted@3.3.2: {}
 
-  follow-redirects@1.15.9: {}
+  follow-redirects@1.15.9(debug@4.4.0):
+    optionalDependencies:
+      debug: 4.4.0
 
   for-each@0.3.5:
     dependencies:
@@ -7573,10 +7577,10 @@ snapshots:
 
   html-void-elements@3.0.0: {}
 
-  http-proxy@1.18.1:
+  http-proxy@1.18.1(debug@4.4.0):
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.9
+      follow-redirects: 1.15.9(debug@4.4.0)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -7588,7 +7592,7 @@ snapshots:
       corser: 2.0.1
       he: 1.2.0
       html-encoding-sniffer: 3.0.0
-      http-proxy: 1.18.1
+      http-proxy: 1.18.1(debug@4.4.0)
       mime: 1.6.0
       minimist: 1.2.8
       opener: 1.5.2
