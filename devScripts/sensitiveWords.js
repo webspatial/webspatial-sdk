@@ -35,7 +35,7 @@ var scanResults = fs
       return true
     }
     regex =
-      /(byted)|(bytedance)|(feishu)|(larkoffice)|(testak)|(testsk)|(token)|(auth)|(pass)|(cookie)/i
+      /(byted)|(feishu)|(larkoffice)|(testak)|(testsk)|(token)|(auth)|(pass)|(cookie)/i
     if (regex.test(line)) {
       console.error(regex + '\ndetected on line:\n' + line + '\n\n')
       return true
