@@ -1,9 +1,9 @@
-# builder/visionOSAPP/web-spatial/static-web
-builder/visionOSApp/web-spatial.xcodeproj/xcuserdata/bytedance.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-builder/visionOSApp/web-spatial.xcodeproj/project.xcworkspace/xcuserdata/bytedance.xcuserdatad/UserInterfaceState.xcuserstate
-builder/visionOSApp/web-spatial/web-project
-builder/visionOSApp/icon.*
+# builder/visionOS/web-spatial/static-web
+**/*/xcuserdata
+builder/visionOS/web-spatial/web-project
+builder/visionOS/icon.*
 old/
+
 # We only allow pnpm lock files
 **/*/yarn.lock
 **/*/package-lock.json
@@ -19,4 +19,3 @@ coverage
 temp
 .idea
 dist
-/cli/template/visionOSApp/web-spatial.xcodeproj/xcuserdata/
