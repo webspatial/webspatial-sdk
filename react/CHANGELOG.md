@@ -1,5 +1,15 @@
 # @webspatial/react-sdk
 
+## 0.0.11
+
+### Patch Changes
+
+- 456d15f: change ModelDragEvent to SpatialModelDragEvent in coresdk
+- 9fe84e4: support 'enable-xr-monitor' property which is used to monitor childre…
+- c597a16: simplify react-sdk export entries. Remove cjs output.
+- Updated dependencies [456d15f]
+  - @webspatial/core-sdk@0.0.1
+
 ## 0.0.10
 
 ### Patch Changes
