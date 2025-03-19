@@ -5,15 +5,20 @@ interface WebSpatialOptions {
   mode?: 'avp'
   // devServer port
   port?: number
+
+  // base path
+  base?: string
 }
 export default function (options: WebSpatialOptions = {}): PluginOption[] {
+  let mode = options?.mode ?? getEnv()
+  let port = options?.port ?? 3000
+  let base = options?.base ?? '/'
+
   return [
     {
       name: 'vite-plugin-webspatial-serve',
       apply: 'serve',
       config: () => {
-        let mode = options?.mode ?? getEnv()
-        let port = options?.port ?? 3000
         const config: any = {
           define: {},
           resolve: {
@@ -63,12 +68,14 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
 
     {
       name: 'react-vite-plugin-for-webspatial',
-      // apply: 'build',
-      config: () => {
+      apply: 'build',
+      config: (config, { command }) => {
         const xrEnv = getEnv()
         const isAVP = xrEnv === AVP
-
+        let isBaseEndWithSlash = base.endsWith('/')
+        let separator = isBaseEndWithSlash ? '' : '/'
         return {
+          base: isAVP ? base + separator + 'webspatial/avp' : base,
           resolve: {
             alias: [
               {
