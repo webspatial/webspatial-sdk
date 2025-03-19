@@ -48,6 +48,7 @@ class SpatialWindowComponent: SpatialComponent {
             "cornerRadius": cornerRadius.toJson(),
             "backgroundMaterial": backgroundMaterial.rawValue,
             "isOpaque": webViewNative!.webViewHolder.appleWebView!.isOpaque,
+            "isScrollEnabled": isScrollEnabled(),
         ]
 
         let baseInspectInfo = super.inspect()
@@ -231,6 +232,21 @@ class SpatialWindowComponent: SpatialComponent {
 
     func isScrollEnabled() -> Bool {
         return webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled
+    }
+
+    func findNearestScrollEnabledSpatialWindowComponent() -> SpatialWindowComponent? {
+        var current: SpatialWindowComponent? = self
+        while current != nil {
+            if current!.isScrollEnabled() {
+                return current!
+            }
+            if let parentEntity = current?.entity?.parent {
+                current = parentEntity.getComponent(SpatialWindowComponent.self)
+            } else {
+                current = nil
+            }
+        }
+        return current
     }
 
     func updateScrollOffset(delta: CGFloat) {
