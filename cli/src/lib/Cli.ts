@@ -2,7 +2,7 @@ import * as minimist from 'minimist'
 import { major } from 'semver'
 import { fetchUtils } from './utils/FetchUtils-1'
 import { help } from './cmds/help'
-import { start, store, dev } from './cmds/build'
+import { start, store, run } from './cmds/build'
 import { version } from './cmds/version'
 import { fetch, downloadFile, decompressResponseBuffer } from './utils/fetch'
 export class Cli {
@@ -43,8 +43,8 @@ export class Cli {
         return await start(parsedArgs)
       case 'publish':
         return await store(parsedArgs)
-      case 'dev':
-        return await dev(parsedArgs)
+      case 'run':
+        return await run(parsedArgs)
       // case 'check':
       //   return await check(config, parsedArgs);
       case 'version': {
