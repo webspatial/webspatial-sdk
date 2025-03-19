@@ -54,6 +54,7 @@ function renderRootCSSSpatialComponent(
     height: 0,
     padding: 0,
     transition: 'none',
+    position: 'absolute',
   }
 
   const spatialDivStyle: CSSProperties = {
@@ -152,6 +153,7 @@ function renderInPortalInstance(
     height: 0,
     padding: 0,
     transition: 'none',
+    position: 'absolute',
   }
 
   const spatialDivStyle: CSSProperties = {
