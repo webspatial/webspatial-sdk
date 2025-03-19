@@ -1,4 +1,4 @@
-import { parseRouter } from '../utils/utils'
+import { getAVPVersionUrl, parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join } from 'path'
 
@@ -25,6 +25,7 @@ export function configStartUrl(
       start_url = join('./static-web', manifestJson.start_url)
     }
   }
+  start_url = getAVPVersionUrl(start_url)
   manifestJson.start_url = start_url
 }
 
