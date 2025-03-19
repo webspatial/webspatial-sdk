@@ -76,7 +76,7 @@ export class ResourceManager {
     // If the module does not exist, execute the npm installation command
     if (!hasModule) {
       execSync(
-        `cd ${join(__dirname, '../../../')} && npm i @webspatial/platform-avp`,
+        `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-avp`,
       )
     }
     PROJECT_DIRECTORY = modulePath
