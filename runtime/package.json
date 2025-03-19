@@ -1,7 +1,7 @@
 {
   "name": "@webspatial/core-sdk",
   "version": "0.0.1",
-  "description": "",
+  "description": "this is runtime for webspatial",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "type": "module",
