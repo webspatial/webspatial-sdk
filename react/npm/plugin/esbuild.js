@@ -1,5 +1,4 @@
-const { definePlugin } = require('esbuild-plugin-define')
-
+import { definePlugin } from 'esbuild-plugin-define'
 const injectEnvPlugin = () => {
   return definePlugin({
     process: {
@@ -9,4 +8,4 @@ const injectEnvPlugin = () => {
     },
   })
 }
-module.exports = injectEnvPlugin
+export default injectEnvPlugin
