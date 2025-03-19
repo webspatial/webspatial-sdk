@@ -3,18 +3,18 @@ import { useMonitorDocumentHeaderChange } from './useMonitorDocumentHeaderChange
 import { ElementType, ForwardedRef, forwardRef } from 'react'
 
 type SpatialMonitorProps = {
-  El: ElementType
+  El?: ElementType
 }
 
 /**
  * Component that add MutationObserver to monitor all dom changes including its children.
  * If any dom changes, it will notify all SpatialDiv to render again for the purpose of sync standInstance layout to portalInstance.
  */
-export function SpatialMonitorBase(
+function SpatialMonitorBase(
   inProps: SpatialMonitorProps,
   inRef: ForwardedRef<HTMLElement>,
 ) {
-  const { El, ...props } = inProps
+  const { El = 'div', ...props } = inProps
   const ref = useMonitorDomChange(inRef)
   useMonitorDocumentHeaderChange()
 
