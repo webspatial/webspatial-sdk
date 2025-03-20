@@ -32,8 +32,10 @@ export function usePortalContainer(options: PortalContainerOption) {
       // session?.log("TREVORX " + props.debugName + " " + (parentSpatialReactComponent !== null ? "hasParent" : "NoParent"))
 
       // Create spatial window
-      let windowMgr = new SpatialWindowManager()
-      await windowMgr.initFromWidow(parentSpatialWindowManager)
+      let windowMgr = new SpatialWindowManager({
+        parentSpatialWindowManager: parentSpatialWindowManager || undefined,
+      })
+      await windowMgr.initFromWidow()
 
       if (isDestroyed) {
         windowMgr.destroy()
