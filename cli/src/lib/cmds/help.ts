@@ -11,7 +11,7 @@ const HELP_MESSAGES = new Map<string, string>([
       'help ................ shows this menu',
       'build ................ initializes a new WebSpatial Project' +
         ' and generates an Apple Vision Pro App from a WebSpatial Project',
-      'dev ................ build and run WebSpatial Project on Apple Vision Pro simulator',
+      'run ................ build and run WebSpatial Project on Apple Vision Pro simulator',
       'publish.............. upload WebSpatial Project to App Store Connect',
     ].join('\n'),
   ],

@@ -3,6 +3,7 @@ import { InitArgs, PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
+import { join } from 'path'
 
 export async function start(
   args: ParsedArgs,
@@ -31,7 +32,7 @@ export async function start(
    **/
   if (!manifestInfo.fromNet) {
     // If it is a local project, the project needs to be moved.
-    await ResourceManager.moveProjectFrom(args['project'])
+    await ResourceManager.moveProjectFrom(args['project'] ?? 'dist')
     console.log('move web project: ok')
   }
   const icon = await ResourceManager.generateIcon(manifestInfo)
