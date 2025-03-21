@@ -1,4 +1,5 @@
 import { ParsedArgs } from 'minimist'
+import { validateURL } from '../pwa/validate'
 export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   if (args['manifest'] && args['manifest-url']) {
     throw new Error(
@@ -8,8 +9,23 @@ export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   if (!args['teamId'] && !isDev) {
     throw new Error('--teamId is required')
   }
-  if (!args['base-url']) {
-    throw new Error('--base-url is required')
+  if (args['base']) {
+    if (validateURL(args['base'])) {
+      const baseUrl = new URL(args['base'])
+      if (baseUrl.pathname !== '/' || baseUrl.search || baseUrl.hash) {
+        throw new Error(
+          'The base parameter must be a path or url and cannot contain parameters or suffixes.',
+        )
+      }
+    } else {
+      const pathRegex = /(\?.*|\.\w+|#.*)$/
+      const pathPart = args['base'].split('/').pop() || ''
+      if (pathRegex.test(pathPart)) {
+        throw new Error(
+          'The base parameter must be a path or url and cannot contain parameters or suffixes.',
+        )
+      }
+    }
   }
 }
 
