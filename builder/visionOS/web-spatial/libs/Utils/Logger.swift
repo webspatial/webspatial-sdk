@@ -1,10 +1,3 @@
-//
-//  Logger.swift
-//  web-spatial
-//
-//  Created by ByteDance on 7/18/24.
-//
-
 import Foundation
 
 class Logger {

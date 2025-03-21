@@ -15,7 +15,6 @@
 		2B2F1D6F2BEBFAAA006897EE /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
-		2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */; };
 		2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */; };
 		2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D902BED61A8006897EE /* NativeWebView.swift */; };
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */; };
@@ -61,15 +60,14 @@
 		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
 		2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowContainerMgr.swift; sourceTree = "<group>"; };
-		2B2F1D632BEBFAAA006897EE /* web-spatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web-spatial.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialApp.swift; sourceTree = "<group>"; };
 		2B2F1D6E2BEBFAAA006897EE /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "web-spatialTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = web_spatialTests.swift; sourceTree = "<group>"; };
+		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WebSpatial.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D8E2BED4D7A006897EE /* JsonParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JsonParser.swift; sourceTree = "<group>"; };
 		2B2F1D902BED61A8006897EE /* NativeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWebView.swift; sourceTree = "<group>"; };
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowContainerView.swift; sourceTree = "<group>"; };
@@ -136,7 +134,6 @@
 			children = (
 				2B2F1D652BEBFAAA006897EE /* web-spatial */,
 				2B2F1D662BEBFAAA006897EE /* Packages */,
-				2B2F1D7D2BEBFAAD006897EE /* web-spatialTests */,
 				2B2F1D642BEBFAAA006897EE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -144,8 +141,8 @@
 		2B2F1D642BEBFAAA006897EE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2B2F1D632BEBFAAA006897EE /* web-spatial.app */,
-				2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */,
+				2B2F1D632BEBFAAA006897EE /* WebSpatial.app */,
+				2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -178,14 +175,6 @@
 				2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		2B2F1D7D2BEBFAAD006897EE /* web-spatialTests */ = {
-			isa = PBXGroup;
-			children = (
-				2B2F1D7E2BEBFAAD006897EE /* web_spatialTests.swift */,
-			);
-			path = "web-spatialTests";
 			sourceTree = "<group>";
 		};
 		2B2F1D8A2BED4CD0006897EE /* libs */ = {
@@ -291,7 +280,7 @@
 				2B2F1D682BEBFAAA006897EE /* RealityKitContent */,
 			);
 			productName = "web-spatial";
-			productReference = 2B2F1D632BEBFAAA006897EE /* web-spatial.app */;
+			productReference = 2B2F1D632BEBFAAA006897EE /* WebSpatial.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2B2F1D792BEBFAAD006897EE /* web-spatialTests */ = {
@@ -309,7 +298,7 @@
 			);
 			name = "web-spatialTests";
 			productName = "web-spatialTests";
-			productReference = 2B2F1D7A2BEBFAAD006897EE /* web-spatialTests.xctest */;
+			productReference = 2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -417,7 +406,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2B2F1D7F2BEBFAAD006897EE /* web_spatialTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -568,8 +556,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.webspatial.test";
-				PRODUCT_NAME = "WebSpatial";
+				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
+				PRODUCT_NAME = WebSpatial;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -595,8 +583,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.webspatial.test";
-				PRODUCT_NAME = "WebSpatial";
+				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
+				PRODUCT_NAME = WebSpatial;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -613,8 +601,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.webspatial.test";
-				PRODUCT_NAME = "WebSpatial";
+				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
+				PRODUCT_NAME = WebSpatial;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -632,8 +620,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.webspatial.test";
-				PRODUCT_NAME = "WebSpatial";
+				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
+				PRODUCT_NAME = WebSpatial;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;

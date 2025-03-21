@@ -1,9 +1,3 @@
-//
-//  MaterialWithBorderCornerModifier.swift
-//  web-spatial
-//
-//  Created by ByteDance on 12/4/24.
-//
 import SwiftUI
 
 enum BackgroundMaterial: String, Codable {

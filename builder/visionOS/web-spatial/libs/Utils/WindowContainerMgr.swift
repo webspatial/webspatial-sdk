@@ -1,17 +1,3 @@
-//
-//  WindowContainerMgr.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2024/12/13.
-//
-
-//
-//  WindowContainerModel.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2024/11/25.
-//
-
 import Combine
 import SwiftUI
 import UIKit
