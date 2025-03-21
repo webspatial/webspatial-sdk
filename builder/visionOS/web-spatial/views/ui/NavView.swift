@@ -1,10 +1,3 @@
-//
-//  NavView.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2025/1/8.
-//
-
 import SwiftUI
 import WebKit
 

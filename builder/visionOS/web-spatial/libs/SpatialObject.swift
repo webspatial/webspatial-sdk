@@ -1,10 +1,3 @@
-//
-//  SpatialObject.swift
-//  web-spatial
-//
-//  Created by ByteDance on 9/10/24.
-//
-
 import Foundation
 
 struct SpatialObjectInfo: Codable {
