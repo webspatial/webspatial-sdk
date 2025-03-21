@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 1.0.0
+
+### Major Changes
+
+- abeda99: Change some cli parameters name and change the name of @webspatial/platform-avp to @webspatial/platform-visionos
+
 ## 0.0.3
 
 ### Patch Changes
