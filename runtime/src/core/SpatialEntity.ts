@@ -141,6 +141,7 @@ export class SpatialEntity extends SpatialObject {
   // Set Entity name. Currently for debugging only.
   /** @hidden */
   async _setName(name: string) {
+    this.name = name
     return WebSpatial.updateResource(this._entity, { name })
   }
 }
