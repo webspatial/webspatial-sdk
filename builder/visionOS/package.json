@@ -1,6 +1,6 @@
 {
-  "name": "@webspatial/platform-avp",
-  "version": "0.0.3",
+  "name": "@webspatial/platform-visionos",
+  "version": "0.0.0",
   "description": "Used to publish WebSpatial projects to Apple Vision Pro",
   "type": "commonjs",
   "engines": {
@@ -13,6 +13,7 @@
   "files": [
     "Packages",
     "web-spatial",
+    "web-spatialTests",
     "web-spatial.xcodeproj",
     "package.json"
   ],
