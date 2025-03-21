@@ -1,86 +1,108 @@
-import * as path from 'path'
-import * as fs from 'fs'
-import { PluginOption, UserConfig } from 'vite'
-import { getEnv, AVP } from './shared'
+import { PluginOption } from 'vite'
+import { AVP, getEnv } from './shared'
+interface WebSpatialOptions {
+  // XR_ENV
+  mode?: 'avp'
+  // devServer port
+  port?: number
 
-export default function injectProcessEnv(): PluginOption {
-  return {
-    name: 'react-vite-plugin-for-webspatial',
-    config: () => {
-      const xrEnv = getEnv()
+  // base path
+  base?: string
+}
+export default function (options: WebSpatialOptions = {}): PluginOption[] {
+  let mode = options?.mode ?? getEnv()
+  let port = options?.port ?? 3000
+  let base = options?.base ?? '/'
 
-      const isAVP = xrEnv === AVP
-
-      const output = isAVP
-        ? {
-            entryFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js entry
-            chunkFileNames: `assets/[name]-[hash].${AVP}.js`, // no share js chunk
-            assetFileNames: 'assets/[name]-[hash][extname]', // shared css image
-          }
-        : {}
-
-      return {
-        resolve: {
-          alias: [
-            {
-              find: /^@webspatial\/react-sdk$/,
-              replacement: isAVP
-                ? '@webspatial/react-sdk/default'
-                : '@webspatial/react-sdk/web',
+  return [
+    {
+      name: 'vite-plugin-webspatial-serve',
+      apply: 'serve',
+      config: () => {
+        const config: any = {
+          define: {},
+          resolve: {
+            alias: {
+              '@webspatial/react-sdk/jsx-dev-runtime':
+                '@webspatial/react-sdk/jsx-dev-runtime',
+              '@webspatial/react-sdk/jsx-runtime':
+                '@webspatial/react-sdk/jsx-runtime',
             },
-          ],
-        },
-        define: {
-          'process.env.XR_ENV': JSON.stringify(xrEnv),
-          'import.meta.env.XR_ENV': JSON.stringify(xrEnv), // visible in development
-        },
-        build: {
-          emptyOutDir: xrEnv !== AVP, // keep dist folder
-          rollupOptions: {
-            output,
           },
-        },
-        optimizeDeps: {},
-      }
+        }
+
+        if (mode === AVP) {
+          config.base = '/webspatial/avp/'
+          config.server = {
+            port: port + 1,
+          }
+          config.define['window.XR_ENV'] = "'avp'"
+          config.resolve.alias['@webspatial/react-sdk'] =
+            '@webspatial/react-sdk/default'
+        } else {
+          config.server = {
+            port: port,
+            proxy: {
+              '/webspatial/avp': {
+                target: `http://localhost:${port + 1}`,
+                changeOrigin: true,
+              },
+            },
+          }
+          config.resolve.alias['@webspatial/react-sdk'] =
+            '@webspatial/react-sdk/web'
+        }
+
+        return config
+      },
     },
-    renderStart(outputOptions) {
-      // rename index.html to index.avp.html
-      const xrEnv = getEnv()
-      if (xrEnv !== AVP) {
-        return
-      }
-
-      const outDir = outputOptions.dir || 'dist'
-      const indexPath = path.resolve(outDir, 'index.html')
-      const tempIndexPath = path.resolve(outDir, 'index.html.tmp')
-
-      if (fs.existsSync(indexPath)) {
-        fs.renameSync(indexPath, tempIndexPath)
-        console.log(
-          `[Build Start] Renamed existing index.html to ${tempIndexPath}`,
-        )
-      }
+    {
+      name: 'inject-xr-env',
+      apply: 'serve',
+      transformIndexHtml(html, { originalUrl }) {
+        const xrEnv = originalUrl?.includes('/webspatial/avp/') ? AVP : ''
+        const injectedScript = `<script>window.XR_ENV = ${JSON.stringify(xrEnv)}</script>`
+        return html.replace('<head>', `<head>${injectedScript}`)
+      },
     },
-    writeBundle(outputOptions) {
-      const xrEnv = getEnv()
-      if (xrEnv !== AVP) {
-        return
-      }
-      const outDir = outputOptions.dir || 'dist'
-      const indexHtmlPath = path.resolve(outDir, 'index.html')
-      const tempIndexPath = path.resolve(outDir, 'index.html.tmp')
-      const newHtmlPath = path.resolve(outDir, 'index.avp.html')
 
-      if (fs.existsSync(indexHtmlPath)) {
-        fs.renameSync(indexHtmlPath, newHtmlPath)
-        console.log(`Renamed index.html to ${newHtmlPath}`)
-      }
-
-      // recover index.html.tmp to index.html
-      if (fs.existsSync(tempIndexPath)) {
-        fs.renameSync(tempIndexPath, indexHtmlPath)
-        console.log(`Renamed ${tempIndexPath} back to index.html`)
-      }
+    {
+      name: 'react-vite-plugin-for-webspatial',
+      apply: 'build',
+      config: (config, { command }) => {
+        const xrEnv = getEnv()
+        const isAVP = xrEnv === AVP
+        let isBaseEndWithSlash = base.endsWith('/')
+        let separator = isBaseEndWithSlash ? '' : '/'
+        return {
+          base: isAVP ? base + separator + 'webspatial/avp' : base,
+          resolve: {
+            alias: [
+              {
+                // Use default or web version based on the environment
+                find: /^@webspatial\/react-sdk$/,
+                replacement: isAVP
+                  ? '@webspatial/react-sdk/default'
+                  : '@webspatial/react-sdk/web',
+              },
+            ],
+          },
+          define: {
+            // Define environment variables for both Node and browser
+            'process.env.XR_ENV': JSON.stringify(xrEnv),
+            'import.meta.env.XR_ENV': JSON.stringify(xrEnv),
+          },
+          build: {
+            // Set output directory for AVP version to /dist/spatial/avp
+            outDir: isAVP ? 'dist/webspatial/avp' : 'dist',
+            // Do not empty the output directory for AVP build
+            emptyOutDir: xrEnv !== AVP,
+            // Remove custom rollup naming logic; use Vite defaults
+            rollupOptions: {},
+          },
+          optimizeDeps: {},
+        }
+      },
     },
-  }
+  ]
 }
