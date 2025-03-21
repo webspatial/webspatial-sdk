@@ -18,10 +18,12 @@ let startURL = pwaManager.start_url
 var sceneStateChangedCB: ((Any) -> Void) = { _ in
 }
 
+// TODO: we need to get rid of rootWGD and rootWC to cleanup memory and better handle close/reopen
+weak var rootWC: SpatialWindowComponent?
+
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var root: SpatialWindowComponent? = nil
     @State var rootWGD: SpatialWindowContainer
     @State var initialLaunch = true
 
@@ -50,7 +52,7 @@ struct web_spatialApp: App {
     // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
     // https://forums.developer.apple.com/forums/thread/61432
     func initAppOnViewMount() {
-        if root == nil {
+        if rootWC == nil {
             let fileUrl = getFileUrl()
 
             // Create a default entity with webview resource
@@ -60,7 +62,9 @@ struct web_spatialApp: App {
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowContainer(wg: rootWGD)
 
-            root = windowComponent
+            rootWGD.childResources[windowComponent.id] = windowComponent
+            rootWGD.childResources[rootEntity.id] = rootEntity
+            rootWC = windowComponent
         }
     }
 
@@ -74,14 +78,16 @@ struct web_spatialApp: App {
             if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
                 VStack {}.onAppear { initAppOnViewMount() }
 
-                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0)).onOpenURL { myURL in
-                    initAppOnViewMount()
-                    let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
-
-                    if let url = URL(string: urlToLoad) {
-                        root!.navigateToURL(url: url)
-                    }
-                }
+                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0))
+//                TODO: Universal link is currently broken
+//                .onOpenURL { myURL in
+//                    initAppOnViewMount()
+//                    let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
+//
+//                    if let url = URL(string: urlToLoad) {
+//                        // root!.navigateToURL(url: url)
+//                    }
+//                }
             } else {
                 let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
                     windowData.windowContainerID, windowData
