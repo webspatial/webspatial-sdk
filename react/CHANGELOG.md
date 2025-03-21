@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.0.13
+
+### Patch Changes
+
+- cb34f1d: support css position fixed property in nested spatialdiv
+- aa894ba: Support position fix in nested spatialdiv
+
 ## 0.0.12
 
 ### Patch Changes
