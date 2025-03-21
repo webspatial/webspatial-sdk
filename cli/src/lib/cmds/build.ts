@@ -9,8 +9,8 @@ export async function start(
   args: ParsedArgs,
   isDev: boolean = false,
 ): Promise<any> {
-  ResourceManager.checkPlatformPath(args['platform'])
   checkBuildParams(args, isDev)
+  ResourceManager.checkPlatformPath(args['platform'])
   /**
    * PWA steps
    * 1.  Load manifestion.json
@@ -87,7 +87,6 @@ export async function store(args: ParsedArgs): Promise<boolean> {
 
 // build and run on simulator
 export async function run(args: ParsedArgs): Promise<boolean> {
-  ResourceManager.checkPlatformPath(args['platform'])
   let appInfo = { name: 'SpatialWebTest', id: 'com.SpatialWeb.test' }
   const buildRes = await start(args, true)
   if (!buildRes) {

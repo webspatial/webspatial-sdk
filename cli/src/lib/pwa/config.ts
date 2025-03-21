@@ -1,6 +1,6 @@
 import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
-import { join } from 'path'
+import { join, normalize, relative, resolve } from 'path'
 
 export function configId(manifestJson: Record<string, any>) {
   const url = new URL(manifestJson.id)
@@ -10,21 +10,35 @@ export function configId(manifestJson: Record<string, any>) {
 
 export function configStartUrl(
   manifestJson: Record<string, any>,
-  urlRoot: string,
+  base: string,
 ) {
-  const isUrl = validateURL(manifestJson.start_url)
-  const isRootUrl = validateURL(urlRoot)
+  const isStartUrl = validateURL(manifestJson.start_url)
+  const isBaseUrl = validateURL(base)
   let start_url = manifestJson.start_url
-  // todo: Supplement according to the suffix .html
-  if (isUrl) {
-    const lastSlashIndex = start_url.lastIndexOf('/')
-    const trimmedUrl = start_url.slice(lastSlashIndex, start_url.length)
-    start_url = trimmedUrl
-  }
-  if (isRootUrl) {
-    start_url = join(urlRoot, start_url)
-  } else {
-    start_url = join('./static-web', urlRoot, start_url)
+  if (!isStartUrl && !isBaseUrl) {
+    const staticWebRoot = resolve('./static-web')
+    const resolvedPath = resolve(staticWebRoot, base, start_url)
+    const normalizedPath = normalize(resolvedPath)
+
+    const safePath = normalizedPath.startsWith(staticWebRoot)
+      ? normalizedPath
+      : staticWebRoot
+
+    start_url = relative(process.cwd(), safePath)
+      .replace(/^(\.\.\/)+/, './')
+      .replace(/\/$/, '')
+  } else if (isStartUrl && !isBaseUrl) {
+    const startUrl = new URL(start_url)
+    const fullPath = startUrl.pathname + startUrl.search + startUrl.hash
+    let newBase = new URL(base, startUrl.origin)
+    start_url = new URL(fullPath, newBase).href
+  } else if (!isStartUrl && isBaseUrl) {
+    start_url = new URL(start_url, base).href
+  } else if (isStartUrl && isBaseUrl) {
+    const startUrl = new URL(start_url)
+    const baseUrl = new URL(base)
+    const startFullPath = startUrl.pathname + startUrl.search + startUrl.hash
+    start_url = new URL(startFullPath, baseUrl.origin + baseUrl.pathname).href
   }
   manifestJson.start_url = start_url
 }
