@@ -1,10 +1,3 @@
-//
-//  OpenDismissHandlerUI.swift
-//  web-spatial
-//
-//  Created by ByteDance on 8/20/24.
-//
-
 import SwiftUI
 
 struct OpenDismissHandlerUI: View {

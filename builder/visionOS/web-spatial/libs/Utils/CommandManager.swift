@@ -1,9 +1,3 @@
-//
-//  CommandManager.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2024/10/15.
-//
 import Foundation
 import RealityKit
 import SwiftUI
