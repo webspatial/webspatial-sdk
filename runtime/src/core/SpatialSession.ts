@@ -40,7 +40,9 @@ type animCallback = (time: DOMHighResTimeStamp) => Promise<any>
  * @param options
  * @returns parsed results
  */
-function _parseParentResources(options?: CreateResourceOptions): [WindowContainer | null, WebSpatialResource | null] {
+function _parseParentResources(
+  options?: CreateResourceOptions,
+): [WindowContainer | null, WebSpatialResource | null] {
   var parentWindowContainer: WindowContainer | null = null
   if (options?.windowContainer !== null) {
     parentWindowContainer = options?.windowContainer
@@ -119,15 +121,12 @@ export class SpatialSession {
    * Creates a ViewComponent used to display 3D content within the entity
    * @returns SpatialViewComponent
    */
-  async createViewComponent(options?: {
-    windowContainer?: SpatialWindowContainer
-  }) {
+  async createViewComponent(options?: CreateResourceOptions) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'SpatialView',
-      options?.windowContainer
-        ? options?.windowContainer._wg
-        : WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
     )
     return new SpatialViewComponent(entity)
   }
@@ -136,15 +135,18 @@ export class SpatialSession {
    * Creates a ModelComponent used to display geometry + material of a 3D model
    * @returns ModelComponent
    */
-  async createModelComponent(options?: { url: string }) {
+  async createModelComponent(
+    options?: { url: string } & CreateResourceOptions,
+  ) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     var opts = undefined
     if (options) {
       opts = { modelURL: options.url }
     }
     let entity = await WebSpatial.createResource(
       'ModelComponent',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
       opts,
     )
     return new SpatialModelComponent(entity)
@@ -154,15 +156,18 @@ export class SpatialSession {
    * Creates a Model3DComponent
    * @returns Model3DComponent
    */
-  async createModel3DComponent(options?: { url: string }) {
+  async createModel3DComponent(
+    options?: { url: string } & CreateResourceOptions,
+  ) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     var opts = undefined
     if (options) {
       opts = { modelURL: options.url }
     }
     let entity = await WebSpatial.createResource(
       'Model3DComponent',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
       opts,
     )
     return new SpatialModel3DComponent(entity)
@@ -173,11 +178,12 @@ export class SpatialSession {
    * [Experimental] Creates a InputComponent used to handle click and drag events of the entity containing a model
    * @returns InputComponent
    */
-  async createInputComponent() {
+  async createInputComponent(options?: CreateResourceOptions) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'InputComponent',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
     )
     return new SpatialInputComponent(entity)
   }
@@ -186,11 +192,14 @@ export class SpatialSession {
    * Creates a MeshResource containing geometry data
    * @returns MeshResource
    */
-  async createMeshResource(options?: { shape?: string }) {
+  async createMeshResource(
+    options?: { shape?: string } & CreateResourceOptions,
+  ) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'MeshResource',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
       options,
     )
     return new SpatialMeshResource(entity)
@@ -200,11 +209,14 @@ export class SpatialSession {
    * Creates a PhysicallyBasedMaterial containing PBR material data
    * @returns PhysicallyBasedMaterial
    */
-  async createPhysicallyBasedMaterialResource(options?: {}) {
+  async createPhysicallyBasedMaterialResource(
+    options?: {} & CreateResourceOptions,
+  ) {
+    var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     let entity = await WebSpatial.createResource(
       'PhysicallyBasedMaterial',
-      WebSpatial.getCurrentWindowContainer(),
-      WebSpatial.getCurrentWebPanel(),
+      parentWindowContainer,
+      parentWindow,
       options,
     )
     return new SpatialPhysicallyBasedMaterialResource(entity)
@@ -213,9 +225,11 @@ export class SpatialSession {
    * Creates a WindowContainer
    * @returns SpatialWindowContainer
    * */
-  async createWindowContainer(options?: {
-    style: WindowStyle
-  } & CreateResourceOptions) {
+  async createWindowContainer(
+    options?: {
+      style: WindowStyle
+    } & CreateResourceOptions,
+  ) {
     var style = options?.style ? options?.style : 'Plain'
     var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     return new SpatialWindowContainer(
@@ -396,7 +410,7 @@ export class SpatialSession {
 
         await new Promise(resolve => setTimeout(resolve, 10))
       }
-      ; (openedWindow! as any)._webSpatialID = (
+      ;(openedWindow! as any)._webSpatialID = (
         openedWindow!.window as any
       ).testAPI.getWindowID()
     } else {
