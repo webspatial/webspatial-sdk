@@ -125,6 +125,17 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   )
   const isWebEnv = !getSession()
   if (isWebEnv) {
+    useEffect(() => {
+      if (gltfSourceURL == '') {
+        console.warn('Unable to display model, no gltf/glb source provided')
+        if (props.onLoad) {
+          props.onLoad({
+            target: { ready: false, currentSrc: gltfSourceURL } as any,
+          })
+        }
+      }
+    }, [])
+
     const myModelViewer = useRef<ModelViewerElement>(null)
     const { className, style = {}, ...props } = inProps
 
