@@ -20,5 +20,7 @@ export class SpatialObject {
     await this.onDestroy()
   }
 
+  public name: string = ''
+
   protected async onDestroy() {}
 }
