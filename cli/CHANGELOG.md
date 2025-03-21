@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.0.12
+
+### Patch Changes
+
+- abeda99: Change some cli parameters name and change the name of @webspatial/platform-avp to @webspatial/platform-visionos
+- 3f0d749: Added basic readme
+
 ## 0.0.11
 
 ### Patch Changes
