@@ -1,4 +1,4 @@
-import { getAVPVersionUrl, parseRouter } from '../utils/utils'
+import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join } from 'path'
 
@@ -10,22 +10,22 @@ export function configId(manifestJson: Record<string, any>) {
 
 export function configStartUrl(
   manifestJson: Record<string, any>,
-  manifestUrl: string,
-  fromNet: boolean,
+  urlRoot: string,
 ) {
   const isUrl = validateURL(manifestJson.start_url)
+  const isRootUrl = validateURL(urlRoot)
   let start_url = manifestJson.start_url
   // todo: Supplement according to the suffix .html
-  if (fromNet) {
-    if (!isUrl) {
-      start_url = join(parseRouter(manifestUrl), manifestJson.start_url)
-    }
-  } else {
-    if (!isUrl) {
-      start_url = join('./static-web', manifestJson.start_url)
-    }
+  if (isUrl) {
+    const lastSlashIndex = start_url.lastIndexOf('/')
+    const trimmedUrl = start_url.slice(lastSlashIndex, start_url.length)
+    start_url = trimmedUrl
   }
-  start_url = getAVPVersionUrl(start_url)
+  if (isRootUrl) {
+    start_url = join(urlRoot, start_url)
+  } else {
+    start_url = join('./static-web', urlRoot, start_url)
+  }
   manifestJson.start_url = start_url
 }
 
