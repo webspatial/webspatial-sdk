@@ -1,10 +1,3 @@
-//
-//  UpdateSystem.swift
-//  web-spatial
-//
-//  Created by ByteDance on 5/21/24.
-//
-
 import Foundation
 import RealityKit
 

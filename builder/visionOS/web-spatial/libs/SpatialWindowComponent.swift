@@ -1,11 +1,3 @@
-
-//
-//  SpatialWindowComponent.swift
-//  web-spatial
-//
-//  Created by ByteDance on 5/9/24.
-//
-
 import Combine
 import Foundation
 import RealityKit

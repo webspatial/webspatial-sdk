@@ -1,10 +1,3 @@
-//
-//  JsonParser.swift
-//  web-spatial
-//
-//  Created by ByteDance on 5/9/24.
-//
-
 import Foundation
 
 class JsonParser {

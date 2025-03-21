@@ -1,11 +1,3 @@
-
-//
-//  VolumetricWindowContainerView.swift
-//  web-spatial
-//
-//  Created by ByteDance on 5/9/24.
-//
-
 import typealias RealityKit.Attachment
 import typealias RealityKit.Entity
 import typealias RealityKit.MeshResource

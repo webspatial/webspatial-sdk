@@ -1,10 +1,3 @@
-//
-//  SceneManager.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2025/2/6.
-//
-
 import Foundation
 
 class SceneManager {
