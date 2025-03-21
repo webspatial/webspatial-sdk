@@ -252,6 +252,13 @@ function useSyncSpatialProps(
     Object.assign(cornerRadiusObject, cornerRadius)
   }
 
+  const isFixedPosition = stylePosition == 'fixed'
+  useEffect(() => {
+    if (spatialWindowManager && spatialWindowManager.webview) {
+      spatialWindowManager.updateCSSPosition(isFixedPosition)
+    }
+  }, [spatialWindowManager, isFixedPosition])
+
   // Sync prop updates
   useEffect(() => {
     if (spatialWindowManager && spatialWindowManager.webview) {
@@ -278,7 +285,7 @@ function useSyncSpatialProps(
       ;(async function () {
         webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
 
-        const isFixed = scrollWithParent == false || stylePosition == 'fixed'
+        const isFixed = scrollWithParent == false || isFixedPosition
         webview.setScrollWithParent(!isFixed)
       })()
     }
@@ -286,9 +293,21 @@ function useSyncSpatialProps(
     spatialWindowManager,
     allowScroll,
     scrollWithParent,
-    stylePosition,
+    isFixedPosition,
     styleOverflow,
   ])
+
+  useEffect(() => {
+    if (spatialWindowManager && spatialWindowManager.webview) {
+      const webview = spatialWindowManager.webview
+      ;(async function () {
+        webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
+
+        const isFixed = scrollWithParent == false || stylePosition == 'fixed'
+        webview.setScrollWithParent(!isFixed)
+      })()
+    }
+  }, [spatialWindowManager, allowScroll, scrollWithParent, stylePosition])
 
   useEffect(() => {
     if (spatialWindowManager) {
@@ -389,19 +408,24 @@ function useSyncDomRect(spatialId: string) {
       if (!dom) {
         return
       }
+
+      const computedStyle = getComputedStyle(dom)
+      inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
+
+      const stylePosition = inheritedPortalStyleRef.current.position
+      const isFixedPosition = stylePosition === 'fixed'
+
       let domRect = dom.getBoundingClientRect()
       let rectType = domRect2rectType(domRect)
 
       const parentDom =
         spatialReactContextObject?.queryParentSpatialDom(spatialId)
-      if (parentDom) {
+      if (!isFixedPosition && parentDom) {
         const parentDomRect = parentDom.getBoundingClientRect()
         const parentRectType = domRect2rectType(parentDomRect)
         rectType.x -= parentRectType.x
         rectType.y -= parentRectType.y
       }
-      const computedStyle = getComputedStyle(dom)
-      inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
 
       const anchor = parseTransformOrigin(computedStyle)
       anchorRef.current = anchor

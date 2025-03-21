@@ -9,6 +9,17 @@ export class SpatialWindowManager {
   webview?: SpatialWindowComponent
   window: WindowProxy | null = null
 
+  private parentSpatialWindowManager?: SpatialWindowManager
+  private isFixedPosition: boolean
+
+  constructor(options: {
+    parentSpatialWindowManager?: SpatialWindowManager
+    isFixedPosition?: boolean
+  }) {
+    this.isFixedPosition = options.isFixedPosition || false
+    this.parentSpatialWindowManager = options.parentSpatialWindowManager
+  }
+
   setDebugName(debugName: string) {
     this.entity?._setName(debugName)
   }
@@ -28,9 +39,7 @@ export class SpatialWindowManager {
     await this.entity.setParent(ent!)
   }
 
-  private async initInternalFromWindow(
-    parentSpatialWindowManager?: SpatialWindowManager | null,
-  ) {
+  private async initInternalFromWindow() {
     if (__WEB__) return
     var w = await getSession()!.createWindowContext()
     this.window = w
@@ -42,16 +51,31 @@ export class SpatialWindowManager {
     await this.webview.setScrollEnabled(false)
     await this.entity.setComponent(this.webview)
 
-    if (parentSpatialWindowManager !== undefined) {
-      if (parentSpatialWindowManager !== null) {
-        // Add as a child of the parent
-        await parentSpatialWindowManager.initPromise
-        this.entity!.setParent(parentSpatialWindowManager.entity!)
-      } else {
+    this.setEntityParentByCSSPosition(this.isFixedPosition)
+  }
+
+  async updateCSSPosition(isFixedPosition: boolean) {
+    if (this.isFixedPosition === isFixedPosition) {
+      return
+    } else {
+      this.isFixedPosition = isFixedPosition
+    }
+    return this.setEntityParentByCSSPosition(isFixedPosition)
+  }
+
+  private async setEntityParentByCSSPosition(isFixedPosition: boolean) {
+    if (this.initPromise) {
+      await this.initPromise
+      if (isFixedPosition || !this.parentSpatialWindowManager) {
         // Add as a child of the current page
         var wc = await getSession()!.getCurrentWindowComponent()
         var ent = await wc.getEntity()
         await this.entity!.setParent(ent!)
+      } else {
+        const parentSpatialWindowManager = this.parentSpatialWindowManager!
+        // Add as a child of the parent
+        await parentSpatialWindowManager.initPromise
+        this.entity!.setParent(parentSpatialWindowManager.entity!)
       }
     }
   }
@@ -60,10 +84,8 @@ export class SpatialWindowManager {
     this.initPromise = this.initInternal(url)
     await this.initPromise
   }
-  async initFromWidow(
-    parentSpatialWindowManager?: SpatialWindowManager | null,
-  ) {
-    this.initPromise = this.initInternalFromWindow(parentSpatialWindowManager)
+  async initFromWidow() {
+    this.initPromise = this.initInternalFromWindow()
     await this.initPromise
   }
   async resize(
