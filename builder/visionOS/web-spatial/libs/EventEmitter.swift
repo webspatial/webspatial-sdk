@@ -1,10 +1,3 @@
-//
-//  EventEmitter.swift
-//  web-spatial
-//
-//  Created by ByteDance on 9/10/24.
-//
-
 class EventEmitter {
     private var listeners: [String: [(_ object: Any, _ data: Any) -> Void]] = [:]
 

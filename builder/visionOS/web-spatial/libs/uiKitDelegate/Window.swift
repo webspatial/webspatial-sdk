@@ -1,10 +1,3 @@
-//
-//  Window.swift
-//  web-spatial
-//
-//  Created by ByteDance on 7/3/24.
-//
-
 import Foundation
 import SwiftUI
 

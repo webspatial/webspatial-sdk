@@ -1,9 +1,3 @@
-//
-//  SpatialModel3DView.swift
-//  web-spatial
-//
-//  Created by ByteDance on 1/21/25.
-//
 import RealityKit
 import SwiftUI
 
