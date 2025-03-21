@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.13
+
+### Patch Changes
+
+- ddab5df: Change --base-url to --base, and optimize the combination logic between --base and start_url
+
 ## 0.0.12
 
 ### Patch Changes
