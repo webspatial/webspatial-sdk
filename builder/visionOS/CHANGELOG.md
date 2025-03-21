@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.0.3
+
+### Patch Changes
+
+- aa894ba: Support position fix in nested spatialdiv
+
 ## 0.0.2
 
 ### Patch Changes
