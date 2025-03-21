@@ -14,49 +14,49 @@ If you wish to package an IPA file or publish it to App Store Connect, you need 
 ## **Usage**
 Build and run local WebSpatial project on Apple Vision Pro simulator.
 
-`webspatial-builder run --manifest=public/manifest.json --project=dist --url-root=dist/webspatial/avp --platform=avp`
+`webspatial-builder run --manifest=public/manifest.json --project=dist --base-url=dist/webspatial/avp --platform=visionos`
 
 - Default parameters
     - --manifest=public/manifest.json
     - --project=dist
-    - --platform=avp
+    - --platform=visionos
 - Necessary parameters
-    - --url-root
+    - --base-url
 
-> The --url-root is the root path to the project. It will be combined with start_url in the manifest.json file to generate the final URL.
+> The --base-url is the root path to the project. It will be combined with start_url in the manifest.json file to generate the final URL.
 >
 >**For example:**
 >```
 >Example 1:
 >start_url:./a/index.html
->--url-root:dist/webspatial/avp
+>--base-url:dist/webspatial/avp
 >final url:dist/webspatial/avp/a/index.html
 >
 >Example 2:
 >start_url:https://www.domain1.com/a/index.html
->--url-root:https://www.domain2.com/webspatial/avp
+>--base-url:https://www.domain2.com/webspatial/avp
 >final url:https://www.domain2.com/webspatial/avp/index.html
 >
 >Example 3:
 >start_url:https://www.domain1.com/a/index.html
->--url-root:dist/webspatial/avp
+>--base-url:dist/webspatial/avp
 >final url:dist/webspatial/avp/index.html
 >```
 
 Package an IPA file.
 
-`webspatial-builder build --manifest=manifest.json --project=dist --url-root=dist/webspatial/avp --platform=avp --teamId=yourTeamId`
+`webspatial-builder build --manifest=manifest.json --project=dist --base-url=dist/webspatial/avp --platform=visionos --teamId=yourTeamId`
 
 - Necessary parameters
-    - --url-root
+    - --base-url
     - --teamId
 
       
 Publish to App Store Connect.
-`webspatial-builder publish --manifest=manifest.json --project=dist --url-root=dist/webspatial/avp --platform=avp --teamId=yourTeamId --version=projectVersion --u=yourAppleId --p=yourAppSpecificCode`
+`webspatial-builder publish --manifest=manifest.json --project=dist --base-url=dist/webspatial/avp --platform=visionos --teamId=yourTeamId --version=projectVersion --u=yourAppleId --p=yourAppSpecificCode`
 
 - Necessary parameters
-    - --url-root
+    - --base-url
     - --teamId
     - --version
     - --u
