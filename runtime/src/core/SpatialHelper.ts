@@ -26,7 +26,7 @@ export class SpatialHelper {
     return null
   }
 
-  constructor(public session: SpatialSession) { }
+  constructor(public session: SpatialSession) {}
 
   shape = {
     createShapeEntity: async (shape = 'box') => {
@@ -88,11 +88,21 @@ export class SpatialHelper {
       }
 
       // Create window container
-      var wg = await this.session.createWindowContainer({ style: 'Plain', windowComponent: null, windowContainer: null })
+      var wg = await this.session.createWindowContainer({
+        style: 'Plain',
+        windowComponent: null,
+        windowContainer: null,
+      })
 
       // Create a root entity displaying a webpage
-      var ent = await this.session!.createEntity({ windowComponent: null, windowContainer: wg })
-      var i = await this.session!.createWindowComponent({ windowContainer: wg })
+      var ent = await this.session!.createEntity({
+        windowComponent: null,
+        windowContainer: wg,
+      })
+      var i = await this.session!.createWindowComponent({
+        windowComponent: null,
+        windowContainer: wg,
+      })
       await i.loadURL(url)
       await ent.setCoordinateSpace('Root')
       await ent.setComponent(i)
@@ -109,22 +119,41 @@ export class SpatialHelper {
       url: string,
       options?: { resolution: { width: number; height: number } },
     ) => {
-      var wg = await this.session.createWindowContainer({ style: 'Volumetric' })
+      var wg = await this.session.createWindowContainer({
+        style: 'Volumetric',
+        windowComponent: null,
+        windowContainer: null,
+      })
 
       // Create a root view entity within the window container
-      var rootEnt = await this.session!.createEntity()
+      var rootEnt = await this.session!.createEntity({
+        windowComponent: null,
+        windowContainer: wg,
+      })
       await rootEnt.setComponent(
-        await this.session!.createViewComponent({ windowContainer: wg }),
+        await this.session!.createViewComponent({
+          windowComponent: null,
+          windowContainer: wg,
+        }),
       )
       await rootEnt.setCoordinateSpace('Root')
       await wg.setRootEntity(rootEnt)
 
       // Add webpage to the window container
-      var ent = await this.session!.createEntity()
-      var i = await this.session!.createWindowComponent({ windowContainer: wg })
+      var ent = await this.session!.createEntity({
+        windowComponent: null,
+        windowContainer: wg,
+      })
+      var i = await this.session!.createWindowComponent({
+        windowComponent: null,
+        windowContainer: wg,
+      })
       await i.loadURL(url)
       if (options?.resolution) {
-        await i.setResolution(options.resolution.width, options.resolution.height)
+        await i.setResolution(
+          options.resolution.width,
+          options.resolution.height,
+        )
       } else {
         await i.setResolution(1000, 1000)
       }
