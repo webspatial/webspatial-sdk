@@ -79,6 +79,8 @@ struct SpatialWebViewUI: View {
                                                     .onChanged { gesture in
                                                         let scrollEnabled = view.isScrollEnabled()
                                                         if !scrollEnabled {
+                                                            // Check if there is a nearest scroll-enabled SpatialWindowComponent in the current SpatialEntity
+                                                            // and scroll it if it exists
                                                             if let targetScrollWV = wv.findNearestScrollEnabledSpatialWindowComponent() {
                                                                 if !view.dragStarted {
                                                                     view.dragStarted = true
