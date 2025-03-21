@@ -1,10 +1,3 @@
-//
-//  ImmersiveView.swift
-//  web-spatial
-//
-//  Created by ByteDance on 5/8/24.
-//
-
 import RealityKit
 import RealityKitContent
 import SwiftUI
