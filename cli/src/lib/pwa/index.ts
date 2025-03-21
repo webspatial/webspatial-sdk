@@ -19,7 +19,7 @@ export interface InitArgs {
   'manifest-url'?: string // remote manifest url
   manifest?: string // local manifest path
   project?: string // local web project path
-  'url-root': string // url root
+  'base-url': string // url root
 }
 
 export interface ManifestInfo {
@@ -38,7 +38,7 @@ export class PWAGenerator {
   ): Promise<ManifestInfo> {
     let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
-    await this.config(manifestInfo, args['url-root'], isDev)
+    await this.config(manifestInfo, args['base-url'], isDev)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
