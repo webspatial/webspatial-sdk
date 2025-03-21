@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.0.3
+
+### Patch Changes
+
+- ee36e07: add SpatialObject name to provide more infomation when debug
+
 ## 0.0.2
 
 ### Patch Changes
