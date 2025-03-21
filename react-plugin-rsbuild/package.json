@@ -1,0 +1,29 @@
+{
+  "name": "@webspatial/react-plugin-rsbuild",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./dist/index.js",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "npm run dev",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rsbuild/core": "^1.2.19",
+    "@types/node": "^22.13.9",
+    "tsup": "^8.4.0"
+  },
+  "peerDependencies": {
+    "@rsbuild/core": "^1.2.19"
+  }
+}
