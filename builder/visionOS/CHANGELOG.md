@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.0.2
+
+### Patch Changes
+
+- a7092b7: Remove head comments
+- cb7e33e: remove head comments
+
 ## 0.0.1
 
 ### Patch Changes
