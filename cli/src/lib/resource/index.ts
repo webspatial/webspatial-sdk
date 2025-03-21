@@ -17,7 +17,7 @@ export const MIDDLE_APPICON_DIRECTORY =
   ASSET_DIRECTORY +
   '/AppIcon.solidimagestack/Middle.solidimagestacklayer/Content.imageset'
 
-const supportPlatform = ['avp']
+const supportPlatform = ['visionos']
 
 export class ResourceManager {
   public static async moveProjectFrom(dir: string) {
@@ -52,31 +52,31 @@ export class ResourceManager {
    * @description Check and set the platform path to ensure the existence of the specified platform module.
    * If the module does not exist, it will be installed automatically.
    * Also set the project directory, build directory, and export directory.
-   * @param platform The name of the platform to check, defaulting to 'avp'
+   * @param platform The name of the platform to check, defaulting to 'visionos'
    */
   public static checkPlatformPath(platform: string) {
-    if (!platform) platform = 'avp'
-    if (!supportPlatform.includes(platform)) {
+    const usePlatform = platform ?? supportPlatform[0]
+    if (!supportPlatform.includes(usePlatform)) {
       throw new Error(
-        `not support platform ${platform}, now WebSpatial only support ${supportPlatform.join(',')}`,
+        `not support platform ${usePlatform}, now WebSpatial only support ${supportPlatform.join(',')}`,
       )
     }
     let modulePath = join(
       process.cwd(),
-      'node_modules/@webspatial/platform-avp',
+      `node_modules/@webspatial/platform-${usePlatform}`,
     )
     // If the module does not exist in the current working directory, try to get it from the cli directory
     if (!fs.existsSync(modulePath)) {
       modulePath = join(
         __dirname,
-        '../../../node_modules/@webspatial/platform-avp',
+        `../../../node_modules/@webspatial/platform-${usePlatform}`,
       )
     }
     const hasModule = fs.existsSync(modulePath)
     // If the module does not exist, execute the npm installation command
     if (!hasModule) {
       execSync(
-        `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-avp`,
+        `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
     PROJECT_DIRECTORY = modulePath

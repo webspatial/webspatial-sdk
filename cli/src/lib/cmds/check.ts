@@ -8,8 +8,8 @@ export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   if (!args['teamId'] && !isDev) {
     throw new Error('--teamId is required')
   }
-  if (!args['url-root']) {
-    throw new Error('--url-root is required')
+  if (!args['base-url']) {
+    throw new Error('--base-url is required')
   }
 }
 
