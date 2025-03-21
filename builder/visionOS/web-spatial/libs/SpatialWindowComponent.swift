@@ -48,6 +48,7 @@ class SpatialWindowComponent: SpatialComponent {
             "cornerRadius": cornerRadius.toJson(),
             "backgroundMaterial": backgroundMaterial.rawValue,
             "isOpaque": webViewNative!.webViewHolder.appleWebView!.isOpaque,
+            "isScrollEnabled": isScrollEnabled(),
         ]
 
         let baseInspectInfo = super.inspect()
@@ -231,6 +232,28 @@ class SpatialWindowComponent: SpatialComponent {
 
     func isScrollEnabled() -> Bool {
         return webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled
+    }
+
+    /// Finds the nearest ancestor `SpatialWindowComponent` that has scrolling enabled.
+    ///
+    /// This method traverses the entity hierarchy upwards, starting from the current `SpatialWindowComponent`,
+    /// and checks each ancestor `SpatialWindowComponent` to see if scrolling is enabled. If a suitable
+    /// component is found, it is returned; otherwise, `nil` is returned.
+    ///
+    /// - Returns: The nearest ancestor `SpatialWindowComponent` with scrolling enabled, or `nil` if none is found.
+    func findNearestScrollEnabledSpatialWindowComponent() -> SpatialWindowComponent? {
+        var current: SpatialWindowComponent? = self
+        while current != nil {
+            if current!.isScrollEnabled() {
+                return current!
+            }
+            if let parentEntity = current?.entity?.parent {
+                current = parentEntity.getComponent(SpatialWindowComponent.self)
+            } else {
+                current = nil
+            }
+        }
+        return current
     }
 
     func updateScrollOffset(delta: CGFloat) {
