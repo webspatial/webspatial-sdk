@@ -19,7 +19,7 @@ export interface InitArgs {
   'manifest-url'?: string // remote manifest url
   manifest?: string // local manifest path
   project?: string // local web project path
-  'base-url': string // url root
+  base: string // url root
 }
 
 export interface ManifestInfo {
@@ -38,7 +38,7 @@ export class PWAGenerator {
   ): Promise<ManifestInfo> {
     let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
-    await this.config(manifestInfo, args['base-url'], isDev)
+    await this.config(manifestInfo, args['base'] ?? '', isDev)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
@@ -74,10 +74,10 @@ export class PWAGenerator {
   // generate manifest
   public static config(
     manifestInfo: ManifestInfo,
-    urlRoot: string,
+    base: string,
     isDev: boolean,
   ) {
-    configStartUrl(manifestInfo.json, urlRoot)
+    configStartUrl(manifestInfo.json, base)
     if (!isDev) configId(manifestInfo.json)
     configScope(manifestInfo.json, manifestInfo.fromNet)
     configDisplay(manifestInfo.json)
