@@ -3,16 +3,26 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { AVP, getEnv } from './shared'
 
 interface WebspatialOptions {
+  // base path
+  base?: string
+
+  // running mode
   mode?: string
+  // server port
   port?: number
 }
 
 export default function webspatialPlugin(
   options?: WebspatialOptions,
 ): RsbuildPlugin {
-  const { mode = getEnv(), port = 3000 } = options ?? {}
+  let { mode = getEnv(), port = 3000, base = '/' } = options ?? {}
   const isAVP = mode === AVP
-  console.log('🚀 ~ mode:', mode)
+
+  if (base.endsWith('/')) {
+    base = base.slice(0, base.length - 1)
+  }
+
+  let AVP_PATH = base + '/webspatial/avp'
 
   return {
     name: 'webspatial-plugin',
@@ -20,29 +30,36 @@ export default function webspatialPlugin(
       // server
       api.modifyRsbuildConfig(config => {
         config.server = config.server || {}
-        config.server.base = isAVP ? '/webspatial/avp' : '/'
+        config.dev = config.dev ?? {}
+        config.server.base = isAVP ? AVP_PATH : '/'
         config.server.port = isAVP ? port + 1 : port
-        if (!isAVP) {
+        if (isAVP) {
+          config.dev.assetPrefix = AVP_PATH
+        } else {
           config.server.proxy = {
-            '/webspatial/avp': {
+            [`${AVP_PATH}`]: {
               target: `http://localhost:${port + 1}`,
               changeOrigin: true,
             },
           }
         }
+
         return config
       })
 
       // alias
       api.modifyRsbuildConfig(config => {
         const xrEnv = getEnv()
-        config.source = config.source || {}
-        config.source.alias = {
-          '@webspatial/react-sdk': isAVP
+
+        config.resolve = config.resolve ?? {}
+        config.resolve.alias = {
+          //! only set root import
+          '@webspatial/react-sdk$': isAVP
             ? '@webspatial/react-sdk/default'
             : '@webspatial/react-sdk/web',
         }
-        // fixme: this will be override by server in front
+        // define
+        config.source = config.source || {}
         config.source.define = {
           'process.env.XR_ENV': JSON.stringify(xrEnv),
           'import.meta.env.XR_ENV': JSON.stringify(xrEnv),
@@ -53,6 +70,9 @@ export default function webspatialPlugin(
       // output
       api.modifyRsbuildConfig(config => {
         config.output = config.output || {}
+        if (isAVP) {
+          config.output.assetPrefix = AVP_PATH
+        }
         config.output.distPath = {
           root: isAVP ? 'dist/webspatial/avp' : 'dist',
         }
