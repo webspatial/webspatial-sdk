@@ -2,10 +2,14 @@ import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join, normalize, relative, resolve } from 'path'
 
-export function configId(manifestJson: Record<string, any>) {
-  const url = new URL(manifestJson.id)
-  let arr = url.host.split('.').reverse()
-  manifestJson.id = arr.join('.')
+export function configId(manifestJson: Record<string, any>, bundleId: string) {
+  if (bundleId) {
+    manifestJson.id = bundleId
+  } else {
+    const url = new URL(manifestJson.id)
+    let arr = url.host.split('.').reverse()
+    manifestJson.id = arr.join('.')
+  }
 }
 
 export function configStartUrl(
@@ -20,9 +24,7 @@ export function configStartUrl(
     const resolvedPath = resolve(staticWebRoot, base, start_url)
     const normalizedPath = normalize(resolvedPath)
 
-    const safePath = normalizedPath.startsWith(staticWebRoot)
-      ? normalizedPath
-      : staticWebRoot
+    const safePath = join(staticWebRoot, normalizedPath)
 
     start_url = relative(process.cwd(), safePath)
       .replace(/^(\.\.\/)+/, './')
@@ -43,13 +45,11 @@ export function configStartUrl(
   manifestJson.start_url = start_url
 }
 
-export function configScope(
-  manifestJson: Record<string, any>,
-  fromNet: boolean,
-) {
+export function configScope(manifestJson: Record<string, any>) {
   let scope = ''
+  const isStartUrl = validateURL(manifestJson.start_url)
   const isUrl = validateURL(manifestJson.scope)
-  if (fromNet && isUrl) {
+  if (isStartUrl && isUrl) {
     const scopeURL = new URL(manifestJson.scope ?? '')
     const startURL = new URL(manifestJson.start_url)
     if (
@@ -58,14 +58,11 @@ export function configScope(
     ) {
       scope = parseRouter(manifestJson.start_url)
     }
-  } else if (fromNet && !isUrl) {
-    const head =
-      manifestJson.start_url.indexOf('http://') === 0 ? 'http://' : 'https://'
-    scope = join(
-      manifestJson.start_url.replace(head, ''),
-      manifestJson.scope ?? '',
-    )
-    scope = head + scope
+  } else if (isStartUrl && !isUrl) {
+    scope = new URL(manifestJson.scope, manifestJson.start_url).href
+  } else if (!isStartUrl && isUrl) {
+    const cleanPath = manifestJson.start_url.replace(/\/[^\/]+$/, '')
+    scope = normalize(cleanPath + '/')
   } else {
     scope = join(parseRouter(manifestJson.start_url), manifestJson.scope ?? '')
   }
