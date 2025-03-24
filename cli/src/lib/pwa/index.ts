@@ -20,6 +20,7 @@ export interface InitArgs {
   manifest?: string // local manifest path
   project?: string // local web project path
   base: string // url root
+  'bundle-id'?: string // bundle id
 }
 
 export interface ManifestInfo {
@@ -38,7 +39,7 @@ export class PWAGenerator {
   ): Promise<ManifestInfo> {
     let manifestInfo: ManifestInfo = await this.validate(args, isDev)
     console.log('check manifest.json: ok')
-    await this.config(manifestInfo, args['base'] ?? '', isDev)
+    await this.config(manifestInfo, args, isDev)
     console.log('reset manifest.json: ok')
     return manifestInfo
   }
@@ -62,7 +63,7 @@ export class PWAGenerator {
     // check manifest.json
     checkManifestJson(manifest)
     var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
-    if (!isDev) checkId(manifest)
+    if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
     await checkIcons(manifest, url)
     return {
       json: manifest,
@@ -74,12 +75,12 @@ export class PWAGenerator {
   // generate manifest
   public static config(
     manifestInfo: ManifestInfo,
-    base: string,
+    args: InitArgs,
     isDev: boolean,
   ) {
-    configStartUrl(manifestInfo.json, base)
-    if (!isDev) configId(manifestInfo.json)
-    configScope(manifestInfo.json, manifestInfo.fromNet)
+    configStartUrl(manifestInfo.json, args['base'] ?? '')
+    if (!isDev) configId(manifestInfo.json, args['bundle-id'] ?? '')
+    configScope(manifestInfo.json)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
     configMainScene(manifestInfo.json)
