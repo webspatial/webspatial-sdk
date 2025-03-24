@@ -191,9 +191,7 @@ export async function checkIcons(
 }
 
 export function checkId(manifest: Record<string, any>, bundleId: string) {
-  if (bundleId.length > 0) {
-    manifest.id = bundleId
-  } else if (!manifest.id) {
+  if (!manifest.id) {
     manifest.id = manifest.start_url
   }
   if (!validateURL(manifest.id) && !bundleId) {
