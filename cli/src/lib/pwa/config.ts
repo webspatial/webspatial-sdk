@@ -46,11 +46,11 @@ export function configStartUrl(
 }
 
 export function configScope(manifestJson: Record<string, any>) {
-  let scope = ''
+  let scope = manifestJson.scope ?? ''
   const isStartUrl = validateURL(manifestJson.start_url)
-  const isUrl = validateURL(manifestJson.scope)
+  const isUrl = validateURL(scope)
   if (isStartUrl && isUrl) {
-    const scopeURL = new URL(manifestJson.scope ?? '')
+    const scopeURL = new URL(scope)
     const startURL = new URL(manifestJson.start_url)
     if (
       scopeURL.host !== startURL.host ||
@@ -59,12 +59,12 @@ export function configScope(manifestJson: Record<string, any>) {
       scope = parseRouter(manifestJson.start_url)
     }
   } else if (isStartUrl && !isUrl) {
-    scope = new URL(manifestJson.scope, manifestJson.start_url).href
+    scope = new URL(scope, manifestJson.start_url).href
   } else if (!isStartUrl && isUrl) {
     const cleanPath = manifestJson.start_url.replace(/\/[^\/]+$/, '')
     scope = normalize(cleanPath + '/')
   } else {
-    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope ?? '')
+    scope = join(parseRouter(manifestJson.start_url), scope)
   }
   manifestJson.scope = scope
 }
