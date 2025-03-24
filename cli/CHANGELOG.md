@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.16
+
+### Patch Changes
+
+- 5648ef2: Fix the verification logic of the --base parameter
+
 ## 0.0.15
 
 ### Patch Changes
