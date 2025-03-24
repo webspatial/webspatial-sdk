@@ -190,16 +190,18 @@ export async function checkIcons(
   ]
 }
 
-export function checkId(manifest: Record<string, any>) {
-  if (!manifest.id) {
+export function checkId(manifest: Record<string, any>, bundleId: string) {
+  if (bundleId.length > 0) {
+    manifest.id = bundleId
+  } else if (!manifest.id) {
     manifest.id = manifest.start_url
   }
-  if (!validateURL(manifest.id)) {
+  if (!validateURL(manifest.id) && !bundleId) {
     throw new CustomError({
       code: 4000,
       // eslint-disable-next-line @typescript-eslint/camelcase
       message:
-        'In the WebSpatial App Manifest, the id or start_url must be a valid URL',
+        'In the WebSpatial App Manifest, the id or start_url must be a valid URL, or provide it use --bundle-id',
       message_staring_params: {},
     })
   }
