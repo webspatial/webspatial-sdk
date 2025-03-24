@@ -11,8 +11,14 @@ export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   }
   if (args['base']) {
     if (validateURL(args['base'])) {
-      const baseUrl = new URL(args['base'])
-      if (baseUrl.pathname !== '/' || baseUrl.search || baseUrl.hash) {
+      try {
+        const baseUrl = new URL(args['base'])
+        if (baseUrl.search || baseUrl.hash) {
+          throw new Error(
+            'The base parameter must be a path or url and cannot contain parameters or suffixes.',
+          )
+        }
+      } catch (e) {
         throw new Error(
           'The base parameter must be a path or url and cannot contain parameters or suffixes.',
         )
