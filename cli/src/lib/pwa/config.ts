@@ -35,7 +35,12 @@ export function configStartUrl(
     let newBase = new URL(base, startUrl.origin)
     start_url = new URL(fullPath, newBase).href
   } else if (!isStartUrl && isBaseUrl) {
-    start_url = new URL(start_url, base).href
+    if (start_url.startsWith('/')) {
+      const baseUrl = new URL(base)
+      start_url = baseUrl.origin + join(baseUrl.pathname, start_url)
+    } else {
+      start_url = new URL(start_url, base).href
+    }
   } else if (isStartUrl && isBaseUrl) {
     const startUrl = new URL(start_url)
     const baseUrl = new URL(base)
