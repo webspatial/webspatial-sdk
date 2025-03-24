@@ -14,6 +14,7 @@ import {
   checkManifestJson,
   checkStartUrl,
 } from './validate'
+import * as fs from 'fs'
 
 export interface InitArgs {
   'manifest-url'?: string // remote manifest url
@@ -57,7 +58,17 @@ export class PWAGenerator {
       fromNet = true
       manifest = await loadJsonFromNet(args['manifest-url'])
     } else {
-      url = join(process.cwd(), args['manifest'] ?? 'public/manifest.json')
+      if (args['manifest']) {
+        url = join(process.cwd(), args['manifest'])
+      } else {
+        url = join(process.cwd(), 'public/manifest.json')
+        if (!fs.existsSync(url)) {
+          url = join(process.cwd(), 'public/manifest.webmanifest')
+        }
+      }
+      if (!fs.existsSync(url)) {
+        throw new Error('manifest not found')
+      }
       manifest = await loadJsonFromDisk(url)
     }
     // check manifest.json
