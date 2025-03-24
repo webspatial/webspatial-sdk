@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.15
+
+### Patch Changes
+
+- f4c23d9: The default value of the --manifest parameter has been increased to support public/manifest.webmanifest
+
 ## 0.0.14
 
 ### Patch Changes
