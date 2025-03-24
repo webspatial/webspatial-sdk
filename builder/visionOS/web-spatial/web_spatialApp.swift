@@ -62,8 +62,8 @@ struct web_spatialApp: App {
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowContainer(wg: rootWGD)
 
-            rootWGD.childResources[windowComponent.id] = windowComponent
-            rootWGD.childResources[rootEntity.id] = rootEntity
+            rootWGD.addChildResource(windowComponent)
+            rootWGD.addChildResource(rootEntity)
             rootWC = windowComponent
         }
     }
