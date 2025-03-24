@@ -47,8 +47,7 @@ function renderJSXPortalInstance(
     PortalInstanceProps,
     'allowScroll' | 'scrollWithParent' | 'spatialStyle'
   >,
-  elWidth: number,
-  elHeight: number,
+
   inheritedPortalStyle: CSSProperties,
   className: string,
 ) {
@@ -66,15 +65,11 @@ function renderJSXPortalInstance(
     borderRadius: '0px',
     overflow: '',
   }
-  const elWHStyle = {
-    width: `${elWidth}px`,
-    height: `${elHeight}px`,
-  }
+
   const style = {
     ...inStyle,
     ...inheritedPortalStyle,
     ...extraStyle,
-    ...elWHStyle,
   }
 
   return <El style={style} className={className} {...props} />
@@ -194,6 +189,8 @@ function syncDefaultSpatialStyle(openedWindow: Window, debugName: string) {
   styleElement.innerHTML =
     ' .xr-spatial-default {  --xr-back: 0.001; --xr-background-material: none  } '
   openedWindow.document.head.appendChild(styleElement)
+  // openedWindow body's width and height should be set to inline-block to make sure the width and height are correct
+  openedWindow.document.body.style.display = 'inline-block'
 }
 
 function useSyncSpatialProps(
@@ -525,8 +522,6 @@ export function PortalInstance(inProps: PortalInstanceProps) {
 
   const JSXPortalInstance = renderJSXPortalInstance(
     props,
-    domRect.width,
-    domRect.height,
     inheritedPortalStyle,
     className,
   )
