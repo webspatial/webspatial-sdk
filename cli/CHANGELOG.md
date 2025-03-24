@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.17
+
+### Patch Changes
+
+- 3981195: Fix the validation logic when the scope is missing in the manifest
+
 ## 0.0.16
 
 ### Patch Changes
