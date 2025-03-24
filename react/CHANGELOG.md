@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.0.15
+
+### Patch Changes
+
+- 6d619c9: set portalinstance body have inline-block display, so that body's width/height is determined by spatialdiv
+
 ## 0.0.14
 
 ### Patch Changes
