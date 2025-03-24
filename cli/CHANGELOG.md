@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.14
+
+### Patch Changes
+
+- 72973d6: Add readme to package, add --bundle-id parameter to bind the bundle id in xcode.
+
 ## 0.0.13
 
 ### Patch Changes
