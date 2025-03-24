@@ -13,7 +13,26 @@ class SpatialWindowContainer: SpatialObject {
     }
 
     // Resources that will be destroyed when this window group is removed
-    public var childResources = [String: SpatialObject]()
+    private var childResources = [String: SpatialObject]()
+    public func addChildResource(_ spatialObject: SpatialObject) {
+        childResources[spatialObject.id] = spatialObject
+        spatialObject
+            .on(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onSptatialObjectDestroyed
+            )
+    }
+
+    private func onSptatialObjectDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialObject
+        spatialObject
+            .off(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onSptatialObjectDestroyed
+            )
+        childResources.removeValue(forKey: spatialObject.id)
+    }
+
     public var childContainers = [String: SpatialWindowContainer]()
 
     var wgd: WindowContainerData
