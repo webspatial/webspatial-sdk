@@ -17,7 +17,7 @@ Build and run local WebSpatial project on Apple Vision Pro simulator.
 `webspatial-builder run --manifest=public/manifest.json --project=dist --base=dist/webspatial/avp --platform=visionos`
 
 - Default parameters
-    - --manifest=public/manifest.json
+    - --manifest=public/manifest.json or --manifest=manifest.webmanifest
     - --project=dist
     - --platform=visionos
 - Necessary parameters
