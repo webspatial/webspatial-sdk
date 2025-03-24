@@ -1,0 +1,13 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@webspatial/platform-visionos": "0.0.2",
+    "@webspatial/builder": "0.0.14",
+    "@webspatial/react-sdk": "0.0.14",
+    "@webspatial/react-plugin-vite": "0.0.2",
+    "@webspatial/core-sdk": "0.0.3",
+    "web-content": "0.0.0"
+  },
+  "changesets": []
+}
