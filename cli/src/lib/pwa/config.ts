@@ -35,7 +35,12 @@ export function configStartUrl(
     let newBase = new URL(base, startUrl.origin)
     start_url = new URL(fullPath, newBase).href
   } else if (!isStartUrl && isBaseUrl) {
-    start_url = new URL(start_url, base).href
+    if (start_url.startsWith('/')) {
+      const baseUrl = new URL(base)
+      start_url = baseUrl.origin + join(baseUrl.pathname, start_url)
+    } else {
+      start_url = new URL(start_url, base).href
+    }
   } else if (isStartUrl && isBaseUrl) {
     const startUrl = new URL(start_url)
     const baseUrl = new URL(base)
@@ -46,11 +51,11 @@ export function configStartUrl(
 }
 
 export function configScope(manifestJson: Record<string, any>) {
-  let scope = ''
+  let scope = manifestJson.scope ?? ''
   const isStartUrl = validateURL(manifestJson.start_url)
-  const isUrl = validateURL(manifestJson.scope)
+  const isUrl = validateURL(scope)
   if (isStartUrl && isUrl) {
-    const scopeURL = new URL(manifestJson.scope ?? '')
+    const scopeURL = new URL(scope)
     const startURL = new URL(manifestJson.start_url)
     if (
       scopeURL.host !== startURL.host ||
@@ -59,12 +64,12 @@ export function configScope(manifestJson: Record<string, any>) {
       scope = parseRouter(manifestJson.start_url)
     }
   } else if (isStartUrl && !isUrl) {
-    scope = new URL(manifestJson.scope, manifestJson.start_url).href
+    scope = new URL(scope, manifestJson.start_url).href
   } else if (!isStartUrl && isUrl) {
     const cleanPath = manifestJson.start_url.replace(/\/[^\/]+$/, '')
     scope = normalize(cleanPath + '/')
   } else {
-    scope = join(parseRouter(manifestJson.start_url), manifestJson.scope ?? '')
+    scope = join(parseRouter(manifestJson.start_url), scope)
   }
   manifestJson.scope = scope
 }
