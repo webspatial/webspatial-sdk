@@ -3,17 +3,13 @@ import { AVP, getEnv } from './shared'
 interface WebSpatialOptions {
   // XR_ENV
   mode?: 'avp'
-  // devServer port
-  port?: number
 
   // base path
   base?: string
 }
 export default function (options: WebSpatialOptions = {}): PluginOption[] {
   let mode = options?.mode ?? getEnv()
-  let port = options?.port ?? 3000
   let base = options?.base ?? '/'
-
   return [
     {
       name: 'vite-plugin-webspatial-serve',
@@ -33,22 +29,10 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
 
         if (mode === AVP) {
           config.base = '/webspatial/avp/'
-          config.server = {
-            port: port + 1,
-          }
           config.define['window.XR_ENV'] = "'avp'"
           config.resolve.alias['@webspatial/react-sdk'] =
             '@webspatial/react-sdk/default'
         } else {
-          config.server = {
-            port: port,
-            proxy: {
-              '/webspatial/avp': {
-                target: `http://localhost:${port + 1}`,
-                changeOrigin: true,
-              },
-            },
-          }
           config.resolve.alias['@webspatial/react-sdk'] =
             '@webspatial/react-sdk/web'
         }
