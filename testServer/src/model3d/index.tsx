@@ -83,7 +83,7 @@ function App() {
       setModelUrl(v =>
         v ===
         'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz'
-          ? '/src/assets/ball.usdz'
+          ? 'https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz'
           : 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
       )
     }

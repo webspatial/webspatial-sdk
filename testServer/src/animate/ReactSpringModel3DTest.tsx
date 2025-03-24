@@ -49,7 +49,7 @@ export function ReactSpringModel3DTest() {
 
       <AnimatedModel3D ref={ref} style={springProps} className="box">
         <source
-          src="http://localhost:5173/src/assets/FlightHelmet.usdz"
+          src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
           type="model/vnd.usdz+zip"
         />
 
