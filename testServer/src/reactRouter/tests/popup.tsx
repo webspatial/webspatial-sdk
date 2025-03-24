@@ -67,7 +67,7 @@ export function PopupTest() {
             >
               <figure className="px-10 pt-10">
                 <img
-                  src="/src/assets/react.svg"
+                  src="https://raw.githubusercontent.com/webspatial/test-assets/main/images/preview.png"
                   alt="Shoes"
                   className="rounded-xl"
                   width={100}
