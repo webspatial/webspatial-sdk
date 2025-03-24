@@ -16,6 +16,8 @@
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
     "changeset": "changeset",
+    "changeset:pre-enter": "changeset pre enter alpha",
+    "changeset:pre-exit": "changeset pre exit alpha",
     "generateStaticSite": "./devScripts/generateWebsite.sh"
   },
   "simple-git-hooks": {
