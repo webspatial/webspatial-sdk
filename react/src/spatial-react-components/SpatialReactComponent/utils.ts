@@ -50,6 +50,9 @@ export function getInheritedStyleProps(
     'background',
     // position also need to be synced
     'position',
+
+    'width',
+    'height',
   ]
   var props = {} as any
   for (var cssName of propNames) {
