@@ -7,4 +7,5 @@ packages:
   - 'react-plugin-vite'
   - 'react-plugin-rsbuild'
   - 'builder/visionOS'
+  - 'ciTest'
 
