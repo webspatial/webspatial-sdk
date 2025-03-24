@@ -32,7 +32,8 @@
     "dist/index.js",
     "bin",
     "template",
-    "package.json"
+    "package.json",
+    "README.md"
   ],
   "author": "",
   "license": "ISC",

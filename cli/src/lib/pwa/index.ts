@@ -20,6 +20,7 @@ export interface InitArgs {
   manifest?: string // local manifest path
   project?: string // local web project path
   base: string // url root
+  'bundle-id'?: string // bundle id
 }
 
 export interface ManifestInfo {
@@ -62,7 +63,7 @@ export class PWAGenerator {
     // check manifest.json
     checkManifestJson(manifest)
     var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
-    if (!isDev) checkId(manifest)
+    if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
     await checkIcons(manifest, url)
     return {
       json: manifest,
