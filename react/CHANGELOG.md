@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.0.17
+
+### Patch Changes
+
+- bf0ad9a: keep css in portalInstance the same order as in entry page
+- bba3767: SpatialDiv's default material should be none material
+
 ## 0.0.16
 
 ### Patch Changes
