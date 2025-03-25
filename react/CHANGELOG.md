@@ -1,5 +1,13 @@
 # @webspatial/react-sdk
 
+## 0.0.16-alpha.1
+
+### Patch Changes
+
+- 997d398: support fixed position for Model including wrapped under a spatialdiv
+- Updated dependencies [997d398]
+  - @webspatial/core-sdk@0.0.4-alpha.0
+
 ## 0.0.16-alpha.0
 
 ### Patch Changes
