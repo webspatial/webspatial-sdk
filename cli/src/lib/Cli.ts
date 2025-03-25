@@ -7,7 +7,7 @@ import { start, store, run } from './cmds/build'
 import { version } from './cmds/version'
 import { fetch, downloadFile, decompressResponseBuffer } from './utils/fetch'
 export class Cli {
-  static log: ConsoleLog = new ConsoleLog('cli')
+  static log: ConsoleLog = new ConsoleLog('webspatial-builder')
   async run(args: string[]): Promise<boolean> {
     if (major(process.versions.node) < 14) {
       throw new Error(
