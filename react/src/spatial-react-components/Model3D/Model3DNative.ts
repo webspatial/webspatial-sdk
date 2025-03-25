@@ -166,7 +166,7 @@ export class Model3DNative {
     }
 
     const targetPosX = rect.x + rect.width / 2
-    const targetPosY = rect.y + rect.height / 2 + window.scrollY
+    const targetPosY = rect.y + rect.height / 2
 
     const { position, rotation, scale } = spatialTransform
     const entity = this.entity
