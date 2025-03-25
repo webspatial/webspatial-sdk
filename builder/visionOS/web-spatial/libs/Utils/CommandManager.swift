@@ -414,6 +414,10 @@ class CommandManager {
                 spatialModel3DComponent.enableLongPressEvent = enableLongPressEvent
             }
 
+            if let scrollWithParent: Bool = data.update?.scrollWithParent {
+                spatialModel3DComponent.scrollWithParent = scrollWithParent
+            }
+
         } else if let spatialWindowComponent = sr as? SpatialWindowComponent {
             if let _: String = data.update?.getEntityID {
                 if let entity: SpatialEntity = spatialWindowComponent.entity {
