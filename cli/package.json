@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/builder",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Client CLI tool to Generate XRApp project for Apple Vision Pro",
   "type": "commonjs",
   "engines": {
