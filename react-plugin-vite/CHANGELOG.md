@@ -1,4 +1,4 @@
-# @webspatial/react-plugin-vite
+# @webspatial/vite-plugin
 
 ## 0.0.3-alpha.0
 
