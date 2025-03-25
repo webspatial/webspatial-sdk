@@ -3,7 +3,7 @@
 ```js
 // vite.config.ts
 
-import WebSpatial from '@webspatial/react-plugin-vite'
+import WebSpatial from '@webspatial/vite-plugin'
 export default defineConfig({
   plugins: [
     react({ jsxImportSource: '@webspatial/react-sdk' }),
