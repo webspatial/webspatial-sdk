@@ -1,5 +1,11 @@
 # @webspatial/vite-plugin
 
+## 0.0.3
+
+### Patch Changes
+
+- 41fe80f: remove port param and web vite no longer link to port of avp vite
+
 ## 0.0.3-alpha.0
 
 ### Patch Changes
