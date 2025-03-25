@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.0.16-alpha.0
+
+### Patch Changes
+
+- b1e16b5: only root spatialdiv need to consume window.scrollY
+- 4d95b2b: when model3d is in nested spatialdiv, there's no need to consume window.scrollY
+
 ## 0.0.15
 
 ### Patch Changes
