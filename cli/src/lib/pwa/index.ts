@@ -34,6 +34,15 @@ export class PWAGenerator {
   // Supported display modes for TWA
   static DisplayModes: string[] = ['standalone', 'minimal-ui']
 
+  private static defaultManifestJson = {
+    name: 'WebSpatialTest',
+    display: 'minimal-ui',
+    start_url: '/',
+    scope: '/',
+  }
+
+  private static useDefaultManifestJson = false
+
   public static async generator(
     args: InitArgs,
     isDev: boolean = false,
@@ -52,6 +61,7 @@ export class PWAGenerator {
     let manifest: Record<string, any> = {}
     let url: string = ''
     let fromNet: boolean = false
+    let useDefault = false
     // load manifest.json
     if (args['manifest-url']) {
       url = args['manifest-url']
@@ -67,15 +77,22 @@ export class PWAGenerator {
         }
       }
       if (!fs.existsSync(url)) {
-        throw new Error('manifest not found')
+        if (isDev) {
+          useDefault = true
+        } else {
+          throw new Error('manifest not found')
+        }
       }
-      manifest = await loadJsonFromDisk(url)
+      manifest = useDefault
+        ? this.defaultManifestJson
+        : await loadJsonFromDisk(url)
+      this.useDefaultManifestJson = useDefault
     }
     // check manifest.json
-    checkManifestJson(manifest)
-    var isNetWeb = checkStartUrl(manifest, url, fromNet, isDev)
+    checkManifestJson(manifest, isDev)
+    var isNetWeb = checkStartUrl(manifest, url, args['base'], fromNet, isDev)
     if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
-    await checkIcons(manifest, url)
+    await checkIcons(manifest, url, isDev)
     return {
       json: manifest,
       url,
