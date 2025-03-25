@@ -141,7 +141,7 @@ async function syncParentHeadToChild(
 ) {
   const styleLoadedPromises = []
 
-  for (let i = document.head.children.length - 1; i >= 0; i--) {
+  for (let i = 0; i < document.head.children.length; i++) {
     let n = document.head.children[i].cloneNode(true)
     if (
       n.nodeName == 'LINK' &&
