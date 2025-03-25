@@ -1,10 +1,9 @@
 import { Cli } from './lib/Cli'
-import { ConsoleLog } from './lib/utils/Log'
 import { CustomError } from './lib/utils/CustomError'
 
 module.exports = async (): Promise<void> => {
   const cli = new Cli()
-  const log = new ConsoleLog('cli')
+  const log = Cli.log
   const args = process.argv.slice(2)
 
   let success
