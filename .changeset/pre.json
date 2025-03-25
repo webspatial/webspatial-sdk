@@ -1,16 +1,14 @@
 {
-  "mode": "pre",
+  "mode": "exit",
   "tag": "alpha",
   "initialVersions": {
     "@webspatial/platform-visionos": "0.0.2",
     "@webspatial/builder": "0.0.14",
     "@webspatial/react-sdk": "0.0.14",
-    "@webspatial/react-plugin-vite": "0.0.2",
+    "@webspatial/vite-plugin": "0.0.2",
     "@webspatial/core-sdk": "0.0.3",
     "web-content": "0.0.0",
     "@webspatial/react-plugin-rsbuild": "0.0.2"
   },
-  "changesets": [
-    "upset-needles-end"
-  ]
+  "changesets": ["upset-needles-end"]
 }
