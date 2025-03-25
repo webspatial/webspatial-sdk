@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.0.4-alpha.0
+
+### Patch Changes
+
+- 997d398: support fixed position for Model including wrapped under a spatialdiv
+
 ## 0.0.3
 
 ### Patch Changes
