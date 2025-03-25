@@ -35,7 +35,10 @@ export async function start(
     await ResourceManager.moveProjectFrom(args['project'] ?? 'dist')
     console.log('move web project: ok')
   }
-  const icon = await ResourceManager.generateIcon(manifestInfo)
+  let icon
+  if (manifestInfo.json.icons?.length && isDev) {
+    icon = await ResourceManager.generateIcon(manifestInfo)
+  }
   console.log('generate icon: ok')
   /**
    * Xcode steps

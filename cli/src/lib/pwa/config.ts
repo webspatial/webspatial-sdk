@@ -47,7 +47,7 @@ export function configStartUrl(
     const startFullPath = startUrl.pathname + startUrl.search + startUrl.hash
     start_url = new URL(startFullPath, baseUrl.origin + baseUrl.pathname).href
   }
-  manifestJson.start_url = start_url
+  return start_url
 }
 
 export function configScope(manifestJson: Record<string, any>) {
@@ -93,6 +93,7 @@ export function configDisplay(manifestJson: Record<string, any>) {
       display = 'standalone'
     }
   }
+  manifestJson.display = display
 }
 
 export function configMainScene(manifestJson: Record<string, any>) {
