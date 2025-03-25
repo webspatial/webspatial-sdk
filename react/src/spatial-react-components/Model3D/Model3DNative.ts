@@ -200,6 +200,21 @@ export class Model3DNative {
     }
   }
 
+  async setScrollWithParent(scrollWithParent: boolean) {
+    if (this.spatialModel3DComponent) {
+      this.spatialModel3DComponent.setScrollWithParent(scrollWithParent)
+    }
+  }
+
+  async changeParentEntity(parentEntity: SpatialEntity) {
+    if (this.parentEntity !== parentEntity) {
+      if (this.entity) {
+        await this.entity.setParent(parentEntity)
+      }
+      this.parentEntity = parentEntity
+    }
+  }
+
   public set onDragStart(
     callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
   ) {
