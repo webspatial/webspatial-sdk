@@ -294,11 +294,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/FlightHelmet.usdz" //avp
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz" //avp
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/FlightHelmet.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>
@@ -311,11 +311,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/2016_BMW_X6M.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/2016_bmw_x6m.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>
@@ -328,11 +328,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/Size_comparison_coloured.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/size_comparison_coloured.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>
@@ -345,11 +345,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/NASB_2_-_SpongeBob.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/nasb_2_-_spongebob.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>
@@ -362,11 +362,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/2016_BMW_X6M.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/2016_bmw_x6m.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>
@@ -379,11 +379,11 @@ function App() {
           <div className="w-full h-52">
             <Model className="w-full h-full bg-white bg-opacity-25 rounded-xl">
               <source
-                src="/src/assets/Real-time_Bones_Demo_Phoenix_Bird.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/real-time_bones_demo_phoenix_bird.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
             </Model>

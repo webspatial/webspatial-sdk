@@ -206,7 +206,7 @@ function App() {
               contentMode={contentMode}
               resizable={resizable}
               aspectRatio={aspectRatio}
-              poster="/src/assets/loading.png"
+              poster="https://raw.githubusercontent.com/webspatial/test-assets/main/images/loading.png"
               onLoad={(event: ModelEvent) => {
                 console.log(
                   'model1 onLoad',
@@ -242,20 +242,20 @@ function App() {
               }}
             >
               <source
-                src="/src/assets/FlightHelmet.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               {/*<source src="https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz" type="model/vnd.usdz+zip" />*/}
               <source
-                src="/src/assets/NASB_2_-_SpongeBob.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <source
-                src="/src/assets/nasb_2_-_patrick/scene.gltf"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/gltf-binary"
               />
               <source
-                src="/src/assets/nasb_2_-_spongebob.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type='type="model/gltf+json"'
               />
             </Model>
@@ -388,7 +388,7 @@ function App() {
               }}
             >
               <source
-                src="/src/assets/NASB_2_-_SpongeBob.usdz"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
                 type="model/vnd.usdz+zip"
               />
               <div> this is place holder when failure for model2 </div>
@@ -488,7 +488,7 @@ function App() {
               contentMode={contentMode}
               resizable={resizable}
               aspectRatio={aspectRatio}
-              poster="/src/assets/loading.png"
+              poster="https://raw.githubusercontent.com/webspatial/test-assets/main/images/loading.png"
               onLoad={(event: ModelEvent) => {
                 console.log(
                   'model3 onLoad',
@@ -523,7 +523,7 @@ function App() {
               }}
             >
               <source
-                src="/src/assets/FlightHelmet.glb"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
                 type="model/gltf-binary"
               />
               <div> this is place holder when failure for model3 </div>
@@ -607,7 +607,7 @@ function App() {
               className="w-full h-full bg-white bg-opacity-25 rounded-xl"
               resizable={resizable}
               aspectRatio={aspectRatio}
-              poster="/src/assets/flightHelmet.png"
+              poster="https://raw.githubusercontent.com/webspatial/test-assets/main/images/preview.png"
               onLoad={(event: ModelEvent) => {
                 console.log(
                   'model4 onLoad',
@@ -642,8 +642,8 @@ function App() {
               }}
             >
               <source
-                src="/src/assets/nasb_2_-_patrick/scene.gltf"
-                type="model/gltf+json"
+                src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
+                type="model/gltf-binary"
               />
               <div> this is place holder when failure for model4 </div>
             </Model>
