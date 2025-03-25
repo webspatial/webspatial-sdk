@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.0.3-alpha.0
+
+### Patch Changes
+
+- 29b0e60: remove reference when spatialObject destroyed in window container
+
 ## 0.0.2
 
 ### Patch Changes

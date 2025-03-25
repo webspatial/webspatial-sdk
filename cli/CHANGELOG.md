@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.18-alpha.0
+
+### Patch Changes
+
+- f20ded9: Fix --project parameter logic
+
 ## 0.0.17
 
 ### Patch Changes

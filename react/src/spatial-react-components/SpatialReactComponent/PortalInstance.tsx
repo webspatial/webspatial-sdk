@@ -417,13 +417,15 @@ function useSyncDomRect(spatialId: string) {
       let domRect = dom.getBoundingClientRect()
       let rectType = domRect2rectType(domRect)
 
-      const parentDom =
-        spatialReactContextObject?.queryParentSpatialDom(spatialId)
-      if (!isFixedPosition && parentDom) {
-        const parentDomRect = parentDom.getBoundingClientRect()
-        const parentRectType = domRect2rectType(parentDomRect)
-        rectType.x -= parentRectType.x
-        rectType.y -= parentRectType.y
+      if (!isFixedPosition) {
+        const parentDom =
+          spatialReactContextObject?.queryParentSpatialDom(spatialId)
+        if (parentDom) {
+          const parentDomRect = parentDom.getBoundingClientRect()
+          const parentRectType = domRect2rectType(parentDomRect)
+          rectType.x -= parentRectType.x
+          rectType.y -= parentRectType.y
+        }
       }
 
       const anchor = parseTransformOrigin(computedStyle)
