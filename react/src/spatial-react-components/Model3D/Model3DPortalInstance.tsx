@@ -239,7 +239,9 @@ export function renderModel3DPortalInstance(
     }
   }, [modelUrl])
 
-  const needRenderPlaceHolder = inheritedPortalStyle.position !== 'absolute'
+  const needRenderPlaceHolder =
+    inheritedPortalStyle.position !== 'absolute' &&
+    inheritedPortalStyle.position !== 'fixed'
 
   if (!needRenderPlaceHolder && phase !== 'failure') {
     return <></>

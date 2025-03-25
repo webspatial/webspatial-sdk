@@ -123,10 +123,14 @@ export class Model3DNative {
       return
     }
 
+    const computedStyle = getComputedStyle(dom)
+
+    const isFixed = computedStyle.position === 'fixed'
+    const scrollY = isFixed ? 0 : window.scrollY
+
     const rect = dom.getBoundingClientRect()
     const targetPosX = rect.left + (rect.right - rect.left) / 2
-    const targetPosY =
-      rect.bottom + (rect.top - rect.bottom) / 2 + window.scrollY
+    const targetPosY = rect.bottom + (rect.top - rect.bottom) / 2 + scrollY
     const { spatialTransform } = options
     const { position, rotation, scale } = spatialTransform
 
@@ -149,7 +153,6 @@ export class Model3DNative {
     const spatialModel3DComponent = this.spatialModel3DComponent
     await spatialModel3DComponent.setResolution(rect.width, rect.height)
 
-    const computedStyle = getComputedStyle(dom)
     const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
     await spatialModel3DComponent.setOpacity(opacity)
 
