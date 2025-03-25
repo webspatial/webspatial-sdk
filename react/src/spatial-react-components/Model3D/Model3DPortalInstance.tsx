@@ -11,6 +11,7 @@ import { useModel3DNative } from './useModel3DNative'
 import { PopulatePartialSpatialTransformType } from './utils'
 import { SpatialWindowManagerContext } from '../SpatialReactComponent/SpatialWindowManagerContext'
 import { type SpatialModelDragEvent } from '@webspatial/core-sdk'
+import { getSession } from '../../utils'
 
 function useModelEvents(
   props: Model3DProps,
@@ -196,6 +197,25 @@ export function renderModel3DPortalInstance(
       model3DNativeRef.current.setOpacity(opacity)
     }
   }, [model3DNativeRef.current, opacity])
+
+  const isFixedPosition = inheritedPortalStyle.position == 'fixed'
+
+  // handle scrollWithParent Properties
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setScrollWithParent(
+        inheritedPortalStyle.position !== 'fixed',
+      )
+
+      if (isFixedPosition) {
+        ;(async function () {
+          var wc = await getSession()!.getCurrentWindowComponent()
+          var ent = await wc.getEntity()
+          model3DNativeRef.current?.changeParentEntity(ent!)
+        })()
+      }
+    }
+  }, [model3DNativeRef.current, isFixedPosition])
 
   // handle onLoad using onSuccess/onFailure
   const onSuccess = useCallback(() => {
