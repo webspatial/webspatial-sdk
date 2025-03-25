@@ -8,7 +8,7 @@ class SpatialModel3DComponent: SpatialComponent {
     var modelURL: String = ""
     var opacity: Double = 1.0
     var rotationAnchor: UnitPoint3D = .center
-    var scrollWithParent = true
+    var scrollWithParent = false
     var contentMode: ContentMode = .fit
     var resizable: Bool = true
     var aspectRatio: Double? = nil

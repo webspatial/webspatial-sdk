@@ -5,9 +5,12 @@ import { parseRouter } from '../utils/utils'
 import { ImageHelper } from '../resource/imageHelper'
 import { loadImageFromDisk, loadImageFromNet } from '../resource/load'
 
-export function checkManifestJson(manifestJson: Record<string, any>) {
+export function checkManifestJson(
+  manifestJson: Record<string, any>,
+  isDev: boolean = false,
+) {
   const errors = []
-  if (!manifestJson.name && !manifestJson['short_name']) {
+  if (!manifestJson.name && !manifestJson['short_name'] && !isDev) {
     errors.push({
       code: 3006,
       message:
@@ -16,7 +19,7 @@ export function checkManifestJson(manifestJson: Record<string, any>) {
       message_staring_params: {},
     })
   }
-  if (!manifestJson.icons?.length) {
+  if (!manifestJson.icons?.length && !isDev) {
     errors.push({
       code: 3007,
       message:
@@ -34,16 +37,6 @@ export function checkManifestJson(manifestJson: Record<string, any>) {
       message_staring_params: {},
     })
   }
-  if (!PWAGenerator.DisplayModes.includes(manifestJson.display)) {
-    errors.push({
-      code: 3009,
-      message:
-        'In the Spatial Web App Manifest, the display property must be provided, and its value' +
-        ` can only be one of "minimal-ui" or "standalone" (your current configuration is ${manifestJson.display})`,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      message_staring_params: { display: manifestJson.display },
-    })
-  }
   if (errors.length) {
     throw new CustomError(errors)
   }
@@ -52,14 +45,17 @@ export function checkManifestJson(manifestJson: Record<string, any>) {
 export function checkStartUrl(
   manifest: Record<string, any>,
   manifestUrl: string,
+  base: string,
   isNet: boolean,
   isDev: boolean = false,
 ): boolean {
   var isNetWeb = false
   if (isDev) {
     isNetWeb =
-      manifest.start_url.indexOf('https://') === 0 ||
-      manifest.start_url.indexOf('http://') === 0
+      manifest.start_url.startsWith('https://') ||
+      manifest.start_url.startsWith('http://') ||
+      base.startsWith('https://') ||
+      base.startsWith('http://')
     return isNetWeb
   }
   if (isNet) {
@@ -106,7 +102,9 @@ export function checkStartUrl(
 export async function checkIcons(
   manifest: Record<string, any>,
   manifestUrl: string,
+  isDev: boolean = false,
 ) {
+  if (!manifest.icons?.length && isDev) return
   const relativeUrl = parseRouter(manifestUrl)
   let maxSizeImage
   let maxSizeImageUrl
@@ -159,6 +157,10 @@ export async function checkIcons(
   }
   // There is no icon that satisfies both size>=1024 and purpose including Maskable
   if (maxSize === 0) {
+    // if(isDev){
+    //   console.warn('In the Spatial Web App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable')
+    //   return
+    // }
     throw new CustomError({
       code: 4000,
       // eslint-disable-next-line @typescript-eslint/camelcase
