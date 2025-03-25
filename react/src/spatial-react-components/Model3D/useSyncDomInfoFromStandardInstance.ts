@@ -38,20 +38,24 @@ export function useSyncDomInfoFromStandardInstance(spatialId: string) {
       }
       modelRef.current = dom as HTMLDivElement
 
+      const computedStyle = getComputedStyle(dom)
+      inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
+      const stylePosition = inheritedPortalStyleRef.current.position
+      const isFixedPosition = stylePosition === 'fixed'
+
       let domRect = dom.getBoundingClientRect()
       let rectType = domRect2rectType(domRect)
 
-      const parentDom =
-        spatialReactContextObject?.queryParentSpatialDom(spatialId)
-
-      if (parentDom) {
-        const parentDomRect = parentDom.getBoundingClientRect()
-        const parentRectType = domRect2rectType(parentDomRect)
-        rectType.x -= parentRectType.x
-        rectType.y -= parentRectType.y
+      if (!isFixedPosition) {
+        const parentDom =
+          spatialReactContextObject?.queryParentSpatialDom(spatialId)
+        if (parentDom) {
+          const parentDomRect = parentDom.getBoundingClientRect()
+          const parentRectType = domRect2rectType(parentDomRect)
+          rectType.x -= parentRectType.x
+          rectType.y -= parentRectType.y
+        }
       }
-      const computedStyle = getComputedStyle(dom)
-      inheritedPortalStyleRef.current = getInheritedStyleProps(computedStyle)
 
       const anchor = parseTransformOrigin(computedStyle)
       anchorRef.current = anchor
