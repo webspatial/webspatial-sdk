@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.19
+
+### Patch Changes
+
+- 10c1b8f: Under the run command, when the manifest file is missing, the default manifest can be used instead.
+
 ## 0.0.18
 
 ### Patch Changes
