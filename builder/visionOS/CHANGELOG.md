@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.0.3-alpha.1
+
+### Patch Changes
+
+- 997d398: support fixed position for Model including wrapped under a spatialdiv
+
 ## 0.0.3-alpha.0
 
 ### Patch Changes
