@@ -15,6 +15,7 @@ import {
   checkStartUrl,
 } from './validate'
 import * as fs from 'fs'
+import { Cli } from '../Cli'
 
 export interface InitArgs {
   'manifest-url'?: string // remote manifest url
@@ -79,8 +80,11 @@ export class PWAGenerator {
       if (!fs.existsSync(url)) {
         if (isDev) {
           useDefault = true
+          Cli.log.warn(
+            'manifest.json or manifest.webmanifest not found, use default in run mode',
+          )
         } else {
-          throw new Error('manifest not found')
+          throw new Error('manifest.json or manifest.webmanifest not found')
         }
       }
       manifest = useDefault
@@ -90,7 +94,9 @@ export class PWAGenerator {
     }
     // check manifest.json
     checkManifestJson(manifest, isDev)
-    var isNetWeb = checkStartUrl(manifest, url, args['base'], fromNet, isDev)
+    let start_url = configStartUrl(manifest, args['base'] ?? '')
+    var isNetWeb = checkStartUrl(start_url, url, fromNet, isDev)
+    manifest.start_url = start_url
     if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
     await checkIcons(manifest, url, isDev)
     return {
@@ -106,7 +112,6 @@ export class PWAGenerator {
     args: InitArgs,
     isDev: boolean,
   ) {
-    configStartUrl(manifestInfo.json, args['base'] ?? '')
     if (!isDev) configId(manifestInfo.json, args['bundle-id'] ?? '')
     configScope(manifestInfo.json)
     configDisplay(manifestInfo.json)
