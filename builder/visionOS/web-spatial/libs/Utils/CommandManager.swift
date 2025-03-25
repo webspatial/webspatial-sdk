@@ -152,7 +152,7 @@ class CommandManager {
             parentWindowComponent.addChildSpatialObject(object)
         }
         if let parentWindowContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
-            parentWindowContainer.childResources[object.id] = object
+            parentWindowContainer.addChildResource(object)
         }
     }
 
