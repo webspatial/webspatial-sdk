@@ -1,7 +1,7 @@
 // tsup.config.ts
-import { defineConfig } from 'tsup'
+import { defineConfig, Options } from 'tsup'
 
-const baseConfig = {
+const baseConfig: Options = {
   splitting: false,
   sourcemap: true,
   clean: true,
@@ -40,7 +40,12 @@ export default defineConfig([
     // JSX
     ...baseConfig,
     external: ['@webspatial/react-sdk'],
-    entry: ['src/jsx/jsx-dev-runtime.ts', 'src/jsx/jsx-runtime.ts'],
+    entry: [
+      'src/jsx/jsx-dev-runtime.ts',
+      'src/jsx/jsx-dev-runtime.react-server.ts',
+      'src/jsx/jsx-runtime.ts',
+      'src/jsx/jsx-runtime.react-server.ts',
+    ],
     format: ['esm'],
     outDir: 'dist/jsx',
     esbuildOptions(options) {
