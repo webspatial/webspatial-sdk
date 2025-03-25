@@ -11,6 +11,10 @@
     "@webspatial/react-plugin-rsbuild": "0.0.2"
   },
   "changesets": [
-    "upset-needles-end"
+    "crazy-lamps-repeat",
+    "dull-bananas-swim",
+    "quiet-pots-slide",
+    "upset-needles-end",
+    "wide-ducks-repair"
   ]
 }
