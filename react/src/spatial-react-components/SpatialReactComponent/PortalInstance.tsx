@@ -37,7 +37,7 @@ interface PortalInstanceProps {
   style?: CSSProperties | undefined
   className?: string
 
-  isSubPortal?: boolean
+  isSubPortal: boolean
 
   [SpatialID]: string
 }
@@ -45,7 +45,7 @@ interface PortalInstanceProps {
 function renderJSXPortalInstance(
   inProps: Omit<
     PortalInstanceProps,
-    'allowScroll' | 'scrollWithParent' | 'spatialStyle'
+    'allowScroll' | 'scrollWithParent' | 'spatialStyle' | 'isSubPortal'
   >,
 
   inheritedPortalStyle: CSSProperties,
@@ -204,6 +204,7 @@ function useSyncSpatialProps(
   cornerRadiusFromStyle: CornerRadius,
   opacity: number,
   stylePosition: string | undefined,
+  isSubPortal: boolean,
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
@@ -315,6 +316,7 @@ function useSyncSpatialProps(
           rotation,
           scale as vecType,
           anchor,
+          isSubPortal ? 0 : window.scrollY,
         )
 
         spatialWindowManager?.setZIndex(zIndex)
@@ -518,6 +520,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     cornerRadius,
     opacity,
     inheritedPortalStyle.position,
+    isSubPortal,
   )
 
   const JSXPortalInstance = renderJSXPortalInstance(
