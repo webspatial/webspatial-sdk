@@ -108,7 +108,7 @@ function parseSpatialStyle(node: HTMLElement) {
     scale: { x: scale.x, y: scale.y, z: scale.z },
     zIndex,
     material: {
-      type: backgroundMaterialType,
+      type: backgroundMaterialType || 'none',
     },
     visible,
   }
