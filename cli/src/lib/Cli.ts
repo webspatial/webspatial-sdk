@@ -1,11 +1,13 @@
 import * as minimist from 'minimist'
 import { major } from 'semver'
+import { ConsoleLog } from '../lib/utils/Log'
 import { fetchUtils } from './utils/FetchUtils-1'
 import { help } from './cmds/help'
 import { start, store, run } from './cmds/build'
 import { version } from './cmds/version'
 import { fetch, downloadFile, decompressResponseBuffer } from './utils/fetch'
 export class Cli {
+  static log: ConsoleLog = new ConsoleLog('cli')
   async run(args: string[]): Promise<boolean> {
     if (major(process.versions.node) < 14) {
       throw new Error(
