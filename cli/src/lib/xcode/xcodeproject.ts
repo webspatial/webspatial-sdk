@@ -85,7 +85,7 @@ export default class XcodeProject {
       this.updateTeamId(project, option['teamId'])
     }
     this.updateExportOptions()
-    await this.bindIcon(option.icon)
+    if (option.icon) await this.bindIcon(option.icon)
     this.bindManifestInfo(project, option.manifestInfo.json)
     if (option['version']) {
       this.updateVersion(project, option['version'])
