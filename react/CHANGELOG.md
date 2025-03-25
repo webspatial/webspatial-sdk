@@ -1,5 +1,15 @@
 # @webspatial/react-sdk
 
+## 0.0.16
+
+### Patch Changes
+
+- b1e16b5: only root spatialdiv need to consume window.scrollY
+- 997d398: support fixed position for Model including wrapped under a spatialdiv
+- 4d95b2b: when model3d is in nested spatialdiv, there's no need to consume window.scrollY
+- Updated dependencies [997d398]
+  - @webspatial/core-sdk@0.0.4
+
 ## 0.0.16-alpha.1
 
 ### Patch Changes

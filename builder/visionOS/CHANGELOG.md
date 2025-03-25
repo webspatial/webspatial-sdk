@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.0.3
+
+### Patch Changes
+
+- 29b0e60: remove reference when spatialObject destroyed in window container
+- 997d398: support fixed position for Model including wrapped under a spatialdiv
+
 ## 0.0.3-alpha.1
 
 ### Patch Changes
