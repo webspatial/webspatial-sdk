@@ -4,6 +4,7 @@ import { CustomError } from '../utils/CustomError'
 import { parseRouter } from '../utils/utils'
 import { ImageHelper } from '../resource/imageHelper'
 import { loadImageFromDisk, loadImageFromNet } from '../resource/load'
+import { Cli } from '../Cli'
 
 export function checkManifestJson(
   manifestJson: Record<string, any>,
@@ -14,7 +15,7 @@ export function checkManifestJson(
     errors.push({
       code: 3006,
       message:
-        'In the Spatial Web App Manifest, it is necessary to provide the name property or short_name property (preferably both)',
+        'In the Web Spatial App Manifest, it is necessary to provide the name property or short_name property (preferably both)',
       // eslint-disable-next-line @typescript-eslint/camelcase
       message_staring_params: {},
     })
@@ -23,7 +24,7 @@ export function checkManifestJson(
     errors.push({
       code: 3007,
       message:
-        'In the Spatial Web App Manifest, the icons property must be provided and it should include at least one icon object',
+        'In the Web Spatial App Manifest, the icons property must be provided and it should include at least one icon object',
       // eslint-disable-next-line @typescript-eslint/camelcase
       message_staring_params: {},
     })
@@ -32,7 +33,7 @@ export function checkManifestJson(
     errors.push({
       code: 3008,
       message:
-        'In the Spatial Web App Manifest, the start_url property must be provided',
+        'In the Web Spatial App Manifest, the start_url property must be provided',
       // eslint-disable-next-line @typescript-eslint/camelcase
       message_staring_params: {},
     })
@@ -43,25 +44,19 @@ export function checkManifestJson(
 }
 
 export function checkStartUrl(
-  manifest: Record<string, any>,
+  startUrl: string,
   manifestUrl: string,
-  base: string,
   isNet: boolean,
   isDev: boolean = false,
 ): boolean {
   var isNetWeb = false
   if (isDev) {
-    isNetWeb =
-      manifest.start_url.startsWith('https://') ||
-      manifest.start_url.startsWith('http://') ||
-      base.startsWith('https://') ||
-      base.startsWith('http://')
-    return isNetWeb
+    return startUrl.startsWith('https://') || startUrl.startsWith('http://')
   }
   if (isNet) {
     // Determine whether it is of the same origin as the manifest
-    if (manifest.start_url.indexOf('https://') == 0) {
-      const urlStart: URL = new URL(manifest.start_url)
+    if (startUrl.startsWith('https://')) {
+      const urlStart: URL = new URL(startUrl)
       const urlManifest: URL = new URL(manifestUrl)
       // The start_url and manifest need to be of the same origin
       if (urlStart.host !== urlManifest.host) {
@@ -75,19 +70,17 @@ export function checkStartUrl(
       }
     }
     // Start_url must be HTTPS protocol
-    else if (manifest.start_url.indexOf('http://') == 0) {
+    else if (startUrl.startsWith('http://')) {
       throw new CustomError({
         code: 4000,
         // eslint-disable-next-line @typescript-eslint/camelcase
-        message: 'In the WebSpatial App Manifest, the start_url must use https',
+        message:
+          'In the Web Spatial App Manifest, the start_url must use https',
         message_staring_params: {},
       })
     }
   } else {
-    if (
-      manifest.start_url.indexOf('https://') == 0 ||
-      manifest.start_url.indexOf('http://') == 0
-    ) {
+    if (startUrl.startsWith('https://') || startUrl.startsWith('http://')) {
       throw new CustomError({
         code: 4000,
         // eslint-disable-next-line @typescript-eslint/camelcase
@@ -104,7 +97,10 @@ export async function checkIcons(
   manifestUrl: string,
   isDev: boolean = false,
 ) {
-  if (!manifest.icons?.length && isDev) return
+  if (!manifest.icons?.length && isDev) {
+    Cli.log.warn('icon not found, use default in run mode')
+    return
+  }
   const relativeUrl = parseRouter(manifestUrl)
   let maxSizeImage
   let maxSizeImageUrl
@@ -157,15 +153,17 @@ export async function checkIcons(
   }
   // There is no icon that satisfies both size>=1024 and purpose including Maskable
   if (maxSize === 0) {
-    // if(isDev){
-    //   console.warn('In the Spatial Web App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable')
-    //   return
-    // }
+    if (isDev) {
+      Cli.log.warn(
+        'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
+      )
+      return
+    }
     throw new CustomError({
       code: 4000,
       // eslint-disable-next-line @typescript-eslint/camelcase
       message:
-        'In the Spatial Web App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
+        'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
       message_staring_params: {},
     })
   } else if (maxSizeImageUrl) {
@@ -175,11 +173,17 @@ export async function checkIcons(
   }
   // Check if the image is completely opaque
   if (maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)) {
+    if (isDev) {
+      Cli.log.warn(
+        'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
+      )
+      return
+    }
     throw new CustomError({
       code: 4000,
       // eslint-disable-next-line @typescript-eslint/camelcase
       message:
-        'In the Spatial Web App on VisionPro, must be a fully opaque bitmap.',
+        'In the Web Spatial App on VisionPro, must be a fully opaque bitmap.',
       message_staring_params: {},
     })
   }
@@ -201,7 +205,7 @@ export function checkId(manifest: Record<string, any>, bundleId: string) {
       code: 4000,
       // eslint-disable-next-line @typescript-eslint/camelcase
       message:
-        'In the WebSpatial App Manifest, the id or start_url must be a valid URL, or provide it use --bundle-id',
+        'In the Web Spatial App Manifest, the id or start_url must be a valid URL, or provide it use --bundle-id',
       message_staring_params: {},
     })
   }
