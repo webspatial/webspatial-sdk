@@ -100,6 +100,16 @@ export class SpatialModel3DComponent extends EventSpatialComponent {
   }
 
   /**
+   * Defaults to false. If set to true, scrolling the parent page will also scroll this window with it like other dom elements
+   * @param scrollWithParent value to set
+   */
+  async setScrollWithParent(scrollWithParent: boolean) {
+    await WebSpatial.updateResource(this._resource, {
+      scrollWithParent: scrollWithParent,
+    })
+  }
+
+  /**
    * Sets whether the model appear in original size or fit the rect
    * @param resizable
    */
