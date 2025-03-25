@@ -13,6 +13,7 @@
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "npm run testServer",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
+    "ciTest": "cd ciTest/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
     "changeset": "changeset",
