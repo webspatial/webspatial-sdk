@@ -38,6 +38,7 @@ function simplifyEntityTree(rootTree: any) {
       backgroundMaterial: node.components[0].backgroundMaterial,
       isOpaque: node.components[0].isOpaque,
       isScrollEnabled: node.components[0].isScrollEnabled,
+      scrollWithParent: node.components[0].scrollWithParent,
     }
     nodeMap[node.id] = newNode
 

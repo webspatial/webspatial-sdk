@@ -94,11 +94,12 @@ export class SpatialWindowManager {
     rotation: quatType = { x: 0, y: 0, z: 0, w: 1 },
     scale: vecType = { x: 1, y: 1, z: 1 },
     rotationOrigin: vecType = { x: 0, y: 0, z: 0 },
+    parrentOffset: number = 0,
   ) {
     let targetPosX = rect.x + rect.width / 2
     // Adjust to get the page relative to document instead of viewport
     // This is needed as when you scroll down the page the rect.top moves but we dont want it to so we can offset that by adding scroll
-    let targetPosY = rect.y + rect.height / 2 + window.scrollY
+    let targetPosY = rect.y + rect.height / 2 + parrentOffset
 
     if (!this.webview) {
       return
