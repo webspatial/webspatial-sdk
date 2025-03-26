@@ -13,8 +13,14 @@
     "./plugin-vite.js": "./npm/plugin/vite.js",
     "./plugin-rollup.js": "./npm/plugin/rollup.js",
     "./plugin-webpack.js": "./npm/plugin/webpack.js",
-    "./jsx-runtime": "./dist/jsx/jsx-runtime.js",
-    "./jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.js"
+    "./jsx-runtime": {
+      "react-server": "./dist/jsx/jsx-runtime.react-server.js",
+      "default": "./dist/jsx/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "react-server": "./dist/jsx/jsx-dev-runtime.react-server.js",
+      "default": "./dist/jsx/jsx-dev-runtime.js"
+    }
   },
   "files": [
     "dist",
