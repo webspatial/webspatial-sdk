@@ -112,7 +112,7 @@ export class PWAGenerator {
     args: InitArgs,
     isDev: boolean,
   ) {
-    if (!isDev) configId(manifestInfo.json, args['bundle-id'] ?? '')
+    configId(manifestInfo.json, args['bundle-id'] ?? '', isDev)
     configScope(manifestInfo.json)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
