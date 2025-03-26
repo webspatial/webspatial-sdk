@@ -66,7 +66,11 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 let useExportOptionsXML = ''
 
 export default class XcodeProject {
-  public static async modify(projectPath: string, option: any) {
+  public static async modify(
+    projectPath: string,
+    option: any,
+    isDev: boolean = false,
+  ) {
     let project = xcode.project(projectPath)
     this.fixProjectFunction(project)
     project.parseSync()
@@ -86,7 +90,7 @@ export default class XcodeProject {
     }
     this.updateExportOptions()
     if (option.icon) await this.bindIcon(option.icon)
-    this.bindManifestInfo(project, option.manifestInfo.json)
+    this.bindManifestInfo(project, option.manifestInfo.json, isDev)
     if (option['version']) {
       this.updateVersion(project, option['version'])
     } else {
@@ -227,13 +231,19 @@ export default class XcodeProject {
     )
   }
 
-  private static bindManifestInfo(xcodeProject: any, manifest: any) {
+  private static bindManifestInfo(
+    xcodeProject: any,
+    manifest: any,
+    isDev: boolean = false,
+  ) {
     xcodeProject.updateProductName(manifest.name)
     // set PRODUCT_BUNDLE_IDENTIFIER need ""
-    xcodeProject.updateBuildProperty(
-      'PRODUCT_BUNDLE_IDENTIFIER',
-      `"${manifest.id}"`,
-    )
+    if (manifest.id && !isDev) {
+      xcodeProject.updateBuildProperty(
+        'PRODUCT_BUNDLE_IDENTIFIER',
+        `"${manifest.id}"`,
+      )
+    }
     this.updateDeeplink(manifest.protocol_handlers ?? [])
     this.modifySwift(manifest)
   }

@@ -197,6 +197,18 @@ export async function checkIcons(
 }
 
 export function checkId(manifest: Record<string, any>, bundleId: string) {
+  if (bundleId) {
+    if (!validateBundleId(bundleId)) {
+      throw new CustomError({
+        code: 4000,
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        message:
+          'In the Web Spatial App Manifest, the bundle ID must be in reverse domain format (e.g. com.example.app) and no longer than 128 characters',
+        message_staring_params: {},
+      })
+    }
+    return
+  }
   if (!manifest.id) {
     manifest.id = manifest.start_url
   }
@@ -209,6 +221,17 @@ export function checkId(manifest: Record<string, any>, bundleId: string) {
       message_staring_params: {},
     })
   }
+}
+
+export function validateBundleId(bundleId: string): boolean {
+  // iOS official specification regex (supports reverse domain name format validation)
+  // 1. Allowed: letters/numbers/hyphens/underscores/dots
+  // 2. Disallow: consecutive dots/leading or trailing dots
+  // 3. Each part starts with a letter or underscore
+  // 4. Total length 1-128 characters
+  const iosBundleIdRegex =
+    /^(?=.{1,128}$)(?!.*\.\.)(?!^\.|.*\.$)[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)+$/
+  return iosBundleIdRegex.test(bundleId)
 }
 
 export function validateURL(url: string): boolean {
