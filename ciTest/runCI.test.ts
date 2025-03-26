@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import { exec } from 'child_process'
 
 // Make timeout 10 min
@@ -9,7 +10,10 @@ global.console = require('console')
 
 // Express server setup
 const app = express()
-const port = 5174 // You can change the port number if needed
+app.use(cors())
+app.use(express.json())
+const testSitePort = 5179
+const port = testSitePort + 1
 
 test('App builds and loads url', async () => {
   // Setup deffered promise for test results
@@ -17,22 +21,38 @@ test('App builds and loads url', async () => {
   var testStatus = new Promise((res, rej) => {
     deffered = { res, rej }
   })
-
-  // Start the server
-  app.get('/', (req, res) => {
-    res.send('Hello World!')
+  // Start the server that is used to get events from the webspatial app
+  app.post('/', (req, res) => {
+    console.log('\n\n\nReceived result:' + JSON.stringify(req.body))
+    res.send({})
     deffered.res({ status: 'success' })
   })
   var server = app.listen(port, () => {
     console.log(`Test server waiting for result http://localhost:${port}`)
   })
 
+  // Setup vite server to serve our webspatial app
+  const { createServer } = await import('vite')
+  var viteServer = await createServer({
+    root: './',
+    server: {
+      port: testSitePort,
+      watch: {
+        ignored: ['**/**'],
+      },
+    },
+    logLevel: 'silent',
+  })
+  await viteServer.listen() // Start the Vite server
+
+  // Run webspatial page in the simulator
   console.log('Running builder')
   var process = exec(
-    'npx @webspatial/builder run --base=http://localhost:5174/',
+    'npx @webspatial/builder run --base=http://localhost:' +
+      testSitePort +
+      '/testPages',
     (error: any, stdout: any, stderr: any) => {
-      console.log('Builder finished')
-      var logBuilder = false
+      var logBuilder = true
       if (logBuilder) {
         if (stdout) {
           console.log('stdout: ' + stdout)
@@ -44,6 +64,9 @@ test('App builds and loads url', async () => {
           console.log('error: ' + error)
         }
       }
+
+      expect(error).toBeNull()
+      console.log('Builder finished')
     },
   )
 
@@ -54,5 +77,7 @@ test('App builds and loads url', async () => {
   // Cleanup
   server.close()
   process.kill()
+  await viteServer.close()
+
   console.log('Cleanup complete')
 })
