@@ -1,6 +1,5 @@
 ---
 '@webspatial/platform-visionos': minor
-'ci-test': minor
 '@webspatial/builder': minor
 '@webspatial/react-sdk': minor
 '@webspatial/react-plugin-rsbuild': minor
