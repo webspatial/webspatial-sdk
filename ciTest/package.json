@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@webspatial/builder": "^0.0.17",
+    "@webspatial/builder": "workspace:^",
     "express": "^4.21.2"
   },
   "devDependencies": {
