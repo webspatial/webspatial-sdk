@@ -101,7 +101,7 @@ npm run dev
 
 This project uses the following third-party libraries:
 
-- [@webspatial/core-sdk@1.0.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
+- [@webspatial/core-sdk@0.1.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
 - [loglevel@1.9.2](https://github.com/pimterry/loglevel) - Licensed under the MIT
 - [typescript@5.6.3](https://github.com/microsoft/TypeScript) - Licensed under the Apache-2.0
 - [@types/hast@3.0.4](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
@@ -111,7 +111,7 @@ This project uses the following third-party libraries:
 - [@types/react@18.3.12](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
 - [@types/three@0.170.0](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
 - [@types/unist@3.0.3](https://github.com/DefinitelyTyped/DefinitelyTyped) - Licensed under the MIT
-- [@webspatial/react-sdk@1.0.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
+- [@webspatial/react-sdk@0.1.0](https://github.com/webspatial/webspatial-sdk) - Licensed under the ISC
 - [lodash.isequal@4.5.0](https://github.com/lodash/lodash) - Licensed under the MIT
 - [react-dom@18.3.1](https://github.com/facebook/react) - Licensed under the MIT
 - [react@18.3.1](https://github.com/facebook/react) - Licensed under the MIT
