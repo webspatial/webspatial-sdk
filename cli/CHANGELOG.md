@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.0.20
+
+### Patch Changes
+
+- e3e040a: Fix an error that may occur under the run command regarding the bundle ID, and improve the verification rules for the bundle ID
+
 ## 0.0.19
 
 ### Patch Changes
