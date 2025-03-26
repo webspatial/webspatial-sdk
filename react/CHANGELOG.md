@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.0.18
+
+### Patch Changes
+
+- f102c02: set model's scrollWithParent property
+
 ## 0.0.17
 
 ### Patch Changes
