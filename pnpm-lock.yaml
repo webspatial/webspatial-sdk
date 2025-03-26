@@ -32,8 +32,8 @@ importers:
   ciTest:
     dependencies:
       '@webspatial/builder':
-        specifier: ^0.0.17
-        version: 0.0.17
+        specifier: workspace:^
+        version: link:../cli
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -2219,11 +2219,6 @@ packages:
 
   '@webgpu/types@0.1.53':
     resolution: {integrity: sha512-x+BLw/opaz9LiVyrMsP75nO1Rg0QfrACUYIbVSfGwY/w0DiWIPYYrpte6us//KZXinxFAOJl0+C17L1Vi2vmDw==}
-
-  '@webspatial/builder@0.0.17':
-    resolution: {integrity: sha512-swzUhNbvlbVZKr9WgOqW/M7E4ArBCNghlhkz1GeFq5SPJde1KbUlZGekRtrfEdZINf9jE13hG5+jPxXHlLO6sg==}
-    engines: {node: '>=14.15.0'}
-    hasBin: true
 
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
@@ -7958,24 +7953,6 @@ snapshots:
       '@xtuc/long': 4.2.2
 
   '@webgpu/types@0.1.53': {}
-
-  '@webspatial/builder@0.0.17':
-    dependencies:
-      '@resvg/resvg-js': 2.6.2
-      cli-progress: 3.12.0
-      colors: 1.4.0
-      fetch-h2: 2.5.1
-      inquirer: 8.2.6
-      jimp: 0.22.12
-      mime-types: 2.1.35
-      minimist: 1.2.8
-      node-fetch: 2.6.1
-      semver: 7.7.1
-      sharp: 0.33.5
-      valid-url: 1.0.9
-      xcode: 3.0.1
-    transitivePeerDependencies:
-      - debug
 
   '@xmldom/xmldom@0.8.10': {}
 
