@@ -3,6 +3,10 @@ import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import ReactDOM from 'react-dom/client'
 import styled from 'styled-components'
 
+import { enableDebugTool } from '@webspatial/react-sdk'
+
+enableDebugTool()
+
 const StyledElement = styled.div<{
   opacity: number
   display: string
@@ -29,7 +33,10 @@ const StyledElement = styled.div<{
   border-radius: 40px;
 `
 function App() {
-  const ref = (useRef<HTMLDivElement>(null)(window as any).ref = ref)
+  const ref = useRef<HTMLDivElement>(null)
+
+  ;(window as any).ref = ref
+
   const ref1 = useRef<HTMLDivElement>(null)
 
   const [styleMode, setStyleMode] = useState('In-line style')
@@ -415,6 +422,7 @@ function App() {
         <div className="bg-gray-800 p-4 rounded-lg min-h-[200px] flex items-center justify-center">
           <div
             id="father"
+            enable-xr-monitor
             className="flex"
             style={{
               backgroundColor: 'rgba(173, 216, 230, 0.2)',
