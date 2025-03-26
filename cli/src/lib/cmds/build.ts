@@ -90,7 +90,7 @@ export async function store(args: ParsedArgs): Promise<boolean> {
 
 // build and run on simulator
 export async function run(args: ParsedArgs): Promise<boolean> {
-  let appInfo = { name: 'SpatialWebTest', id: 'com.SpatialWeb.test' }
+  let appInfo = { name: 'WebSpatialTest', id: '' }
   const buildRes = await start(args, true)
   if (!buildRes) {
     return false
