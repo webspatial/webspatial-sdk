@@ -1,5 +1,17 @@
 # @webspatial/react-sdk
 
+## 0.1.0
+
+### Minor Changes
+
+- fe1e2ab: add react-server export for jsx-runtime
+- a2a401e: version bump
+
+### Patch Changes
+
+- Updated dependencies [a2a401e]
+  - @webspatial/core-sdk@0.1.0
+
 ## 0.0.18
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @webspatial/vite-plugin
 
+## 0.1.0
+
+### Minor Changes
+
+- a2a401e: version bump
+
 ## 0.0.3
 
 ### Patch Changes
