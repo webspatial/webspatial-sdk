@@ -1,5 +1,15 @@
 # @webspatial/builder
 
+## 1.0.0
+
+### Minor Changes
+
+- a2a401e: version bump
+
+### Patch Changes
+
+- 2494201: Fix missing id bug when use run command
+
 ## 0.0.20
 
 ### Patch Changes
