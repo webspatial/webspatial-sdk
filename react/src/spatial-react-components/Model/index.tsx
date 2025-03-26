@@ -263,7 +263,17 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
             poster={props.poster}
           />
         ) : (
-          <></>
+          <>
+            {props.poster ? (
+              <img
+                className={className}
+                style={Object.assign(style, { objectFit: 'contain' })}
+                src={props.poster}
+              ></img>
+            ) : (
+              <></>
+            )}
+          </>
         )}
       </div>
     )
