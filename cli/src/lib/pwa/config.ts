@@ -2,8 +2,14 @@ import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join, normalize, relative, resolve } from 'path'
 
-export function configId(manifestJson: Record<string, any>, bundleId: string) {
-  if (bundleId) {
+export function configId(
+  manifestJson: Record<string, any>,
+  bundleId: string,
+  isDev: boolean,
+) {
+  if (isDev) {
+    manifestJson.id = 'com.WebSpatial.test'
+  } else if (bundleId) {
     manifestJson.id = bundleId
   } else {
     const url = new URL(manifestJson.id)
