@@ -158,6 +158,8 @@ export class Model3DNative {
 
     const anchor = parseTransformOrigin(computedStyle)
     await spatialModel3DComponent.setRotationAnchor(anchor)
+
+    await this.setScrollWithParent(!isFixed)
   }
 
   async updateRectAndTransform(
