@@ -142,9 +142,25 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     const isDragging = useRef(false)
     let [modelViewerExists, setModelViewerExists] = useState(false)
     useEffect(() => {
+      var modelViewerFound = false
       customElements.whenDefined('model-viewer').then(function () {
-        setModelViewerExists(true)
+        modelViewerFound = true
+        setModelViewerExists(modelViewerFound)
       })
+
+      // if model-viewer element is not loaded in 500ms, print a warning
+      setTimeout(() => {
+        if (!modelViewerFound) {
+          console.warn(
+            'model-viewer element not loaded yet, if you want to fallback to webGL model loading, you must include the model-viewer library manually in your html file eg. \n\n <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>',
+          )
+          if (props.onLoad) {
+            props.onLoad({
+              target: { ready: false, currentSrc: gltfSourceURL } as any,
+            })
+          }
+        }
+      }, 500)
     }, [])
 
     useEffect(() => {
