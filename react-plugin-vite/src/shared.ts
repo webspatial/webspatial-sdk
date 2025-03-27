@@ -1,7 +1,7 @@
 const AVP = 'avp'
 function getEnv(): ModeKind {
-  const env = process.env.XR_ENV || ''
-  return env as ModeKind
+  const env = process.env.XR_ENV
+  return env === 'avp' ? 'avp' : undefined
 }
 
 type ModeKind = 'avp' | undefined
