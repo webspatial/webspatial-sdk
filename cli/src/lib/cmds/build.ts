@@ -73,7 +73,7 @@ export async function store(args: ParsedArgs): Promise<boolean> {
     2. Use the name parameter to specify the IPA name, then this command will skip archiving and exporting, and directly find the specified IPA file in the export folder and execute the upload
   */
 
-  let appInfo = { name: 'SpatialWebTest' }
+  let appInfo = { name: 'WebSpatialTest' }
   args['buildType'] = 'app-store-connect'
   if (args['name']) {
     appInfo.name = args['name']
