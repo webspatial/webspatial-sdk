@@ -1,0 +1,31 @@
+{
+  "name": "@webspatial/next-plugin",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "npm run dev",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "next": "^15.2.2",
+    "tsup": "^8.4.0",
+    "webpack": "^5.98.0"
+  },
+  "peerDependencies": {
+    "next": "^15.2.2",
+    "webpack": "^5.98.0"
+  }
+}
