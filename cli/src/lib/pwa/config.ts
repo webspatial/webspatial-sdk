@@ -8,7 +8,7 @@ export function configId(
   isDev: boolean,
 ) {
   if (isDev) {
-    manifestJson.id = 'com.WebSpatial.test'
+    manifestJson.id = 'com.webspatial.test'
   } else if (bundleId) {
     manifestJson.id = bundleId
   } else {
