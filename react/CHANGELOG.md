@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- c2d4a30: add JSX namespace
+  - @webspatial/core-sdk@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
