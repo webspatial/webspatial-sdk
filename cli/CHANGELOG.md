@@ -1,5 +1,11 @@
 # @webspatial/builder
 
+## 0.1.2
+
+### Patch Changes
+
+- @webspatial/platform-visionos@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+- 99ebe7e: provide warning and failed load event if model-viewer script is missing
+  - @webspatial/core-sdk@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
