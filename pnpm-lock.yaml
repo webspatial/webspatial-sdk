@@ -81,8 +81,8 @@ importers:
         specifier: ^2.6.2
         version: 2.6.2
       '@webspatial/platform-visionos':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: workspace:^
+        version: link:../builder/visionOS
       cli-progress:
         specifier: ^3.8.2
         version: 3.12.0
@@ -2243,10 +2243,6 @@ packages:
 
   '@webgpu/types@0.1.53':
     resolution: {integrity: sha512-x+BLw/opaz9LiVyrMsP75nO1Rg0QfrACUYIbVSfGwY/w0DiWIPYYrpte6us//KZXinxFAOJl0+C17L1Vi2vmDw==}
-
-  '@webspatial/platform-visionos@0.1.0':
-    resolution: {integrity: sha512-anNDIPPEwfuk5Y1ZjCsUa19a0zR33vr5UyskuQAQ77s4vPkrmhpFulF7cSPUwm+NQ5hXvJIIdCu2l3js5lTeQg==}
-    engines: {node: '>=14.15.0'}
 
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
@@ -7993,8 +7989,6 @@ snapshots:
       '@xtuc/long': 4.2.2
 
   '@webgpu/types@0.1.53': {}
-
-  '@webspatial/platform-visionos@0.1.0': {}
 
   '@xmldom/xmldom@0.8.10': {}
 
