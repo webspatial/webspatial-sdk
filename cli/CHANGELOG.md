@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.1
+
+### Patch Changes
+
+- c2d4a30: Fix default id setting
+  - @webspatial/platform-visionos@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
