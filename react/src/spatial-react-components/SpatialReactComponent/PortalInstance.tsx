@@ -191,6 +191,10 @@ function syncDefaultSpatialStyle(openedWindow: Window, debugName: string) {
   openedWindow.document.head.appendChild(styleElement)
   // openedWindow body's width and height should be set to inline-block to make sure the width and height are correct
   openedWindow.document.body.style.display = 'inline-block'
+  openedWindow.document.body.style.minWidth = 'auto'
+  openedWindow.document.body.style.minHeight = 'auto'
+  openedWindow.document.body.style.maxWidth = 'fit-content'
+  openedWindow.document.body.style.minWidth = 'fit-content'
 }
 
 function useSyncSpatialProps(
@@ -539,7 +543,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
       {needRenderPlaceHolder && (
-        <div
+        <span
           className={className}
           data-subportal-spatialid={spatialId}
           style={{
@@ -547,6 +551,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
             width: `${domRect.width}px`,
             height: `${domRect.height}px`,
             visibility: 'hidden',
+            display: inheritedPortalStyle.display,
           }}
         />
       )}
