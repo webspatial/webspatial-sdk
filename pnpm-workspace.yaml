@@ -6,6 +6,7 @@ packages:
   - 'examples/*'
   - 'react-plugin-vite'
   - 'react-plugin-rsbuild'
+  - 'react-plugin-next'
   - 'builder/visionOS'
   - 'ciTest'
 
