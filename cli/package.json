@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/builder",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Client CLI tool to Generate XRApp project for Apple Vision Pro",
   "type": "commonjs",
   "engines": {
@@ -39,7 +39,7 @@
   "license": "ISC",
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@webspatial/platform-visionos": "^0.1.1",
+    "@webspatial/platform-visionos": "^0.1.0",
     "cli-progress": "^3.8.2",
     "colors": "^1.4.0",
     "fetch-h2": "^2.5.1",
