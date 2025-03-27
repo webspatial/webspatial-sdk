@@ -1,12 +1,5 @@
 # @webspatial/builder
 
-## 0.1.1
-
-### Patch Changes
-
-- 8670193: Fix default id setting
-  - @webspatial/platform-visionos@0.1.1
-
 ## 0.1.0
 
 ### Minor Changes
