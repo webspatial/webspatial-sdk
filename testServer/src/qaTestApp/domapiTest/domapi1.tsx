@@ -1,10 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 
+import { enableDebugTool } from '@webspatial/react-sdk'
+
+enableDebugTool()
+
 function App() {
   const ref = useRef<HTMLDivElement>(null)
   ;(window as any).ref = ref
   const ref1 = useRef<HTMLDivElement>(null)
+  ;(window as any).ref1 = ref1
 
   const [elementState, setElementState] = useState({
     style: '',

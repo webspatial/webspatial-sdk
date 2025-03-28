@@ -64,7 +64,7 @@ function parseBack(computedStyle: CSSStyleDeclaration) {
   try {
     back = parseFloat(backProperty)
   } catch (error) {}
-  return new Matrix4().makeTranslation(0, 0, back || 1)
+  return new Matrix4().makeTranslation(0, 0, back || 0)
 }
 
 function parseSpatialStyle(node: HTMLElement) {
@@ -86,7 +86,7 @@ function parseSpatialStyle(node: HTMLElement) {
   resultMatrix.decompose(position, quaternion, scale)
 
   // parse zIndex
-  const zIndex = parseFloat(computedStyle.getPropertyValue('z-index'))
+  const zIndex = parseFloat(computedStyle.getPropertyValue('z-index')) || 0
 
   // parse visibility
   const visible = computedStyle.getPropertyValue('visibility') === 'visible'
@@ -118,7 +118,7 @@ export function useSpatialStyle() {
   const ref = useRef<HTMLDivElement | null>(null)
 
   const [spatialStyle, setSpatialStyle] = useState({
-    position: { x: 0, y: 0, z: 1 },
+    position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0, w: 1 },
     scale: { x: 1, y: 1, z: 1 },
     zIndex: 0,
