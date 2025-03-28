@@ -9,7 +9,7 @@ interface WebSpatialOptions {
 }
 export default function (options: WebSpatialOptions = {}): PluginOption[] {
   let mode = options?.mode ?? getEnv()
-  let outputDir = options?.outputDir ?? '/webspatial/avp/'
+  let outputDir = options?.outputDir
   console.log('🚀 ~ mode:', mode)
   return [
     {

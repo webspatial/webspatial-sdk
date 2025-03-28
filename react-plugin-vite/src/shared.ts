@@ -11,7 +11,7 @@ export { getEnv, AVP }
 export function getFinalBase(
   userBase: string | undefined,
   mode: ModeKind,
-  outputDir?: string,
+  outputDir: string = '/webspatial/avp/',
 ) {
   if (mode === 'avp') {
     if (userBase !== undefined) {
