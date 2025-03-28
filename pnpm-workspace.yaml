@@ -9,4 +9,5 @@ packages:
   - 'react-plugin-next'
   - 'builder/visionOS'
   - 'ciTest'
+  - 'shared'
 

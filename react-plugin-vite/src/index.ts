@@ -1,5 +1,12 @@
 import { PluginOption } from 'vite'
-import { AVP, getEnv, getFinalBase, getFinalOutdir } from './shared'
+import {
+  AVP,
+  getDefineByMode,
+  getEnv,
+  getFinalBase,
+  getFinalOutdir,
+  getReactSDKAliasByMode,
+} from '@webspatial/shared'
 interface WebSpatialOptions {
   // XR_ENV
   mode?: 'avp'
@@ -22,23 +29,12 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         const config: any = {
           define: {},
           resolve: {
-            alias: {
-              '@webspatial/react-sdk/jsx-dev-runtime':
-                '@webspatial/react-sdk/jsx-dev-runtime',
-              '@webspatial/react-sdk/jsx-runtime':
-                '@webspatial/react-sdk/jsx-runtime',
-            },
+            alias: {},
           },
         }
         config.base = finalBase
-        if (mode === AVP) {
-          config.define['window.XR_ENV'] = "'avp'"
-          config.resolve.alias['@webspatial/react-sdk'] =
-            '@webspatial/react-sdk/default'
-        } else {
-          config.resolve.alias['@webspatial/react-sdk'] =
-            '@webspatial/react-sdk/web'
-        }
+        config.resolve.alias = getReactSDKAliasByMode(mode)
+        config.define = getDefineByMode(mode)
 
         return config
       },
@@ -59,7 +55,6 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
       config: (config, { command }) => {
         const userOutDir = config.build?.outDir
         const xrEnv = getEnv()
-        const isAVP = xrEnv === AVP
         const userBase = config.base
         const finalBase = getFinalBase(userBase, mode, outputDir)
         const finalOutdir = getFinalOutdir(userOutDir, xrEnv, outputDir)
@@ -67,20 +62,13 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         return {
           base: finalBase,
           resolve: {
-            alias: [
-              {
-                // Use default or web version based on the environment
-                find: /^@webspatial\/react-sdk$/,
-                replacement: isAVP
-                  ? '@webspatial/react-sdk/default'
-                  : '@webspatial/react-sdk/web',
-              },
-            ],
+            alias: {
+              ...getReactSDKAliasByMode(mode),
+            },
           },
           define: {
             // Define environment variables for both Node and browser
-            'process.env.XR_ENV': JSON.stringify(xrEnv),
-            'import.meta.env.XR_ENV': JSON.stringify(xrEnv),
+            ...getDefineByMode(mode),
           },
           build: {
             // Set output directory
