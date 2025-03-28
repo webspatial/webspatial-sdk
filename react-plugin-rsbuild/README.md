@@ -5,7 +5,7 @@
 
 import {defineConfig} from '@rsbuild/core';
 import {pluginReact} from '@rsbuild/plugin-react';
-import webspatial from '@webspatial/react-plugin-rsbuild';
+import webspatial from '@webspatial/rsbuild-plugin';
 
 export default defineConfig({
     plugins: [
