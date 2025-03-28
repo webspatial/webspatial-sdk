@@ -1,5 +1,12 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
-import { getEnv, AVP, getFinalBase, getFinalOutdir } from './pluginUtils'
+import {
+  getEnv,
+  AVP,
+  getFinalBase,
+  getFinalOutdir,
+  getReactSDKAliasByMode,
+  removeFirstSlash,
+} from './pluginUtils'
 
 describe('Environment Utility Functions', () => {
   describe('AVP Constant', () => {
@@ -68,11 +75,11 @@ describe('Environment Utility Functions', () => {
     // avp
 
     test('should return webspatial/avp when mode is avp and userBase is undefined', () => {
-      expect(getFinalBase(undefined, 'avp')).toBe('webspatial/avp')
+      expect(getFinalBase(undefined, 'avp')).toBe('/webspatial/avp')
     })
 
     test('should return webspatial/avp when mode is avp and userBase is undefined', () => {
-      expect(getFinalBase(undefined, 'avp', 'base')).toBe('base')
+      expect(getFinalBase(undefined, 'avp', '/base')).toBe('/base')
     })
   })
 
@@ -95,7 +102,33 @@ describe('Environment Utility Functions', () => {
     })
 
     test('should handle trailing slashes correctly in paths', () => {
-      expect(getFinalOutdir('dist', 'avp', 'plugin')).toBe('dist/plugin')
+      expect(getFinalOutdir('dist', 'avp', '/plugin')).toBe('dist/plugin')
+    })
+  })
+
+  describe('getReactSDK func', () => {
+    test('web version', () => {
+      expect(getReactSDKAliasByMode()['@webspatial/react-sdk$']).toBe(
+        '@webspatial/react-sdk/web',
+      )
+    })
+
+    test('avp version', () => {
+      expect(getReactSDKAliasByMode('avp')['@webspatial/react-sdk$']).toBe(
+        '@webspatial/react-sdk/default',
+      )
+    })
+  })
+
+  describe('removeFirstSlash func', () => {
+    test('start with /', () => {
+      expect(removeFirstSlash('/mybase')).toBe('mybase')
+      expect(removeFirstSlash('/my/base/')).toBe('my/base/')
+    })
+
+    test('not start with /', () => {
+      expect(removeFirstSlash('mybase')).toBe('mybase')
+      expect(removeFirstSlash('my/base/')).toBe('my/base/')
     })
   })
 })

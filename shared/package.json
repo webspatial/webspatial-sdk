@@ -16,7 +16,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
-    "test": "tsc",
+    "test": "tsc && npm run coverage",
     "coverage": "vitest run --coverage",
     "test:w": "vitest --watch"
   },
