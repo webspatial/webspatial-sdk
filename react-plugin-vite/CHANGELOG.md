@@ -1,5 +1,14 @@
 # @webspatial/vite-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- 073c3cd: refactor to use shared pkg
+- d4c1b6a: update logic about outDir and base
+- Updated dependencies [073c3cd]
+  - @webspatial/shared@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
