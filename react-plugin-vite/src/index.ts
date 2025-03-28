@@ -1,5 +1,5 @@
 import { PluginOption } from 'vite'
-import { AVP, getEnv, getFinalBase, getFinalOutdir } from './shared'
+import { AVP, getEnv, getFinalBase, getFinalOutdir } from '@webspatial/shared'
 interface WebSpatialOptions {
   // XR_ENV
   mode?: 'avp'
@@ -23,20 +23,20 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
           define: {},
           resolve: {
             alias: {
-              '@webspatial/react-sdk/jsx-dev-runtime':
-                '@webspatial/react-sdk/jsx-dev-runtime',
-              '@webspatial/react-sdk/jsx-runtime':
-                '@webspatial/react-sdk/jsx-runtime',
+              // '@webspatial/react-sdk/jsx-dev-runtime':
+              //   '@webspatial/react-sdk/jsx-dev-runtime',
+              // '@webspatial/react-sdk/jsx-runtime':
+              //   '@webspatial/react-sdk/jsx-runtime',
             },
           },
         }
         config.base = finalBase
         if (mode === AVP) {
           config.define['window.XR_ENV'] = "'avp'"
-          config.resolve.alias['@webspatial/react-sdk'] =
+          config.resolve.alias['@webspatial/react-sdk$'] =
             '@webspatial/react-sdk/default'
         } else {
-          config.resolve.alias['@webspatial/react-sdk'] =
+          config.resolve.alias['@webspatial/react-sdk$'] =
             '@webspatial/react-sdk/web'
         }
 

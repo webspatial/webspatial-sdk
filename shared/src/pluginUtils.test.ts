@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
-import { getEnv, AVP, getFinalBase, getFinalOutdir } from './shared'
+import { getEnv, AVP, getFinalBase, getFinalOutdir } from './pluginUtils'
 
 describe('Environment Utility Functions', () => {
   describe('AVP Constant', () => {
@@ -52,6 +52,8 @@ describe('Environment Utility Functions', () => {
       )
     })
 
+    // web
+
     test('should return userBase when mode is not "avp" (web version)', () => {
       expect(getFinalBase('/web/path', undefined)).toBe('/web/path')
       expect(getFinalBase('/web/path', undefined, '/ignore/this')).toBe(
@@ -62,6 +64,16 @@ describe('Environment Utility Functions', () => {
     test('should return undefined when mode is undefined and userBase is undefined', () => {
       expect(getFinalBase(undefined, undefined)).toBeUndefined()
     })
+
+    // avp
+
+    test('should return webspatial/avp when mode is avp and userBase is undefined', () => {
+      expect(getFinalBase(undefined, 'avp')).toBe('webspatial/avp')
+    })
+
+    test('should return webspatial/avp when mode is avp and userBase is undefined', () => {
+      expect(getFinalBase(undefined, 'avp', 'base')).toBe('base')
+    })
   })
 
   describe('getFinalOutdir()', () => {
@@ -69,8 +81,8 @@ describe('Environment Utility Functions', () => {
       expect(getFinalOutdir('dist', 'avp', 'plugin')).toBe('dist/plugin')
     })
 
-    test('should return userOutDir with "undefined" when mode is "avp" but pluginOutputDir is missing', () => {
-      expect(getFinalOutdir('dist', 'avp')).toBe('dist/undefined')
+    test('should return userOutDir with "/webspatial/avp" when mode is "avp" but pluginOutputDir is missing', () => {
+      expect(getFinalOutdir('dist', 'avp')).toBe('dist/webspatial/avp')
       // Note: This might be unexpected behavior, consider adding validation
     })
 

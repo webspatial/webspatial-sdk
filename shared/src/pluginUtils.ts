@@ -4,14 +4,14 @@ function getEnv(): ModeKind {
   return env === 'avp' ? 'avp' : undefined
 }
 
-type ModeKind = 'avp' | undefined
+export type ModeKind = 'avp' | undefined
 
 export { getEnv, AVP }
 
 export function getFinalBase(
   userBase: string | undefined,
   mode: ModeKind,
-  outputDir: string = '/webspatial/avp/',
+  outputDir: string = 'webspatial/avp',
 ) {
   if (mode === 'avp') {
     if (userBase !== undefined) {
@@ -28,7 +28,7 @@ export function getFinalBase(
 export function getFinalOutdir(
   userOutDir: string | undefined = 'dist',
   mode: ModeKind,
-  pluginOutputDir?: string,
+  pluginOutputDir: string = 'webspatial/avp',
 ) {
   if (mode === 'avp') {
     return `${userOutDir}/${pluginOutputDir}`
