@@ -51,11 +51,13 @@
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "@changesets/cli": "^2.28.1",
+    "@vitest/coverage-v8": "^3.0.9",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "simple-git-hooks": "^2.11.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.9"
   },
   "packageManager": "pnpm@9.0.0"
 }

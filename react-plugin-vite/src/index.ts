@@ -1,20 +1,24 @@
 import { PluginOption } from 'vite'
-import { AVP, getEnv } from './shared'
+import { AVP, getEnv, getFinalBase, getFinalOutdir } from './shared'
 interface WebSpatialOptions {
   // XR_ENV
   mode?: 'avp'
 
   // base path
-  base?: string
+  outputDir?: string
 }
 export default function (options: WebSpatialOptions = {}): PluginOption[] {
   let mode = options?.mode ?? getEnv()
-  let base = options?.base ?? '/'
+  let outputDir = options?.outputDir
+  console.log('🚀 ~ mode:', mode)
   return [
     {
       name: 'vite-plugin-webspatial-serve',
       apply: 'serve',
-      config: () => {
+      config: userCfg => {
+        const userBase = userCfg.base
+        const finalBase = getFinalBase(userBase, mode, outputDir)
+        console.log('🚀 ~ finalBase:', finalBase)
         const config: any = {
           define: {},
           resolve: {
@@ -26,9 +30,8 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
             },
           },
         }
-
+        config.base = finalBase
         if (mode === AVP) {
-          config.base = '/webspatial/avp/'
           config.define['window.XR_ENV'] = "'avp'"
           config.resolve.alias['@webspatial/react-sdk'] =
             '@webspatial/react-sdk/default'
@@ -54,12 +57,15 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
       name: 'react-vite-plugin-for-webspatial',
       apply: 'build',
       config: (config, { command }) => {
+        const userOutDir = config.build?.outDir
         const xrEnv = getEnv()
         const isAVP = xrEnv === AVP
-        let isBaseEndWithSlash = base.endsWith('/')
-        let separator = isBaseEndWithSlash ? '' : '/'
+        const userBase = config.base
+        const finalBase = getFinalBase(userBase, mode, outputDir)
+        const finalOutdir = getFinalOutdir(userOutDir, xrEnv, outputDir)
+
         return {
-          base: isAVP ? base + separator + 'webspatial/avp' : base,
+          base: finalBase,
           resolve: {
             alias: [
               {
@@ -77,14 +83,12 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
             'import.meta.env.XR_ENV': JSON.stringify(xrEnv),
           },
           build: {
-            // Set output directory for AVP version to /dist/spatial/avp
-            outDir: isAVP ? 'dist/webspatial/avp' : 'dist',
+            // Set output directory
+            outDir: finalOutdir,
             // Do not empty the output directory for AVP build
             emptyOutDir: xrEnv !== AVP,
             // Remove custom rollup naming logic; use Vite defaults
-            rollupOptions: {},
           },
-          optimizeDeps: {},
         }
       },
     },
