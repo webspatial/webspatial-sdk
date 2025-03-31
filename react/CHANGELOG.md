@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.6
+
+### Patch Changes
+
+- df94278: bugfix: use useState instead of useRef
+  - @webspatial/core-sdk@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes
