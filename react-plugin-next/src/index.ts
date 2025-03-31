@@ -1,9 +1,18 @@
 // nextjs-webspatial-plugin.ts
 import type { Configuration as WebpackConfig } from 'webpack'
-import { AVP, getEnv } from './shared'
+import {
+  addFirstSlash,
+  AVP,
+  getDefineByMode,
+  getEnv,
+  getFinalBase,
+  getFinalOutdir,
+  getReactSDKAliasByMode,
+} from '@webspatial/shared'
 
 interface WebSpatialOptions {
   mode?: 'avp'
+  outputDir?: string
 }
 
 export default function withWebspatial<
@@ -14,6 +23,7 @@ export default function withWebspatial<
   } = {},
 >(options: WebSpatialOptions = {}) {
   const mode = options.mode ?? getEnv()
+  const outputDir = options.outputDir
   console.log('🚀 ~ mode:', mode)
 
   return (
@@ -24,7 +34,13 @@ export default function withWebspatial<
     basePath: string
   } => {
     const distDir = config?.distDir ?? '.next'
-    const basePath = config?.basePath ?? ''
+    const basePath = config?.basePath
+
+    const finalBasePath = addFirstSlash(getFinalBase(basePath, mode, outputDir))
+    console.log('🚀 ~ finalBasePath:', finalBasePath)
+
+    const finalDistDir = getFinalOutdir(distDir, mode, outputDir)
+    console.log('🚀 ~ finalDistDir:', finalDistDir)
 
     const finalConfig = {
       ...config,
@@ -35,12 +51,10 @@ export default function withWebspatial<
         }
         modifiedConfig.plugins = modifiedConfig.plugins || []
 
-        // env
-        const xrEnv = mode === AVP ? AVP : ''
+        // env define
         modifiedConfig.plugins.push(
           new (require('webpack').DefinePlugin)({
-            'process.env.XR_ENV': JSON.stringify(xrEnv),
-            'window.XR_ENV': JSON.stringify(xrEnv),
+            ...getDefineByMode(mode),
           }),
         )
 
@@ -51,15 +65,12 @@ export default function withWebspatial<
         modifiedConfig.resolve = modifiedConfig.resolve || {}
         modifiedConfig.resolve.alias = {
           ...(modifiedConfig.resolve.alias || {}),
-          '@webspatial/react-sdk$':
-            mode === AVP
-              ? '@webspatial/react-sdk/default'
-              : '@webspatial/react-sdk/web',
+          ...getReactSDKAliasByMode(mode),
         }
         return modifiedConfig
       },
-      distDir: mode === AVP ? `${distDir}/webspatial/avp` : distDir,
-      basePath: mode === AVP ? `${basePath}/webspatial/avp` : basePath,
+      distDir: finalDistDir,
+      basePath: finalBasePath,
     }
 
     return finalConfig as T & {
