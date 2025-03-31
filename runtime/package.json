@@ -8,8 +8,8 @@
   "sideEffects": false,
   "scripts": {
     "test": "tsc -p ./tsconfig.json",
-    "build": "tsc",
-    "start": "tsc --watch",
+    "build": "tsup",
+    "start": "tsup --watch",
     "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialRuntime",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
@@ -25,9 +25,10 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "tsup": "^8.4.0",
     "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.2"
+    "typedoc-plugin-markdown": "^4.2.2",
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "loglevel": "^1.9.2"
