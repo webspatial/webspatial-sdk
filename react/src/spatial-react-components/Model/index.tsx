@@ -125,6 +125,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   )
   const isWebEnv = !getSession()
   if (isWebEnv) {
+    const loadFailed = useRef(false)
     useEffect(() => {
       if (gltfSourceURL == '') {
         console.warn('Unable to display model, no gltf/glb source provided')
@@ -133,6 +134,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
             target: { ready: false, currentSrc: gltfSourceURL } as any,
           })
         }
+        loadFailed.current = true
       }
     }, [])
 
@@ -159,6 +161,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               target: { ready: false, currentSrc: gltfSourceURL } as any,
             })
           }
+          loadFailed.current = true
         }
       }, 500)
     }, [])
@@ -175,6 +178,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               target: { ready: false, currentSrc: gltfSourceURL } as any,
             })
           }
+          loadFailed.current = true
         }
       })
 
@@ -184,6 +188,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
             target: { ready: true, currentSrc: gltfSourceURL } as any,
           })
         }
+        loadFailed.current = false
       })
 
       myModelViewer.current!.addEventListener('pointerdown', event => {
@@ -249,29 +254,35 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     return (
       <div ref={ref} className={className} style={style}>
         {modelViewerExists ? (
-          <model-viewer
-            ref={myModelViewer}
-            style={
-              {
-                width: '100%',
-                height: '100%',
-              } as any
-            }
-            src={gltfSourceURL}
-            camera-controls
-            touch-action="pan-y"
-            poster={props.poster}
-          />
+          <>
+            <model-viewer
+              ref={myModelViewer}
+              style={
+                {
+                  display: loadFailed.current ? 'none' : '',
+                  width: '100%',
+                  height: '100%',
+                } as any
+              }
+              src={gltfSourceURL}
+              camera-controls
+              touch-action="pan-y"
+              poster={props.poster}
+            ></model-viewer>
+            {loadFailed.current ? <>{placeHolder}</> : <> </>}
+          </>
         ) : (
           <>
             {props.poster ? (
               <img
                 className={className}
-                style={Object.assign(style, { objectFit: 'contain' })}
+                style={Object.assign(structuredClone(style), {
+                  objectFit: 'contain',
+                })}
                 src={props.poster}
               ></img>
             ) : (
-              <></>
+              <>{placeHolder}</>
             )}
           </>
         )}
