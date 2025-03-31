@@ -178,7 +178,7 @@ struct SpatialWebViewUI: View {
             .hidden(!ent.visible)
             .ornament(attachmentAnchor: .scene(.bottomTrailing), contentAlignment: .bottomTrailing) {
                 if wv.isRootWebview() {
-                    NavView(swc: wv)
+                    NavView(swc: wv, navInfo: wv.navInfo)
                 }
             }
         }
