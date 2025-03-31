@@ -111,7 +111,7 @@ function App() {
 
   // Test background-material
   // Store the value of backgroundMaterial
-  const [backgroundMaterial, setBackgroundMaterial] = useState(' ') // Can directly modify the material for testing
+  const [backgroundMaterial, setBackgroundMaterial] = useState('none') // Can directly modify the material for testing
 
   const handleBackgroundMaterialChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -227,9 +227,9 @@ function App() {
     if (!ref.current) return
     console.log(zIndex, ref.current)
     // ref.current.style.zIndex = zIndex.toString() // Method 1
-    ref.current.style.setProperty('z-Index', `${zIndex}`) // Method 2, technical documentation error
+    ref.current.style.setProperty('--xr-z-index', `${zIndex}`) // Method 2, technical documentation error
     // Get the current zIndex value
-    const currentZIndex = ref.current.style.getPropertyValue('z-Index')
+    const currentZIndex = ref.current.style.getPropertyValue('--xr-z-index')
     console.log('Get zIndex:', currentZIndex)
     updateElementState(ref)
   }
@@ -240,8 +240,8 @@ function App() {
   const setZIndexValue1 = () => {
     if (!ref1.current) return
     console.log(zIndex1, ref1.current)
-    // ref1.current.style.setProperty('z-Index',`${zIndex1}`)
-    ref1.current.style.zIndex = zIndex1.toString()
+    ref1.current.style.setProperty('--xr-z-index', `${zIndex1}`)
+    // ref1.current.style.zIndex = zIndex1.toString()
     updateElementState1(ref1)
   }
   const handleZIndex1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,7 +252,7 @@ function App() {
   const removeZIndex = () => {
     if (ref.current) {
       console.log('Remove zIndex', ref.current)
-      ref.current.style.removeProperty('z-Index')
+      ref.current.style.removeProperty('--xr-z-index')
       updateElementState(ref)
     }
   }
@@ -260,7 +260,7 @@ function App() {
   const removeZIndex1 = () => {
     if (ref1.current) {
       console.log('Remove zIndex1', ref1.current)
-      ref1.current.style.removeProperty('z-Index')
+      ref1.current.style.removeProperty('--xr-z-index')
       updateElementState1(ref1)
     }
   }
@@ -477,7 +477,6 @@ function App() {
                 className="p-2  bg-purple-50 text-black rounded-lg transition-colors"
                 style={{ flex: 1 }}
               >
-                <option value="default">Default</option>
                 <option value="none">None</option>
                 <option value="thin">Thin</option>
                 <option value="regular">Regular</option>

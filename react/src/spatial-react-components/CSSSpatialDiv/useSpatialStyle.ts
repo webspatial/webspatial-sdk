@@ -67,6 +67,17 @@ function parseBack(computedStyle: CSSStyleDeclaration) {
   return new Matrix4().makeTranslation(0, 0, back || 0)
 }
 
+function parseXRZIndex(computedStyle: CSSStyleDeclaration) {
+  let xrZIndexProperty = computedStyle.getPropertyValue(
+    SpatialCustomVars.xrZIndex,
+  )
+  let xrZIndex: number = 0
+  try {
+    xrZIndex = parseFloat(xrZIndexProperty)
+  } catch (error) {}
+  return xrZIndex
+}
+
 function parseSpatialStyle(node: HTMLElement) {
   const computedStyle = getComputedStyle(node)
 
@@ -85,8 +96,8 @@ function parseSpatialStyle(node: HTMLElement) {
 
   resultMatrix.decompose(position, quaternion, scale)
 
-  // parse zIndex
-  const zIndex = parseFloat(computedStyle.getPropertyValue('z-index')) || 0
+  // parse xrZIndex
+  const zIndex = parseXRZIndex(computedStyle)
 
   // parse visibility
   const visible = computedStyle.getPropertyValue('visibility') === 'visible'
