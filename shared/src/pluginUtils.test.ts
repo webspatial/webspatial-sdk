@@ -6,6 +6,7 @@ import {
   getFinalOutdir,
   getReactSDKAliasByMode,
   removeFirstSlash,
+  addFirstSlash,
 } from './pluginUtils'
 
 describe('Environment Utility Functions', () => {
@@ -129,6 +130,221 @@ describe('Environment Utility Functions', () => {
     test('not start with /', () => {
       expect(removeFirstSlash('mybase')).toBe('mybase')
       expect(removeFirstSlash('my/base/')).toBe('my/base/')
+    })
+  })
+
+  describe('addFirstSlash func', () => {
+    test('empty case', () => {
+      expect(addFirstSlash()).toBe('')
+      expect(addFirstSlash('')).toBe('')
+    })
+
+    test('start with /', () => {
+      expect(addFirstSlash('/mybase')).toBe('/mybase')
+      expect(addFirstSlash('/my/base/')).toBe('/my/base/')
+    })
+
+    test('not start with /', () => {
+      expect(addFirstSlash('mybase')).toBe('/mybase')
+      expect(addFirstSlash('my/base/')).toBe('/my/base/')
+    })
+  })
+
+  const testCasesForWeb = [
+    {
+      id: 1,
+      input: {
+        mode: 'web',
+        base: undefined,
+        outDir: undefined,
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: undefined,
+        finalOutDir: 'dist',
+      },
+    },
+    {
+      id: 2,
+      input: {
+        mode: 'web',
+        base: 'mybase',
+        outDir: undefined,
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: 'mybase',
+        finalOutDir: 'dist',
+      },
+    },
+    {
+      id: 3,
+      input: {
+        mode: 'web',
+        base: undefined,
+        outDir: 'myDist',
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: undefined,
+        finalOutDir: 'myDist',
+      },
+    },
+    {
+      id: 4,
+      input: {
+        mode: 'web',
+        base: undefined,
+        outDir: undefined,
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: undefined,
+        finalOutDir: 'dist',
+      },
+    },
+    {
+      id: 5,
+      input: {
+        mode: 'web',
+        base: undefined,
+        outDir: 'myDist',
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: undefined,
+        finalOutDir: 'myDist',
+      },
+    },
+    {
+      id: 6,
+      input: {
+        mode: 'web',
+        base: 'mybase',
+        outDir: 'myDist',
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: 'mybase',
+        finalOutDir: 'myDist',
+      },
+    },
+  ]
+
+  describe('test for web should work', () => {
+    test.each(testCasesForWeb)('input：%j', ({ input, result }) => {
+      const actualBase = getFinalBase(
+        input.base,
+        input.mode as any,
+        input.outputDir,
+      )
+      expect(actualBase).toBe(result.finalBase)
+
+      const actualOutput = getFinalOutdir(
+        input.outDir,
+        input.mode as any,
+        input.outputDir,
+      )
+      expect(actualOutput).toBe(result.finalOutDir)
+    })
+  })
+
+  const testCasesForAVP = [
+    {
+      id: 1,
+      input: {
+        mode: 'avp',
+        base: undefined,
+        outDir: undefined,
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: '/webspatial/avp',
+        finalOutDir: 'dist/webspatial/avp',
+      },
+    },
+    {
+      id: 2,
+      input: {
+        mode: 'avp',
+        base: 'mybase',
+        outDir: undefined,
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: 'mybase',
+        finalOutDir: 'dist/webspatial/avp',
+      },
+    },
+    {
+      id: 3,
+      input: {
+        mode: 'avp',
+        base: undefined,
+        outDir: 'myDist',
+        outputDir: undefined,
+      },
+      result: {
+        finalBase: '/webspatial/avp',
+        finalOutDir: 'myDist/webspatial/avp',
+      },
+    },
+    {
+      id: 4,
+      input: {
+        mode: 'avp',
+        base: undefined,
+        outDir: undefined,
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: 'myOutput',
+        finalOutDir: 'dist/myOutput',
+      },
+    },
+    {
+      id: 5,
+      input: {
+        mode: 'avp',
+        base: undefined,
+        outDir: 'myDist',
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: 'myOutput',
+        finalOutDir: 'myDist/myOutput',
+      },
+    },
+    {
+      id: 6,
+      input: {
+        mode: 'avp',
+        base: 'mybase',
+        outDir: 'myDist',
+        outputDir: 'myOutput',
+      },
+      result: {
+        finalBase: 'mybase',
+        finalOutDir: 'myDist/myOutput',
+      },
+    },
+  ]
+
+  describe('test for avp should work', () => {
+    test.each(testCasesForAVP)('input：%j', ({ input, result }) => {
+      const actualBase = getFinalBase(
+        input.base,
+        input.mode as any,
+        input.outputDir,
+      )
+      expect(actualBase).toBe(result.finalBase)
+
+      const actualOutput = getFinalOutdir(
+        input.outDir,
+        input.mode as any,
+        input.outputDir,
+      )
+      expect(actualOutput).toBe(result.finalOutDir)
     })
   })
 })

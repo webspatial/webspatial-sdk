@@ -1,4 +1,4 @@
-# @webspatial/react-plugin-rsbuild
+# @webspatial/rsbuild-plugin
 
 ## 0.1.0
 

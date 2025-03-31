@@ -95,6 +95,15 @@ export namespace WebSpatialJSX {
     extends ReactJSXIntrinsicClassAttributes<T> {}
 
   export type IntrinsicElements = {
-    [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K]
+    [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
+      style?: React.CSSProperties
+    }
+  }
+}
+
+declare module 'react' {
+  interface CSSProperties {
+    '--xr-background-material'?: string
+    '--xr-back'?: number | string
   }
 }
