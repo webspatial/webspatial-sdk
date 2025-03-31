@@ -11,13 +11,13 @@ export { getEnv, AVP }
 export function getFinalBase(
   userBase: string | undefined,
   mode: ModeKind,
-  outputDir: string = '/webspatial/avp',
+  pluginOutputDir: string = '/webspatial/avp',
 ) {
   if (mode === 'avp') {
     if (userBase !== undefined) {
       return userBase
     } else {
-      return outputDir
+      return pluginOutputDir
     }
   }
 
@@ -39,11 +39,17 @@ export function getFinalOutdir(
   return userOutDir
 }
 
+export function addFirstSlash(input?: string) {
+  if (input === undefined || input.length === 0) return ''
+  if (input[0] !== '/') return '/' + input
+  return input
+}
+
 export function removeFirstSlash(input?: string) {
   if (input === undefined) return ''
 
   let idx = 0
-  while (input.length > 0 && input[idx] === '/') {
+  while (idx < input.length && input[idx] === '/') {
     idx += 1
   }
   return input.slice(idx)
