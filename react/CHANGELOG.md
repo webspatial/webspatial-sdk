@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.5
+
+### Patch Changes
+
+- 3b65e89: fix placeholder not displaying when using the model-viewer fallback
+  - @webspatial/core-sdk@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes
