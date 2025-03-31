@@ -39,13 +39,19 @@ export function useHijackSpatialDivRef(
                   } else if (property === 'transform') {
                     ref.current?.style.setProperty(property, value as string)
                     return true
+                  } else if (property === SpatialCustomVars.xrZIndex) {
+                    ref.current?.style.setProperty(
+                      SpatialCustomVars.xrZIndex,
+                      value as string,
+                    )
                   }
                 } else if (prop === 'removeProperty') {
                   const [property] = args
                   if (
                     property === SpatialCustomVars.backgroundMaterial ||
                     property === SpatialCustomVars.back ||
-                    property === 'transform'
+                    property === 'transform' ||
+                    property === SpatialCustomVars.xrZIndex
                   ) {
                     ref.current?.style.removeProperty(property)
                   }
@@ -70,7 +76,7 @@ export function useHijackSpatialDivRef(
             }
 
             if (prop === 'cssText') {
-              // todo: concat target cssText with ref.current.style's spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+              // todo: concat target cssText with ref.current.style's spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
             }
 
             return Reflect.get(target, prop)
@@ -86,6 +92,11 @@ export function useHijackSpatialDivRef(
                 SpatialCustomVars.back,
                 value as string,
               )
+            } else if (property === SpatialCustomVars.xrZIndex) {
+              ref.current?.style.setProperty(
+                SpatialCustomVars.xrZIndex,
+                value as string,
+              )
             } else if (property === 'transform') {
               ref.current?.style.setProperty(property, value as string)
               return true
@@ -93,12 +104,13 @@ export function useHijackSpatialDivRef(
               ref.current?.style.setProperty(property, value as string)
               return true
             } else if (property === 'cssText') {
-              // parse cssText, filter out spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+              // parse cssText, filter out spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
               const toFilteredCSSProperties = [
                 'transform',
                 'visibility',
                 SpatialCustomVars.back,
                 SpatialCustomVars.backgroundMaterial,
+                SpatialCustomVars.xrZIndex,
               ]
               const { extractedValues, filteredCssText } =
                 extractAndRemoveCustomProperties(
