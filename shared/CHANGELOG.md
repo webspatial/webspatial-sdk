@@ -1,5 +1,11 @@
 # @webspatial/shared
 
+## 0.1.3
+
+### Patch Changes
+
+- 9ea0baf: add `__XR_ENV_BASE__` and fix preview outDir issue
+
 ## 0.1.2
 
 ### Patch Changes
