@@ -18,6 +18,9 @@ struct OptionalClip<Content: View>: View {
     }
 }
 
+// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
+let zOrderBias = 0.001
+
 struct SpatialWebViewUI: View {
     @Environment(SpatialEntity.self) var ent: SpatialEntity
     var body: some View {
@@ -38,7 +41,7 @@ struct SpatialWebViewUI: View {
                                         let view = childWindowcomponent
                                         let x = CGFloat(e.modelEntity.position.x)
                                         let y = CGFloat(e.modelEntity.position.y - (view.scrollWithParent ? parentYOffset : 0))
-                                        let z = CGFloat(e.modelEntity.position.z)
+                                        let z = CGFloat(e.modelEntity.position.z) + (e.zIndex * zOrderBias)
                                         let width = CGFloat(view.resolutionX)
                                         let height = CGFloat(view.resolutionY)
                                         let anchor = view.rotationAnchor
@@ -66,7 +69,6 @@ struct SpatialWebViewUI: View {
 
                                             .position(x: x, y: y)
                                             .offset(z: z)
-                                            .zIndex(e.zIndex)
                                             .gesture(
                                                 DragGesture()
                                                     .onChanged { gesture in

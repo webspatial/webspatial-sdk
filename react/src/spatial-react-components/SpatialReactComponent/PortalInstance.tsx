@@ -208,7 +208,7 @@ function useSyncSpatialProps(
 ) {
   let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
   let {
-    position = { x: 0, y: 0, z: 1 },
+    position = { x: 0, y: 0, z: 0 },
     rotation = { x: 0, y: 0, z: 0, w: 1 },
     scale = { x: 1, y: 1, z: 1 },
     material = { type: 'none' },
