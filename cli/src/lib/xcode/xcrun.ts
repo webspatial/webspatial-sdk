@@ -7,6 +7,7 @@ import {
 import { join } from 'path'
 import * as fs from 'fs'
 import { XcodebuildCMD } from './xcodebuild'
+import { clearDir } from '../resource/file'
 
 export default class Xcrun {
   public static async validate(
@@ -89,6 +90,7 @@ export default class Xcrun {
     if (!fs.existsSync(testPath)) {
       fs.mkdirSync(testPath, { recursive: true })
     }
+    clearDir(testPath)
     const buildCMD =
       new XcodebuildCMD().project(projectFile).line +
       ` build -scheme web-spatial -destination 'platform=visionOS Simulator,id=${device.deviceId}' -derivedDataPath ${testPath}`

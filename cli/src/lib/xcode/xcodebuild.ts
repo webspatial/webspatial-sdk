@@ -75,13 +75,12 @@ export default class Xcodebuild {
           )
           resString = outRes.toString()
           if (resString.indexOf('EXPORT SUCCEEDED') > 0) {
-            if (exportPath) {
-              const path = join(process.cwd(), exportPath)
-              if (!fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true })
-              }
-              copyDir(PROJECT_EXPORT_DIRECTORY, path)
+            const useExportPath = exportPath ?? './build'
+            const path = join(process.cwd(), useExportPath)
+            if (!fs.existsSync(path)) {
+              fs.mkdirSync(path, { recursive: true })
             }
+            copyDir(PROJECT_EXPORT_DIRECTORY, path)
             console.log(
               '------------------- EXPORT SUCCEEDED -------------------',
             )
