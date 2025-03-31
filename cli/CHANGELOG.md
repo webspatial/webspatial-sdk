@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.4
+
+### Patch Changes
+
+- b1f60f7: Fix run command bug and provides the default export path
+  - @webspatial/platform-visionos@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

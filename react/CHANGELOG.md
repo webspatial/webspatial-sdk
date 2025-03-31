@@ -1,5 +1,13 @@
 # @webspatial/react-sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- 77c2df3: support --xr-z-index
+- 243d190: 1. portalinstance body's size should be the size of children
+  - @webspatial/core-sdk@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
