@@ -7,6 +7,27 @@ enum BackgroundMaterial: String, Codable {
     case ThickMaterial = "thick"
     case RegularMaterial = "regular"
     case ThinMaterial = "thin"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        switch rawValue {
+        case "none":
+            self = .None
+        case "transparent":
+            self = .Transparent
+        case "translucent":
+            self = .GlassMaterial
+        case "thick":
+            self = .ThickMaterial
+        case "regular":
+            self = .RegularMaterial
+        case "thin":
+            self = .ThinMaterial
+        default:
+            self = .None
+        }
+    }
 }
 
 struct CornerRadius: Codable {

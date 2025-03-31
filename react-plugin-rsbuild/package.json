@@ -1,5 +1,5 @@
 {
-  "name": "@webspatial/react-plugin-rsbuild",
+  "name": "@webspatial/rsbuild-plugin",
   "version": "0.1.0",
   "description": "",
   "main": "./dist/index.js",
