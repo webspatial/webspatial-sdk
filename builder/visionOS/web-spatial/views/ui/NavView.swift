@@ -3,6 +3,7 @@ import WebKit
 
 struct NavView: View {
     @State var swc: SpatialWindowComponent?
+    @StateObject var navInfo: NavInfo
     @State var showUrl: Bool = true
     @State private var showCopyTip = false
     @State private var navWidth: CGFloat = 0
@@ -52,7 +53,7 @@ struct NavView: View {
                 HStack(spacing: 5) {
                     if showUrl {
                         Text(
-                            swc?.getURL()?.absoluteString ?? "http://localhost:5173/"
+                            navInfo.url
                         )
                         .padding()
                         .lineLimit(1)
@@ -64,7 +65,7 @@ struct NavView: View {
                             }
                             return AnyView(EmptyView())
                         })
-                        .frame(width: texWidth == 0 ? .infinity : texWidth)
+                        .frame(width: .maximum(300, texWidth))
                         Button(action: {
                             UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
                             showCopyTip = true
