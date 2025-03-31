@@ -39,9 +39,11 @@ export function useHijackSpatialDivRef(
                   } else if (property === 'transform') {
                     ref.current?.style.setProperty(property, value as string)
                     return true
-                  } else if (property === 'z-index') {
-                    ref.current!.style.zIndex = value as string
-                    return true
+                  } else if (property === SpatialCustomVars.xrZIndex) {
+                    ref.current?.style.setProperty(
+                      SpatialCustomVars.xrZIndex,
+                      value as string,
+                    )
                   }
                 } else if (prop === 'removeProperty') {
                   const [property] = args
@@ -49,7 +51,7 @@ export function useHijackSpatialDivRef(
                     property === SpatialCustomVars.backgroundMaterial ||
                     property === SpatialCustomVars.back ||
                     property === 'transform' ||
-                    property === 'z-index'
+                    property === SpatialCustomVars.xrZIndex
                   ) {
                     ref.current?.style.removeProperty(property)
                   }
@@ -69,16 +71,12 @@ export function useHijackSpatialDivRef(
               return ref.current?.style[prop]
             }
 
-            if (prop === 'zIndex') {
-              return ref.current?.style.zIndex
-            }
-
             if (prop === 'visibility') {
               return ref.current?.style.visibility
             }
 
             if (prop === 'cssText') {
-              // todo: concat target cssText with ref.current.style's spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+              // todo: concat target cssText with ref.current.style's spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
             }
 
             return Reflect.get(target, prop)
@@ -94,22 +92,25 @@ export function useHijackSpatialDivRef(
                 SpatialCustomVars.back,
                 value as string,
               )
+            } else if (property === SpatialCustomVars.xrZIndex) {
+              ref.current?.style.setProperty(
+                SpatialCustomVars.xrZIndex,
+                value as string,
+              )
             } else if (property === 'transform') {
               ref.current?.style.setProperty(property, value as string)
               return true
             } else if (property === 'visibility') {
               ref.current?.style.setProperty(property, value as string)
               return true
-            } else if (property === 'z-index' || property === 'zIndex') {
-              ref.current!.style.zIndex = value as string
-              return true
             } else if (property === 'cssText') {
-              // parse cssText, filter out spatialStyle like back/transform/visibility/zIndex/backgroundMaterial
+              // parse cssText, filter out spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
               const toFilteredCSSProperties = [
                 'transform',
                 'visibility',
                 SpatialCustomVars.back,
                 SpatialCustomVars.backgroundMaterial,
+                SpatialCustomVars.xrZIndex,
               ]
               const { extractedValues, filteredCssText } =
                 extractAndRemoveCustomProperties(
