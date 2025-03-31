@@ -129,6 +129,7 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                 // backward/forward
                 webViewRef?.didNavBackForward()
             }
+            webViewRef?.navInfo.url = resource
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)

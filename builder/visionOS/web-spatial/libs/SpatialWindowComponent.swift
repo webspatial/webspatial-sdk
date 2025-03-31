@@ -18,6 +18,10 @@ struct LoadingStyles {
     var backgroundMaterial: BackgroundMaterial = .None
 }
 
+class NavInfo: ObservableObject {
+    @Published var url: String = ""
+}
+
 @Observable
 class SpatialWindowComponent: SpatialComponent {
     override func inspect() -> [String: Any] {
@@ -66,6 +70,7 @@ class SpatialWindowComponent: SpatialComponent {
     var parentWindowContainerID: String
     var childWindowContainers = [String: WindowContainerData]()
     var spawnedNativeWebviews = [String: WebViewNative]()
+    var navInfo = NavInfo()
 
     // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var childResources = [String: SpatialObject]()
