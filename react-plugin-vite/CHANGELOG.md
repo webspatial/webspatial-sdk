@@ -1,5 +1,13 @@
 # @webspatial/vite-plugin
 
+## 0.1.3
+
+### Patch Changes
+
+- 9ea0baf: add `__XR_ENV_BASE__` and fix preview outDir issue
+- Updated dependencies [9ea0baf]
+  - @webspatial/shared@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
