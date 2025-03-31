@@ -76,3 +76,9 @@ export function getDefineByMode(mode?: ModeKind) {
     'import.meta.env.XR_ENV': undefined,
   }
 }
+
+export function getDefineXrEnvBase(finalBase?: string) {
+  return {
+    __XR_ENV_BASE__: JSON.stringify(finalBase),
+  }
+}
