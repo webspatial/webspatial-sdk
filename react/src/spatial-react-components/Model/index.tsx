@@ -22,6 +22,18 @@ import { getAbsoluteURL } from '../Model3D/utils'
 
 import { ModelViewerElement } from '@google/model-viewer'
 
+{
+  // Set a default size for the model tag
+  // This is done with css to allow it to be overwritten by className/css/style props
+  const styleElement = document.createElement('style')
+  styleElement.id = '__custom-class-model-webspatial'
+  styleElement.innerHTML = `.__custom-class-model-webspatial { width: 300px; height: 300px; }`
+  if (document.getElementById('__custom-class-model-webspatial')) {
+    console.warn('__custom-class-model-webspatial already exists')
+  }
+  document.head.prepend(styleElement)
+}
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -252,7 +264,11 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     }, [props.contentMode, props.resizable, props.aspectRatio])
 
     return (
-      <div ref={ref} className={className} style={style}>
+      <div
+        ref={ref}
+        className={'__custom-class-model-webspatial ' + className}
+        style={style}
+      >
         {modelViewerExists ? (
           <>
             <model-viewer
