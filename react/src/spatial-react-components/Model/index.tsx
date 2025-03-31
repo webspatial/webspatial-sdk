@@ -125,7 +125,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   )
   const isWebEnv = !getSession()
   if (isWebEnv) {
-    const loadFailed = useRef(false)
+    const [loadFailed, setLoadFailed] = useState(false)
     useEffect(() => {
       if (gltfSourceURL == '') {
         console.warn('Unable to display model, no gltf/glb source provided')
@@ -134,7 +134,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
             target: { ready: false, currentSrc: gltfSourceURL } as any,
           })
         }
-        loadFailed.current = true
+        setLoadFailed(true)
       }
     }, [])
 
@@ -161,7 +161,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               target: { ready: false, currentSrc: gltfSourceURL } as any,
             })
           }
-          loadFailed.current = true
+          setLoadFailed(true)
         }
       }, 500)
     }, [])
@@ -178,7 +178,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               target: { ready: false, currentSrc: gltfSourceURL } as any,
             })
           }
-          loadFailed.current = true
+          setLoadFailed(true)
         }
       })
 
@@ -188,7 +188,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
             target: { ready: true, currentSrc: gltfSourceURL } as any,
           })
         }
-        loadFailed.current = false
+        setLoadFailed(false)
       })
 
       myModelViewer.current!.addEventListener('pointerdown', event => {
@@ -259,7 +259,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               ref={myModelViewer}
               style={
                 {
-                  display: loadFailed.current ? 'none' : '',
+                  display: loadFailed ? 'none' : '',
                   width: '100%',
                   height: '100%',
                 } as any
@@ -269,7 +269,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
               touch-action="pan-y"
               poster={props.poster}
             ></model-viewer>
-            {loadFailed.current ? <>{placeHolder}</> : <> </>}
+            {loadFailed ? <>{placeHolder}</> : <> </>}
           </>
         ) : (
           <>
