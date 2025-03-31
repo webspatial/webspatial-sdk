@@ -2,6 +2,7 @@ import { PluginOption } from 'vite'
 import {
   AVP,
   getDefineByMode,
+  getDefineXrEnvBase,
   getEnv,
   getFinalBase,
   getFinalOutdir,
@@ -26,26 +27,27 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         const userBase = userCfg.base
         const finalBase = getFinalBase(userBase, mode, outputDir)
         console.log('🚀 ~ finalBase:', finalBase)
+        const userOutDir = userCfg.build?.outDir
+        const finalOutdir = getFinalOutdir(userOutDir, mode, outputDir)
         const config: any = {
           define: {},
           resolve: {
             alias: {},
           },
+          build: {
+            // Set output directory
+            outDir: finalOutdir,
+          },
         }
         config.base = finalBase
         config.resolve.alias = getReactSDKAliasByMode(mode)
-        config.define = getDefineByMode(mode)
+        config.define = {
+          // Define environment variables for both Node and browser
+          ...getDefineByMode(mode),
+          ...getDefineXrEnvBase(finalBase),
+        }
 
         return config
-      },
-    },
-    {
-      name: 'inject-xr-env',
-      apply: 'serve',
-      transformIndexHtml(html, { originalUrl }) {
-        const xrEnv = originalUrl?.includes('/webspatial/avp/') ? AVP : ''
-        const injectedScript = `<script>window.XR_ENV = ${JSON.stringify(xrEnv)}</script>`
-        return html.replace('<head>', `<head>${injectedScript}`)
       },
     },
 
@@ -69,6 +71,7 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
           define: {
             // Define environment variables for both Node and browser
             ...getDefineByMode(mode),
+            ...getDefineXrEnvBase(finalBase),
           },
           build: {
             // Set output directory
