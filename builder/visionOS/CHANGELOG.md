@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.1.3
+
+### Patch Changes
+
+- ab185cf: Fix navigation URL display issue
+- 9b49c90: set default value of background material
+
 ## 0.1.2
 
 ## 0.1.1

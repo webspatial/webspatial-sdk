@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.3
+
+### Patch Changes
+
+- deb60e1: update dts for '--xr-background-material' and '--xr-back'
+  - @webspatial/core-sdk@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
