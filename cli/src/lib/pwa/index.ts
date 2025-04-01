@@ -94,7 +94,7 @@ export class PWAGenerator {
     }
     // check manifest.json
     checkManifestJson(manifest, isDev)
-    let start_url = configStartUrl(manifest, args['base'] ?? '')
+    let start_url = configStartUrl(manifest, args['base'] ?? '', url, fromNet)
     var isNetWeb = checkStartUrl(start_url, url, fromNet, isDev)
     manifest.start_url = start_url
     if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
