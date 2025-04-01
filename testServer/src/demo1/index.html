@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" style="background-color: #00000000; --xr-background-material: transparent;">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSpatial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../dist/src/index.css">
+</head>
+
+<body>
+</body>
+
+<script>
+    let pageScript = document.createElement("script")
+    pageScript.src = "../../dist" + window.location.pathname.split(".")[0] + ".js"
+    document.head.append(pageScript)
+</script>
+
+</html>
