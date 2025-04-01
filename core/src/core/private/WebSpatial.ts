@@ -16,7 +16,7 @@ export class WebSpatialResource {
   windowContainerId = ''
   data = {} as any
 
-  receiveEvent() { }
+  receiveEvent() {}
 }
 
 export class WebSpatial {
@@ -41,7 +41,7 @@ export class WebSpatial {
   }
 
   static init() {
-    ; (window as any).__SpatialWebEvent = (e: any) => {
+    ;(window as any).__SpatialWebEvent = (e: any) => {
       if (e.resourceId) {
         var callback = WebSpatial.eventReceivers[e.resourceId]
         callback(e.data)
@@ -96,10 +96,10 @@ export class WebSpatial {
     var msg = JSON.stringify(cmd)
 
     if (WebSpatial.getBackend() == 'AVP') {
-      ; (window as any).webkit.messageHandlers.bridge.postMessage(msg)
+      ;(window as any).webkit.messageHandlers.bridge.postMessage(msg)
       return
     } else {
-      ; (window as any).bridge.nativeMessage(msg)
+      ;(window as any).bridge.nativeMessage(msg)
       return
     }
   }

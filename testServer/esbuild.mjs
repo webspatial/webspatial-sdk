@@ -53,9 +53,9 @@ var ctx = await esbuild.context({
     'react-dom': path.resolve('node_modules/react-dom'),
     "@webspatial/react-sdk/jsx-runtime": path.resolve('../react/src/jsx/jsx-runtime.ts'),
     '@webspatial/react-sdk': path.resolve('../react/src'),
-    '@webspatial/core-sdk': path.resolve('../runtime/src'),
+    '@webspatial/core-sdk': path.resolve('../core/src'),
 
-    
+
   },
 })
 
