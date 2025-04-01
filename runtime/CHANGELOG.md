@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- 5be664b: add baseURI to createWindowContext method, fixing path issues related to assets
+
 ## 0.1.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.1.8
+
+### Patch Changes
+
+- 4aa5a3b: Support new display:fullscreen and fix scope logic
+
 ## 0.1.7
 
 ## 0.1.6
