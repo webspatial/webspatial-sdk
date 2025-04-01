@@ -1,5 +1,13 @@
 # @webspatial/builder
 
+## 0.1.8
+
+### Patch Changes
+
+- 6fa36a0: Add default icon and default start_url, support new displa: fullscreen
+- Updated dependencies [4aa5a3b]
+  - @webspatial/platform-visionos@0.1.8
+
 ## 0.1.7
 
 ### Patch Changes
