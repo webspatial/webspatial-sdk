@@ -1,7 +1,7 @@
 {
   "name": "@webspatial/core-sdk",
-  "version": "0.1.8",
-  "description": "this is runtime for webspatial",
+  "version": "0.1.6",
+  "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "type": "module",
@@ -10,7 +10,7 @@
     "test": "tsc -p ./tsconfig.json",
     "build": "tsup",
     "start": "tsup --watch",
-    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialRuntime",
+    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialCore",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
   },
