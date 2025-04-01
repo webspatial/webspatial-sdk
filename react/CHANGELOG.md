@@ -1,5 +1,13 @@
 # @webspatial/react-sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- 7c8c556: support css hot reload
+- Updated dependencies [5be664b]
+  - @webspatial/core-sdk@0.1.8
+
 ## 0.1.7
 
 ### Patch Changes
