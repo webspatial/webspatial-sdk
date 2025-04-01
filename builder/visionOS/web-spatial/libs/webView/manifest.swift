@@ -28,9 +28,12 @@ struct PWAManager: Codable {
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
         if !(urlType == "http" || urlType == "https") {
-            start_url = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")!.absoluteString
-            scope = "file://" + Bundle.main.bundlePath + "/" + scope
-            scope = scope.replacingOccurrences(of: " ", with: "%20")
+            if scope == "" || scope == "/" {
+                scope = "./"
+            }
+            let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
+            start_url = startUrl!.absoluteString
+            scope = URL(string: scope, relativeTo: startUrl)!.absoluteString
             isLocal = true
         }
 
@@ -80,6 +83,7 @@ struct PWAManager: Codable {
 enum PWADisplayMode: Codable {
     case minimal
     case standalone
+    case fullscreen
 }
 
 struct PWAProtocol: Codable {
