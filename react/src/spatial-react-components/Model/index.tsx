@@ -131,6 +131,12 @@ function parseChildren(child: ModelChildren) {
 
 function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   const { children, ...props } = inProps
+  // Set default dimensions with predefined class
+  props.className =
+    '__custom-class-model-webspatial ' +
+    (props.className ? props.className : '')
+  let className = props.className
+
   const { placeHolder, gltfSourceURL, usdzSourceURL } = useMemo(
     () => parseChildren(children),
     [children],
@@ -151,7 +157,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     }, [])
 
     const myModelViewer = useRef<ModelViewerElement>(null)
-    const { className, style = {}, ...props } = inProps
+    const { style = {}, ...props } = inProps
 
     const isDragging = useRef(false)
     let [modelViewerExists, setModelViewerExists] = useState(false)
@@ -264,11 +270,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     }, [props.contentMode, props.resizable, props.aspectRatio])
 
     return (
-      <div
-        ref={ref}
-        className={'__custom-class-model-webspatial ' + className}
-        style={style}
-      >
+      <div ref={ref} className={className} style={style}>
         {modelViewerExists ? (
           <>
             <model-viewer
