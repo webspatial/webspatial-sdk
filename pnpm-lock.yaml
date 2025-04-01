@@ -42,7 +42,7 @@ importers:
         version: link:../cli
       '@webspatial/core-sdk':
         specifier: workspace:*
-        version: link:../runtime
+        version: link:../core
       '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../react
@@ -185,7 +185,7 @@ importers:
         version: 0.170.0
       '@webspatial/core-sdk':
         specifier: workspace:*
-        version: link:../runtime
+        version: link:../core
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -313,7 +313,7 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.1)(sass-embedded@1.83.4)(sass@1.84.0)(terser@5.39.0)(yaml@2.7.0)
 
-  runtime:
+  core:
     dependencies:
       loglevel:
         specifier: ^1.9.2
@@ -366,7 +366,7 @@ importers:
         version: 0.164.1
       '@webspatial/core-sdk':
         specifier: workspace:*
-        version: link:../runtime
+        version: link:../core
       '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../react

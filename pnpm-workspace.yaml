@@ -1,6 +1,6 @@
 packages:
   - 'react'
-  - 'runtime'
+  - 'core'
   - 'testServer'
   - 'cli'
   - 'examples/*'
