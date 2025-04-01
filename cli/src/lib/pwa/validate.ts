@@ -29,7 +29,7 @@ export function checkManifestJson(
       message_staring_params: {},
     })
   }
-  if (!manifestJson['start_url']) {
+  if (!manifestJson['start_url'] && !isDev) {
     errors.push({
       code: 3008,
       message:
@@ -98,6 +98,13 @@ export async function checkIcons(
   isDev: boolean = false,
 ) {
   if (!manifest.icons?.length && isDev) {
+    manifest.icons = [
+      {
+        src: join(__dirname, '../../assets/icon-default.png'),
+        sizes: '1024x1024',
+        purpose: 'maskable',
+      },
+    ]
     Cli.log.warn('icon not found, use default in run mode')
     return
   }
@@ -154,8 +161,18 @@ export async function checkIcons(
   // There is no icon that satisfies both size>=1024 and purpose including Maskable
   if (maxSize === 0) {
     if (isDev) {
+      manifest.icons = [
+        {
+          src: join(__dirname, '../../assets/icon-default.png'),
+          sizes: '1024x1024',
+          purpose: 'maskable',
+        },
+      ]
       Cli.log.warn(
         'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
+      )
+      Cli.log.warn(
+        'icon does not meet the standard, use default icon in run mode',
       )
       return
     }
