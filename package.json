@@ -9,7 +9,7 @@
     "postinstall": "simple-git-hooks",
     "buildPackages": "pnpm -r --filter \"@webspatial/*\" run build",
     "setup": "pnpm install && npm run buildPackages",
-    "watchNPM": "concurrently \"cd runtime/ && npm run start\" \"cd react/ && npm run start\"",
+    "watchNPM": "concurrently \"cd core/ && npm run start\" \"cd react/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "npm run testServer",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
