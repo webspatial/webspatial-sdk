@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.1.7
+
+### Patch Changes
+
+- 123ee60: bundle files into one
+
 ## 0.1.6
 
 ## 0.1.5

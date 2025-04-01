@@ -1,5 +1,14 @@
 # @webspatial/react-sdk
 
+## 0.1.7
+
+### Patch Changes
+
+- cb92fab: fix portalinstance layout issue
+- d2ff8ef: fix sub portal instance layout bug
+- Updated dependencies [123ee60]
+  - @webspatial/core-sdk@0.1.7
+
 ## 0.1.6
 
 ### Patch Changes
