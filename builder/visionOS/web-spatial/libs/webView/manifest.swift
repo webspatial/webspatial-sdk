@@ -66,16 +66,24 @@ struct PWAManager: Codable {
 
     func getLocalResourceURL(url: String) -> String {
         let path = String(url.split(separator: "file://").first!.split(separator: "?").first!)
-        let root = String(url.split(separator: "?").first!)
-        let params = String(url.split(separator: "file://" + root).first!)
-        var resource: String = Bundle.main.url(forResource: path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
+        let newUrl = URL(string: url)
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: newUrl!.path) {
+            return url
+        }
+        var resource: String = Bundle.main.url(forResource: newUrl?.path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
         if resource == "" {
             resource = Bundle.main.url(forResource: "static-web" + path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
         }
         if resource == "" {
             return url
         }
-        resource += "?" + params
+        if newUrl?.query() != nil {
+            resource += "?" + (newUrl?.query())!
+        }
+        if newUrl?.fragment() != nil {
+            resource += "#" + (newUrl?.fragment())!
+        }
         return resource
     }
 }
