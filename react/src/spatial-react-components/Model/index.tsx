@@ -22,6 +22,18 @@ import { getAbsoluteURL } from '../Model3D/utils'
 
 import { ModelViewerElement } from '@google/model-viewer'
 
+{
+  // Set a default size for the model tag
+  // This is done with css to allow it to be overwritten by className/css/style props
+  const styleElement = document.createElement('style')
+  styleElement.id = '__custom-class-model-webspatial'
+  styleElement.innerHTML = `.__custom-class-model-webspatial { width: 300px; height: 300px; }`
+  if (document.getElementById('__custom-class-model-webspatial')) {
+    console.warn('__custom-class-model-webspatial already exists')
+  }
+  document.head.prepend(styleElement)
+}
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -119,6 +131,12 @@ function parseChildren(child: ModelChildren) {
 
 function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
   const { children, ...props } = inProps
+  // Set default dimensions with predefined class
+  props.className =
+    '__custom-class-model-webspatial ' +
+    (props.className ? props.className : '')
+  let className = props.className
+
   const { placeHolder, gltfSourceURL, usdzSourceURL } = useMemo(
     () => parseChildren(children),
     [children],
@@ -139,7 +157,7 @@ function ModelBase(inProps: ModelProps, ref: ModelElementRef) {
     }, [])
 
     const myModelViewer = useRef<ModelViewerElement>(null)
-    const { className, style = {}, ...props } = inProps
+    const { style = {}, ...props } = inProps
 
     const isDragging = useRef(false)
     let [modelViewerExists, setModelViewerExists] = useState(false)
