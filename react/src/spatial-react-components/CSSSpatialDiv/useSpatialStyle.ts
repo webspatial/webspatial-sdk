@@ -182,6 +182,16 @@ export function useSpatialStyle() {
   }, [])
 
   useEffect(() => {
+    const headObserver = new MutationObserver(mutations => {
+      checkSpatialStyleUpdate()
+    })
+    headObserver.observe(document.head, { childList: true, subtree: true })
+    return () => {
+      headObserver.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
     if (!ref.current) {
       return
     }
