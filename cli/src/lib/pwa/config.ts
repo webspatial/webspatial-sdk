@@ -21,43 +21,69 @@ export function configId(
 export function configStartUrl(
   manifestJson: Record<string, any>,
   base: string,
+  manifestUrl: string,
+  isNet: boolean,
 ) {
-  const isStartUrl = validateURL(manifestJson.start_url)
-  const isBaseUrl = validateURL(base)
-  let start_url = manifestJson.start_url
-  if (!isStartUrl && !isBaseUrl) {
-    const staticWebRoot = resolve('./static-web')
-    const resolvedPath = resolve(staticWebRoot, base, start_url)
-    const normalizedPath = normalize(resolvedPath)
+  let start_url = manifestJson.start_url ?? '/'
+  const isStartUrl = validateURL(start_url)
+  const hasBase = base.length > 0
+  if (hasBase) {
+    const isBaseUrl = validateURL(base)
+    if (!isStartUrl && !isBaseUrl) {
+      const staticWebRoot = resolve('./static-web')
+      const resolvedPath = resolve(staticWebRoot, base, start_url)
+      const normalizedPath = normalize(resolvedPath)
 
-    const safePath = join(staticWebRoot, normalizedPath)
+      const safePath = join(staticWebRoot, normalizedPath)
 
-    start_url = relative(process.cwd(), safePath)
-      .replace(/^(\.\.\/)+/, './')
-      .replace(/\/$/, '')
-  } else if (isStartUrl && !isBaseUrl) {
-    const startUrl = new URL(start_url)
-    const fullPath = startUrl.pathname + startUrl.search + startUrl.hash
-    let newBase = new URL(base, startUrl.origin)
-    start_url = new URL(fullPath, newBase).href
-  } else if (!isStartUrl && isBaseUrl) {
-    if (start_url.startsWith('/')) {
+      start_url = relative(process.cwd(), safePath)
+        .replace(/^(\.\.\/)+/, './')
+        .replace(/\/$/, '')
+    } else if (isStartUrl && !isBaseUrl) {
+      const startUrl = new URL(start_url)
+      const fullPath = startUrl.pathname + startUrl.search + startUrl.hash
+      let newBase = new URL(base, startUrl.origin)
+      start_url = new URL(fullPath, newBase).href
+    } else if (!isStartUrl && isBaseUrl) {
+      if (start_url.startsWith('/')) {
+        const baseUrl = new URL(base)
+        start_url = baseUrl.origin + join(baseUrl.pathname, start_url)
+      } else {
+        start_url = new URL(start_url, base).href
+      }
+    } else if (isStartUrl && isBaseUrl) {
+      const startUrl = new URL(start_url)
       const baseUrl = new URL(base)
-      start_url = baseUrl.origin + join(baseUrl.pathname, start_url)
-    } else {
-      start_url = new URL(start_url, base).href
+      const startFullPath = startUrl.pathname + startUrl.search + startUrl.hash
+      start_url = new URL(startFullPath, baseUrl.origin + baseUrl.pathname).href
     }
-  } else if (isStartUrl && isBaseUrl) {
-    const startUrl = new URL(start_url)
-    const baseUrl = new URL(base)
-    const startFullPath = startUrl.pathname + startUrl.search + startUrl.hash
-    start_url = new URL(startFullPath, baseUrl.origin + baseUrl.pathname).href
+  } else {
+    if (isNet) {
+      const murl = new URL(manifestUrl)
+      if (!isStartUrl) {
+        const newStartUrl = new URL(start_url, murl.origin)
+        start_url = newStartUrl.href
+      } else {
+        const startUrl = new URL(start_url)
+        start_url =
+          murl.origin + startUrl.pathname + startUrl.search + startUrl.hash
+      }
+    } else if (!isStartUrl) {
+      const staticWebRoot = resolve('./static-web')
+      const resolvedPath = resolve(staticWebRoot, start_url)
+      const normalizedPath = normalize(resolvedPath)
+      const safePath = join(staticWebRoot, normalizedPath)
+      start_url = relative(process.cwd(), safePath)
+        .replace(/^(\.\.\/)+/, './')
+        .replace(/\/$/, '')
+    }
   }
+
   return start_url
 }
 
 export function configScope(manifestJson: Record<string, any>) {
-  let scope = manifestJson.scope ?? ''
+  let scope = manifestJson.scope ?? '/'
   const isStartUrl = validateURL(manifestJson.start_url)
   const isUrl = validateURL(scope)
   if (isStartUrl && isUrl) {
@@ -82,21 +108,21 @@ export function configScope(manifestJson: Record<string, any>) {
 
 export function configDisplay(manifestJson: Record<string, any>) {
   let display = manifestJson.display
-  if (display !== 'minimal-ui' && display !== 'standalone') {
+  const modes = ['minimal-ui', 'standalone', 'fullscreen']
+  if (!modes.includes(display)) {
     display = 'standalone'
   }
   if (
     manifestJson.display_override &&
     manifestJson.display_override.length > 0
   ) {
-    const mIndex = manifestJson.display_override.indexOf('minimal-ui')
-    const sIndex = manifestJson.display_override.indexOf('standalone')
-    if (mIndex >= 0 && sIndex >= 0) {
-      display = sIndex > mIndex ? 'standalone' : 'minimal-ui'
-    } else if (mIndex >= 0) {
-      display = 'minimal-ui'
-    } else if (sIndex >= 0) {
-      display = 'standalone'
+    const validModes = manifestJson.display_override
+      .map((mode: string, index: number) => ({ mode, index }))
+      .filter(({ mode }: { mode: string }) => modes.includes(mode))
+      .sort((a: any, b: any) => a.index - b.index)
+
+    if (validModes.length > 0) {
+      display = validModes[0].mode
     }
   }
   manifestJson.display = display
