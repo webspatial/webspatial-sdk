@@ -275,7 +275,7 @@ export default class XcodeProject {
     manifestSwift = manifestSwift.replace('AppID', manifest.id)
     manifestSwift = manifestSwift.replace(
       '.minimal',
-      manifest.display == 'minimal-ui' ? '.minimal' : '.standalone',
+      manifest.display == 'minimal-ui' ? '.minimal' : `.${manifest.display}`,
     )
     if (manifest.protocol_handlers) {
       let deeplinkString = ''
