@@ -418,8 +418,9 @@ export class SpatialSession {
         await new Promise(resolve => setTimeout(resolve, 10))
       }
     }
-    openedWindow!.document.head.innerHTML =
-      '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    openedWindow!.document.head.innerHTML = `<meta name="viewport" content="width=device-width, initial-scale=1">
+      <base href="${document.baseURI}">
+      `
     return openedWindow
   }
 
