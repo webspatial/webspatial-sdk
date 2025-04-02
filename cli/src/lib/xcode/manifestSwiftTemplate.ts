@@ -28,9 +28,12 @@ struct PWAManager: Codable {
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
         if !(urlType == "http" || urlType == "https") {
-            start_url = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")!.absoluteString
-            scope = "file://" + Bundle.main.bundlePath + "/" + scope
-            scope = scope.replacingOccurrences(of: " ", with: "%20")
+            if scope == "" || scope == "/" {
+                scope = "./"
+            }
+            let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
+            start_url = startUrl!.absoluteString
+            scope = URL(string: scope, relativeTo: startUrl)!.absoluteString
             isLocal = true
         }
 
@@ -60,19 +63,27 @@ struct PWAManager: Codable {
         logger.debug(linkUrl)
         return linkUrl
     }
-    
-    func getLocalResourceURL(url: String) -> String{
-        let path:String = String(url.split(separator: "file://").first!.split(separator: "?").first!)
-        let root:String = String(url.split(separator: "?").first!)
-        let params = String(url.split(separator: "file://" + root).first!)
-        var resource:String = Bundle.main.url(forResource: path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
+
+    func getLocalResourceURL(url: String) -> String {
+        let path = String(url.split(separator: "file://").first!.split(separator: "?").first!)
+        let newUrl = URL(string: url)
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: newUrl!.path) {
+            return url
+        }
+        var resource: String = Bundle.main.url(forResource: newUrl?.path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
         if resource == "" {
             resource = Bundle.main.url(forResource: "static-web" + path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
         }
         if resource == "" {
             return url
         }
-        resource += "?" + params
+        if newUrl?.query() != nil {
+            resource += "?" + (newUrl?.query())!
+        }
+        if newUrl?.fragment() != nil {
+            resource += "#" + (newUrl?.fragment())!
+        }
         return resource
     }
 }
@@ -80,6 +91,7 @@ struct PWAManager: Codable {
 enum PWADisplayMode: Codable {
     case minimal
     case standalone
+    case fullscreen
 }
 
 struct PWAProtocol: Codable {
