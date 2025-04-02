@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/core-sdk",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
