@@ -1,4 +1,3 @@
-import { SpatialHelper } from '@webspatial/core-sdk'
 import type { SpatialEntity } from '@webspatial/core-sdk'
 import React, {
   useRef,
@@ -45,30 +44,6 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
         </div>
       )
     }
-    useEffect(() => {
-      activePromise.current = runAsync(async () => {
-        if (activePromise.current) {
-          await activePromise.current
-        }
-        let sh = new SpatialHelper(getSession()!)
-        let x = await sh.dom.attachSpatialView(divRef.current!)
-        spatialEntity.current = x.entity
-
-        if (props.onViewLoad) {
-          props.onViewLoad(x.entity)
-        }
-      })
-      return () => {
-        runAsync(async () => {
-          await activePromise.current
-          spatialEntity.current?.destroy()
-          // Teardown
-          if (props.onViewUnload) {
-            props.onViewUnload()
-          }
-        })
-      }
-    }, [])
 
     // Remove props that cant be used on the div
     const { onViewLoad, onViewUnload, ...divProps } = props

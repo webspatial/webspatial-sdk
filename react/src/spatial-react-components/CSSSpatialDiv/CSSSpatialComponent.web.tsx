@@ -23,6 +23,7 @@ import {
   CSSSpatialRootContext,
   CSSSpatialRootContextObject,
 } from './CSSSpatialRootContext'
+import React from 'react'
 
 interface CSSSpatialComponentWithUniqueIDProps
   extends SpatialReactComponentProps {
@@ -197,7 +198,7 @@ function CSSSpatialComponentBase(
   ref: SpatialReactComponentRef,
 ) {
   const { [CSSSpatialID]: cssSpatialID, ...props } = inProps
-  const isWebEnv = !getSession()
+  const isWebEnv = true
   if (isWebEnv) {
     return renderInWebEnv(props, ref)
   } else {

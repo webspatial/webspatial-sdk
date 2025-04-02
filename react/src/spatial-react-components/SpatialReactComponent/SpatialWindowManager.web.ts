@@ -1,4 +1,7 @@
-import { SpatialEntity, SpatialWindowComponent } from '@webspatial/core-sdk'
+import type {
+  SpatialEntity,
+  SpatialWindowComponent,
+} from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { vecType, quatType, RectType } from '../types'
 
@@ -25,31 +28,29 @@ export class SpatialWindowManager {
   }
 
   private async initInternal(url: string) {
-    this.entity = await getSession()!.createEntity()
-    this.webview = await getSession()!.createWindowComponent()
-    await this.webview.loadURL(url)
-    await this.entity.setCoordinateSpace('Dom')
-    await this.webview.setScrollWithParent(true)
-    await this.webview.setScrollEnabled(false)
-    await this.entity.setComponent(this.webview)
-
-    var wc = await getSession()!.getCurrentWindowComponent()
-    var ent = await wc.getEntity()
-    await this.entity.setParent(ent!)
+    // this.entity = await getSession()!.createEntity()
+    // this.webview = await getSession()!.createWindowComponent()
+    // await this.webview.loadURL(url)
+    // await this.entity.setCoordinateSpace('Dom')
+    // await this.webview.setScrollWithParent(true)
+    // await this.webview.setScrollEnabled(false)
+    // await this.entity.setComponent(this.webview)
+    // var wc = await getSession()!.getCurrentWindowComponent()
+    // var ent = await wc.getEntity()
+    // await this.entity.setParent(ent!)
   }
 
   private async initInternalFromWindow() {
-    var w = await getSession()!.createWindowContext()
-    this.window = w
-    this.entity = await getSession()!.createEntity()
-    this.webview = await getSession()!.createWindowComponent()
-    await this.webview.setFromWindow(w)
-    await this.entity.setCoordinateSpace('Dom')
-    await this.webview.setScrollWithParent(true)
-    await this.webview.setScrollEnabled(false)
-    await this.entity.setComponent(this.webview)
-
-    this.setEntityParentByCSSPosition(this.isFixedPosition)
+    // var w = await getSession()!.createWindowContext()
+    // this.window = w
+    // this.entity = await getSession()!.createEntity()
+    // this.webview = await getSession()!.createWindowComponent()
+    // await this.webview.setFromWindow(w)
+    // await this.entity.setCoordinateSpace('Dom')
+    // await this.webview.setScrollWithParent(true)
+    // await this.webview.setScrollEnabled(false)
+    // await this.entity.setComponent(this.webview)
+    // this.setEntityParentByCSSPosition(this.isFixedPosition)
   }
 
   async updateCSSPosition(isFixedPosition: boolean) {
