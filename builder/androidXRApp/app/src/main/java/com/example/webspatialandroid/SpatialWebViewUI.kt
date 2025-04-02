@@ -7,10 +7,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webspatiallib.NativeWebView
 import androidx.compose.foundation.layout.Box
 import android.view.ViewGroup
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 
+val transparentColor = Color.Transparent
 @Composable
 fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
+//        Text("test")
     AndroidView(
         modifier = Modifier
            // .clip(RoundedCornerShape(swv.cornerRadius.dp))
@@ -22,6 +27,7 @@ fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
+                setBackgroundColor(transparentColor.toArgb());
             }
         }, update = { webView ->
 //            webView.apply {

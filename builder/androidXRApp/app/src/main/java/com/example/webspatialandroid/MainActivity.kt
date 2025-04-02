@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,17 +49,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
-            WebSpatialAndroidTheme {
-                val session = LocalSession.current
-                if (LocalSpatialCapabilities.current.isSpatialUiEnabled) {
-                    Subspace {
-                        MySpatialContent(onRequestHomeSpaceMode = { session?.requestHomeSpaceMode() })
-                    }
-                } else {
-                    My2DContent(onRequestFullSpaceMode = { session?.requestFullSpaceMode() })
+            val session = LocalSession.current
+            if (LocalSpatialCapabilities.current.isSpatialUiEnabled) {
+                Subspace {
+                    MySpatialContent(onRequestHomeSpaceMode = { session?.requestHomeSpaceMode() })
                 }
+            } else {
+                My2DContent(onRequestFullSpaceMode = { session?.requestFullSpaceMode() })
             }
         }
     }
@@ -92,23 +90,23 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
 @SuppressLint("RestrictedApi")
 @Composable
 fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
-    Surface {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+    Surface (color = Color.Transparent) {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
 
-            val s = NativeWebView(LocalContext.current)
-            s.navigateToURL("http://localhost:5173/src/jsApiTestPages/standard.html?pageName=pingNativePerf")
-            SpatialWebViewUI(s, Modifier)
-            MainContent(modifier = Modifier.padding(48.dp))
-            if (LocalHasXrSpatialFeature.current) {
-                FullSpaceModeIconButton(
-                    onClick = onRequestFullSpaceMode,
-                    modifier = Modifier.padding(32.dp)
-                )
-            }
+        val s = NativeWebView(LocalContext.current)
+        s.navigateToURL("http://localhost:5173/src/jsApiTestPages/standard.html?pageName=glassBackground")
+        SpatialWebViewUI(s, Modifier)
+        MainContent(modifier = Modifier.padding(48.dp))
+        if (LocalHasXrSpatialFeature.current) {
+            FullSpaceModeIconButton(
+                onClick = onRequestFullSpaceMode,
+                modifier = Modifier.padding(32.dp)
+            )
         }
+    }
     }
 }
 
