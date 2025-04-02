@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.1.9
+
+### Patch Changes
+
+- 51b4e56: Fix the issue of possible errors in obtaining local static resources
+
 ## 0.1.8
 
 ### Patch Changes
