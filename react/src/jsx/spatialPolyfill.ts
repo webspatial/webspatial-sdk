@@ -154,36 +154,7 @@ function hijackDocumentElementStyle() {
 
 function monitorExternalStyleChange() {
   const headObserver = new MutationObserver(function (mutationsList) {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        let needCheck = false
-        mutation.addedNodes.forEach(node => {
-          if (
-            node.nodeName === 'LINK' &&
-            (node as HTMLLinkElement).rel === 'stylesheet'
-          ) {
-            needCheck = true
-          }
-
-          if (node.nodeName === 'STYLE') {
-            needCheck = true
-          }
-        })
-
-        mutation.removedNodes.forEach(node => {
-          if (
-            node.nodeName === 'LINK' &&
-            (node as HTMLLinkElement).rel === 'stylesheet'
-          ) {
-            needCheck = true
-          }
-        })
-
-        if (needCheck) {
-          checkCSSProperties()
-        }
-      }
-    }
+    checkCSSProperties()
   })
 
   headObserver.observe(document.head, { childList: true, subtree: true })
