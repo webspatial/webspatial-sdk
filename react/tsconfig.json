@@ -25,6 +25,6 @@
       "@webspatial/react-sdk": ["./src"]
     }
   },
-  "include": ["src/index.ts", "esbuild.mjs"],
+  "include": ["src/index.ts", "esbuild.mjs", "src/types/*.d.ts"],
   "references": []
 }
