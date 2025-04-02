@@ -16,10 +16,13 @@ export default defineConfig([
     format: ['esm'],
     outDir: 'dist/web',
     esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        __WEB__: 'true',
-      }
+      options.resolveExtensions = [
+        '.web.tsx',
+        '.web.ts',
+        '.tsx',
+        '.ts',
+        ...(options.resolveExtensions ?? []),
+      ]
     },
   },
   {
@@ -28,12 +31,6 @@ export default defineConfig([
     entry: ['src/index.ts'],
     format: ['esm'],
     outDir: 'dist/default',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        __WEB__: 'false',
-      }
-    },
   },
 
   {
@@ -48,11 +45,5 @@ export default defineConfig([
     ],
     format: ['esm'],
     outDir: 'dist/jsx',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        __WEB__: 'false',
-      }
-    },
   },
 ])

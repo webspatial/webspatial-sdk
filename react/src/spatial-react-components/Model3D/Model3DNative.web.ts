@@ -50,44 +50,7 @@ export class Model3DNative {
     onSuccess: () => void,
     onFailure: (error: string) => void,
   ) {
-    var session = getSession()
-
-    if (!session) {
-      return
-    }
-
-    // Create entity with view component to display the model inside
-    const entity = await session.createEntity()
-    await entity.setCoordinateSpace('Dom')
-
-    const spatialModel3DComponent = await session.createModel3DComponent({
-      url: getAbsoluteURL(modelUrl),
-    })
-
-    await entity.setComponent(spatialModel3DComponent)
-    if (this.isDestroyed) {
-      return
-    }
-    if (this.parentEntity) {
-      await entity.setParent(this.parentEntity)
-    } else {
-      // Add entity to the window
-      var wc = session.getCurrentWindowComponent()
-      var ent = await wc.getEntity()
-      await entity.setParent(ent!)
-    }
-
-    this.entity = entity
-    this.spatialModel3DComponent = spatialModel3DComponent
-
-    this.spatialModel3DComponent.onSuccess = onSuccess
-    this.spatialModel3DComponent.onFailure = onFailure
-    this.spatialModel3DComponent.onDragStart = this._onDragStart
-    this.spatialModel3DComponent.onDrag = this._onDrag
-    this.spatialModel3DComponent.onDragEnd = this._onDragEnd
-    this.spatialModel3DComponent.onTap = this._onTap
-    this.spatialModel3DComponent.onDoubleTap = this._onDoubleTap
-    this.spatialModel3DComponent.onLongPress = this._onLongPress
+    // nothing
   }
 
   async setVisible(visible: boolean) {
