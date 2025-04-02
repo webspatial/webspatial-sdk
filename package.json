@@ -12,6 +12,7 @@
     "watchNPM": "concurrently \"cd core/ && npm run start\" \"cd react/ && npm run start\"",
     "testServer": "cd testServer/ && npm run dev -- --host",
     "dev": "npm run testServer",
+    "xcode": "open builder/visionOS/web-spatial.xcodeproj",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
     "ciTest": "cd ciTest/ && pnpm run test",
     "format": "pnpm -r run format",
