@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.10
+
+### Patch Changes
+
+- 5b90390: Fix the issue where manifestTemplate.ts is not synchronized with manifest.swift
+  - @webspatial/platform-visionos@0.1.10
+
 ## 0.1.9
 
 ### Patch Changes
