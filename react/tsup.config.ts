@@ -15,7 +15,11 @@ export default defineConfig([
     entry: ['src/index.ts'],
     format: ['esm'],
     outDir: 'dist/web',
+    noExternal: ['@webspatial/core-sdk'],
     esbuildOptions(options) {
+      options.alias = {
+        '@webspatial/core-sdk': './src/noRuntime.ts',
+      }
       options.define = {
         ...options.define,
         __WEB__: 'true',
