@@ -33,10 +33,8 @@ class NativeWebView {
         if (rID != null) {
             val ret = CommandInfo()
             ret.requestID = rID.jsonPrimitive.int
-            // Log.i("test", "TREV got rid")
             val data = json.get("data")
             if (data != null) {
-                //   Log.i("test", "TREV got data")
                 val windowContainerID = data.jsonObject.get("windowContainerID")
                 if (windowContainerID != null) {
                     ret.windowContainerID = windowContainerID.jsonPrimitive.content
@@ -76,7 +74,7 @@ class NativeWebView {
                 webView.evaluateJavascript("window.__SpatialWebEvent({success: true, requestID:" + requestID + ", data: " + data + "})") { result ->
                 }
             } catch (e: Exception) {
-                Log.e("WebViewResult", "TREV Exception during JavaScript evaluation: ${e.message}")
+                Log.e("WebViewResult", "Exception during JavaScript evaluation: ${e.message}")
             }
         }
     }
@@ -97,37 +95,41 @@ class NativeWebView {
         webView.settings.setSupportMultipleWindows(true)
         webView.settings.javaScriptCanOpenWindowsAutomatically = true
         webView.settings.defaultTextEncodingName = "utf-8"
+
         webView.addJavascriptInterface(object {
             @JavascriptInterface
-            fun getNativeVersion(): String {
-               return "0.0.1";
+            fun getNativeVersion():String{
+                return "0.0.1"
             }
 
             @JavascriptInterface
-            fun nativeMessage(message: String) {
-                 // TODO move this out of this file
+            fun getBackendName():String{
+                return "AndroidXR"
+            }
+
+            @JavascriptInterface
+            fun androidNativeMessage(message: String) {
+                // TODO move this out of this file
                 val mainHandler = Handler(Looper.getMainLooper())
                 mainHandler.post {
-
-                        try {
-                            // Parse json
-                            val currentTimeMillisA = System.nanoTime()
-                            val json = Json.parseToJsonElement(message)
-                            //handleJson(json)
-                            val ci = getCommandInfo(json.jsonObject)
-                            if(ci != null){
-                                completeEvent(ci.requestID)
-                            }
-
-                            val currentTimeMillisB = System.nanoTime()
-                        } catch (e: Exception) {
-                            Log.e("WebViewResult", "TREV Exception during JavaScript evaluation: ${e.message}")
+                    try {
+                        // Parse json
+                        val currentTimeMillisA = System.nanoTime()
+                        val json = Json.parseToJsonElement(message)
+                        //handleJson(json)
+                        val ci = getCommandInfo(json.jsonObject)
+                        if(ci != null){
+                            Log.e("WebSpatial", "Got command "+ ci.command)
+                            completeEvent(ci.requestID)
                         }
 
+                        val currentTimeMillisB = System.nanoTime()
+                    } catch (e: Exception) {
+                        Log.e("WebViewResult", "Exception during JavaScript evaluation: ${e.message}")
+                    }
                 }
-
             }
-        }, "WebSpatailEnabled")
+        }, "__WebSpatialData")
         webView.setWebViewClient(WebViewClient()) // Allow navigation to navigate within webview (instead of open chrome)
     }
 
