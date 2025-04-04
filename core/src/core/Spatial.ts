@@ -32,13 +32,10 @@ export class Spatial {
    * @returns native version string
    */
   getNativeVersion() {
-    if (
-      (window as any).__WebSpatialData &&
-      (window as any).__WebSpatialData.getNativeVersion
-    ) {
-      return (window as any).__WebSpatialData.getNativeVersion()
+    if (window.__WebSpatialData && window.__WebSpatialData.getNativeVersion) {
+      return window.__WebSpatialData.getNativeVersion()
     }
-    return (window as any).WebSpatailNativeVersion
+    return window.WebSpatailNativeVersion
   }
 
   /**
