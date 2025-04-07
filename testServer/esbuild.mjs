@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild'
 import { tailwindPlugin } from 'esbuild-plugin-tailwindcss'
-import xrsdkPlugin from '../react/npm/plugin/esbuild.js'
+import xrsdkPlugin from '../react/npm/plugin/esbuild.mjs'
 
 import glob from 'tiny-glob'
 import path from 'path'
@@ -51,7 +51,7 @@ var ctx = await esbuild.context({
   alias: {
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
-    "@webspatial/react-sdk/jsx-runtime": path.resolve('../react/src/jsx/jsx-runtime.ts'),
+    "@webspatial/react-sdk/jsx-runtime": path.resolve('../react/src/jsx/jsx-runtime.js'),
     '@webspatial/react-sdk': path.resolve('../react/src'),
     '@webspatial/core-sdk': path.resolve('../core/src'),
 
