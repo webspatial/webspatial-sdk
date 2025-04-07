@@ -1,5 +1,14 @@
 # @webspatial/react-sdk
 
+## 0.1.10
+
+### Patch Changes
+
+- 2ea77fd: fix: restore empty module replacement when building web version
+- f93d6cc: when global style changes, html material should change according to the new material value
+- 900e704: add xr css type declare
+  - @webspatial/core-sdk@0.1.10
+
 ## 0.1.9
 
 ### Patch Changes
