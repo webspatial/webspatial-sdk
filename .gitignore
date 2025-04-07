@@ -2,6 +2,7 @@
 **/*/xcuserdata
 builder/visionOS/web-spatial/web-project
 builder/visionOS/icon.*
+builder/visionOS/build/**
 old/
 
 # We only allow pnpm lock files
