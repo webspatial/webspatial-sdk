@@ -13,7 +13,7 @@ export default defineConfig([
     // Web
     ...baseConfig,
     entry: ['src/index.ts'],
-    format: ['esm'],
+    format: ['cjs'],
     outDir: 'dist/web',
     noExternal: ['@webspatial/core-sdk'],
     esbuildOptions(options) {
@@ -30,7 +30,7 @@ export default defineConfig([
     // AVP
     ...baseConfig,
     entry: ['src/index.ts'],
-    format: ['esm'],
+    format: ['cjs'],
     outDir: 'dist/default',
     esbuildOptions(options) {
       options.define = {
@@ -38,6 +38,9 @@ export default defineConfig([
         __WEB__: 'false',
       }
     },
+    // outExtension: f => {
+    //   return { js: '.js' }
+    // },
   },
 
   {
@@ -45,12 +48,21 @@ export default defineConfig([
     ...baseConfig,
     external: ['@webspatial/react-sdk'],
     entry: [
-      'src/jsx/jsx-dev-runtime.ts',
+      // dev
+      'src/jsx/jsx-dev-runtime.web.ts',
+      'src/jsx/jsx-dev-runtime.avp.ts',
+      'src/jsx/jsx-dev-runtime.js',
       'src/jsx/jsx-dev-runtime.react-server.ts',
-      'src/jsx/jsx-runtime.ts',
+      // prod
+      'src/jsx/jsx-runtime.web.ts',
+      'src/jsx/jsx-runtime.avp.ts',
+      'src/jsx/jsx-runtime.js',
       'src/jsx/jsx-runtime.react-server.ts',
     ],
-    format: ['esm'],
+    loader: {
+      '.js': 'copy', // directly copy js file
+    },
+    format: ['cjs'],
     outDir: 'dist/jsx',
     esbuildOptions(options) {
       options.define = {
@@ -58,5 +70,6 @@ export default defineConfig([
         __WEB__: 'false',
       }
     },
+    // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
   },
 ])

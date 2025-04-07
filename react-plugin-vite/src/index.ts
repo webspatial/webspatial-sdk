@@ -1,4 +1,4 @@
-import { PluginOption } from 'vite'
+import { PluginOption, UserConfig, mergeConfig } from 'vite'
 import {
   AVP,
   getDefineByMode,
@@ -20,6 +20,43 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
   let outputDir = options?.outputDir
   console.log('🚀 ~ mode:', mode)
   return [
+    {
+      name: 'vite-plugin-webspatial-cjs',
+      config: config => {
+        // for stopping from esm and cjs module reset each
+        // we make them all cjs.
+        // so should we do in other plugin
+        const myConfig: UserConfig = {
+          // esbuild: {
+          //   jsxImportSource: '@webspatial/react-sdk',
+          // },
+          build: {
+            commonjsOptions: {
+              include: [
+                // local path
+                /XRSDK\/react\/dist/,
+                /XRSDK\/core\/dist/,
+                // npm path
+                /@webspatial\/react-sdk/,
+                /@webspatial\/core-sdk/,
+                /node_modules/,
+              ],
+            },
+          },
+          optimizeDeps: {
+            include: [
+              '@webspatial/react-sdk',
+              '@webspatial/core-sdk',
+              '@webspatial/react-sdk/jsx-dev-runtime',
+              '@webspatial/react-sdk/jsx-runtime',
+            ],
+          },
+        }
+        const finalConfig = mergeConfig(config, myConfig)
+
+        return finalConfig
+      },
+    },
     {
       name: 'vite-plugin-webspatial-serve',
       apply: 'serve',

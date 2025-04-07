@@ -46,7 +46,6 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
       )
     }
     useEffect(() => {
-      if (__WEB__) return // not supported
       activePromise.current = runAsync(async () => {
         if (activePromise.current) {
           await activePromise.current
@@ -60,7 +59,6 @@ const SpatialViewEl = forwardRef<SpatialViewRef, SpatialViewProps>(
         }
       })
       return () => {
-        if (__WEB__) return // not supported
         runAsync(async () => {
           await activePromise.current
           spatialEntity.current?.destroy()
