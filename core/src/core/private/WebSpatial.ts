@@ -7,6 +7,33 @@ import {
   sceneDataJSBShape,
 } from '../types'
 
+declare global {
+  interface Window {
+    // Location for webspatial custom functions
+    __WebSpatialData: {
+      androidNativeMessage: Function
+      getNativeVersion: Function
+    }
+
+    // Location for webspatial internal callbacks (eg. completion events)
+    __SpatialWebEvent: Function
+
+    // Used to access webkit specific api
+    webkit: any
+
+    // Marks the page as unloaded so it doesn't send additional events
+    __WebSpatialUnloaded: boolean
+
+    // Internal id information mapping to internal state about the native window
+    _webSpatialID: string
+    _webSpatialGroupID: string
+    _webSpatialParentGroupID: string
+
+    // Will be removed in favor of __WebSpatialData
+    WebSpatailNativeVersion: string
+  }
+}
+
 export class WindowContainer {
   id = ''
 }
@@ -41,7 +68,7 @@ export class WebSpatial {
   }
 
   static init() {
-    ;(window as any).__SpatialWebEvent = (e: any) => {
+    window.__SpatialWebEvent = (e: any) => {
       if (e.resourceId) {
         var callback = WebSpatial.eventReceivers[e.resourceId]
         callback(e.data)
@@ -77,7 +104,7 @@ export class WebSpatial {
   }
 
   static getBackend() {
-    if ((window as any).webkit) {
+    if (window.webkit) {
       return 'AVP'
     } else {
       return 'UNKNOWN'
@@ -85,7 +112,7 @@ export class WebSpatial {
   }
 
   static async sendCommand(cmd: RemoteCommand) {
-    if ((window as any).__WebSpatialUnloaded) {
+    if (window.__WebSpatialUnloaded) {
       return
     }
     if (WebSpatial.transactionStarted) {
@@ -96,10 +123,10 @@ export class WebSpatial {
     var msg = JSON.stringify(cmd)
 
     if (WebSpatial.getBackend() == 'AVP') {
-      ;(window as any).webkit.messageHandlers.bridge.postMessage(msg)
+      window.webkit.messageHandlers.bridge.postMessage(msg)
       return
     } else {
-      ;(window as any).bridge.nativeMessage(msg)
+      window.__WebSpatialData.androidNativeMessage(msg)
       return
     }
   }
@@ -132,13 +159,13 @@ export class WebSpatial {
     const { window: newWindow, ...sceneData } = cfg.sceneData
     const jsbSceneData: sceneDataJSBShape = {
       ...sceneData,
-      windowID: (newWindow as any)._webSpatialID,
-      windowContainerID: (newWindow as any)._webSpatialGroupID,
+      windowID: newWindow._webSpatialID,
+      windowContainerID: newWindow._webSpatialGroupID,
     }
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
       sceneData: jsbSceneData,
-      windowContainerID: (window as any)._webSpatialParentGroupID, // parent WindowContainerID
+      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
     })
 
     try {
@@ -311,7 +338,7 @@ export class WebSpatial {
 
   static async setLoading(method: LoadingMethodKind, style?: string) {
     var cmd = new RemoteCommand('setLoading', {
-      windowContainerID: (window as any)._webSpatialParentGroupID, // parent WindowContainerID
+      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
       loading: {
         method,
         style,

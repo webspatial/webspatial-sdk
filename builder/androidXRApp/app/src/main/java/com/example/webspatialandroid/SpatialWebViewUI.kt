@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
 val transparentColor = Color.Transparent
+val standardColor = Color.White
 @Composable
 fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
@@ -27,7 +28,7 @@ fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
-                setBackgroundColor(transparentColor.toArgb());
+                setBackgroundColor(standardColor.toArgb());
             }
         }, update = { webView ->
 //            webView.apply {
