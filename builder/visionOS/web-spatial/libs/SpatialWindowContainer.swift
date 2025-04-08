@@ -132,15 +132,6 @@ extension SpatialWindowContainer {
     static func getRootID() -> String {
         return RootID
     }
-
-    static func createRootWindowContainer() -> SpatialWindowContainer {
-        if let rootWindowContainer = getSpatialWindowContainer(RootID) {
-            logger.warning("Root already created! ")
-            return rootWindowContainer
-        }
-        let wgd = WindowContainerData(windowStyle: "Plain", windowContainerID: "root")
-        return SpatialWindowContainer(RootID, wgd)
-    }
 }
 
 extension SpatialWindowContainer {

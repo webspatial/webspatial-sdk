@@ -18,13 +18,9 @@ let startURL = pwaManager.start_url
 var sceneStateChangedCB: ((Any) -> Void) = { _ in
 }
 
-// TODO: we need to get rid of rootWGD and rootWC to cleanup memory and better handle close/reopen
-weak var rootWC: SpatialWindowComponent?
-
 @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var rootWGD: SpatialWindowContainer
     @State var initialLaunch = true
 
     @ObservedObject var wgm = WindowContainerMgr.Instance
@@ -39,33 +35,10 @@ struct web_spatialApp: App {
 
         // init pwa manager
         pwaManager._init()
-
-        // create root SpatialWindowContainer and Immersive SpatialWindowContainer
-        rootWGD = SpatialWindowContainer.createRootWindowContainer()
-        let _ = SpatialWindowContainer.createImmersiveWindowContainer()
     }
 
     func getFileUrl() -> URL {
         return URL(string: pwaManager.start_url)!
-    }
-
-    // There seems to be a bug in WKWebView where it needs to be initialized after the app has loaded so we do this here instead of init()
-    // https://forums.developer.apple.com/forums/thread/61432
-    func initAppOnViewMount() {
-        if rootWC == nil {
-            let fileUrl = getFileUrl()
-
-            // Create a default entity with webview resource
-            let rootEntity = SpatialEntity()
-            rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
-            let windowComponent = SpatialWindowComponent(parentWindowContainerID: rootWGD.id, url: fileUrl)
-            rootEntity.addComponent(windowComponent)
-            rootEntity.setParentWindowContainer(wg: rootWGD)
-
-            rootWGD.addChildResource(windowComponent)
-            rootWGD.addChildResource(rootEntity)
-            rootWC = windowComponent
-        }
     }
 
     func getDefaultSize() -> CGSize {
@@ -75,34 +48,30 @@ struct web_spatialApp: App {
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: WindowContainerData.self) { $windowData in
-            if windowData.windowContainerID == SpatialWindowContainer.getRootID() {
-                VStack {}.onAppear { initAppOnViewMount() }
-
-                PlainWindowContainerView().environment(rootWGD).background(Color.clear.opacity(0))
-//                TODO: Universal link is currently broken
-//                .onOpenURL { myURL in
-//                    initAppOnViewMount()
-//                    let urlToLoad = pwaManager.checkInDeeplink(url: myURL.absoluteString)
-//
-//                    if let url = URL(string: urlToLoad) {
-//                        // root!.navigateToURL(url: url)
-//                    }
-//                }
-            } else {
-                let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
-                    windowData.windowContainerID, windowData
-                )
-                PlainWindowContainerView().environment(wg)
-                // we no longer need the initial windowGroup to live all the time
-                // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
+            let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
+                windowData.windowContainerID, windowData
+            )
+            PlainWindowContainerView().environment(wg)
+            // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
 //                    .handlesExternalEvents(preferring: [], allowing: [])
-            }
         }
         defaultValue: {
-            WindowContainerData(
+            let windowData = WindowContainerData(
                 windowStyle: "Plain",
                 windowContainerID: SpatialWindowContainer.getRootID()
             )
+
+            // Initialize entity and webview for deafult value
+            let fileUrl = getFileUrl()
+            let wc = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
+                windowData.windowContainerID, windowData
+            )!
+            let rootEntity = SpatialEntity()
+            rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
+            let windowComponent = SpatialWindowComponent(parentWindowContainerID: wc.id, url: fileUrl)
+            rootEntity.addComponent(windowComponent)
+            rootEntity.setParentWindowContainer(wg: wc)
+            return windowData
         }
         .windowStyle(.plain).onChange(of: scenePhase) {
             oldPhase,
