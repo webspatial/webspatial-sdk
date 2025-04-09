@@ -35,6 +35,9 @@ struct web_spatialApp: App {
 
         // init pwa manager
         pwaManager._init()
+
+        // create Immersive SpatialWindowContainer
+        let _ = SpatialWindowContainer.createImmersiveWindowContainer()
     }
 
     func getFileUrl() -> URL {
