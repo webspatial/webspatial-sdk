@@ -1,13 +1,20 @@
-import type { Spatial, SpatialSession } from '@webspatial/core-sdk'
-
-export interface GetSessionShape {
-  getSession: () => SpatialSession | null
-  spatial: Spatial | null
+import { Spatial, SpatialSession } from '@webspatial/core-sdk'
+// Create the default Spatial session for the app
+let spatial: Spatial | null = null
+let _currentSession: SpatialSession | null = null
+/** @hidden */
+export function getSession() {
+  if (!spatial) {
+    spatial = new Spatial()
+  }
+  if (!spatial.isSupported()) {
+    return null
+  }
+  if (_currentSession) {
+    return _currentSession
+  }
+  _currentSession = spatial.requestSession()
+  return _currentSession
 }
 
-const implementation: GetSessionShape = __WEB__
-  ? require('./getSession.web')
-  : require('./getSession.avp')
-
-export const getSession = implementation.getSession
-export const spatial = implementation.spatial
+export { spatial }

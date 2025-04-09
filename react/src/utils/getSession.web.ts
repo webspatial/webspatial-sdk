@@ -1,10 +1,9 @@
-import { GetSessionShape } from './getSession'
-
+import type { Spatial } from '@webspatial/core-sdk'
 // Create the default Spatial session for the app
-let spatial: GetSessionShape['spatial'] = null
+let spatial: Spatial | null = null
 
 /** @hidden */
-export const getSession: GetSessionShape['getSession'] = () => {
+export function getSession() {
   return null
 }
 

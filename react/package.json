@@ -3,20 +3,31 @@
   "version": "0.1.9",
   "description": "React components for WebSpatial",
   "main": "./dist/default/index.js",
+  "type": "module",
   "types": "./dist/default/index.d.ts",
   "exports": {
     ".": "./dist/default/index.js",
-    "./default": "./dist/default/index.js",
-    "./web": "./dist/web/index.js",
-    "./plugin-esbuild": "./npm/plugin/esbuild.mjs",
     "./jsx-runtime": {
-      "react-server": "./dist/jsx/jsx-runtime.react-server.js",
+      "react-server": "./dist/jsx/jsx-runtime.web.js",
       "default": "./dist/jsx/jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
-      "react-server": "./dist/jsx/jsx-dev-runtime.react-server.js",
+      "react-server": "./dist/jsx/jsx-dev-runtime.web.js",
       "default": "./dist/jsx/jsx-dev-runtime.js"
-    }
+    },
+    "./default": "./dist/default/index.js",
+    "./default/jsx-dev-runtime": {
+      "react-server": "./dist/jsx/jsx-dev-runtime.web.js",
+      "default": "./dist/jsx/jsx-dev-runtime.js"
+    },
+    "./default/jsx-runtime": {
+      "react-server": "./dist/jsx/jsx-runtime.web.js",
+      "default": "./dist/jsx/jsx-runtime.js"
+    },
+    "./web": "./dist/web/index.js",
+    "./web/jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.web.js",
+    "./web/jsx-runtime": "./dist/jsx/jsx-runtime.web.js",
+    "./plugin-esbuild": "./npm/plugin/esbuild.mjs"
   },
   "files": [
     "dist",

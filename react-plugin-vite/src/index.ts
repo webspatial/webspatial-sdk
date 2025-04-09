@@ -21,35 +21,14 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
   console.log('🚀 ~ mode:', mode)
   return [
     {
-      name: 'vite-plugin-webspatial-cjs',
+      name: 'vite-plugin-webspatial-common',
       config: config => {
-        // for stopping from esm and cjs module reset each
-        // we make them all cjs.
-        // so should we do in other plugin
         const myConfig: UserConfig = {
-          // esbuild: {
-          //   jsxImportSource: '@webspatial/react-sdk',
-          // },
-          build: {
-            commonjsOptions: {
-              include: [
-                // local path
-                /XRSDK\/react\/dist/,
-                /XRSDK\/core\/dist/,
-                // npm path
-                /@webspatial\/react-sdk/,
-                /@webspatial\/core-sdk/,
-                /node_modules/,
-              ],
-            },
-          },
-          optimizeDeps: {
-            include: [
-              '@webspatial/react-sdk',
-              '@webspatial/core-sdk',
-              '@webspatial/react-sdk/jsx-dev-runtime',
-              '@webspatial/react-sdk/jsx-runtime',
-            ],
+          esbuild: {
+            jsxImportSource:
+              mode === 'avp'
+                ? '@webspatial/react-sdk/default'
+                : '@webspatial/react-sdk/web',
           },
         }
         const finalConfig = mergeConfig(config, myConfig)
@@ -66,7 +45,7 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         console.log('🚀 ~ finalBase:', finalBase)
         const userOutDir = userCfg.build?.outDir
         const finalOutdir = getFinalOutdir(userOutDir, mode, outputDir)
-        const config: any = {
+        const config: UserConfig = {
           define: {},
           resolve: {
             alias: {},
@@ -77,19 +56,20 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
           },
         }
         config.base = finalBase
-        config.resolve.alias = getReactSDKAliasByMode(mode)
+        config.resolve!.alias = getReactSDKAliasByMode(mode)
         config.define = {
           // Define environment variables for both Node and browser
           ...getDefineByMode(mode),
           ...getDefineXrEnvBase(finalBase),
         }
 
+        console.log('🚀 ~ config:', config)
         return config
       },
     },
 
     {
-      name: 'react-vite-plugin-for-webspatial',
+      name: 'vite-plugin-webspatial-build',
       apply: 'build',
       config: (config, { command }) => {
         const userOutDir = config.build?.outDir
