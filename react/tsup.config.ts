@@ -22,7 +22,6 @@ export default defineConfig([
       }
       options.define = {
         ...options.define,
-        __WEB__: 'true',
       }
       options.resolveExtensions = [
         '.web.tsx',
@@ -42,7 +41,6 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: 'false',
       }
     },
     // outExtension: f => {
@@ -70,7 +68,6 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: 'false',
       }
     },
     // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
