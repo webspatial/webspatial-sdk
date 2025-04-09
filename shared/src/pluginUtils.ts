@@ -62,6 +62,30 @@ export function getReactSDKAliasByMode(mode?: ModeKind) {
   return { '@webspatial/react-sdk$': '@webspatial/react-sdk/web' }
 }
 
+export function getJSXAliasByMode(mode?: ModeKind) {
+  if (mode === 'avp') {
+    return {
+      '@webspatial/react-sdk/jsx-dev-runtime':
+        '@webspatial/react-sdk/default/jsx-dev-runtime',
+      '@webspatial/react-sdk/jsx-runtime':
+        '@webspatial/react-sdk/default/jsx-runtime',
+    }
+  }
+  return {
+    '@webspatial/react-sdk/jsx-dev-runtime':
+      '@webspatial/react-sdk/web/jsx-dev-runtime',
+    '@webspatial/react-sdk/jsx-runtime':
+      '@webspatial/react-sdk/web/jsx-runtime',
+  }
+}
+
+export function getJSXImportSourceByMode(mode?: ModeKind) {
+  if (mode === 'avp') {
+    return '@webspatial/react-sdk/default'
+  }
+  return '@webspatial/react-sdk/web'
+}
+
 export function getDefineByMode(mode?: ModeKind) {
   if (mode === 'avp') {
     return {
