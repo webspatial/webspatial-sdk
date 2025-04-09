@@ -12,7 +12,7 @@ export default defineConfig([
   {
     ...baseConfig,
     entry: ['src/index.ts'],
-    format: ['cjs', 'esm'],
+    format: ['esm'],
     outDir: 'dist',
   },
 ])
