@@ -1,26 +1,49 @@
 import { SpatialHelper } from '@webspatial/core-sdk'
 import ky from 'ky'
-console.log('hello world')
-var testResults = [] as any[]
-
 var testPort = parseInt(window.location.port) + 1
+
+var testResults = [] as any[]
+const testComplete = (pass: boolean, message: String) => {
+  testResults.push({
+    status: pass ? 'success' : 'fail',
+    message: message,
+  })
+  document.body.innerHTML = JSON.stringify(testResults)
+}
+const testPass = (message: String) => {
+  testComplete(true, message)
+}
+const testFail = (message: String) => {
+  testComplete(false, message)
+}
 
 var main = async () => {
   if (SpatialHelper.instance === null) {
-    testResults.push({
-      status: 'fail',
-      message: 'SpatialHelper.instance is null',
-    })
-    document.body.innerHTML = JSON.stringify(testResults)
+    testFail('SpatialHelper.instance is null')
   } else {
-    testResults.push({
-      status: 'success',
-      message: 'SpatialHelper.instance is populated',
-    })
+    testPass('SpatialHelper.instance is populated')
+
+    document.documentElement.style.color = 'white'
+    document.documentElement.style.padding = '50px'
+    await SpatialHelper.instance.setBackgroundStyle(
+      { material: { type: 'translucent' }, cornerRadius: 50 },
+      '#00000000',
+    )
+    testPass('setBackgroundStyle')
+
+    await SpatialHelper.instance.navigation.openPanel(
+      '/testPages/testPage.html',
+      { resolution: { width: 100, height: 100 } },
+    )
+    testPass('open panel')
+
+    let shapEnt = await SpatialHelper.instance.shape.createShapeEntity()
+    testPass('createShapeEntity')
+
     var res = await ky.post('http://localhost:' + testPort, {
       json: { results: testResults },
     })
-    document.body.innerHTML = JSON.stringify(testResults)
+    testPass('Received result')
   }
 }
 main()
