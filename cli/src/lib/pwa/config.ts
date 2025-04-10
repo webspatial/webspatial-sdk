@@ -7,7 +7,7 @@ export function configId(
   bundleId: string,
   isDev: boolean,
 ) {
-  if (isDev) {
+  if (isDev && !bundleId) {
     manifestJson.id = 'com.webspatial.test'
   } else if (bundleId) {
     manifestJson.id = bundleId
