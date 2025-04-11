@@ -20,4 +20,17 @@ export default defineConfig([
       }
     },
   },
+  {
+    ...baseConfig,
+    entry: ['src/index.ts'],
+    format: ['iife'],
+    outDir: 'dist/iife',
+    globalName: 'webspatialCore',
+    esbuildOptions(options) {
+      options.define = {
+        ...options.define,
+      }
+    },
+    minify: true,
+  },
 ])
