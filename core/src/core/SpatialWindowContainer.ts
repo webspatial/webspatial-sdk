@@ -50,4 +50,10 @@ export class SpatialWindowContainer {
   async setRootEntity(entity: SpatialEntity) {
     await entity._setParentWindowContainer(this)
   }
+
+  async close() {
+    await WebSpatial.updateWindowContainer(this._wg, {
+      close: true,
+    })
+  }
 }
