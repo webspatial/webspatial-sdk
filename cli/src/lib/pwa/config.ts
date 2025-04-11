@@ -6,9 +6,13 @@ export function configId(manifestJson: Record<string, any>, bundleId: string) {
   if (bundleId) {
     manifestJson.id = bundleId
   } else {
-    const url = new URL(manifestJson.id)
-    let arr = url.host.split('.').reverse()
-    manifestJson.id = arr.join('.')
+    try {
+      const url = new URL(manifestJson.id)
+      let arr = url.host.split('.').reverse()
+      manifestJson.id = arr.join('.')
+    } catch (e) {
+      throw new Error('id is not a valid url')
+    }
   }
 }
 
