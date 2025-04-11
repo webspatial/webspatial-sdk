@@ -3,7 +3,15 @@
   "version": "0.1.10",
   "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
   "type": "module",
   "sideEffects": false,
   "scripts": {
