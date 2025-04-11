@@ -179,7 +179,7 @@ struct SpatialWebViewUI: View {
             .opacity(wv.opacity)
             .hidden(!ent.visible)
             .ornament(attachmentAnchor: .scene(.bottomTrailing), contentAlignment: .bottomTrailing) {
-                if wv.isRootWebview() && pwaManager.display != .fullscreen {
+                if wv.isRootEntityWebview() && pwaManager.display != .fullscreen {
                     NavView(swc: wv, navInfo: wv.navInfo)
                 }
             }
