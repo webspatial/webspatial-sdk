@@ -36,6 +36,7 @@ export class PWAGenerator {
   static DisplayModes: string[] = ['standalone', 'minimal-ui']
 
   private static defaultManifestJson = {
+    id: 'com.webspatial.test',
     name: 'WebSpatialTest',
     display: 'minimal-ui',
     start_url: '/',
@@ -112,7 +113,10 @@ export class PWAGenerator {
     args: InitArgs,
     isDev: boolean,
   ) {
-    configId(manifestInfo.json, args['bundle-id'] ?? '', isDev)
+    if (isDev && !manifestInfo.json.id) {
+      manifestInfo.json.id = this.defaultManifestJson.id
+    }
+    configId(manifestInfo.json, args['bundle-id'] ?? '')
     configScope(manifestInfo.json)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
