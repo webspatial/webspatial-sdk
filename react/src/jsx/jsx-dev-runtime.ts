@@ -1,4 +1,4 @@
-import { spatialPolyfill } from './spatialPolyfill'
+import { spatialPolyfill } from '../polyfill'
 
 spatialPolyfill()
 

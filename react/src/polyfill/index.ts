@@ -1,0 +1,1 @@
+export { spatialPolyfill } from './spatialPolyfill'
