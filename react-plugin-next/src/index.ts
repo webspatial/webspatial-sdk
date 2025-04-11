@@ -7,6 +7,7 @@ import {
   getEnv,
   getFinalBase,
   getFinalOutdir,
+  getJSXAliasByMode,
   getReactSDKAliasByMode,
 } from '@webspatial/shared'
 
@@ -44,6 +45,15 @@ export default function withWebspatial<
 
     const finalConfig = {
       ...config,
+      experimental: {
+        turbo: {
+          root: '..', // https://github.com/vercel/next.js/issues/71886
+          resolveAlias: {
+            ...getJSXAliasByMode(mode),
+            ...getReactSDKAliasByMode(mode),
+          },
+        },
+      },
       webpack: (webpackConfig: WebpackConfig, context: any) => {
         let modifiedConfig = webpackConfig
         if (config && typeof config.webpack === 'function') {
@@ -65,6 +75,7 @@ export default function withWebspatial<
         modifiedConfig.resolve = modifiedConfig.resolve || {}
         modifiedConfig.resolve.alias = {
           ...(modifiedConfig.resolve.alias || {}),
+          ...getJSXAliasByMode(mode),
           ...getReactSDKAliasByMode(mode),
         }
         return modifiedConfig
@@ -75,6 +86,7 @@ export default function withWebspatial<
 
     return finalConfig as T & {
       webpack: (config: WebpackConfig, context: any) => WebpackConfig
+      experimental: any
       distDir: string
       basePath: string
     }
