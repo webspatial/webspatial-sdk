@@ -136,10 +136,3 @@ export class XRApp {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
 }
-
-export function initScene(
-  name: string,
-  callback: (pre: WindowContainerOptions) => WindowContainerOptions,
-) {
-  return XRApp.getInstance().initScene(name, callback)
-}

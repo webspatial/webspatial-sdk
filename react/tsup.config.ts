@@ -22,8 +22,14 @@ export default defineConfig([
       }
       options.define = {
         ...options.define,
-        __WEB__: 'true',
       }
+      options.resolveExtensions = [
+        '.web.tsx',
+        '.web.ts',
+        '.tsx',
+        '.ts',
+        ...(options.resolveExtensions ?? []),
+      ]
     },
   },
   {
@@ -35,9 +41,11 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: 'false',
       }
     },
+    // outExtension: f => {
+    //   return { js: '.js' }
+    // },
   },
 
   {
@@ -45,18 +53,23 @@ export default defineConfig([
     ...baseConfig,
     external: ['@webspatial/react-sdk'],
     entry: [
+      // dev
+      'src/jsx/jsx-dev-runtime.web.ts',
       'src/jsx/jsx-dev-runtime.ts',
-      'src/jsx/jsx-dev-runtime.react-server.ts',
+      // prod
+      'src/jsx/jsx-runtime.web.ts',
       'src/jsx/jsx-runtime.ts',
-      'src/jsx/jsx-runtime.react-server.ts',
     ],
+    // loader: {
+    //   '.js': 'copy', // directly copy js file
+    // },
     format: ['esm'],
     outDir: 'dist/jsx',
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        __WEB__: 'false',
       }
     },
+    // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
   },
 ])
