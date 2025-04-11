@@ -97,6 +97,7 @@ export namespace WebSpatialJSX {
   export type IntrinsicElements = {
     [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
       style?: React.CSSProperties
+      'enable-xr'?: boolean
     }
   }
 }
