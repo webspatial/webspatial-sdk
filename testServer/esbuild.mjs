@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild'
 import { tailwindPlugin } from 'esbuild-plugin-tailwindcss'
-import xrsdkPlugin from '../react/npm/plugin/esbuild.js'
+import xrsdkPlugin from '../react/npm/plugin/esbuild.mjs'
 
 import glob from 'tiny-glob'
 import path from 'path'
@@ -36,9 +36,7 @@ var ctx = await esbuild.context({
   sourcemap: true,
   jsx: 'automatic',
   plugins,
-  define: {
-    '__WEB__': 'false',
-  },
+  define: {},
   // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
   banner: {
     js: `
@@ -51,11 +49,11 @@ var ctx = await esbuild.context({
   alias: {
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
-    "@webspatial/react-sdk/jsx-runtime": path.resolve('../react/src/jsx/jsx-runtime.ts'),
+    '@webspatial/react-sdk/jsx-runtime': path.resolve(
+      '../react/src/jsx/jsx-runtime.ts',
+    ),
     '@webspatial/react-sdk': path.resolve('../react/src'),
     '@webspatial/core-sdk': path.resolve('../core/src'),
-
-
   },
 })
 
