@@ -123,8 +123,8 @@ class SpatialWindowComponent: SpatialComponent {
     /// For example, a `SpatialDiv` is not a root webview.
     ///
     /// - Returns: `true` if the webview is a root webview (i.e., `parentWebviewID` is empty), otherwise `false`.
-    public func isRootWebview() -> Bool {
-        return parentWebviewID == ""
+    public func isRootEntityWebview() -> Bool {
+        return entity?.coordinateSpace == .ROOT
     }
 
     public func setWindowContainer(uuid: String, wgd: WindowContainerData) {
@@ -151,7 +151,7 @@ class SpatialWindowComponent: SpatialComponent {
         }
         set(newValue) {
             _backgroundMaterial = newValue
-            if isRootWebview() {
+            if isRootEntityWebview() {
                 webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
             } else {
                 // it's spatial div
@@ -396,7 +396,7 @@ class SpatialWindowComponent: SpatialComponent {
 
     func didCloseWebView() {
         // if need
-        if isRootWebview() {
+        if isRootEntityWebview() {
             SceneManager.Instance.closeRoot(self)
         }
     }
