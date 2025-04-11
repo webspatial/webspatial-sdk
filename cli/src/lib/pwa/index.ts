@@ -113,10 +113,11 @@ export class PWAGenerator {
     args: InitArgs,
     isDev: boolean,
   ) {
+    let bundleId = args['bundle-id'] ?? ''
     if (isDev && !manifestInfo.json.id) {
-      manifestInfo.json.id = this.defaultManifestJson.id
+      bundleId = this.defaultManifestJson.id
     }
-    configId(manifestInfo.json, args['bundle-id'] ?? '')
+    configId(manifestInfo.json, bundleId)
     configScope(manifestInfo.json)
     configDisplay(manifestInfo.json)
     configDeeplink(manifestInfo.json)
