@@ -1,5 +1,14 @@
 # @webspatial/react-sdk
 
+## 0.1.11
+
+### Patch Changes
+
+- cd50d6b: separate avp and web version by ext filename instead of **WEB**
+- 56f32c3: fix a link handling error
+- Updated dependencies [6cc8bef]
+  - @webspatial/core-sdk@0.1.11
+
 ## 0.1.10
 
 ### Patch Changes

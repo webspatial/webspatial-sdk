@@ -1,5 +1,11 @@
 # @webspatial/vite-plugin
 
+## 0.1.4
+
+### Patch Changes
+
+- cd50d6b: setup jsxImportSource inside plugin
+
 ## 0.1.3
 
 ### Patch Changes
