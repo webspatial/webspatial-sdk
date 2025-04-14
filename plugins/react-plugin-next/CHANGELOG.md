@@ -1,5 +1,11 @@
 # @webspatial/next-plugin
 
+## 0.1.2
+
+### Patch Changes
+
+- cbb49a1: support turbo
+
 ## 0.1.1
 
 ### Patch Changes
