@@ -204,6 +204,68 @@ importers:
         specifier: ^5.6.3
         version: 5.8.2
 
+  plugins/react-plugin-next:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.13.14
+      '@webspatial/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
+      webpack:
+        specifier: ^5.98.0
+        version: 5.98.0
+
+  plugins/react-plugin-rsbuild:
+    devDependencies:
+      '@rsbuild/core':
+        specifier: ^1.2.19
+        version: 1.2.19
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.13.14
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
+
+  plugins/react-plugin-rspack:
+    dependencies:
+      '@webspatial/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      '@rspack/core':
+        specifier: ^1.3.0
+        version: 1.3.0(@swc/helpers@0.5.15)
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.13.14
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
+      webpack:
+        specifier: ^5.98.0
+        version: 5.98.0
+
+  plugins/react-plugin-vite:
+    dependencies:
+      '@webspatial/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.13.14
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
+      vite:
+        specifier: '>=6.2.4'
+        version: 6.2.4(@types/node@22.13.14)(jiti@2.4.2)(lightningcss@1.29.1)(sass-embedded@1.83.4)(sass@1.84.0)(terser@5.39.0)(yaml@2.7.0)
+
   react:
     dependencies:
       '@google/model-viewer':
@@ -279,68 +341,6 @@ importers:
       webpack:
         specifier: ^5.98.0
         version: 5.98.0(esbuild@0.25.0)
-
-  react-plugin-next:
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.9
-        version: 22.13.9
-      '@webspatial/shared':
-        specifier: workspace:*
-        version: link:../shared
-      tsup:
-        specifier: ^8.4.0
-        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
-      webpack:
-        specifier: ^5.98.0
-        version: 5.98.0
-
-  react-plugin-rsbuild:
-    devDependencies:
-      '@rsbuild/core':
-        specifier: ^1.2.19
-        version: 1.2.19
-      '@types/node':
-        specifier: ^22.13.9
-        version: 22.13.9
-      tsup:
-        specifier: ^8.4.0
-        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
-
-  react-plugin-rspack:
-    dependencies:
-      '@webspatial/shared':
-        specifier: workspace:*
-        version: link:../shared
-    devDependencies:
-      '@rspack/core':
-        specifier: ^1.3.0
-        version: 1.3.0(@swc/helpers@0.5.15)
-      '@types/node':
-        specifier: ^22.13.9
-        version: 22.13.14
-      tsup:
-        specifier: ^8.4.0
-        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
-      webpack:
-        specifier: ^5.98.0
-        version: 5.98.0
-
-  react-plugin-vite:
-    dependencies:
-      '@webspatial/shared':
-        specifier: workspace:*
-        version: link:../shared
-    devDependencies:
-      '@types/node':
-        specifier: ^22.13.9
-        version: 22.13.9
-      tsup:
-        specifier: ^8.4.0
-        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
-      vite:
-        specifier: '>=6.2.4'
-        version: 6.2.4(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.1)(sass-embedded@1.83.4)(sass@1.84.0)(terser@5.39.0)(yaml@2.7.0)
 
   shared:
     devDependencies:
@@ -12489,21 +12489,6 @@ snapshots:
       rollup: 4.34.9
     optionalDependencies:
       '@types/node': 22.13.14
-      fsevents: 2.3.3
-      jiti: 2.4.2
-      lightningcss: 1.29.1
-      sass: 1.84.0
-      sass-embedded: 1.83.4
-      terser: 5.39.0
-      yaml: 2.7.0
-
-  vite@6.2.4(@types/node@22.13.9)(jiti@2.4.2)(lightningcss@1.29.1)(sass-embedded@1.83.4)(sass@1.84.0)(terser@5.39.0)(yaml@2.7.0):
-    dependencies:
-      esbuild: 0.25.0
-      postcss: 8.5.3
-      rollup: 4.34.9
-    optionalDependencies:
-      '@types/node': 22.13.9
       fsevents: 2.3.3
       jiti: 2.4.2
       lightningcss: 1.29.1
