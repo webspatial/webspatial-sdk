@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.1.11
+
+### Patch Changes
+
+- 6cc8bef: Get androidXR command message working again
+
 ## 0.1.10
 
 ## 0.1.9

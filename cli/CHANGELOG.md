@@ -1,5 +1,13 @@
 # @webspatial/builder
 
+## 0.1.11
+
+### Patch Changes
+
+- 310a722: Fix bundleId bug with run command
+- 331e2f6: When executing the run command, the default value will be overwritten when --bundle-id is passed in
+  - @webspatial/platform-visionos@0.1.11
+
 ## 0.1.10
 
 ### Patch Changes
