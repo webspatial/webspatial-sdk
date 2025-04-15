@@ -126,9 +126,11 @@ export class SpatialWindowComponent extends SpatialComponent {
       x.rel = 'stylesheet'
       x.href = 'forceStyle://mystyle.css?' + 'style=' + encoded
       document.head.appendChild(x)
+      // remove this style after trigger forceStyle action
+      x.remove()
+    } else {
+      await WebSpatial.updateResource(this._resource, { style: options })
     }
-
-    await WebSpatial.updateResource(this._resource, { style: options })
   }
 
   /**
