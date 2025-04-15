@@ -1,6 +1,4 @@
-import { parseCornerRadius } from '../spatial-react-components'
-import { getSession } from '../utils'
-import { XRApp } from '../XRApp'
+import { parseCornerRadius, getSession, XRApp } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
