@@ -1,4 +1,6 @@
+//@ts-ignore
 import { getSession } from '@webspatial/react-sdk'
+//@ts-ignore
 import { defaultSceneConfig, XRApp } from '@webspatial/react-sdk'
 
 export async function injectSceneHook() {
