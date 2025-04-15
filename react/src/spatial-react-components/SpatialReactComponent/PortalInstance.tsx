@@ -541,12 +541,15 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     inheritedPortalStyle.position !== 'absolute' &&
     inheritedPortalStyle.position !== 'fixed'
 
-  const El = props.El
+  const PlaceHolderEl =
+    props.El !== 'audio' && props.El !== 'video' && props.El !== 'canvas'
+      ? props.El
+      : 'div'
 
   return (
     <SpatialWindowManagerContext.Provider value={spatialWindowManager}>
       {needRenderPlaceHolder && (
-        <El
+        <PlaceHolderEl
           className={className}
           data-subportal-spatialid={spatialId}
           style={{

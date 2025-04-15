@@ -44,6 +44,7 @@ function renderRootCSSSpatialComponent(
     children,
     debugName,
     debugShowStandardInstance,
+    optimized,
     ...props
   } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
@@ -62,7 +63,7 @@ function renderRootCSSSpatialComponent(
     transform: 'none',
   }
 
-  const El = inProps.component || 'div'
+  const El = optimized ? 'div' : inProps.component || 'div'
 
   // hijack SpatialDiv ref
   const spatialDivRef = useHijackSpatialDivRef(refIn, ref)
@@ -76,6 +77,7 @@ function renderRootCSSSpatialComponent(
           style={spatialDivStyle}
           className={className}
           children={children}
+          optimized={optimized}
           {...props}
           spatialStyle={spatialStyle}
           debugName={debugName}
@@ -144,6 +146,7 @@ function renderInPortalInstance(
     children,
     debugName,
     debugShowStandardInstance,
+    optimized,
     ...props
   } = inProps
   const { ref, spatialStyle, ready } = useSpatialStyle()
@@ -161,7 +164,7 @@ function renderInPortalInstance(
     transform: 'none',
   }
 
-  const El = inProps.component || 'div'
+  const El = optimized ? 'div' : inProps.component || 'div'
 
   const divRefClassName = className + ' ' + InjectClassName
 
@@ -176,6 +179,7 @@ function renderInPortalInstance(
           style={spatialDivStyle}
           className={className}
           children={children}
+          optimized={optimized}
           {...props}
           spatialStyle={spatialStyle}
           debugName={debugName}
