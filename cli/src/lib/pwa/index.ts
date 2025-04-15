@@ -35,8 +35,8 @@ export class PWAGenerator {
   // Supported display modes for TWA
   static DisplayModes: string[] = ['standalone', 'minimal-ui']
 
+  private static defaultBundleId = 'com.webspatial.test'
   private static defaultManifestJson = {
-    id: 'com.webspatial.test',
     name: 'WebSpatialTest',
     display: 'minimal-ui',
     start_url: '/',
@@ -115,7 +115,7 @@ export class PWAGenerator {
   ) {
     let bundleId = args['bundle-id'] ?? ''
     if (isDev && !manifestInfo.json.id) {
-      bundleId = this.defaultManifestJson.id
+      bundleId = this.defaultBundleId
     }
     configId(manifestInfo.json, bundleId)
     configScope(manifestInfo.json)
