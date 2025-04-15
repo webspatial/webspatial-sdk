@@ -5,25 +5,25 @@ var pwaManager = PWAManager()
 
 struct PWAManager: Codable {
     var isLocal: Bool = false
-    var start_url: String = "http://localhost:5173/"
-    var scope: String = ""
-    var id: String = "com.webspatial.pico"
+    var start_url: String = "http://localhost:5179/testPages/"
+    var scope: String = "http://localhost:5179/"
+    var id: String = "com.webspatial.test"
 
-    var name: String = "WebSpatial"
+    var name: String = "CI app"
     var short_name: String = "name"
-    var description: String = ""
+    var description: String = "undefined"
 
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
-    var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "web+spatial", url: "./?cmd=%s")]
+    var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "", url: "")]
     var mainScene: WindowContainerOptions = .init(
         defaultSize: .init(
             width: 1280,
-            height: 720
+            height: 1280
         ),
         resizability: "automatic"
     )
-    var useMainScene: Bool = true
+    var useMainScene: Bool = false
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
