@@ -74,6 +74,13 @@ struct web_spatialApp: App {
             let windowComponent = SpatialWindowComponent(parentWindowContainerID: wc.id, url: fileUrl)
             rootEntity.addComponent(windowComponent)
             rootEntity.setParentWindowContainer(wg: wc)
+
+            // init SpatialScene
+            let spatialScene = SpatialScene(
+                windowContainerID: wc.id,
+                swc: windowComponent
+            )
+            SceneManager.Instance.addScene(spatialScene)
             return windowData
         }
         .windowStyle(.plain).onChange(of: scenePhase) {

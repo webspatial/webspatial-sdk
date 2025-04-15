@@ -558,15 +558,15 @@ class CommandManager {
                         // setup windowContainer defaultValues
                         if let config = data.sceneData?.sceneConfig {
                             SceneManager.Instance
-                                .createRoot(target: target, windowID: windowID, config: config)
+                                .createScene(target: target, windowID: windowID, config: config)
                         } else {
                             SceneManager.Instance
-                                .createRoot(target: target, windowID: windowID)
+                                .createScene(target: target, windowID: windowID)
                         }
 
                     } else {
                         if let windowContainerID = data.sceneData?.windowContainerID {
-                            SceneManager.Instance.focusRoot(target: target, windowContainerID: windowContainerID)
+                            SceneManager.Instance.focusScene(target: target, windowContainerID: windowContainerID)
                         } else {
                             logger.error("error: no windowContainerID")
                         }
@@ -575,9 +575,10 @@ class CommandManager {
                     target.completeEvent(requestID: info.requestID, data: "{}")
                 }
             } else if data.sceneData?.method == "showRoot" {
-                if let config = data.sceneData?.sceneConfig {
-                    let parentWindowContainerID = info.windowContainerID
-                    SceneManager.Instance.showRoot(target: target, config: config, parentWindowContainerID: parentWindowContainerID)
+                if let config = data.sceneData?.sceneConfig,
+                   let windowContainerID = data.sceneData?.windowContainerID
+                {
+                    SceneManager.Instance.showScene(target: target, config: config, windowContainerID: windowContainerID)
                 }
                 target.completeEvent(requestID: info.requestID, data: "{}")
 
@@ -641,9 +642,9 @@ class CommandManager {
         let data = info.cmd.data!
         switch data.loading?.method {
         case "show":
-            SceneManager.Instance.setLoading(.show, windowContainerID: info.windowContainerID)
+            SceneManager.Instance.setLoading(.show, swc: target)
         case "hide":
-            SceneManager.Instance.setLoading(.hide, windowContainerID: info.windowContainerID)
+            SceneManager.Instance.setLoading(.hide, swc: target)
         case _:
             break
         }

@@ -27,7 +27,6 @@ declare global {
     // Internal id information mapping to internal state about the native window
     _webSpatialID: string
     _webSpatialGroupID: string
-    _webSpatialParentGroupID: string
 
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
@@ -165,7 +164,6 @@ export class WebSpatial {
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
       sceneData: jsbSceneData,
-      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
     })
 
     try {
@@ -338,7 +336,6 @@ export class WebSpatial {
 
   static async setLoading(method: LoadingMethodKind, style?: string) {
     var cmd = new RemoteCommand('setLoading', {
-      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
       loading: {
         method,
         style,

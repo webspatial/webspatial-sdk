@@ -397,7 +397,7 @@ class SpatialWindowComponent: SpatialComponent {
     func didCloseWebView() {
         // if need
         if isRootWebview() {
-            SceneManager.Instance.closeRoot(self)
+            SceneManager.Instance.closeScene(self)
         }
     }
 
