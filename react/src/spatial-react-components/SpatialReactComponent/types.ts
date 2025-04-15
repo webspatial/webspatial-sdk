@@ -23,6 +23,11 @@ export interface SpatialReactComponentProps {
 
   component?: ElementType
 
+  // when optimized is true, the standard instance will use div to render,
+  // and the the standard instance's dom rect will be determined by the style instead of it's children.
+  // this is used to optimize the performance of the standard instance.
+  optimized?: boolean
+
   debugName?: string
   debugShowStandardInstance?: boolean
 }

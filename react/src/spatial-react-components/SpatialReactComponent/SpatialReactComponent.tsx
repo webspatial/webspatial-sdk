@@ -24,6 +24,7 @@ function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
     allowScroll,
     spatialStyle,
     scrollWithParent,
+    optimized = false,
     ...props
   } = inProps
 
@@ -32,7 +33,7 @@ function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
   const componentDesc = { El }
   const spatialDesc = { spatialStyle, allowScroll, scrollWithParent }
   const debugDesc = { debugName, debugShowStandardInstance }
-  return { componentDesc, spatialDesc, debugDesc, props }
+  return { componentDesc, spatialDesc, debugDesc, optimized, props }
 }
 
 function renderWebReactComponent(
@@ -48,11 +49,13 @@ function renderSpatialReactComponent(
   inProps: SpatialReactComponentWithUniqueIDProps,
   ref: SpatialReactComponentRef,
 ) {
-  const { componentDesc, spatialDesc, debugDesc, props } = parseProps(inProps)
+  const { componentDesc, spatialDesc, debugDesc, props, optimized } =
+    parseProps(inProps)
 
   const standardInstanceProps = {
     ...props,
     ...componentDesc,
+    optimized,
     debugShowStandardInstance: debugDesc.debugShowStandardInstance,
   }
 

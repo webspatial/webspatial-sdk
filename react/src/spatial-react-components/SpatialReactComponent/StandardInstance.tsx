@@ -90,6 +90,8 @@ interface StandardInstanceProps {
   children?: ReactNode
   style?: CSSProperties | undefined
 
+  optimized: boolean
+
   // for debug
   debugShowStandardInstance?: boolean
 }
@@ -97,7 +99,13 @@ export const StandardInstance = forwardRef(function (
   inProps: StandardInstanceProps,
   refIn: SpatialReactComponentRef,
 ) {
-  const { El, style: inStyle, debugShowStandardInstance, ...props } = inProps
+  const {
+    El,
+    style: inStyle,
+    optimized,
+    debugShowStandardInstance,
+    ...props
+  } = inProps
   const extraStyle = {
     visibility: debugShowStandardInstance ? undefined : 'hidden',
     transition: 'none',
@@ -125,9 +133,19 @@ export const StandardInstance = forwardRef(function (
     },
   })
 
+  const StandardEl = optimized ? 'div' : El
+  if (optimized) {
+    delete props.children
+  }
+
   return (
     <SpatialIsStandardInstanceContext.Provider value={true}>
-      <El data-standardinstance ref={proxyRef} style={style} {...props} />
+      <StandardEl
+        data-standardinstance
+        ref={proxyRef}
+        style={style}
+        {...props}
+      />
     </SpatialIsStandardInstanceContext.Provider>
   )
 })
