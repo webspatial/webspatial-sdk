@@ -1,12 +1,4 @@
 {
-  "images": [
-    {
-      "idiom": "vision",
-      "scale": "2x"
-    }
-  ],
-  "info": {
-    "author": "xcode",
-    "version": 1
-  }
+  "images": [{ "idiom": "vision", "scale": "2x", "filename": "icon.png" }],
+  "info": { "author": "xcode", "version": 1 }
 }

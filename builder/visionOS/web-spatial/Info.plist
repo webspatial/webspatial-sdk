@@ -11,7 +11,7 @@
 			<string>web-spatial</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>web+spatial</string>
+				
 			</array>
 		</dict>
 	</array>
