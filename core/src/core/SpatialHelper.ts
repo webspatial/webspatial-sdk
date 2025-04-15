@@ -114,6 +114,10 @@ export class SpatialHelper {
       await this.session
         .getCurrentWindowContainer()
         ._setOpenSettings({ resolution: { width: 900, height: 700 } })
+
+      return {
+        windowContainer: wg,
+      }
     },
     openVolume: async (
       url: string,

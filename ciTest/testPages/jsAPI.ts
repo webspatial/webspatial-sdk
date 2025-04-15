@@ -31,10 +31,12 @@ var main = async () => {
     )
     testPass('setBackgroundStyle')
 
-    await SpatialHelper.instance.navigation.openPanel(
+    let page = await SpatialHelper.instance.navigation.openPanel(
       '/testPages/testPage.html',
       { resolution: { width: 100, height: 100 } },
     )
+    await new Promise(r => setTimeout(r, 1000))
+    await page.windowContainer.close()
     testPass('open panel')
 
     let shapEnt = await SpatialHelper.instance.shape.createShapeEntity()
