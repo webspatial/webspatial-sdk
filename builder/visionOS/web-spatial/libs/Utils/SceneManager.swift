@@ -15,8 +15,8 @@ class SceneManager {
         return sceneMap[windowContainerID]
     }
 
-    func delScene(_ windowContainerID: String) {
-        sceneMap[windowContainerID] = nil // TODO: lazy delete?
+    func delScene(_ scene: SpatialScene) {
+        sceneMap[scene.windowContainerID] = nil
     }
 
     // create scene
@@ -78,6 +78,7 @@ class SceneManager {
             swc.parentWindowContainerID
         ) {
             scene.close()
+            delScene(scene)
         }
     }
 }
