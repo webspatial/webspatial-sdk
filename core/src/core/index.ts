@@ -8,3 +8,4 @@ export { SpatialHelper } from './SpatialHelper'
 export { type WindowStyle } from './types'
 export { SpatialTransform, Vec3, Vec4 } from './SpatialTransform'
 export * from './types'
+export const version = __coresdkversion__

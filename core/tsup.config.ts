@@ -1,11 +1,15 @@
 // tsup.config.ts
 import { defineConfig, Options } from 'tsup'
-
+import { version } from './package.json'
 const baseConfig: Options = {
   splitting: false,
   sourcemap: true,
   clean: true,
   dts: true,
+}
+
+const versionDefine = {
+  __coresdkversion__: JSON.stringify(version),
 }
 
 export default defineConfig([
@@ -17,6 +21,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
   },
@@ -29,6 +34,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
     minify: true,
