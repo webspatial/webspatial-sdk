@@ -1,5 +1,13 @@
 # @webspatial/react-sdk
 
+## 0.1.12
+
+### Patch Changes
+
+- 16e9be0: fix scene polyfill module reset
+- Updated dependencies [f6befd2]
+  - @webspatial/core-sdk@0.1.12
+
 ## 0.1.11
 
 ### Patch Changes

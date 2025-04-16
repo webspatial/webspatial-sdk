@@ -1,5 +1,15 @@
 # @webspatial/builder
 
+## 0.1.12
+
+### Patch Changes
+
+- 09fe929: Remove id from default manifest
+- 55171c7: Support the launch command, which eliminates the need for compilation to trigger the emulator to open the app
+- 0058670: Support shutdown command to close simulator
+- Updated dependencies [f6befd2]
+  - @webspatial/platform-visionos@0.1.12
+
 ## 0.1.11
 
 ### Patch Changes

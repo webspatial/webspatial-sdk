@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.1.12
+
+### Patch Changes
+
+- f6befd2: fix SpatialWindowComponent.setstyle error
+
 ## 0.1.11
 
 ## 0.1.10
