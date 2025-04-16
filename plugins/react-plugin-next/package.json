@@ -18,8 +18,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@webspatial/shared": "workspace:*"
+  },
   "devDependencies": {
-    "@webspatial/shared": "workspace:*",
     "@types/node": "^22.13.9",
     "tsup": "^8.4.0",
     "webpack": "^5.98.0"
