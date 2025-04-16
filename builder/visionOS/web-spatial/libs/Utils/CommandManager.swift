@@ -617,6 +617,15 @@ class CommandManager {
             WindowContainerMgr.Instance.updateWindowContainerPlainDefaultValues(cfg)
             return
         }
+
+        if let shouldClose = data.update?.close,
+           let wg = SpatialWindowContainer.getSpatialWindowContainer(target.readWindowContainerID(id: info.windowContainerID))
+        {
+            if shouldClose {
+                wg.destroy()
+            }
+        }
+
         target.completeEvent(requestID: info.requestID)
     }
 
@@ -726,6 +735,7 @@ struct JSResourceData: Codable {
     var windowID: String?
     var style: JSEntityStyle?
     var nextOpenSettings: JSNextOpen?
+    var close: Bool?
     var getBoundingBox: Bool?
     var zIndex: Double?
     var visible: Bool?
