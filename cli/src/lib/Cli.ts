@@ -6,6 +6,8 @@ import { help } from './cmds/help'
 import { start, store, run } from './cmds/build'
 import { version } from './cmds/version'
 import { fetch, downloadFile, decompressResponseBuffer } from './utils/fetch'
+import { launch } from './cmds/launch'
+import { shutdown } from './cmds/shutdown'
 export class Cli {
   static log: ConsoleLog = new ConsoleLog('webspatial-builder')
   async run(args: string[]): Promise<boolean> {
@@ -47,6 +49,10 @@ export class Cli {
         return await store(parsedArgs)
       case 'run':
         return await run(parsedArgs)
+      case 'launch':
+        return launch(parsedArgs)
+      case 'shutdown':
+        return shutdown(parsedArgs)
       // case 'check':
       //   return await check(config, parsedArgs);
       case 'version': {

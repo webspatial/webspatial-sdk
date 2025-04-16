@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { exec } from 'child_process'
+import { exec, execSync } from 'child_process'
 
 // Make timeout 10 min
 jest.setTimeout(1000 * 60 * 10)
@@ -78,6 +78,7 @@ test('App builds and loads url', async () => {
   server.close()
   process.kill()
   await viteServer.close()
+  execSync('npx @webspatial/builder shutdown')
 
   console.log('Cleanup complete')
 })
