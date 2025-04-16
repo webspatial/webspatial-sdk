@@ -227,6 +227,10 @@ importers:
         version: 5.98.0(esbuild@0.25.0)
 
   plugins/react-plugin-rsbuild:
+    dependencies:
+      '@webspatial/shared':
+        specifier: workspace:*
+        version: link:../../shared
     devDependencies:
       '@rsbuild/core':
         specifier: ^1.2.19

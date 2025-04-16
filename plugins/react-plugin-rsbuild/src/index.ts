@@ -1,68 +1,58 @@
 // plugins/webspatial.ts
 import type { RsbuildPlugin } from '@rsbuild/core'
-import { AVP, getEnv } from './shared'
+import {
+  AVP,
+  getDefineByMode,
+  getEnv,
+  getFinalBase,
+  getFinalOutdir,
+  getReactSDKAliasByMode,
+  ModeKind,
+} from '@webspatial/shared'
 
 interface WebspatialOptions {
-  // base path
-  base?: string
-
-  // running mode
-  mode?: string
-  // server port
-  port?: number
+  mode?: ModeKind
+  outputDir?: string
 }
 
 export default function webspatialPlugin(
   options?: WebspatialOptions,
 ): RsbuildPlugin {
-  let { mode = getEnv(), port = 3000, base = '/' } = options ?? {}
-  const isAVP = mode === AVP
-
-  if (base.endsWith('/')) {
-    base = base.slice(0, base.length - 1)
-  }
-
-  let AVP_PATH = base + '/webspatial/avp'
+  let { mode = getEnv(), outputDir } = options ?? {}
 
   return {
     name: 'webspatial-plugin',
     setup(api) {
       // server
       api.modifyRsbuildConfig(config => {
+        let userbase = config?.server?.base
+        // default is / which is undefined in other build tools
+        if (userbase === '/') userbase = undefined
+        console.log('🚀 ~ setup ~ userbase:', userbase)
+
+        const finalbase = getFinalBase(userbase, mode, outputDir)
+        console.log('🚀 ~ setup ~ finalbase:', finalbase)
+
         config.server = config.server || {}
         config.dev = config.dev ?? {}
-        config.server.base = isAVP ? AVP_PATH : '/'
-        config.server.port = isAVP ? port + 1 : port
-        if (isAVP) {
-          config.dev.assetPrefix = AVP_PATH
-        } else {
-          config.server.proxy = {
-            [`${AVP_PATH}`]: {
-              target: `http://localhost:${port + 1}`,
-              changeOrigin: true,
-            },
-          }
-        }
+        config.dev.assetPrefix = finalbase
 
+        config.server.base = finalbase
         return config
       })
 
       // alias
       api.modifyRsbuildConfig(config => {
-        const xrEnv = getEnv()
-
         config.resolve = config.resolve ?? {}
         config.resolve.alias = {
-          //! only set root import
-          '@webspatial/react-sdk$': isAVP
-            ? '@webspatial/react-sdk/default'
-            : '@webspatial/react-sdk/web',
+          ...config.resolve.alias,
+          ...getReactSDKAliasByMode(mode),
         }
         // define
         config.source = config.source || {}
         config.source.define = {
-          'process.env.XR_ENV': JSON.stringify(xrEnv),
-          'import.meta.env.XR_ENV': JSON.stringify(xrEnv),
+          ...config.source.define,
+          ...getDefineByMode(mode),
         }
         return config
       })
@@ -70,11 +60,17 @@ export default function webspatialPlugin(
       // output
       api.modifyRsbuildConfig(config => {
         config.output = config.output || {}
-        if (isAVP) {
-          config.output.assetPrefix = AVP_PATH
-        }
+        const userOutDir = config.output.distPath?.root
+        const userbase = config.server?.base
+        console.log('🚀 ~ setup ~ userbase:', userbase)
+
+        const assetPrefix = getFinalBase(userbase, mode, outputDir)
+        console.log('🚀 ~ setup ~ assetPrefix:', assetPrefix)
+
+        config.output.assetPrefix = assetPrefix
         config.output.distPath = {
-          root: isAVP ? 'dist/webspatial/avp' : 'dist',
+          // only affect root dir
+          root: getFinalOutdir(userOutDir, mode, outputDir),
         }
         return config
       })

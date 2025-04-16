@@ -19,6 +19,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@webspatial/shared": "workspace:*"
+  },
   "devDependencies": {
     "@rsbuild/core": "^1.2.19",
     "@types/node": "^22.13.9",
