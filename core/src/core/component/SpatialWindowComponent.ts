@@ -1,6 +1,7 @@
 import { SpatialComponent } from './SpatialComponent'
 import { WebSpatial } from '../private/WebSpatial'
 import { Vec3 } from '../SpatialTransform'
+import { SpatialHelper } from '../SpatialHelper'
 
 /**
  * Material type for SpatialDiv or HTML document.
@@ -100,6 +101,11 @@ export class SpatialWindowComponent extends SpatialComponent {
    * @param options style options
    */
   async setStyle(styleParam: StyleParam) {
+    const currentWindowComponent =
+      SpatialHelper.instance?.session.getCurrentWindowComponent()
+    const isSettingSelfStyle =
+      currentWindowComponent?._resource.id == this._resource.id
+
     const { material, cornerRadius } = styleParam
     const options: any = {}
     if (material?.type) {
@@ -119,7 +125,7 @@ export class SpatialWindowComponent extends SpatialComponent {
       }
     }
 
-    if (document && document.readyState == 'loading') {
+    if (isSettingSelfStyle && document && document.readyState == 'loading') {
       // Avoid flash of unstyled content by sending style command via a link element
       var encoded = encodeURIComponent(JSON.stringify(options))
       var x = document.createElement('link')
