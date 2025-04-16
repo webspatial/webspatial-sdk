@@ -105,6 +105,18 @@ export default class Xcrun {
     this.launchApp(device.deviceId, bundleId)
   }
 
+  public static async shutdownSimulator() {
+    let device = this.findSimulator()
+    console.log(`find simulator: ${device.deviceId}`)
+    if (device.state !== 'Shutdown') {
+      let cmd = new XcrunCMD().simctl()
+      cmd.shutdown(device.deviceId)
+      execSync(cmd.line)
+    } else {
+      console.log('simulator is already shutdown')
+    }
+  }
+
   private static launchSimulator(device: any) {
     // boot visionOS simulator if not booted
     if (device.state === 'Shutdown') {
@@ -244,8 +256,8 @@ class XcrunCMD {
     return this
   }
 
-  public shutdown() {
-    this.line += ` shutdown booted`
+  public shutdown(device: string) {
+    this.line += ` shutdown "${device}"`
     return this
   }
 
