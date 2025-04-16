@@ -1,12 +1,22 @@
 import Foundation
 
-enum SceneState {
-    case loading // not configured
-    case active // configured，showing
-    case closed // closed
-}
-
 class SpatialScene {
+    // loading -[show()]--> active -[close()]--> closed
+    enum SceneState {
+        case loading // not configured
+        case active // configured，showing
+        case closed // closed
+    }
+
+    // simple state checker
+    private func isStateAllowed(_ allowedStates: [SceneState]) -> Bool {
+        guard allowedStates.contains(state) else {
+            print("State not allowed. Expected: \(allowedStates), current: \(state)")
+            return false
+        }
+        return true
+    }
+
     // MARK: primary key
 
     var windowContainerID: String
@@ -24,6 +34,8 @@ class SpatialScene {
     init(windowContainerID: String, swc: SpatialWindowComponent) {
         self.windowContainerID = windowContainerID
         self.swc = swc
+        // move to active state
+        state = .active
     }
 
     init(config: WindowContainerOptions?,
@@ -80,6 +92,7 @@ class SpatialScene {
     }
 
     func show(config: WindowContainerOptions) {
+        guard isStateAllowed([.loading]) else { return }
         guard let parent = parent else {
             print("parent not defined")
             return
@@ -103,21 +116,22 @@ class SpatialScene {
             }
         }
 
-        print("show Scene: \(windowContainerID)")
         state = .active
     }
 
     func focus() {
+        guard isStateAllowed([.active]) else { return }
         if let wg = SpatialWindowContainer.getSpatialWindowContainer(windowContainerID) {
             wg.openWindowData.send(wg.wgd)
         }
     }
 
     func close() {
+        guard isStateAllowed([.active]) else { return }
         if let wg = SpatialWindowContainer.getSpatialWindowContainer(windowContainerID) {
             wg.closeWindowData.send(wg.wgd)
         }
-        print("close Scene: \(windowContainerID)")
+
         state = .closed
     }
 }
