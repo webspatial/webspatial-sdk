@@ -18,7 +18,10 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "web-spatial": ["../npmLib/src"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "src/qaTestApp"]
