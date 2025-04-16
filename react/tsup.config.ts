@@ -9,10 +9,6 @@ const baseConfig: Options = {
   dts: true,
 }
 
-const versionDefine = {
-  __reactsdkversion__: JSON.stringify(version),
-}
-
 export default defineConfig([
   {
     // Web
@@ -21,13 +17,22 @@ export default defineConfig([
     format: ['esm'],
     outDir: 'dist/web',
     noExternal: ['@webspatial/core-sdk'],
+    banner: {
+      js: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "web"
+    })()
+      `,
+    },
     esbuildOptions(options) {
       options.alias = {
         '@webspatial/core-sdk': './src/noRuntime.ts',
       }
       options.define = {
         ...options.define,
-        ...versionDefine,
       }
       options.resolveExtensions = [
         '.web.tsx',
@@ -47,12 +52,18 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        ...versionDefine,
       }
     },
-    // outExtension: f => {
-    //   return { js: '.js' }
-    // },
+    banner: {
+      js: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "avp"
+    })()
+      `,
+    },
   },
 
   {
@@ -67,17 +78,12 @@ export default defineConfig([
       'src/jsx/jsx-runtime.web.ts',
       'src/jsx/jsx-runtime.ts',
     ],
-    // loader: {
-    //   '.js': 'copy', // directly copy js file
-    // },
     format: ['esm'],
     outDir: 'dist/jsx',
     esbuildOptions(options) {
       options.define = {
         ...options.define,
-        ...versionDefine,
       }
     },
-    // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
   },
 ])
