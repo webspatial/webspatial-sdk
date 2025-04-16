@@ -43,6 +43,6 @@ export class Spatial {
    * @returns client version string
    */
   getClientVersion() {
-    return '0.0.1'
+    return window?.__webspatialsdk__?.['core-sdk-version']
   }
 }
