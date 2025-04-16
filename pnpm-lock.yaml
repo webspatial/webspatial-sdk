@@ -65,6 +65,12 @@ importers:
       ky:
         specifier: ^1.7.5
         version: 1.7.5
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
