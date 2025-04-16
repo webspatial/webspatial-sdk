@@ -1,7 +1,5 @@
 import * as esbuild from 'esbuild'
 import { tailwindPlugin } from 'esbuild-plugin-tailwindcss'
-import xrsdkPlugin from '../react/npm/plugin/esbuild.mjs'
-
 import glob from 'tiny-glob'
 import path from 'path'
 import livereload from 'livereload'
@@ -25,7 +23,6 @@ plugins.push(
   }),
 )
 plugins.push(sassPlugin())
-plugins.push(xrsdkPlugin())
 
 var outdir = 'dist'
 var port = 5173
@@ -40,6 +37,7 @@ var ctx = await esbuild.context({
   jsx: 'automatic',
   plugins,
   define: {
+    'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV),
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
