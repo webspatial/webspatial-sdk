@@ -1,11 +1,16 @@
 // tsup.config.ts
 import { defineConfig, Options } from 'tsup'
+import { version } from './package.json'
 
 const baseConfig: Options = {
   splitting: false,
   sourcemap: true,
   clean: true,
   dts: true,
+}
+
+const versionDefine = {
+  __reactsdkversion__: JSON.stringify(version),
 }
 
 export default defineConfig([
@@ -22,6 +27,7 @@ export default defineConfig([
       }
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
       options.resolveExtensions = [
         '.web.tsx',
@@ -41,6 +47,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
     // outExtension: f => {
@@ -68,6 +75,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
     // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
