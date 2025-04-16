@@ -67,20 +67,7 @@ export default class Xcrun {
 
   public static async runWithSimulator(appInfo: any) {
     // find visionOS simulator
-    let cmd = new XcrunCMD().simctl()
-    cmd.listDevices('Apple Vision Pro')
-    const res = execSync(cmd.line)
-    const simList = this.parseListDevices(res.toString())
-    if (simList.length === 0) {
-      throw new Error('no visionOS simulator found')
-    }
-    let device = simList[0]
-    for (let i = 0; i < simList.length; i++) {
-      if (simList[i].state === 'Booted') {
-        device = simList[i]
-        break
-      }
-    }
+    let device = this.findSimulator()
     console.log(`find simulator: ${device.deviceId}`)
     const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
     const testPath = PROJECT_BUILD_DIRECTORY + '/test'
@@ -97,9 +84,31 @@ export default class Xcrun {
     console.log('start building')
     execSync(buildCMD)
     console.log('build success')
+    // launch visionOS simulator
+    this.launchSimulator(device)
+    // install app
+    console.log('installing app')
+    this.installApp(testPath, device.deviceId, appInfo.name)
+    console.log('install success')
+    // launch app
+    console.log('launch app')
+    this.launchApp(device.deviceId, appInfo.id)
+  }
+
+  public static launchWithSimulator(bundleId: string) {
+    let device = this.findSimulator()
+    console.log(`find simulator: ${device.deviceId}`)
+    // launch visionOS simulator
+    this.launchSimulator(device)
+    // launch app
+    console.log('launch app')
+    this.launchApp(device.deviceId, bundleId)
+  }
+
+  private static launchSimulator(device: any) {
     // boot visionOS simulator if not booted
     if (device.state === 'Shutdown') {
-      cmd = new XcrunCMD().simctl()
+      let cmd = new XcrunCMD().simctl()
       cmd.boot(device.deviceId)
       execSync(cmd.line)
     }
@@ -107,20 +116,21 @@ export default class Xcrun {
     execSync(
       'open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app/',
     )
-    // install app
-    console.log('installing app')
+  }
+
+  private static installApp(path: string, deviceId: string, appName: string) {
     const appFile = join(
-      testPath,
-      `Build/Products/Debug-xrsimulator/${appInfo.name}.app`,
+      path,
+      `Build/Products/Debug-xrsimulator/${appName}.app`,
     )
-    cmd = new XcrunCMD().simctl()
-    cmd.install(device.deviceId, appFile)
+    let cmd = new XcrunCMD().simctl()
+    cmd.install(deviceId, appFile)
     execSync(cmd.line)
-    console.log('install success')
-    // launch app
-    console.log('launch app')
-    cmd = new XcrunCMD().simctl()
-    cmd.launch(device.deviceId, appInfo.id)
+  }
+
+  private static launchApp(deviceId: string, bundleId: string) {
+    let cmd = new XcrunCMD().simctl()
+    cmd.launch(deviceId, bundleId)
     execSync(cmd.line)
   }
 
@@ -148,6 +158,23 @@ export default class Xcrun {
       }
     }
     return list
+  }
+
+  private static findSimulator() {
+    // find visionOS simulator
+    let cmd = new XcrunCMD().simctl()
+    cmd.listDevices('Apple Vision Pro')
+    const res = execSync(cmd.line)
+    const simList = this.parseListDevices(res.toString())
+    if (simList.length === 0) {
+      throw new Error('no visionOS simulator found')
+    }
+    for (let i = 0; i < simList.length; i++) {
+      if (simList[i].state === 'Booted') {
+        return simList[i]
+      }
+    }
+    return simList[0]
   }
 }
 
