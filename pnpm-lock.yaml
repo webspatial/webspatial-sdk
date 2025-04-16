@@ -205,19 +205,20 @@ importers:
         version: 5.8.2
 
   plugins/react-plugin-next:
+    dependencies:
+      '@webspatial/shared':
+        specifier: workspace:*
+        version: link:../../shared
     devDependencies:
       '@types/node':
         specifier: ^22.13.9
         version: 22.13.14
-      '@webspatial/shared':
-        specifier: workspace:*
-        version: link:../../shared
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.2)(yaml@2.7.0)
       webpack:
         specifier: ^5.98.0
-        version: 5.98.0
+        version: 5.98.0(esbuild@0.25.0)
 
   plugins/react-plugin-rsbuild:
     devDependencies:
