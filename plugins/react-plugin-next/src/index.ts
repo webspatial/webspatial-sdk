@@ -9,6 +9,7 @@ import {
   getFinalOutdir,
   getJSXAliasByMode,
   getReactSDKAliasByMode,
+  ModeKind,
 } from '@webspatial/shared'
 
 interface WebSpatialOptions {
@@ -69,7 +70,9 @@ export default function withWebspatial<
         )
 
         if (context.dev) {
-          modifiedConfig.plugins.push(new PrintDevUrlPlugin({ finalBasePath }))
+          modifiedConfig.plugins.push(
+            new PrintDevInfoPlugin({ mode, finalBasePath, finalDistDir }),
+          )
         }
 
         // conditionNames
@@ -114,15 +117,31 @@ class ModifyResolveConditionNamesPlugin {
   }
 }
 
-class PrintDevUrlPlugin {
+class PrintDevInfoPlugin {
   private static hasPrinted = false
   finalBasePath: string
-  constructor(props: { finalBasePath: string }) {
+  finalDistDir: string
+  mode: ModeKind
+  constructor(props: {
+    finalBasePath: string
+    mode: ModeKind
+    finalDistDir: string
+  }) {
     this.finalBasePath = props.finalBasePath
+    this.finalDistDir = props.finalDistDir
+    this.mode = props.mode
   }
   apply(compiler: any) {
     compiler.hooks.done.tap('WebspatialURLPlugin', () => {
-      if (compiler.options.name === 'client' && !PrintDevUrlPlugin.hasPrinted) {
+      if (
+        compiler.options.name === 'client' &&
+        !PrintDevInfoPlugin.hasPrinted
+      ) {
+        console.log('🚀 ~  mode:', this.mode)
+        console.log('🚀 ~ finalBasePath:', this.finalBasePath)
+
+        console.log('🚀 ~ finalDistDir:', this.finalDistDir)
+
         let port = process.env.PORT ? Number(process.env.PORT) : 3000
         const argv = process.argv
         const idx = argv.findIndex(v => v === '-p' || v === '--port')
@@ -132,7 +151,7 @@ class PrintDevUrlPlugin {
         console.log(
           `🚀 > Dev URL: http://localhost:${port}${this.finalBasePath}`,
         )
-        PrintDevUrlPlugin.hasPrinted = true
+        PrintDevInfoPlugin.hasPrinted = true
       }
     })
   }
