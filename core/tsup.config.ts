@@ -17,6 +17,10 @@ const baseConfig: Options = {
   },
 }
 
+const versionDefine = {
+  __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(version),
+}
+
 export default defineConfig([
   {
     ...baseConfig,
@@ -26,6 +30,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
   },
@@ -38,6 +43,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
     minify: true,
