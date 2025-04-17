@@ -1,11 +1,16 @@
 // tsup.config.ts
 import { defineConfig, Options } from 'tsup'
+import { version } from './package.json'
 
 const baseConfig: Options = {
   splitting: false,
   sourcemap: true,
   clean: true,
   dts: true,
+}
+
+const versionDefine = {
+  __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(version),
 }
 
 export default defineConfig([
@@ -16,12 +21,23 @@ export default defineConfig([
     format: ['esm'],
     outDir: 'dist/web',
     noExternal: ['@webspatial/core-sdk'],
+    banner: {
+      js: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "web"
+    })()
+      `,
+    },
     esbuildOptions(options) {
       options.alias = {
         '@webspatial/core-sdk': './src/noRuntime.ts',
       }
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
       options.resolveExtensions = [
         '.web.tsx',
@@ -41,11 +57,19 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
-    // outExtension: f => {
-    //   return { js: '.js' }
-    // },
+    banner: {
+      js: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "avp"
+    })()
+      `,
+    },
   },
 
   {
@@ -60,16 +84,13 @@ export default defineConfig([
       'src/jsx/jsx-runtime.web.ts',
       'src/jsx/jsx-runtime.ts',
     ],
-    // loader: {
-    //   '.js': 'copy', // directly copy js file
-    // },
     format: ['esm'],
     outDir: 'dist/jsx',
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
-    // publicDir: './npm/jsx/', // copy npm/jsx to dist/jsx
   },
 ])

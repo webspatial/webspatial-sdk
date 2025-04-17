@@ -33,3 +33,5 @@ export class Spatial {
     return null
   }
 }
+
+export const version = undefined // no runtime so this should set undefined

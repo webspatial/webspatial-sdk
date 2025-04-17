@@ -9,6 +9,7 @@ import { sassPlugin, postcssModules } from 'esbuild-sass-plugin'
 import { createServer } from 'http-server'
 
 import corePkg from '../core/package.json' assert { type: 'json' }
+import reactPkg from '../react/package.json' assert { type: 'json' }
 
 var entryPoints = await glob('./src/**/*.tsx')
 entryPoints = entryPoints.concat(await glob('./src/**/*.ts'))
@@ -40,6 +41,7 @@ var ctx = await esbuild.context({
   plugins,
   define: {
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
+    __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
   // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
   banner: {
