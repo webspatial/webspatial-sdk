@@ -62,6 +62,19 @@ export function getReactSDKAliasByMode(mode?: ModeKind) {
   return { '@webspatial/react-sdk$': '@webspatial/react-sdk/web' }
 }
 
+export function getReactSDKAliasReplacementByMode(mode?: ModeKind) {
+  if (mode === 'avp') {
+    return {
+      find: /^@webspatial\/react-sdk$/,
+      replacement: '@webspatial/react-sdk/default',
+    }
+  }
+  return {
+    find: /^@webspatial\/react-sdk$/,
+    replacement: '@webspatial/react-sdk/web',
+  }
+}
+
 export function getJSXAliasByMode(mode?: ModeKind) {
   if (mode === 'avp') {
     return {

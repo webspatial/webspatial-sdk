@@ -6,7 +6,7 @@ import {
   getEnv,
   getFinalBase,
   getFinalOutdir,
-  getReactSDKAliasByMode,
+  getReactSDKAliasReplacementByMode,
 } from '@webspatial/shared'
 interface WebSpatialOptions {
   // XR_ENV
@@ -48,7 +48,7 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         const config: UserConfig = {
           define: {},
           resolve: {
-            alias: {},
+            alias: [getReactSDKAliasReplacementByMode(mode)],
           },
           build: {
             // Set output directory
@@ -56,7 +56,6 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
           },
         }
         config.base = finalBase
-        config.resolve!.alias = getReactSDKAliasByMode(mode)
         config.define = {
           // Define environment variables for both Node and browser
           ...getDefineByMode(mode),
@@ -81,9 +80,7 @@ export default function (options: WebSpatialOptions = {}): PluginOption[] {
         return {
           base: finalBase,
           resolve: {
-            alias: {
-              ...getReactSDKAliasByMode(mode),
-            },
+            alias: [getReactSDKAliasReplacementByMode(mode)],
           },
           define: {
             // Define environment variables for both Node and browser
