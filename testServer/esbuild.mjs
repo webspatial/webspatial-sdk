@@ -5,9 +5,10 @@ import path from 'path'
 import livereload from 'livereload'
 import { sassPlugin, postcssModules } from 'esbuild-sass-plugin'
 import { createServer } from 'http-server'
-
-import corePkg from '../core/package.json' assert { type: 'json' }
-import reactPkg from '../react/package.json' assert { type: 'json' }
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const corePkg = require('../core/package.json')
+const reactPkg = require('../react/package.json')
 
 var entryPoints = await glob('./src/**/*.tsx')
 entryPoints = entryPoints.concat(await glob('./src/**/*.ts'))
