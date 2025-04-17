@@ -53,6 +53,8 @@ export function getInheritedStyleProps(
 
     'width',
     'height',
+
+    'display',
   ]
   var props = {} as any
   for (var cssName of propNames) {
