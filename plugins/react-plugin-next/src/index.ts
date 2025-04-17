@@ -137,10 +137,13 @@ class PrintDevInfoPlugin {
         compiler.options.name === 'client' &&
         !PrintDevInfoPlugin.hasPrinted
       ) {
-        console.log('🚀 ~  mode:', this.mode)
-        console.log('🚀 ~ finalBasePath:', this.finalBasePath)
+        console.log('[WebSpatialNextjsPlugin]  mode:', this.mode)
+        console.log(
+          '[WebSpatialNextjsPlugin] finalBasePath:',
+          this.finalBasePath,
+        )
 
-        console.log('🚀 ~ finalDistDir:', this.finalDistDir)
+        console.log('[WebSpatialNextjsPlugin] finalDistDir:', this.finalDistDir)
 
         let port = process.env.PORT ? Number(process.env.PORT) : 3000
         const argv = process.argv
@@ -149,7 +152,7 @@ class PrintDevInfoPlugin {
           port = Number(argv[idx + 1])
         }
         console.log(
-          `🚀 > Dev URL: http://localhost:${port}${this.finalBasePath}`,
+          `[WebSpatialNextjsPlugin] > Dev URL: http://localhost:${port}${this.finalBasePath}`,
         )
         PrintDevInfoPlugin.hasPrinted = true
       }
