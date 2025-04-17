@@ -25,7 +25,7 @@ export default function withWebspatial<
 >(options: WebSpatialOptions = {}) {
   const mode = options.mode ?? getEnv()
   const outputDir = options.outputDir
-  console.log('🚀 ~ mode:', mode)
+  // console.log('🚀 ~ mode:', mode)
 
   return (
     config?: T,
@@ -38,10 +38,10 @@ export default function withWebspatial<
     const basePath = config?.basePath
 
     const finalBasePath = addFirstSlash(getFinalBase(basePath, mode, outputDir))
-    console.log('🚀 ~ finalBasePath:', finalBasePath)
+    // console.log('🚀 ~ finalBasePath:', finalBasePath)
 
     const finalDistDir = getFinalOutdir(distDir, mode, outputDir)
-    console.log('🚀 ~ finalDistDir:', finalDistDir)
+    // console.log('🚀 ~ finalDistDir:', finalDistDir)
 
     const finalConfig = {
       ...config,
@@ -67,6 +67,10 @@ export default function withWebspatial<
             ...getDefineByMode(mode),
           }),
         )
+
+        if (context.dev) {
+          modifiedConfig.plugins.push(new PrintDevUrlPlugin({ finalBasePath }))
+        }
 
         // conditionNames
         modifiedConfig.plugins.push(new ModifyResolveConditionNamesPlugin())
@@ -107,5 +111,29 @@ class ModifyResolveConditionNamesPlugin {
         }
       },
     )
+  }
+}
+
+class PrintDevUrlPlugin {
+  private static hasPrinted = false
+  finalBasePath: string
+  constructor(props: { finalBasePath: string }) {
+    this.finalBasePath = props.finalBasePath
+  }
+  apply(compiler: any) {
+    compiler.hooks.done.tap('WebspatialURLPlugin', () => {
+      if (compiler.options.name === 'client' && !PrintDevUrlPlugin.hasPrinted) {
+        let port = process.env.PORT ? Number(process.env.PORT) : 3000
+        const argv = process.argv
+        const idx = argv.findIndex(v => v === '-p' || v === '--port')
+        if (idx !== -1 && argv[idx + 1]) {
+          port = Number(argv[idx + 1])
+        }
+        console.log(
+          `🚀 > Dev URL: http://localhost:${port}${this.finalBasePath}`,
+        )
+        PrintDevUrlPlugin.hasPrinted = true
+      }
+    })
   }
 }
