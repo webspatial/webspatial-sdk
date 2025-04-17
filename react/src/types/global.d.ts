@@ -10,7 +10,7 @@ declare global {
     readonly XR_ENV: string
   }
 
-  declare const __reactsdkversion__: string
+  declare const __WEBSPATIAL_REACT_SDK_VERSION__: string
 }
 
 export {}

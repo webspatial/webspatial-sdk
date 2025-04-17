@@ -9,6 +9,10 @@ const baseConfig: Options = {
   dts: true,
 }
 
+const versionDefine = {
+  __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(version),
+}
+
 export default defineConfig([
   {
     // Web
@@ -33,6 +37,7 @@ export default defineConfig([
       }
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
       options.resolveExtensions = [
         '.web.tsx',
@@ -52,6 +57,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
     banner: {
@@ -83,6 +89,7 @@ export default defineConfig([
     esbuildOptions(options) {
       options.define = {
         ...options.define,
+        ...versionDefine,
       }
     },
   },
