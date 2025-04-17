@@ -13,6 +13,25 @@ const versionDefine = {
   __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(version),
 }
 
+const banner = {
+  web: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "web"
+    })()
+      `,
+  avp: `
+      (function(){
+        if(typeof window === 'undefined') return;
+        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+        window.__webspatialsdk__['XR_ENV'] = "avp"
+    })()
+      `,
+}
+
 export default defineConfig([
   {
     // Web
@@ -22,14 +41,7 @@ export default defineConfig([
     outDir: 'dist/web',
     noExternal: ['@webspatial/core-sdk'],
     banner: {
-      js: `
-      (function(){
-        if(typeof window === 'undefined') return;
-        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
-        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
-        window.__webspatialsdk__['XR_ENV'] = "web"
-    })()
-      `,
+      js: banner.web,
     },
     esbuildOptions(options) {
       options.alias = {
@@ -61,27 +73,42 @@ export default defineConfig([
       }
     },
     banner: {
-      js: `
-      (function(){
-        if(typeof window === 'undefined') return;
-        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
-        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
-        window.__webspatialsdk__['XR_ENV'] = "avp"
-    })()
-      `,
+      js: banner.avp,
     },
   },
 
   {
-    // JSX
+    // JSX web
     ...baseConfig,
+    clean: false,
     external: ['@webspatial/react-sdk'],
     entry: [
       // dev
       'src/jsx/jsx-dev-runtime.web.ts',
-      'src/jsx/jsx-dev-runtime.ts',
       // prod
       'src/jsx/jsx-runtime.web.ts',
+    ],
+    format: ['esm'],
+    outDir: 'dist/jsx',
+    esbuildOptions(options) {
+      options.define = {
+        ...options.define,
+        ...versionDefine,
+      }
+    },
+    banner: {
+      js: banner.web,
+    },
+  },
+  {
+    // JSX avp
+    ...baseConfig,
+    clean: false,
+    external: ['@webspatial/react-sdk'],
+    entry: [
+      // dev
+      'src/jsx/jsx-dev-runtime.ts',
+      // prod
       'src/jsx/jsx-runtime.ts',
     ],
     format: ['esm'],
@@ -91,6 +118,9 @@ export default defineConfig([
         ...options.define,
         ...versionDefine,
       }
+    },
+    banner: {
+      js: banner.avp,
     },
   },
 ])
