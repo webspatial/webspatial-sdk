@@ -40,7 +40,8 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.guava)
+    implementation(libs.kotlinx.coroutines.guava)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -56,6 +57,7 @@ dependencies {
     implementation(libs.runtime)
     implementation(libs.androidx.scenecore)
     implementation(project(":webspatiallib"))
+    implementation(libs.androidx.tools.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
