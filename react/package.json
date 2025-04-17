@@ -26,12 +26,10 @@
     },
     "./web": "./dist/web/index.js",
     "./web/jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.web.js",
-    "./web/jsx-runtime": "./dist/jsx/jsx-runtime.web.js",
-    "./plugin-esbuild": "./npm/plugin/esbuild.mjs"
+    "./web/jsx-runtime": "./dist/jsx/jsx-runtime.web.js"
   },
   "files": [
-    "dist",
-    "npm"
+    "dist"
   ],
   "scripts": {
     "test": "tsc -p ./tsconfig.json",
