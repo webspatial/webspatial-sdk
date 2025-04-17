@@ -7,6 +7,6 @@ declare global {
       'core-sdk-version'?: string
     }
   }
-  declare const __coresdkversion__: string
+  declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
 }
 export {}
