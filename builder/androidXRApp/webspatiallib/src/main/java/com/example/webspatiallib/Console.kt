@@ -15,3 +15,4 @@ class Console {
         Log.d("WebSpatialLogs", "Error: $message")
     }
 }
+var console = Console()
