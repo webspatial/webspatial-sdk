@@ -3,6 +3,7 @@
 builder/visionOS/web-spatial/web-project
 builder/visionOS/icon.*
 builder/visionOS/build/**
+builder/visionOS/web-spatial/Assets.xcassets
 old/
 
 # We only allow pnpm lock files
