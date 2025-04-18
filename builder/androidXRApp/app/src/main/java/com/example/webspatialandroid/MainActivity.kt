@@ -17,10 +17,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,20 +35,46 @@ import androidx.xr.compose.spatial.Orbiter
 import androidx.xr.compose.spatial.OrbiterEdge
 import androidx.xr.compose.spatial.Subspace
 import androidx.xr.compose.subspace.SpatialPanel
+import androidx.xr.compose.subspace.Volume
 import androidx.xr.compose.subspace.layout.SpatialRoundedCornerShape
 import androidx.xr.compose.subspace.layout.SubspaceModifier
+import androidx.xr.compose.subspace.layout.depth
 import androidx.xr.compose.subspace.layout.height
 import androidx.xr.compose.subspace.layout.movable
 import androidx.xr.compose.subspace.layout.resizable
 import androidx.xr.compose.subspace.layout.width
 import com.example.webspatialandroid.ui.theme.WebSpatialAndroidTheme
-import com.example.webspatiallib.NativeWebView
+import com.example.webspatiallib.Console
+import com.example.webspatiallib.CoordinateSpaceMode
+import com.example.webspatiallib.SpatialEntity
+import com.example.webspatiallib.SpatialWindowComponent
+import com.example.webspatiallib.SpatialWindowContainer
+import com.example.webspatiallib.WindowContainerData
+import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.launch
 
+var startURL = "http://localhost:5173/src/docsWebsite?examplePath=createSession"
+var console = Console()
+var windowContainers = mutableStateListOf<SpatialWindowContainer>()
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        console.log("WebSpatial App Started -------- rootURL: " + startURL)
+
+        // Initialize default window container with webpage
+        val rootContainer = SpatialWindowContainer.getOrCreateSpatialWindowContainer("Root", WindowContainerData("Plain", "Root"))
+        val rootEntity = SpatialEntity()
+        rootEntity.coordinateSpace = CoordinateSpaceMode.ROOT
+        rootEntity.setParentWindowContainer(rootContainer)
+        val windowComponent = SpatialWindowComponent(this)
+        windowComponent.loadURL(startURL)
+        rootEntity.addComponent(windowComponent)
+        windowContainers.add(rootContainer)
+
+
         enableEdgeToEdge()
         setContent {
             val session = LocalSession.current
@@ -65,15 +92,20 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("RestrictedApi")
 @Composable
 fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
-    SpatialPanel(SubspaceModifier.width(1280.dp).height(800.dp).resizable().movable()) {
-        Surface {
-            MainContent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(48.dp)
-            )
-        }
-        Orbiter(
+    val session = checkNotNull(LocalSession.current)
+    val scope = rememberCoroutineScope()
+
+    // For every window container, displays its contents
+    windowContainers.forEach { c ->
+        SpatialPanel(SubspaceModifier.width(1280.dp).height(800.dp).resizable().movable()) {
+            val root = c.getEntities().entries.firstOrNull { it.value.coordinateSpace == CoordinateSpaceMode.ROOT }
+            if(root != null){
+                val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
+                if(wc != null){
+                    SpatialWebViewUI(wc.nativeWebView, Modifier)
+                }
+            }
+                    Orbiter(
             position = OrbiterEdge.Top,
             offset = EdgeOffset.inner(offset = 20.dp),
             alignment = Alignment.End,
@@ -83,6 +115,15 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
                 onClick = onRequestHomeSpaceMode,
                 modifier = Modifier.size(56.dp)
             )
+        }
+        }
+        Volume(SubspaceModifier.width(300.dp).height(300.dp).depth(100.dp).movable()) {
+            scope.launch {
+                val modelResource = session.createGltfResourceAsync("https://github.com/KhronosGroup/glTF-Sample-Models/raw/refs/heads/main/2.0/Avocado/glTF-Binary/Avocado.glb")
+                val model = modelResource.await()
+                val modelEntity = session.createGltfEntity(model)
+                it.addChild(modelEntity)
+            }
         }
     }
 }
@@ -95,16 +136,22 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
-        val s = NativeWebView(LocalContext.current)
-        s.navigateToURL("http://localhost:5173/src/docsWebsite?examplePath=createSession")
-        SpatialWebViewUI(s, Modifier)
-        MainContent(modifier = Modifier.padding(48.dp))
+       // Add a button to transition to homespace (maybe this should be handled by the webpage instead?)
         if (LocalHasXrSpatialFeature.current) {
             FullSpaceModeIconButton(
                 onClick = onRequestFullSpaceMode,
                 modifier = Modifier.padding(32.dp)
             )
+        }
+        // In 2D mode (homespace) we can only show one panel so we pick the first window containers root entity
+        windowContainers.forEach { c ->
+            val root = c.getEntities().entries.firstOrNull { it.value.coordinateSpace == CoordinateSpaceMode.ROOT }
+            if(root != null){
+                val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
+                if(wc != null){
+                  SpatialWebViewUI(wc.nativeWebView, Modifier)
+                }
+            }
         }
     }
     }

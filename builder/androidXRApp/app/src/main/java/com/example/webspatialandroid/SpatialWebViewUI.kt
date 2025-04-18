@@ -8,6 +8,7 @@ import com.example.webspatiallib.NativeWebView
 import androidx.compose.foundation.layout.Box
 import android.view.ViewGroup
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
@@ -16,7 +17,9 @@ val standardColor = Color.White
 @Composable
 fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
-//        Text("test")
+    // Since the androidView doesn't seem to get destroyed right away we need to remove the webview from its parent before adding it in its new UI
+    // Without this we can get a crash when switching from home to full space modes
+    ( swv.webView.parent as? ViewGroup)?.removeView( swv.webView)
     AndroidView(
         modifier = Modifier
            // .clip(RoundedCornerShape(swv.cornerRadius.dp))
