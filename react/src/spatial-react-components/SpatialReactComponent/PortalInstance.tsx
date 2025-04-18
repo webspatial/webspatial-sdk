@@ -64,7 +64,6 @@ function renderJSXPortalInstance(
     marginBottom: '0px',
     borderRadius: '0px',
     overflow: '',
-    display: 'block',
   }
 
   const style = {

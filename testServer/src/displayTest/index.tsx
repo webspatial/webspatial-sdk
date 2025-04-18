@@ -59,6 +59,43 @@ function CustomComponent(props: {
   )
 }
 
+function GridComponent() {
+  const style = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gridTemplateRows: '1fr 1fr',
+    gap: '10px',
+    '--xr-back': 1,
+  }
+  return (
+    <div enable-xr style={style}>
+      <div style={{ backgroundColor: 'red' }}>1</div>
+      <div style={{ backgroundColor: 'blue' }}>2</div>
+      <div style={{ backgroundColor: 'green' }}>3</div>
+      <div style={{ backgroundColor: 'yellow' }}>4</div>
+    </div>
+  )
+}
+
+function InlineComponent() {
+  const style = {
+    '--xr-back': 120,
+  }
+  return (
+    <p
+      style={{
+        width: '100%',
+        display: 'flex',
+        'justify-content': 'center',
+      }}
+    >
+      <a enable-xr style={style}>
+        Edit <code>src/App.tsx</code> and save to test HMR
+      </a>
+    </p>
+  )
+}
+
 function VisibleRefComponent() {
   const ref = useRef<HTMLElement>(null)
 
@@ -132,7 +169,9 @@ function App() {
         </button>
       </div>
 
-      <VisibleRefComponent />
+      <GridComponent />
+
+      <InlineComponent />
     </>
   )
 }
