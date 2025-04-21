@@ -122,7 +122,7 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
                 ).apply {
                     if (debugSpaceToggle) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            delay(1000)
+                            delay(200)
                             onRequestHomeSpaceMode()
                         }
                     }
@@ -134,7 +134,10 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
                 val modelResource = session.createGltfResourceAsync("https://github.com/KhronosGroup/glTF-Sample-Models/raw/refs/heads/main/2.0/Avocado/glTF-Binary/Avocado.glb")
                 val model = modelResource.await()
                 val modelEntity = session.createGltfEntity(model)
-                it.addChild(modelEntity)
+                // Adding this seems to cause a crash when toggling between full/home space
+                // I think this is an AndroidXR bug
+                // It also turns out its not needed to get the model to appear
+                // it.addChild(modelEntity)
             }
         }
     }
@@ -156,7 +159,7 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
                 ).apply {
                     if (debugSpaceToggle) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            delay(1000)
+                            delay(200)
                             onRequestFullSpaceMode()
                         }
                     }
