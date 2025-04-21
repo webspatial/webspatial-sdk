@@ -50,12 +50,17 @@ import com.example.webspatiallib.SpatialEntity
 import com.example.webspatiallib.SpatialWindowComponent
 import com.example.webspatiallib.SpatialWindowContainer
 import com.example.webspatiallib.WindowContainerData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 
+val debugSpaceToggle = false
 var startURL = "http://localhost:5173/src/docsWebsite?examplePath=createSession"
 var console = Console()
 var windowContainers = mutableStateListOf<SpatialWindowContainer>()
+
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("RestrictedApi")
@@ -99,23 +104,30 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
     windowContainers.forEach { c ->
         SpatialPanel(SubspaceModifier.width(1280.dp).height(800.dp).resizable().movable()) {
             val root = c.getEntities().entries.firstOrNull { it.value.coordinateSpace == CoordinateSpaceMode.ROOT }
-            if(root != null){
+            if (root != null) {
                 val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
-                if(wc != null){
+                if (wc != null) {
                     SpatialWebViewUI(wc.nativeWebView, Modifier)
                 }
             }
-                    Orbiter(
-            position = OrbiterEdge.Top,
-            offset = EdgeOffset.inner(offset = 20.dp),
-            alignment = Alignment.End,
-            shape = SpatialRoundedCornerShape(CornerSize(28.dp))
-        ) {
-            HomeSpaceModeIconButton(
-                onClick = onRequestHomeSpaceMode,
-                modifier = Modifier.size(56.dp)
-            )
-        }
+            Orbiter(
+                position = OrbiterEdge.Top,
+                offset = EdgeOffset.inner(offset = 20.dp),
+                alignment = Alignment.End,
+                shape = SpatialRoundedCornerShape(CornerSize(28.dp))
+            ) {
+                HomeSpaceModeIconButton(
+                    onClick = onRequestHomeSpaceMode,
+                    modifier = Modifier.size(56.dp)
+                ).apply {
+                    if (debugSpaceToggle) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(1000)
+                            onRequestHomeSpaceMode()
+                        }
+                    }
+                }
+            }
         }
         Volume(SubspaceModifier.width(300.dp).height(300.dp).depth(100.dp).movable()) {
             scope.launch {
@@ -131,29 +143,37 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
 @SuppressLint("RestrictedApi")
 @Composable
 fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
-    Surface (color = Color.Transparent) {
-    Row(
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-       // Add a button to transition to homespace (maybe this should be handled by the webpage instead?)
-        if (LocalHasXrSpatialFeature.current) {
-            FullSpaceModeIconButton(
-                onClick = onRequestFullSpaceMode,
-                modifier = Modifier.padding(32.dp)
-            )
-        }
-        // In 2D mode (homespace) we can only show one panel so we pick the first window containers root entity
-        windowContainers.forEach { c ->
-            val root = c.getEntities().entries.firstOrNull { it.value.coordinateSpace == CoordinateSpaceMode.ROOT }
-            if(root != null){
-                val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
-                if(wc != null){
-                  SpatialWebViewUI(wc.nativeWebView, Modifier)
+    Surface(color = Color.Transparent) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Add a button to transition to homespace (maybe this should be handled by the webpage instead?)
+            if (LocalHasXrSpatialFeature.current) {
+                FullSpaceModeIconButton(
+                    onClick = onRequestFullSpaceMode,
+                    modifier = Modifier.padding(32.dp)
+                ).apply {
+                    if (debugSpaceToggle) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delay(1000)
+                            onRequestFullSpaceMode()
+                        }
+                    }
+
+                }
+            }
+            // In 2D mode (homespace) we can only show one panel so we pick the first window containers root entity
+            windowContainers.forEach { c ->
+                val root = c.getEntities().entries.firstOrNull { it.value.coordinateSpace == CoordinateSpaceMode.ROOT }
+                if (root != null) {
+                    val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
+                    if (wc != null) {
+                        SpatialWebViewUI(wc.nativeWebView, Modifier)
+                    }
                 }
             }
         }
-    }
     }
 }
 
