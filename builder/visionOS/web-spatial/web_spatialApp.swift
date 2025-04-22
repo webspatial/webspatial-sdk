@@ -10,7 +10,7 @@ import SwiftUI
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
-let nativeAPIVersion = getPackageVersion() ?? "0.0.1"
+let nativeAPIVersion = getPackageVersion() ?? "unknown"
 
 // start URL
 let startURL = pwaManager.start_url
