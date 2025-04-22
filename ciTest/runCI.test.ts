@@ -25,7 +25,7 @@ test('App builds and loads url', async () => {
   app.post('/', (req, res) => {
     console.log('\n\n\nReceived result:' + JSON.stringify(req.body))
     res.send({})
-    deffered.res({ status: 'success' })
+    deffered.res(req.body)
   })
   var server = app.listen(port, () => {
     console.log(`Test server waiting for result http://localhost:${port}`)
@@ -70,9 +70,14 @@ test('App builds and loads url', async () => {
     },
   )
 
-  var result = (await testStatus) as any
-  console.log('Test done, status: ' + result.status)
-  expect(result.status).toBe('success')
+  var result = (await testStatus) as {
+    results: Array<{ status: 'success' | 'fail'; message: string }>
+  }
+
+  result.results.forEach(item => {
+    console.log('Test: ' + item.message + ' ' + item.status)
+    expect(item.status).toBe('success')
+  })
 
   // Cleanup
   server.close()
