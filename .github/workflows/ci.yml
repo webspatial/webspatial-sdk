@@ -33,4 +33,7 @@ jobs:
       
       - name: Test
         run: pnpm run test
+
+      - name: Test changeset
+        run: npx changeset version
       
