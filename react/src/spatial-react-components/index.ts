@@ -18,4 +18,3 @@ export * from './CSSSpatialDiv'
 
 export * from './SpatialView'
 export * from './Model/index'
-export * from './Model3D'
