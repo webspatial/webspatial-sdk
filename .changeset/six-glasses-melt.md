@@ -2,4 +2,4 @@
 '@webspatial/react-sdk': patch
 ---
 
-export model3d
+export model type
