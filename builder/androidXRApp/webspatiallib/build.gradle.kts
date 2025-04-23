@@ -20,7 +20,7 @@ android {
         consumerProguardFiles("consumer-rules.pro")
 
         // 1. read visionOS/package.json
-        val pkgFile = file("$rootDir/../visionOS/package.json")
+        val pkgFile = file("$rootDir/package.json")
         val version = try {
             // 2. parse version by JsonSlurper
             val json = JsonSlurper().parseText(pkgFile.readText()) as Map<*, *>
