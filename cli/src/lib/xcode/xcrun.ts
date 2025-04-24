@@ -123,11 +123,11 @@ export default class Xcrun {
       let cmd = new XcrunCMD().simctl()
       cmd.boot(device.deviceId)
       execSync(cmd.line)
+      // wait 10s for simulator to boot
+      execSync('sleep 10')
     }
     // open simulator
-    execSync(
-      'open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app/',
-    )
+    execSync('open -a Simulator --args -CurrentDeviceUDID ' + device.deviceId)
   }
 
   private static installApp(path: string, deviceId: string, appName: string) {
@@ -141,9 +141,10 @@ export default class Xcrun {
   }
 
   private static launchApp(deviceId: string, bundleId: string) {
-    let cmd = new XcrunCMD().simctl()
-    cmd.launch(deviceId, bundleId)
-    execSync(cmd.line)
+    try {
+      execSync(new XcrunCMD().simctl().terminate(deviceId, bundleId).line)
+    } catch (e) {}
+    execSync(new XcrunCMD().simctl().launch(deviceId, bundleId).line)
   }
 
   private static parseListDevices(devices: string) {
@@ -273,6 +274,11 @@ class XcrunCMD {
 
   public launch(device: string, packName: string) {
     this.line += ` launch "${device}" "${packName}"`
+    return this
+  }
+
+  public terminate(device: string, packName: string) {
+    this.line += ` terminate "${device}" "${packName}"`
     return this
   }
 }

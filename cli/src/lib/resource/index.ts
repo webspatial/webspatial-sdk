@@ -79,7 +79,15 @@ export class ResourceManager {
         `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
-    PROJECT_DIRECTORY = modulePath
+    let tempDir = join(__dirname, `../../temp`)
+    let tempPlatformDir = join(tempDir, `platform-${usePlatform}`)
+    if (fs.existsSync(tempDir)) {
+      execSync(`rm -rf ${tempDir}`)
+    }
+    fs.mkdirSync(tempDir)
+    fs.mkdirSync(tempPlatformDir)
+    copyDir(modulePath, tempPlatformDir)
+    PROJECT_DIRECTORY = tempPlatformDir
     PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
     PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
   }
