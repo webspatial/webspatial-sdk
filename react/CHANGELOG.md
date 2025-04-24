@@ -1,5 +1,18 @@
 # @webspatial/react-sdk
 
+## 0.1.13
+
+### Patch Changes
+
+- 208e5b4: sync css style display property to portal div
+- 0cfd93d: export version from react-sdk
+- cc59fbf: export model type
+- e10a722: add **webspatialsdk** banner for jsx-runtime
+- Updated dependencies [bc93209]
+- Updated dependencies [1c0709c]
+- Updated dependencies [3e0b072]
+  - @webspatial/core-sdk@0.1.13
+
 ## 0.1.12
 
 ### Patch Changes

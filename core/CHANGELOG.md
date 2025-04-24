@@ -1,5 +1,13 @@
 # @webspatial/core-sdk
 
+## 0.1.13
+
+### Patch Changes
+
+- bc93209: export version
+- 1c0709c: add close container method
+- 3e0b072: Add react to ci test
+
 ## 0.1.12
 
 ### Patch Changes
