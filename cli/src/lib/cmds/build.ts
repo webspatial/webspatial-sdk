@@ -4,13 +4,19 @@ import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
 import { join } from 'path'
+import * as fs from 'fs'
+import { launch } from './launch'
+
+export async function build(args: ParsedArgs): Promise<boolean> {
+  ResourceManager.checkPlatformPath(args['platform'])
+  return await start(args)
+}
 
 export async function start(
   args: ParsedArgs,
   isDev: boolean = false,
 ): Promise<any> {
   checkBuildParams(args, isDev)
-  ResourceManager.checkPlatformPath(args['platform'])
   /**
    * PWA steps
    * 1.  Load manifestion.json
@@ -88,6 +94,21 @@ export async function store(args: ParsedArgs): Promise<boolean> {
 // build and run on simulator
 export async function run(args: ParsedArgs): Promise<boolean> {
   let appInfo = { name: 'WebSpatialTest', id: '' }
+  let paramArr = []
+  for (let key in args) {
+    if (key === '_') {
+      paramArr.push(`${args[key]}`)
+    } else if (key !== 'tryWithoutBuild') {
+      paramArr.push(`--${key}=${args[key]}`)
+    }
+  }
+  let runCmd = paramArr.join(' ')
+  // If this command is a new command, go through the build process; otherwise, go through the launch process
+  if (!checkRunHistory(runCmd) && args['tryWithoutBuild'] === 'true') {
+    console.log('launch without build')
+    return launch(args)
+  }
+  ResourceManager.checkPlatformPath(args['platform'])
   const buildRes = await start(args, true)
   if (!buildRes) {
     return false
@@ -96,4 +117,29 @@ export async function run(args: ParsedArgs): Promise<boolean> {
   appInfo.id = buildRes.json.id
   await XcodeManager.runWithSimulator(appInfo)
   return true
+}
+
+function checkRunHistory(cmd: string) {
+  let historyFile = join(__dirname, '../../run_history.txt')
+  if (!fs.existsSync(historyFile)) {
+    fs.writeFileSync(historyFile, '[]')
+  }
+  let history
+  try {
+    history = JSON.parse(fs.readFileSync(historyFile, 'utf-8'))
+    if (!Array.isArray(history)) {
+      history = []
+    }
+  } catch (e) {
+    history = []
+  }
+  let isNew = true
+  if (history.length > 0) {
+    if (history[history.length - 1].cmd === cmd) {
+      isNew = false
+    }
+  }
+  history.push({ cmd: cmd, time: new Date().toLocaleString() })
+  fs.writeFileSync(historyFile, JSON.stringify(history))
+  return isNew
 }

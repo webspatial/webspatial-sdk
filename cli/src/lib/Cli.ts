@@ -3,7 +3,7 @@ import { major } from 'semver'
 import { ConsoleLog } from '../lib/utils/Log'
 import { fetchUtils } from './utils/FetchUtils-1'
 import { help } from './cmds/help'
-import { start, store, run } from './cmds/build'
+import { start, store, run, build } from './cmds/build'
 import { version } from './cmds/version'
 import { fetch, downloadFile, decompressResponseBuffer } from './utils/fetch'
 import { launch } from './cmds/launch'
@@ -44,7 +44,7 @@ export class Cli {
       case 'h':
         return await help(parsedArgs)
       case 'build':
-        return await start(parsedArgs)
+        return await build(parsedArgs)
       case 'publish':
         return await store(parsedArgs)
       case 'run':
