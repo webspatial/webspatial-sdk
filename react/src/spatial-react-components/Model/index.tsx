@@ -18,6 +18,7 @@ import {
   ModelDragEvent,
   ModelElement,
 } from '../Model3D'
+export type * from '../Model3D'
 import { getAbsoluteURL } from '../Model3D/utils'
 
 import { ModelViewerElement } from '@google/model-viewer'
