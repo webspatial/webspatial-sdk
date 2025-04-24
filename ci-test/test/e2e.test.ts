@@ -9,13 +9,7 @@ import { assert } from 'chai'
 const fail = assert.fail
 
 describe('E2E Test For Webspatial SDK', function () {
-  this.beforeAll(async () => {
-    this.timeout(1000 * 60 * 5) // 5 minutes
-  })
-
-  this.afterAll(async () => {
-    this.timeout(1000 * 60 * 1) // 1 minutes
-  })
+  this.timeout(1000 * 60 * 5) // 5 minutes
 
   it('should pass', async () => {
     const promise = new AsyncPromise<TestResults>()
