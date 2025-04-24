@@ -1,5 +1,11 @@
 # @webspatial/next-plugin
 
+## 0.1.4
+
+### Patch Changes
+
+- 1a70b35: print Dev URL
+
 ## 0.1.3
 
 ### Patch Changes

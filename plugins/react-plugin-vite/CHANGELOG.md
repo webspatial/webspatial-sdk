@@ -1,5 +1,11 @@
 # @webspatial/vite-plugin
 
+## 0.1.5
+
+### Patch Changes
+
+- 650e763: fix react-sdk alias not replaced correctly
+
 ## 0.1.4
 
 ### Patch Changes

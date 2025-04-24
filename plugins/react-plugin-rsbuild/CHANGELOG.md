@@ -1,5 +1,11 @@
 # @webspatial/rsbuild-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- 4864809: refactor rsbuild plugin to use shared utils
+
 ## 0.1.0
 
 ### Minor Changes
