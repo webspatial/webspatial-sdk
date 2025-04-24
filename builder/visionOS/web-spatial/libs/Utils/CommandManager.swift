@@ -492,14 +492,14 @@ class CommandManager {
             }
 
             if let backgroundMaterial: BackgroundMaterial = data.update?.style?.backgroundMaterial {
-                if spatialWindowComponent.isLoading {
-                    spatialWindowComponent.loadingStyles.backgroundMaterial = backgroundMaterial
+                if target.isLoading {
+                    target.loadingStyles.backgroundMaterial = backgroundMaterial
                 }
                 spatialWindowComponent.backgroundMaterial = backgroundMaterial
             }
             if let cornerRadius: CornerRadius = data.update?.style?.cornerRadius {
-                if spatialWindowComponent.isLoading {
-                    spatialWindowComponent.loadingStyles.cornerRadius = cornerRadius
+                if target.isLoading {
+                    target.loadingStyles.cornerRadius = cornerRadius
                 }
                 spatialWindowComponent.cornerRadius = cornerRadius
             }
