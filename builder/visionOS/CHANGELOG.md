@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.1.13
+
+### Patch Changes
+
+- 1c0709c: add close container method
+- 3e0b072: Add react to ci test
+
 ## 0.1.12
 
 ### Patch Changes
