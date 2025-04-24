@@ -1,5 +1,11 @@
 # @webspatial/shared
 
+## 0.1.4
+
+### Patch Changes
+
+- d0c00b1: export getReactSDKAliasReplacementByMode func
+
 ## 0.1.3
 
 ### Patch Changes
