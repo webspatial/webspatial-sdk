@@ -15,7 +15,7 @@ import {
   checkStartUrl,
 } from './validate'
 import * as fs from 'fs'
-import { Cli } from '../Cli'
+import { CliLog } from '../utils/utils'
 
 export interface InitArgs {
   'manifest-url'?: string // remote manifest url
@@ -81,7 +81,7 @@ export class PWAGenerator {
       if (!fs.existsSync(url)) {
         if (isDev) {
           useDefault = true
-          Cli.log.warn(
+          CliLog.warn(
             'manifest.json or manifest.webmanifest not found, use default in run mode',
           )
         } else {

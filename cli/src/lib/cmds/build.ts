@@ -1,4 +1,3 @@
-import { ParsedArgs } from 'minimist'
 import { InitArgs, PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
@@ -7,15 +6,12 @@ import { join } from 'path'
 import * as fs from 'fs'
 import { launch } from './launch'
 
-export async function build(args: ParsedArgs): Promise<boolean> {
+export async function build(args: any) {
   ResourceManager.checkPlatformPath(args['platform'])
-  return await start(args)
+  await start(args)
 }
 
-export async function start(
-  args: ParsedArgs,
-  isDev: boolean = false,
-): Promise<any> {
+export async function start(args: any, isDev: boolean = false): Promise<any> {
   checkBuildParams(args, isDev)
   /**
    * PWA steps
@@ -67,7 +63,7 @@ export async function start(
   return manifestInfo
 }
 
-export async function store(args: ParsedArgs): Promise<boolean> {
+export async function store(args: any) {
   ResourceManager.checkPlatformPath(args['platform'])
   checkStoreParams(args)
   /*
@@ -83,26 +79,17 @@ export async function store(args: ParsedArgs): Promise<boolean> {
   } else {
     const buildRes = await start(args)
     if (!buildRes) {
-      return false
+      return
     }
     appInfo.name = buildRes.json.name
   }
   await XcodeManager.upload(args, appInfo)
-  return true
 }
 
 // build and run on simulator
-export async function run(args: ParsedArgs): Promise<boolean> {
+export async function run(args: any) {
   let appInfo = { name: 'WebSpatialTest', id: '' }
-  let paramArr = []
-  for (let key in args) {
-    if (key === '_') {
-      paramArr.push(`${args[key]}`)
-    } else if (key !== 'tryWithoutBuild') {
-      paramArr.push(`--${key}=${args[key]}`)
-    }
-  }
-  let runCmd = paramArr.join(' ')
+  let runCmd = JSON.stringify(args)
   // If this command is a new command, go through the build process; otherwise, go through the launch process
   if (!checkRunHistory(runCmd) && args['tryWithoutBuild'] === 'true') {
     console.log('launch without build')
@@ -111,12 +98,11 @@ export async function run(args: ParsedArgs): Promise<boolean> {
   ResourceManager.checkPlatformPath(args['platform'])
   const buildRes = await start(args, true)
   if (!buildRes) {
-    return false
+    return
   }
   appInfo.name = buildRes.json.name
   appInfo.id = buildRes.json.id
   await XcodeManager.runWithSimulator(appInfo)
-  return true
 }
 
 /*
