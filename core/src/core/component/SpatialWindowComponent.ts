@@ -128,12 +128,13 @@ export class SpatialWindowComponent extends SpatialComponent {
     if (isSettingSelfStyle && document && document.readyState == 'loading') {
       // Avoid flash of unstyled content by sending style command via a link element
       var encoded = encodeURIComponent(JSON.stringify(options))
-      var x = document.createElement('link')
-      x.rel = 'stylesheet'
-      x.href = 'forceStyle://mystyle.css?' + 'style=' + encoded
-      document.head.appendChild(x)
-      // remove this style after trigger forceStyle action
-      x.remove()
+
+      const a = document.createElement(`a`)
+      a.href = 'forcestyle://mystyle.css?' + 'style=' + encoded
+      document.body.appendChild(a)
+      a.click()
+      // remove this element after trigger forceStyle action
+      a.remove()
     } else {
       await WebSpatial.updateResource(this._resource, { style: options })
     }
