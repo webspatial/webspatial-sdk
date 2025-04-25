@@ -89,13 +89,13 @@ export async function store(args: any) {
 // build and run on simulator
 export async function run(args: any) {
   let appInfo = { name: 'WebSpatialTest', id: '' }
+  ResourceManager.checkPlatformPath(args['platform'])
   let runCmd = JSON.stringify(args)
   // If this command is a new command, go through the build process; otherwise, go through the launch process
   if (!checkRunHistory(runCmd) && args['tryWithoutBuild'] === 'true') {
     console.log('launch without build')
     return launch(args)
   }
-  ResourceManager.checkPlatformPath(args['platform'])
   const buildRes = await start(args, true)
   if (!buildRes) {
     return
