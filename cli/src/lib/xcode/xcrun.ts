@@ -8,6 +8,7 @@ import { join } from 'path'
 import * as fs from 'fs'
 import { XcodebuildCMD } from './xcodebuild'
 import { clearDir } from '../resource/file'
+import { CliLog } from '../utils/utils'
 
 export default class Xcrun {
   public static async validate(
@@ -68,7 +69,7 @@ export default class Xcrun {
   public static async runWithSimulator(appInfo: any) {
     // find visionOS simulator
     let device = this.findSimulator()
-    console.log(`find simulator: ${device.deviceId}`)
+    console.log(`use simulator: ${device.deviceId}`)
     const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
     const testPath = PROJECT_BUILD_DIRECTORY + '/test'
     if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
@@ -145,8 +146,94 @@ export default class Xcrun {
       execSync(new XcrunCMD().simctl().terminate(deviceId, bundleId).line)
     } catch (e) {}
     execSync(new XcrunCMD().simctl().launch(deviceId, bundleId).line)
+    this.writeSimulatorRecord(deviceId)
   }
 
+  /*
+   * use command to find available destinations for the "web-spatial" scheme
+   * command: xcodebuild -showdestinations -scheme web-spatial
+   * result like:
+   * { platform:visionOS, id:dvtdevice-DVTiOSDevicePlaceholder-xros:placeholder, name:Any visionOS Device }
+   * { platform:visionOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-xrsimulator:placeholder, name:Any visionOS Simulator Device }
+   * { platform:visionOS Simulator, id:8C7AD003-4039-478F-9F94-938876D57817, OS:2.3, name:Apple Vision Pro }
+   * { platform:visionOS Simulator, id:3E883774-AFD3-4E0D-884C-FA9B940F8720, OS:2.3, name:WebSpatialSimulator }
+   *
+   * only uuid deviceId is valid
+   */
+  private static parseDestinationDevices(devices: string) {
+    let res = devices.split('\n')
+    const uuidRegex =
+      /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/
+    let deviceId = ''
+    for (let i = 0; i < res.length; i++) {
+      if (res[i].includes('platform:visionOS Simulator')) {
+        const uuid = res[i].slice(
+          res[i].indexOf('id:') + 3,
+          res[i].indexOf(', name'),
+        )
+        if (uuidRegex.test(uuid)) {
+          return deviceId
+        }
+      }
+    }
+    return deviceId
+  }
+
+  /*
+   * use command to find available simDevice when create a simulator
+   * command: xcrun simctl list devicetypes
+   * result like:
+   * Apple Watch Series 2 (38mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-2-38mm)
+   * Apple Vision Pro (com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro)
+   *
+   * only Apple Vision Pro is valid
+   */
+  private static parseSupportDevices(devices: string) {
+    let res = devices.split('\n')
+    for (let i = 0; i < res.length; i++) {
+      if (res[i].includes('Apple Vision Pro')) {
+        res[i] = res[i].replace('Apple Vision Pro', '').trim()
+        res[i] = res[i].replace('(', '')
+        res[i] = res[i].replace(')', '')
+        return res[i]
+      }
+    }
+    throw new Error(
+      'No Apple Vision Pro simulator found! Please go to Xcode to download the Apple Vision Pro simulator',
+    )
+  }
+
+  /*
+   * use command to find available runtime when create a simulator
+   * command: xcrun simctl list devicetypes
+   * result like:
+   * iOS 17.2 (17.2 - 21C62) - com.apple.CoreSimulator.SimRuntime.iOS-17-2
+   * visionOS 2.3 (2.3 - 22N895) - com.apple.CoreSimulator.SimRuntime.xrOS-2-3
+   *
+   * only visionOS is valid
+   */
+  private static parseSupportRuntimes(runtimes: string) {
+    let res = runtimes.split('\n')
+    for (let i = 0; i < res.length; i++) {
+      if (res[i].includes('visionOS')) {
+        return res[i].slice(res[i].indexOf('com')).trim()
+      }
+    }
+    throw new Error(
+      'No visionOS rumtime found! Please go to Xcode to download the Apple Vision Pro simulator',
+    )
+  }
+
+  /*
+   * use command to find all sumlators about "Apple Vision Pro"
+   * command: xcrun simctl list devices "Apple Vision Pro"
+   * result like:
+   * == Devices ==
+   *   -- iOS 17.2 --
+   *   -- visionOS 2.3 --
+   *       Apple Vision Pro (8C7AD003-4039-478F-9F94-938876D57817) (Shutdown)
+   *       WebSpatialSimulator (C57E4C63-BF38-4E49-B1DC-8F1775A89712) (Shutdown)
+   */
   private static parseListDevices(devices: string) {
     let res = devices.split('\n')
     let list: any[] = []
@@ -172,22 +259,72 @@ export default class Xcrun {
     }
     return list
   }
-
+  // Try to find an available simulator, if not, create one and save the running record for the next time direct use.
   private static findSimulator() {
-    // find visionOS simulator
-    let cmd = new XcrunCMD().simctl()
-    cmd.listDevices('Apple Vision Pro')
-    const res = execSync(cmd.line)
-    const simList = this.parseListDevices(res.toString())
-    if (simList.length === 0) {
-      throw new Error('no visionOS simulator found')
+    // check simulator record
+    let device = this.checkSimulatorRecord()
+    let res
+    if (device.length === 0) {
+      // no record, find simulator in project destinations
+      res = execSync(
+        `cd ${PROJECT_DIRECTORY} && xcodebuild -showdestinations -scheme web-spatial`,
+      )
+      device = this.parseDestinationDevices(res.toString())
     }
-    for (let i = 0; i < simList.length; i++) {
-      if (simList[i].state === 'Booted') {
+    console.log(`find record: ${device}`)
+    let simList = this.listSimulator()
+    for (var i = 0; i < simList.length; i++) {
+      // check simulator in list
+      if (simList[i].deviceId === device) {
         return simList[i]
       }
     }
-    return simList[0]
+    // create a simulator
+    CliLog.warn('no visionOS simulator found')
+    CliLog.warn('try create a visionOS simulator')
+    // list support device include Apple Vision Pro
+    res = execSync(new XcrunCMD().simctl().listDeviceTypes().line)
+    const supportDevice = this.parseSupportDevices(res.toString())
+    // list support runtime include visionOS
+    res = execSync(new XcrunCMD().simctl().listRuntimes().line)
+    const supportRuntime = this.parseSupportRuntimes(res.toString())
+    // use device and runtime to create simulator
+    CliLog.info(
+      `use ${supportDevice} and ${supportRuntime} to create visionOS simulator`,
+    )
+    res = execSync(
+      new XcrunCMD().simctl().create(supportDevice, supportRuntime).line,
+    )
+    device = res.toString().trim()
+    console.log(`create visionOS simulator: ${device}`)
+    return {
+      name: 'WebSpatial Simulator',
+      deviceId: device,
+      state: 'Shutdown',
+    }
+  }
+
+  private static listSimulator() {
+    let res = execSync(
+      new XcrunCMD().simctl().listDevices('Apple Vision Pro').line,
+    )
+    return this.parseListDevices(res.toString())
+  }
+
+  private static checkSimulatorRecord() {
+    let simulatorFile = join(__dirname, '../../simulator_record.txt')
+    if (!fs.existsSync(simulatorFile)) {
+      fs.writeFileSync(simulatorFile, '')
+    }
+    return fs.readFileSync(simulatorFile, 'utf-8')
+  }
+
+  private static writeSimulatorRecord(deviceId: string) {
+    let simulatorFile = join(__dirname, '../../simulator_record.txt')
+    if (!fs.existsSync(simulatorFile)) {
+      fs.writeFileSync(simulatorFile, '')
+    }
+    fs.writeFileSync(simulatorFile, deviceId)
   }
 }
 
@@ -210,6 +347,16 @@ class XcrunCMD {
 
   public listDevices(device: string) {
     this.line += ` list devices "${device}"`
+    return this
+  }
+
+  public listDeviceTypes() {
+    this.line += ` list devicetypes`
+    return this
+  }
+
+  public listRuntimes() {
+    this.line += ` list runtimes`
     return this
   }
 
@@ -254,6 +401,11 @@ class XcrunCMD {
 
   public verbose() {
     this.line += ` --verbose`
+    return this
+  }
+
+  public create(device: string, runtime: string) {
+    this.line += ` create "WebSpatialSimulator" "${device}" "${runtime}"`
     return this
   }
 
