@@ -1,10 +1,9 @@
 import { join } from 'path'
-import { PWAGenerator } from '.'
 import { CustomError } from '../utils/CustomError'
 import { parseRouter } from '../utils/utils'
 import { ImageHelper } from '../resource/imageHelper'
 import { loadImageFromDisk, loadImageFromNet } from '../resource/load'
-import { Cli } from '../Cli'
+import { CliLog } from '../utils/utils'
 
 export function checkManifestJson(
   manifestJson: Record<string, any>,
@@ -105,7 +104,7 @@ export async function checkIcons(
         purpose: 'maskable',
       },
     ]
-    Cli.log.warn('icon not found, use default in run mode')
+    CliLog.warn('icon not found, use default in run mode')
     return
   }
   const relativeUrl = parseRouter(manifestUrl)
@@ -168,10 +167,10 @@ export async function checkIcons(
           purpose: 'maskable',
         },
       ]
-      Cli.log.warn(
+      CliLog.warn(
         'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
       )
-      Cli.log.warn(
+      CliLog.warn(
         'icon does not meet the standard, use default icon in run mode',
       )
       return
@@ -191,7 +190,7 @@ export async function checkIcons(
   // Check if the image is completely opaque
   if (maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)) {
     if (isDev) {
-      Cli.log.warn(
+      CliLog.warn(
         'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
       )
       return
