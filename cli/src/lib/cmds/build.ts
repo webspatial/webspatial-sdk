@@ -119,6 +119,14 @@ export async function run(args: ParsedArgs): Promise<boolean> {
   return true
 }
 
+/*
+  Every time the run command is executed,
+  the current command will be recorded through run_history.txt,
+  and when using the --tryWithoutBuild=true parameter,
+  it will be judged whether it is the same as the previous command. 
+  If it is the same, it will be defaulted as already compiled, 
+  and the compilation will be skipped and the application will be launched directly
+*/
 function checkRunHistory(cmd: string) {
   let historyFile = join(__dirname, '../../run_history.txt')
   if (!fs.existsSync(historyFile)) {
