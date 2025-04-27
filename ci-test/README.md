@@ -9,5 +9,9 @@ start e2e test
 `npm run test`
 
 ## **How to add test cases **
+1. npm run dev
+2. open xcode project and run 
+3. write test cases in `src/specs` folder
+4. see the result in window page
 
-write test cases in `src/specs` folder
+## **How to run test cases **
