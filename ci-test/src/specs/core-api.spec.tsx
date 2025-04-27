@@ -3,7 +3,7 @@ import { SpatialHelper } from '@webspatial/core-sdk'
 
 const fail = assert.fail
 
-describe.only('Core API', function () {
+describe('Core API', function () {
   it('SpatialHelper.instance is populated', function () {
     expect(SpatialHelper.instance !== null).to.be.true
   })
