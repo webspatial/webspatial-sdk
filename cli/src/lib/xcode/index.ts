@@ -21,6 +21,10 @@ export class XcodeManager {
     if (!isDev) await Xcodebuild.archive(option['export'])
   }
 
+  public static async build(exportPath: string) {
+    await Xcodebuild.archive(exportPath)
+  }
+
   public static async upload(option: any, appInfo: any) {
     if (option['u'] && option['p']) {
       // use username, password

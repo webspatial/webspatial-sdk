@@ -1,68 +1,25 @@
-import { InitArgs, PWAGenerator } from '../pwa'
+import { PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
 import { join } from 'path'
 import * as fs from 'fs'
 import { launch } from './launch'
+import { ManifestInfo, PWAInitArgs } from '../types'
 
+// build and export ipa
 export async function build(args: any) {
+  console.log('------------------- parse start -------------------')
   ResourceManager.checkPlatformPath(args['platform'])
-  await start(args)
-}
-
-export async function start(args: any, isDev: boolean = false): Promise<any> {
-  checkBuildParams(args, isDev)
-  /**
-   * PWA steps
-   * 1.  Load manifestion.json
-   * 2.  Check the integrity of manifestion.json parameters
-   * 3.  Detecting start_url rule
-   * 4.  Improve start_url, scope, display, and deeplink configurations
-   **/
-  console.log('------------------- build start -------------------')
-  let manifestInfo = await PWAGenerator.generator(
-    args as unknown as InitArgs,
-    isDev,
-  )
-  /**
-   * *Resource steps
-   * 1.  If it is a local project, then
-   *  A. Check and create project directory
-   *  B. Mobile Web Engineering
-   * 2.  Generate icon icon
-   **/
-  if (!manifestInfo.fromNet) {
-    // If it is a local project, the project needs to be moved.
-    await ResourceManager.moveProjectFrom(args['project'] ?? 'dist')
-    console.log('move web project: ok')
-  }
-  let icon = await ResourceManager.generateIcon(manifestInfo)
-  console.log('generate icon: ok')
-  /**
-   * Xcode steps
-   * 1.  Parse the project
-   * 2.  Configure teamId
-   * 3.  Bind web project
-   * 4.  Configure icon
-   * 5.  Configure manifest
-   * 6.  Write project
-   **/
-  await XcodeManager.parseProject(
-    {
-      icon,
-      manifestInfo,
-      teamId: args['teamId'],
-      version: args['version'],
-      buildType: args['buildType'],
-      export: args['export'],
-    },
-    isDev,
-  )
-  console.log('------------------- build end -------------------')
+  const manifestInfo = await doPwa(args)
+  const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
+  await doXcode(args, icon, manifestInfo)
+  console.log('------------------- parse end -------------------')
+  await XcodeManager.build(args['export'])
   return manifestInfo
 }
 
+// build and upload ipa to App Store Connect
 export async function store(args: any) {
   ResourceManager.checkPlatformPath(args['platform'])
   checkStoreParams(args)
@@ -77,32 +34,94 @@ export async function store(args: any) {
   if (args['name']) {
     appInfo.name = args['name']
   } else {
-    const buildRes = await start(args)
-    if (!buildRes) {
-      return
-    }
-    appInfo.name = buildRes.json.name
+    const manifestInfo = await build(args)
+    appInfo.name = manifestInfo.json.name
   }
   await XcodeManager.upload(args, appInfo)
 }
 
 // build and run on simulator
 export async function run(args: any) {
-  let appInfo = { name: 'WebSpatialTest', id: '' }
   ResourceManager.checkPlatformPath(args['platform'])
-  let runCmd = JSON.stringify(args)
-  // If this command is a new command, go through the build process; otherwise, go through the launch process
-  if (!checkRunHistory(runCmd) && args['tryWithoutBuild'] === 'true') {
-    console.log('launch without build')
-    return launch(args)
+  const manifestInfo = await doPwa(args, true)
+  /*
+    If it is an online project, there is no need to worry about project changes, just ensure that the parameters are consistent with the previous time and there is no need to compile again.
+    If it is a local project, there is a risk of project changes, so it needs to be compiled again.
+    If the --tryWithoutBuild=true parameter is used, it will be judged whether it is the same as the previous command.
+    If it is the same, it will be defaulted as already compiled, and the compilation will be skipped and the application will be launched directly.
+  */
+  if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
+    let runCmd = JSON.stringify(args)
+    // If this command is a new command, go through the build process; otherwise, go through the launch process
+    if (!checkRunHistory(runCmd)) {
+      console.log('launch without build')
+      return launch(args)
+    }
   }
-  const buildRes = await start(args, true)
-  if (!buildRes) {
-    return
-  }
-  appInfo.name = buildRes.json.name
-  appInfo.id = buildRes.json.id
+
+  let appInfo = { name: '', id: '' }
+  const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
+  await doXcode(args, icon, manifestInfo, true)
+  console.log('------------------- parse end -------------------')
+  appInfo.name = manifestInfo.json.name
+  appInfo.id = manifestInfo.json.id
   await XcodeManager.runWithSimulator(appInfo)
+}
+
+/**
+ * PWA steps
+ * 1.  Load manifestion.json
+ * 2.  Check the integrity of manifestion.json parameters
+ * 3.  Detecting start_url rule
+ * 4.  Improve start_url, scope, display, and deeplink configurations
+ **/
+async function doPwa(args: any, isDev: boolean = false) {
+  checkBuildParams(args, isDev)
+  return await PWAGenerator.generator(args as unknown as PWAInitArgs, isDev)
+}
+
+/**
+ * *Resource steps
+ * 1.  If it is a local project, then
+ *  A. Check and create project directory
+ *  B. Mobile Web Engineering
+ * 2.  Generate icon icon
+ **/
+async function doReadyProject(project: any, manifestInfo: ManifestInfo) {
+  if (!manifestInfo.fromNet) {
+    // If it is a local project, the project needs to be moved.
+    await ResourceManager.moveProjectFrom(project)
+    console.log('move web project: ok')
+  }
+  return await ResourceManager.generateIcon(manifestInfo)
+}
+
+/**
+ * Xcode steps
+ * 1.  Parse the project
+ * 2.  Configure teamId
+ * 3.  Bind web project
+ * 4.  Configure icon
+ * 5.  Configure manifest
+ * 6.  Write project
+ **/
+async function doXcode(
+  args: any,
+  icon: any,
+  manifestInfo: ManifestInfo,
+  isDev: boolean = false,
+) {
+  await XcodeManager.parseProject(
+    {
+      icon,
+      manifestInfo,
+      teamId: args['teamId'],
+      version: args['version'],
+      buildType: args['buildType'],
+      export: args['export'],
+    },
+    isDev,
+  )
 }
 
 /*
