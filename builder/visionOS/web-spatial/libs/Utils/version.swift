@@ -4,7 +4,7 @@ struct PackageJSON: Codable {
     let version: String
 }
 
-func getPackageVersion() -> String? {
+func getPackageVersion() -> String {
     let currentFileURL = URL(fileURLWithPath: #file) // path of version
     let currentDirectoryURL = currentFileURL.deletingLastPathComponent()
 
@@ -20,7 +20,6 @@ func getPackageVersion() -> String? {
         let package = try JSONDecoder().decode(PackageJSON.self, from: data)
         return package.version
     } catch {
-        print("⚠️ Error reading package.json: \(error)")
-        return nil
+        fatalError("⚠️ Error reading package.json at \(packageJSONURL.path): \(error)")
     }
 }
