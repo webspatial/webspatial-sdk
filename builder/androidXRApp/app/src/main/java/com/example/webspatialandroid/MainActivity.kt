@@ -50,6 +50,7 @@ import androidx.xr.compose.subspace.layout.width
 import com.example.webspatialandroid.ui.theme.WebSpatialAndroidTheme
 import com.example.webspatiallib.Console
 import com.example.webspatiallib.CoordinateSpaceMode
+import com.example.webspatiallib.NativeWebView
 import com.example.webspatiallib.SpatialEntity
 import com.example.webspatiallib.SpatialWindowComponent
 import com.example.webspatiallib.SpatialWindowContainer
@@ -65,6 +66,9 @@ var startURL = "http://localhost:5173/src/docsWebsite?examplePath=createSession"
 var console = Console()
 var windowContainers = mutableStateListOf<SpatialWindowContainer>()
 
+val cm = CommandManager()
+
+
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("RestrictedApi")
@@ -72,6 +76,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         console.log("WebSpatial App Started -------- rootURL: " + startURL)
+        NativeWebView.commandManager = cm;
 
         // Initialize default window container with webpage
         val rootContainer = SpatialWindowContainer.getOrCreateSpatialWindowContainer("Root", WindowContainerData("Plain", "Root"))
