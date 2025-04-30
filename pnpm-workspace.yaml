@@ -6,6 +6,5 @@ packages:
   - 'examples/*'
   - 'plugins/*'
   - 'builder/visionOS'
-  - 'ciTest'
   - 'shared'
-
+  - 'ci-test'

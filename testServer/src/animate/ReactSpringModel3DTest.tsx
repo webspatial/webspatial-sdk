@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { useRef } from 'react'
 
 import { Model } from '@webspatial/react-sdk'
