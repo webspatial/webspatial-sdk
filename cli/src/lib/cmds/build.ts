@@ -2,10 +2,10 @@ import { PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
-import { join } from 'path'
-import * as fs from 'fs'
 import { launch } from './launch'
 import { ManifestInfo, PWAInitArgs } from '../types'
+import Xcrun from '../xcode/xcrun'
+import CliHistory from '../utils/history'
 
 // build and export ipa
 export async function build(args: any) {
@@ -28,7 +28,6 @@ export async function store(args: any) {
     1. Using parameters from the build command, then this command will first archive and export before uploading
     2. Use the name parameter to specify the IPA name, then this command will skip archiving and exporting, and directly find the specified IPA file in the export folder and execute the upload
   */
-
   let appInfo = { name: 'WebSpatialTest' }
   args['buildType'] = 'app-store-connect'
   if (args['name']) {
@@ -42,8 +41,12 @@ export async function store(args: any) {
 
 // build and run on simulator
 export async function run(args: any) {
+  const runCmd = JSON.stringify(args)
+  CliHistory.init(runCmd)
+  console.log('------------------- parse start -------------------')
   ResourceManager.checkPlatformPath(args['platform'])
   const manifestInfo = await doPwa(args, true)
+  CliHistory.recordManifest(manifestInfo.json)
   /*
     If it is an online project, there is no need to worry about project changes, just ensure that the parameters are consistent with the previous time and there is no need to compile again.
     If it is a local project, there is a risk of project changes, so it needs to be compiled again.
@@ -51,21 +54,17 @@ export async function run(args: any) {
     If it is the same, it will be defaulted as already compiled, and the compilation will be skipped and the application will be launched directly.
   */
   if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
-    let runCmd = JSON.stringify(args)
     // If this command is a new command, go through the build process; otherwise, go through the launch process
-    if (!checkRunHistory(runCmd)) {
-      console.log('launch without build')
-      return launch(args)
+    if (CliHistory.checkManifest(manifestInfo.json)) {
+      console.log('Same as the previous record')
+      await XcodeManager.runWithHistory()
+      return
     }
   }
-
-  let appInfo = { name: '', id: '' }
   const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
   await doXcode(args, icon, manifestInfo, true)
   console.log('------------------- parse end -------------------')
-  appInfo.name = manifestInfo.json.name
-  appInfo.id = manifestInfo.json.id
-  await XcodeManager.runWithSimulator(appInfo)
+  await XcodeManager.runWithSimulator()
 }
 
 /**
@@ -122,37 +121,4 @@ async function doXcode(
     },
     isDev,
   )
-}
-
-/*
-  Every time the run command is executed,
-  the current command will be recorded through run_history.txt,
-  and when using the --tryWithoutBuild=true parameter,
-  it will be judged whether it is the same as the previous command. 
-  If it is the same, it will be defaulted as already compiled, 
-  and the compilation will be skipped and the application will be launched directly
-*/
-function checkRunHistory(cmd: string) {
-  let historyFile = join(__dirname, '../../run_history.txt')
-  if (!fs.existsSync(historyFile)) {
-    fs.writeFileSync(historyFile, '[]')
-  }
-  let history
-  try {
-    history = JSON.parse(fs.readFileSync(historyFile, 'utf-8'))
-    if (!Array.isArray(history)) {
-      history = []
-    }
-  } catch (e) {
-    history = []
-  }
-  let isNew = true
-  if (history.length > 0) {
-    if (history[history.length - 1].cmd === cmd) {
-      isNew = false
-    }
-  }
-  history.push({ cmd: cmd, time: new Date().toLocaleString() })
-  fs.writeFileSync(historyFile, JSON.stringify(history))
-  return isNew
 }

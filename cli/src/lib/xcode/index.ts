@@ -45,7 +45,11 @@ export class XcodeManager {
     }
   }
 
-  public static async runWithSimulator(appInfo: any) {
-    await Xcrun.runWithSimulator(appInfo)
+  public static async runWithSimulator() {
+    await Xcrun.runWithSimulator()
+  }
+
+  public static async runWithHistory() {
+    await Xcrun.runWithHistory()
   }
 }

@@ -1,14 +1,16 @@
-import { execFile, execSync } from 'child_process'
+import { execSync } from 'child_process'
 import {
-  PROJECT_EXPORT_DIRECTORY,
   PROJECT_BUILD_DIRECTORY,
   PROJECT_DIRECTORY,
+  PROJECT_TEST_DIRECTORY,
 } from '../resource'
 import { join } from 'path'
 import * as fs from 'fs'
 import { XcodebuildCMD } from './xcodebuild'
 import { clearDir } from '../resource/file'
 import { CliLog } from '../utils/utils'
+import CliHistory from '../utils/history'
+import { BasicAppInfo, SimulatorInfo } from '../types'
 
 export default class Xcrun {
   public static async validate(
@@ -66,48 +68,98 @@ export default class Xcrun {
     return res.toString()
   }
 
-  public static async runWithSimulator(appInfo: any) {
-    // find visionOS simulator
-    let device = this.findSimulator()
+  /**
+   * @description
+   * Find suitable simulator device
+   * Attempt to build a testing app
+   * Try running the test app on the simulator
+   */
+  public static async runWithSimulator() {
+    let deviceList = this.findSimulator()
+    if (!deviceList[0]) {
+      deviceList = [this.createSimulator()]
+    }
+    const recordAppInfo = CliHistory.getAppInfoRecord()
+    for (var i = 0; i < deviceList.length; i++) {
+      if (this.buildTestApp(deviceList[i].deviceId)) {
+        const launchedDeviceId = this.launchWithSimulator(
+          recordAppInfo,
+          deviceList[i].deviceId,
+          true,
+          false,
+        )
+        CliHistory.recordSimulator(launchedDeviceId)
+        CliHistory.write()
+        return
+      } else {
+        CliLog.error(
+          `build failed on ${deviceList[i].deviceId}, try next device`,
+        )
+      }
+    }
+    CliLog.error('no simulator available')
+  }
+
+  /**
+   * @description
+   * Attempt to launch the app using information from the history
+   */
+  public static async runWithHistory() {
+    const historyDeviceId = CliHistory.getSimulatorHistory()
+    const historyAppInfo = CliHistory.getAppInfoRecord()
+    const launchedDeviceId = this.launchWithSimulator(
+      historyAppInfo,
+      historyDeviceId,
+    )
+    CliHistory.recordSimulator(launchedDeviceId)
+    CliHistory.write()
+  }
+
+  /**
+   * @description
+   * Find a simulator with the given deviceId
+   * If no deviceId is provided, find the first available simulator
+   * If no simulator is found, create a new simulator
+   * @param deviceId The deviceId of the simulator to find, defaulting to the first available simulator
+   * @param appInfo
+   *  appInfo.name is used for installing applications
+   *  appInfo.id is used to launch the application
+   * @returns The simulator device uuid
+   */
+  public static launchWithSimulator(
+    appInfo: BasicAppInfo,
+    deviceId: string = '',
+    needInstall: boolean = false,
+    needFind: boolean = true,
+  ) {
+    let device
+    let isNewSim = false
+    if (needFind) {
+      device = this.findSimulator(deviceId)[0]
+    } else {
+      device = this.searchSimulator(deviceId)
+    }
+    if (!device || device.deviceId === '') {
+      device = this.createSimulator()
+      isNewSim = true
+    }
     console.log(`use simulator: ${device.deviceId}`)
-    const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
-    const testPath = PROJECT_BUILD_DIRECTORY + '/test'
-    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
-      fs.mkdirSync(PROJECT_BUILD_DIRECTORY, { recursive: true })
-    }
-    if (!fs.existsSync(testPath)) {
-      fs.mkdirSync(testPath, { recursive: true })
-    }
-    clearDir(testPath)
-    const buildCMD =
-      new XcodebuildCMD().project(projectFile).line +
-      ` build -scheme web-spatial -destination 'platform=visionOS Simulator,id=${device.deviceId}' -derivedDataPath ${testPath}`
-    console.log('start building')
-    execSync(buildCMD)
-    console.log('build success')
     // launch visionOS simulator
     this.launchSimulator(device)
-    // install app
-    console.log('installing app')
-    this.installApp(testPath, device.deviceId, appInfo.name)
-    console.log('install success')
+    if (needInstall || isNewSim) {
+      // install app
+      console.log('installing app')
+      this.installApp(PROJECT_TEST_DIRECTORY, device.deviceId, appInfo.name)
+      console.log('install success')
+    }
     // launch app
     console.log('launch app')
     this.launchApp(device.deviceId, appInfo.id)
-  }
-
-  public static launchWithSimulator(bundleId: string) {
-    let device = this.findSimulator()
-    console.log(`find simulator: ${device.deviceId}`)
-    // launch visionOS simulator
-    this.launchSimulator(device)
-    // launch app
-    console.log('launch app')
-    this.launchApp(device.deviceId, bundleId)
+    return device.deviceId
   }
 
   public static async shutdownSimulator() {
-    let device = this.findSimulator()
+    let device = this.findSimulator()[0]
     console.log(`find simulator: ${device.deviceId}`)
     if (device.state !== 'Shutdown') {
       let cmd = new XcrunCMD().simctl()
@@ -131,6 +183,29 @@ export default class Xcrun {
     execSync('open -a Simulator --args -CurrentDeviceUDID ' + device.deviceId)
   }
 
+  private static buildTestApp(deviceId: string) {
+    const projectFile = PROJECT_DIRECTORY + '/web-spatial.xcodeproj'
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY, { recursive: true })
+    }
+    if (!fs.existsSync(PROJECT_TEST_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_TEST_DIRECTORY, { recursive: true })
+    }
+    clearDir(PROJECT_TEST_DIRECTORY)
+    const buildCMD =
+      new XcodebuildCMD().project(projectFile).line +
+      ` build -scheme web-spatial -destination 'platform=visionOS Simulator,id=${deviceId}' -derivedDataPath ${PROJECT_TEST_DIRECTORY}`
+    console.log(`---- build start on ${deviceId} ----`)
+    try {
+      const res = execSync(buildCMD)
+      if (res.toString().includes('** BUILD FAILED **')) {
+        return false
+      }
+    } catch (e) {}
+    console.log('------------------- build end -------------------')
+    return true
+  }
+
   private static installApp(path: string, deviceId: string, appName: string) {
     const appFile = join(
       path,
@@ -146,7 +221,6 @@ export default class Xcrun {
       execSync(new XcrunCMD().simctl().terminate(deviceId, bundleId).line)
     } catch (e) {}
     execSync(new XcrunCMD().simctl().launch(deviceId, bundleId).line)
-    this.writeSimulatorRecord(deviceId)
   }
 
   /*
@@ -164,7 +238,7 @@ export default class Xcrun {
     let res = devices.split('\n')
     const uuidRegex =
       /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/
-    let deviceId = ''
+    let deviceList = []
     for (let i = 0; i < res.length; i++) {
       if (res[i].includes('platform:visionOS Simulator')) {
         const uuid = res[i].slice(
@@ -172,11 +246,12 @@ export default class Xcrun {
           res[i].indexOf(', name'),
         )
         if (uuidRegex.test(uuid)) {
-          return deviceId
+          deviceList.push(uuid)
+          console.log(`find destination device: ${res[i]})`)
         }
       }
     }
-    return deviceId
+    return deviceList
   }
 
   /*
@@ -236,7 +311,7 @@ export default class Xcrun {
    */
   private static parseListDevices(devices: string) {
     let res = devices.split('\n')
-    let list: any[] = []
+    let list: SimulatorInfo[] = []
     let findIndex = -1
     for (let i = 0; i < res.length; i++) {
       if (res[i].includes('-- visionOS')) {
@@ -247,43 +322,68 @@ export default class Xcrun {
           break
         }
         if (res[i].length > 0) {
-          const info = res[i].split('(')
-          const deviceInfo = {
-            name: info[0].trim(),
-            deviceId: info[1].split(')')[0].trim(),
-            state: info[2].split(')')[0].trim(),
-          }
-          list.push(deviceInfo)
+          list.push(this.parseDeviceInfo(res[i]))
         }
       }
     }
     return list
   }
+
+  /*
+   * device info like:
+   * Apple Vision Pro (8C7AD003-4039-478F-9F94-938876D57817) (Shutdown)
+   */
+  private static parseDeviceInfo(device: string) {
+    const info = device.split('(')
+    const deviceInfo = {
+      name: info[0].trim(),
+      deviceId: info[1].split(')')[0].trim(),
+      state: info[2].split(')')[0].trim(),
+    }
+    return deviceInfo
+  }
   // Try to find an available simulator, if not, create one and save the running record for the next time direct use.
-  private static findSimulator() {
-    // check simulator record
-    let device = this.checkSimulatorRecord()
-    let res
-    if (device.length === 0) {
-      // no record, find simulator in project destinations
-      res = execSync(
-        `cd ${PROJECT_DIRECTORY} && xcodebuild -showdestinations -scheme web-spatial`,
-      )
-      device = this.parseDestinationDevices(res.toString())
-    }
-    console.log(`find record: ${device}`)
+  public static findSimulator(deviceId?: string) {
+    let device: string[] = [deviceId ?? '']
+    const res = execSync(
+      `cd ${PROJECT_DIRECTORY} && xcodebuild -showdestinations -scheme web-spatial`,
+    )
+    const arr = this.parseDestinationDevices(res.toString())
+    device = [...device, ...arr]
     let simList = this.listSimulator()
-    for (var i = 0; i < simList.length; i++) {
-      // check simulator in list
-      if (simList[i].deviceId === device) {
-        return simList[i]
+    // Sorting logic: Prioritize the DeviceId in the device array
+    simList.sort((a, b) => {
+      const aIndex = device.indexOf(a.deviceId)
+      const bIndex = device.indexOf(b.deviceId)
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex // All in device, in order of device
+      } else if (aIndex !== -1) {
+        return -1 // Only 'a' is in the device, 'a' is in the front row
+      } else if (bIndex !== -1) {
+        return 1 // Only 'b' is in the device, 'b' is in the front row
       }
-    }
-    // create a simulator
+      return 0 // Neither 'a' nor 'b' is in the device, no change in order
+    })
+    console.log('find simulators:')
+    console.log(simList)
+    return simList
+  }
+
+  private static searchSimulator(deviceId: string) {
+    const cmd =
+      new XcrunCMD().simctl().listDevices('Apple Vision Pro').line +
+      ` | grep ${deviceId}`
+    console.log(cmd)
+    let res = execSync(cmd)
+    console.log(res.toString())
+    return this.parseDeviceInfo(res.toString())
+  }
+
+  public static createSimulator() {
     CliLog.warn('no visionOS simulator found')
     CliLog.warn('try create a visionOS simulator')
     // list support device include Apple Vision Pro
-    res = execSync(new XcrunCMD().simctl().listDeviceTypes().line)
+    let res = execSync(new XcrunCMD().simctl().listDeviceTypes().line)
     const supportDevice = this.parseSupportDevices(res.toString())
     // list support runtime include visionOS
     res = execSync(new XcrunCMD().simctl().listRuntimes().line)
@@ -295,7 +395,7 @@ export default class Xcrun {
     res = execSync(
       new XcrunCMD().simctl().create(supportDevice, supportRuntime).line,
     )
-    device = res.toString().trim()
+    const device = res.toString().trim()
     console.log(`create visionOS simulator: ${device}`)
     return {
       name: 'WebSpatial Simulator',
@@ -309,22 +409,6 @@ export default class Xcrun {
       new XcrunCMD().simctl().listDevices('Apple Vision Pro').line,
     )
     return this.parseListDevices(res.toString())
-  }
-
-  private static checkSimulatorRecord() {
-    let simulatorFile = join(__dirname, '../../simulator_record.txt')
-    if (!fs.existsSync(simulatorFile)) {
-      fs.writeFileSync(simulatorFile, '')
-    }
-    return fs.readFileSync(simulatorFile, 'utf-8')
-  }
-
-  private static writeSimulatorRecord(deviceId: string) {
-    let simulatorFile = join(__dirname, '../../simulator_record.txt')
-    if (!fs.existsSync(simulatorFile)) {
-      fs.writeFileSync(simulatorFile, '')
-    }
-    fs.writeFileSync(simulatorFile, deviceId)
   }
 }
 

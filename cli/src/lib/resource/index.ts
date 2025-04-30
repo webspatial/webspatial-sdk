@@ -1,13 +1,14 @@
 import * as fs from 'fs'
 import { join } from 'path'
 import { clearDir, copyDir } from './file'
-import { ManifestInfo } from '../pwa'
+import { ManifestInfo } from '../types'
 import * as Jimp from 'jimp'
 import { loadImageFromDisk, loadImageFromNet } from './load'
 import { execSync } from 'child_process'
 export let PROJECT_DIRECTORY = ''
 export let PROJECT_BUILD_DIRECTORY = ''
 export let PROJECT_EXPORT_DIRECTORY = ''
+export let PROJECT_TEST_DIRECTORY = ''
 export const WEB_PROJECT_DIRECTORY = 'web-spatial/static-web'
 export const ASSET_DIRECTORY = 'web-spatial/Assets.xcassets'
 export const BACK_APPICON_DIRECTORY =
@@ -90,5 +91,6 @@ export class ResourceManager {
     PROJECT_DIRECTORY = tempPlatformDir
     PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
     PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
+    PROJECT_TEST_DIRECTORY = join(PROJECT_BUILD_DIRECTORY, './test')
   }
 }
