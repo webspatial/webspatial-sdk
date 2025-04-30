@@ -46,7 +46,10 @@ class CommandManager : CommandManagerInterface {
                 if (style != null) {
                     val swc = SpatialObject.get(ci.resourceID) as SpatialWindowComponent?
                     if (swc != null) {
-                        swc.backgroundStyle = "transparent"
+                        val backgroundMaterial = style.find<String>("backgroundMaterial")
+                        if (backgroundMaterial != null) {
+                            swc.backgroundStyle = backgroundMaterial
+                        }
                     }
                 }
                 senderWebview.completeEvent(ci.requestID)

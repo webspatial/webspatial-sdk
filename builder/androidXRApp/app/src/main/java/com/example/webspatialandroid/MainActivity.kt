@@ -116,7 +116,7 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
             if (root != null) {
                 val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
                 if (wc != null) {
-                    SpatialWebViewUI(wc.nativeWebView, Modifier)
+                    SpatialWebViewUI(wc, Modifier)
                 }
             }
             Orbiter(
@@ -186,7 +186,7 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
                 if (root != null) {
                     val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
                     if (wc != null) {
-                        SpatialWebViewUI(wc.nativeWebView, Modifier)
+                        SpatialWebViewUI(wc, Modifier)
                     }
                 }
             }
