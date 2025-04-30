@@ -11,3 +11,21 @@ export interface ManifestInfo {
   url: string
   fromNet: boolean
 }
+
+export interface HistoryInfo {
+  cmd: string
+  manifest: Record<string, any>
+  appInfo: BasicAppInfo
+  simulator: string
+}
+
+export interface SimulatorInfo {
+  name: string
+  deviceId: string
+  state: string
+}
+
+export interface BasicAppInfo {
+  name: string
+  id: string
+}
