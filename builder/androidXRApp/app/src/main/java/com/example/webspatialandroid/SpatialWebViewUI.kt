@@ -21,35 +21,40 @@ val standardColor = Color.White
 
 @Composable
 fun SpatialWebViewUI(swc: SpatialWindowComponent, modifier: Modifier = Modifier) {
+    val id = remember { ++SpatialWindowComponent.mountIdCounter }
     val bgColor = remember { mutableStateOf(standardColor) }
     Box(modifier = modifier) {
         // Since the androidView doesn't seem to get destroyed right away we need to remove the webview from its parent before adding it in its new UI
         // Without this we can get a crash when switching from home to full space modes
-
-        AndroidView(
-            modifier = Modifier
-                .background(bgColor.value)
-                .align(Alignment.TopStart),
-            factory = { ctx ->
-                (swc.nativeWebView.webView.parent as? ViewGroup)?.removeView(swc.nativeWebView.webView)
-                swc.nativeWebView.webView.apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
+        if (swc.mountedId == 0 || swc.mountedId == id) {
+            swc.mountedId = id
+            AndroidView(
+                modifier = Modifier
+                    .background(bgColor.value)
+                    .align(Alignment.TopStart),
+                factory = { ctx ->
+                    swc.nativeWebView.webView.apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                }, update = { webView ->
+                    if (swc.backgroundStyle == "none") {
+                        swc.nativeWebView.webView.setBackgroundColor(standardColor.toArgb())
+                        bgColor.value = standardColor
+                    } else if (swc.backgroundStyle == "translucent") {
+                        swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
+                        bgColor.value = transparentColor
+                    } else if (swc.backgroundStyle == "glassEffect") {
+                        swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
+                        bgColor.value = glassColor
+                    }
+                },
+                onRelease = { view ->
+                    swc.mountedId = 0
                 }
-            }, update = { webView ->
-                if (swc.backgroundStyle == "none") {
-                    swc.nativeWebView.webView.setBackgroundColor(standardColor.toArgb())
-                    bgColor.value = standardColor
-                } else if (swc.backgroundStyle == "translucent") {
-                    swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
-                    bgColor.value = transparentColor
-                } else if (swc.backgroundStyle == "glassEffect") {
-                    swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
-                    bgColor.value = glassColor
-                }
-            }
-        )
+            )
+        }
     }
 }
