@@ -62,7 +62,7 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 
 val debugSpaceToggle = false
-var startURL = "http://localhost:5173/src/docsWebsite?examplePath=createSession"
+var startURL = "http://localhost:5173/src/androidBringup/index.html"
 var console = Console()
 var windowContainers = mutableStateListOf<SpatialWindowContainer>()
 

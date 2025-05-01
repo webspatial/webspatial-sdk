@@ -10,8 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 class SpatialWindowComponent(context: Context) : SpatialComponent() {
+    companion object {
+        var mountIdCounter = 1
+    }
+
     val nativeWebView = NativeWebView(context)
 
+    var mountedId by mutableIntStateOf(0)
     var backgroundStyle by mutableStateOf("none")
 
     init {
