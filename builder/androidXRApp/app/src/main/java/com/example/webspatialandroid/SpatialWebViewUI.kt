@@ -45,10 +45,10 @@ fun SpatialWebViewUI(swc: SpatialWindowComponent, modifier: Modifier = Modifier)
                         bgColor.value = standardColor
                     } else if (swc.backgroundStyle == "translucent") {
                         swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
-                        bgColor.value = transparentColor
-                    } else if (swc.backgroundStyle == "glassEffect") {
-                        swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
                         bgColor.value = glassColor
+                    } else if (swc.backgroundStyle == "transparent") {
+                        swc.nativeWebView.webView.setBackgroundColor(transparentColor.toArgb())
+                        bgColor.value = transparentColor
                     }
                 },
                 onRelease = { view ->
