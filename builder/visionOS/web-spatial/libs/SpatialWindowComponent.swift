@@ -227,6 +227,13 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative!.initialLoad()
     }
 
+    // remove webview name, to address name issues when reopen the app
+    func removeWebviewName(completion: (() -> Void)? = nil) {
+        webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.name = '';") { _, _ in
+            completion?()
+        }
+    }
+
     func isScrollEnabled() -> Bool {
         return webViewNative!.webViewHolder.appleWebView!.scrollView.isScrollEnabled
     }
