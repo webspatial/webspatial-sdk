@@ -4,7 +4,5 @@ packages:
   - 'testServer'
   - 'cli'
   - 'examples/*'
-  - 'plugins/*'
   - 'builder/*'
-  - 'shared'
   - 'ci-test'
