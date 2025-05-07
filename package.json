@@ -38,7 +38,8 @@
       "swiftformat"
     ],
     "*": [
-      "node ./tools/scripts/check-filesize.js"
+      "node ./tools/scripts/check-filesize.js",
+      "node ./tools/scripts/check-valid-characters.js"
     ]
   },
   "repository": {
