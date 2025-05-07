@@ -1,6 +1,6 @@
 import { validateURL } from '../pwa/validate'
 export function checkBuildParams(args: any, isDev: boolean = false) {
-  if (args['manifest'] && args['manifest-url']) {
+  if (args['manifest'] && args['manifestUrl']) {
     throw new Error(
       '--manifest and --manifest-url cannot be used at the same time',
     )

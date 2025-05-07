@@ -1,0 +1,40 @@
+{
+  "name": "ci-test",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "test": "mocha",
+    "runbuilder": "tsx scripts/runbuilder.ts",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "chai": "^5.2.0",
+    "express": "^4.21.2",
+    "mocha": "^11.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.3",
+    "@webspatial/core-sdk": "workspace:*",
+    "@webspatial/react-sdk": "workspace:*",
+    "@webspatial/builder": "workspace:^"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/chai": "^5.2.1",
+    "@types/mocha": "^10.0.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@types/express": "^5.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.22.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.26.1",
+    "vite": "^6.3.1"
+  }
+}

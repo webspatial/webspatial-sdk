@@ -52,10 +52,10 @@ export class PWAGenerator {
     let fromNet: boolean = false
     let useDefault = false
     // load manifest.json
-    if (args['manifest-url']) {
-      url = args['manifest-url']
+    if (args['manifestUrl']) {
+      url = args['manifestUrl']
       fromNet = true
-      manifest = await loadJsonFromNet(args['manifest-url'])
+      manifest = await loadJsonFromNet(args['manifestUrl'])
     } else {
       if (args['manifest']) {
         url = join(process.cwd(), args['manifest'])
@@ -85,7 +85,7 @@ export class PWAGenerator {
     let start_url = configStartUrl(manifest, args['base'] ?? '', url, fromNet)
     var isNetWeb = checkStartUrl(start_url, url, fromNet, isDev)
     manifest.start_url = start_url
-    if (!isDev) checkId(manifest, args['bundle-id'] ?? '')
+    if (!isDev) checkId(manifest, args['bundleId'] ?? '')
     await checkIcons(manifest, url, isDev)
     return {
       json: manifest,
@@ -100,7 +100,7 @@ export class PWAGenerator {
     args: PWAInitArgs,
     isDev: boolean,
   ) {
-    let bundleId = args['bundle-id'] ?? ''
+    let bundleId = args['bundleId'] ?? ''
     if (isDev && !manifestInfo.json.id) {
       bundleId = this.defaultBundleId
     }
