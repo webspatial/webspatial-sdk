@@ -114,8 +114,8 @@ class NativeWebView {
 
         webView.addJavascriptInterface(object {
             @JavascriptInterface
-            fun getNativeVersion(): String {
-                return "0.0.1"
+            fun getNativeVersion():String{
+                return BuildConfig.NATIVE_VERSION
             }
 
             @JavascriptInterface

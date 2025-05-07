@@ -5,6 +5,6 @@ packages:
   - 'cli'
   - 'examples/*'
   - 'plugins/*'
-  - 'builder/visionOS'
+  - 'builder/*'
   - 'shared'
   - 'ci-test'
