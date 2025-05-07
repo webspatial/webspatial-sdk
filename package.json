@@ -16,7 +16,7 @@
     "androidStudio": "open -a /Applications/Android\\ Studio.app builder/androidXRApp",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
-    "ciTest": "cd ciTest/ && pnpm run test",
+    "ciTest": "cd ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
     "changeset": "changeset",

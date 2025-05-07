@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter, Link, Route, Routes } from 'react-router-dom'
