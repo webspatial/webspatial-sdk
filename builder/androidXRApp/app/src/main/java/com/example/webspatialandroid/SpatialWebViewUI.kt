@@ -17,23 +17,23 @@ val standardColor = Color.White
 @Composable
 fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
-    // Since the androidView doesn't seem to get destroyed right away we need to remove the webview from its parent before adding it in its new UI
-    // Without this we can get a crash when switching from home to full space modes
-    ( swv.webView.parent as? ViewGroup)?.removeView( swv.webView)
-    AndroidView(
-        modifier = Modifier
-           // .clip(RoundedCornerShape(swv.cornerRadius.dp))
-         //   .background(viewBGColor.value)
-            .align(Alignment.TopStart),
-        factory = { ctx ->
-            swv.webView.apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                setBackgroundColor(standardColor.toArgb());
-            }
-        }, update = { webView ->
+        // Since the androidView doesn't seem to get destroyed right away we need to remove the webview from its parent before adding it in its new UI
+        // Without this we can get a crash when switching from home to full space modes
+        (swv.webView.parent as? ViewGroup)?.removeView(swv.webView)
+        AndroidView(
+            modifier = Modifier
+                // .clip(RoundedCornerShape(swv.cornerRadius.dp))
+                //   .background(viewBGColor.value)
+                .align(Alignment.TopStart),
+            factory = { ctx ->
+                swv.webView.apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundColor(standardColor.toArgb());
+                }
+            }, update = { webView ->
 //            webView.apply {
 //                if (swv.glassEffect || swv.transparentEffect) {
 //                    setBackgroundColor(transparentColor.toArgb())
@@ -46,7 +46,7 @@ fun SpatialWebViewUI(swv: NativeWebView, modifier: Modifier = Modifier) {
 //                    setBackgroundColor(Color.White.toArgb())
 //                }
 //            }
-        }
-    )
-}
+            }
+        )
+    }
 }
