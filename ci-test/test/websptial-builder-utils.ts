@@ -30,7 +30,3 @@ export async function runWebSpatialBuilder(
     )
   })
 }
-
-export function closeXCodeSimulater() {
-  execSync('npx @webspatial/builder shutdown')
-}

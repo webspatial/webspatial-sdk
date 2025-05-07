@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 
 const XRSDKBaseDir = path.join(__dirname, '../')
 
+const corePkg = require('../core/package.json')
+const reactPkg = require('../react/package.json')
+
 const tsconfig: any = {
   compilerOptions: {
     jsx: 'react-jsx',
@@ -28,8 +31,8 @@ export default defineConfig({
     },
   },
   define: {
-    __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(``),
-    __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(``),
+    __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
+    __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
   esbuild: {
     tsconfigRaw: tsconfig,
