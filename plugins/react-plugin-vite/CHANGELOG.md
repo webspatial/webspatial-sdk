@@ -1,5 +1,11 @@
 # @webspatial/vite-plugin
 
+## 0.1.7
+
+### Patch Changes
+
+- 37c3a1d: update readme
+
 ## 0.1.6
 
 ### Patch Changes
