@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.15
+
+### Patch Changes
+
+- 5b72246: export dts for window.xrCurrentSceneDefaults
+  - @webspatial/core-sdk@0.1.15
+
 ## 0.1.14
 
 ### Patch Changes
