@@ -1,6 +1,5 @@
-import { ParsedArgs } from 'minimist'
 import { validateURL } from '../pwa/validate'
-export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
+export function checkBuildParams(args: any, isDev: boolean = false) {
   if (args['manifest'] && args['manifest-url']) {
     throw new Error(
       '--manifest and --manifest-url cannot be used at the same time',
@@ -35,7 +34,7 @@ export function checkBuildParams(args: ParsedArgs, isDev: boolean = false) {
   }
 }
 
-export function checkStoreParams(args: ParsedArgs) {
+export function checkStoreParams(args: any) {
   if (!(args['u'] && args['p'])) {
     throw new Error('--u and --p is required')
   }

@@ -1,3 +1,5 @@
+import { ConsoleLog } from './Log'
+
 export function parseRouter(url: string): string {
   let urlParts = url.split('/')
   urlParts.pop()
@@ -7,3 +9,5 @@ export function parseRouter(url: string): string {
   }
   return pathUrl
 }
+
+export const CliLog: ConsoleLog = new ConsoleLog('webspatial-builder')

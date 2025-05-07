@@ -21,6 +21,10 @@ export class XcodeManager {
     if (!isDev) await Xcodebuild.archive(option['export'])
   }
 
+  public static async build(exportPath: string) {
+    await Xcodebuild.archive(exportPath)
+  }
+
   public static async upload(option: any, appInfo: any) {
     if (option['u'] && option['p']) {
       // use username, password
@@ -41,7 +45,11 @@ export class XcodeManager {
     }
   }
 
-  public static async runWithSimulator(appInfo: any) {
-    await Xcrun.runWithSimulator(appInfo)
+  public static async runWithSimulator() {
+    await Xcrun.runWithSimulator()
+  }
+
+  public static async runWithHistory() {
+    await Xcrun.runWithHistory()
   }
 }

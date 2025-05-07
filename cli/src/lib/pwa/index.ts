@@ -15,21 +15,8 @@ import {
   checkStartUrl,
 } from './validate'
 import * as fs from 'fs'
-import { Cli } from '../Cli'
-
-export interface InitArgs {
-  'manifest-url'?: string // remote manifest url
-  manifest?: string // local manifest path
-  project?: string // local web project path
-  base: string // url root
-  'bundle-id'?: string // bundle id
-}
-
-export interface ManifestInfo {
-  json: Record<string, any>
-  url: string
-  fromNet: boolean
-}
+import { CliLog } from '../utils/utils'
+import { ManifestInfo, PWAInitArgs } from '../types'
 
 export class PWAGenerator {
   // Supported display modes for TWA
@@ -46,7 +33,7 @@ export class PWAGenerator {
   private static useDefaultManifestJson = false
 
   public static async generator(
-    args: InitArgs,
+    args: PWAInitArgs,
     isDev: boolean = false,
   ): Promise<ManifestInfo> {
     let manifestInfo: ManifestInfo = await this.validate(args, isDev)
@@ -57,7 +44,7 @@ export class PWAGenerator {
   }
 
   public static async validate(
-    args: InitArgs,
+    args: PWAInitArgs,
     isDev: boolean = false,
   ): Promise<ManifestInfo> {
     let manifest: Record<string, any> = {}
@@ -81,7 +68,7 @@ export class PWAGenerator {
       if (!fs.existsSync(url)) {
         if (isDev) {
           useDefault = true
-          Cli.log.warn(
+          CliLog.warn(
             'manifest.json or manifest.webmanifest not found, use default in run mode',
           )
         } else {
@@ -110,7 +97,7 @@ export class PWAGenerator {
   // generate manifest
   public static config(
     manifestInfo: ManifestInfo,
-    args: InitArgs,
+    args: PWAInitArgs,
     isDev: boolean,
   ) {
     let bundleId = args['bundle-id'] ?? ''
