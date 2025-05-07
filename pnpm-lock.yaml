@@ -43,6 +43,8 @@ importers:
         specifier: ^3.0.9
         version: 3.1.2(@types/debug@4.1.12)(@types/node@22.15.2)(jiti@2.4.2)(lightningcss@1.29.3)(sass@1.87.0)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.1)
 
+  builder/androidXRApp: {}
+
   builder/visionOS: {}
 
   ci-test:

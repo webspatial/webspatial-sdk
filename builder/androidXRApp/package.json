@@ -1,0 +1,13 @@
+{
+  "name": "@webspatial/platform-androidxrapp",
+  "version": "0.1.12",
+  "private": true,
+  "files": [
+    "webspatiallib",
+    "package.json"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Used to publish WebSpatial projects to AndroidXRApp"
+}
