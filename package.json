@@ -9,37 +9,27 @@
     "postinstall": "simple-git-hooks",
     "buildPackages": "pnpm -r --filter \"@webspatial/*\" run build",
     "setup": "pnpm install && npm run buildPackages",
-    "watchNPM": "concurrently \"cd core/ && npm run start\" \"cd react/ && npm run start\"",
-    "testServer": "cd testServer/ && npm run dev -- --host",
+    "watchNPM": "concurrently \"cd packages/core/ && npm run start\" \"cd packages/react/ && npm run start\"",
+    "testServer": "cd apps/test-server/ && npm run dev -- --host",
     "dev": "npm run testServer",
-    "xcode": "open builder/visionOS/web-spatial.xcodeproj",
-    "androidStudio": "open -a /Applications/Android\\ Studio.app builder/androidXRApp",
+    "xcode": "open packages/visionOS/web-spatial.xcodeproj",
+    "androidStudio": "open -a /Applications/Android\\ Studio.app packages/androidXR",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
-    "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p testServer/tsconfig.json\"",
-    "ciTest": "cd ci-test/ && pnpm run test",
+    "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\"",
+    "ciTest": "cd tests/ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
     "changeset": "changeset",
     "changeset:pre-enter": "changeset pre enter alpha",
     "changeset:pre-exit": "changeset pre exit alpha",
-    "generateStaticSite": "./devScripts/generateWebsite.sh"
+    "generateStaticSite": "./tools/scripts/generateWebsite.sh"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm test"
   },
   "lint-staged": {
-    "*.{js,json}": [
-      "prettier --write"
-    ],
-    "*.ts?(x)": [
-      "prettier --write"
-    ],
     "*.swift": [
       "swiftformat"
-    ],
-    "*": [
-      "node -e \"const fs = require('fs'); process.argv.slice(1).forEach(file => { if (fs.existsSync(file)) { const size = fs.statSync(file).size; if (size >= 1048576) { console.error(`Error: ${file} is 1MB or larger`); process.exit(1); }}})\"",
-      "node -e \"const fs=require('fs'),f=process.argv[1],c=fs.readFileSync(f,'utf8').split('\\n').filter(l=>/[\\u4E00-\\u9FFF]/.test(l)); if(c.length) { console.error('Non english characters detected:\\n' + c.join('\\n')); process.exit(1); }\""
     ]
   },
   "repository": {

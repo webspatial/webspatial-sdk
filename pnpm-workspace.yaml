@@ -1,8 +1,4 @@
 packages:
-  - 'react'
-  - 'core'
-  - 'testServer'
-  - 'cli'
-  - 'examples/*'
-  - 'builder/*'
-  - 'ci-test'
+  - 'packages/*'
+  - 'apps/*'
+  - 'tests/*'
