@@ -50,6 +50,7 @@ import androidx.xr.compose.subspace.layout.width
 import com.example.webspatialandroid.ui.theme.WebSpatialAndroidTheme
 import com.example.webspatiallib.Console
 import com.example.webspatiallib.CoordinateSpaceMode
+import com.example.webspatiallib.NativeWebView
 import com.example.webspatiallib.SpatialEntity
 import com.example.webspatiallib.SpatialWindowComponent
 import com.example.webspatiallib.SpatialWindowContainer
@@ -61,9 +62,13 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 
 val debugSpaceToggle = false
-var startURL = "http://localhost:5173/src/docsWebsite?examplePath=createSession"
+val debugSpaceToggleTime: Long = 200
+var startURL = "http://localhost:5173/src/androidBringup/index.html"
 var console = Console()
 var windowContainers = mutableStateListOf<SpatialWindowContainer>()
+
+val cm = CommandManager()
+
 
 class MainActivity : ComponentActivity() {
 
@@ -72,6 +77,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         console.log("WebSpatial App Started -------- rootURL: " + startURL)
+        NativeWebView.commandManager = cm;
 
         // Initialize default window container with webpage
         val rootContainer = SpatialWindowContainer.getOrCreateSpatialWindowContainer("Root", WindowContainerData("Plain", "Root"))
@@ -111,7 +117,7 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
             if (root != null) {
                 val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
                 if (wc != null) {
-                    SpatialWebViewUI(wc.nativeWebView, Modifier)
+                    SpatialWebViewUI(wc, Modifier)
                 }
             }
             Orbiter(
@@ -126,7 +132,7 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
                 ).apply {
                     if (debugSpaceToggle) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            delay(200)
+                            delay(debugSpaceToggleTime)
                             onRequestHomeSpaceMode()
                         }
                     }
@@ -134,21 +140,23 @@ fun MySpatialContent(onRequestHomeSpaceMode: () -> Unit) {
             }
         }
 
-        SpatialPanel(SubspaceModifier.width(100.dp).height(100.dp).movable()) {
-            Subspace {
-                Volume(SubspaceModifier.offset(0.dp, 0.dp, 0.dp).scale(1.2f)) { parent ->
-                    scope.launch {
-                        val modelResource = session.createGltfResourceAsync("https://github.com/KhronosGroup/glTF-Sample-Models/raw/refs/heads/main/2.0/Avocado/glTF-Binary/Avocado.glb")
-                        val model = modelResource.await()
-                        val modelEntity = session.createGltfEntity(model)
-                        // Adding this seems to cause a crash when toggling between full/home space (if not in nested subspace)
-                        // I think this is an AndroidXR bug
-                        // It also turns out its not needed to get the model to appear
-                        parent.addChild(modelEntity)
-                    }
-                }
-            }
-        }
+        // https://developer.android.com/develop/xr/jetpack-xr-sdk/develop-ui#use-volume
+        // This shows how to do this but it seems pretty flaky
+//        SpatialPanel(SubspaceModifier.width(100.dp).height(100.dp).movable()) {
+//            Subspace {
+//                Volume(SubspaceModifier.offset(0.dp, 0.dp, 0.dp).scale(1.2f)) { parent ->
+//                    scope.launch {
+//                        val modelResource = session.createGltfResourceAsync("https://github.com/KhronosGroup/glTF-Sample-Models/raw/refs/heads/main/2.0/Avocado/glTF-Binary/Avocado.glb")
+//                        val model = modelResource.await()
+//                        val modelEntity = session.createGltfEntity(model)
+//                        // Adding this seems to cause a crash when toggling between full/home space (if not in nested subspace)
+//                        // I think this is an AndroidXR bug
+//                        // It also turns out its not needed to get the model to appear
+//                        parent.addChild(modelEntity)
+//                    }
+//                }
+//            }
+//        }
     }
 }
 
@@ -168,7 +176,7 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
                 ).apply {
                     if (debugSpaceToggle) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            delay(200)
+                            delay(debugSpaceToggleTime)
                             onRequestFullSpaceMode()
                         }
                     }
@@ -181,7 +189,7 @@ fun My2DContent(onRequestFullSpaceMode: () -> Unit) {
                 if (root != null) {
                     val wc = root.value.components.find { it is SpatialWindowComponent } as? SpatialWindowComponent
                     if (wc != null) {
-                        SpatialWebViewUI(wc.nativeWebView, Modifier)
+                        SpatialWebViewUI(wc, Modifier)
                     }
                 }
             }

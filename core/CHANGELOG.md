@@ -1,5 +1,14 @@
 # @webspatial/core-sdk
 
+## 0.1.15
+
+## 0.1.14
+
+### Patch Changes
+
+- a87c8bf: support setStyle api in https env
+- 1a9e18c: getClientVersion export version from **WEBSPATIAL_CORE_SDK_VERSION**
+
 ## 0.1.13
 
 ### Patch Changes
