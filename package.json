@@ -28,8 +28,17 @@
     "pre-commit": "pnpm lint-staged && pnpm test"
   },
   "lint-staged": {
+    "*.{js,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --write"
+    ],
     "*.swift": [
       "swiftformat"
+    ],
+    "*": [
+      "node ./tools/scripts/check-filesize.js"
     ]
   },
   "repository": {
