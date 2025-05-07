@@ -99,6 +99,7 @@ export namespace WebSpatialJSX {
     [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
       style?: React.CSSProperties
       'enable-xr'?: boolean
+      optimized?: boolean
     }
   }
 }
