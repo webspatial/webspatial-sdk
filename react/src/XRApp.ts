@@ -1,14 +1,6 @@
 import { WindowContainerOptions } from '@webspatial/core-sdk/'
 import { getSession } from './utils/getSession'
 
-declare global {
-  interface Window {
-    xrCurrentSceneDefaults: (
-      defaultConfig: WindowContainerOptions,
-    ) => Promise<WindowContainerOptions>
-  }
-}
-
 export const defaultSceneConfig: WindowContainerOptions = {
   defaultSize: {
     width: 900,
