@@ -56,33 +56,6 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             dataTask.resume()
             return
         }
-
-        var styleJsonString: String? = URLComponents(string: url!.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
-
-        do {
-            if styleJsonString?.contains("?") != nil {
-                // remove invalid query string
-                // before "{\"glassEffect\":true,\"cornerRadius\":50}?uniqueURL=0.0010192470591506853"
-                // after "{\"glassEffect\":true,\"cornerRadius\":50}"
-                styleJsonString = styleJsonString?
-                    .components(separatedBy: "?").first
-            }
-            let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
-
-            webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
-        } catch {
-            logger.warning("Style url parse failure " + error.localizedDescription)
-        }
-
-        // Respond with empty css file
-        let response = ".ignoreThis{}".data(using: .utf8)
-        let mimeType = "text/css"
-        let headers = ["Content-Type": mimeType, "Cache-Control": "no-cache"]
-        let resp = HTTPURLResponse(url: url!, statusCode: 200, httpVersion: "1.1", headerFields: headers)
-
-        urlSchemeTask.didReceive(resp!)
-        urlSchemeTask.didReceive(response!)
-        urlSchemeTask.didFinish()
     }
 
     func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
@@ -117,6 +90,27 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         if let url = navigationAction.request.url,
            url.absoluteString == "webspatial://createWindowContext"
         {
+            decisionHandler(.cancel)
+            return
+        }
+        if let url = navigationAction.request.url,
+           url.absoluteString.starts(with: "forcestyle://")
+        {
+            var styleJsonString: String? = URLComponents(string: url.absoluteString)?.queryItems?.first(where: { $0.name == "style" })?.value
+            do {
+                if styleJsonString?.contains("?") != nil {
+                    // remove invalid query string
+                    // before "{\"glassEffect\":true,\"cornerRadius\":50}?uniqueURL=0.0010192470591506853"
+                    // after "{\"glassEffect\":true,\"cornerRadius\":50}"
+                    styleJsonString = styleJsonString?
+                        .components(separatedBy: "?").first
+                }
+                let styleToSet = try decoder.decode(PreloadStyleSettings.self, from: styleJsonString!.data(using: .utf8)!)
+
+                webviewGetEarlyStyleData.send(WebviewEarlyStyle(webview: webView, style: styleToSet))
+            } catch {
+                logger.warning("Style url parse failure " + error.localizedDescription)
+            }
             decisionHandler(.cancel)
             return
         }
@@ -244,10 +238,6 @@ struct WebViewNative: UIViewRepresentable {
             myConfig.userContentController = userContentController
             myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
             myConfig.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
-
-            if myConfig.urlSchemeHandler(forURLScheme: "forceStyle") == nil {
-                myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "forceStyle")
-            }
             if myConfig.urlSchemeHandler(forURLScheme: "file") == nil {
                 myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "file")
             }
