@@ -32,10 +32,9 @@ describe('E2E Test For Webspatial SDK', function () {
 
       // wait for mocha result finished
       const result = await promise.waitFinish()
-
       const hasError = result.failures.length > 0
-
       if (hasError) {
+        console.error('Failures', result.failures)
         fail()
       } else {
         // close server
@@ -45,6 +44,7 @@ describe('E2E Test For Webspatial SDK', function () {
         await closeXCodeSimulater()
       }
     } catch (error) {
+      console.log('error', error)
       fail(error as string)
     }
   })
