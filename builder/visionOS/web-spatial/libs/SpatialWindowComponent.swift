@@ -227,7 +227,14 @@ class SpatialWindowComponent: SpatialComponent {
         webViewNative!.initialLoad()
     }
 
-    // remove webview name, to address name issues when reopen the app
+    /// Remove webview window.name
+    ///
+    /// The expectation is that when the app is reopened, the root page should not have a window.name. However, under the current scene mechanism, if the last closed scene had set a window.name, it will still exist the next time the app is opened.
+    ///
+    /// Currently, window.name is only deleted when non-main scenes are closed along with the destruction of the WebView.
+    ///
+    /// the root page should always have a blank name
+
     func removeWebviewName(completion: (() -> Void)? = nil) {
         webViewNative?.webViewHolder.appleWebView?.evaluateJavaScript("window.name = '';") { _, _ in
             completion?()
