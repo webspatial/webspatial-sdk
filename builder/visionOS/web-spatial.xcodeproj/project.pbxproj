@@ -30,6 +30,7 @@
 		2BC261222D38F1DA00BCA977 /* NavView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC261202D38F1DA00BCA977 /* NavView.swift */; };
 		2BC9A2212D1E829B00912170 /* HideViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC9A2202D1E829B00912170 /* HideViewModifier.swift */; };
 		2BD510562D54A30D0001E5E6 /* SceneManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD510552D54A2FF0001E5E6 /* SceneManager.swift */; };
+		2BD5880C2DAD0A6B00C0E13B /* SpatialScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD5880B2DAD0A6600C0E13B /* SpatialScene.swift */; };
 		2BDBED5F2D3F885A0065443F /* SpatialModel3DComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */; };
 		2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
@@ -83,6 +84,7 @@
 		2BC261202D38F1DA00BCA977 /* NavView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavView.swift; sourceTree = "<group>"; };
 		2BC9A2202D1E829B00912170 /* HideViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HideViewModifier.swift; sourceTree = "<group>"; };
 		2BD510552D54A2FF0001E5E6 /* SceneManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneManager.swift; sourceTree = "<group>"; };
+		2BD5880B2DAD0A6600C0E13B /* SpatialScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialScene.swift; sourceTree = "<group>"; };
 		2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModel3DComponent.swift; sourceTree = "<group>"; };
 		2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialModel3DView.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 		2B2F1D8A2BED4CD0006897EE /* libs */ = {
 			isa = PBXGroup;
 			children = (
+				2BD5880B2DAD0A6600C0E13B /* SpatialScene.swift */,
 				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
 				2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */,
 				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
@@ -376,6 +379,7 @@
 				2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */,
 				2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
+				2BD5880C2DAD0A6B00C0E13B /* SpatialScene.swift in Sources */,
 				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
 				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
 				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
