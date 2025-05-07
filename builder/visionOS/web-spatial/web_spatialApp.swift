@@ -10,7 +10,8 @@ import SwiftUI
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
-let nativeAPIVersion = "0.0.1"
+let nativeAPIVersion = getPackageVersion()
+
 // start URL
 let startURL = pwaManager.start_url
 
@@ -97,7 +98,10 @@ struct web_spatialApp: App {
                         }.first?.value
 
                         if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
-                            wv.navigateToURL(url: fileUrl)
+                            // remove the webview's name to behave like new opened root scene
+                            wv.removeWebviewName {
+                                wv.navigateToURL(url: fileUrl)
+                            }
                         }
                         // reset to mainScene size
                         wgm.setToMainSceneCfg()

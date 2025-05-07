@@ -1,8 +1,5 @@
 import { runViteServer } from '../scripts/vite-server'
-import {
-  runWebSpatialBuilder,
-  closeXCodeSimulater,
-} from './websptial-builder-utils'
+import { runWebSpatialBuilder } from './websptial-builder-utils'
 import { AddressInfo } from 'node:net'
 import { AsyncPromise } from '../utils/AsyncPromise'
 import { assert } from 'chai'
@@ -32,19 +29,16 @@ describe('E2E Test For Webspatial SDK', function () {
 
       // wait for mocha result finished
       const result = await promise.waitFinish()
-
       const hasError = result.failures.length > 0
-
       if (hasError) {
+        console.error('Failures', result.failures)
         fail()
       } else {
         // close server
         server.close()
-
-        // close simulater
-        await closeXCodeSimulater()
       }
     } catch (error) {
+      console.log('error', error)
       fail(error as string)
     }
   })

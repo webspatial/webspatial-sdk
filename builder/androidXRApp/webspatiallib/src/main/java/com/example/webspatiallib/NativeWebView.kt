@@ -11,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
+import java.lang.ref.WeakReference
 
 class CommandInfo {
     var command = "notFound"
@@ -18,12 +19,24 @@ class CommandInfo {
     var entityID = "notFound"
     var resourceID = "notFound"
     var requestID = -1
+    lateinit var json: JsonObject
 }
 
+interface CommandManagerInterface {
+    fun processCommand(senderWebview: NativeWebView, ci: CommandInfo)
+}
 
 class NativeWebView {
-    val webView:WebView;
-    @SuppressLint("[ByDesign3.3]AvoidContentOrFileExecuteJS",
+    companion object {
+        lateinit var commandManager: CommandManagerInterface;
+    }
+
+
+    val webView: WebView;
+    var windowComponent = WeakReference<SpatialWindowComponent>(null)
+
+    @SuppressLint(
+        "[ByDesign3.3]AvoidContentOrFileExecuteJS",
         "[ByDesign5.1]UsingAddJavaScriptInterface"
     )
 
@@ -49,7 +62,7 @@ class NativeWebView {
                 if (resourceID != null) {
                     ret.resourceID = resourceID.jsonPrimitive.content
                     if (ret.resourceID == "current") {
-                     //   ret.resourceID = id
+                        ret.resourceID = windowComponent.get()?.id ?: "currentIdNotFound"
                     }
                 }
 
@@ -58,15 +71,15 @@ class NativeWebView {
                     ret.command = command.jsonPrimitive.content
                 }
             } else {
-                //     Log.i("test", "TREV no reqID")
+                console.warn("Invalid command, missing request ID")
             }
-
+            ret.json = json
             return ret
         }
         return null
     }
 
- // TODO move this out of this file
+    // TODO move this out of this file
     fun completeEvent(requestID: Int, data: String = "{}") {
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post {
@@ -80,10 +93,11 @@ class NativeWebView {
     }
 
 
-    @SuppressLint("[ByDesign5.1]UsingAddJavaScriptInterface",
+    @SuppressLint(
+        "[ByDesign5.1]UsingAddJavaScriptInterface",
         "[ByDesign3.3]AvoidContentOrFileExecuteJS"
     )
-    constructor(context: Context){
+    constructor(context: Context) {
         webView = WebView(context)
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.settings.javaScriptEnabled = true
@@ -96,14 +110,16 @@ class NativeWebView {
         webView.settings.javaScriptCanOpenWindowsAutomatically = true
         webView.settings.defaultTextEncodingName = "utf-8"
 
+        val nWebView = this;
+
         webView.addJavascriptInterface(object {
             @JavascriptInterface
             fun getNativeVersion():String{
-                return "0.0.1"
+                return BuildConfig.NATIVE_VERSION
             }
 
             @JavascriptInterface
-            fun getBackendName():String{
+            fun getBackendName(): String {
                 return "AndroidXR"
             }
 
@@ -116,11 +132,12 @@ class NativeWebView {
                         // Parse json
                         val currentTimeMillisA = System.nanoTime()
                         val json = Json.parseToJsonElement(message)
+
                         //handleJson(json)
                         val ci = getCommandInfo(json.jsonObject)
-                        if(ci != null){
-                            Log.e("WebSpatial", "Got command "+ ci.command)
-                            completeEvent(ci.requestID)
+                        if (ci != null) {
+                            NativeWebView.commandManager.processCommand(nWebView, ci);
+                            Log.e("WebSpatial", "Got command " + ci.command)
                         }
 
                         val currentTimeMillisB = System.nanoTime()

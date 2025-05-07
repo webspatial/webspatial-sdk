@@ -1,5 +1,15 @@
 # @webspatial/platform-avp
 
+## 0.1.15
+
+## 0.1.14
+
+### Patch Changes
+
+- ff647df: reset scene window.name when reopen app
+- a87c8bf: support setStyle api in https env
+- 1a9e18c: set nativeAPIVersion from getPackageVersion()
+
 ## 0.1.13
 
 ### Patch Changes

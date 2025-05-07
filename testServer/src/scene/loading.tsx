@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
-;(window as any).xrCurrentSceneDefaults = async (config: any) => {
+window.xrCurrentSceneDefaults = async (config: any) => {
   // const config = await requestDatabase()
 
   await new Promise<void>((resolve, reject) => {

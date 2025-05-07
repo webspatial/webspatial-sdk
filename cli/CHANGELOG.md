@@ -1,5 +1,21 @@
 # @webspatial/builder
 
+## 0.1.15
+
+### Patch Changes
+
+- @webspatial/platform-visionos@0.1.15
+
+## 0.1.14
+
+### Patch Changes
+
+- ac63313: Support the use of the -- tryWithoutBuild=true parameter in the run command to bypass compilation and run.
+- Updated dependencies [ff647df]
+- Updated dependencies [a87c8bf]
+- Updated dependencies [1a9e18c]
+  - @webspatial/platform-visionos@0.1.14
+
 ## 0.1.13
 
 ### Patch Changes

@@ -1,3 +1,4 @@
+import { WindowContainerOptions } from '@webspatial/core-sdk'
 // This file is from emotion-js, credit.
 
 import 'react'
@@ -107,5 +108,13 @@ declare module 'react' {
     '--xr-background-material'?: string
     '--xr-back'?: number | string
     '--xr-z-index'?: number | string
+  }
+}
+
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: WindowContainerOptions,
+    ) => Promise<WindowContainerOptions>
   }
 }
