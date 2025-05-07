@@ -75,6 +75,7 @@ export default class Xcodebuild {
           )
           resString = outRes.toString()
           if (resString.indexOf('EXPORT SUCCEEDED') > 0) {
+            // copy .ipa file to export path
             const useExportPath = exportPath ?? './build'
             const path = join(process.cwd(), useExportPath)
             if (!fs.existsSync(path)) {
