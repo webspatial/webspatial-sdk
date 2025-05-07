@@ -1,5 +1,31 @@
 # install
 
+## for typescript project.
+make sure add these:
+
+```js
+// tsconfig.json
+{
+  "jsx": "react-jsx",
+  "jsxImportSource": "@webspatial/react-sdk",
+}
+
+```
+
+```js
+// vite.config.ts
+import WebSpatial from '@webspatial/vite-plugin'
+export default defineConfig({
+  plugins: [
+    react(),
+    WebSpatial(), // <----- use it
+  ],
+})
+```
+
+## for javascript project.
+make sure add these:
+
 ```js
 // vite.config.ts
 
