@@ -15,10 +15,6 @@ export class XcodeManager {
       PROJECT_DIRECTORY + '/web-spatial.xcodeproj/project.pbxproj'
     await XcodeProject.modify(projectPath, option, isDev)
     console.log('write project.pbxproj: ok')
-    if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
-      fs.mkdirSync(PROJECT_EXPORT_DIRECTORY, { recursive: true })
-    }
-    if (!isDev) await Xcodebuild.archive(option['export'])
   }
 
   public static async build(exportPath: string) {
