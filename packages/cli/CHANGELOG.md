@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.16
+
+### Patch Changes
+
+- Fix parameter parsing error after using commander.js
+  - @webspatial/platform-visionos@0.1.16
+
 ## 0.1.15
 
 ### Patch Changes
