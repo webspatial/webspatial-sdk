@@ -311,10 +311,14 @@ export class SpatialSession {
   /**
    * @hidden
    * Debugging to get internal state from native code
-   * @returns data as a js object
+   * @returns stats from native code. Objects tracks number of native objects that were created but not yet explicitly destroyed. RefObjects tracks bjects that still have references. After an object is destroyed, we should be cleaning up all of the native references. Expect objects.count == refObjects.count , if not, there is likely a leak.
    */
   async _getStats() {
-    return (await WebSpatial.getStats()) as { objects: any; refObjects: any }
+    return (await WebSpatial.getStats()) as {
+      backend: string
+      objects: { count: number }
+      refObjects: { count: number }
+    }
   }
 
   /**
