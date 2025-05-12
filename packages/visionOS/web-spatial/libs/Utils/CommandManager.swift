@@ -492,6 +492,8 @@ class CommandManager {
             }
 
             if let backgroundMaterial: BackgroundMaterial = data.update?.style?.backgroundMaterial {
+                clock.backgroundSet()
+
                 if spatialWindowComponent.isLoading {
                     spatialWindowComponent.loadingStyles.backgroundMaterial = backgroundMaterial
                 }
@@ -523,7 +525,7 @@ class CommandManager {
 
                 // If the parent window component  isn't set, the new container can continue to exist even after other window is closed
                 if info.resourceID != "notFound" {
-                    var rid = info.resourceID
+                    let rid = info.resourceID
                     let so = SpatialObject.get(rid)
                     if let parentWindowComponent = so as? SpatialWindowComponent {
                         parentWindowComponent.setWindowContainer(uuid: uuid, wgd: wgd)
@@ -531,7 +533,7 @@ class CommandManager {
                 }
 
                 if info.windowContainerID != "notFound" {
-                    if var parentContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
+                    if let parentContainer = SpatialWindowContainer.getSpatialWindowContainer(info.windowContainerID) {
                         parentContainer.childContainers[uuid] = wg
                     }
                 }
