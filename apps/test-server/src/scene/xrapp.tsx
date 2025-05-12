@@ -138,6 +138,26 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: 'contentSize',
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open with initScene fixed size
+      </button>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
           winARef.current = window.open(
             'http://localhost:5173/src/scene/xrapp.html',
             'sa',
