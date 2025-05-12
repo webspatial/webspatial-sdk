@@ -11,7 +11,7 @@ class SpatialComponent: SpatialObject {
 
     override func inspect() -> [String: Any] {
         var inspectInfo: [String: Any] = [
-            "entity": entity?.id,
+            "entity": entity == nil ? "invalid" : entity!.id,
             "type": String(describing: type(of: self)),
         ]
 
