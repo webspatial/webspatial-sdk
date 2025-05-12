@@ -16,6 +16,10 @@ struct WindowContainerData: Decodable, Hashable, Encodable {
     let windowContainerID: String
 }
 
+struct WindowContainerResizability: Decodable, Hashable, Encodable {
+    let resizable: Bool
+}
+
 enum LoadingMethod: String, Decodable, Encodable, Hashable {
     case show
     case hide
