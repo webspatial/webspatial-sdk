@@ -80,6 +80,7 @@ class SpatialWindowContainer: SpatialObject {
     var updateFrame = false
     var openWindowData = PassthroughSubject<WindowContainerData, Never>()
     var closeWindowData = PassthroughSubject<WindowContainerData, Never>()
+    var setWindowData = PassthroughSubject<WindowContainerResizability, Never>()
 
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 

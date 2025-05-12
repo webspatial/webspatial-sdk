@@ -9,7 +9,21 @@ struct PlainWindowContainerView: View {
     @State private var timer: Timer?
 
     private func setSize(size: CGSize) {
-        sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    size: size
+                )
+            )
+    }
+
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
     }
 
     var body: some View {
@@ -58,6 +72,13 @@ struct PlainWindowContainerView: View {
             }
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
+            }
+            .onReceive(windowContainerContent.setWindowData) { wd in
+                if wd.resizable {
+                    self.setResizibility(resizingRestrictions: .freeform)
+                } else {
+                    self.setResizibility(resizingRestrictions: .none)
+                }
             }
             .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized
