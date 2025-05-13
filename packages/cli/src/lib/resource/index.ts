@@ -82,15 +82,33 @@ export class ResourceManager {
     }
     let tempDir = join(__dirname, `../../temp`)
     let tempPlatformDir = join(tempDir, `platform-${usePlatform}`)
-    if (fs.existsSync(tempDir)) {
-      execSync(`rm -rf ${tempDir}`)
+    let tempProjectDir = join(tempPlatformDir, './project')
+    let temBuildDir = join(tempPlatformDir, './build')
+    let temExportDir = join(tempPlatformDir, './export')
+    let temTestDir = join(tempPlatformDir, './test')
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir)
     }
-    fs.mkdirSync(tempDir)
-    fs.mkdirSync(tempPlatformDir)
-    copyDir(modulePath, tempPlatformDir)
-    PROJECT_DIRECTORY = tempPlatformDir
-    PROJECT_BUILD_DIRECTORY = join(PROJECT_DIRECTORY, './build')
-    PROJECT_EXPORT_DIRECTORY = join(PROJECT_DIRECTORY, './export')
-    PROJECT_TEST_DIRECTORY = join(PROJECT_BUILD_DIRECTORY, './test')
+    if (!fs.existsSync(tempPlatformDir)) {
+      fs.mkdirSync(tempPlatformDir)
+    }
+    if (fs.existsSync(tempProjectDir)) {
+      execSync(`rm -rf ${tempProjectDir}`)
+    }
+    if (!fs.existsSync(temBuildDir)) {
+      fs.mkdirSync(temBuildDir)
+    }
+    if (!fs.existsSync(temExportDir)) {
+      fs.mkdirSync(temExportDir)
+    }
+    if (!fs.existsSync(temTestDir)) {
+      fs.mkdirSync(temTestDir)
+    }
+    fs.mkdirSync(tempProjectDir)
+    copyDir(modulePath, tempProjectDir)
+    PROJECT_DIRECTORY = tempProjectDir
+    PROJECT_BUILD_DIRECTORY = temBuildDir
+    PROJECT_EXPORT_DIRECTORY = temExportDir
+    PROJECT_TEST_DIRECTORY = temTestDir
   }
 }
