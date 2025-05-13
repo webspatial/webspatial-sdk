@@ -35,7 +35,7 @@ export function renderCSSModel3DNotInSpatialDiv(
 
   const model3DStyle: CSSProperties = {
     ...style,
-    transform: 'none',
+    transform: spatialStyle.transformExist ? 'translateZ(0)' : 'none',
   }
   return (
     <>

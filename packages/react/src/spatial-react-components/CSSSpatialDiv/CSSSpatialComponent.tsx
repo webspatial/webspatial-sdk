@@ -59,7 +59,7 @@ function renderRootCSSSpatialComponent(
 
   const spatialDivStyle: CSSProperties = {
     ...style,
-    transform: 'none',
+    transform: spatialStyle.transformExist ? 'translateZ(0)' : 'none',
   }
 
   const El = inProps.component || 'div'
@@ -158,7 +158,7 @@ function renderInPortalInstance(
 
   const spatialDivStyle: CSSProperties = {
     ...style,
-    transform: 'none',
+    transform: spatialStyle.transformExist ? 'translateZ(0)' : 'none',
   }
 
   const El = inProps.component || 'div'

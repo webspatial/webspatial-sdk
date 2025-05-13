@@ -42,7 +42,7 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
       .substring(matrixFlagString.length, transform.length - 1)
       .split(',')
       .map(item => parseFloat(item))
-    return parse2dMatrix(transformDataArray)
+    return { transformExist: true, matrix: parse2dMatrix(transformDataArray) }
   } else {
     const matrix3dFlagString = 'matrix3d('
     const idxOfMatrix3d = transform.indexOf(matrix3dFlagString)
@@ -51,9 +51,12 @@ function parseTransform(computedStyle: CSSStyleDeclaration) {
         .substring(matrix3dFlagString.length, transform.length - 1)
         .split(',')
         .map(item => parseFloat(item))
-      return parse3dMatrix(transform3dDataArray)
+      return {
+        transformExist: true,
+        matrix: parse3dMatrix(transform3dDataArray),
+      }
     } else {
-      return new Matrix4()
+      return { transformExist: false, matrix: new Matrix4() }
     }
   }
 }
@@ -85,7 +88,9 @@ function parseSpatialStyle(node: HTMLElement) {
   const mat4ForBack = parseBack(computedStyle)
 
   // handle transform properties
-  const mat4ForTransform = parseTransform(computedStyle)
+
+  const { transformExist, matrix: mat4ForTransform } =
+    parseTransform(computedStyle)
 
   const resultMatrix = new Matrix4()
   resultMatrix.multiplyMatrices(mat4ForBack, mat4ForTransform)
@@ -122,6 +127,7 @@ function parseSpatialStyle(node: HTMLElement) {
       type: backgroundMaterialType || 'none',
     },
     visible,
+    transformExist,
   }
 }
 
@@ -137,6 +143,7 @@ export function useSpatialStyle() {
       type: 'none' as BackgroundMaterialType,
     },
     visible: true,
+    transformExist: false,
   })
   const [ready, setReady] = useState(false)
 
