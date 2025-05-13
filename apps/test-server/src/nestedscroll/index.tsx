@@ -1,12 +1,12 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
+import { CSSProperties } from 'react'
 
 enableDebugTool()
 
 function App() {
-  const styleContainer = {
+  const styleContainer: CSSProperties = {
     enableXr: true,
   }
 
@@ -26,9 +26,9 @@ function App() {
   }
 
   return (
-    <div style={styleContainer} debugName="container">
+    <div style={styleContainer}>
       <div style={styleHead}> head </div>
-      <div style={styleLongContent} enable-xr debugName="longcontent">
+      <div style={styleLongContent} enable-xr>
         long content
       </div>
     </div>

@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { useRef } from 'react'
 import { Easing, Tween } from '@tweenjs/tween.js'
 
-function applyTeen(tween) {
+function applyTeen(tween: Tween<any>) {
   function animate() {
     tween.update()
     if (tween.isPlaying()) {
@@ -13,7 +12,7 @@ function applyTeen(tween) {
 }
 
 export function TeenjsTest() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const onChangeBack = () => {
     const tween = new Tween({ v: 0 })
@@ -31,7 +30,7 @@ export function TeenjsTest() {
       .to({ v: 0.5 }, 1000)
       .easing(Easing.Quadratic.InOut)
       .onUpdate(o => {
-        if (ref.current) ref.current.style.opacity = o.v
+        if (ref.current) ref.current.style.opacity = o.v + ''
       })
       .start()
     applyTeen(tween)
@@ -50,7 +49,7 @@ export function TeenjsTest() {
 
   const onReset = () => {
     if (ref.current) {
-      ref.current.style.opacity = 1
+      ref.current.style.opacity = '1'
       ref.current.style['--xr-back'] = 0
       ref.current.style.transform = 'none'
     }

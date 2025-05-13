@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 export function TestStyleComponent() {
   const [backgroundMaterial, setBackgroundMaterial] = useState('none')
 
-  const refBackgroundDom = useRef<HTMLDivElement>(null)
+  const refBackgroundDom = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     if (refBackgroundDom.current) {
       // refBackgroundDom.current.style.setProperty(

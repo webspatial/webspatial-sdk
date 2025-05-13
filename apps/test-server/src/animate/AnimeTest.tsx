@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { useRef } from 'react'
 import anime from 'animejs/lib/anime.es.js'
 
 export function AnimeTest() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const onChangeBack = () => {
     const object = {
@@ -39,7 +38,7 @@ export function AnimeTest() {
 
   const onReset = () => {
     if (ref.current) {
-      ref.current.style.opacity = 1
+      ref.current.style.opacity = '1'
       ref.current.style['--xr-back'] = 0
       ref.current.style.transform = 'none'
     }

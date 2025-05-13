@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { TestClassComponent } from './TestClassComponent'
