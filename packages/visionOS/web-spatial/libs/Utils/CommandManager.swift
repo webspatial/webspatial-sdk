@@ -456,6 +456,7 @@ class CommandManager {
                     spatialWindowComponent.getView()!.destroy()
                     spatialWindowComponent.setView(wv: spawnedWebView)
                     spatialWindowComponent.getView()!.webViewHolder.webViewCoordinator!.webViewRef = spatialWindowComponent
+                    spatialWindowComponent.didFinishFirstLoad = true
                 }
             }
 

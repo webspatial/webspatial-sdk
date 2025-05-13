@@ -37,6 +37,38 @@ function MySample(props: { session?: SpatialSession }) {
         onClick={async () => {
           if (props.session) {
             let session = props.session
+            // Create window container
+            var wg = await session.createWindowContainer({ style: 'Plain' })
+
+            // Create a root entity displaying a webpage
+            var ent = await session!.createEntity()
+            var i = await session!.createWindowComponent({
+              windowContainer: wg,
+            })
+
+            // Setup a window element with content and attach
+            let wc = (await session.createWindowContext())!
+            wc.window.document.documentElement.style.backgroundColor = 'red'
+            wc.window.document.body.innerHTML =
+              "<div style='color:white;'>Hello world</div>"
+            await i.setFromWindow(wc.window)
+
+            await ent.setCoordinateSpace('Root')
+            await ent.setComponent(i)
+
+            // Add enitity the windowcontainer
+            await wg.setRootEntity(ent)
+          }
+        }}
+      >
+        Open Plain Window from window object
+      </div>
+
+      <div
+        className="btn"
+        onClick={async () => {
+          if (props.session) {
+            let session = props.session
 
             var wg = await session.createWindowContainer({
               style: 'Volumetric',
