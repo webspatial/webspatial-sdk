@@ -1,12 +1,9 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
-window.xrCurrentSceneDefaults = async (config: any) => {
-  // const config = await requestDatabase()
-
-  await new Promise<void>((resolve, reject) => {
+window.xrCurrentSceneDefaults = async () => {
+  await new Promise<void>((resolve, _) => {
     setTimeout(resolve, 2000)
   })
 
@@ -14,7 +11,7 @@ window.xrCurrentSceneDefaults = async (config: any) => {
     defaultSize: {
       width: 900,
       height: 900,
-    }, //config.defaultSize,
+    },
     resizability: 'contentSize',
   }
 }

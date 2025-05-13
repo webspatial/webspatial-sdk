@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -6,14 +5,14 @@ import { useGSAP } from '@gsap/react'
 gsap.registerPlugin(useGSAP)
 
 export function GSAPTest() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   ;(window as any).ref = ref
 
   const { contextSafe } = useGSAP({ scope: ref })
 
   const onChangeBack = contextSafe(() => {
-    gsap.to(ref.current as HTMLElement, {
+    gsap.to(ref.current, {
       rotation: 200,
       '--xr-back': 200,
       duration: 1,
@@ -22,7 +21,7 @@ export function GSAPTest() {
   })
 
   const onChangeOpacity = contextSafe(() => {
-    gsap.to(ref.current as HTMLElement, {
+    gsap.to(ref.current, {
       opacity: 0.5,
       x: 200,
       duration: 1,

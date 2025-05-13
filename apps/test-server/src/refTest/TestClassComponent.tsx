@@ -1,10 +1,13 @@
-// @ts-nocheck
 import { useState, useRef, useEffect } from 'react'
 
 export function TestClassComponent() {
-  const [selectedOption, setSelectedOption] = useState('text-green-500')
+  const [selectedOption, setSelectedOption] = useState<
+    'text-yellow-500' | 'text-green-500'
+  >('text-green-500')
   const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedOption(event.target.value)
+    // Ensure the value from the event target is one of the allowed types
+    const value = event.target.value as 'text-yellow-500' | 'text-green-500'
+    setSelectedOption(value)
   }
 
   const selectedOptionMap = {

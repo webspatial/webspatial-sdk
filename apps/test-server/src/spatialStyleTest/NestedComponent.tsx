@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 
 export const NestedComponent = () => {
@@ -25,27 +24,15 @@ export const NestedComponent = () => {
     <div
       enable-xr
       style={styleOuter}
-      debugName="OuterDiv"
-      debugShowStandardInstance={false}
       onClick={() => {
         setPrimary(!primary)
       }}
     >
       OuterDiv
-      <div
-        enable-xr
-        style={styleInner}
-        debugName="InnerDiv"
-        debugShowStandardInstance={false}
-      >
+      <div enable-xr style={styleInner}>
         Inner Div!!
       </div>
-      <div
-        enable-xr
-        style={styleInner2}
-        debugName="InnerDiv2"
-        debugShowStandardInstance={false}
-      >
+      <div enable-xr style={styleInner2}>
         Inner Div 2!!
       </div>
     </div>

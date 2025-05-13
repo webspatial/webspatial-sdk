@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { useRef } from 'react'
 import { animate } from 'popmotion'
 
 export function PopmotionTest() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const onChangeBack = () => {
     animate({
@@ -20,7 +19,7 @@ export function PopmotionTest() {
       from: 1,
       to: 0.5,
       onUpdate: latest => {
-        if (ref.current) ref.current.style.opacity = latest
+        if (ref.current) ref.current.style.opacity = latest + ''
       },
     })
   }
@@ -39,7 +38,7 @@ export function PopmotionTest() {
 
   const onReset = () => {
     if (ref.current) {
-      ref.current.style.opacity = 1
+      ref.current.style.opacity = '1'
       ref.current.style['--xr-back'] = 0
       ref.current.style.transform = 'none'
     }
