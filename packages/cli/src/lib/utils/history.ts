@@ -81,7 +81,6 @@ export default class CliHistory {
       PROJECT_TEST_DIRECTORY,
       `Build/Products/Debug-xrsimulator/${appInfo.name}.app`,
     )
-    console.log(appFile)
     return fs.existsSync(appFile)
   }
 
