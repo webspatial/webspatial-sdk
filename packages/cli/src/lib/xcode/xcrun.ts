@@ -85,7 +85,6 @@ export default class Xcrun {
         const launchedDeviceId = this.launchWithSimulator(
           recordAppInfo,
           deviceList[i].deviceId,
-          true,
           false,
         )
         CliHistory.recordSimulator(launchedDeviceId)
@@ -129,11 +128,9 @@ export default class Xcrun {
   public static launchWithSimulator(
     appInfo: BasicAppInfo,
     deviceId: string = '',
-    needInstall: boolean = false,
     needFind: boolean = true,
   ) {
     let device
-    let isNewSim = false
     if (needFind) {
       device = this.findSimulator(deviceId)[0]
     } else {
@@ -141,17 +138,14 @@ export default class Xcrun {
     }
     if (!device || device.deviceId === '') {
       device = this.createSimulator()
-      isNewSim = true
     }
     console.log(`use simulator: ${device.deviceId}`)
     // launch visionOS simulator
     this.launchSimulator(device)
-    if (needInstall || isNewSim) {
-      // install app
-      console.log('installing app')
-      this.installApp(PROJECT_TEST_DIRECTORY, device.deviceId, appInfo.name)
-      console.log('install success')
-    }
+    // install app
+    console.log('installing app')
+    this.installApp(PROJECT_TEST_DIRECTORY, device.deviceId, appInfo.name)
+    console.log('install success')
     // launch app
     console.log('launch app')
     this.launchApp(device.deviceId, appInfo.id)
@@ -217,9 +211,6 @@ export default class Xcrun {
   }
 
   private static launchApp(deviceId: string, bundleId: string) {
-    try {
-      execSync(new XcrunCMD().simctl().terminate(deviceId, bundleId).line)
-    } catch (e) {}
     execSync(new XcrunCMD().simctl().launch(deviceId, bundleId).line)
   }
 
