@@ -48,10 +48,12 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                 return
             }
             let session = URLSession(configuration: URLSessionConfiguration.default)
-            let dataTask = session.dataTask(with: urlRequest) { data, response, _ in
-                urlSchemeTask.didReceive(response!)
-                urlSchemeTask.didReceive(data!)
-                urlSchemeTask.didFinish()
+            let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in
+                guard let task = task as? WKURLSchemeTask else { return }
+
+                task.didReceive(response!)
+                task.didReceive(data!)
+                task.didFinish()
             }
             dataTask.resume()
             return

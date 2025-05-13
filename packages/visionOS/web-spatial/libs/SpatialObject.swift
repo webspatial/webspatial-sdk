@@ -12,6 +12,7 @@ struct SpatialObjectStatsInfo: Codable {
     var backend = "AVP"
     var objects: SpatialObjectInfo
     var refObjects: SpatialObjectInfo
+    var perfStats: PerfStats
 }
 
 class WeakReference<T: AnyObject> {
@@ -71,7 +72,8 @@ class SpatialObject: EventEmitter, Equatable {
                 windowArray: Array(weakRefWebviews.keys),
                 windowContainerArray: Array(weakRefWindowContainers.keys),
                 entityArray: Array(weakRefEntities.keys)
-            )
+            ),
+            perfStats: clock.perfStats
         )
     }
 

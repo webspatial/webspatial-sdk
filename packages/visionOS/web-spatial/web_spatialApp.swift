@@ -7,6 +7,7 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
+let clock = PerfClock()
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
