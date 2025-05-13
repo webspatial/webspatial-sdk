@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B1C0F2C494E5400E644F9 /* Logger.swift */; };
 		2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B43092CBE21540003CEF3 /* CommandManager.swift */; };
+		2B0FF4F42DD2711E00C3F20A /* PerfClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0FF4F32DD2711800C3F20A /* PerfClock.swift */; };
 		2B23CB3F2D0BEE6900E70D95 /* WindowContainerMgr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */; };
@@ -60,6 +61,7 @@
 /* Begin PBXFileReference section */
 		2B0B1C0F2C494E5400E644F9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		2B0B43092CBE21540003CEF3 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
+		2B0FF4F32DD2711800C3F20A /* PerfClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfClock.swift; sourceTree = "<group>"; };
 		2B23CB3E2D0BEE6900E70D95 /* WindowContainerMgr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowContainerMgr.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 		2B0B1C0E2C494E4100E644F9 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				2B0FF4F32DD2711800C3F20A /* PerfClock.swift */,
 				2BD5880D2DB1236000C0E13B /* version.swift */,
 				2BD510552D54A2FF0001E5E6 /* SceneManager.swift */,
 				2B0B43092CBE21540003CEF3 /* CommandManager.swift */,
@@ -375,6 +378,7 @@
 				2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */,
 				2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
+				2B0FF4F42DD2711E00C3F20A /* PerfClock.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
 				2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */,
 				2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */,
