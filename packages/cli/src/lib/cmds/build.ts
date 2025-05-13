@@ -55,8 +55,6 @@ export async function run(args: any) {
   */
   if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
     // If this command is a new command, go through the build process; otherwise, go through the launch process
-    console.log('check manifest', CliHistory.checkManifest(manifestInfo.json))
-    console.log('check test app is exist', CliHistory.checkTestAppIsExist())
     if (
       CliHistory.checkManifest(manifestInfo.json) &&
       CliHistory.checkTestAppIsExist()
