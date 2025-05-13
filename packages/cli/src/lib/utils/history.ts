@@ -2,6 +2,7 @@ import { join } from 'path'
 import * as fs from 'fs'
 import { HistoryInfo } from '../types'
 import { CliLog } from './utils'
+import { PROJECT_TEST_DIRECTORY } from '../resource'
 
 /*
   Histoy is used to record information about successful execution of the run command,
@@ -71,6 +72,16 @@ export default class CliHistory {
 
   public static checkManifest(manifest: Record<string, any>) {
     return this.compareObjects(this.history.manifest, manifest)
+  }
+
+  // Check whether the test app exists
+  public static checkTestAppIsExist() {
+    const appInfo = this.getAppInfoRecord()
+    const appFile = join(
+      PROJECT_TEST_DIRECTORY,
+      `Build/Products/Debug-xrsimulator/${appInfo.name}.app`,
+    )
+    return fs.existsSync(appFile)
   }
 
   // Compare whether two objects are equal

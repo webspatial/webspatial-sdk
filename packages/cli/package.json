@@ -16,7 +16,7 @@
     "test3": "npm run build && bin/bundlepwa.js publish --name=webspatial --version=1.0 --u=username --p=password",
     "test4": "npm run build && bin/bundlepwa.js run --tryWithoutBuild=true",
     "obfuscate": "node obfuscate.js",
-    "build": "tsc && npm run obfuscate && npm run copy-assets",
+    "build": "tsc && npm run copy-assets",
     "build1": "rollup -c ./rollup.config.js",
     "build2": "tsc && npm run copy-assets",
     "copy-assets": "cp -R src/assets/ dist/assets/",
