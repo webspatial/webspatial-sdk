@@ -266,6 +266,33 @@ function App() {
       </button>
 
       <h1 className="text-2xl text-black">close scene by local</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('close self')
+          try {
+            window.close()
+          } catch (error: any) {
+            log(error.message)
+          }
+        }}
+      >
+        close self
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('close parent')
+          try {
+            window.opener?.close()
+          } catch (error: any) {
+            log(error.message)
+          }
+        }}
+      >
+        close parent
+      </button>
 
       <button
         className={btnCls}
