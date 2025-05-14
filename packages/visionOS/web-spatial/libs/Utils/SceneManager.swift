@@ -75,7 +75,7 @@ class SceneManager {
                 wg.setWindowData
                     .send(
                         WindowContainerResizability(
-                            resizable: config.resizability != "contentSize"
+                            resizeRange: config.resizeRange
                         )
                     )
             }

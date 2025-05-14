@@ -7,6 +7,12 @@ export interface WindowContainerOptions {
   }
 
   resizability?: 'automatic' | 'contentSize' | 'contentMinSize'
+  resizeRange?: {
+    minWidth?: number
+    minHeight?: number
+    maxWidth?: number
+    maxHeight?: number
+  }
 }
 
 export type LoadingMethodKind = 'show' | 'hide'
