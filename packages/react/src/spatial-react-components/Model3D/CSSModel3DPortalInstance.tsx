@@ -36,7 +36,7 @@ export function renderCSSModel3DPortalInstance(
 
   const model3DStyle: CSSProperties = {
     ...style,
-    transform: 'none',
+    transform: spatialStyle.transformExist ? 'translateZ(0)' : 'none',
   }
 
   return (
