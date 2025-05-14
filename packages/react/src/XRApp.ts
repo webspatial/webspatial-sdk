@@ -1,6 +1,6 @@
 import { WindowContainerOptions } from '@webspatial/core-sdk/'
 import { getSession } from './utils/getSession'
-
+export type { WindowContainerOptions }
 export const defaultSceneConfig: WindowContainerOptions = {
   defaultSize: {
     width: 900,
