@@ -21,7 +21,8 @@ struct PWAManager: Codable {
             width: 1280,
             height: 720
         ),
-        resizability: "automatic"
+        resizability: "automatic",
+        resizeRange: nil
     )
     var useMainScene: Bool = true
     private var version: String = "PACKAGE_VERSION"
