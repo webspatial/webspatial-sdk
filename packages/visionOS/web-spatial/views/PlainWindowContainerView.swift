@@ -90,8 +90,8 @@ struct PlainWindowContainerView: View {
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
             }
-            .onReceive(windowContainerContent.setWindowData) { wd in
-
+            .onAppear {
+                let wd = WindowContainerMgr.Instance.getValue()
                 if let range = wd.resizeRange {
                     self.setResizeRange(resizeRange: range)
                     if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
