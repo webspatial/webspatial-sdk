@@ -70,15 +70,6 @@ class SceneManager {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pwg.openWindowData.send(wg.wgd) // openwindow
             }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                wg.setWindowData
-                    .send(
-                        WindowContainerResizability(
-                            resizeRange: config.resizeRange
-                        )
-                    )
-            }
         }
     }
 
