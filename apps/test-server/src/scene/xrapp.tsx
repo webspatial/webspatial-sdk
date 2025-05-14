@@ -56,6 +56,114 @@ function App() {
 
   return (
     <div enable-xr className="pl-5 pt-2">
+      <h1 className="text-2xl text-black">resize</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: 'contentSize',
+            resizeRange: {
+              minWidth: 700,
+              minHeight: 700,
+              // maxWidth: 900,
+              // maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable 700-
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: 'contentSize',
+            resizeRange: {
+              minWidth: 700,
+              minHeight: 700,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable 700-900
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: 'contentSize',
+            resizeRange: {
+              // minWidth: 700,
+              // minHeight: 700,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable -900
+      </button>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: 'contentSize',
+            resizeRange: {
+              minWidth: 900,
+              minHeight: 900,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open fixed size
+      </button>
+
       <h1 className="text-2xl text-black">a tag</h1>
       <a className={btnCls} href={`http://localhost:5173/src/scene/hook.html`}>
         open in place
@@ -134,26 +242,7 @@ function App() {
       >
         window.open with initScene
       </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          initScene('sa', () => ({
-            defaultSize: {
-              width: 900,
-              height: 900,
-            },
-            resizability: 'contentSize',
-          }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        window.open with initScene fixed size
-      </button>
+
       <button
         className={btnCls}
         onClick={async () => {

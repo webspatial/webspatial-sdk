@@ -8,7 +8,8 @@ let defaultWindowContainerConfig = WindowContainerOptions(
         width: DefaultPlainWindowContainerSize.width,
         height: DefaultPlainWindowContainerSize.height
     ),
-    resizability: nil
+    resizability: nil,
+    resizeRange: nil
 )
 
 struct WindowContainerData: Decodable, Hashable, Encodable {
@@ -16,8 +17,8 @@ struct WindowContainerData: Decodable, Hashable, Encodable {
     let windowContainerID: String
 }
 
-struct WindowContainerResizability: Decodable, Hashable, Encodable {
-    let resizable: Bool
+struct WindowContainerResizability: Decodable, Encodable {
+    let resizeRange: ResizeRange?
 }
 
 enum LoadingMethod: String, Decodable, Encodable, Hashable {
@@ -46,6 +47,13 @@ extension WindowContainerPlainDefaultValues {
     }
 }
 
+struct ResizeRange: Codable {
+    var minWidth: Double?
+    var minHeight: Double?
+    var maxWidth: Double?
+    var maxHeight: Double?
+}
+
 // incomming JSB data
 struct WindowContainerOptions: Codable {
     // windowContainer
@@ -55,6 +63,8 @@ struct WindowContainerOptions: Codable {
         var width: Double
         var height: Double
     }
+
+    let resizeRange: ResizeRange?
 }
 
 func getWindowResizability(_ windowResizability: String?) -> WindowResizability {
