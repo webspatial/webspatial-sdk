@@ -117,4 +117,5 @@ declare global {
       defaultConfig: WindowContainerOptions,
     ) => Promise<WindowContainerOptions>
   }
+  var __XR_ENV_BASE__: string
 }
