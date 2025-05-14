@@ -34,6 +34,7 @@ struct LoadingWindowContainerData: Decodable, Hashable, Encodable {
 struct WindowContainerPlainDefaultValues {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?
+    var resizeRange: ResizeRange?
 }
 
 // support WindowContainerOptions => WindowContainerPlainDefaultValues
@@ -44,6 +45,7 @@ extension WindowContainerPlainDefaultValues {
             height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
         )
         windowResizability = getWindowResizability(options.resizability)
+        resizeRange = options.resizeRange
     }
 }
 
@@ -93,7 +95,8 @@ class WindowContainerMgr: ObservableObject {
 
     private var wgSetting: WindowContainerPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720),
-        windowResizability: .automatic
+        windowResizability: .automatic,
+        resizeRange: nil
     )
 
     func getValue() -> WindowContainerPlainDefaultValues {
@@ -112,6 +115,9 @@ class WindowContainerMgr: ObservableObject {
         }
         if let newResizability = data.windowResizability {
             wgSetting.windowResizability = newResizability
+        }
+        if let newResizeRange = data.resizeRange {
+            wgSetting.resizeRange = newResizeRange
         }
     }
 }
