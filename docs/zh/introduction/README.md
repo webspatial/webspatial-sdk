@@ -1,6 +1,6 @@
 # 介绍
 
-本节介绍 WebSpatial SDK 的核心概念和优势。
+本节介绍 WebSpatial 解决的问题以及它带来的收益。
 
 ## 目录
 

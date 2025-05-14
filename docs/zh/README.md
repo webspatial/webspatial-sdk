@@ -1,8 +1,8 @@
-# WebSpatial 指南
+# WebSpatial 手册
 
-欢迎阅读 WebSpatial 文档。
+欢迎阅读 WebSpatial 手册。
 
-建议您按顺序阅读本指南，特别是前三章——《什么是 WebSpatial》、《快速开始》和《核心概念》。第四章提供了全面而详细的开发文档，可以根据需要查阅。
+建议你按顺序阅读本文档，特别是前三章——[介绍](introduction/README.md)、[快速开始](quick-start/README.md)和[核心概念](core-concepts/README.md)。第四章提供了全面而详细的[开发文档](development-guide/README.md)，可以根据需要查阅。
 
 ## 其他语言
 

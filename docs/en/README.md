@@ -1,8 +1,8 @@
-# WebSpatial Guide
+# WebSpatial Handbook
 
-Welcome to the WebSpatial documentation.
+Welcome to the WebSpatial Handbook.
 
-It is recommended that you read this guide in sequence, particularly the first three chapters—Introduction, Quick Start, and Core Concepts. The fourth chapter provides comprehensive and detailed development documentation, which you may consult as needed.
+It is recommended that you read this documentation in sequence, particularly the first three chapters—[Introduction](introduction/README.md), [Quick Start](quick-start/README.md), and [Core Concepts](core-concepts/README.md). The fourth chapter provides comprehensive and detailed [development documentation](development-guide/README.md), which you may consult as needed.
 
 ## Other Languages
 

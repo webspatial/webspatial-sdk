@@ -1,6 +1,6 @@
 # Introduction
 
-This section introduces the key concepts and benefits of WebSpatial SDK.
+This section introduces the problems WebSpatial solves and the benefits It Brings.
 
 ## Table of Contents
 
