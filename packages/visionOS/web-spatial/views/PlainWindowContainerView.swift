@@ -26,6 +26,23 @@ struct PlainWindowContainerView: View {
             )
     }
 
+    private func setResizeRange(resizeRange: ResizeRange) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    minimumSize: CGSize(
+                        width: resizeRange.minWidth ?? 0,
+                        height: resizeRange
+                            .minHeight ?? 0
+                    ),
+                    maximumSize: CGSize(
+                        width: resizeRange.maxWidth ?? .infinity,
+                        height: resizeRange.maxHeight ?? .infinity
+                    )
+                )
+            )
+    }
+
     var body: some View {
         OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
             windowContainerContent.destroy()
@@ -74,10 +91,14 @@ struct PlainWindowContainerView: View {
                 setSize(size: newSize)
             }
             .onReceive(windowContainerContent.setWindowData) { wd in
-                if wd.resizable {
-                    self.setResizibility(resizingRestrictions: .freeform)
-                } else {
-                    self.setResizibility(resizingRestrictions: .none)
+
+                if let range = wd.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
                 }
             }
             .onChange(of: proxy3D.size) {
