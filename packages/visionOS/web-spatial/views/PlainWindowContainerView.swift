@@ -26,6 +26,23 @@ struct PlainWindowContainerView: View {
             )
     }
 
+    private func setResizeRange(resizeRange: ResizeRange) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    minimumSize: CGSize(
+                        width: resizeRange.minWidth ?? 0,
+                        height: resizeRange
+                            .minHeight ?? 0
+                    ),
+                    maximumSize: CGSize(
+                        width: resizeRange.maxWidth ?? .infinity,
+                        height: resizeRange.maxHeight ?? .infinity
+                    )
+                )
+            )
+    }
+
     var body: some View {
         OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
             windowContainerContent.destroy()
@@ -46,7 +63,8 @@ struct PlainWindowContainerView: View {
                     let height = proxy3D.size.height
 
                     if windowResizeInProgress {
-                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
+                        VStack {}.frame(width: width, height: height)
+                            .glassBackgroundEffect().padding3D(.front, -100_000)
                             .position(x: x, y: y)
                             .offset(z: z)
                     } else {
@@ -55,7 +73,8 @@ struct PlainWindowContainerView: View {
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
 
                         SpatialWebViewUI().environment(e)
-                            .frame(width: width, height: height).padding3D(.front, -100_000)
+                            .frame(width: width, height: height)
+                            .padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
@@ -68,10 +87,14 @@ struct PlainWindowContainerView: View {
                 setSize(size: newSize)
             }
             .onReceive(windowContainerContent.setWindowData) { wd in
-                if wd.resizable {
-                    self.setResizibility(resizingRestrictions: .freeform)
-                } else {
-                    self.setResizibility(resizingRestrictions: .none)
+
+                if let range = wd.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
                 }
             }
             .onChange(of: proxy3D.size) {
