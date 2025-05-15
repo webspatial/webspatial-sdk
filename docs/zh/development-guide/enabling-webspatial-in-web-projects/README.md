@@ -13,3 +13,7 @@
 - [步骤 1：安装 WebSpatial SDK](step-1-install-the-webspatial-sdk.md)
 - [步骤 2：添加 WebSpatial 应用打包构建工具](step-2-add-build-tool-for-packaged-webspatial-apps.md)
 - [步骤 3：在 Web 构建工具中集成 WebSpatial SDK](step-3-integrate-webspatial-sdk-into-web-build-tools.md)
+
+---
+
+后续：[使用 WebSpatial API](../using-the-webspatial-api/README.md)
