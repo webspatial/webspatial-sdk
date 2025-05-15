@@ -194,7 +194,7 @@ export default defineConfig({
       react(),
 ```
 
-## 单 Web Server 模式
+### 单 Web Server 模式
 
 另一种方案，是用同一个 Web 服务，同时提供面向桌面/移动平台和普通浏览器的网站版本，和专门面向 visionOS 中 [WebSpatial App Shell]() 的网站版本，避免额外的部署流程、占用域名和服务器资源等。
 
