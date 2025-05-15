@@ -31,9 +31,7 @@ WebSpatial 基于各种现有的主流 Web API，包括 PWA 标准。
 
 步骤如下：
 1. [添加图标文件](add-icon-files.md)
-2. 添加 Web App Manifest
-   - [[选项 1] 手动添加 Manifest](option-1-manually-add-a-manifest.md)
-    - [[选项 2] 使用工具自动添加 Manifest](option-2-auto-add-manifest-using-tools.md)
+2. [添加 Web App Manifest](add-web-app-manifest.md)
 3. [测试 PWA 可安装性](test-pwa-installability.md)
 
 
