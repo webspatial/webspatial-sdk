@@ -1,0 +1,59 @@
+{
+  "name": "website",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "link:xrsdk": "bash scripts/link-xrsdk.sh",
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.7.0",
+    "@docusaurus/plugin-ideal-image": "^3.7.0",
+    "@docusaurus/preset-classic": "3.7.0",
+    "@docusaurus/theme-common": "^3.7.0",
+    "@docusaurus/theme-live-codeblock": "^3.7.0",
+    "@mdx-js/react": "^3.1.0",
+    "clsx": "^2.1.1",
+    "copy-text-to-clipboard": "^3.2.0",
+    "docusaurus-plugin-generate-llms-txt": "^0.0.1",
+    "docusaurus-plugin-sass": "^0.2.6",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-medium-image-zoom": "^5.2.14",
+    "sass": "^1.88.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.7.0",
+    "@docusaurus/tsconfig": "3.7.0",
+    "@docusaurus/types": "3.7.0",
+    "docusaurus-plugin-typedoc": "^1.4.0",
+    "typedoc": "^0.28.4",
+    "typedoc-plugin-markdown": "^4.6.3",
+    "typescript": "~5.6.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0"
+  }
+}

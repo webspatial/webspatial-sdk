@@ -1,0 +1,77 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.checkboxLabel {
+  --height: 32px;
+  --width: 92px;
+  --border: 2px;
+  padding: 2px;
+  display: flex;
+  width: var(--width);
+  height: var(--height);
+  position: relative;
+  border-radius: 6px;
+  color: #c9cdd4;
+  background-color: rgb(229, 230, 235);
+  /* border: var(--border) solid var(--ifm-color-primary-darkest); */
+  cursor: pointer;
+  justify-content: space-around;
+  opacity: 0.75;
+  transition: opacity var(--ifm-transition-fast)
+    var(--ifm-transition-timing-default);
+  /* box-shadow: var(--ifm-global-shadow-md); */
+}
+
+.checkboxLabel:hover {
+  opacity: 1;
+  /* box-shadow: var(--ifm-global-shadow-md),
+    0 0 2px 1px var(--ifm-color-primary-dark); */
+}
+
+.checkboxLabel::after {
+  position: absolute;
+  content: '';
+  inset: 0;
+  width: 44px;
+  top: 2px;
+  left: 2px;
+  height: 28px;
+  border-radius: 5px;
+  /* background-color: var(--ifm-color-primary-darkest); */
+  background-color: #ffffff; /*todo: dark mode?*/
+  transition: transform var(--ifm-transition-fast)
+    var(--ifm-transition-timing-default);
+  /* transform: translateX(calc(-1 * var(--border))); */
+}
+
+input:focus-visible ~ .checkboxLabel::after {
+  outline: 2px solid currentColor;
+}
+
+.checkboxLabel > * {
+  font-size: 12px;
+  color: inherit;
+  transition: opacity 150ms ease-in 50ms;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  z-index: 1;
+}
+
+input:checked ~ .checkboxLabel::after {
+  transform: translateX(calc(var(--width) / 2 - var(--border)));
+}
+
+/* 默认状态：滑块覆盖 "OR" */
+input[type='checkbox']:not(:checked) ~ .checkboxLabel .checkboxLabelOr {
+  color: #4e5969;
+}
+
+/* 选中状态：滑块覆盖 "AND" */
+input[type='checkbox']:checked ~ .checkboxLabel .checkboxLabelAnd {
+  color: #4e5969;
+}
