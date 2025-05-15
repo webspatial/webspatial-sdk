@@ -284,4 +284,4 @@ WebSpatial SDK 暂时还不支持在 CSS 动画中使用 WebSpatial API，可以
 
 ---
 
-下一节：[添加材质背景](using-the-webspatial-api/add-material-backgrounds.md)
+下一节：[添加材质背景](add-material-backgrounds.md)

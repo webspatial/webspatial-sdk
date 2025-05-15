@@ -252,4 +252,4 @@ opener.close();
 
 ---
 
-下一节：[添加 3D 内容](using-the-webspatial-api/add-3d-content.md)
+下一节：[添加 3D 内容](add-3d-content.md)

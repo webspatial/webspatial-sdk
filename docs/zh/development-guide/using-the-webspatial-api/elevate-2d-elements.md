@@ -319,4 +319,4 @@ function CardList() {
 
 ---
 
-下一节：[管理多个场景](using-the-webspatial-api/manage-multiple-scenes.md)
+下一节：[管理多个场景](manage-multiple-scenes.md)

@@ -161,4 +161,4 @@ html.is-spatial {
 
 ---
 
-下一节：[抬升 2D 元素](using-the-webspatial-api/elevate-2d-elements.md)
+下一节：[抬升 2D 元素](elevate-2d-elements.md)
