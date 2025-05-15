@@ -74,6 +74,7 @@ npx webspatial-builder run --base=http://localhost:3001/webspatial/avp/
 XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 ```
 
+> [!TIP]
 > 最佳实践：给这个专用 Dev Server 添加一个 npm script，比如：
 > ```json5
 > "dev": "vite",
