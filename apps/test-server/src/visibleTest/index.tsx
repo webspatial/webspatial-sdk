@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
@@ -49,11 +48,11 @@ function CustomComponent(props: {
 }
 
 function VisibleRefComponent() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const onClick = () => {
-    ref.current.style.visibility =
-      ref.current.style.visibility !== 'hidden' ? 'hidden' : 'visible'
+    if (!ref.current) return
+    ref.current.style.visibility !== 'hidden' ? 'hidden' : 'visible'
   }
 
   useEffect(() => {

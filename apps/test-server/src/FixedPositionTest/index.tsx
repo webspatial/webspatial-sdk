@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
@@ -6,15 +5,6 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 enableDebugTool()
 
 function App() {
-  const styleOuter = {
-    '--xr-back': 121,
-    position: 'relative',
-    width: '200px',
-    height: '78px',
-
-    backgroundColor: 'red',
-  }
-
   return (
     <div className="w-screen h-screen  ">
       <div

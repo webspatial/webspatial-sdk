@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 export function TestNestedClassComponent() {
@@ -12,7 +11,7 @@ export function TestNestedClassComponent() {
     'text-green-500': 'text-green-500 translate-x-1 rotate-12',
   }
 
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement | null>(null)
   const onRefOuter = useCallback((node: HTMLDivElement) => {
     if (node) {
       ;(window as any).ref = node
@@ -27,30 +26,34 @@ export function TestNestedClassComponent() {
   useEffect(() => {
     if (refInner.current) {
       refInner.current.className =
-        className + ' ' + selectedOptionMap[selectedOption]
+        className +
+        ' ' +
+        selectedOptionMap[
+          selectedOption as 'text-green-500' | 'text-yellow-500'
+        ]
     }
   }, [selectedOption])
 
   const onAddClass = () => {
-    if (ref.current) {
+    if (refInner.current) {
       refInner.current.classList.add(testClass)
     }
   }
 
   const onRemoveClass = () => {
-    if (ref.current) {
+    if (refInner.current) {
       refInner.current.classList.remove(testClass)
     }
   }
 
   const onReplaceClass = () => {
-    if (ref.current) {
+    if (refInner.current) {
       refInner.current.classList.replace(testClass, 'translate-x-8')
     }
   }
 
   const onToggleClass = () => {
-    if (ref.current) {
+    if (refInner.current) {
       refInner.current.classList.toggle(testClass)
     }
   }
@@ -60,10 +63,10 @@ export function TestNestedClassComponent() {
     '--xr-back': '100px',
   }
 
-  const refInner = useRef<HTMLDivElement>(null)
+  const refInner = useRef<HTMLDivElement | null>(null)
 
   const onRefInner = useCallback((node: HTMLDivElement) => {
-    if (node) {
+    if (refInner.current) {
       ;(window as any).refInner = node
 
       refInner.current = node

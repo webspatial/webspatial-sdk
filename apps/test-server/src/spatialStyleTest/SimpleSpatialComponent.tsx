@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 export const SimpleSpatialComponent = () => {
   const [isPrimary, setIsPrimary] = useState(true)
@@ -28,21 +27,9 @@ export const SimpleSpatialComponent = () => {
 
   return (
     <div className="flex items-center justify-center">
-      <div
-        enable-xr
-        className="outter"
-        style={style}
-        onClick={onClick}
-        debugName="outer"
-      >
+      <div enable-xr className="outter" style={style} onClick={onClick}>
         Outter SimpleSpatialComponent
-        <div
-          enable-xr
-          style={style2}
-          className="inner"
-          onClick={onClick}
-          debugName="inner"
-        >
+        <div enable-xr style={style2} className="inner" onClick={onClick}>
           Inner SimpleSpatialComponent
         </div>
       </div>
