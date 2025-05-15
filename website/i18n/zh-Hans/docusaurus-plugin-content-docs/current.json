@@ -1,0 +1,266 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Tutorial - Basics": {
+    "message": "Tutorial - Basics",
+    "description": "The label for category Tutorial - Basics in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Tutorial - Basics.link.generated-index.description": {
+    "message": "5 minutes to learn the most important Docusaurus concepts.",
+    "description": "The generated-index page description for category Tutorial - Basics in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Tutorial - Extras": {
+    "message": "Tutorial - Extras",
+    "description": "The label for category Tutorial - Extras in sidebar tutorialSidebar"
+  },
+  "sidebar.apiSidebar.category.core-sdk": {
+    "message": "core-sdk",
+    "description": "The label for category core-sdk in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Classes": {
+    "message": "Classes",
+    "description": "The label for category Classes in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Interfaces": {
+    "message": "Interfaces",
+    "description": "The label for category Interfaces in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Type Alias": {
+    "message": "Type Alias",
+    "description": "The label for category Type Alias in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.react-sdk": {
+    "message": "react-sdk",
+    "description": "The label for category react-sdk in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Variables": {
+    "message": "Variables",
+    "description": "The label for category Variables in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Functions": {
+    "message": "Functions",
+    "description": "The label for category Functions in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.doc.API Overview": {
+    "message": "API Overview",
+    "description": "The label for the doc item API Overview in sidebar apiSidebar, linking to the doc api-react/index"
+  },
+  "sidebar.apiSidebar.doc.Globals": {
+    "message": "Globals",
+    "description": "The label for the doc item Globals in sidebar apiSidebar, linking to the doc api-core/globals"
+  },
+  "sidebar.apiSidebar.doc.Spatial": {
+    "message": "Spatial",
+    "description": "The label for the doc item Spatial in sidebar apiSidebar, linking to the doc api-core/classes/Spatial"
+  },
+  "sidebar.apiSidebar.doc.SpatialEntity": {
+    "message": "SpatialEntity",
+    "description": "The label for the doc item SpatialEntity in sidebar apiSidebar, linking to the doc api-core/classes/SpatialEntity"
+  },
+  "sidebar.apiSidebar.doc.SpatialHelper": {
+    "message": "SpatialHelper",
+    "description": "The label for the doc item SpatialHelper in sidebar apiSidebar, linking to the doc api-core/classes/SpatialHelper"
+  },
+  "sidebar.apiSidebar.doc.SpatialInputComponent": {
+    "message": "SpatialInputComponent",
+    "description": "The label for the doc item SpatialInputComponent in sidebar apiSidebar, linking to the doc api-core/classes/SpatialInputComponent"
+  },
+  "sidebar.apiSidebar.doc.SpatialMeshResource": {
+    "message": "SpatialMeshResource",
+    "description": "The label for the doc item SpatialMeshResource in sidebar apiSidebar, linking to the doc api-core/classes/SpatialMeshResource"
+  },
+  "sidebar.apiSidebar.doc.SpatialModel3DComponent": {
+    "message": "SpatialModel3DComponent",
+    "description": "The label for the doc item SpatialModel3DComponent in sidebar apiSidebar, linking to the doc api-core/classes/SpatialModel3DComponent"
+  },
+  "sidebar.apiSidebar.doc.SpatialModelComponent": {
+    "message": "SpatialModelComponent",
+    "description": "The label for the doc item SpatialModelComponent in sidebar apiSidebar, linking to the doc api-core/classes/SpatialModelComponent"
+  },
+  "sidebar.apiSidebar.doc.SpatialPhysicallyBasedMaterialResource": {
+    "message": "SpatialPhysicallyBasedMaterialResource",
+    "description": "The label for the doc item SpatialPhysicallyBasedMaterialResource in sidebar apiSidebar, linking to the doc api-core/classes/SpatialPhysicallyBasedMaterialResource"
+  },
+  "sidebar.apiSidebar.doc.SpatialSession": {
+    "message": "SpatialSession",
+    "description": "The label for the doc item SpatialSession in sidebar apiSidebar, linking to the doc api-core/classes/SpatialSession"
+  },
+  "sidebar.apiSidebar.doc.SpatialTransform": {
+    "message": "SpatialTransform",
+    "description": "The label for the doc item SpatialTransform in sidebar apiSidebar, linking to the doc api-core/classes/SpatialTransform"
+  },
+  "sidebar.apiSidebar.doc.SpatialViewComponent": {
+    "message": "SpatialViewComponent",
+    "description": "The label for the doc item SpatialViewComponent in sidebar apiSidebar, linking to the doc api-core/classes/SpatialViewComponent"
+  },
+  "sidebar.apiSidebar.doc.SpatialWindowComponent": {
+    "message": "SpatialWindowComponent",
+    "description": "The label for the doc item SpatialWindowComponent in sidebar apiSidebar, linking to the doc api-core/classes/SpatialWindowComponent"
+  },
+  "sidebar.apiSidebar.doc.SpatialWindowContainer": {
+    "message": "SpatialWindowContainer",
+    "description": "The label for the doc item SpatialWindowContainer in sidebar apiSidebar, linking to the doc api-core/classes/SpatialWindowContainer"
+  },
+  "sidebar.apiSidebar.doc.Vec3": {
+    "message": "Vec3",
+    "description": "The label for the doc item Vec3 in sidebar apiSidebar, linking to the doc api-core/classes/Vec3"
+  },
+  "sidebar.apiSidebar.doc.Vec4": {
+    "message": "Vec4",
+    "description": "The label for the doc item Vec4 in sidebar apiSidebar, linking to the doc api-core/classes/Vec4"
+  },
+  "sidebar.apiSidebar.doc.sceneDataJSBShape": {
+    "message": "sceneDataJSBShape",
+    "description": "The label for the doc item sceneDataJSBShape in sidebar apiSidebar, linking to the doc api-core/interfaces/sceneDataJSBShape"
+  },
+  "sidebar.apiSidebar.doc.sceneDataShape": {
+    "message": "sceneDataShape",
+    "description": "The label for the doc item sceneDataShape in sidebar apiSidebar, linking to the doc api-core/interfaces/sceneDataShape"
+  },
+  "sidebar.apiSidebar.doc.WindowContainerOptions": {
+    "message": "WindowContainerOptions",
+    "description": "The label for the doc item WindowContainerOptions in sidebar apiSidebar, linking to the doc api-core/interfaces/WindowContainerOptions"
+  },
+  "sidebar.apiSidebar.doc.BackgroundMaterialType": {
+    "message": "BackgroundMaterialType",
+    "description": "The label for the doc item BackgroundMaterialType in sidebar apiSidebar, linking to the doc api-core/type-aliases/BackgroundMaterialType"
+  },
+  "sidebar.apiSidebar.doc.CornerRadius": {
+    "message": "CornerRadius",
+    "description": "The label for the doc item CornerRadius in sidebar apiSidebar, linking to the doc api-core/type-aliases/CornerRadius"
+  },
+  "sidebar.apiSidebar.doc.LoadingMethodKind": {
+    "message": "LoadingMethodKind",
+    "description": "The label for the doc item LoadingMethodKind in sidebar apiSidebar, linking to the doc api-core/type-aliases/LoadingMethodKind"
+  },
+  "sidebar.apiSidebar.doc.SpatialModelDragEvent": {
+    "message": "SpatialModelDragEvent",
+    "description": "The label for the doc item SpatialModelDragEvent in sidebar apiSidebar, linking to the doc api-core/type-aliases/SpatialModelDragEvent"
+  },
+  "sidebar.apiSidebar.doc.StyleParam": {
+    "message": "StyleParam",
+    "description": "The label for the doc item StyleParam in sidebar apiSidebar, linking to the doc api-core/type-aliases/StyleParam"
+  },
+  "sidebar.apiSidebar.doc.WindowStyle": {
+    "message": "WindowStyle",
+    "description": "The label for the doc item WindowStyle in sidebar apiSidebar, linking to the doc api-core/type-aliases/WindowStyle"
+  },
+  "sidebar.apiSidebar.doc.XRApp": {
+    "message": "XRApp",
+    "description": "The label for the doc item XRApp in sidebar apiSidebar, linking to the doc api-react/classes/XRApp"
+  },
+  "sidebar.apiSidebar.doc.Model3DProps": {
+    "message": "Model3DProps",
+    "description": "The label for the doc item Model3DProps in sidebar apiSidebar, linking to the doc api-react/interfaces/Model3DProps"
+  },
+  "sidebar.apiSidebar.doc.ModelDragEvent": {
+    "message": "ModelDragEvent",
+    "description": "The label for the doc item ModelDragEvent in sidebar apiSidebar, linking to the doc api-react/interfaces/ModelDragEvent"
+  },
+  "sidebar.apiSidebar.doc.ModelElement": {
+    "message": "ModelElement",
+    "description": "The label for the doc item ModelElement in sidebar apiSidebar, linking to the doc api-react/interfaces/ModelElement"
+  },
+  "sidebar.apiSidebar.doc.ModelEvent": {
+    "message": "ModelEvent",
+    "description": "The label for the doc item ModelEvent in sidebar apiSidebar, linking to the doc api-react/interfaces/ModelEvent"
+  },
+  "sidebar.apiSidebar.doc.ModelProps": {
+    "message": "ModelProps",
+    "description": "The label for the doc item ModelProps in sidebar apiSidebar, linking to the doc api-react/interfaces/ModelProps"
+  },
+  "sidebar.apiSidebar.doc.SpatialReactComponentProps": {
+    "message": "SpatialReactComponentProps",
+    "description": "The label for the doc item SpatialReactComponentProps in sidebar apiSidebar, linking to the doc api-react/interfaces/SpatialReactComponentProps"
+  },
+  "sidebar.apiSidebar.doc.SpatialViewRef": {
+    "message": "SpatialViewRef",
+    "description": "The label for the doc item SpatialViewRef in sidebar apiSidebar, linking to the doc api-react/interfaces/SpatialViewRef"
+  },
+  "sidebar.apiSidebar.doc.ModelElementRef": {
+    "message": "ModelElementRef",
+    "description": "The label for the doc item ModelElementRef in sidebar apiSidebar, linking to the doc api-react/type-aliases/ModelElementRef"
+  },
+  "sidebar.apiSidebar.doc.SpatialReactComponentRef": {
+    "message": "SpatialReactComponentRef",
+    "description": "The label for the doc item SpatialReactComponentRef in sidebar apiSidebar, linking to the doc api-react/type-aliases/SpatialReactComponentRef"
+  },
+  "sidebar.apiSidebar.doc.CSSModel3D": {
+    "message": "CSSModel3D",
+    "description": "The label for the doc item CSSModel3D in sidebar apiSidebar, linking to the doc api-react/variables/CSSModel3D"
+  },
+  "sidebar.apiSidebar.doc.CSSSpatialDiv": {
+    "message": "CSSSpatialDiv",
+    "description": "The label for the doc item CSSSpatialDiv in sidebar apiSidebar, linking to the doc api-react/variables/CSSSpatialDiv"
+  },
+  "sidebar.apiSidebar.doc.CSSSpatialPrimitive": {
+    "message": "CSSSpatialPrimitive",
+    "description": "The label for the doc item CSSSpatialPrimitive in sidebar apiSidebar, linking to the doc api-react/variables/CSSSpatialPrimitive"
+  },
+  "sidebar.apiSidebar.doc.defaultSceneConfig": {
+    "message": "defaultSceneConfig",
+    "description": "The label for the doc item defaultSceneConfig in sidebar apiSidebar, linking to the doc api-react/variables/defaultSceneConfig"
+  },
+  "sidebar.apiSidebar.doc.Model": {
+    "message": "Model",
+    "description": "The label for the doc item Model in sidebar apiSidebar, linking to the doc api-react/variables/Model"
+  },
+  "sidebar.apiSidebar.doc.Model3D": {
+    "message": "Model3D",
+    "description": "The label for the doc item Model3D in sidebar apiSidebar, linking to the doc api-react/variables/Model3D"
+  },
+  "sidebar.apiSidebar.doc.SpatialDiv": {
+    "message": "SpatialDiv",
+    "description": "The label for the doc item SpatialDiv in sidebar apiSidebar, linking to the doc api-react/variables/SpatialDiv"
+  },
+  "sidebar.apiSidebar.doc.SpatialMonitor": {
+    "message": "SpatialMonitor",
+    "description": "The label for the doc item SpatialMonitor in sidebar apiSidebar, linking to the doc api-react/variables/SpatialMonitor"
+  },
+  "sidebar.apiSidebar.doc.SpatialPrimitive": {
+    "message": "SpatialPrimitive",
+    "description": "The label for the doc item SpatialPrimitive in sidebar apiSidebar, linking to the doc api-react/variables/SpatialPrimitive"
+  },
+  "sidebar.apiSidebar.doc.SpatialView": {
+    "message": "SpatialView",
+    "description": "The label for the doc item SpatialView in sidebar apiSidebar, linking to the doc api-react/variables/SpatialView"
+  },
+  "sidebar.apiSidebar.doc.version": {
+    "message": "version",
+    "description": "The label for the doc item version in sidebar apiSidebar, linking to the doc api-react/variables/version"
+  },
+  "sidebar.apiSidebar.doc.enableDebugTool": {
+    "message": "enableDebugTool",
+    "description": "The label for the doc item enableDebugTool in sidebar apiSidebar, linking to the doc api-react/functions/enableDebugTool"
+  },
+  "sidebar.apiSidebar.doc.initScene": {
+    "message": "initScene",
+    "description": "The label for the doc item initScene in sidebar apiSidebar, linking to the doc api-react/functions/initScene"
+  },
+  "sidebar.apiSidebar.doc.notifyUpdateStandInstanceLayout": {
+    "message": "notifyUpdateStandInstanceLayout",
+    "description": "The label for the doc item notifyUpdateStandInstanceLayout in sidebar apiSidebar, linking to the doc api-react/functions/notifyUpdateStandInstanceLayout"
+  },
+  "sidebar.apiSidebar.doc.parseCornerRadius": {
+    "message": "parseCornerRadius",
+    "description": "The label for the doc item parseCornerRadius in sidebar apiSidebar, linking to the doc api-react/functions/parseCornerRadius"
+  },
+  "sidebar.apiSidebar.doc.spatialPolyfill": {
+    "message": "spatialPolyfill",
+    "description": "The label for the doc item spatialPolyfill in sidebar apiSidebar, linking to the doc api-react/functions/spatialPolyfill"
+  },
+  "sidebar.apiSidebar.doc.withCSSSpatial": {
+    "message": "withCSSSpatial",
+    "description": "The label for the doc item withCSSSpatial in sidebar apiSidebar, linking to the doc api-react/functions/withCSSSpatial"
+  },
+  "sidebar.apiSidebar.doc.withSpatial": {
+    "message": "withSpatial",
+    "description": "The label for the doc item withSpatial in sidebar apiSidebar, linking to the doc api-react/functions/withSpatial"
+  },
+  "sidebar.apiSidebar.doc.withSpatialMonitor": {
+    "message": "withSpatialMonitor",
+    "description": "The label for the doc item withSpatialMonitor in sidebar apiSidebar, linking to the doc api-react/functions/withSpatialMonitor"
+  }
+}
