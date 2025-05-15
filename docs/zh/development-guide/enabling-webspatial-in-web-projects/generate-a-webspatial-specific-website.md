@@ -83,7 +83,7 @@ XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 
 应用在 visionOS 模拟器中启动后会自动加载这个专用 Dev Server 的 URL。
 
-前文介绍过这个 URL 中的 `/webspatial/avp/` 是默认会自动添加的 base 部分，除了起始网址，所有构建产物中所有经过 Web Builder 处理的 URL（比如静态 Web 文件的 URL），都会自动在 base 部分加上 `webspatial/avp/`。比如：
+前文介绍过这个 URL 中的 `/webspatial/avp/` 是默认会自动添加的 base 部分，除了起始网址，所有构建产物中所有经过 Web 构建工具处理的 URL（比如静态 Web 文件的 URL），都会自动在 base 部分加上 `webspatial/avp/`。比如：
 
 ```html
 <link rel="icon" href="/webspatial/avp/favicon.ico" sizes="any"/>
@@ -167,7 +167,9 @@ XR_ENV=avp pnpm preview
 如果想直接用不同域名来区分这两个网站版本，都用 `/` 作为 base，省去 `webspatial/avp/`，可以做以下配置:
 
 - 让构建产物始终生成在 `dist/` 根目录下
-- 把 base 设置成不同域名（只要当前项目自定义了 base，WebSpatial SDK 就不会自动添加 `/webspatial/avp/`）
+- 把 base 设置成不同域名
+- 只要当前项目自定义了 base，WebSpatial SDK 就不会自动添加 `/webspatial/avp/`
+
 ```diff
 // vite.config.js
 import { defineConfig } from 'vite'
@@ -265,9 +267,9 @@ web-dist
 对于这样的构建产物，有两种使用方式：
 
 1. 需要给 Web Server 配置路由逻辑，让 base 部分为 `/webspatial/avp/` 的 URL 请求都从 `web-dist/webspatial/avp/` 路径下读取 HTML 模版。
-   1. 如果采用这种方式，注意跟[专用 Dev Server]() 和[多 Web Server]() 模式一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
+   - 如果采用这种方式，注意跟[专用 Dev Server]() 和[多 Web Server]() 模式一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
 2. 需要在 Web Server 的网页路由逻辑中，判断请求是否来自 visionOS 中的 WebSpatial App Shell（有特殊的 UserAgent），如果是，就读取 `dist/webspatial/avp` 目录下的 HTML 模版，否则读取 `dist/` 目录下的 HTML 模版。
-  1. 如果采用这种方式，需要在 Web 构建工具的配置中提供自定义 base，这时 WebSpatial SDK 不会自动添加 `/webspatial/avp/`。比如：
+  - 如果采用这种方式，需要在 Web 构建工具的配置中提供自定义 base，这时 WebSpatial SDK 不会自动添加 `/webspatial/avp/`。比如：
 ```diff
 // vite.config.js
 export default defineConfig({
