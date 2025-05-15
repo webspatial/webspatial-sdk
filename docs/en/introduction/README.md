@@ -1,6 +1,7 @@
+
 # Introduction
 
-This section introduces the problems WebSpatial solves and the benefits It Brings.
+This section introduces the problems WebSpatial solves and the benefits it brings.
 
 ## Table of Contents
 
@@ -10,3 +11,7 @@ This section introduces the problems WebSpatial solves and the benefits It Bring
 - [Make the Web Spatial Too](make-the-web-spatial-too.md)
 - [Built on the Existing Web Ecosystem](built-on-the-existing-web-ecosystem.md)
 - [If You Are a ___ Developer](if-you-are-a-developer.md)
+
+---
+
+Next chapter: [Quick Start](../quick-start/README.md) to experience WebSpatial in action.
