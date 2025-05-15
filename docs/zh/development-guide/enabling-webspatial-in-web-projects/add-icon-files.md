@@ -50,6 +50,4 @@
 
 ---
 
-下一步有两种选择：
-- [[选项 1] 手动添加 Manifest](option-1-manually-add-a-manifest.md)
-- [[选项 2] 使用工具自动添加 Manifest](option-2-auto-add-manifest-using-tools.md)
+下一步：[添加 Web App Manifest](add-web-app-manifest.md)
