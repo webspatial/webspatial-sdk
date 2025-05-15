@@ -7,8 +7,6 @@
 
 pnpm 是 npm 的一个替代品，使用硬链接和符号链接来节省磁盘空间，并提供更快的安装速度。
 
-> [安装 pnpm](https://pnpm.io/installation)
-
 在根目录下添加 `.npmrc`：
 
 ```
