@@ -18,20 +18,30 @@ WebSpatial is a set of spatial APIs and a ready-to-use cross-platform spatial ap
     <tr>
       <td align="center">
         <img src="docs/assets/screenshot-desktop.png" alt="2D View" width="400"/>
+        <em>Before SDK integration</em>
       </td>
       <td align="center">
         <img src="docs/assets/screenshot-spatial.png" alt="Spatial View" width="400"/>
+        <em>After SDK integration</em>
       </td>
     </tr>
   </table>
 </div>
 
+<!-- 示例：如何嵌入 YouTube 视频 -->
+<!-- 将 YouTube 视频链接中的 watch?v= 替换为 embed/ -->
+<!-- 例如：https://www.youtube.com/watch?v=VIDEO_ID 变为 https://www.youtube.com/embed/VIDEO_ID -->
+<div align="center" style="width: 100%; max-width: 860px;">
+  <iframe style="width: 100%; aspect-ratio: 16/9;" src="https://www.youtube.com/embed/QRWjRoKKuXI?si=Ml3wuNE8itxTXCMf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</div>
+
 ## Documentation
 
+- [Table of Contents](docs/en/README.md)
 - [Introduction](docs/en/introduction/README.md)
 - [Quick Start](docs/en/quick-start/README.md)
 - [Core Concepts](docs/en/core-concepts/README.md)
-- [Development Guide](development-guide/README.md)
+- [Development Guide](docs/en/development-guide/README.md)
 
 ## Packages
 
