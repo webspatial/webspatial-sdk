@@ -12,7 +12,7 @@ It is recommended that you read this documentation in sequence, particularly the
 
 1. [Introduction](introduction/README.md)
 	- [New Powers for XR Apps](introduction/new-powers-for-xr-apps.md)
-	- [The New Generation of Spatial Apps](introduction/the-new-generations-of-spatial-apps.md)
+	- [The New Generation of Spatial Apps](introduction/the-new-generation-of-spatial-apps.md)
 	- [HTML/CSS and WebXR](introduction/html-css-and-webxr.md)
 	- [Make the Web Spatial Too](introduction/make-the-web-spatial-too.md)
 	- [Built on the Existing Web Ecosystem](introduction/built-on-the-existing-web-ecosystem.md)

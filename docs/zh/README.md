@@ -12,7 +12,7 @@
 
 1. [介绍](introduction/README.md)
 	- [XR 应用的新能力](introduction/new-powers-for-xr-apps.md)
-	- [新一代的空间化应用](introduction/the-new-generations-of-spatial-apps.md)
+	- [新一代的空间化应用](introduction/the-new-generation-of-spatial-apps.md)
 	- [HTML/CSS 和 WebXR](introduction/html-css-and-webxr.md)
 	- [让 Web 也能空间化](introduction/make-the-web-spatial-too.md)
 	- [基于现有 Web 开发生态](introduction/built-on-the-existing-web-ecosystem.md)
