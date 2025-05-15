@@ -11,6 +11,7 @@ For Core SDK:
 * [API Docs](https://github.com/webspatial/webspatial.github.io/blob/main/docs/globals.md)
 
 For WebSpatial:
+- [Table of Contents](../../docs/en/README.md)
 - [Introduction](../../docs/en/introduction/README.md)
 - [Quick Start](../../docs/en/quick-start/README.md)
 - [Core Concepts](../../docs/en/core-concepts/README.md)

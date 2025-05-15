@@ -4,6 +4,7 @@ The React SDK from the WebSpatial SDK makes the WebSpatial API immediately avail
 
 ## Documentation
 
+- [Table of Contents](../../docs/en/README.md)
 - [Introduction](../../docs/en/introduction/README.md)
 - [Quick Start](../../docs/en/quick-start/README.md)
 - [Core Concepts](../../docs/en/core-concepts/README.md)
