@@ -1,8 +1,6 @@
 # 快速开始
 
-整体介绍：[WebSpatial 是什么](..introduction/README.md)
-
----
+> 上一章节：[WebSpatial 是什么](../introduction/README.md)
 
 通过一个最简化的示例,快速上手 [WebSpatial SDK]()，包括项目搭建、SDK 安装和配置、开发流程示例、空间化能力预览等。
 
