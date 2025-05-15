@@ -1,5 +1,5 @@
 
-# [选择 1] 手动添加 Manifest
+# 添加 Web App Manifest
 
 上一步：[添加图标文件](add-icon-files.md)
 
