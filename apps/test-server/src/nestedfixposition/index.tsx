@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState } from 'react'
+import React, { CSSProperties, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
@@ -7,7 +6,7 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 enableDebugTool()
 
 function App() {
-  const fixedSpatialDivStyle = {
+  const fixedSpatialDivStyle: CSSProperties = {
     '--xr-back': 100,
     position: 'fixed',
     left: 100,
@@ -18,13 +17,13 @@ function App() {
     backgroundColor: 'yellow',
   }
 
-  const parentSpatialDivStyle = {
+  const parentSpatialDivStyle: CSSProperties = {
     '--xr-back': 36,
     backgroundColor: 'lightblue',
     position: 'relative',
   }
 
-  const nestedSpatialDivStyle = {
+  const nestedSpatialDivStyle: CSSProperties = {
     '--xr-back': 6,
     backgroundColor: 'green',
     position: 'fixed',
@@ -45,7 +44,7 @@ function App() {
     <div className="w-screen h-screen  ">
       <div style={longStyle}>
         some infomation
-        <div enable-xr style={fixedSpatialDivStyle} debugName="FixedDiv">
+        <div enable-xr style={fixedSpatialDivStyle}>
           <div>
             this is a fixed spatialdiv \n this is a fixed spatialdiv \n this is
             a fixed spatialdiv this is a fixed spatialdiv this is a fixed
@@ -55,15 +54,11 @@ function App() {
       </div>
       <button onClick={onToggle}> toggle spatialdiv </button>
       {flag && (
-        <div enable-xr style={parentSpatialDivStyle} debugName="ParentDiv">
+        <div enable-xr style={parentSpatialDivStyle}>
           <p enable-xr style={{ '--xr-back': 50 }}>
             this is a parent spatialdiv
           </p>
-          <div
-            enable-xr
-            style={nestedSpatialDivStyle}
-            debugName="NestedFixedDiv"
-          >
+          <div enable-xr style={nestedSpatialDivStyle}>
             this is a nested fixed spatialdiv
           </div>
           <div style={longStyle}>End of the parent spatialdiv </div>

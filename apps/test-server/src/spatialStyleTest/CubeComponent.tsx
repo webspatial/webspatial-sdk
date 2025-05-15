@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 import './CubeComponent.scss'
 import { CSSProperties } from 'styled-components'
@@ -16,48 +15,23 @@ export const Cube = (props: CubeProps) => {
   }
 
   return (
-    <div
-      className="cube"
-      style={cubeStyle as CSSProperties}
-      enable-xr
-      debugName="cube"
-    >
-      <div
-        enable-xr
-        className="cube__face cube__face--front"
-        debugName="frontCube"
-      >
+    <div className="cube" style={cubeStyle as CSSProperties} enable-xr>
+      <div enable-xr className="cube__face cube__face--front">
         front
       </div>
-      <div
-        enable-xr
-        className="cube__face cube__face--back"
-        debugName="backCube"
-      >
+      <div enable-xr className="cube__face cube__face--back">
         back
       </div>
-      <div
-        enable-xr
-        className="cube__face cube__face--right"
-        debugName="rightCube"
-      >
+      <div enable-xr className="cube__face cube__face--right">
         right
       </div>
-      <div
-        enable-xr
-        className="cube__face cube__face--left"
-        debugName="leftCube"
-      >
+      <div enable-xr className="cube__face cube__face--left">
         left
       </div>
-      <div enable-xr className="cube__face cube__face--top" debugName="topCube">
+      <div enable-xr className="cube__face cube__face--top">
         top
       </div>
-      <div
-        enable-xr
-        className="cube__face cube__face--bottom"
-        debugName="bottomCube"
-      >
+      <div enable-xr className="cube__face cube__face--bottom">
         bottom
       </div>
     </div>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
@@ -43,16 +42,10 @@ function CustomComponent(props: {
       enable-xr
       style={styleForSpatialDiv}
       onClick={onToggleColor}
-      debugName="PARENT"
       ref={parentRef}
     >
       this is spatial div
-      <div
-        enable-xr
-        style={childDivVisibleStyle}
-        ref={childRef}
-        debugName="child"
-      >
+      <div enable-xr style={childDivVisibleStyle} ref={childRef}>
         this is child spatial div
       </div>
     </div>
@@ -86,35 +79,13 @@ function InlineComponent() {
       style={{
         width: '100%',
         display: 'flex',
-        'justify-content': 'center',
+        justifyContent: 'center',
       }}
     >
       <a enable-xr style={style}>
         Edit <code>src/App.tsx</code> and save to test HMR
       </a>
     </p>
-  )
-}
-
-function VisibleRefComponent() {
-  const ref = useRef<HTMLElement>(null)
-
-  const onClick = () => {
-    ref.current.style.display =
-      ref.current.style.display !== 'none' ? 'none' : 'block'
-  }
-
-  useEffect(() => {
-    ;(window as any).ref = ref
-  }, [])
-
-  return (
-    <div>
-      <div enable-xr ref={ref} style={{ '--xr-back': 10 }}>
-        this is visible ref div
-      </div>
-      <button onClick={onClick}> toggle visibility by ref </button>
-    </div>
   )
 }
 

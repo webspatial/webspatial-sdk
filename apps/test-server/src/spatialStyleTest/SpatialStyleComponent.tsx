@@ -1,4 +1,3 @@
-// @ts-nocheck
 export const SpatialStyleComponent = () => {
   const divCls = 'text-amber-600	'
   const spaceCls = divCls + 'bg-zinc-400'
@@ -26,7 +25,7 @@ export const SpatialStyleComponent = () => {
         <div
           style={{
             color: 'red',
-            back: 50,
+            '--xr-back': 50,
           }}
           className={spaceCls}
         >
@@ -40,7 +39,7 @@ export const SpatialStyleComponent = () => {
           {' '}
           this is partial inline div{' '}
         </div>
-        <div className={spaceCls} style={{ ...style, back: 50 }}>
+        <div className={spaceCls} style={{ ...style, '--xr-back': 50 }}>
           {' '}
           [Not working!] this is spatial div{' '}
         </div>
@@ -70,7 +69,7 @@ export const SpatialStyleComponent = () => {
         <p
           style={{
             color: 'red',
-            back: 50,
+            '--xr-back': 50,
           }}
           className={spaceCls}
         >

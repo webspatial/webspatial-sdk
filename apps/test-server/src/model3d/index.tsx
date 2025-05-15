@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ReactDOM from 'react-dom/client'
 
 import {
@@ -8,8 +7,7 @@ import {
   ModelEvent,
   ModelDragEvent,
 } from '@webspatial/react-sdk'
-import { CSSProperties } from 'styled-components'
-import { useRef, useState } from 'react'
+import { CSSProperties, useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -101,7 +99,6 @@ function App() {
         className="w-[100%] h-[400px] flex justify-center  items-center bg-base-100	 "
         style={{ position: 'relative', '--xr-back': 300 }}
         enable-xr
-        debugShowStandardInstance={true}
       >
         <Model
           ref={ref}

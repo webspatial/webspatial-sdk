@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef } from 'react'
 
 import { CSSSpatialDiv } from '@webspatial/react-sdk'
@@ -8,7 +7,7 @@ import { animated, useSpring } from '@react-spring/web'
 const AnimatedDiv = animated(CSSSpatialDiv)
 
 export function ReactSpringTest() {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const [springProps, setSpringProps] = useSpring(() => ({
     opacity: 1,
