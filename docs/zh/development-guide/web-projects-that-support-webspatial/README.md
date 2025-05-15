@@ -36,10 +36,10 @@ WebSpatial 目前采用 [Hybrid 技术方案]()，让主流 Web 项目能立刻�
 
 如果你想在已有的 Web 项目中引入 WebSpatial API，把网站打包成 visionOS 应用获得空间化能力，可以跳过本章节，从以下章节开始：
 
-- [在 Web 项目中启用 WebSpatial](enabling-webspatial-in-web-projects/README.md)
+- [在 Web 项目中启用 WebSpatial](../enabling-webspatial-in-web-projects/README.md)
 
 ## 创建全新的 WebSpatial 项目
 
 如果你想开发全新的 Web 项目，从一开始就支持 WebSpatial，或是想创建全新的 demo 项目，用于试用和学习 WebSpatial API、体验 WebSpatial 应用，可以按照以下步骤，获得还未引入 WebSpatial API 的标准 Web 网站项目，作为项目的初始状态。
 
-- [创建新的 Web 项目](web-projects-that-support-webspatial/creating-new-web-projects.md)
+- [创建新的 Web 项目](creating-new-web-projects.md)
