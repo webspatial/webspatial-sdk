@@ -1,34 +1,44 @@
-# **Full API documentation**
 
-* [API Docs](https://github.com/webspatial/webspatial.github.io/blob/main/docs/globals.md)
+# Core SDK for WebSpatial
 
-# **Introduction**
+WebSpatial SDK is implemented on top of the Core SDK, which is a framework-agnostic pure-JS API that enables the WebSpatial App Shell to natively spatialize 2D HTML content and render 3D content.
 
 The core-sdk library is responsible for interacting with the target platforms native APIs to expose behavior not commonly found on the web.
 
-# **Hello world example**
+## Documentation
 
-```
+For Core SDK:
+* [API Docs](https://github.com/webspatial/webspatial.github.io/blob/main/docs/globals.md)
+
+For WebSpatial:
+- [Introduction](../../docs/en/introduction/README.md)
+- [Quick Start](../../docs/en/quick-start/README.md)
+- [Core Concepts](../../docs/en/core-concepts/README.md)
+- [Development Guide](../../docs/en/development-guide/README.md)
+
+## Hello World Example
+
+```jsx
 import { Spatial, SpatialHelper } from '@webspatial/core-sdk'
 
 var main = async () => {
     var spatial = new Spatial()
     var versionInfo = "clientVersion:" + spatial.getClientVersion() + "\nnativeVersion:" + spatial.getNativeVersion() + "\nisSupported:" + spatial.isSupported()
-    
+
     let sh = SpatialHelper.instance!
     if (sh) {
         // Create a new window container
         var container = await sh.session.createWindowContainer({ style: 'Volumetric' })
-        
+
         // Setup volume for the entity
         var rootEntity = await sh.session.createEntity()
         await rootEntity.setCoordinateSpace("Root")
         rootEntity.setComponent(await sh.session.createViewComponent())
-        
+
         // Create a mesh. and add it tot the root volume
         var box = await sh.shape.createShapeEntity("box")
         await box.setParent(rootEntity)
-        
+
         // add the volume to the window
         await container.setRootEntity(rootEntity)
     }
@@ -85,7 +95,7 @@ await entity.setComponent(
 )
 await entity.setCoordinateSpace('Root')
 
-// Set root entity on the window container. 
+// Set root entity on the window container.
 // Note the entity much have:
 // - Root coordinate space
 // - have a ViewComponent for Volumetric windowContainer
@@ -93,7 +103,7 @@ await entity.setCoordinateSpace('Root')
 await windowContainer.setRootEntity(entity)
 ```
 
-Entity maps to an object that will be displayed. Components tell how that object should be displayed.  
+Entity maps to an object that will be displayed. Components tell how that object should be displayed.
 You can find more examples here when you run the server locally:
 
 * http://localhost:5173/src/docsWebsite/index.html?examplePath=webElement
