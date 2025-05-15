@@ -13,26 +13,25 @@ WebSpatial is a set of spatial APIs and a ready-to-use cross-platform spatial ap
 - **Zero-rewrite adoption** – Drop the SDK into an existing React project and with zero intrusion or additional cost
 - **Cross-platform** – desktops, mobiles, and spatial-computing platfroms share one codebase.
 
-<div align="center">
+<div align="center" style="width: 100%; max-width: 860px;">
   <table>
     <tr>
       <td align="center">
-        <img src="docs/assets/screenshot-desktop.png" alt="2D View" width="400"/>
+        <img src="docs/assets/screenshot-desktop.png" width="400"/>
         <em>Before SDK integration</em>
       </td>
       <td align="center">
-        <img src="docs/assets/screenshot-spatial.png" alt="Spatial View" width="400"/>
+        <img src="docs/assets/screenshot-spatial.png" width="400"/>
         <em>After SDK integration</em>
       </td>
     </tr>
   </table>
 </div>
 
-<!-- 示例：如何嵌入 YouTube 视频 -->
-<!-- 将 YouTube 视频链接中的 watch?v= 替换为 embed/ -->
-<!-- 例如：https://www.youtube.com/watch?v=VIDEO_ID 变为 https://www.youtube.com/embed/VIDEO_ID -->
 <div align="center" style="width: 100%; max-width: 860px;">
-  <iframe style="width: 100%; aspect-ratio: 16/9;" src="https://www.youtube.com/embed/QRWjRoKKuXI?si=Ml3wuNE8itxTXCMf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <a href="https://youtu.be/QRWjRoKKuXI?si=RvC66Y7X_eyWoRwv" target="_blank">
+    <img src="docs/assets/whatif.jpg" style="width: 100%" />
+  </a>
 </div>
 
 ## Documentation
