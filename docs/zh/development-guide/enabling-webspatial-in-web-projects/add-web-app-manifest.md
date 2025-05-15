@@ -10,7 +10,7 @@
 首先，在项目中创建 `public/manifest.webmanifest` 或 `public/manifest.json` 文件。
 
 > [!TIP]
-> 这两种文件在 Web 服务器上都需要被视作 JSON 文件，响应的 MIME 类型可以是任意 JSON 类型，比如 application/json，最推荐的是 application/manifest+json
+> 这两种文件在 Web 服务器上都需要被视作 JSON 文件，响应的 MIME 类型可以是任意 JSON 类型，比如 `application/json`，最推荐的是 `application/manifest+json`
 
 由于 manifest 文件被放在 public 目录的根路径下，因此当网站的服务器启动之后，应该能通过类似 `https://www.myapp.com/manifest.webmanifest` 这样的 URL 访问这个 manifest。
 > 类似 `robots.txt`、`favicion.ico` 这类静态文件的用法
