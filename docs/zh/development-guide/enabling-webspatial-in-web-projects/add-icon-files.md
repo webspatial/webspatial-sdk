@@ -22,7 +22,7 @@
 
 在 PWA 原有要求的基础上，[Packaged WebSpatial App]() 对于图标有额外要求：
 
-由于 visionOS 应用的最小图标尺寸是 1024x1024，且系统会自动把图标裁剪为圆形，所以要让网站成为 Packaged WebSpatial App 上架 visionOS 应用商店，必须基于 PWA 标准提供**最小尺寸为 1024x1024、[`maskable` 类型（不能有透明背景和圆角）]()**的图标。
+由于 visionOS 应用的最小图标尺寸是 1024x1024，且系统会自动把图标裁剪为圆形，所以要让网站成为 Packaged WebSpatial App 上架 visionOS 应用商店，必须基于 PWA 标准提供**最小尺寸为 1024x1024、[`maskable` 类型（不能有透明背景和圆角）]()** 的图标。
 
 > [!TIP]
 > 其他 PWA 图标（比如 512x512 和 192x192 这两个版本）默认为 [`"any"` 类型，有圆角和透明背景]()（因为不是每个平台都支持自动裁剪）。
