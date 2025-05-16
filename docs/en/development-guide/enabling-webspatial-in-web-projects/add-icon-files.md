@@ -16,7 +16,8 @@ The first step is to provide app icons. The best practice for a WebSpatial proje
 
 Sample (you can use this directly in the demo):
 
-![image]()
+[webspatial-icon-examples.zip](../../../assets/guide/webspatial-icon-examples.zip)
+
 
 In addition to the standard PWA requirements, a **Packaged WebSpatial App** has extra icon rules:
 

@@ -252,14 +252,14 @@ WebSpatial SDK 暂时还不支持在 CSS 动画中使用 WebSpatial API，可以
 - 输入框和表单元素，会被自动视为可交互区域
 - **除此之外，如果想把任意 HTML 元素自定义为可交互区域，只要给这个元素加上 CSS 的 `cursor: pointer` 属性就行**
 
-![image]()
+![](../../../assets/guide/hand-1.png)
 
 ### JS 事件
 
 在「[确认（触发）]()」之后，无论间接交互还是直接交互，都会触发跟触屏交互一样的 JS 事件：
 
-![image]()
-![image]()
+| ![](../../../assets/guide/hand-2.png) | ![](../../../assets/guide/hand-3.png) |
+|:---:|:---:|
 
 以间接交互为例，「确认」的完整过程会按顺序触发以下 JS 事件：
 
@@ -276,7 +276,7 @@ WebSpatial SDK 暂时还不支持在 CSS 动画中使用 WebSpatial API，可以
 可以基于这些底层基础事件，用 JS 实现拖拽等高级交互手势。
 
 示例：
-![image]()
+[![](../../../assets/guide/hand-4.png)](https://youtu.be/d8RcEiV-WM4?si=MyfgPKQ4qGZN80lw)
 
 ## 自身交互能力
 

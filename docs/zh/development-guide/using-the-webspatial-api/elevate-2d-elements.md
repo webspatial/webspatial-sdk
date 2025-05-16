@@ -31,8 +31,8 @@
 
 在绝对定位的情况下，元素直接相对于父级中距离自己最近的 [containing block]() （有 `position` 属性且值不为 `static`，或有 `transform` 属性，就是 containing block 元素。如果没有这种父元素，会相对于整个窗口）来定位。
 
-![image]()
-![image]()
+![](../../../assets/guide/3-1.png)
+![](../../../assets/guide/3-2.png)
 
 在这种模式下，现有 CSS 标准中有四种属性可以让元素在 X 轴和 Y 轴的 4 个方向上「移动」（定位）：
 
@@ -41,7 +41,7 @@
 - `left`：沿着 X 轴向右「移动」（定位）
 - `right`：沿着 X 轴向左「移动」（定位）
 
-![image]()
+![](../../../assets/guide/3-3.png)
 
 WebSpatial API 在上述现有 Web 标准 API 的基础上，增加了一个新的 CSS 属性，让空间化元素可以在 Z 轴上「移动」（定位）：
 
@@ -83,7 +83,7 @@ html.is-spatial {
 可以看到这个 `<p>` 元素中的文字，在 Y 轴方向上是相对于父元素 `.count-card` 的底部来定位的，因为这个父元素是相对定位的 containing block。
 同时在 Z 轴方向上，`<p>` 元素的 `--xr-back` 是相对于父元素 .count-card 所在的平面来定位的，因为这个父元素既是半透明材质背景的空间化元素，也是相对定位的 containing block。
 
-![image]()
+![](../../../assets/guide/3-4.png)
 
 ### `position: fixed`
 
@@ -116,7 +116,7 @@ html.is-spatial {
 顶栏和侧栏都是固定定位，商品列表保持在网页平面上的布局流中。
 因此如果用拖拽条把整个窗口场景的高度调小，商品列表中超出窗口场景的部分会被裁切，网页滚动时，商品列表会跟着滚动，而顶栏和侧栏的位置则保持不变。
 
-![image]()
+![](../../../assets/guide/3-5.png)
 
 点击商品卡片中的「View Details」，打开商品详情（新的窗口场景），可以看到另一个例子：
 
@@ -137,7 +137,7 @@ html.is-spatial {
 
 网页滚动时，左侧的商品图片会跟着滚动，而右侧的商品信息栏则固定不动。
 
-![image]()
+![](../../../assets/guide/3-6.png)
 
 ## 不影响布局流的 API
 
@@ -147,7 +147,7 @@ html.is-spatial {
 
 在相对定位的情况下，元素可以相对于自己原来的位置，用现有 CSS 标准中的四种属性[在 X 轴和 Y 轴的 4 个方向上「移动」（定位）]()。
 
-![image]()
+![](../../../assets/guide/3-7.png)
 
 也可以用 WebSpatial API 新增的 [`--xr-back` 属性]()，沿着 Z 轴向前方移动。
 注意在这种情况下，`--xr-back` 的 Z 轴初始位置始终位于**元素自身原本所在的平面**上，把这个平面作为「背面」，沿着垂直于这个背面的 Z 轴向前方移动。
@@ -174,7 +174,7 @@ html.is-spatial {
 可以看到 `.link-card` 元素在原有布局流中位于 `.count-card` 的下方。
 在相对定位模式下，用 `--xr-back` 相对于网页平面沿着 Z 轴向前方移动了 50 单位，同时在 X/Y 轴方向上保持原有位置不变。
 
-![image]()
+![](../../../assets/guide/3-8.png)
 
 基于[「快速开始」示例]()的例子：
 
@@ -198,7 +198,7 @@ html.is-spatial {
 `.count-card` 元素在相对定位模式下，用 `--xr-back` 相对于网页平面沿着 Z 轴向前方移动了 50 单位，同时在 X/Y 轴方向上保持原有位置不变。
 `.count-card` 元素内的 `<p>` 元素在绝对定位模式下，用 `--xr-back` 相对于`.count-card` 元素所在的平面，沿着 Z 轴向前方移动了 20 单位。
 
-![image]()
+![](../../../assets/guide/3-9.png)
 
 ### 改变位置和形状——CSS Transform
 
@@ -206,8 +206,8 @@ CSS Transform 完全不影响 HTML 元素原本的位置、尺寸和布局关系
 
 现有 Web 标准中，CSS Transform 已经可以围绕 X、Y、Z 三个轴做位移和变形，可以有「深度」，但这些深度效果都会被投影和渲染到平面网页上，最终效果不具备真正的深度。
 
-![image]()
-![image]()
+| ![intro-3-7](../../../assets/intro/intro-3-7.png) | ![intro-3-8](../../../assets/intro/intro-3-8.png) |
+|:---:|:---:|
 
 WebSpatial SDK 直接沿用了现有的 CSS Transform API。
 非空间化 HTML 元素通过 CSS Transform 在 Z 轴方向上产生的位移和变形，仍然会投影到平面上。
@@ -217,7 +217,7 @@ X、Y、Z 轴的原点**始终位于元素自身原本所在的平面**上，可
 
 空间化元素可以把这个平面作为「背面」，让自身的图像通过 CSS Transform 进入这个背面前方的空间中。
 
-![image]()
+![](../../../assets/guide/3-13.png)
 
 `transform: perspective()` 在空间化元素中也会失效，因为不再需要用这个 API 来定义投影方式。
 
@@ -252,7 +252,7 @@ html.is-spatial {
 
 然后基于这个位置和形状，按照 Transform 属性做转换，沿着 Z 轴向前方又移动了 30px（px 会被自动转换为物理空间中的 pt 单位），然后以自身的顶部边缘为轴，向外旋转 30 度。
 
-![image]()
+![](../../../assets/guide/3-14.png)
 
 [Techshop demo]() 中的示例：
 
@@ -269,7 +269,7 @@ html.is-spatial {
 侧栏菜单首先按照固定定位，被放置在应用的最左侧。
 然后基于这个位置和形状，按照 Transform 属性做转换，沿着 Z 轴向前方移动了 320px（px 会被自动转换为物理空间中的 pt 单位），然后以自身的左边缘为轴，向内旋转 80 度。
 
-![image]()
+![](../../../assets/guide/3-15.png)
 
 ## 基于布局流的 API
 

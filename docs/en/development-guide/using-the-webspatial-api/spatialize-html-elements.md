@@ -251,14 +251,14 @@ An element becomes an Interaction Region if any of the following is true:
 - It is an input or form element.
 - Otherwise add the CSS property `cursor: pointer` to mark any element as an Interaction Region.
 
-![image]()
+![](../../../assets/guide/hand-1.png)
 
 ### JavaScript events
 
 After the *Confirm (Activate)* phase, indirect and direct interactions fire the same JavaScript events as touch screens:
 
-![image]()
-![image]()
+| ![](../../../assets/guide/hand-2.png) | ![](../../../assets/guide/hand-3.png) |
+|:---:|:---:|
 
 For indirect interaction the sequence is:
 
@@ -275,7 +275,7 @@ For indirect interaction the sequence is:
 You can build higher-level gestures such as drag-and-drop on top of these low-level events.
 
 Example:
-![image]()
+[![](../../../assets/guide/hand-4.png)](https://youtu.be/d8RcEiV-WM4?si=MyfgPKQ4qGZN80lw)
 
 ## Self interaction
 

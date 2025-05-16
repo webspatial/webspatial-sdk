@@ -23,12 +23,12 @@ pnpm preview # `pnpm start` for Next.js
 然后在 Chrome / Edge 浏览器里打开网站的本地网址。
 应该可以看到地址栏上出现了 PWA 的安装按钮：
 
-![image]()
-![image]()
+![](../../../assets/guide/pwa-1.png)
+![](../../../assets/guide/pwa-2.png)
 
 打开浏览器 DevTools，应该可以看到浏览器对这个网页中 Web App Manifest 的解析结果：
 
-![image]()
+![](../../../assets/guide/pwa-3.png)
 
 到这里为止，这个网站已经成为了一个最简单的 PWA。
 

@@ -275,7 +275,7 @@ Before the scene with `name` equal to `"secondScene"` opens, initialize it:
 
 Click the button and see that the default size of the `secondScene` scene changes:
 
-![image]()
+![](../../assets/quick/9.png)
 
 ## 8. Add material backgrounds
 
@@ -352,8 +352,8 @@ html.is-spatial {
 }
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/12.png) | ![](../../assets/quick/13.png) |
+|:---:|:---:|
 
 ## 9. 'Elevate' spatialized elements
 
@@ -393,8 +393,8 @@ Apply different levels of 'elevation' to the link elements spatialized earlier.
     top: 20px;
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/14.png) | ![](../../assets/quick/15.png) |
+|:---:|:---:|
 
 Another way to 'elevate' is to use CSS Transform, which can also [deform and rotate]() in 3D space.
 
@@ -411,8 +411,8 @@ In the [`XR_ENV` mode styles]() in `src/index.css`, move and rotate `link-card` 
 +   transform: translateZ(30px) rotateX(30deg);
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/16.png) | ![](../../assets/quick/17.png) |
+|:---:|:---:|
 
 ## 10. Add static 3D content
 

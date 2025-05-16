@@ -12,10 +12,9 @@ Web 开发者自己写的业务逻辑代码（包括 JS 和 CSS），也有可�
 - 跟普通网页界面差别很大的空间化 GUI
 - WebSpatial 应用中特有的 3D 内容
 
-参考示例项目：https://github.com/webspatial/sample-techshop
-
-![image]()
-![image]()
+> 参考示例项目：https://github.com/webspatial/sample-techshop
+> | ![](../../../assets/concepts/3-12.png) | ![](../../../assets/concepts/3-13.png) |
+> |:---:|:---:|
 
 这些代码在面向桌面/移动平台和普通浏览器的网站版本中不应该生效，也不应该被包含在构建产物中。
 

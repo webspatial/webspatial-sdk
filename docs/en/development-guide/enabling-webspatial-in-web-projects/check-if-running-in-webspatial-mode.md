@@ -14,10 +14,9 @@ Your own application code (both JS and CSS) may also contain logic that is speci
 * Spatial GUI that differs greatly from a normal web UI
 * 3D content unique to WebSpatial apps
 
-Example project: <https://github.com/webspatial/sample-techshop>
-
-![image]()
-![image]()
+> Example project: <https://github.com/webspatial/sample-techshop>
+> | ![](../../../assets/concepts/3-12.png) | ![](../../../assets/concepts/3-13.png) |
+> |:---:|:---:|
 
 This code should **not** run and **must not** be bundled in the build aimed at desktop/mobile browsers.
 

@@ -123,16 +123,12 @@ WebSpatial Builder 命令的参数，分为两类，推荐用不同的方式来�
 
 通过 `--bundle-id` 提供 [App Store Connect 需要的应用 ID（Bundle ID）]()，需要先在 App Store Connect 中[注册一个专用的 Bundle ID]()：
 
-![image]()
-
 #### `$XR_TEAM_ID` (`--teamId`)
 
 > [!IMPORTANT]
 > 在构建（[`build:avp` 脚本]()）或分发（[`publish:avp` 脚本]()）环节都必须提供这个环境变量
 
 通过 `--teamId` 提供 Apple 开发者账号的 Team ID。
-
-![image]()
 
 ### `publish`
 

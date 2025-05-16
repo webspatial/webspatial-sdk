@@ -21,12 +21,12 @@ pnpm preview # `pnpm start` for Next.js
 
 Then open the site’s local URL in Chrome or Edge. You should see the PWA install button in the address bar:
 
-![image]()
-![image]()
+![](../../../assets/guide/pwa-1.png)
+![](../../../assets/guide/pwa-2.png)
 
 Open DevTools in the browser and check the parsed Web App Manifest for this page:
 
-![image]()
+![](../../../assets/guide/pwa-3.png)
 
 At this point, the site qualifies as a minimal PWA.
 

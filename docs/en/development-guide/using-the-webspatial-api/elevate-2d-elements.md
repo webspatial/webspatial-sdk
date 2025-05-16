@@ -28,8 +28,8 @@ Multiple APIs can achieve this elevation and can be grouped into three categorie
 
 With absolute positioning, the element is positioned relative to the nearest ancestor **containing block** (an ancestor whose `position` value is not `static`, or one that has a `transform` property). If no such ancestor exists, it is positioned relative to the entire window.
 
-![image]()
-![image]()
+![](../../../assets/guide/3-1.png)
+![](../../../assets/guide/3-2.png)
 
 Under CSS, four properties move (position) the element along the X and Y axes:
 
@@ -38,7 +38,7 @@ Under CSS, four properties move (position) the element along the X and Y axes:
 - `left`: moves rightward along the X-axis
 - `right`: moves leftward along the X-axis
 
-![image]()
+![](../../../assets/guide/3-3.png)
 
 The WebSpatial API adds a new CSS property that positions the element along the Z-axis:
 
@@ -78,7 +78,7 @@ html.is-spatial {
 
 The `<p>` text is positioned on the Y-axis relative to its containing block `.count-card`, which is `relative`. On the Z-axis, `--xr-back` positions the `<p>` relative to the plane of `.count-card`, which is both a semi-transparent spatialized element and a containing block.
 
-![image]()
+![](../../../assets/guide/3-4.png)
 
 ### `position: fixed`
 
@@ -109,7 +109,7 @@ Example from the [Techshop demo]():
 
 The top bar and side bar are fixed; the product list remains in the page flow. Shrinking the window with the drag handle clips the list, which scrolls, while the bars stay in place.
 
-![image]()
+![](../../../assets/guide/3-5.png)
 
 Clicking “View Details” opens a new product-detail window scene:
 
@@ -130,7 +130,7 @@ Clicking “View Details” opens a new product-detail window scene:
 
 While the page scrolls, the left product image scrolls too, but the right info panel remains fixed.
 
-![image]()
+![](../../../assets/guide/3-6.png)
 
 ## APIs that do not affect the layout flow
 
@@ -140,7 +140,7 @@ The element remains in the flow, keeping its original space and dimensions.
 
 With relative positioning, the element can move along X and Y using the four CSS properties.
 
-![image]()
+![](../../../assets/guide/3-7.png)
 
 It can also move along Z with `--xr-back`. The initial Z position is **the plane where the element originally sits**, which works as the “back surface.”
 
@@ -165,7 +165,7 @@ html.is-spatial {
 
 The `.link-card` is below `.count-card` in the original flow. In relative mode, `--xr-back` moves it 50 units forward along Z while leaving its X/Y position untouched.
 
-![image]()
+![](../../../assets/guide/3-8.png)
 
 Another example from the [Quick Start]():
 
@@ -188,7 +188,7 @@ Another example from the [Quick Start]():
 
 `.count-card` moves 50 units forward in Z with relative positioning. Inside it, an absolutely positioned `<p>` moves an additional 20 units forward relative to the `.count-card` plane.
 
-![image]()
+![](../../../assets/guide/3-9.png)
 
 ### Change position and shape: CSS Transform
 
@@ -196,11 +196,14 @@ CSS Transform leaves the element’s original position, size, and layout relatio
 
 Standard CSS already allows transforms along all three axes, but depth effects are projected onto the 2-D page. With WebSpatial, spatialized elements using transforms actually occupy 3-D space.
 
+| ![intro-3-7](../../../assets/intro/intro-3-7.png) | ![intro-3-8](../../../assets/intro/intro-3-8.png) |
+|:---:|:---:|
+
 The X/Y/Z origin is **always the plane where the element originally sits**. `transform-origin` can shift the origin in X and Y, but never in Z.
 
 Spatialized elements treat that plane as the “back surface,” letting the transformed image extend into the space in front.
 
-![image]()
+![](../../../assets/guide/3-13.png)
 
 `transform: perspective()` becomes unnecessary for spatialized elements because projection is handled natively.
 
@@ -234,7 +237,7 @@ html.is-spatial {
 
 `.link-card` first moves 50 units forward via `--xr-back`, then applies a transform: it moves another 30 px forward (automatically converted to pt) and rotates 30 degrees outward around its top edge.
 
-![image]()
+![](../../../assets/guide/3-14.png)
 
 A [Techshop demo]() example:
 
@@ -250,7 +253,7 @@ A [Techshop demo]() example:
 
 The side menu is fixed at the far left, then transformed: it moves 320 px forward on Z (converted to pt) and rotates 80 degrees inward around its left edge.
 
-![image]()
+![](../../../assets/guide/3-15.png)
 
 ## APIs based on the layout flow
 

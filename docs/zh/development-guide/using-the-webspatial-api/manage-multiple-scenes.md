@@ -43,8 +43,8 @@ WebSpatial SDK 在 Web App Manifest 中扩展了一个新属性 `xr_main_scene`�
 
 这个 demo 的起始场景，本来是左图这样的尺寸（横屏界面风格），在 Web App Manifest 中添加以上配置后，起始场景就变成右图这样的竖屏界面风格了。
 
-![image]()
-![image]()
+| ![](../../../assets/concepts/3-28.png) | ![](../../../assets/concepts/3-29.png) |
+|:---:|:---:|
 
 > [!NOTE]
 > 在 WebSpatial SDK 目前的实现中：
@@ -107,7 +107,7 @@ Web App Manifest 中的 [`scope`]() 属性和 [`start_url`]() 属性组合在一
 场景中的内容都是 `/second-page` 页面的内容，因为这些新场景中打开的是相同的 URL。
 如果多次点击链接，会生成多个新场景。如果多次点击按钮，只会有一个新场景，因为点击按钮触发的 `window.open` 中指定了窗口名称（`"secondScene"`）。
 
-![image]()
+![](../../../assets/intro/intro-4-8.gif)
 
 由于场景在空间应用中是由操作系统[统一管理]()的，不能由开发者任意控制，因此空间应用中的场景多了「[初始化]()」的概念，开发者只能在场景创建之初的初始化环节，为场景的一些属性提供自己**期望的起始值**，由操作系统来判断是否采纳。之后这些属性**无法被代码改变**，只能由操作系统和终端用户的行为来共同决定。
 
@@ -211,7 +211,7 @@ window.xrCurrentSceneDefaults = async defaultConfig => {
 
 如果点击按钮，会先用 `initScene()` 对窗口名称为 `"secondScene"` 的场景提供初始化配置，之后用 `window.open` 创建同名场景的时候，不会有等待状态，会直接按照这个初始化配置创建新场景（图中右侧的新窗口）。
 
-![image]()
+![](../../../assets/concepts/3-30.png)
 
 ## 管理多个场景
 
