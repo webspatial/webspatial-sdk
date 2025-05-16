@@ -1,7 +1,7 @@
 <div align="center">
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 
- [English Documentation](../../en/quick-start/README.md) - 英文文档
+ [English Documentation](../../en/quick-start/README.md)
  <br>
 </div>
 

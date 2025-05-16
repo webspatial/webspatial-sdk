@@ -2,7 +2,7 @@
 <div align="center">
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 
-  [中文文档](../../zh/introduction/README.md) - Chinese documentation
+  [中文文档](../../zh/introduction/README.md)
   <br>
 </div>
 
