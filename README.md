@@ -1,12 +1,13 @@
-# WebSpatial
 
 <div align="center">
   <img src="docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  Make the Web Spatial Too
 </div>
 
-> Make the Web Spatial Too
+# WebSpatial SDK
 
-WebSpatial is a set of spatial APIs and a ready-to-use cross-platform spatial app SDK built on top of the existing standard 2D Web ecosystem. It enables the entire HTML/CSS-based Web world to step into the spatial era, gaining spatial power on par with native apps (like visionOS apps) while keeping the advantages they already have.
+WebSpatial is a set of spatial APIs and ready-to-use SDK that extend the standard 2D Web ecosystem to support spatial computing across platforms. It enables the entire HTML/CSS-based Web world to step into the spatial era, gaining spatial power on par with native apps (like visionOS apps) while keeping the advantages they already have.
 
 - **Open standard vision**: Extends existing HTML/CSS/JS with minimal new spatial APIs
 - **Developer friendly**: Extending the existing web development ecosystem and 2D web development mindset
