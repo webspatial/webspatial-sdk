@@ -1,3 +1,7 @@
+<div align="left">
+  <img src="../../docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
+</div>
+<br/>
 
 # Core SDK for WebSpatial
 

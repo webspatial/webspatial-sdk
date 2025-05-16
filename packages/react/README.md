@@ -1,3 +1,8 @@
+<div align="left">
+  <img src="../../docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
+</div>
+<br/>
+
 # React SDK for WebSpatial
 
 The React SDK from the WebSpatial SDK makes the WebSpatial API immediately available inside React.

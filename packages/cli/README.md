@@ -1,3 +1,8 @@
+<div align="left">
+  <img src="../../docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
+</div>
+<br/>
+
 # WebSpatial Builder
 
 The build tool transforms websites into Packaged WebSpatial Apps for debugging and distributing on spatial computing platforms.

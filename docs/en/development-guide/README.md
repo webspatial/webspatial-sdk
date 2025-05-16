@@ -1,3 +1,11 @@
+
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [中文文档](../../zh/development-guide/README.md) - Chinese documentation
+  <br>
+</div>
+
 # Development Guide
 
 - [Introduction](../introduction/README.md)
@@ -37,3 +45,4 @@ Comprehensive guide for developing with WebSpatial SDK.
 - [Using the Core SDK](using-the-core-sdk/README.md)
 - [FAQ](faq.md)
 - [Troubleshooting](troubleshooting.md)
+

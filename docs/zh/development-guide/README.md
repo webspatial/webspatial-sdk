@@ -1,3 +1,10 @@
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [English Documentation](../../en/development-guide/README.md) - 英文文档
+  <br>
+</div>
+
 # 开发指南
 
 - [整体介绍](../introduction/README.md)
@@ -35,3 +42,5 @@
 - [使用 Core SDK](using-the-core-sdk/README.md)
 - [常见问题](faq.md)
 - [故障排除](troubleshooting.md)
+
+

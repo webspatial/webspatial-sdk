@@ -1,12 +1,15 @@
+<div align="center">
+  <img src="../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [English Documentation](../en/README.md) - 英文文档
+	<br>
+</div>
+
 # WebSpatial 手册
 
 欢迎阅读 WebSpatial 手册。
 
 建议你按顺序阅读本文档，特别是前三章——[介绍](introduction/README.md)、[快速开始](quick-start/README.md)和[核心概念](core-concepts/README.md)。第四章提供了全面而详细的[开发文档](development-guide/README.md)，可以根据需要查阅。
-
-## 其他语言
-
-- [English Documentation](../en/README.md) - 英文文档
 
 ## 目录
 

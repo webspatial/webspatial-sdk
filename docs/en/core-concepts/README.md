@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [中文文档](../../zh/core-concepts/README.md) - Chinese documentation
+  <br>
+</div>
 
 # Core Concepts
 
@@ -16,6 +22,7 @@ Learn the fundamental concepts of the WebSpatial SDK.
 - [Scenes and Spatial Layouts](scenes-and-spatial-layouts.md)
 - [Spatialized Elements and 3D Container Elements](spatialized-elements-and-3d-container-elements.md)
 - [Full-Space and AR Capabilities](full-space-and-ar-capabilities.md)
+
 
 ---
 

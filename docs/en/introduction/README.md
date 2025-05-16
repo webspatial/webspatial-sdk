@@ -1,4 +1,11 @@
 
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [中文文档](../../zh/introduction/README.md) - Chinese documentation
+  <br>
+</div>
+
 # Introduction
 
 This section introduces the problems WebSpatial solves and the benefits it brings.

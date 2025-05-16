@@ -1,3 +1,10 @@
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+ [English Documentation](../../en/quick-start/README.md) - 英文文档
+ <br>
+</div>
+
 # 快速开始
 
 > 上一章节：[WebSpatial 是什么](../introduction/README.md)

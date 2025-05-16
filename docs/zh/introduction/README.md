@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+[English Documentation](../../en/introduction/README.md) - 英文文档
+
+</div>
+
+
 # 介绍
 
 本节介绍 WebSpatial 解决的问题以及它带来的收益。

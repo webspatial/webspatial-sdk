@@ -1,3 +1,10 @@
+<div align="center">
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
+
+  [English Documentation](../../en/core-concepts/README.md) - 英文文档
+  <br>
+</div>
+
 # 核心概念
 
 前面的章节：
