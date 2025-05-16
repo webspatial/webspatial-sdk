@@ -8,10 +8,10 @@ With Apple’s release of the new XR OS, visionOS, and its new spatial-computing
 
 The new generation of XR apps—**spatial apps**—are not cut off from the 2D apps on desktop and mobile platforms. Instead, they extend the advantages of those 2D apps, adding **spatial capabilities** that bring optional enhancements on spatial-computing platforms and free them from flat 2D windows.
 
-![image]()
-![image]()
-![image]()
-![image]()
+![intro-2-1](../../assets/intro/intro-2-1-1.gif)
+![intro-2-2](../../assets/intro/intro-2-2.png)
+![intro-2-3](../../assets/intro/intro-2-3.png)
+![intro-2-4](../../assets/intro/intro-2-4.png)
 
 ## Comparing Three App Types
 
@@ -130,8 +130,9 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 
 Before visionOS, apps on XR platforms were **completely different** from apps on desktop and mobile:
 
-![Desktop/Mobile apps]()
-![Traditional XR apps]()
+| ![intro-2-5](../../assets/intro/intro-2-5.png) | ![intro-2-6](../../assets/intro/intro-2-6.png) |
+|:---:|:---:|
+| Desktop apps | Traditional XR apps |
 
 As shown above, and in the first section’s three major advantages, **traditional XR apps lag in both user experience and development workflow, losing many benefits of desktop/mobile apps**. XR development could not reuse code, tools, or mindsets from mainstream platforms, so it struggled to support diverse business scenarios. Developer numbers stayed low, and both barrier to entry and cost remained high.
 

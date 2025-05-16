@@ -112,12 +112,17 @@ Example project: <https://github.com/webspatial/sample-techshop>
 
 The screenshots below show how this sample project looks on different platforms. Only the last screenshot runs as a [Packaged WebSpatial App]() on visionOS and activates spatial UI. All other screenshots show the project running directly in browsers that do **not** support the [WebSpatial API]() (including Safari on visionOS).
 
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
+| Large Screen | Small Window |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-desktop.png) | ![](../../assets//intro/techshop-small.png) |
+
+| Phone | Tablet |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-phone.png) | ![](../../assets//intro/techshop-pad.png) |
+
+| visionOS Safari | WebSpatial |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-safari.png) | ![](../../assets//intro/techshop-spatial.png) |
 
 ---
 

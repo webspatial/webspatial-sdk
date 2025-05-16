@@ -111,12 +111,17 @@
 
 下面这些截屏是这个示例项目在不同平台上的效果，只有最后这张截屏是作为 [Packaged WebSpatial App]() 在 visionOS 上的运行效果，启用了空间化的 UI，其他截屏都是在不支持 [WebSpatial API]() 的浏览器（包括 visionOS 上的 Safari）里直接运行的效果。
 
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
+| 桌面大屏 | 小窗口 |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-desktop.png) | ![](../../assets//intro/techshop-small.png) |
+
+| 手机版 | 平板版 |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-phone.png) | ![](../../assets//intro/techshop-pad.png) |
+
+| visionOS Safari | WebSpatial |
+|:---:|:---:|
+| ![](../../assets//intro/techshop-safari.png) | ![](../../assets//intro/techshop-spatial.png) |
 
 ---
 
