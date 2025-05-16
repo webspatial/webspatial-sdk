@@ -10,8 +10,10 @@
 2. 应用的「生存空间」更大了，更多应用有机会被作为辅助工具或伴侣来使用，**不用独自撑起整个用户场景**。
 3. 很多原本普通的内容，比如高清大图、信息可视化和视频，在大空间中获得了**新的吸引力**。
 
-![image]()
-![image]()
+<div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+  <img src="../../assets/intro/intro-1-1.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+  <img src="../../assets/intro/intro-1-2.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+</div>
 
 ## 超越 2D 平面
 
@@ -20,8 +22,10 @@ GUI 和内容都**不用局限于 2D 平面**，可以像现实世界物体一�
 1. 3D 内容可以立体的在空间中展示和使用，用户可以**直接**从各个角度看它（乃至「进入」其中），直接「上手」互动，不必跟 2D 窗口中各种低效复杂不直观的 3D 内容查看器打交道，3D 内容不会被困在这种查看器的**平面视区内或平面画布上**。
 2. GUI 不需要挤在同一个窗口中通过边框、阴影、额外留白、背景色等复杂元素来区分彼此，可以拆分到 3D 空间中获得**真正的视觉层次和信息区分度**，同时让自身保持**最简洁纯粹的状态**。
 
-![image]()
-![image]()
+<div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+  <img src="../../assets/intro/intro-1-3.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+  <img src="../../assets/intro/intro-1-4.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+</div>
 
 ## 人机交互大进化
 
@@ -30,10 +34,12 @@ GUI 和内容都**不用局限于 2D 平面**，可以像现实世界物体一�
 2. 不需要费力甩鼠标和抬着手在触屏上点来点去，多数时候**不用动手**（通过眼睛注视来做选择，手指原地捏合来做确认）。
 3. 不需要额外购买和存放硬件装置，用软件就可以灵活实现各种**专用操作工具**（就像 iPhone 中用软件来实现键盘）。
 
-![image]()
-![image]()
-![image]()
-![image]()
+<div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+  <img src="../../assets/intro/intro-1-5.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+  <video src="../../assets/intro/intro-1-6.mp4" style="max-width: 100%; flex: 1; min-width: 300px;" controls loop playsinline></video>
+  <img src="../../assets/intro/intro-1-7.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+  <img src="../../assets/intro/intro-1-8.png" style="max-width: 100%; flex: 1; min-width: 300px;">
+</div>
 
 ---
 
