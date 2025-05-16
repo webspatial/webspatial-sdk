@@ -86,11 +86,11 @@ Run the Dev Server for desktop/mobile and other non-XR platforms (keep it runnin
 npm run dev
 ```
 
-![image]()
+![](../../assets/quick/1.png)
 
 Open the URL shown in the terminal in a desktop browser such as Chrome to confirm everything works:
 
-![image]()
+![](../../assets/quick/2.png)
 
 Next, open a new terminal window (in the project root) and run another Dev Server to generate [Web-only code for WebSpatial](), used as a WebSpatial app on visionOS (keep it running in the following steps):
 
@@ -98,7 +98,7 @@ Next, open a new terminal window (in the project root) and run another Dev Serve
 XR_ENV=avp npm run dev
 ```
 
-![image]()
+![](../../assets/quick/3.png)
 
 ## 4. Package and run the WebSpatial app
 
@@ -120,8 +120,8 @@ npx webspatial-builder run --base=$XR_DEV_SERVER
 
 The visionOS simulator launches automatically, installs the packaged WebSpatial app, and runs it:
 
-![image]()
-![image]()
+![](../../assets/quick/4.png)
+![](../../assets/quick/5.png)
 
 ## 5. Set initialization properties for the launch scene
 
@@ -150,7 +150,7 @@ Run the WebSpatial packaging tool (`run` command) again. The app’s launch scen
 > A current bug may leave the launch scene blank after repackaging. If this happens, delete the app in the simulator, quit the simulator, then package and run again.
 > If the issue persists, delete `node_modules` in the project and reinstall dependencies.
 
-![image]()
+![](../../assets/quick/6.png)
 
 ## 6. Add a new scene
 
@@ -216,7 +216,7 @@ Move all existing JSX in `src/App.tsx` into the designated position in the new J
 
 The new page `/second-page` has been added:
 
-![image]()
+![](../../assets/quick/7.png)
 
 At the end of the existing content in `src/App.tsx` (below `<p className="read-the-docs">`), add a card containing:
 
@@ -247,7 +247,7 @@ At the end of the existing content in `src/App.tsx` (below `<p className="read-t
 
 Clicking the link or button opens a new [spatial-app scene]() that displays the content of `/second-page`:
 
-![image]()
+![](../../assets/intro/intro-4-8.gif)
 
 ## 7. Set initialization properties for the new scene
 
@@ -301,8 +301,8 @@ html.is-spatial {
 > [!TIP]
 > Although style changes take effect automatically via the Dev Server, HMR for WebSpatial logic in React components is not yet supported. If logic changes, refresh manually (via the scene menu in the bottom right) or restart the Dev Server to see updates.
 
-![image]()
-![image]()
+| ![](../../assets/quick/10.png) | ![](../../assets/quick/11.png) |
+|:---:|:---:|
 
 Modify `src/App.tsx` to make the two card elements [spatialized HTML elements]() by adding a `classname`.
 
