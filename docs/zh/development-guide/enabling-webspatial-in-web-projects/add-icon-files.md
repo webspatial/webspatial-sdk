@@ -18,7 +18,8 @@
 
 示例（可以直接在 demo 中使用）：
 
-![image]()
+[webspatial-icon-examples.zip](../../../assets/guide/webspatial-icon-examples.zip)
+
 
 在 PWA 原有要求的基础上，[Packaged WebSpatial App]() 对于图标有额外要求：
 

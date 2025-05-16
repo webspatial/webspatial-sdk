@@ -6,29 +6,36 @@ A [spatial app]() is composed of **scenes**.
 
 A scene is a content container centrally managed by the spatial-computing OS in the shared space. Every piece of app content must live in one or more of these containers.
 
-![image]()
-![image]()
+| ![](../../assets/concepts/3-1.png) | ![](../../assets/concepts/3-2.png) |
+|:---:|:---:|
 
 ### Window Scene
 
 The most basic **scene type** is the **window**.
 
+![](../../assets/concepts/3-3.png)
+
 Unlike a flat desktop window, a window scene can host both 2D and 3D content. All content is positioned relative to the window plane, but it **can extend forward into the 3D space in front of the plane**.
+
+![](../../assets/concepts/3-4.png)
+![](../../assets/concepts/3-5.png)
 
 A window scene has a new capability: its background and chrome can be fully transparent, making the content **appear to float independently in space**.
 
-![image]()
-![image]()
+![](../../assets/concepts/3-6.png)
+![](../../assets/concepts/3-7.png)
 
 ### Volume Scene
 
 A spatial app can also use a more three-dimensional scene type called a **volume scene** (also referred to as a spatial container, volumetric window, or volume).
 This scene is a bounded local 3D space (a sort of 3D bounding box) that has volume. It can hold 3D content **and** 2D content.
 
+![](../../assets/concepts/3-8.png)
+
 Although both window scenes and volume scenes can host 2D and 3D content, the former behaves like a **panel with depth extending forward**, while the latter behaves like a bounded **object** with full volume. The OS treats them differently within the shared space, integrates them with the environment in distinct ways, and exposes different interactions, for example separate drag behaviors and [Spatial Layout]() modes.
 
-![image]()
-![图中的共享空间里，有一个空间应用的两个场景，每个场景都是一个 Widget 小工具。场景下方有操作系统的原生工具条，可以关闭或拖拽场景]()
+![](../../assets/concepts/3-9.png)
+![](../../assets/concepts/3-10.png)
 
 ### Scenes in a WebSpatial App
 
@@ -38,11 +45,13 @@ At the same time, each scene acts as a container that loads a URL, parses, and r
 
 Unlike browser windows, scenes from different WebSpatial apps do not belong to a single browser application or get managed as multiple tabs. Each WebSpatial app owns one or more scenes independently, just like a native app.
 
+![](../../assets/concepts/3-11.png)
+
 Another difference: a WebSpatial scene **has no browser UI such as address bar, bookmarks, or history**. The whole scene can be given a transparent background, so no window chrome is visible except the **[scene menu]()**.
 
-Comparison: the left image shows the non-spatial version; the right image shows the spatial version with a fully transparent background.
-![image]()
-![image]()
+> Comparison: the left image shows the non-spatial version; the right image shows the spatial version with a fully transparent background.
+> | ![](../../assets/concepts/3-12.png) | ![](../../assets/concepts/3-13.png) |
+> |:---:|:---:|
 
 ## Scene Menu
 
@@ -58,27 +67,27 @@ Because a WebSpatial scene is essentially a web page, it inherits the same gener
 
 For these reasons, a PWA window includes native UI for safety and URL-related functions:
 
-![image]()
+![](../../assets/concepts/3-14.png)
 
 The PWA standard's [display property]() in the [Web App Manifest]() lets you control certain parts of this native UI — for example, whether **native navigation buttons** appear.
 
 > The following image shows a desktop PWA in `minimal-ui` mode (native title bar with navigation buttons).
-> ![image]()
+> ![](../../assets/concepts/3-15.png)
 >
 > The following images show an Android PWA in `minimal-ui` mode (native title bar, navigation buttons inside the menu).
-> ![image]()
-> ![image]()
+> | ![](../../assets/concepts/3-16.png) | ![](../../assets/concepts/3-17.png) |
+> |:---:|:---:|
 >
 > In `standalone` mode on Android, the PWA has no title bar and no navigation buttons; only the multitasking view shows a native menu.
-> ![image]()
-> ![image]()
+> | ![](../../assets/concepts/3-18.png) | ![](../../assets/concepts/3-19.png) |
+> |:---:|:---:|
 
 Because a WebSpatial app is **built on top of a PWA** (), every scene includes a native **scene menu**, just like a PWA window.
 
 > [!NOTE]
 > The current UI is collapsed by default. When expanded it offers URL view/copy, navigation buttons (back, refresh), and other features depending on the `display` property set in the Web App Manifest.
 
-![image]()
+![](../../assets/concepts/3-20.png)
 
 ## Scene Properties
 
@@ -86,20 +95,20 @@ A WebSpatial window scene exposes several scene properties that the developer ca
 
 The window plane can use a **semi-transparent** [material background](), rendered dynamically against the surrounding environment so it remains legible in any context. You can also round the four corners instead of keeping the default sharp angles.
 
-![image]()
+![](../../assets/concepts/3-21.png)
 
 Alternatively, set the background to a [fully transparent]() material with no border, making the page content appear to float freely.
 
-![image]()
-![image]()
+![](../../assets/concepts/3-22.png)
+![](../../assets/concepts/3-23.png)
 
 You can create native UI elements that hover on the window edge and provide global functionality (for example, a global navigation bar).
 
 > [!TIP]
 > The current version of WebSpatial does not support this feature natively. You can simulate it in a fully transparent window scene using regular HTML/CSS.
 
-![image]()
-![image]()
+| ![](../../assets/concepts/3-24.png) | ![](../../assets/concepts/3-25.png) |
+|:---:|:---:|
 
 ## Spatial Layout
 
@@ -117,8 +126,8 @@ To simplify implementation, spatial layout is **scene-centric** by default. All 
 
 For example, as the distance between scene and user changes, a reading-oriented window scene may keep the same perceived size (smaller when close, larger when far), whereas a volume scene that mimics a real object will appear larger when nearer and smaller when farther.
 
-![image]()
-![image]()
+| ![](../../assets/concepts/3-26.gif) | ![](../../assets/concepts/3-27.gif) |
+|:---:|:---:|
 
 ## Scene Initialization
 
@@ -133,8 +142,8 @@ After creation, code **cannot** modify these properties; they change only throug
 The classic example is the scene’s [initial size (`defaultSize`)]().
 
 > Example from the Quick Start:
-> ![image]()
-> ![image]()
+> | ![](../../assets/concepts/3-28.png) | ![](../../assets/concepts/3-29.png) |
+> |:---:|:---:|
 
 ## Start Scene
 
@@ -152,7 +161,7 @@ By default, it is defined by `start_url` in the Web App Manifest.
 If the WebSpatial app is launched through a specific URL, the start scene loads that URL instead.
 
 > In the Quick Start, clicking buttons and links in the start scene opens two new scenes:
-> ![image]()
+> ![](../../assets/concepts/3-30.png)
 
 ---
 

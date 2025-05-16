@@ -86,11 +86,11 @@ export default defineConfig({
 npm run dev
 ```
 
-![image]()
+![](../../assets/quick/1.png)
 
 在桌面浏览器（比如 Chrome）里打开终端中显示的 URL，确认效果正常：
 
-![image]()
+![](../../assets/quick/2.png)
 
 接下来，新建一个终端窗口（进入项目根目录下），同时运行另一个 Dev Server，生成 [WebSpatial 专用 Web 代码]()，用于 visionOS 平台上的 WebSpatial 应用（在后续步骤中始终保持运行）：
 
@@ -98,7 +98,7 @@ npm run dev
 XR_ENV=avp npm run dev
 ```
 
-![image]()
+![](../../assets/quick/3.png)
 
 ## 4. 打包和运行 WebSpatial 应用
 
@@ -120,8 +120,8 @@ npx webspatial-builder run --base=$XR_DEV_SERVER
 
 visionOS 模拟器会被自动调起，自动安装打包出的 WebSpatial 应用，自动运行应用：
 
-![image]()
-![image]()
+![](../../assets/quick/4.png)
+![](../../assets/quick/5.png)
 
 ## 5. 设置起始场景的初始化属性
 
@@ -149,7 +149,7 @@ touch public/manifest.webmanifest
 > [!WARNING]
 > 目前存在 bug，可能导致有时在重新打包和运行后，应用的起始场景是空白，这时只要手动删除模拟器中的应用，退出模拟器，重新打包运行，就会正常。如果还不正常，可以删除当前项目的 node_modules 重装依赖。
 
-![image]()
+![](../../assets/quick/6.png)
 
 ## 6. 添加新场景
 
@@ -215,7 +215,7 @@ npm install --save react-router-dom
 
 新增了页面 `/second-page`：
 
-![image]()
+![](../../assets/quick/7.png)
 
 在 `src/App.tsx` 中原有内容末尾（`<p className="read-the-docs">` 下面）新增一个 card，其中包含：
 
@@ -246,7 +246,7 @@ npm install --save react-router-dom
 
 点击链接或按钮，出现新的[空间应用场景]()，其中显示 `/second-page` 的内容：
 
-![image]()
+![](../../assets/intro/intro-4-8.gif)
 
 ## 7. 设置新场景的初始化属性
 
@@ -274,7 +274,7 @@ import { initScene } from "@webspatial/react-sdk";
 
 点击按钮，可以看到 `secondScene` 场景的默认大小改变了：
 
-![image]()
+![](../../assets/quick/9.png)
 
 ## 8. 添加材质背景
 
@@ -300,8 +300,8 @@ html.is-spatial {
 > [!TIP]
 > 注意：虽然这里的修改可以通过 DevServer 自动生效，但由于 WebSpatial API 暂时还不支持 React 组件中具体逻辑的 HMR，所以如果有逻辑变动，需要手动刷新页面（通过右下角的场景菜单）或重启 devServer，才能看到改动生效
 
-![image]()
-![image]()
+| ![](../../assets/quick/10.png) | ![](../../assets/quick/11.png) |
+|:---:|:---:|
 
 修改 `src/App.tsx`，把两个 card 元素[设置为「空间化 HTML 元素」]()，添加 `classname`。
 
@@ -351,8 +351,8 @@ html.is-spatial {
 }
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/12.png) | ![](../../assets/quick/13.png) |
+|:---:|:---:|
 
 ## 9. 「抬升」空间化元素
 
@@ -391,8 +391,8 @@ html.is-spatial {
     top: 20px;
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/14.png) | ![](../../assets/quick/15.png) |
+|:---:|:---:|
 
 另一种「抬升」方法是用 CSS Transform，不仅可以改变 3D 空间中 Z 轴上的定位，还可以[在 3D 空间中变形和旋转]()。
 
@@ -409,8 +409,8 @@ html.is-spatial {
 +   transform: translateZ(30px) rotateX(30deg);
 ```
 
-![image]()
-![image]()
+| ![](../../assets/quick/16.png) | ![](../../assets/quick/17.png) |
+|:---:|:---:|
 
 ## 10. 添加静态 3D 内容
 

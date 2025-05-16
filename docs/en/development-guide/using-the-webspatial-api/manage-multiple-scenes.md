@@ -41,8 +41,8 @@ Based on the [Quick-Start sample]():
 
 In this demo, the entry scene originally used the size shown in the left image (landscape layout). After adding the configuration above to the Web App Manifest, the entry scene switches to the portrait layout shown in the right image.
 
-![image]()
-![image]()
+| ![](../../../assets/concepts/3-28.png) | ![](../../../assets/concepts/3-29.png) |
+|:---:|:---:|
 
 > [!NOTE]
 > In the current WebSpatial SDK:
@@ -102,7 +102,7 @@ Based on the [Quick-Start sample]():
 Clicking the link or the button opens new scenes.
 Every scene shows the content of `/second-page`, because that URL is opened in each new scene. Clicking the link multiple times produces multiple scenes. Clicking the button multiple times produces a single scene, because the `window.open` call gives it the window name `"secondScene"`.
 
-![image]()
+![](../../../assets/intro/intro-4-8.gif)
 
 Because scenes are [centrally managed]() by the operating system in spatial apps, developers cannot arbitrarily control them. Instead, scenes must be initialized with desired **initial values** at creation time; the OS decides whether to honor them. After creation, these properties **cannot be changed by code** and are determined only by the OS and the user.
 
@@ -209,7 +209,7 @@ When you click the link, no window name is supplied, so no initialization settin
 
 When you click the button, `initScene()` supplies settings for the window name `"secondScene"`. The subsequent `window.open` call skips the waiting state and creates the scene directly with those settings (right window in the image).
 
-![image]()
+![](../../../assets/concepts/3-30.png)
 
 ## Managing Multiple Scenes
 

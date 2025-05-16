@@ -115,16 +115,12 @@ Because `start_url` does not include the domain of your local or preview server,
 
 Provide the App ID (Bundle ID) needed by App Store Connect via `--bundle-id`. You must [register a dedicated Bundle ID]() in App Store Connect first:
 
-![image]()
-
 #### `$XR_TEAM_ID` (`--teamId`)
 
 > [!IMPORTANT]
 > Required during both build (`build:avp`) and distribution (`publish:avp`).
 
 Provide your Apple Developer Team ID via `--teamId`.
-
-![image]()
 
 ### `publish`
 

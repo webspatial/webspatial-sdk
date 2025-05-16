@@ -29,7 +29,7 @@ html.is-spatial {
   border-radius: 10%;
 ```
 
-![image]()
+![](../../../assets/guide/2-1.png)
 
 - To add a translucent background, the default value is `translucent`. If the window is nested inside other translucent material content and needs to be visually separated, you can choose from [other material options]().
 - Use `border-radius` to control the roundness of the window border.
@@ -46,7 +46,7 @@ html.is-spatial {
   --xr-background-material: transparent;
 ```
 
-![image]()
+![](../../../assets/guide/2-2.png)
 
 ## Translucent HTML Elements
 
@@ -71,7 +71,7 @@ Example based on the [Quick Start sample]():
 
 Removing the background-material property from the `.link-card` element reveals that it is transparent by default.
 
-![image]()
+![](../../../assets/guide/2-3.png)
 
 Whether or not the spatialized HTML element is elevated, you can set `--xr-background-material: translucent` (or one of the other options) to give it a translucent background.
 
@@ -82,7 +82,7 @@ Example based on the [Quick Start sample]():
 +   --xr-background-material: translucent;
 ```
 
-![image]()
+![](../../../assets/guide/2-4.png)
 
 ## Additional Material Options
 
@@ -92,8 +92,8 @@ Besides `none` (no custom setting), `transparent` (fully transparent), and `tran
 - `thick` – Suitable for content nested inside another material background.
 - `thin` – Good for interactive elements and highlighted selections.
 
-![image]()
-![image]()
+![](../../../assets/concepts/4-4.png)
+![](../../../assets/concepts/4-3.png)
 
 Example from the [Techshop demo]():
 
@@ -128,7 +128,7 @@ Example from the [Techshop demo]():
 
 The sidebar menu itself uses a translucent material background. Items inside the menu use `thin` or `thick` depending on whether they are selected, creating clear visual separation from the menu background.
 
-![image]()
+![](../../../assets/guide/2-5.png)
 
 ## Content Visibility and Opacity
 

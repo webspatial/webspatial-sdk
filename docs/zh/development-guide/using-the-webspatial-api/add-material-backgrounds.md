@@ -29,7 +29,7 @@ html.is-spatial {
   border-radius: 10%;
 ```
 
-![image]()
+![](../../../assets/guide/2-1.png)
 
 - 如果想添加半透明材质背景，一般默认使用 `translucent` 这个值，如果被嵌套在其他半透明材质背景的内容中，想要做区分，可以用[其他材质选项]()
 - 可以用 border-radius 控制窗口边框的圆角程度
@@ -46,7 +46,7 @@ html.is-spatial {
   --xr-background-material: transparent;
 ```
 
-![image]()
+![](../../../assets/guide/2-2.png)
 
 ## 半透明的 HTML 元素
 
@@ -72,7 +72,7 @@ html.is-spatial {
 ```
 把 `.link-card` 元素的背景材质属性移除掉，可以看到它本来就是全透明的。
 
-![image]()
+![](../../../assets/guide/2-3.png)
 
 无论空间化 HTML 元素是否「抬升」，都可以用 `--xr-background-material: translucent` 或更多材质选项，设置成半透明材质背景。
 
@@ -83,7 +83,7 @@ html.is-spatial {
 +   --xr-background-material: translucent;
 ```
 
-![image]()
+![](../../../assets/guide/2-4.png)
 
 ## 更多材质选项
 
@@ -93,8 +93,8 @@ html.is-spatial {
 - `thick` - 适合嵌套在其他材质背景内部
 - `thin` - 适合用于可交互元素和被中选区域
 
-![image]()
-![image]()
+![](../../../assets/concepts/4-4.png)
+![](../../../assets/concepts/4-3.png)
 
 [Techshop demo]() 中的示例：
 
@@ -129,7 +129,7 @@ html.is-spatial {
 
 侧栏菜单本身是半透明材质背景，菜单中的选项在选中和未选中状态下，分别使用了 `thin` 或 `thick` 的半透明材质，跟菜单本身形成区分。
 
-![image]()
+![](../../../assets/guide/2-5.png)
 
 ## 内容可见性和透明度
 

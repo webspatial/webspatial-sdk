@@ -49,7 +49,7 @@ The WebSpatial SDK has two main parts.
 
 If you install the upcoming **WebSpatial Browser** on the target platform, you can skip packaging and app-store submission. The browser already contains the WebSpatial App Shell, so you can open any WebSpatial App URL directly and experience it in spatial form.
 
-![image]()
+![](../../assets/concepts/2-1.png)
 
 ---
 
