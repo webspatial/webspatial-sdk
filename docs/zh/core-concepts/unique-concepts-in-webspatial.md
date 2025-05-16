@@ -52,7 +52,7 @@ WebSpatial SDK 由两大部分组成。
 
 如果提前安装了对应平台上的 **WebSpatial Browser 应用**（开发中），也可以不用打包、安装和上架应用商店，因为这个浏览器中内置了 WebSpatial App Shell，所以可以直接在这个浏览器里访问各个 WebSpatial App 的网址，获得空间化的使用体验。
 
-![image]()
+![](../../assets/concepts/2-1.png)
 
 ---
 

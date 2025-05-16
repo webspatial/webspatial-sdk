@@ -10,8 +10,8 @@ Within this single 3D space, multiple apps can coexist harmoniously – they fit
 
 These **Multitasking Apps** include not only traditional 2D apps but also **Spatial Apps** that take advantage of 3D space and contain 3D content.
 
-![image]()
-![image]()
+| ![](../../assets/concepts/1-1.png) | ![](../../assets/concepts/1-2.png) |
+|:---:|:---:|
 
 ## Spatial Apps
 
@@ -29,12 +29,11 @@ Apps built this way are called **Spatial Apps**.
 
 Spatial Apps are the [new generation of XR apps](). They **preserve the strengths of 2D apps** from desktop and mobile platforms while gaining **optional, progressive [spatial enhancements]()** on spatial-computing platforms.
 
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
-![image]()
+| ![](../../assets/concepts/1-3.png) | ![](../../assets/concepts/1-4.png) |
+|:---:|:---:|
+| ![](../../assets/concepts/1-5.png) | ![](../../assets/concepts/1-6.png) |
+|:---:|:---:|
+| ![](../../assets/concepts/1-7.png) | ![](../../assets/concepts/1-8.png) |
 
 > [!NOTE]
 > Example apps shown above:
@@ -55,17 +54,17 @@ Because of this, Spatial Apps cannot freely build independent rendering pipeline
 
 [Unified Rendering App Model]():
 
-![image]()
+![image](../../assets/concepts/1-9.png)
 
 Unified rendering architecture on visionOS:
 
-![image]()
+![image](../../assets/concepts/1-10.png)
 
 Excerpts from the WWDC session on unified rendering:
 
-![image]()
-![image]()
-![image]()
+![image](../../assets/concepts/1-11.png)
+![image](../../assets/concepts/1-12.png)
+![image](../../assets/concepts/1-13.png)
 
 ---
 

@@ -22,24 +22,24 @@ A spatialized element mainly gains two new capabilities:
 1. **Dynamic backgrounds**
    It can render its background based on the spatial environment around the app—for example, using translucent materials instead of a fixed solid color.
 
-   ![image]()
+![](../../assets/concepts/4-1.png)
 
 2. **3D elevation**
    It can move, transform, and be laid out along the Z-axis in front of the web-page window, allowing it to be “lifted” into 3D space.
 
-   ![image]()
+![](../../assets/concepts/4-2.png)
 
 Both capabilities support nesting:
 
 1. If the window or a parent element already has a translucent material background, its child elements can still use different translucent material backgrounds.
 
-   ![image]()
-   ![image]()
+![](../../assets/concepts/4-3.png)
+![](../../assets/concepts/4-4.png)
 
 2. If the parent element has been lifted and rotated in 3D space, child elements can continue to be lifted and rotated on that basis.
 
-   ![image]()
-   ![image]()
+![](../../assets/concepts/4-5.jpeg)
+![](../../assets/concepts/4-6.png)
 
 ## 3D Content Container Elements
 
@@ -70,12 +70,12 @@ There are two kinds of 3D content container elements.
 - **Static 3D content containers**
   Their 3D content comes from pre-authored [3D model files]().
 
-  ![image]()
+![](../../assets/concepts/4-7.png)
 
 - **Dynamic 3D content containers**
   Their 3D content is generated in real time by a [3D engine]().
 
-  ![image]()
+![](../../assets/concepts/4-8.png)
 
 ## Interaction with 2D Content
 
@@ -90,7 +90,7 @@ The default interaction mode on visionOS is called **Natural Interaction** and i
   - Moving a finger without touching an object is “selection (navigation),” while touching the object is “activation (trigger).”
   - As with touchscreens, after the finger touches an object it can move before releasing to fire move events.
 
-![image]()
+![](../../assets/concepts/4-9.png)
 
 The visionOS browser engine already lets 2D web content support Natural Interaction:
 
