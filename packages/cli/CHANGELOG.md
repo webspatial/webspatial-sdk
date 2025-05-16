@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.17
+
+### Patch Changes
+
+- 56e6a1d: Fix cli run command repeatedly executed bug
+  - @webspatial/platform-visionos@0.1.17
+
 ## 0.1.16
 
 ### Patch Changes

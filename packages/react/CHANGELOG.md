@@ -1,5 +1,14 @@
 # @webspatial/react-sdk
 
+## 0.1.17
+
+### Patch Changes
+
+- 2a6ba54: set spatialdiv's css transform to 'translateZ(0)' if transform value …
+- dbea2f0: add type declare for style.enableXr
+- 3db2b7b: export type WindowContainerOptions
+  - @webspatial/core-sdk@0.1.17
+
 ## 0.1.16
 
 ### Patch Changes
