@@ -17,6 +17,7 @@ env:
 
 jobs:
   version:
+    if: github.repository == 'webspatial/webspatial-sdk'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
