@@ -40,7 +40,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/webspatial/webspatial-sdk.git"
+    "url": "https://github.com/webspatial/webspatial-sdk.git",
+    "directory": "packages/react"
   },
   "author": "",
   "license": "ISC",
