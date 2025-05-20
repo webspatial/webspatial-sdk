@@ -51,10 +51,10 @@ npm run dev
 ## Testing on Apple Vision Pro Simulator
 
 1. Open the project in Xcode:
-   - It is located in `/builder/visionOSApp/web-spatial.xcodeproj`
+   - It is located in `/packages/visionOS/web-spatial.xcodeproj`
    - Click play to launch in the simulator
    - You should now see webspatial running in the simulator
-   - To set a custom initial URL, you can modify `web_spatialApp.swift`
+   - To set a custom initial URL, you can modify `manifest.swift`
 
 ## License
 
