@@ -335,9 +335,6 @@ importers:
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
-      loglevel:
-        specifier: ^1.9.1
-        version: 1.9.2
       react:
         specifier: '>=18.0.0'
         version: 19.1.0
