@@ -6,14 +6,14 @@ Previous section: [Make the Web Spatial Too](make-the-web-spatial-too.md)
 
 While the mainstream Web ecosystem is ultimately built on HTML/CSS, most Web developers **do not work directly with raw HTML/CSS** when creating applications. Instead, they rely on **UI frameworks or even full-featured application frameworks**. React is currently the most popular choice: developers use HTML through React’s JSX API and component model, and CSS through APIs such as TailwindCSS, PostCSS, or CSS-in-JS.
 
-To address pressing real-world needs without delay, the WebSpatial project provides a **[WebSpatial SDK]() designed for Web frameworks (for example, React + Vite)**. This lets Web developers immediately start using the WebSpatial API within their framework’s HTML (JSX) and CSS APIs, without waiting for browser engines to ship these capabilities.
+To address pressing real-world needs without delay, the WebSpatial project provides a **[WebSpatial SDK](#) designed for Web frameworks (for example, React + Vite)**. This lets Web developers immediately start using the WebSpatial API within their framework’s HTML (JSX) and CSS APIs, without waiting for browser engines to ship these capabilities.
 
-In its first release, WebSpatial offers **out-of-the-box support for [React projects]() (compatible with Vite and other mainstream Web build tools)**.
+In its first release, WebSpatial offers **out-of-the-box support for [React projects](#) (compatible with Vite and other mainstream Web build tools)**.
 
 > [!NOTE]
 > Additional UI framework support will be added soon. WebSpatial also offers a **framework-agnostic Core SDK composed solely of pure JS APIs**, so developers can implement the WebSpatial API in other frameworks or import specific features directly from the Core SDK.
 
-You can call WebSpatial’s [**HTML API**]() and [**DOM API**]() directly inside React JSX:
+You can call WebSpatial’s [**HTML API**](#) and [**DOM API**](#) directly inside React JSX:
 
 ```diff
 -             <div className="card count-card">
@@ -30,7 +30,7 @@ You can call WebSpatial’s [**HTML API**]() and [**DOM API**]() directly inside
 
 <!-- TODO：补充 Model 的例子 -->
 
-You can also use WebSpatial’s [**CSS API**]() in a React project together with TailwindCSS, PostCSS, Styled Components, and similar solutions:
+You can also use WebSpatial’s [**CSS API**](#) in a React project together with TailwindCSS, PostCSS, Styled Components, and similar solutions:
 
 ```diff
 .count-card {
@@ -48,7 +48,7 @@ You can also use WebSpatial’s [**CSS API**]() in a React project together with
   }
 ```
 
-You can use the **existing link element and window-related DOM APIs** defined in Web standards—together with WebSpatial’s new **[Scene Initialization]() API**—to treat [scenes in a spatial app]() as browser windows and manage them accordingly.
+You can use the **existing link element and window-related DOM APIs** defined in Web standards—together with WebSpatial’s new **[Scene Initialization](#) API**—to treat [scenes in a spatial app](#) as browser windows and manage them accordingly.
 
 
 ```diff
@@ -80,7 +80,7 @@ You can use the **existing link element and window-related DOM APIs** defined in
                 </p>
 ```
 
-You can manage **app-level configurations** such as the WebSpatial app’s start scene, offline packaging, native window UI, and app icons by using the **[Web App Manifest]() from the PWA standard**.
+You can manage **app-level configurations** such as the WebSpatial app’s start scene, offline packaging, native window UI, and app icons by using the **[Web App Manifest](#) from the PWA standard**.
 
 
 ```json5
@@ -110,7 +110,7 @@ A Web project that integrates the WebSpatial SDK is still a **cross-platform web
 
 Example project: <https://github.com/webspatial/sample-techshop>
 
-The screenshots below show how this sample project looks on different platforms. Only the last screenshot runs as a [Packaged WebSpatial App]() on visionOS and activates spatial UI. All other screenshots show the project running directly in browsers that do **not** support the [WebSpatial API]() (including Safari on visionOS).
+The screenshots below show how this sample project looks on different platforms. Only the last screenshot runs as a [Packaged WebSpatial App](#) on visionOS and activates spatial UI. All other screenshots show the project running directly in browsers that do **not** support the [WebSpatial API](#) (including Safari on visionOS).
 
 | Large Screen | Small Window |
 |:---:|:---:|

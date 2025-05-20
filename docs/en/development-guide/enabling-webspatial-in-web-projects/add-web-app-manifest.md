@@ -40,22 +40,22 @@ The manifest must contain at least the following properties:
 
 > [!IMPORTANT]
 > The [Add Icon Files](add-icon-files.md) section lists the exact icon requirements and provides ready-to-use sample icons.
-> If you only need to build an app that installs and runs in the visionOS simulator, you may omit the manifest entirely or exclude any of the properties above. For missing properties, [WebSpatial Builder]() will fill in default placeholders automatically.
+> If you only need to build an app that installs and runs in the visionOS simulator, you may omit the manifest entirely or exclude any of the properties above. For missing properties, [WebSpatial Builder](#) will fill in default placeholders automatically.
 
 ## How manifest properties affect a WebSpatial app
 
 ### `start_url`
 
-The entry point that loads when the app starts. This property both sets the WebSpatial app’s default [**Start Scene**]() and **determines how the app is packaged**:
+The entry point that loads when the app starts. This property both sets the WebSpatial app’s default [**Start Scene**](#) and **determines how the app is packaged**:
 
-- If `start_url` is an absolute URL (including an `http`-prefixed domain) or is converted to one via [`--base`](), the packaged app will **not** include your site’s built assets (for example, the files Vite outputs to `dist/`). Instead, the app will **load all pages and static files on demand** from the server at runtime.
-- If `start_url` is a relative path and you do **not** supply a domain through [`--base`](), the packaged app will bundle your entire site (for example, everything in `dist/`). This produces a **fully offline** app that loads HTML and other static files directly from the package.
+- If `start_url` is an absolute URL (including an `http`-prefixed domain) or is converted to one via [`--base`](#), the packaged app will **not** include your site’s built assets (for example, the files Vite outputs to `dist/`). Instead, the app will **load all pages and static files on demand** from the server at runtime.
+- If `start_url` is a relative path and you do **not** supply a domain through [`--base`](#), the packaged app will bundle your entire site (for example, everything in `dist/`). This produces a **fully offline** app that loads HTML and other static files directly from the package.
 
 ### `scope`
 
-(Optional) The [URL scope]() of the app. Defaults to all pages under the same path as `start_url`.
+(Optional) The [URL scope](#) of the app. Defaults to all pages under the same path as `start_url`.
 
-This property decides which URLs open inside the WebSpatial app (either navigating within the current [Scene]() or opening a new one). URLs outside the scope open in the browser.
+This property decides which URLs open inside the WebSpatial app (either navigating within the current [Scene](#) or opening a new one). URLs outside the scope open in the browser.
 
 ### `display`
 
@@ -71,12 +71,12 @@ Sets the display mode, which controls which native options appear in each Scene�
 
 ### `icons`
 
-Icons used during installation. [WebSpatial Builder]() will read compatible files specified here.
+Icons used during installation. [WebSpatial Builder](#) will read compatible files specified here.
 
 At minimum, include:
 
 - An icon with `"purpose": "any"` (required for all PWAs)
-- A maskable icon at least 1024×1024 px with `"purpose": "maskable"` (required by [visionOS apps]())
+- A maskable icon at least 1024×1024 px with `"purpose": "maskable"` (required by [visionOS apps](#))
 
 > [!IMPORTANT]
 > Manifest properties not mentioned above are currently ignored by WebSpatial apps.

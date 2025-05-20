@@ -7,7 +7,7 @@
 
 ---
 
-接下来，开始在 Web 项目中引入 [WebSpatial API]()，搭建起 WebSpatial 的开发环境。
+接下来，开始在 Web 项目中引入 [WebSpatial API](#)，搭建起 WebSpatial 的开发环境。
 
 - [前置任务：成为（最简单的）PWA](prerequisite-become-a-minimal-pwa.md)
 - [步骤 1：安装 WebSpatial SDK](step-1-install-the-webspatial-sdk.md)

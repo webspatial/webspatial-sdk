@@ -4,7 +4,7 @@ Current location: [Step 3: Integrate the WebSpatial SDK into Web Build Tools](st
 
 ---
 
-To use the [WebSpatial API]() inside a UI framework such as React, you need to integrate WebSpatial’s framework SDK (currently only the React SDK) into the JS/TS compiler used by your Web project. This allows the SDK to affect JSX transforms and other stages that involve the HTML/CSS APIs.
+To use the [WebSpatial API](#) inside a UI framework such as React, you need to integrate WebSpatial’s framework SDK (currently only the React SDK) into the JS/TS compiler used by your Web project. This allows the SDK to affect JSX transforms and other stages that involve the HTML/CSS APIs.
 
 > [!IMPORTANT]
 > In builds targeting desktop/mobile platforms and regular browsers, the SDK is inactive—it adds no extra code and makes no changes to behavior or performance. See the next section, “[Generate a WebSpatial-Specific Website](generate-a-webspatial-specific-website.md),” for details.

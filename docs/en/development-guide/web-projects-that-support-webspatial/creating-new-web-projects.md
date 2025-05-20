@@ -9,8 +9,8 @@
 To build a brand-new WebSpatial project from scratch, first create a modern Web project (currently React-only) that meets the following requirements:
 
 - Use HTML APIs (for example, JSX) through a UI framework such as React
-- Use CSS APIs through the same UI framework (supports [PostCSS, TailwindCSS](), CSS-in-JS, and other approaches)
-- Manage project dependencies with npm or any npm-compatible package manager (for example, [pnpm]())
+- Use CSS APIs through the same UI framework (supports [PostCSS, TailwindCSS](#), CSS-in-JS, and other approaches)
+- Manage project dependencies with npm or any npm-compatible package manager (for example, [pnpm](#))
 - Compile and build HTML and static web assets (JS, CSS, images, etc.) that run directly in desktop / mobile browsers
 - Run a Web server that exposes URLs accessible from desktop / mobile browsers
 
@@ -20,9 +20,9 @@ To build a brand-new WebSpatial project from scratch, first create a modern Web 
 
 ## Initial Project Templates
 
-Below are several options for creating a modern Web project that satisfies the requirements above. Any of these can serve as the starting point before you add the [WebSpatial SDK]().
+Below are several options for creating a modern Web project that satisfies the requirements above. Any of these can serve as the starting point before you add the [WebSpatial SDK](#).
 
-> Ensure Node.js is installed first. See the [official Node.js site]() for installation instructions.
+> Ensure Node.js is installed first. See the [official Node.js site](#) for installation instructions.
 
 ### React + Vite
 

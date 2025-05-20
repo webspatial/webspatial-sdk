@@ -5,9 +5,9 @@
 
 ---
 
-除了「[配置 JS/TS 编译器](configure-js-ts-compiler.md)」，集成了 [WebSpatial SDK]() 的 Web 项目还要加入一些必要的性能优化和默认配置（「惯例优先于配置」），这些优化和配置需要基于项目中的 Web 构建工具和 Web Server 来实现。
+除了「[配置 JS/TS 编译器](configure-js-ts-compiler.md)」，集成了 [WebSpatial SDK](#) 的 Web 项目还要加入一些必要的性能优化和默认配置（「惯例优先于配置」），这些优化和配置需要基于项目中的 Web 构建工具和 Web Server 来实现。
 
-如果当前项目用的是 Next.js、Vite、rsbuild 这样集成了 Web Builder 和 Web Server、抽象程度较高的主流工程方案，只需要在它们的配置里加入[对应的 WebSpatial 插件]()。这些开箱即用的插件可以免去自行配置的麻烦、减少项目中需要复制粘贴的样板代码。
+如果当前项目用的是 Next.js、Vite、rsbuild 这样集成了 Web Builder 和 Web Server、抽象程度较高的主流工程方案，只需要在它们的配置里加入[对应的 WebSpatial 插件](#)。这些开箱即用的插件可以免去自行配置的麻烦、减少项目中需要复制粘贴的样板代码。
 
 如果当前项目是直接使用 rspack / webpack 这样更底层的 Web Builder 工具，可以基于本文档中的配置指南，手动集成这些优化和默认配置。
 

@@ -4,7 +4,7 @@ Basic concept: [Spatialized Elements and 3D Container Elements](../../core-conce
 
 ---
 
-> Because the [WebSpatial SDK]() currently offers only a React SDK, all examples in this document use React.
+> Because the [WebSpatial SDK](#) currently offers only a React SDK, all examples in this document use React.
 >
 > APIs covered in this section:
 > - `enable-xr`, `__enableXr__`, `enableXr`
@@ -12,9 +12,9 @@ Basic concept: [Spatialized Elements and 3D Container Elements](../../core-conce
 
 ## Enable spatialization
 
-With the current WebSpatial SDK an HTML element must be marked with a temporary flag before you can use any [other spatial APIs]().
+With the current WebSpatial SDK an HTML element must be marked with a temporary flag before you can use any [other spatial APIs](#).
 
-> In a future W3C specification an element will not need an explicit flag. Using a spatial API will implicitly make it a [spatialized HTML element](). For now the flag is required for performance and other practical reasons.
+> In a future W3C specification an element will not need an explicit flag. Using a spatial API will implicitly make it a [spatialized HTML element](#). For now the flag is required for performance and other practical reasons.
 
 You can apply the flag in three ways:
 
@@ -101,11 +101,11 @@ const Card = ({
 </Card>
 ```
 
-After the flag is applied the element keeps all of its original capabilities and also gains access to the [spatial APIs]() provided by the WebSpatial SDK, including the CSS APIs and DOM APIs described below.
+After the flag is applied the element keeps all of its original capabilities and also gains access to the [spatial APIs](#) provided by the WebSpatial SDK, including the CSS APIs and DOM APIs described below.
 
 ## Cross-platform behavior
 
-A spatialized element has spatial capabilities only when running inside the [WebSpatial App Shell]().
+A spatialized element has spatial capabilities only when running inside the [WebSpatial App Shell](#).
 On desktop or mobile browsers the build output does **not** include the WebSpatial SDK implementation. Calls to the WebSpatial API are removed automatically, and the elements remain ordinary HTML elements in the React DOM.
 
 You therefore **do not need any if-else checks** when spatializing elements. The API works cross-platform by default.
@@ -185,7 +185,7 @@ CSS Modules, PostCSS, and other pre-compiled CSS pipelines work as well.
 
 ## DOM capabilities
 
-If you bypass React and manipulate the element directly through `querySelector` or similar DOM APIs, the [WebSpatial API will not work correctly]().
+If you bypass React and manipulate the element directly through `querySelector` or similar DOM APIs, the [WebSpatial API will not work correctly](#).
 
 Instead, obtain the DOM node via React’s Ref API, for example:
 

@@ -6,8 +6,8 @@ Currently located in: [Step&nbsp;3: Integrate WebSpatial SDK into Web Build Tool
 
 The previous section, **[Generate a WebSpatial-Specific Website](generate-a-webspatial-specific-website.md)**, explained that WebSpatial SDK can automatically build two sets of site assets:
 
-* One set targets desktop/mobile platforms and regular browsers and **does not** include the [WebSpatial SDK]().
-* The other set targets the [WebSpatial App Shell]() and **does** include the WebSpatial SDK.
+* One set targets desktop/mobile platforms and regular browsers and **does not** include the [WebSpatial SDK](#).
+* The other set targets the [WebSpatial App Shell](#) and **does** include the WebSpatial SDK.
 
 Your own application code (both JS and CSS) may also contain logic that is specific to WebSpatial apps, such as:
 
@@ -45,7 +45,7 @@ export default defineConfig({
 ```
 
 > [!NOTE]
-> The [WebSpatial Vite plugin]() automatically injects **`__XR_ENV_BASE__`**, so you can skip the manual config above.
+> The [WebSpatial Vite plugin](#) automatically injects **`__XR_ENV_BASE__`**, so you can skip the manual config above.
 
 See the usage example in the **[Quick Start](../quick-start/README.md)** guide.
 

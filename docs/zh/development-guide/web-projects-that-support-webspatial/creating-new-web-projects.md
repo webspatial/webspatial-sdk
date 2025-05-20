@@ -9,8 +9,8 @@
 要从零开始创建一个全新的 WebSpatial 项目，首先要创建一个现代的 Web 项目（暂时只支持 React 项目），具备以下要素：
 
 - 能通过 UI 框架（比如 React）使用 HTML API（比如 JSX 语法）
-- 能通过 UI 框架（比如 React）使用 CSS API（包括 [PostCSS、TailwindCSS]()、CSS In JS 等不同方案）
-- 通过 npm 或兼容 npm 的包管理工具（比如 [pnpm]()）来管理项目的依赖
+- 能通过 UI 框架（比如 React）使用 CSS API（包括 [PostCSS、TailwindCSS](#)、CSS In JS 等不同方案）
+- 通过 npm 或兼容 npm 的包管理工具（比如 [pnpm](#)）来管理项目的依赖
 - 能编译构建出在桌面/移动浏览器里可直接运行的 HTML 和静态 web 文件（JS、CSS、图片等）
 - 能运行 Web Server，生成能在桌面/移动浏览器直接加载访问的 URL
 
@@ -20,9 +20,9 @@
 
 ## 初始项目模版
 
-以下是一些例子，你可以通过其中任一方式，创建具备这些要素的现代 Web 项目，作为引入 [WebSpatial SDK]() 之前的起始状态。
+以下是一些例子，你可以通过其中任一方式，创建具备这些要素的现代 Web 项目，作为引入 [WebSpatial SDK](#) 之前的起始状态。
 
-> 需要先确认 Node.js 已经安装，安装方法见 [Node.js 官网]()
+> 需要先确认 Node.js 已经安装，安装方法见 [Node.js 官网](#)
 
 ### React + Vite
 
