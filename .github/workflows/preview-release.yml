@@ -35,4 +35,4 @@ jobs:
       - name: Install dependencies and build
         run: pnpm run setup
       
-      - run: pnpm dlx pkg-pr-new@0.0 publish --pnpm ./packages/*
+      - run: pnpm dlx pkg-pr-new@0.0 publish --pnpm ./packages/* --packageManager=pnpm
