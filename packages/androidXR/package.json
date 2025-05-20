@@ -6,6 +6,11 @@
     "webspatiallib",
     "package.json"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webspatial/webspatial-sdk.git",
+    "directory": "packages/androidXR"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

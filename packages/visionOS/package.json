@@ -8,7 +8,8 @@
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/webspatial/webspatial-sdk.git",
+    "directory": "packages/visionOS"
   },
   "files": [
     "Packages",
