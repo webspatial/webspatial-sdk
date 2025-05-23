@@ -100,8 +100,10 @@ struct web_spatialApp: App {
 
                         if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
                             // remove the webview's name to behave like new opened root scene
-                            wv.removeWebviewName {
-                                wv.navigateToURL(url: fileUrl)
+                            if wv.getURL() != fileUrl {
+                                wv.removeWebviewName {
+                                    wv.navigateToURL(url: fileUrl)
+                                }
                             }
                         }
                         // reset to mainScene size
