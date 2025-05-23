@@ -1,4 +1,4 @@
-import {PrismTheme} from 'prism-react-renderer';
+import {PrismTheme, themes} from 'prism-react-renderer';
 
 const theme: PrismTheme = {
   plain: {
@@ -75,3 +75,5 @@ const theme: PrismTheme = {
   ],
 };
 export default theme;
+
+export const emptyTheme = {plain: {}, styles: []};

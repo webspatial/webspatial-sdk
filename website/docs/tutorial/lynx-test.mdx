@@ -1,0 +1,178 @@
+---
+sidebar_position: -1
+---
+# Composing Elements
+
+This is copied from lynx site to test page effect.
+
+A Lynx page may contain various visual elements such as text and images, presented in different layouts to create diverse page styles. This section aims to help everyone understand how to construct the most basic views.
+
+## Element tag: UI Building Blocks
+
+Lynx defines content and structure using a markup language, with the most basic unit being an [element tag](/guide/spec.html#element-tag). The concept of an element tag is similar to [HTML elements](https://developer.mozilla.org/en-US/docs/Glossary/Element), which can be used to encapsulate different parts of the content to present or operate in a specific manner.
+
+Unlike HTML, Lynx uses some unique element tags such as [`<view>`](/api/elements/built-in/view), [`<text>`](/api/elements/built-in/text), and [`<image>`](/api/elements/built-in/image) to display different content. For example, in Lynx, the following source code can be used to display a piece of text:
+
+```html
+<text>Hello Lynx</text>
+```
+
+### Anatomy of an Element tag
+
+The basic usage of element tags is very similar to [HTML elements](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website/Creating_the_content#anatomy_of_an_html_element):
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_tags.png"
+  width="100%"
+  height="40%"
+/>
+
+Each element tag consists of the following parts:
+
+1. **Start tag**: Includes the name of the element tag (in this case, text) surrounded by angle brackets, indicating where the element tag begins.
+2. **End tag**: Similar to the start tag but includes a forward slash before the element tag's name, indicating where the element tag ends.
+3. **Content**: The content of the element tag, which for the `<text>` element tag is the text itself.
+
+Combining the start tag, end tag, and content forms a complete element tag.
+
+### Attributes
+
+Each element tag has its own attributes that can be set by adding attribute names and values within the element tag's tag to describe its behavior and appearance.
+
+For example, each element tag can use attributes such as [`style`](/api/elements/built-in/view#style) and [`class`](/api/elements/built-in/view#class) to set background, border-radius, shadow styles, and support some CSS syntax. The following code sets the background color of an element tag to red:
+
+```html
+<text style="background:red;">Hello Lynx</text>
+```
+
+In this example, `style` is the attribute name, and `background:red` is the attribute value.
+
+For more attributes, refer to the [API Reference](/api/elements/built-in/view).
+
+### Empty Element tags
+
+Some element tags do not have content, such as the `<image>` element tag:
+
+```html
+<image src="assets/logo.png" />
+```
+
+It does not use an `</image>` end tag, nor does it have any content inside because the `<image>` element tag uses an attribute `src` to display an image rather than content.
+
+### Nested Element tags
+
+Element tags can be nested within other element tags. For example, multiple `<text>` element tags can be nested inside a `<view>` element tag:
+
+```html
+<view>
+  <text>Hello</text>
+  <text>Lynx</text>
+</view>
+```
+
+### Element Tree
+
+The element tags in the source code will be parsed by the Lynx engine at runtime and translated into [elements](/guide/spec.html#element) for rendering. Nested element tags will form a tree composed of elements, which we refer to as the [element tree](/guide/spec.html#element-tree). We rely on this tree structure to build and manage more complex interfaces.
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_tree.png"
+  width="100%"
+  height="30%"
+/>
+
+## Built-in Elements
+
+The Lynx Engine comes with some built-in elements by default to help you quickly build pages.
+
+### View
+
+The `<view>` is the most basic element, commonly used to wrap other elements and carry some drawing capability. For example, the following code sets the entire view's background color to gray and adds some padding within the view:
+
+```html
+<view style="padding:10px;background:gray;">
+  <text>Hello Lynx</text>
+</view>
+```
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_hello_lynx_gray.png"
+  width="100%"
+  height="30%"
+/>
+
+### Text
+
+As mentioned earlier, the `<text>` element is used to display text content. For instance, the following code can be used to display a piece of text:
+
+```html
+<text>Hello Lynx</text>
+```
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_hello_lynx.png"
+  width="100%"
+  height="30%"
+/>
+
+### Image
+
+The `<image>` element is used to display images. For example, the following code can be used to display an image:
+
+```html
+<image auto-size style="width:100px;" src="assets/logo.png" />
+```
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_lynx_logo.png"
+  width="20%"
+/>
+
+### More Built-in Elements
+
+For all built-in Lynx elements, refer to [Built-in Elements Documentation](/api/elements/built-in/view).
+
+## Behind the Elements: Native Rendering
+
+<img
+  src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_2_na.png"
+  width="100%"
+  height="30%"
+/>
+
+Lynx elements are designed to be platform-agnostic. They are rendered natively by the Lynx Engine into the UI primitives for each platforms, such as iOS and Android views, or HTML elements (including [custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)) on the Web.
+
+Lynx enables cross-platform application development based on the web technology, with its core being the establishment of a unified rendering system through element abstraction. Understanding the mapping relationship between the native views of the platform and Lynx elements is crucial to mastering the design concepts of elements within this framework. Below are some of the built-in elements and their corresponding concepts or analogues in different platforms:
+
+| Element                                               | Android                  | iOS                               | Web analogy                    | Description                                                                                                               |
+| :---------------------------------------------------- | :----------------------- | :-------------------------------- | :----------------------------- | :------------------------------------------------------------------------------------------------------------------------ |
+| [`<view>`](/api/elements/built-in/view)               | `ViewGroup`              | `UIView`                          | Non-scrollable `<div>`         | Basic view container, often used for layout capabilities, stylization, and wrapping other elements.                       |
+| [`<text>`](/api/elements/built-in/text)               | `TextView`               | `UITextView`                      | `<p>`                          | Used for displaying text content. Specific text styles can be aligned.                                                    |
+| [`<image>`](/api/elements/built-in/image)             | `ImageView`              | `UIImageView`                     | `<img>`                        | Used for displaying different types of images, including web images, static resources, and local disk images.             |
+| [`<scroll-view>`](/api/elements/built-in/scroll-view) | `ScrollView`             | `UIScrollView`                    | `<div>` with `overflow:scroll` | Basic scrollable element that supports horizontal and vertical scrolling. Allows users to scroll to display more content. |
+| [`<list>`](/api/elements/built-in/list)               | `RecyclerView`           | `UICollectionView`                | None                           | High-performance scrollable element that reduces memory pressure through lazy loading and view reuse.                     |
+| [`<page>`](/api/elements/built-in/page)               | `ViewRootImpl` of a page | `UIViewController.view` of a page | Non-resizable `<body>`         | Root node of a page, usually doesn't need to be added manually.                                                           |
+
+## Extending with Custom Elements
+
+If built-in elements can't meet your needs, you can expand Lynx's capabilities by implementing native elements customarily. This is one of Lynx's powerful features.
+
+For more details, refer to [Extending Native Elements Documentation](/guide/custom-native-component).
+
+## Components: Composition of Elements
+
+In more complex Lynx view structures, various types of elements are often nested and combined layer by layer to form richer and more diverse interface units. This is the core idea of component-based development in front-end frameworks: achieving modular construction of interfaces through reusable encapsulation units.
+
+In ReactLynx, we follow the React development paradigm. By using a function and JSX to assemble the elements and define a component, its design philosophy and basic principles follow the [React Component Design Documentation](https://react.dev/learn/describing-the-ui). For example:
+{/* 
+<Go
+  example="composing-elements"
+  img="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/doc/elements_lynx_logo_hello_lynx.png"
+  defaultEntryFile="dist/main.lynx.bundle"
+  defaultFile="src/App.tsx"
+  entry="src/App.tsx"
+  highlight="{7-10}"
+/> */}
+
+---
+
+In the next chapter, we will add more elaborate styles to the interface.

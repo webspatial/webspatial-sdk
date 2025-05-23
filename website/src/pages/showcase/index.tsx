@@ -15,6 +15,8 @@ import Heading from '@theme/Heading';
 import ShowcaseSearchBar from '@site/src/pages/showcase/_components/ShowcaseSearchBar';
 import ShowcaseCards from './_components/ShowcaseCards';
 import ShowcaseFilters from './_components/ShowcaseFilters';
+import styles from './index.module.scss';
+import clsx from 'clsx';
 
 const TITLE = translate({message: 'Docusaurus Site Showcase'});
 const DESCRIPTION = translate({
@@ -23,11 +25,20 @@ const DESCRIPTION = translate({
 const SUBMIT_URL = 'https://github.com/facebook/docusaurus/discussions/7826';
 
 function ShowcaseHeader() {
+  // margin-top--lg
   return (
-    <section className="markdown margin-top--lg margin-bottom--lg text--center">
-      <Heading as="h1">{TITLE}</Heading>
+    <section
+      className={clsx(
+        'markdown margin-bottom--lg text--center',
+        styles.headerSection,
+      )}>
+      <Heading as="h1" className={styles.title}>
+        {TITLE}
+      </Heading>
       <p>{DESCRIPTION}</p>
-      <Link className="button button--primary" to={SUBMIT_URL}>
+      <Link
+        className={clsx('button button--primary', styles.button)}
+        to={SUBMIT_URL}>
         <Translate id="showcase.header.button">Please add your site</Translate>
       </Link>
     </section>
@@ -36,15 +47,19 @@ function ShowcaseHeader() {
 
 export default function Showcase(): ReactNode {
   return (
-    <Layout title={TITLE} description={DESCRIPTION}>
-      <main className="margin-vert--lg">
+    <Layout
+      title={TITLE}
+      description={DESCRIPTION}
+      wrapperClassName={styles.backColor}>
+      {/* // margin-vert--xl */}
+      <main className="" style={{marginBottom: '5rem'}}>
         <ShowcaseHeader />
-        <ShowcaseFilters />
-        <div
+        {/* <ShowcaseFilters /> */}
+        {/* <div
           style={{display: 'flex', marginLeft: 'auto'}}
           className="container">
           <ShowcaseSearchBar />
-        </div>
+        </div> */}
         <ShowcaseCards />
       </main>
     </Layout>

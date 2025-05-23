@@ -15,9 +15,9 @@ input[type='checkbox'] + .checkboxLabel {
   display: flex;
   align-items: center;
   cursor: pointer;
-  line-height: 1.5;
-  border-radius: 4px;
-  padding: 0.275rem 0.8rem;
+  line-height: 16px;
+  border-radius: 6px;
+  padding: 4px 8px;
   opacity: 0.85;
   transition: opacity 200ms ease-out;
   border: 1px solid transparent;

@@ -474,6 +474,9 @@ importers:
       '@docusaurus/core':
         specifier: 3.7.0
         version: 3.7.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3)
+      '@docusaurus/plugin-content-blog':
+        specifier: ^3.7.0
+        version: 3.7.0(@docusaurus/plugin-content-docs@3.7.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3))(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3)
       '@docusaurus/plugin-ideal-image':
         specifier: ^3.7.0
         version: 3.7.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(jimp@0.22.12)(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3)
@@ -487,10 +490,10 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0(@docusaurus/plugin-content-docs@3.7.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3))(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3)
       '@mdx-js/react':
-        specifier: ^3.1.0
+        specifier: ^3.0.0
         version: 3.1.0(@types/react@19.1.4)(react@19.1.0)
       clsx:
-        specifier: ^2.1.1
+        specifier: ^2.0.0
         version: 2.1.1
       copy-text-to-clipboard:
         specifier: ^3.2.0
@@ -502,19 +505,22 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6(@docusaurus/core@3.7.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@6.4.2)(eslint@9.26.0(jiti@2.4.2))(lightningcss@1.29.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3))(sass-embedded@1.87.0)(sass@1.88.0)(webpack@5.99.8)
       prism-react-renderer:
-        specifier: ^2.4.1
+        specifier: ^2.3.0
         version: 2.4.1(react@19.1.0)
+      prism-themes:
+        specifier: ^1.9.0
+        version: 1.9.0
       react:
-        specifier: ^19.1.0
+        specifier: ^19.0.0
         version: 19.1.0
       react-dom:
-        specifier: ^19.1.0
+        specifier: ^19.0.0
         version: 19.1.0(react@19.1.0)
       react-medium-image-zoom:
         specifier: ^5.2.14
         version: 5.2.14(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       sass:
-        specifier: ^1.88.0
+        specifier: ^1.87.0
         version: 1.88.0
     devDependencies:
       '@docusaurus/module-type-aliases':
@@ -527,16 +533,16 @@ importers:
         specifier: 3.7.0
         version: 3.7.0(acorn@6.4.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       docusaurus-plugin-typedoc:
-        specifier: ^1.4.0
+        specifier: ^1.3.1
         version: 1.4.0(typedoc-plugin-markdown@4.6.3(typedoc@0.28.4(typescript@5.6.3)))
       typedoc:
-        specifier: ^0.28.4
+        specifier: ^0.28.3
         version: 0.28.4(typescript@5.6.3)
       typedoc-plugin-markdown:
         specifier: ^4.6.3
         version: 4.6.3(typedoc@0.28.4(typescript@5.6.3))
       typescript:
-        specifier: ~5.6.3
+        specifier: ~5.6.2
         version: 5.6.3
 
 packages:
@@ -7456,6 +7462,9 @@ packages:
     peerDependencies:
       react: '>=16.0.0'
 
+  prism-themes@1.9.0:
+    resolution: {integrity: sha512-tX2AYsehKDw1EORwBps+WhBFKc2kxfoFpQAjxBndbZKr4fRmMkv47XN0BghC/K1qwodB1otbe4oF23vUTFDokw==}
+
   prismjs@1.30.0:
     resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
     engines: {node: '>=6'}
@@ -11258,7 +11267,7 @@ snapshots:
 
   '@docusaurus/react-loadable@6.0.0(react@19.1.0)':
     dependencies:
-      '@types/react': 19.1.4
+      '@types/react': 18.3.21
       react: 19.1.0
 
   '@docusaurus/responsive-loader@1.7.1(jimp@0.22.12)(sharp@0.32.6)':
@@ -17924,6 +17933,8 @@ snapshots:
       '@types/prismjs': 1.26.5
       clsx: 2.1.1
       react: 19.1.0
+
+  prism-themes@1.9.0: {}
 
   prismjs@1.30.0: {}
 

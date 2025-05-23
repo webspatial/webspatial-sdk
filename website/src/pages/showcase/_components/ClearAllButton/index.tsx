@@ -14,6 +14,10 @@ export default function ClearAllButton(): ReactNode {
   return (
     <button
       className="button button--outline button--primary"
+      style={{
+        paddingLeft: '12px',
+        paddingRight: '12px',
+      }}
       type="button"
       onClick={() => clearQueryString()}>
       Clear All
