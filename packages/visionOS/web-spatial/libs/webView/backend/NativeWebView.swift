@@ -249,7 +249,7 @@ struct WebViewNative: UIViewRepresentable {
             // change webview ua
             let ua = webViewHolder.appleWebView?.value(forKey: "userAgent") as? String ?? ""
             let webviewVersion = ua.split(separator: configUA)[0].split(separator: "AppleWebKit")[1]
-            webViewHolder.appleWebView!.customUserAgent = "Mozilla/5.0 (iPad; CPU OS 16_3_1 like Mac OS X; wv) AppleWebKit\(webviewVersion)WebSpatial/\(nativeAPIVersion)"
+            webViewHolder.appleWebView!.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit\(webviewVersion)WebSpatial/\(nativeAPIVersion)"
 
             webViewHolder.appleWebView!.uiDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.allowsBackForwardNavigationGestures = true
