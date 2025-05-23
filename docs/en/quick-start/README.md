@@ -9,17 +9,17 @@
 
 > Previous chapter: [What Is WebSpatial](../introduction/README.md)
 
-Use a minimal example to get hands-on with the [WebSpatial SDK](), covering project setup, SDK installation and configuration, a sample development workflow, and a preview of spatial features.
+Use a minimal example to get hands-on with the [WebSpatial SDK](#), covering project setup, SDK installation and configuration, a sample development workflow, and a preview of spatial features.
 
 > [!IMPORTANT]
 > To keep this guide short, clear, and results-oriented, no explanations are given here.
 > Many steps are mandatory, so follow them exactly to ensure everything runs correctly.
-> After you have completed the demo, refer to the more comprehensive [Development Guide]() for real-world projects, full option descriptions, and detailed explanations.
+> After you have completed the demo, refer to the more comprehensive [Development Guide](#) for real-world projects, full option descriptions, and detailed explanations.
 > Several links in this document point to additional details. If you just want to try the demo quickly, feel free to skip those links for now.
 
 ## 1. Create a modern Web project that supports WebSpatial
 
-First confirm that Node.js is installed (see the [Node.js official website]()).
+First confirm that Node.js is installed (see the [Node.js official website](#)).
 
 Using a standard React + Vite + TypeScript project as an example, run the following commands to create the project:
 
@@ -41,11 +41,11 @@ npm install --save-dev @webspatial/builder @webspatial/platform-visionos @webspa
 ```
 
 > [!TIP]
-> See [which dependencies are installed]() for details.
+> See [which dependencies are installed](#) for details.
 
 ## 3. Integrate the WebSpatial SDK into the Web build tool (Vite)
 
-First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configuration that [affects JSX compilation]().
+First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configuration that [affects JSX compilation](#).
 
 ```diff
 {
@@ -55,8 +55,8 @@ First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configurat
 
 Then modify `vite.config.ts`:
 
-- Add the [WebSpatial Vite plugin]().
-- Inject the [environment variable `$XR_ENV`]() into HTML.
+- Add the [WebSpatial Vite plugin](#).
+- Inject the [environment variable `$XR_ENV`](#) into HTML.
 
 ```diff
 import { defineConfig } from "vite";
@@ -92,7 +92,7 @@ Open the URL shown in the terminal in a desktop browser such as Chrome to confir
 
 ![](../../assets/quick/2.png)
 
-Next, open a new terminal window (in the project root) and run another Dev Server to generate [Web-only code for WebSpatial](), used as a WebSpatial app on visionOS (keep it running in the following steps):
+Next, open a new terminal window (in the project root) and run another Dev Server to generate [Web-only code for WebSpatial](#), used as a WebSpatial app on visionOS (keep it running in the following steps):
 
 ```shell
 XR_ENV=avp npm run dev
@@ -102,14 +102,14 @@ XR_ENV=avp npm run dev
 
 ## 4. Package and run the WebSpatial app
 
-Before using the [WebSpatial packaging tool](), install Xcode and the visionOS simulator:
+Before using the [WebSpatial packaging tool](#), install Xcode and the visionOS simulator:
 
 > Prerequisite: a Mac computer
 > 1. Open the Mac App Store, search for 'Xcode', and install it.
 > 2. On first launch, agree to the license and enter the admin password to install additional components.
 > 3. Click the top menu 'Xcode' > 'Settings…'. In the 'Components' tab under 'Platform Support', locate visionOS and visionOS Simulator, then install both.
 
-Run the [development command]() of the WebSpatial packaging tool:
+Run the [development command](#) of the WebSpatial packaging tool:
 
 ```shell
 npx webspatial-builder run --base=$XR_DEV_SERVER
@@ -125,13 +125,13 @@ The visionOS simulator launches automatically, installs the packaged WebSpatial 
 
 ## 5. Set initialization properties for the launch scene
 
-Create a minimal [Web App Manifest file]() (only for the `webspatial-builder run` command; [complete it before real-device runs or distribution]()).
+Create a minimal [Web App Manifest file](#) (only for the `webspatial-builder run` command; [complete it before real-device runs or distribution](#)).
 
 ```shell
 touch public/manifest.webmanifest
 ```
 
-In `xr_main_scene`, set the [launch scene]()[default size]():
+In `xr_main_scene`, set the [launch scene](#)[default size](#):
 
 ```json5
 {
@@ -245,13 +245,13 @@ At the end of the existing content in `src/App.tsx` (below `<p className="read-t
 +             </div>
 ```
 
-Clicking the link or button opens a new [spatial-app scene]() that displays the content of `/second-page`:
+Clicking the link or button opens a new [spatial-app scene](#) that displays the content of `/second-page`:
 
 ![](../../assets/intro/intro-4-8.gif)
 
 ## 7. Set initialization properties for the new scene
 
-Import the [scene initialization]() API from the WebSpatial SDK in `src/App.tsx`.
+Import the [scene initialization](#) API from the WebSpatial SDK in `src/App.tsx`.
 
 ```jsx
 import { initScene } from "@webspatial/react-sdk";
@@ -289,7 +289,7 @@ Modify `index.html` to add a `classname` specific to `XR_ENV` mode on `<html>`.
 +    ` %>
 ```
 
-At the end of `src/index.css`, add code that sets the scene background in `XR_ENV` mode to a [fully transparent material]() (using [--xr-background-material]() from the WebSpatial API):
+At the end of `src/index.css`, add code that sets the scene background in `XR_ENV` mode to a [fully transparent material](#) (using [--xr-background-material](#) from the WebSpatial API):
 
 ```css
 html.is-spatial {
@@ -304,7 +304,7 @@ html.is-spatial {
 | ![](../../assets/quick/10.png) | ![](../../assets/quick/11.png) |
 |:---:|:---:|
 
-Modify `src/App.tsx` to make the two card elements [spatialized HTML elements]() by adding a `classname`.
+Modify `src/App.tsx` to make the two card elements [spatialized HTML elements](#) by adding a `classname`.
 
 Spatialize the link inside `link-card` as well.
 
@@ -325,7 +325,7 @@ Spatialize the link inside `link-card` as well.
                   </a>
 ```
 
-In the [styles for `XR_ENV` mode]() in `src/index.css`, set different [translucent materials]() for the backgrounds of the two card elements and for the link inside `link-card`:
+In the [styles for `XR_ENV` mode](#) in `src/index.css`, set different [translucent materials](#) for the backgrounds of the two card elements and for the link inside `link-card`:
 
 ```css
 html.is-spatial {
@@ -357,7 +357,7 @@ html.is-spatial {
 
 ## 9. 'Elevate' spatialized elements
 
-Mark the description text inside `count-card` as a [spatialized HTML element]().
+Mark the description text inside `count-card` as a [spatialized HTML element](#).
 
 ```diff
 -               <p>
@@ -366,7 +366,7 @@ Mark the description text inside `count-card` as a [spatialized HTML element]().
                 </p>
 ```
 
-In the [`XR_ENV` mode styles]() in `src/index.css`, change this element to `position: relative` and use the WebSpatial Z-axis positioning API (`--xr-back`) to 'elevate' it into 3D space in front of the web plane.
+In the [`XR_ENV` mode styles](#) in `src/index.css`, change this element to `position: relative` and use the WebSpatial Z-axis positioning API (`--xr-back`) to 'elevate' it into 3D space in front of the web plane.
 
 Apply different levels of 'elevation' to the link elements spatialized earlier.
 
@@ -396,9 +396,9 @@ Apply different levels of 'elevation' to the link elements spatialized earlier.
 | ![](../../assets/quick/14.png) | ![](../../assets/quick/15.png) |
 |:---:|:---:|
 
-Another way to 'elevate' is to use CSS Transform, which can also [deform and rotate]() in 3D space.
+Another way to 'elevate' is to use CSS Transform, which can also [deform and rotate](#) in 3D space.
 
-In the [`XR_ENV` mode styles]() in `src/index.css`, move and rotate `link-card` along the Z axis (around the X axis):
+In the [`XR_ENV` mode styles](#) in `src/index.css`, move and rotate `link-card` along the Z axis (around the X axis):
 
 ```diff
   .link-card {

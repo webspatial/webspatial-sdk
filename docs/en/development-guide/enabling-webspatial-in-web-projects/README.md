@@ -6,7 +6,7 @@ Previous step:
 
 ---
 
-Next, bring the [WebSpatial API]() into your Web project and set up the WebSpatial development environment.
+Next, bring the [WebSpatial API](#) into your Web project and set up the WebSpatial development environment.
 
 - [Prerequisite: Become a Minimal PWA](prerequisite-become-a-minimal-pwa.md)
 - [Step 1: Install the WebSpatial SDK](step-1-install-the-webspatial-sdk.md)

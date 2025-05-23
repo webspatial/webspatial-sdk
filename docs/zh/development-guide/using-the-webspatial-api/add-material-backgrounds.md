@@ -7,20 +7,20 @@
 
 ---
 
-> 由于 [WebSpatial SDK]() 暂时只提供了 React SDK，所以本文档都以 React 代码为例。
+> 由于 [WebSpatial SDK](#) 暂时只提供了 React SDK，所以本文档都以 React 代码为例。
 >
 > 本节中涉及的 API：
 > - `--xr-background-material`
 > - `border-radius`、`display`、`visibility`、`opacity`
 > - `--xr-z-index`
 
-在 [WebSpatial SDK]() 的支持下，应用的每个[场景]()中，有两类主体可以基于应用周围的空间环境，动态渲染自己的背景。
+在 [WebSpatial SDK](#) 的支持下，应用的每个[场景](#)中，有两类主体可以基于应用周围的空间环境，动态渲染自己的背景。
 
 ## 半透明或全透明的窗口场景
 
-第一类是整个[窗口场景]()和网页本身，可以通过给 `<html>` 标签添加样式，把整个窗口设置成有半透明材质背景和圆角边框，或让整个窗口变成全透明无边框。
+第一类是整个[窗口场景](#)和网页本身，可以通过给 `<html>` 标签添加样式，把整个窗口设置成有半透明材质背景和圆角边框，或让整个窗口变成全透明无边框。
 
-基于[「快速开始」示例]()的例子： 有半透明材质背景和圆角边框的窗口场景
+基于[「快速开始」示例](#)的例子： 有半透明材质背景和圆角边框的窗口场景
 
 ```css
 html.is-spatial {
@@ -31,14 +31,14 @@ html.is-spatial {
 
 ![](../../../assets/guide/2-1.png)
 
-- 如果想添加半透明材质背景，一般默认使用 `translucent` 这个值，如果被嵌套在其他半透明材质背景的内容中，想要做区分，可以用[其他材质选项]()
+- 如果想添加半透明材质背景，一般默认使用 `translucent` 这个值，如果被嵌套在其他半透明材质背景的内容中，想要做区分，可以用[其他材质选项](#)
 - 可以用 border-radius 控制窗口边框的圆角程度
 - 这段样式也可以写成 inline style，比如 `<html style="--xr-background-material: translucent;">`
 - 还可以通过 `document.documentElement.style` 来动态设置
 - `--xr-background-material` 的默认值是 `none`，如果在窗口的样式中，不提供这个属性，或主动把它配置为 `none`，窗口都会是传统浏览器窗口中默认的网页背景色（不透明）
 > 注意 `none` 的语义是不做任何自定义设置，不一定等同于「无材质背景」。
 
-[Techshop demo]() 中的示例：全透明无边框的窗口场景
+[Techshop demo](#) 中的示例：全透明无边框的窗口场景
 
 ```css
 html.is-spatial {
@@ -50,7 +50,7 @@ html.is-spatial {
 
 ## 半透明的 HTML 元素
 
-第二类是任何[空间化 HTML 元素]()。
+第二类是任何[空间化 HTML 元素](#)。
 
 不像网页窗口有默认的背景色（不透明），所有 HTML 元素原本就默认是透明背景的（比如可以透过这个元素看到父元素的背景）。
 
@@ -58,9 +58,9 @@ html.is-spatial {
 
 对于空间化 HTML 元素来说，`--xr-background-material: none`（语义是不做任何自定义设置，不是「无材质」）等同于 `--xr-background-material: transparent`。
 
-但只有在这个空间化 HTML 元素被「[抬升]()」到 3D 空间中，才能看到这种全透明材质的效果。
+但只有在这个空间化 HTML 元素被「[抬升](#)」到 3D 空间中，才能看到这种全透明材质的效果。
 
-基于[「快速开始」示例]()的例子：
+基于[「快速开始」示例](#)的例子：
 
 ```diff
   .link-card {
@@ -76,7 +76,7 @@ html.is-spatial {
 
 无论空间化 HTML 元素是否「抬升」，都可以用 `--xr-background-material: translucent` 或更多材质选项，设置成半透明材质背景。
 
-基于[「快速开始」示例]()的例子：
+基于[「快速开始」示例](#)的例子：
 
 ```diff
   .link-card {
@@ -96,7 +96,7 @@ html.is-spatial {
 ![](../../../assets/concepts/4-4.png)
 ![](../../../assets/concepts/4-3.png)
 
-[Techshop demo]() 中的示例：
+[Techshop demo](#) 中的示例：
 
 ```jsx {highlight=20-23}
         <div enable-xr className="list-meun w-full md:w-64 shrink-0">
@@ -137,11 +137,11 @@ html.is-spatial {
 
 ## 图层顺序
 
-如果空间化 HTML 元素没有「[抬升]()」，就仍然是**父元素所属平面的组成部分**，这个平面可以是整个窗口场景的平面，也可以是被「抬升」的父元素形成的新平面。
+如果空间化 HTML 元素没有「[抬升](#)」，就仍然是**父元素所属平面的组成部分**，这个平面可以是整个窗口场景的平面，也可以是被「抬升」的父元素形成的新平面。
 
 位于**同一个平面**上的多个 HTML 元素，如果彼此之间有重叠关系，默认通过 DOM 结构中的顺序来决定谁覆盖谁（图层顺序），比如兄弟节点之间，靠后的节点会覆盖前面的节点。
 
-如果是同一个「[Stacking Context]()」元素（比如带有 `position`、`transform` 属性的元素）内的多个 HTML 元素，还可以通过 `z-index` 来改变它们之间的图层顺序。
+如果是同一个「[Stacking Context](#)」元素（比如带有 `position`、`transform` 属性的元素）内的多个 HTML 元素，还可以通过 `z-index` 来改变它们之间的图层顺序。
 
 在目前 WebSpatial SDK 的实现里，空间化 HTML 元素暂时有一个局限：
 
@@ -157,7 +157,7 @@ html.is-spatial {
 - 这个作为作为父节点的空间化 HTML 元素相当于「Stacking Context」元素
 - 这些彼此之间存在图层顺序的空间化元素，跟作为父节点的空间化元素之间的嵌套架构中，不能还存在其他空间化元素（作为父节点）
 
-注意 `--xr-z-index` 只影响**同一平面内**元素之间的图层顺序，不改变它们的 Z 轴位置，跟[抬升 2D 元素]()的 API 是完全不同的。
+注意 `--xr-z-index` 只影响**同一平面内**元素之间的图层顺序，不改变它们的 Z 轴位置，跟[抬升 2D 元素](#)的 API 是完全不同的。
 
 ---
 

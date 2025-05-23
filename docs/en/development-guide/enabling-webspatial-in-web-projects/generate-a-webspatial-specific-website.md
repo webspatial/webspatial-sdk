@@ -4,11 +4,11 @@ Current location: [Step 3 – Integrate WebSpatial SDK into Web Build Tools](ste
 
 ---
 
-After integrating the [WebSpatial SDK]() into the project’s [TS/JS compiler]() and [Web build tool & Web server](), the site can—without affecting the original desktop/mobile site—produce a dedicated build for the [WebSpatial App Shell]. This build is essentially a standalone website that loads only inside a native spatial app containing the App Shell (for example, a [Packaged WebSpatial App]() built with [WebSpatial Builder]()). Web code in this context can tightly cooperate with native features to deliver spatial capabilities.
+After integrating the [WebSpatial SDK](#) into the project’s [TS/JS compiler](#) and [Web build tool & Web server](#), the site can—without affecting the original desktop/mobile site—produce a dedicated build for the [WebSpatial App Shell]. This build is essentially a standalone website that loads only inside a native spatial app containing the App Shell (for example, a [Packaged WebSpatial App](#) built with [WebSpatial Builder](#)). Web code in this context can tightly cooperate with native features to deliver spatial capabilities.
 
 ## Simulator debugging phase
 
-> All examples below are [based on Vite]()
+> All examples below are [based on Vite](#)
 
 ### Run the regular Dev Server
 
@@ -18,7 +18,7 @@ Run the project’s `dev` script as usual. The served site targets desktop/mobil
 pnpm dev
 ```
 
-- The HTML/CSS/JS output **does not** include WebSpatial SDK; all [WebSpatial API]() calls are removed or ignored.
+- The HTML/CSS/JS output **does not** include WebSpatial SDK; all [WebSpatial API](#) calls are removed or ignored.
 - Unsuitable for loading in the WebSpatial App Shell (no spatial effects).
 
 ### Run the dedicated Dev Server
@@ -30,7 +30,7 @@ XR_ENV=avp pnpm dev
 ```
 
 - The HTML/CSS/JS output **does** include WebSpatial SDK.
-- To remain functional in runtimes without [WebSpatial API](), HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API]() calls inside the JS output.
+- To remain functional in runtimes without [WebSpatial API](#), HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API](#) calls inside the JS output.
 - The served URL automatically adds the base segment `/webspatial/avp/` and increments the port by 1.
 > Example: the desktop/mobile Dev Server runs at `http://localhost:3000`; the visionOS Dev Server runs at `http://localhost:3001/webspatial/avp/`.
 - If the project defines a custom base, `/webspatial/avp/` is *not* prepended.
@@ -52,9 +52,9 @@ XR_ENV=avp pnpm dev
 
 ### Use the dedicated Dev Server
 
-Combine the Dev Server with [`webspatial-builder run`]() (or the [`run:avp` script]()) to package and install a visionOS app in the simulator.
+Combine the Dev Server with [`webspatial-builder run`](#) (or the [`run:avp` script](#)) to package and install a visionOS app in the simulator.
 
-Pass the Dev Server URL as the [`--base` option]() (or `$XR_DEV_SERVER`) to replace the original [`start_url`]() in the Web App Manifest.
+Pass the Dev Server URL as the [`--base` option](#) (or `$XR_DEV_SERVER`) to replace the original [`start_url`](#) in the Web App Manifest.
 
 > [!TIP]
 > If no manifest or `start_url` is provided during `run`, `/` is used by default. Adding `--base` makes the start URL identical to the Dev Server URL.
@@ -91,7 +91,7 @@ Because `/webspatial/avp/` is injected as the base segment, every Web-build-tool
 
 For in-page links, add the base manually.
 
-In JS the base string is available through [`__XR_ENV_BASE__`]().
+In JS the base string is available through [`__XR_ENV_BASE__`](#).
 
 ```jsx
  <button
@@ -120,7 +120,7 @@ In JSX, prefer `<Link />` over raw `<a>` tags or `window.open`, letting `react-r
 
 At this stage you must deploy the site to a server accessible from real devices.
 
-> All examples below are [based on Vite]()
+> All examples below are [based on Vite](#)
 
 ### Multi-Web-Server mode
 
@@ -133,7 +133,7 @@ pnpm build
 pnpm preview
 ```
 
-- WebSpatial SDK is **not** included; [WebSpatial API]() calls are stripped.
+- WebSpatial SDK is **not** included; [WebSpatial API](#) calls are stripped.
 - Not suitable for the WebSpatial App Shell.
 
 The second site serves the visionOS-specific version (build with `$XR_ENV=avp`):
@@ -146,7 +146,7 @@ XR_ENV=avp pnpm preview
 The files in the `webspatial/avp/` path under the output folder (like `/dist`) are specifically for the WebSpatial App Shell on visionOS.
 
 - WebSpatial SDK **is** included.
-- HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API]() calls.
+- HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API](#) calls.
 - Only suitable for the WebSpatial App Shell.
 - All builder-processed URLs prepend `webspatial/avp/`.
 ```html
@@ -277,14 +277,14 @@ export default defineConfig({
 pnpm preview
 ```
 
-Best aligned with the [multi-Web-Server]() approach.
-With custom routing (mapping `/webspatial/avp/` to `dist/webspatial/avp/`), the [single-Web-Server]() approach also works.
+Best aligned with the [multi-Web-Server](#) approach.
+With custom routing (mapping `/webspatial/avp/` to `dist/webspatial/avp/`), the [single-Web-Server](#) approach also works.
 
 ### Scenario 2: Third-party static hosting
 
 > Examples: Vercel, Cloudflare Pages, GitHub Pages
 
-Similar to Scenario 1 and suits the [multi-Web-Server]() approach.
+Similar to Scenario 1 and suits the [multi-Web-Server](#) approach.
 
 For GitHub Pages, deploy the WebSpatial version separately:
 
@@ -301,7 +301,7 @@ gh-pages -d dist/webspatial/avp
 pnpm start
 ```
 
-Because pages share a single HTML template (or none), differentiating by template is impossible. The [multi-Web-Server]() approach is recommended.
+Because pages share a single HTML template (or none), differentiating by template is impossible. The [multi-Web-Server](#) approach is recommended.
 
 Deploy a dedicated SSR service for WebSpatial and point its static asset base to the WebSpatial-specific assets.
 
@@ -318,7 +318,7 @@ module.exports = {
 
 > Example: a Node.js server based on NestJS
 
-Use the second serving option of the [single-Web-Server]() approach: detect the visionOS User-Agent and serve from `dist/webspatial/avp`, otherwise from `dist/`.
+Use the second serving option of the [single-Web-Server](#) approach: detect the visionOS User-Agent and serve from `dist/webspatial/avp`, otherwise from `dist/`.
 
 ---
 

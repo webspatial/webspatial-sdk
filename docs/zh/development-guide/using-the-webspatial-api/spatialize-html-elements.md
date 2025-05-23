@@ -5,7 +5,7 @@
 
 ---
 
-> 由于 [WebSpatial SDK]() 暂时只提供了 React SDK，所以本文档都以 React 代码为例。
+> 由于 [WebSpatial SDK](#) 暂时只提供了 React SDK，所以本文档都以 React 代码为例。
 >
 > 本节中涉及的 API：
 > - `enable-xr`、`__enableXr__`、`enableXr`
@@ -13,9 +13,9 @@
 
 ## 启用空间化
 
-基于目前的 WebSpatial SDK，需要用一种临时的特殊标记让 HTML 元素启用空间化，然后才能使用[其他空间化 API]()。
+基于目前的 WebSpatial SDK，需要用一种临时的特殊标记让 HTML 元素启用空间化，然后才能使用[其他空间化 API](#)。
 
-> 未来正式的 W3C 标准中，HTML 元素应该不需要刻意启用空间化，就能使用空间化 API——只要使用了空间化 API，就是[空间化 HTML 元素]()，而不是反过来，先成为空间化 HTML 元素，才能使用空间化 API。
+> 未来正式的 W3C 标准中，HTML 元素应该不需要刻意启用空间化，就能使用空间化 API——只要使用了空间化 API，就是[空间化 HTML 元素](#)，而不是反过来，先成为空间化 HTML 元素，才能使用空间化 API。
 > 但现阶段出于性能等方面的考虑，暂时需要加上这个特殊标记。
 
 这种特殊标记有三种写法：
@@ -103,13 +103,13 @@ const Card = ({
 </Card>
 ```
 
-启用空间化之后，HTML 元素除了保留原有的 API 和能力，还能使用 WebSpatial SDK 实现的[空间化 API]()，下文提到的 CSS API 和 DOM API。
+启用空间化之后，HTML 元素除了保留原有的 API 和能力，还能使用 WebSpatial SDK 实现的[空间化 API](#)，下文提到的 CSS API 和 DOM API。
 
 ## 跨平台
 
-空间化 HTML 元素只有在 [WebSpatial App Shell]() 里才会启用空间化能力。
+空间化 HTML 元素只有在 [WebSpatial App Shell](#) 里才会启用空间化能力。
 
-在原有的桌面/移动平台或普通浏览器里运行的时候，[构建产物中都不会包含 WebSpatial SDK 的实现]()，WebSpatial API 不会生效，会自动被过滤。这些 HTML 元素也不会增加额外的抽象和封装，仍然是 React DOM 中原始的 HTML 元素。
+在原有的桌面/移动平台或普通浏览器里运行的时候，[构建产物中都不会包含 WebSpatial SDK 的实现](#)，WebSpatial API 不会生效，会自动被过滤。这些 HTML 元素也不会增加额外的抽象和封装，仍然是 React DOM 中原始的 HTML 元素。
 
 因此在给 HTML 元素启用空间化的时候是**不用写 if-else** 的，这个 API 是默认支持跨平台的。
 
@@ -188,7 +188,7 @@ function App() {
 
 ## DOM 能力
 
-如果绕过 React 的 API 和渲染机制，直接用 querySelector 这样的 API 找到空间化 HTML 元素对应的 DOM 对象，用 DOM API 对它做修改，[WebSpatial API 会无法正常工作]()。
+如果绕过 React 的 API 和渲染机制，直接用 querySelector 这样的 API 找到空间化 HTML 元素对应的 DOM 对象，用 DOM API 对它做修改，[WebSpatial API 会无法正常工作](#)。
 
 正确的方式是用 React 自身的 Ref API 获取空间化 HTML 元素的 DOM 对象。比如：
 
@@ -229,13 +229,13 @@ WebSpatial SDK 暂时还不支持在 CSS 动画中使用 WebSpatial API，可以
 
 ## 内部交互能力
 
-无论一个 HTML 元素本身是否空间化，它内部子元素的交互，在 visionOS 这样的空间计算平台上，都是基于「[自然交互]()」的。
+无论一个 HTML 元素本身是否空间化，它内部子元素的交互，在 visionOS 这样的空间计算平台上，都是基于「[自然交互](#)」的。
 
-自然交互的具体行为大部分跟触屏交互保持一致，区别是：在[「间接交互」（眼手交互）]()的情况下，需要额外符合「可交互区域（Interaction Region）」的规则，才能获得「Hover Effect」。
+自然交互的具体行为大部分跟触屏交互保持一致，区别是：在[「间接交互」（眼手交互）](#)的情况下，需要额外符合「可交互区域（Interaction Region）」的规则，才能获得「Hover Effect」。
 
 ### Hover Effect
 
-在[「选择（导航）」阶段]()，无论[间接交互还是直接交互]()，都跟触屏交互一样，**不会在 HTML 元素上触发 JS 事件、不会触发 CSS 状态变化（比如不会有 Hover 状态）**。
+在[「选择（导航）」阶段](#)，无论[间接交互还是直接交互](#)，都跟触屏交互一样，**不会在 HTML 元素上触发 JS 事件、不会触发 CSS 状态变化（比如不会有 Hover 状态）**。
 
 因此 Web 代码无法实现任何交互提示效果。本质上，网页这时根本不知道用户在做什么选择。
 
@@ -256,7 +256,7 @@ WebSpatial SDK 暂时还不支持在 CSS 动画中使用 WebSpatial API，可以
 
 ### JS 事件
 
-在「[确认（触发）]()」之后，无论间接交互还是直接交互，都会触发跟触屏交互一样的 JS 事件：
+在「[确认（触发）](#)」之后，无论间接交互还是直接交互，都会触发跟触屏交互一样的 JS 事件：
 
 | ![](../../../assets/guide/hand-2.png) | ![](../../../assets/guide/hand-3.png) |
 |:---:|:---:|

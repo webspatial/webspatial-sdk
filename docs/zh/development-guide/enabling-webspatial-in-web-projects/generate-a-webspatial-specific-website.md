@@ -5,11 +5,11 @@
 
 ---
 
-在当前 Web 项目的 [TS/JS 编译器]()、[Web 构建工具和 Web Server]() 中集成 [WebSpatial SDK]() 之后，当前项目就能在不影响原网站（面向桌面/移动平台和普通浏览器）的前提下，开始为 [WebSpatial App Shell]() 生成专用的 Web 构建产物——相当于一个专用网站，只在包含 WebSpatial App Shell 的原生空间应用（比如用 [WebSpatial Builder]() 打包生成的 [Packaged WebSpatial App]()）中加载和运行，能跟应用中的原生实现紧密结合，实现由 Web 代码控制、基于 Web 渲染结果的空间化能力。
+在当前 Web 项目的 [TS/JS 编译器](#)、[Web 构建工具和 Web Server](#) 中集成 [WebSpatial SDK](#) 之后，当前项目就能在不影响原网站（面向桌面/移动平台和普通浏览器）的前提下，开始为 [WebSpatial App Shell](#) 生成专用的 Web 构建产物——相当于一个专用网站，只在包含 WebSpatial App Shell 的原生空间应用（比如用 [WebSpatial Builder](#) 打包生成的 [Packaged WebSpatial App](#)）中加载和运行，能跟应用中的原生实现紧密结合，实现由 Web 代码控制、基于 Web 渲染结果的空间化能力。
 
 ## 模拟器调试阶段
 
-> 以下示例代码都[基于 Vite]()
+> 以下示例代码都[基于 Vite](#)
 
 ### 运行普通 Dev Server
 
@@ -19,7 +19,7 @@
 pnpm dev
 ```
 
-- 生成的 HTML/CSS/JS 产物中不会包含 WebSpatial SDK 的实现，源代码中所有 [WebSpatial API]() 都会被移除或忽略
+- 生成的 HTML/CSS/JS 产物中不会包含 WebSpatial SDK 的实现，源代码中所有 [WebSpatial API](#) 都会被移除或忽略
 - 不适合在 WebSpatial App Shell 中加载和测试（没有空间化的效果）
 
 ### 运行专用 Dev Server
@@ -31,7 +31,7 @@ XR_ENV=avp pnpm dev
 ```
 
 - 生成的 HTML/CSS/JS 产物中会包含 WebSpatial SDK 的实现
-- 为了保证 HTML/CSS 产物能在不支持 [WebSpatial API]() 的常规 Web Runtime（比如系统默认 WebView）中正常运行，HTML/CSS 源代码中的 WebSpatial API 都会被移除或忽略，转换成 JS 产物中的[非标准 JS Bridge API]() 调用
+- 为了保证 HTML/CSS 产物能在不支持 [WebSpatial API](#) 的常规 Web Runtime（比如系统默认 WebView）中正常运行，HTML/CSS 源代码中的 WebSpatial API 都会被移除或忽略，转换成 JS 产物中的[非标准 JS Bridge API](#) 调用
 - 为了跟分发阶段保持一致，同时兼顾调试阶段的开发效率，运行这种 Dev Server 后生成的 URL，会默认加上额外的 base 部分——`/webspatial/avp/`
 > 比如：如果先运行面向桌面/移动平台的 Dev Server，URL 是 `http://localhost:3000`，然后再运行面向 visionOS 的 Dev Server，URL 默认会是 `http://localhost:3001/webspatial/avp/`，端口自动 +1，同时 base 部分自动加上 `/webspatial/avp/`。
 - 如果当前项目自定义了 base，面向 WebSpatial 的 Dev Server 就不会自动添加 `/webspatial/avp/`
@@ -54,12 +54,12 @@ XR_ENV=avp pnpm dev
 
 ### 使用专用 Dev Server
 
-要在 visionOS 模拟器中使用这个专用 Dev Server，需要结合 [`webspatial-builder run` 命令]()（或 [`run:avp` 脚本]()），打包生成一个 visionOS 应用，自动推送到 visionOS 模拟器里安装。
+要在 visionOS 模拟器中使用这个专用 Dev Server，需要结合 [`webspatial-builder run` 命令](#)（或 [`run:avp` 脚本](#)），打包生成一个 visionOS 应用，自动推送到 visionOS 模拟器里安装。
 
-必须把这个专用 Dev Server 生成的 URL 作为 [`run` 命令的 `--base` 参数]()（或 [`run:avp` 脚本使用的环境变量 `$XR_DEV_SERVER`]()），替换 Web App Manifest 中 [`start_url`]() 原本的 base。
+必须把这个专用 Dev Server 生成的 URL 作为 [`run` 命令的 `--base` 参数](#)（或 [`run:avp` 脚本使用的环境变量 `$XR_DEV_SERVER`](#)），替换 Web App Manifest 中 [`start_url`](#) 原本的 base。
 
 > [!TIP]
-> 在 `run` 阶段，如果[没有提供 Web App Manifest 或 `start_url`]()，默认会以 `/` 作为应用的起始网址。
+> 在 `run` 阶段，如果[没有提供 Web App Manifest 或 `start_url`](#)，默认会以 `/` 作为应用的起始网址。
 > 在这种情况下，使用 `--base` 之后，起始网址跟跟专用 Dev Server 启动时打印出来的网址是完全一样的。
 
 比如，直接运行 `run` 命令：
@@ -94,7 +94,7 @@ XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 
 而对于网页链接，需要手动加上 base 部分。
 
-在 JS 代码里可以通过 [`__XR_ENV_BASE__`]() 获取这段 base 的字符串。
+在 JS 代码里可以通过 [`__XR_ENV_BASE__`](#) 获取这段 base 的字符串。
 
 ```jsx
  <button
@@ -125,7 +125,7 @@ XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 
 在这个阶段，不能继续使用本地的 Dev Server，需要把网站部署到服务器端，生成能在他人的真机设备上直接访问的 URL。
 
-> 以下示例代码都[基于 Vite]()
+> 以下示例代码都[基于 Vite](#)
 
 ### 多 Web Server 模式
 
@@ -140,8 +140,8 @@ pnpm build
 pnpm preview
 ```
 
-- 生成的 HTML/CSS/JS 产物中不会包含 [WebSpatial SDK]() 的实现，源代码中所有 [WebSpatial API]() 都会被移除或忽略
-- 不适合在 [WebSpatial App Shell]() 中加载和测试（没有空间化的效果）
+- 生成的 HTML/CSS/JS 产物中不会包含 [WebSpatial SDK](#) 的实现，源代码中所有 [WebSpatial API](#) 都会被移除或忽略
+- 不适合在 [WebSpatial App Shell](#) 中加载和测试（没有空间化的效果）
 
 另一个 Web 服务提供专门面向 visionOS 中 WebSpatial App Shell 的网站版本。构建和启动时需要把 WebSpatial SDK 中自带的环境变量 `$XR_ENV` 设成 `avp`。
 
@@ -153,7 +153,7 @@ XR_ENV=avp pnpm preview
 产物目录（比如 `/dist`）的 `webspatial/avp/` 路径里，是专门面向 visionOS 中 WebSpatial App Shell 的网站产物。
 
 - 生成的 HTML/CSS/JS 产物中会包含 WebSpatial SDK 的实现
-- 为了保证 HTML/CSS 产物能在不支持 WebSpatial API 的常规 Web Runtime（比如系统默认 WebView）中正常运行，HTML/CSS 源代码中的 WebSpatial API 都会被移除或忽略，转换成 JS 产物中的[非标准 JS Bridge API]() 调用
+- 为了保证 HTML/CSS 产物能在不支持 WebSpatial API 的常规 Web Runtime（比如系统默认 WebView）中正常运行，HTML/CSS 源代码中的 WebSpatial API 都会被移除或忽略，转换成 JS 产物中的[非标准 JS Bridge API](#) 调用
 - 只适合在 WebSpatial App Shell 中加载和测试，不适合在普通浏览器（比如本地电脑上的 Chrome）里测试（缺少了原生 App Shell，UI 效果会不正常）
 - 起始网址，以及构建产物中所有经过 Web Builder 处理的 URL（比如静态 Web 文件的 URL），都会自动在 base 部分加上 `webspatial/avp/`。比如：
 ```html
@@ -162,7 +162,7 @@ XR_ENV=avp pnpm preview
 <script type="module" crossorigin src="/webspatial/avp/assets/index-CpANHSXr.js"></script>
 <link rel="stylesheet" crossorigin href="/webspatial/avp/assets/index-B4Bp50KL.css">
 ```
-- 跟使用[专用 Dev Server]() 一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
+- 跟使用[专用 Dev Server](#) 一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
 
 如果想直接用不同域名来区分这两个网站版本，都用 `/` 作为 base，省去 `webspatial/avp/`，可以做以下配置:
 
@@ -196,7 +196,7 @@ export default defineConfig({
 
 ### 单 Web Server 模式
 
-另一种方案，是用同一个 Web 服务，同时提供面向桌面/移动平台和普通浏览器的网站版本，和专门面向 visionOS 中 [WebSpatial App Shell]() 的网站版本，避免额外的部署流程、占用域名和服务器资源等。
+另一种方案，是用同一个 Web 服务，同时提供面向桌面/移动平台和普通浏览器的网站版本，和专门面向 visionOS 中 [WebSpatial App Shell](#) 的网站版本，避免额外的部署流程、占用域名和服务器资源等。
 
 在这种情况下，需要连续先后执行两遍 Web 项目自带的 `build` 脚本。
 
@@ -267,7 +267,7 @@ web-dist
 对于这样的构建产物，有两种使用方式：
 
 1. 需要给 Web Server 配置路由逻辑，让 base 部分为 `/webspatial/avp/` 的 URL 请求都从 `web-dist/webspatial/avp/` 路径下读取 HTML 模版。
-   - 如果采用这种方式，注意跟[专用 Dev Server]() 和[多 Web Server]() 模式一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
+   - 如果采用这种方式，注意跟[专用 Dev Server](#) 和[多 Web Server](#) 模式一样，需要给网页链接手动加上 base 部分，如果使用了客户端路由，可以通过实现客户端路由的 JS 库，统一提供这个 base 配置。
 2. 需要在 Web Server 的网页路由逻辑中，判断请求是否来自 visionOS 中的 WebSpatial App Shell（有特殊的 UserAgent），如果是，就读取 `dist/webspatial/avp` 目录下的 HTML 模版，否则读取 `dist/` 目录下的 HTML 模版。
   - 如果采用这种方式，需要在 Web 构建工具的配置中提供自定义 base，这时 WebSpatial SDK 不会自动添加 `/webspatial/avp/`。比如：
 ```diff
@@ -284,14 +284,14 @@ export default defineConfig({
 pnpm preview
 ```
 
-适合采用[多 Web Server]() 的方案。
-如果给这种 Static Web Server 增加自定义的路由逻辑（比如让  base 部分为 /webspatial/avp/ 的 URL 请求都从 dist/webspatial/avp/ 路径下读取 HTML 模版），也可以采用[单 Web Server]() 的方案。
+适合采用[多 Web Server](#) 的方案。
+如果给这种 Static Web Server 增加自定义的路由逻辑（比如让  base 部分为 /webspatial/avp/ 的 URL 请求都从 dist/webspatial/avp/ 路径下读取 HTML 模版），也可以采用[单 Web Server](#) 的方案。
 
 ### 场景 2：用 第三方的 Static Web 服务
 
 > 比如 Vercel、Cloudflare Pages、Github Pages
 
-跟「场景 1」相似，适合采用[多 Web Server]() 的方案。
+跟「场景 1」相似，适合采用[多 Web Server](#) 的方案。
 
 以 Github Pages 为例，专门部署面向 WebSpatial 的网站版本：
 ```shell
@@ -309,7 +309,7 @@ pnpm start
 
 在这种情况下，不是每个网页都有单独的 HTML 模版，构建产物中可能完全没有 HTML（比如 Next.js 默认使用内置的 HTML 模版）。无法通过不同 HTML 模版来区分网站的桌面/移动版本和 WebSpatial 版本。
 
-因此适合[多 Web Server]() 的方案。
+因此适合[多 Web Server](#) 的方案。
 
 可以为 WebSpatial 版本专门部署一个不同的 SSR 服务，把静态 web 文件的 URL 根路径配置为 WebSpatial 专用文件的根路径（比如相同 CDN 中的子目录，或专用的 CDN 地址）
 
@@ -325,7 +325,7 @@ module.exports = {
 
 > 比如基于 NestJS 之类的 Node.js 服务器端框架
 
-这种情况下，可以使用[单 Web Server]() 方案中的第二种构建产物使用方法：
+这种情况下，可以使用[单 Web Server](#) 方案中的第二种构建产物使用方法：
 
 在 服务器端的网页路由逻辑中，判断请求是否来自 visionOS 中的 WebSpatial App Shell（有特殊的 UserAgent），如果是，就读取 `dist/webspatial/avp` 目录下的 HTML 模版，否则读取 `dist/` 目录下的 HTML 模版。
 

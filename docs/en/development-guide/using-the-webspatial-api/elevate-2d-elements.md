@@ -5,7 +5,7 @@ Basic concepts:
 
 ---
 
-> Because the [WebSpatial SDK]() currently provides only the React SDK, all examples in this document use React.
+> Because the [WebSpatial SDK](#) currently provides only the React SDK, all examples in this document use React.
 >
 > APIs referenced in this section:
 > - `position: absolute`, `position: fixed`, `position: relative`
@@ -16,9 +16,9 @@ Basic concepts:
 >   - `scaleZ()`, `scale3d()`
 > - `enable-xr-monitor`
 
-When an HTML element has **spatialization enabled**, it still sits on the web page plane inside a [window scene](), participating in the original HTML/CSS layout flow. Its X and Y positions and dimensions—determined by existing CSS properties and layout rules—remain unchanged.
+When an HTML element has **spatialization enabled**, it still sits on the web page plane inside a [window scene](#), participating in the original HTML/CSS layout flow. Its X and Y positions and dimensions—determined by existing CSS properties and layout rules—remain unchanged.
 
-On top of that baseline, a spatialized HTML element can use the [WebSpatial API]() to move, transform, and lay itself out along the Z-axis in front of the page plane. This “elevation” brings the web content into 3-D space and gives the page visual depth.
+On top of that baseline, a spatialized HTML element can use the [WebSpatial API](#) to move, transform, and lay itself out along the Z-axis in front of the page plane. This “elevation” brings the web content into 3-D space and gives the page visual depth.
 
 Multiple APIs can achieve this elevation and can be grouped into three categories based on how they affect the layout flow.
 
@@ -53,7 +53,7 @@ In the current WebSpatial SDK, the value is interpreted relative to the **neares
 
 > In a future Web standard, a `back` property should behave like `top`/`bottom`/`left`/`right`, positioning relative to the nearest **containing block**. For forward compatibility, best practice today is to give the parent `position: relative` (if it is not already `absolute` or `fixed`) whenever a spatialized child should use that parent as its containing block for the Z-axis.
 
-Example based on the [Quick Start]():
+Example based on the [Quick Start](#):
 
 ```diff {highlight=12-16}
 html.is-spatial {
@@ -86,7 +86,7 @@ With fixed positioning, the element is positioned against the **initial containi
 
 Just like absolute positioning, spatialized elements may use the four CSS properties on X and Y and the WebSpatial `--xr-back` on Z. Here, the initial Z position is **always the web page plane of the window scene**.
 
-Example from the [Techshop demo]():
+Example from the [Techshop demo](#):
 
 ```css {highlight=5-14}
   .navbar {
@@ -144,7 +144,7 @@ With relative positioning, the element can move along X and Y using the four CSS
 
 It can also move along Z with `--xr-back`. The initial Z position is **the plane where the element originally sits**, which works as the “back surface.”
 
-Example based on the [Quick Start]():
+Example based on the [Quick Start](#):
 
 ```diff {highlight=10-11}
 html.is-spatial {
@@ -167,7 +167,7 @@ The `.link-card` is below `.count-card` in the original flow. In relative mode, 
 
 ![](../../../assets/guide/3-8.png)
 
-Another example from the [Quick Start]():
+Another example from the [Quick Start](#):
 
 ```css
   .count-card {
@@ -216,7 +216,7 @@ Transforms that affect the Z-axis and are supported on spatialized elements:
 > [!WARNING]
 > `skew` is not supported.
 
-Example based on the [Quick Start]():
+Example based on the [Quick Start](#):
 
 ```diff  {highlight=10-14}
 html.is-spatial {
@@ -239,7 +239,7 @@ html.is-spatial {
 
 ![](../../../assets/guide/3-14.png)
 
-A [Techshop demo]() example:
+A [Techshop demo](#) example:
 
 ```css
   .list-meun {
@@ -265,7 +265,7 @@ They are **not yet supported** in the current WebSpatial SDK.
 
 As noted at the start, once an element is spatialized it still lives in the original layout flow. Updates in React may dynamically change CSS and layout, altering a spatialized element’s X/Y position or size—whether or not the element is elevated.
 
-[WebSpatial SDK]() automatically detects style changes on the spatialized element itself.
+[WebSpatial SDK](#) automatically detects style changes on the spatialized element itself.
 
 However, if changes in **parent** layout move or resize the spatialized element, the SDK does not auto-detect those changes yet (for performance reasons).
 

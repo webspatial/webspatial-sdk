@@ -5,7 +5,7 @@
 
 ---
 
-为了能在 UI 框架（比如 React）中使用 [WebSpatial API]()，需要在 Web 项目使用 JS/TS 编译器中集成 WebSpatial 的框架 SDK（目前暂时只有 React SDK），让 SDK 能影响 JSX 转换等涉及 HTML/CSS API 的环节。
+为了能在 UI 框架（比如 React）中使用 [WebSpatial API](#)，需要在 Web 项目使用 JS/TS 编译器中集成 WebSpatial 的框架 SDK（目前暂时只有 React SDK），让 SDK 能影响 JSX 转换等涉及 HTML/CSS API 的环节。
 
 > [!IMPORTANT]
 > 在面向桌面/移动平台和普通浏览器的构建产物中，SDK 不会生效，不会引入额外代码，不会带来效果和性能上的变化。见下文的「[生成 WebSpatial 专用网站](generate-a-webspatial-specific-website.md)」章节。

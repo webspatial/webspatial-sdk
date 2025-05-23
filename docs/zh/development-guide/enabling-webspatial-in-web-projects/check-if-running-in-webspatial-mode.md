@@ -5,7 +5,7 @@
 
 ---
 
-上一节「[生成 WebSpatial 专用网站](generate-a-webspatial-specific-website.md)」介绍了，WebSpatial SDK 提供了自动的优化，可以自动让 Web 项目构建出两套网站产物，一套面向桌面/移动平台和普通浏览器，不含 [WebSpatial SDK]()，另一套面向 [WebSpatial App Shell]()，包含 WebSpatial SDK。
+上一节「[生成 WebSpatial 专用网站](generate-a-webspatial-specific-website.md)」介绍了，WebSpatial SDK 提供了自动的优化，可以自动让 Web 项目构建出两套网站产物，一套面向桌面/移动平台和普通浏览器，不含 [WebSpatial SDK](#)，另一套面向 [WebSpatial App Shell](#)，包含 WebSpatial SDK。
 
 Web 开发者自己写的业务逻辑代码（包括 JS 和 CSS），也有可能包含专门针对 WebSpatial 应用的代码，比如：
 
@@ -22,7 +22,7 @@ Web 开发者自己写的业务逻辑代码（包括 JS 和 CSS），也有可�
 
 ## 推荐的 JS 解决方案
 
-[配置 Web 构建工具]()，让客户端 JS 能访问 WebSpatial SDK 中自带的环境变量 `$XR_ENV`。
+[配置 Web 构建工具](#)，让客户端 JS 能访问 WebSpatial SDK 中自带的环境变量 `$XR_ENV`。
 
 > [!TIP]
 > 在 Vite 里，可以直接用 `import.meta.env.XR_ENV` 访问 `$XR_ENV`，免配置。
@@ -43,9 +43,9 @@ export default defineConfig({
 ```
 
 > [!NOTE]
-> [WebSpatial 的 Vite 插件]()会自动注入 `__XR_ENV_BASE__` ，以上配置可省略。
+> [WebSpatial 的 Vite 插件](#)会自动注入 `__XR_ENV_BASE__` ，以上配置可省略。
 
-[「快速开始」示例]()中的使用案例：
+[「快速开始」示例](#)中的使用案例：
 
 ```jsx
 <Router basename={__XR_ENV_BASE__}>
