@@ -36,4 +36,7 @@ jobs:
 
       - name: Test changeset
         run: npx changeset version
+
+      - name: Build website
+        run: pnpm -F website build
       
