@@ -9,7 +9,38 @@ struct PlainWindowContainerView: View {
     @State private var timer: Timer?
 
     private func setSize(size: CGSize) {
-        sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    size: size
+                )
+            )
+    }
+
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
+
+    private func setResizeRange(resizeRange: ResizeRange) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    minimumSize: CGSize(
+                        width: resizeRange.minWidth ?? 0,
+                        height: resizeRange
+                            .minHeight ?? 0
+                    ),
+                    maximumSize: CGSize(
+                        width: resizeRange.maxWidth ?? .infinity,
+                        height: resizeRange.maxHeight ?? .infinity
+                    )
+                )
+            )
     }
 
     var body: some View {
@@ -32,7 +63,8 @@ struct PlainWindowContainerView: View {
                     let height = proxy3D.size.height
 
                     if windowResizeInProgress {
-                        VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
+                        VStack {}.frame(width: width, height: height)
+                            .glassBackgroundEffect().padding3D(.front, -100_000)
                             .position(x: x, y: y)
                             .offset(z: z)
                     } else {
@@ -41,7 +73,8 @@ struct PlainWindowContainerView: View {
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
 
                         SpatialWebViewUI().environment(e)
-                            .frame(width: width, height: height).padding3D(.front, -100_000)
+                            .frame(width: width, height: height)
+                            .padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
@@ -52,6 +85,17 @@ struct PlainWindowContainerView: View {
             }
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
+            }
+            .onAppear {
+                let wd = WindowContainerMgr.Instance.getValue()
+                if let range = wd.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
+                }
             }
             .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized
