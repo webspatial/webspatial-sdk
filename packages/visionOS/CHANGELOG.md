@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 0.1.18
+
+### Patch Changes
+
+- db957ab: Add the WebSpatial flag to the user agent of webview
+
 ## 0.1.17
 
 ## 0.1.16
