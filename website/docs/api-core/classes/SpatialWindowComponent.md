@@ -4,6 +4,10 @@ Defined in: [component/SpatialWindowComponent.ts:45](https://github.com/webspati
 
 Used to position an web window in 3D space
 
+## Extends
+
+- `SpatialComponent`
+
 ## Properties
 
 ### name

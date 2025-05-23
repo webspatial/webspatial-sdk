@@ -4,6 +4,10 @@ Defined in: [component/SpatialModelComponent.ts:9](https://github.com/webspatial
 
 Used to position a model in 3D space, made up of a mesh and materials to be applied to the mesh
 
+## Extends
+
+- `SpatialComponent`
+
 ## Properties
 
 ### name

@@ -7,6 +7,7 @@ import style from './style.module.scss';
 
 type Props = WrapperProps<typeof InfoType>;
 
+// blog detail header time
 export default function InfoWrapper(props: Props): ReactNode {
   return (
     <>

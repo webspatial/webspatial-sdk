@@ -34,7 +34,7 @@ function HeadingNoResult() {
 
 function HeadingFavorites() {
   return (
-    <Heading as="h2" className={styles.headingFavorites}>
+    <Heading as="h3" className={styles.headingFavorites}>
       <Translate id="showcase.favoritesList.title">Our favorites</Translate>
       {/* <FavoriteIcon size="large" style={{marginLeft: '1rem'}} /> */}
     </Heading>
@@ -43,7 +43,7 @@ function HeadingFavorites() {
 
 function HeadingAllSites() {
   return (
-    <Heading as="h2">
+    <Heading as="h3">
       <Translate id="showcase.usersList.allUsers">All sites</Translate>
     </Heading>
   );
@@ -80,8 +80,9 @@ export default function ShowcaseCards() {
   }
 
   return (
-    <section className="margin-top--lg margin-bottom--xl">
-      {filteredUsers.length === sortedUsers.length ? (
+    <section
+      className={clsx('margin-top--lg margin-bottom--xl', styles.backColor)}>
+      {/* {filteredUsers.length === sortedUsers.length ? (
         <>
           <div className={styles.showcaseFavorite}>
             <CardList heading={<HeadingFavorites />} items={favoriteUsers} />
@@ -92,7 +93,8 @@ export default function ShowcaseCards() {
         </>
       ) : (
         <CardList items={filteredUsers} />
-      )}
+      )} */}
+      <CardList items={filteredUsers} />
     </section>
   );
 }

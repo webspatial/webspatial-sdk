@@ -71,6 +71,13 @@ input[type='checkbox']:not(:checked) ~ .checkboxLabel .checkboxLabelOr {
   color: #4e5969;
 }
 
+.checkboxLabelOr{
+  transform: translate(2px,1px);
+}
+.checkboxLabelAnd{
+  transform: translate(3px,1px);
+}
+
 /* 选中状态：滑块覆盖 "AND" */
 input[type='checkbox']:checked ~ .checkboxLabel .checkboxLabelAnd {
   color: #4e5969;

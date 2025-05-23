@@ -2410,8 +2410,8 @@ export const Tags: {[type in TagType]: Tag} = {
         'Our favorite Docusaurus sites that you must absolutely check out!',
       id: 'showcase.tag.favorite.description',
     }),
-    color: '#E9669F',
-    backgroundColor: '#E966661A',
+    color: '#F77234',
+    backgroundColor: '#FFF3E8',
   },
 
   opensource: {
@@ -2420,8 +2420,8 @@ export const Tags: {[type in TagType]: Tag} = {
       message: 'Open-Source Docusaurus sites can be useful for inspiration!',
       id: 'showcase.tag.opensource.description',
     }),
-    color: '#39ca30',
-    backgroundColor: '#30CA591A',
+    color: '#00B42A',
+    backgroundColor: '#E8FFFB',
   },
 
   product: {
@@ -2430,8 +2430,8 @@ export const Tags: {[type in TagType]: Tag} = {
       message: 'Docusaurus sites associated to a commercial product!',
       id: 'showcase.tag.product.description',
     }),
-    color: '#0AAFC1',
-    backgroundColor: '#3087CA1A',
+    color: '#DEA616',
+    backgroundColor: '#FCF7D4',
   },
 
   design: {
@@ -2441,20 +2441,20 @@ export const Tags: {[type in TagType]: Tag} = {
         'Beautiful Docusaurus sites, polished and standing out from the initial template!',
       id: 'showcase.tag.design.description',
     }),
-    color: '#303ACA',
-    backgroundColor: '#3054CA1A',
+    color: '#8845E5',
+    backgroundColor: '#F7F0FC',
   },
 
-  i18n: {
-    label: translate({message: 'I18n'}),
-    description: translate({
-      message:
-        'Translated Docusaurus sites using the internationalization support with more than 1 locale.',
-      id: 'showcase.tag.i18n.description',
-    }),
-    color: '#8C30CA',
-    backgroundColor: '#6E30CA1A',
-  },
+  // i18n: {
+  //   label: translate({message: 'I18n'}),
+  //   description: translate({
+  //     message:
+  //       'Translated Docusaurus sites using the internationalization support with more than 1 locale.',
+  //     id: 'showcase.tag.i18n.description',
+  //   }),
+  //   color: '#8C30CA',
+  //   backgroundColor: '#6E30CA1A',
+  // },
 
   // versioning: {
   //   label: translate({message: 'Versioning'}),
