@@ -1,0 +1,113 @@
+---
+sidebar_position: 0
+slug: mdx-demo
+title: 01 MDX test page
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import BrowserWindow from '@site/src/components/BrowserWindow';
+
+## 引用 (Quotes)
+
+> “First, solve the problem. Then, write the code.”  
+> — John Johnson
+>
+> Blockquotes 使用标准 Markdown 语法。
+
+## 折叠面板 (Details)
+
+<details>
+<summary>点击展开更多细节</summary>
+
+这里是折叠隐藏的内容。你可以放任何 MDX/JSX 组件。  
+HTML 原生 `<details>` 标签也被支持。
+
+</details>
+
+## 提示与警告 (Admonitions)
+
+:::info
+这是一个信息提示框，你可以用来强调一些中性的信息。
+:::
+
+:::tip
+这是一个小贴士提示框，通常用于给出优化建议。
+:::
+
+:::warning
+这是一个警告提示框，用于提醒潜在的危险或重大影响。
+:::
+
+:::danger
+
+Some **content** with _Markdown_ `syntax`. Check [this `api`](#).
+
+:::
+
+{/* :::note
+
+Some **content** with _Markdown_ `syntax`. Check [this `api`](#).
+
+::: */}
+
+## 选项卡 (Tabs)
+
+下面示例展示了如何用 `<Tabs>` 组件来组织不同语言或场景的内容。
+
+<Tabs>
+    <TabItem value="apple" label="Apple" default>
+        This is an apple 🍎
+    </TabItem>
+    <TabItem value="orange" label="Orange">
+        This is an orange 🍊
+    </TabItem>
+    <TabItem value="banana" label="Banana">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+## 代码块
+
+```js
+function hello() {
+    console.log('Hello, Docusaurus!');
+}
+```
+
+<CodeBlock className="language-python" title="example.py">
+    {`def add(a, b):
+    return a + b
+`}
+</CodeBlock>
+
+
+使用 BrowserWindow组件
+
+<BrowserWindow>
+```jsx 
+function Counter() {
+    const [count, setCount] = React.useState(0);
+    return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+}
+```
+</BrowserWindow>
+
+## 实时代码编辑器
+
+```jsx live
+function Counter() {
+    const [count, setCount] = React.useState(0);
+    return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+}
+```
+
+    <CodeBlock className="language-jsx" live>
+        {`function Hello() {
+  return <h1>Hello Live!</h1>;
+}
+`}
+    </CodeBlock>
+
+
