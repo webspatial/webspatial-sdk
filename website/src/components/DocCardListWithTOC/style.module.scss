@@ -1,0 +1,12 @@
+.myDocCardGrid {
+  display: block;
+
+  column-gap: 24px;
+  @media (min-width: 768px) {
+    columns: 2;
+  }
+
+  @media (min-width: 1280px) {
+    columns: 3;
+  }
+}

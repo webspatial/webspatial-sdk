@@ -1,0 +1,55 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.cardContainer {
+  --ifm-link-color: var(--ifm-color-emphasis-800);
+  --ifm-link-hover-color: var(--ifm-color-emphasis-700);
+  --ifm-link-hover-decoration: none;
+
+  box-shadow: unset;
+  border: unset;
+  transition: all var(--ifm-transition-fast) ease;
+  transition-property: border, box-shadow;
+
+  background-color: var(--color-fill-2);
+
+  .body {
+    padding-left: 0;
+    a {
+      color: var(--color-text-2);
+      font-size: 14px;
+      &:hover {
+        color: var(--ifm-color-primary);
+      }
+    }
+  }
+  margin-bottom: 24px;
+}
+
+.cardContainer:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.cardContainer *:last-child {
+  margin-bottom: 0;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  margin-top: 0 !important;
+  margin-bottom: 0;
+}
+
+.cardDescription {
+  font-size: 0.8rem;
+}
+
+.myDocCardList {
+  list-style: none; /* 去掉小点点 :contentReference[oaicite:5]{index=5} */
+  margin: 0;
+  padding: 0;
+}
