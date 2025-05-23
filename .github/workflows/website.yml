@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies and build
         run: pnpm run setup
 
-      - name: Build Docusaurus site
+      - name: Build website
         run: pnpm -F website build
 
       - name: Deploy to GitHub Pages
