@@ -54,7 +54,10 @@ export class SpatialReactContextObject {
     Object.values(this.fns).forEach(fn => fn())
   }
 
-  public querySpatialDom(spatialId: string) {
+  public querySpatialDom(
+    spatialId: string,
+    domContainer?: Element | DocumentFragment | null,
+  ) {
     if (this.domSpatialId === spatialId) {
       return this.dom
     }
@@ -62,7 +65,10 @@ export class SpatialReactContextObject {
       return null
     }
     if (!this.spatialId2dom[spatialId]) {
-      const spatialDom = this.dom.querySelector(`[${SpatialID}="${spatialId}"]`)
+      domContainer = domContainer || this.dom
+      const spatialDom = domContainer.querySelector(
+        `[${SpatialID}="${spatialId}"]`,
+      )
 
       if (spatialDom) {
         this.spatialId2dom[spatialId] = spatialDom as HTMLElement
@@ -71,7 +77,10 @@ export class SpatialReactContextObject {
     return this.spatialId2dom[spatialId]
   }
 
-  public queryParentSpatialDom(spatialId: string) {
+  public queryParentSpatialDom(
+    spatialId: string,
+    domContainer?: Element | DocumentFragment | null,
+  ) {
     if (this.domSpatialId === spatialId) {
       return null
     }
@@ -81,11 +90,12 @@ export class SpatialReactContextObject {
       return this.spatialId2parentSpatialDom[spatialId]
     }
 
-    let spatialDom = this.querySpatialDom(spatialId)
+    domContainer = domContainer || this.dom
+    let spatialDom = this.querySpatialDom(spatialId, domContainer)
     if (spatialDom) {
       if (spatialDom === this.dom) return null
       let parentSpatialDom = spatialDom.parentElement as HTMLElement
-      while (parentSpatialDom && spatialDom !== this.dom) {
+      while (parentSpatialDom && spatialDom !== domContainer) {
         if (parentSpatialDom.hasAttribute(SpatialID)) {
           break
         } else {
