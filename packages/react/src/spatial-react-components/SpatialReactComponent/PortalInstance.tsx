@@ -26,6 +26,7 @@ import { CornerRadius } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
 import { XRApp } from '../../XRApp'
+import { SpatialPortalContext } from './SpatialPortalContext'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
@@ -402,11 +403,18 @@ function useSyncDomRect(spatialId: string) {
 
   const spatialReactContextObject = useContext(SpatialReactContext)
 
+  const spatialPortalContextObject = useContext(SpatialPortalContext)
+
   const inheritedPortalClassNameRef = useRef('')
 
   useEffect(() => {
     const syncDomRect = () => {
-      const dom = spatialReactContextObject?.querySpatialDom(spatialId)
+      const queryDomContainer =
+        spatialPortalContextObject?.container || spatialReactContextObject!.dom
+      const dom = spatialReactContextObject?.querySpatialDom(
+        spatialId,
+        queryDomContainer,
+      )
 
       if (!dom) {
         return
@@ -422,8 +430,10 @@ function useSyncDomRect(spatialId: string) {
       let rectType = domRect2rectType(domRect)
 
       if (!isFixedPosition) {
-        const parentDom =
-          spatialReactContextObject?.queryParentSpatialDom(spatialId)
+        const parentDom = spatialReactContextObject?.queryParentSpatialDom(
+          spatialId,
+          queryDomContainer,
+        )
         if (parentDom) {
           const parentDomRect = parentDom.getBoundingClientRect()
           const parentRectType = domRect2rectType(parentDomRect)
@@ -497,7 +507,9 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     [],
   )
 
+  const inSpatialPortalContext = !!useContext(SpatialPortalContext)
   const [spatialWindowManager] = usePortalContainer({
+    inSpatialPortalContext,
     onContainerSpawned,
     onContainerDestroyed,
   })
@@ -536,6 +548,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
   )
 
   const needRenderPlaceHolder =
+    !inSpatialPortalContext &&
     isSubPortal &&
     inheritedPortalStyle.position !== 'absolute' &&
     inheritedPortalStyle.position !== 'fixed'
