@@ -8,8 +8,7 @@ let defaultWindowContainerConfig = WindowContainerOptions(
         width: DefaultPlainWindowContainerSize.width,
         height: DefaultPlainWindowContainerSize.height
     ),
-    resizability: nil,
-    resizeRange: nil
+    resizability: nil
 )
 
 struct WindowContainerData: Decodable, Hashable, Encodable {
@@ -44,8 +43,8 @@ extension WindowContainerPlainDefaultValues {
             width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
             height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
         )
-        windowResizability = getWindowResizability(options.resizability)
-        resizeRange = options.resizeRange
+        windowResizability = getWindowResizability(nil)
+        resizeRange = options.resizability
     }
 }
 
@@ -60,13 +59,12 @@ struct ResizeRange: Codable {
 struct WindowContainerOptions: Codable {
     // windowContainer
     let defaultSize: Size?
-    let resizability: String?
     struct Size: Codable {
         var width: Double
         var height: Double
     }
 
-    let resizeRange: ResizeRange?
+    let resizability: ResizeRange?
 }
 
 func getWindowResizability(_ windowResizability: String?) -> WindowResizability {
