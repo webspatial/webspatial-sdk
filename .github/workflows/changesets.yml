@@ -69,3 +69,12 @@ jobs:
 
           # push tags
           git push origin "$tag"
+      - name: Sync main → stable
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          git fetch origin stable:stable
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout stable
+          git merge origin/main --no-edit
+          git push origin stable
