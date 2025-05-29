@@ -6,8 +6,7 @@ export interface WindowContainerOptions {
     height: number // Initial height of the window
   }
 
-  resizability?: 'automatic' | 'contentSize' | 'contentMinSize'
-  resizeRange?: {
+  resizability?: {
     minWidth?: number
     minHeight?: number
     maxWidth?: number
