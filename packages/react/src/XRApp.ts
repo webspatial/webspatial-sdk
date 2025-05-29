@@ -6,7 +6,6 @@ export const defaultSceneConfig: WindowContainerOptions = {
     width: 900,
     height: 700,
   },
-  resizability: 'automatic',
 }
 
 const CONTEXT_WINDOW_URL = 'webspatial://createWindowContext'

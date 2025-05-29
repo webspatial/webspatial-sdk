@@ -66,8 +66,7 @@ function App() {
               width: 900,
               height: 900,
             },
-            resizability: 'contentSize',
-            resizeRange: {
+            resizability: {
               minWidth: 700,
               minHeight: 700,
               // maxWidth: 900,
@@ -93,8 +92,7 @@ function App() {
               width: 900,
               height: 900,
             },
-            resizability: 'contentSize',
-            resizeRange: {
+            resizability: {
               minWidth: 700,
               minHeight: 700,
               maxWidth: 900,
@@ -120,8 +118,7 @@ function App() {
               width: 900,
               height: 900,
             },
-            resizability: 'contentSize',
-            resizeRange: {
+            resizability: {
               // minWidth: 700,
               // minHeight: 700,
               maxWidth: 900,
@@ -146,8 +143,7 @@ function App() {
               width: 900,
               height: 900,
             },
-            resizability: 'contentSize',
-            resizeRange: {
+            resizability: {
               minWidth: 900,
               minHeight: 900,
               maxWidth: 900,
