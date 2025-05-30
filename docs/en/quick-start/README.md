@@ -1,3 +1,5 @@
+![status: preview](https://img.shields.io/badge/status-preview-orange)
+> ⚠️ This project is in **preview**. Expect some missing docs and potential stability issues. APIs and features may change.
 
 <div align="center">
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
@@ -302,7 +304,7 @@ html.is-spatial {
 > Although style changes take effect automatically via the Dev Server, HMR for WebSpatial logic in React components is not yet supported. If logic changes, refresh manually (via the scene menu in the bottom right) or restart the Dev Server to see updates.
 
 | ![](../../assets/quick/10.png) | ![](../../assets/quick/11.png) |
-|:---:|:---:|
+| :----------------------------: | :----------------------------: |
 
 Modify `src/App.tsx` to make the two card elements [spatialized HTML elements]() by adding a `classname`.
 
@@ -353,7 +355,7 @@ html.is-spatial {
 ```
 
 | ![](../../assets/quick/12.png) | ![](../../assets/quick/13.png) |
-|:---:|:---:|
+| :----------------------------: | :----------------------------: |
 
 ## 9. 'Elevate' spatialized elements
 
@@ -394,7 +396,7 @@ Apply different levels of 'elevation' to the link elements spatialized earlier.
 ```
 
 | ![](../../assets/quick/14.png) | ![](../../assets/quick/15.png) |
-|:---:|:---:|
+| :----------------------------: | :----------------------------: |
 
 Another way to 'elevate' is to use CSS Transform, which can also [deform and rotate]() in 3D space.
 
@@ -412,7 +414,7 @@ In the [`XR_ENV` mode styles]() in `src/index.css`, move and rotate `link-card` 
 ```
 
 | ![](../../assets/quick/16.png) | ![](../../assets/quick/17.png) |
-|:---:|:---:|
+| :----------------------------: | :----------------------------: |
 
 ## 10. Add static 3D content
 
