@@ -1,7 +1,5 @@
-<div align="left">
-  <img src="../../docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
-</div>
-<br/>
+> [!NOTE]
+> This library is still in development. APIs may change as we enable additional platforms/features
 
 # Core SDK for WebSpatial
 
@@ -9,17 +7,10 @@ WebSpatial SDK is implemented on top of the Core SDK, which is a framework-agnos
 
 The core-sdk library is responsible for interacting with the target platforms native APIs to expose behavior not commonly found on the web.
 
-## Documentation
-
-For Core SDK:
-* [API Docs](https://github.com/webspatial/webspatial.github.io/blob/main/docs/globals.md)
-
-For WebSpatial:
-- [Table of Contents](../../docs/en/README.md)
-- [Introduction](../../docs/en/introduction/README.md)
-- [Quick Start](../../docs/en/quick-start/README.md)
-- [Core Concepts](../../docs/en/core-concepts/README.md)
-- [Development Guide](../../docs/en/development-guide/README.md)
+# How to use
+To run a WebSpatial website you currently need to package it within a native app. 
+ 
+See docs on our [github](https://github.com/webspatial/webspatial-sd) for more information.
 
 ## Hello World Example
 
@@ -109,9 +100,6 @@ await windowContainer.setRootEntity(entity)
 ```
 
 Entity maps to an object that will be displayed. Components tell how that object should be displayed.
-You can find more examples here when you run the server locally:
-
-* http://localhost:5173/src/docsWebsite/index.html?examplePath=webElement
 
 # **Helper**
 

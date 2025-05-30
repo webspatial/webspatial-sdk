@@ -64,7 +64,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 This project uses the following third-party libraries:
 
-- [loglevel@1.9.2](https://github.com/pimterry/loglevel) - Licensed under the MIT
 - [tsup@8.4.0](https://github.com/egoist/tsup) - Licensed under the MIT
 - [typedoc-plugin-markdown@4.6.3](https://github.com/typedoc2md/typedoc-plugin-markdown) - Licensed under the MIT
 - [typedoc@0.26.11](https://github.com/TypeStrong/TypeDoc) - Licensed under the Apache-2.0
