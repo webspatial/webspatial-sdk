@@ -303,10 +303,6 @@ importers:
         version: 5.7.3
 
   packages/core:
-    dependencies:
-      loglevel:
-        specifier: ^1.9.2
-        version: 1.9.2
     devDependencies:
       tsup:
         specifier: ^8.4.0
