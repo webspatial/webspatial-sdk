@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.1.18
+
+### Patch Changes
+
+- bf6f9b3: reduce flicker on reopen
+- db957ab: Add the WebSpatial flag to the user agent of webview
+
 ## 0.1.17
 
 ## 0.1.16
