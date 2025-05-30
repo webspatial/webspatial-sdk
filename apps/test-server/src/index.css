@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
+/* html {
     background-color: gray;
-}
+} */
 
-div {
-    background-color: gray;
+body {
+    background-color: red;
 }
