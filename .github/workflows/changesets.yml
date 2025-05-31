@@ -52,22 +52,20 @@ jobs:
       - name: Create and push Git tags for published packages
         if: steps.changesets.outputs.published == 'true'
         run: |
-          echo "Published packages: ${{ steps.changesets.outputs.publishedPackages }}"
           # Configure Git user
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Loop through each published package using jq (jq is pre-installed on ubuntu-latest)
-          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -c '.[]' | while read package; do
-            name=$(echo $package | jq -r '.name')
-            version=$(echo $package | jq -r '.version')
-            tag="${name}@${version}"
-            echo "Creating tag $tag"
-            # Check if the tag already exists
-            if git rev-parse "$tag" >/dev/null 2>&1; then
-              echo "Tag $tag already exists, skipping."
-            else
-              git tag "$tag"
-            fi
-          done
-          # Push all tags to the remote repository
-          git push --tags
+
+          # get version from publishedPackages JSON first element
+          version=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[0].version')
+          tag="v${version}"
+
+          echo "Creating tag $tag"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists, skipping."
+          else
+            git tag "$tag"
+          fi
+
+          # push tags
+          git push origin "$tag"
