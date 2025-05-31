@@ -2,6 +2,7 @@ export { SpatialPrimitive, withSpatial } from './SpatialPrimitive'
 export {
   type SpatialReactComponentProps,
   type SpatialReactComponentRef,
+  useCheckSpatialDivContext,
 } from './SpatialReactComponent'
 export * from './SpatialMonitor'
 export { notifyUpdateStandInstanceLayout } from './notifyUpdateStandInstanceLayout'
@@ -18,3 +19,5 @@ export * from './CSSSpatialDiv'
 
 export * from './SpatialView'
 export * from './Model/index'
+
+export * from './createPortal'
