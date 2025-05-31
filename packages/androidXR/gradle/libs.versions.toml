@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.1"
+agp = "8.9.2"
 guava = "32.1.3-android"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
