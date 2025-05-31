@@ -1,0 +1,73 @@
+.admonition {
+  margin-bottom: 1em;
+}
+.admonitionContent {
+  color: var(--color-text-2);
+  p {
+    font-size: 14px;
+  }
+}
+:global(.alert--danger) {
+  .admonitionHeading {
+    color: #f53f3f;
+  }
+}
+
+:global(.alert--warning) {
+  .admonitionHeading {
+    color: #ff7d00;
+  }
+}
+
+:global(.alert--info) {
+  .admonitionHeading {
+    color: #3491fa;
+  }
+}
+
+:global(.alert--success) {
+  .admonitionHeading {
+    color: #00b42a;
+  }
+}
+
+.admonitionHeading {
+  font: var(--ifm-heading-font-weight) var(--ifm-h5-font-size) /
+    var(--ifm-heading-line-height) var(--ifm-heading-font-family);
+  text-transform: uppercase;
+  font-size: 16px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* Heading alone without content (does not handle fragment content) */
+.admonitionHeading:not(:last-child) {
+  margin-bottom: 0.3rem;
+}
+
+.admonitionHeading code {
+  text-transform: none;
+}
+
+.admonitionIcon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.4em;
+}
+
+.admonitionIcon svg {
+  display: block;
+  height: 16px;
+  width: 16px;
+  fill: var(--ifm-alert-foreground-color);
+}
+
+.admonitionContent > :last-child {
+  margin-bottom: 0;
+}
+
+:global(.alert) {
+  padding: 16px 20px;
+  box-shadow: unset;
+}
