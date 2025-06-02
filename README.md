@@ -1,3 +1,6 @@
+![status: preview](https://img.shields.io/badge/status-preview-orange)
+> ⚠️ This project is in **preview**. Expect some missing docs and potential stability issues. APIs and features may change.
+
 
 <div align="center">
   <img src="docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
