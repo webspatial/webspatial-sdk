@@ -22,7 +22,7 @@ export function configStartUrl(
   manifestUrl: string,
   isNet: boolean,
 ) {
-  let start_url = manifestJson.start_url ?? '/'
+  let start_url = manifestJson.start_url ?? '/index.html'
   const isStartUrl = validateURL(start_url)
   const hasBase = base.length > 0
   if (hasBase) {

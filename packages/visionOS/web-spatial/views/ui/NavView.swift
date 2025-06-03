@@ -53,7 +53,7 @@ struct NavView: View {
                 HStack(spacing: 5) {
                     if showUrl {
                         Text(
-                            navInfo.url
+                            navInfo.url.count > 0 ? navInfo.url : (swc?.getURL()?.absoluteString ?? "")
                         )
                         .padding()
                         .lineLimit(1)
