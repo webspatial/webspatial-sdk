@@ -1,4 +1,3 @@
-//@ts-ignore
 import { parseCornerRadius, getSession, XRApp } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
 
@@ -183,6 +182,21 @@ function hijackWindowOpen() {
   XRApp.getInstance().init()
 }
 
+function monitorHTMLAttributeChange() {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'attributes' && mutation.attributeName) {
+        checkCSSProperties()
+      }
+    })
+  })
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  })
+}
+
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
@@ -194,4 +208,5 @@ export function spatialPolyfill() {
   hijackGetComputedStyle()
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
+  monitorHTMLAttributeChange()
 }
