@@ -18,7 +18,7 @@
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\"",
     "ciTest": "cd tests/ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
-    "ci:publish": "changeset publish",
+    "ci:publish": "changeset publish --no-git-tag",
     "changeset": "changeset",
     "changeset:pre-enter": "changeset pre enter alpha",
     "changeset:pre-exit": "changeset pre exit alpha",
