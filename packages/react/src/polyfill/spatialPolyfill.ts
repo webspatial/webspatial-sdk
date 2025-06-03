@@ -1,3 +1,4 @@
+//@ts-ignore
 import { parseCornerRadius, getSession, XRApp } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
 
