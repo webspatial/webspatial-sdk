@@ -163,10 +163,12 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        let url = navigationAction.request.url?.absoluteString ?? ""
-
-        if url != "webspatial://createWindowContext",
-           !pwaManager.checkInScope(url: url)
+        var resource = navigationAction.request.url!.absoluteString
+        if pwaManager.isLocal {
+            resource = pwaManager.getLocalResourceURL(url: resource)
+        }
+        if resource != "webspatial://createWindowContext",
+           !pwaManager.checkInScope(url: resource)
         {
             // open in safari
             UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
