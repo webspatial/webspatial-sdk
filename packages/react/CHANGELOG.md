@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 0.1.18
+
+### Patch Changes
+
+- 126c45a: check html spatial style when html className changed
+  - @webspatial/core-sdk@0.1.18
+
 ## 0.1.17
 
 ### Patch Changes
