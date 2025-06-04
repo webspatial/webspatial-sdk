@@ -1,5 +1,15 @@
 # @webspatial/builder
 
+## 0.1.18
+
+### Patch Changes
+
+- ec0277b: fix scope setup when the web project is a offline project
+- Updated dependencies [bf6f9b3]
+- Updated dependencies [db957ab]
+- Updated dependencies [46f7f26]
+  - @webspatial/platform-visionos@0.1.18
+
 ## 0.1.17
 
 ### Patch Changes
