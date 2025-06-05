@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/platform-visionos",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Used to publish WebSpatial projects to Apple Vision Pro",
   "type": "commonjs",
   "engines": {

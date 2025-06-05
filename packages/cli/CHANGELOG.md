@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.19
+
+### Patch Changes
+
+- 3c52171: Modify the export path of the test package
+  - @webspatial/platform-visionos@0.1.19
+
 ## 0.1.18
 
 ### Patch Changes
