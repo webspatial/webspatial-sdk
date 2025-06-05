@@ -80,12 +80,12 @@ export class ResourceManager {
         `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
-    let tempDir = join(__dirname, `../../temp`)
+    let tempDir = './node_modules/.webspatial-builder-temp'
     let tempPlatformDir = join(tempDir, `platform-${usePlatform}`)
     let tempProjectDir = join(tempPlatformDir, './project')
     let temBuildDir = join(tempPlatformDir, './build')
     let temExportDir = join(tempPlatformDir, './export')
-    let temTestDir = `./node_modules/.webspatial-builder-temp/platform-${usePlatform}/test`
+    let temTestDir = join(tempPlatformDir, './test')
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir)
     }
@@ -100,18 +100,6 @@ export class ResourceManager {
     }
     if (!fs.existsSync(temExportDir)) {
       fs.mkdirSync(temExportDir)
-    }
-    if (!fs.existsSync('./node_modules/.webspatial-builder-temp')) {
-      fs.mkdirSync('./node_modules/.webspatial-builder-temp')
-    }
-    if (
-      !fs.existsSync(
-        `./node_modules/.webspatial-builder-temp/platform-${usePlatform}`,
-      )
-    ) {
-      fs.mkdirSync(
-        `./node_modules/.webspatial-builder-temp/platform-${usePlatform}`,
-      )
     }
     if (!fs.existsSync(temTestDir)) {
       fs.mkdirSync(temTestDir)
