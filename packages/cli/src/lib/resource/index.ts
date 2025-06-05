@@ -85,7 +85,7 @@ export class ResourceManager {
     let tempProjectDir = join(tempPlatformDir, './project')
     let temBuildDir = join(tempPlatformDir, './build')
     let temExportDir = join(tempPlatformDir, './export')
-    let temTestDir = join(tempPlatformDir, './test')
+    let temTestDir = `./webspatial-builder-temp/platform-${usePlatform}/test`
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir)
     }
@@ -100,6 +100,12 @@ export class ResourceManager {
     }
     if (!fs.existsSync(temExportDir)) {
       fs.mkdirSync(temExportDir)
+    }
+    if (!fs.existsSync('./webspatial-builder-temp')) {
+      fs.mkdirSync('./webspatial-builder-temp')
+    }
+    if (!fs.existsSync(`./webspatial-builder-temp/platform-${usePlatform}`)) {
+      fs.mkdirSync(`./webspatial-builder-temp/platform-${usePlatform}`)
     }
     if (!fs.existsSync(temTestDir)) {
       fs.mkdirSync(temTestDir)
