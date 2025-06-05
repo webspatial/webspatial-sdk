@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import {
   BACK_APPICON_DIRECTORY,
+  LOGO_DIRECTORY,
   MIDDLE_APPICON_DIRECTORY,
   PROJECT_BUILD_DIRECTORY,
   PROJECT_DIRECTORY,
@@ -213,6 +214,15 @@ export default class XcodeProject {
       middleConfig.images[0]['filename'] = middleIconFileName
       await middleIcon.writeAsync(middleIconFullPath)
       await fs.writeFileSync(middleIconConfigPath, JSON.stringify(middleConfig))
+
+      const logoConfigDirectory = join(PROJECT_DIRECTORY, LOGO_DIRECTORY)
+      const logoConfigPath = join(logoConfigDirectory, 'Contents.json')
+      let logoConfig = await loadJsonFromDisk(logoConfigPath)
+      const logoFileName = 'logo.' + icon.getMIME().replace('image/', '')
+      const logoFullPath = join(logoConfigDirectory, logoFileName)
+      logoConfig.images[0]['filename'] = logoFileName
+      await icon.writeAsync(logoFullPath)
+      await fs.writeFileSync(logoConfigPath, JSON.stringify(logoConfig))
     }
   }
 

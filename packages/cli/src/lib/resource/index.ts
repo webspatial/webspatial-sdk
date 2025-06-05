@@ -17,6 +17,7 @@ export const BACK_APPICON_DIRECTORY =
 export const MIDDLE_APPICON_DIRECTORY =
   ASSET_DIRECTORY +
   '/AppIcon.solidimagestack/Middle.solidimagestacklayer/Content.imageset'
+export const LOGO_DIRECTORY = ASSET_DIRECTORY + '/logo.imageset'
 
 const supportPlatform = ['visionos']
 
