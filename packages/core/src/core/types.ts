@@ -6,7 +6,12 @@ export interface WindowContainerOptions {
     height: number // Initial height of the window
   }
 
-  resizability?: 'automatic' | 'contentSize' | 'contentMinSize'
+  resizability?: {
+    minWidth?: number
+    minHeight?: number
+    maxWidth?: number
+    maxHeight?: number
+  }
 }
 
 export type LoadingMethodKind = 'show' | 'hide'
