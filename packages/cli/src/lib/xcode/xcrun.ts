@@ -193,9 +193,13 @@ export default class Xcrun {
     try {
       const res = execSync(buildCMD)
       if (res.toString().includes('** BUILD FAILED **')) {
+        console.log(res.toString())
         return false
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log(e)
+      return false
+    }
     console.log('------------------- build end -------------------')
     return true
   }
