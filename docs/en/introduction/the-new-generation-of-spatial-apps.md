@@ -21,7 +21,7 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### Multitasking
 
 - **Spatial apps**
-  - <ins>Can run and use **multiple [apps that include 3D content]()** at the same time.</ins>
+  - <ins>Can run and use **multiple [apps that include 3D content](#)** at the same time.</ins>
   - <ins>Can **switch focus** between apps quickly.</ins>
   - <ins>Can **keep auxiliary apps open** while using a primary app.</ins>
 
@@ -38,8 +38,8 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### Relationship with the OS
 
 - **Spatial apps**
-  - <ins>An app can [**own the entire 3D space**]() or only [**a local part of it**]() such as its own [scene container (similar to a bounding box)](), while the OS handles the rest.</ins>
-  - <ins>Because the OS supplies most functionality and a unified experience, the app can [**focus on its unique value**](), so design and development costs stay low and binaries are small.</ins>
+  - <ins>An app can [**own the entire 3D space**](#) or only [**a local part of it**](#) such as its own [scene container (similar to a bounding box)](#), while the OS handles the rest.</ins>
+  - <ins>Because the OS supplies most functionality and a unified experience, the app can [**focus on its unique value**](#), so design and development costs stay low and binaries are small.</ins>
 
 - **Desktop/Mobile apps**
   - Each app provides **content only within its window**; the OS does the rest.
@@ -52,8 +52,8 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### 3D Capability
 
 - **Spatial apps**
-  - <ins>2D and 3D content can [**break out of flat windows**](), appearing anywhere in the 3D space.</ins>
-  - To let multiple apps [**share one 3D space (unified rendering)**](), apps cannot implement arbitrary rendering pipelines. They supply content via [OS-managed 2D/3D containers]() and describe it with OS-understood APIs; the OS handles the rendering.
+  - <ins>2D and 3D content can [**break out of flat windows**](#), appearing anywhere in the 3D space.</ins>
+  - To let multiple apps [**share one 3D space (unified rendering)**](#), apps cannot implement arbitrary rendering pipelines. They supply content via [OS-managed 2D/3D containers](#) and describe it with OS-understood APIs; the OS handles the rendering.
 
 - **Desktop/Mobile apps**
   - *Both 2D and 3D content must stay in a single plane (3D is **projected** onto that plane).*
@@ -64,8 +64,8 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### Interaction Capability
 
 - **Spatial apps**
-  - <ins>Leverage environment sensing, head tracking, hand tracking, and eye tracking to deliver [**truly natural interaction**]().</ins>
-  - <ins>Need no controllers. Regardless of GUI type (2D or 3D) or distance, they default to the most efficient [gaze-and-pinch](). The OS implements the visuals, keeping costs down and UX consistent.</ins>
+  - <ins>Leverage environment sensing, head tracking, hand tracking, and eye tracking to deliver [**truly natural interaction**](#).</ins>
+  - <ins>Need no controllers. Regardless of GUI type (2D or 3D) or distance, they default to the most efficient [gaze-and-pinch](#). The OS implements the visuals, keeping costs down and UX consistent.</ins>
 
 - **Desktop/Mobile apps**
   - *Interaction has evolved from mouse and keyboard to touch, gradually approaching **natural interaction** in the physical world.*
@@ -77,9 +77,9 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### Development Approach
 
 - **Spatial apps**
-  - <ins>Built on [**2D GUI frameworks enhanced with spatial features**]().</ins>
+  - <ins>Built on [**2D GUI frameworks enhanced with spatial features**](#).</ins>
   - <ins>Fit almost every business domain and app type (except a few heavy 3D niches) while extending familiar product/GUI patterns.</ins>
-  - <ins>[APIs]() are highly abstract, concrete, and intuitive, so they have a low learning curve.</ins>
+  - <ins>[APIs](#) are highly abstract, concrete, and intuitive, so they have a low learning curve.</ins>
   - <ins>They tap into a huge talent pool and a rich open-source ecosystem.</ins>
 
 - **Desktop/Mobile apps**
@@ -97,7 +97,7 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### Interaction Implementation
 
 - **Spatial apps**
-  - <ins>The **OS provides** [basic GUI events (for 2D)]() and [advanced events (for 3D or 2D)]().</ins>
+  - <ins>The **OS provides** [basic GUI events (for 2D)](#) and [advanced events (for 3D or 2D)](#).</ins>
   - <ins>The OS renders common interaction visuals.</ins>
 
 - **Desktop/Mobile apps**
@@ -112,9 +112,9 @@ The new generation of XR apps—**spatial apps**—are not cut off from the 2D a
 ### UI Implementation
 
 - **Spatial apps**
-  - <ins>The UI is built from **GUI widget objects (including [3D container widgets]())**.</ins>
+  - <ins>The UI is built from **GUI widget objects (including [3D container widgets](#))**.</ins>
   - <ins>The OS and framework **render** those objects each frame; the app does not care about drawing.</ins>
-  - <ins>Position and size come from their [**layout relationships**]() and attributes. Developers think in terms of **stacking blocks**, fully in code, without visual editors.</ins>
+  - <ins>Position and size come from their [**layout relationships**](#) and attributes. Developers think in terms of **stacking blocks**, fully in code, without visual editors.</ins>
 
 - **Desktop/Mobile apps**
   - The UI is built from **GUI widget objects**.

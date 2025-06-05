@@ -8,11 +8,11 @@ The first step is to provide app icons. The best practice for a WebSpatial proje
 
 | Icon Size | Use           | Context                                                    | Transparent Background | Built-in Rounded Corners | How to Provide                |
 |-----------|---------------|------------------------------------------------------------|------------------------|--------------------------|-------------------------------|
-| 48 × 48   | favicon.ico   | Browser tab bar                                           | Required              | Allowed                 | [HTML `<link>`]()             |
-| 180 × 180 | [iOS devices]() | “Add to Home Screen”                                     | Not allowed           | Not allowed             | [HTML `<link>`]()             |
+| 48 × 48   | favicon.ico   | Browser tab bar                                           | Required              | Allowed                 | [HTML `<link>`](#)             |
+| 180 × 180 | [iOS devices](#) | “Add to Home Screen”                                     | Not allowed           | Not allowed             | [HTML `<link>`](#)             |
 | 192 × 192 | Regular PWA   | Small icon on the home screen                             | Required              | Required                | Web App Manifest              |
 | **512 × 512** | Regular PWA   | Larger icon for splash screens, app stores, and similar | Required              | Required                | Web App Manifest              |
-| **1024 × 1024** | [visionOS app]() | App icon in Vision Pro                                | **Not allowed**       | **Not allowed**         | WebSpatial + Web App Manifest |
+| **1024 × 1024** | [visionOS app](#) | App icon in Vision Pro                                | **Not allowed**       | **Not allowed**         | WebSpatial + Web App Manifest |
 
 Sample (you can use this directly in the demo):
 
@@ -30,7 +30,7 @@ At a minimum—so that the app can run independently on both desktop platforms a
 - **512 × 512** (`"any"` type)
 - **1024 × 1024** (`"maskable"` type)
 
-In the [Web App Manifest](), these two icons are configured like this:
+In the [Web App Manifest](#), these two icons are configured like this:
 
 ```json5
   "icons": [

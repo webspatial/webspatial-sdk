@@ -16,11 +16,11 @@ pnpm add @webspatial/react-sdk @webspatial/core-sdk @google/model-viewer three
 
 ### `@webspatial/react-sdk`
 
-[WebSpatial SDK]() 中的 React SDK，让 [WebSpatial API]() 在 React 中开箱即用。
+[WebSpatial SDK](#) 中的 React SDK，让 [WebSpatial API](#) 在 React 中开箱即用。
 
 ### `@webspatial/core-sdk`
 
-React SDK、以及后续用于支持其他 Web 框架的 SDK，都是用 Core SDK 来实现的。Core SDK 是一套框架无关的、更底层的纯 JS API，在内部借助[非标准的 JS Bridge API 让 WebSpatial App Shell 用原生方式实现 2D HTML 内容的空间化和渲染 3D 内容]()。
+React SDK、以及后续用于支持其他 Web 框架的 SDK，都是用 Core SDK 来实现的。Core SDK 是一套框架无关的、更底层的纯 JS API，在内部借助[非标准的 JS Bridge API 让 WebSpatial App Shell 用原生方式实现 2D HTML 内容的空间化和渲染 3D 内容](#)。
 
 > [!NOTE]
 > `@google/model-viewer` 和 `three` 是 SDK 内部需要的依赖，由于包体较大、很多 Web 项目自身可能也要使用、后续 SDK 可能移除对它们的依赖，因此目前作为 SDK 的 peerDependencies，需要在 Web 项目中单独安装。
@@ -33,7 +33,7 @@ pnpm add -D @webspatial/builder
 
 ### `@webspatial/builder`
 
-WebSpatial 应用打包工具，把当前的 Web 网站变成 [Packaged WebSpatial App]()，是目前在 visionOS 上开发调试和分发 WebSpatial 应用必须的开发工具。
+WebSpatial 应用打包工具，把当前的 Web 网站变成 [Packaged WebSpatial App](#)，是目前在 visionOS 上开发调试和分发 WebSpatial 应用必须的开发工具。
 
 具体 API 见[步骤 2：添加 WebSpatial 应用打包构建工具](step-2-add-build-tool-for-packaged-webspatial-apps.md)。
 
@@ -50,7 +50,7 @@ pnpm add -D @webspatial/platform-visionos
 
 ### `@webspatial/platform-visionos`
 
-包含生成 visionOS 应用、提供空间化能力所需的 [WebSpatial App Shell]()。
+包含生成 visionOS 应用、提供空间化能力所需的 [WebSpatial App Shell](#)。
 
 #### 安装 Xcode 和 visionOS 模拟器
 
@@ -63,7 +63,7 @@ pnpm add -D @webspatial/platform-visionos
 
 ## 安装编译环节的非核心依赖
 
-这些依赖是针对第三方生态的支持，简化使用、加入一些[必要的性能优化和默认配置]()。
+这些依赖是针对第三方生态的支持，简化使用、加入一些[必要的性能优化和默认配置](#)。
 
 如果是 React + Vite 项目：
 

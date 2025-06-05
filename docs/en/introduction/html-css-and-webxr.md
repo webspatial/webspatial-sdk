@@ -36,7 +36,7 @@ Web-3D content built with WebGL or WebGPU can, on spatial computing platforms, u
 But WebXR content faces issues identical to those of traditional XR apps built with OpenXR or Unity:
 
 - WebXR content **cannot coexist with other XR apps**, and it **cannot even coexist with other 2D Web content in the same page**. Once a WebXR session starts, it takes over rendering for the entire space, hiding the original page and OS UI; the app itself must handle all interaction.
-- It must be built [**entirely with WebGL or WebGPU**](), usually with a **Web-3D engine**. This approach is **completely disconnected** from traditional Web development with HTML + CSS + JS. In mainstream internet domains, 2D Web GUIs satisfy requirements easily and tap into a huge stock of UI patterns, component libraries, and open-source ecosystems. **None of that can be used directly in WebXR development**. Teams must reinvent UI with disparate 3D GUI experiments or re-implement 2D GUIs and interactions in WebGL or WebGPU.
+- It must be built [**entirely with WebGL or WebGPU**](#), usually with a **Web-3D engine**. This approach is **completely disconnected** from traditional Web development with HTML + CSS + JS. In mainstream internet domains, 2D Web GUIs satisfy requirements easily and tap into a huge stock of UI patterns, component libraries, and open-source ecosystems. **None of that can be used directly in WebXR development**. Teams must reinvent UI with disparate 3D GUI experiments or re-implement 2D GUIs and interactions in WebGL or WebGPU.
 
 ![intro-3-11](../../assets/intro/intro-3-11.png)
 ![intro-3-12](../../assets/intro/intro-3-12.png)

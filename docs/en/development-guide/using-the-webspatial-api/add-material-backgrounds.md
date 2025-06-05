@@ -6,21 +6,21 @@ Basic concepts:
 
 ---
 
-> Because the current [WebSpatial SDK]() only ships a React SDK, all examples in this document use React.
+> Because the current [WebSpatial SDK](#) only ships a React SDK, all examples in this document use React.
 >
 > APIs covered in this section:
 > - `--xr-background-material`
 > - `border-radius`, `display`, `visibility`, `opacity`
 > - `--xr-z-index`
 
-With the help of the [WebSpatial SDK](), two main subjects in every application [scene]() can dynamically render their background based on the surrounding spatial environment.
+With the help of the [WebSpatial SDK](#), two main subjects in every application [scene](#) can dynamically render their background based on the surrounding spatial environment.
 
 ## Translucent or Fully Transparent Window Scenes
 
-The first subject is the entire [window scene]() and the page itself.
+The first subject is the entire [window scene](#) and the page itself.
 You can give the `<html>` tag a style that makes the whole window use a translucent material background with rounded corners, or turn the window fully transparent and border-less.
 
-Example based on the [Quick Start sample](): a window scene with a translucent material background and rounded corners
+Example based on the [Quick Start sample](#): a window scene with a translucent material background and rounded corners
 
 ```css
 html.is-spatial {
@@ -31,14 +31,14 @@ html.is-spatial {
 
 ![](../../../assets/guide/2-1.png)
 
-- To add a translucent background, the default value is `translucent`. If the window is nested inside other translucent material content and needs to be visually separated, you can choose from [other material options]().
+- To add a translucent background, the default value is `translucent`. If the window is nested inside other translucent material content and needs to be visually separated, you can choose from [other material options](#).
 - Use `border-radius` to control the roundness of the window border.
 - The same style can be written inline, for example `<html style="--xr-background-material: translucent;">`.
 - You can also set it dynamically through `document.documentElement.style`.
 - The default value of `--xr-background-material` is `none`. If you omit this property in the window style or set it explicitly to `none`, the window falls back to the traditional browser window background color (opaque).
   > Note that `none` means “do not apply any custom setting”. It is **not** necessarily equivalent to “no material background”.
 
-Example from the [Techshop demo](): a fully transparent, border-less window scene
+Example from the [Techshop demo](#): a fully transparent, border-less window scene
 
 ```css
 html.is-spatial {
@@ -50,15 +50,15 @@ html.is-spatial {
 
 ## Translucent HTML Elements
 
-The second subject is any [spatialized HTML element]().
+The second subject is any [spatialized HTML element](#).
 
 Unlike a web page window, HTML elements are naturally transparent (you can see the parent’s background through them). After an element is spatialized, **its default state is already a fully transparent material background**, equivalent to `--xr-background-material: transparent`.
 
 For a spatialized HTML element, `--xr-background-material: none` (no custom setting) is the same as `--xr-background-material: transparent`.
 
-However, you can only perceive this fully transparent material once the spatialized HTML element has been [elevated]() into 3D space.
+However, you can only perceive this fully transparent material once the spatialized HTML element has been [elevated](#) into 3D space.
 
-Example based on the [Quick Start sample]():
+Example based on the [Quick Start sample](#):
 
 ```diff
   .link-card {
@@ -75,7 +75,7 @@ Removing the background-material property from the `.link-card` element reveals 
 
 Whether or not the spatialized HTML element is elevated, you can set `--xr-background-material: translucent` (or one of the other options) to give it a translucent background.
 
-Example based on the [Quick Start sample]():
+Example based on the [Quick Start sample](#):
 
 ```diff
   .link-card {
@@ -95,7 +95,7 @@ Besides `none` (no custom setting), `transparent` (fully transparent), and `tran
 ![](../../../assets/concepts/4-4.png)
 ![](../../../assets/concepts/4-3.png)
 
-Example from the [Techshop demo]():
+Example from the [Techshop demo](#):
 
 ```jsx {highlight=20-23}
         <div enable-xr className="list-meun w-full md:w-64 shrink-0">
@@ -137,7 +137,7 @@ The CSS `opacity` property continues to affect the entire element, including bot
 
 ## Layer Order
 
-If a spatialized HTML element is **not** [elevated](), it remains part of the **plane of its parent element**. That plane can be the whole window scene’s plane, or a new plane created by an elevated parent element.
+If a spatialized HTML element is **not** [elevated](#), it remains part of the **plane of its parent element**. That plane can be the whole window scene’s plane, or a new plane created by an elevated parent element.
 
 Multiple HTML elements located on the **same plane** follow normal DOM order to decide which one covers the other. For sibling nodes, later nodes cover earlier ones.
 
@@ -156,7 +156,7 @@ Multiple spatialized HTML elements inside the **same** spatialized element can u
 - The parent spatialized element acts like a stacking context.
 - In the nesting structure between the parent and its children, there must not be another spatialized element acting as an intermediate parent.
 
-Remember, `--xr-z-index` **only** changes layer order on the **same plane**. It does **not** move elements along the Z-axis and is completely separate from the [Elevate 2D Elements]() API.
+Remember, `--xr-z-index` **only** changes layer order on the **same plane**. It does **not** move elements along the Z-axis and is completely separate from the [Elevate 2D Elements](#) API.
 
 ---
 

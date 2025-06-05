@@ -4,7 +4,7 @@ Return: [Step 2 – Add Build Tool for Packaged WebSpatial Apps](step-2-add-buil
 
 ---
 
-To avoid typing the same environment variables each time you run [these npm scripts](), you can place all required local variables in a [dotenv]() configuration file and have them loaded automatically before the scripts run.
+To avoid typing the same environment variables each time you run [these npm scripts](#), you can place all required local variables in a [dotenv](#) configuration file and have them loaded automatically before the scripts run.
 
 ## dotenv Files
 

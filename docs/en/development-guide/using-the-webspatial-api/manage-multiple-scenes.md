@@ -5,7 +5,7 @@ Fundamental concepts:
 
 ---
 
-> Because the [WebSpatial SDK]() currently only provides a React SDK, all code examples in this document use React.
+> Because the [WebSpatial SDK](#) currently only provides a React SDK, all code examples in this document use React.
 >
 > APIs referenced in this section:
 > - `xr_main_scene`
@@ -18,17 +18,17 @@ Fundamental concepts:
 >   - `defautSize`
 > - `windowProxy.close()`
 
-A WebSpatial app always starts from an [entry scene](), which loads the first [web page]() of the current run. Starting from this page, you can open additional pages in new scenes, so the app is composed of multiple [scenes]().
+A WebSpatial app always starts from an [entry scene](#), which loads the first [web page](#) of the current run. Starting from this page, you can open additional pages in new scenes, so the app is composed of multiple [scenes](#).
 
 ## Managing the Entry Scene
 
-As the starting point of the entire WebSpatial app, the entry scene is created and initialized entirely by native code (for example, the [WebSpatial App Shell]()). **Web code only runs after this entry scene already exists.**
+As the starting point of the entire WebSpatial app, the entry scene is created and initialized entirely by native code (for example, the [WebSpatial App Shell](#)). **Web code only runs after this entry scene already exists.**
 
 Therefore, the scene type and its initialization settings can be managed only in the [Web App Manifest].
 
-The WebSpatial SDK adds a new manifest property, `xr_main_scene`, that lets you specify [initialization settings]() for the entry scene.
+The WebSpatial SDK adds a new manifest property, `xr_main_scene`, that lets you specify [initialization settings](#) for the entry scene.
 
-Based on the [Quick-Start sample]():
+Based on the [Quick-Start sample](#):
 
 ```json5
   "xr_main_scene": {
@@ -47,14 +47,14 @@ In this demo, the entry scene originally used the size shown in the left image (
 > [!NOTE]
 > In the current WebSpatial SDK:
 > - `xr_main_scene` only supports the `default_size` setting. More options will be added later.
-> - Only [window scenes]() are supported for now. Other scene types such as [volume scenes]() are not yet supported, so there are no manifest properties for an initial scene type.
+> - Only [window scenes](#) are supported for now. Other scene types such as [volume scenes](#) are not yet supported, so there are no manifest properties for an initial scene type.
 
 The URL loaded in the entry scene is the first URL opened and run within the WebSpatial app.
-By default, it is determined by the [start URL (`start_url`)]() in the manifest.
+By default, it is determined by the [start URL (`start_url`)](#) in the manifest.
 
-The combination of the manifest’s [`scope`]() and [`start_url`]() clearly defines which URLs belong to this WebSpatial app.
+The combination of the manifest’s [`scope`](#) and [`start_url`](#) clearly defines which URLs belong to this WebSpatial app.
 
-The [WebSpatial App Shell]() automatically registers these URLs with the system so that they open in the corresponding WebSpatial app instead of a browser.
+The [WebSpatial App Shell](#) automatically registers these URLs with the system so that they open in the corresponding WebSpatial app instead of a browser.
 
 If the app is launched from one of these URLs, the entry scene loads that specific URL instead of the `start_url`.
 
@@ -72,13 +72,13 @@ The method is exactly the same as opening a link in a new window on a standard w
 
 Two important notes:
 
-- The link URL (for example, `newSceneUrl` above) **must** match the manifest’s [`scope`](), meaning it is part of the current WebSpatial app. Otherwise, the URL opens in the browser rather than creating a new scene in the app.
+- The link URL (for example, `newSceneUrl` above) **must** match the manifest’s [`scope`](#), meaning it is part of the current WebSpatial app. Otherwise, the URL opens in the browser rather than creating a new scene in the app.
 - If you supply a window name (for example, `newSceneName` above) and a same-named scene already exists and is still open, no new scene is created. Instead, that scene navigates to the new URL (equivalent to changing location one existing scene).
 
 > [!IMPORTANT]
 > **Best practice:** Once a window name has been used, continue using that name only in the same parent window. Do not reuse the name from another window. Otherwise, according to web standards, the original parent may fail to reach the same-named window or may unexpectedly become the parent of that window.
 
-Based on the [Quick-Start sample]():
+Based on the [Quick-Start sample](#):
 
 ```jsx {highlight=4-11}
               <div className="card" style={{ marginTop: "0px" }}>
@@ -104,11 +104,11 @@ Every scene shows the content of `/second-page`, because that URL is opened in e
 
 ![](../../../assets/intro/intro-4-8.gif)
 
-Because scenes are [centrally managed]() by the operating system in spatial apps, developers cannot arbitrarily control them. Instead, scenes must be initialized with desired **initial values** at creation time; the OS decides whether to honor them. After creation, these properties **cannot be changed by code** and are determined only by the OS and the user.
+Because scenes are [centrally managed](#) by the operating system in spatial apps, developers cannot arbitrarily control them. Instead, scenes must be initialized with desired **initial values** at creation time; the OS decides whether to honor them. After creation, these properties **cannot be changed by code** and are determined only by the OS and the user.
 
 Current web standards lack an initialization concept for this purpose, so there is no suitable standard API.
 
-> The `window.open` `windowfeatures` argument looks like it sets window size, but those properties can be changed by code at any time. They are not the same as [scene initialization]() properties and are not suitable here.
+> The `window.open` `windowfeatures` argument looks like it sets window size, but those properties can be changed by code at any time. They are not the same as [scene initialization](#) properties and are not suitable here.
 
 The WebSpatial SDK therefore provides two new APIs specifically for initializing new scenes:
 
@@ -168,9 +168,9 @@ window.xrCurrentSceneDefaults = async defaultConfig => {
 > [!NOTE]
 > In the current WebSpatial SDK:
 > - Both APIs only support the `defaultSize` setting right now. More options will be added.
-> - Only [window scenes]() are supported. Other scene types such as [volume scenes]() are not yet supported, so type-related options are not available.
+> - Only [window scenes](#) are supported. Other scene types such as [volume scenes](#) are not yet supported, so type-related options are not available.
 
-Based on the [Quick-Start sample]():
+Based on the [Quick-Start sample](#):
 
 ```diff
                 <h2>Open Second Page</h2>

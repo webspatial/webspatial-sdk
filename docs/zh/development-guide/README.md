@@ -2,7 +2,7 @@
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 
   [English Documentation](../../en/development-guide/README.md)
-  <br>
+  <br/>
 </div>
 
 # 开发指南

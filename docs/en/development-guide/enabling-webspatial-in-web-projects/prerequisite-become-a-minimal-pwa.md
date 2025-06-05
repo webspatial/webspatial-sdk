@@ -6,7 +6,7 @@ Previous step:
 
 ---
 
-To give a WebSpatial app native spatial-app capabilities and a proper user experience (for example, having **its own independent window** instead of running only inside a browser), the project must become an **application**, not just “a collection of pages.” You need to add **app-level details** such as the app name, icons, and a [starting screen]().
+To give a WebSpatial app native spatial-app capabilities and a proper user experience (for example, having **its own independent window** instead of running only inside a browser), the project must become an **application**, not just “a collection of pages.” You need to add **app-level details** such as the app name, icons, and a [starting screen](#).
 
 > Traditional websites are a loose set of pages and do not include this information, containing only page-level details like the page title and favicon.
 
@@ -17,7 +17,7 @@ Some WebSpatial apps also need to ship through an app store, reaching users on t
 
 While becoming an application, the project must remain a **standard website** that can still run in the browser. This keeps existing Web strengths: true cross-platform reach, shareable URLs, and on-demand usage without installation.
 
-The **[PWA technology]()** defined in Web standards meets these requirements. It adds app-level information to a site and makes it installable. WebSpatial builds on many existing mainstream Web APIs, including the PWA standard.
+The **[PWA technology](#)** defined in Web standards meets these requirements. It adds app-level information to a site and makes it installable. WebSpatial builds on many existing mainstream Web APIs, including the PWA standard.
 
 Therefore, before introducing the WebSpatial API, make sure your site is already a valid PWA.
 

@@ -10,7 +10,7 @@ Previous section: [HTML/CSS and WebXR](html-css-and-webxr.md)
   </a>
 </div>
 
-**WebSpatial** is a set of [spatial APIs]() built on top of the mainstream Web-development ecosystem and existing 2D Web. It enables the entire HTML/CSS-based Web world—billions of sites and Web apps, tens of millions of Web developers, and millions of open-source libraries—to step into the spatial era, **gaining spatial power on par with native visionOS apps while keeping all the advantages they already have**.
+**WebSpatial** is a set of [spatial APIs](#) built on top of the mainstream Web-development ecosystem and existing 2D Web. It enables the entire HTML/CSS-based Web world—billions of sites and Web apps, tens of millions of Web developers, and millions of open-source libraries—to step into the spatial era, **gaining spatial power on par with native visionOS apps while keeping all the advantages they already have**.
 
 ### Position HTML Elements on the Z Axis
 
@@ -20,30 +20,30 @@ With WebSpatial, **HTML elements** can be laid out and positioned not only along
 
 ### Transform HTML Elements in True 3D
 
-WebSpatial lets HTML elements [**rotate, scale, and warp along the Z axis in real space**](). For example, you can build an actual 3-D “object” out of plain `div` elements:
+WebSpatial lets HTML elements [**rotate, scale, and warp along the Z axis in real space**](#). For example, you can build an actual 3-D “object” out of plain `div` elements:
 
 ![image](../../assets/intro/intro-4-3.png)
 ![image](../../assets/intro/intro-4-4.jpeg)
 
 ### Material-Based Backgrounds
 
-HTML elements can have backgrounds that are [**semi-transparent materials rendered in real time from the environment**](), so content stays legible under any color and lighting conditions. You can also set the background of an element—or an entire page window—to a [**fully transparent material**](), making its contents appear to float and disperse in space.
+HTML elements can have backgrounds that are [**semi-transparent materials rendered in real time from the environment**](#), so content stays legible under any color and lighting conditions. You can also set the background of an element—or an entire page window—to a [**fully transparent material**](#), making its contents appear to float and disperse in space.
 
 ![image](../../assets/intro/intro-4-5.png)
 
 ### Genuine 3D Elements for HTML
 
-WebSpatial adds **[true 3D elements]()** to HTML, allowing 3-D content to appear directly in space:
+WebSpatial adds **[true 3D elements](#)** to HTML, allowing 3-D content to appear directly in space:
 
 ![image](../../assets/intro/intro-4-6.jpeg)
 
-These 3-D elements can [**participate in layout alongside 2-D elements**](), forming any mix of Web content and graphical UI:
+These 3-D elements can [**participate in layout alongside 2-D elements**](#), forming any mix of Web content and graphical UI:
 
 ![image](../../assets/intro/intro-4-7.jpeg)
 
 ### Multi-Scene Web Apps
 
-A Web app can comprise multiple **[scenes]()**, just like a native spatial app. These 2-D + 3-D (or pure 3-D) scenes can be [**managed as standard Web windows**]() and can also receive [**scene-specific spatial initialization**]().
+A Web app can comprise multiple **[scenes](#)**, just like a native spatial app. These 2-D + 3-D (or pure 3-D) scenes can be [**managed as standard Web windows**](#) and can also receive [**scene-specific spatial initialization**](#).
 
 ![image](../../assets/intro/intro-4-8.gif)
 

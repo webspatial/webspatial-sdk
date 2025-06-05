@@ -2,7 +2,7 @@
 
 ## Scenes
 
-A [spatial app]() is composed of **scenes**.
+A [spatial app](#) is composed of **scenes**.
 
 A scene is a content container centrally managed by the spatial-computing OS in the shared space. Every piece of app content must live in one or more of these containers.
 
@@ -32,7 +32,7 @@ This scene is a bounded local 3D space (a sort of 3D bounding box) that has volu
 
 ![](../../assets/concepts/3-8.png)
 
-Although both window scenes and volume scenes can host 2D and 3D content, the former behaves like a **panel with depth extending forward**, while the latter behaves like a bounded **object** with full volume. The OS treats them differently within the shared space, integrates them with the environment in distinct ways, and exposes different interactions, for example separate drag behaviors and [Spatial Layout]() modes.
+Although both window scenes and volume scenes can host 2D and 3D content, the former behaves like a **panel with depth extending forward**, while the latter behaves like a bounded **object** with full volume. The OS treats them differently within the shared space, integrates them with the environment in distinct ways, and exposes different interactions, for example separate drag behaviors and [Spatial Layout](#) modes.
 
 ![](../../assets/concepts/3-9.png)
 ![](../../assets/concepts/3-10.png)
@@ -47,7 +47,7 @@ Unlike browser windows, scenes from different WebSpatial apps do not belong to a
 
 ![](../../assets/concepts/3-11.png)
 
-Another difference: a WebSpatial scene **has no browser UI such as address bar, bookmarks, or history**. The whole scene can be given a transparent background, so no window chrome is visible except the **[scene menu]()**.
+Another difference: a WebSpatial scene **has no browser UI such as address bar, bookmarks, or history**. The whole scene can be given a transparent background, so no window chrome is visible except the **[scene menu](#)**.
 
 > Comparison: the left image shows the non-spatial version; the right image shows the spatial version with a fully transparent background.
 > | ![](../../assets/concepts/3-12.png) | ![](../../assets/concepts/3-13.png) |
@@ -55,7 +55,7 @@ Another difference: a WebSpatial scene **has no browser UI such as address bar, 
 
 ## Scene Menu
 
-A scene in a WebSpatial app is equivalent to an independent window created by an [installed PWA]().
+A scene in a WebSpatial app is equivalent to an independent window created by an [installed PWA](#).
 
 Because a WebSpatial scene is essentially a web page, it inherits the same general requirements and security/privacy considerations as any web page:
 
@@ -69,7 +69,7 @@ For these reasons, a PWA window includes native UI for safety and URL-related fu
 
 ![](../../assets/concepts/3-14.png)
 
-The PWA standard's [display property]() in the [Web App Manifest]() lets you control certain parts of this native UI — for example, whether **native navigation buttons** appear.
+The PWA standard's [display property](#) in the [Web App Manifest](#) lets you control certain parts of this native UI — for example, whether **native navigation buttons** appear.
 
 > The following image shows a desktop PWA in `minimal-ui` mode (native title bar with navigation buttons).
 > ![](../../assets/concepts/3-15.png)
@@ -93,11 +93,11 @@ Because a WebSpatial app is **built on top of a PWA** (), every scene includes a
 
 A WebSpatial window scene exposes several scene properties that the developer can fully control:
 
-The window plane can use a **semi-transparent** [material background](), rendered dynamically against the surrounding environment so it remains legible in any context. You can also round the four corners instead of keeping the default sharp angles.
+The window plane can use a **semi-transparent** [material background](#), rendered dynamically against the surrounding environment so it remains legible in any context. You can also round the four corners instead of keeping the default sharp angles.
 
 ![](../../assets/concepts/3-21.png)
 
-Alternatively, set the background to a [fully transparent]() material with no border, making the page content appear to float freely.
+Alternatively, set the background to a [fully transparent](#) material with no border, making the page content appear to float freely.
 
 ![](../../assets/concepts/3-22.png)
 ![](../../assets/concepts/3-23.png)
@@ -131,7 +131,7 @@ For example, as the distance between scene and user changes, a reading-oriented 
 
 ## Scene Initialization
 
-Scenes are content containers uniformly managed by the OS in the [shared space](). Centralized management is necessary because only the OS has the complete understanding of the user’s environment, the dynamic relationships between scenes and the user ([Spatial Layout]()), and the interactions among different apps.
+Scenes are content containers uniformly managed by the OS in the [shared space](#). Centralized management is necessary because only the OS has the complete understanding of the user’s environment, the dynamic relationships between scenes and the user ([Spatial Layout](#)), and the interactions among different apps.
 
 Therefore, only the OS should make the final decisions about size, position, orientation, and other spatial-layout properties. Developers do not have **full** control over them, and even end-users are limited; they cannot arbitrarily resize a window or place it **anywhere**. OS constraints always apply.
 
@@ -139,7 +139,7 @@ During scene creation, developers may supply **preferred initial values**, which
 
 After creation, code **cannot** modify these properties; they change only through OS logic and user actions.
 
-The classic example is the scene’s [initial size (`defaultSize`)]().
+The classic example is the scene’s [initial size (`defaultSize`)](#).
 
 > Example from the Quick Start:
 > | ![](../../assets/concepts/3-28.png) | ![](../../assets/concepts/3-29.png) |
@@ -149,11 +149,11 @@ The classic example is the scene’s [initial size (`defaultSize`)]().
 
 Every time a WebSpatial app launches, it **starts with a single scene** called the start scene, from which the app can open additional scenes.
 
-Because the start scene is the entry point, it is created and initialized entirely by native code (for example, the [WebSpatial App Shell]()). **The web code runs only after this scene exists.**
+Because the start scene is the entry point, it is created and initialized entirely by native code (for example, the [WebSpatial App Shell](#)). **The web code runs only after this scene exists.**
 
-Consequently, the start scene’s type and initial configuration can only be set via the [Web App Manifest]().
+Consequently, the start scene’s type and initial configuration can only be set via the [Web App Manifest](#).
 
-Additional scenes created later within the same WebSpatial app are [created by web code, where their initialization can also be configured]().
+Additional scenes created later within the same WebSpatial app are [created by web code, where their initialization can also be configured](#).
 
 The URL loaded in the start scene is the very first page the WebSpatial app loads and runs.
 
