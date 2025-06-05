@@ -195,6 +195,7 @@ function syncDefaultSpatialStyle(openedWindow: Window, debugName: string) {
   openedWindow.document.body.style.minHeight = 'auto'
   openedWindow.document.body.style.maxWidth = 'fit-content'
   openedWindow.document.body.style.minWidth = 'fit-content'
+  openedWindow.document.body.style.background = 'transparent'
 }
 
 function useSyncSpatialProps(
