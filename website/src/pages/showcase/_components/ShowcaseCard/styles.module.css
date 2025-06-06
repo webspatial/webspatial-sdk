@@ -1,0 +1,140 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.showcaseCardImage {
+  overflow: hidden;
+  /* border-bottom: 2px solid var(--ifm-color-emphasis-200); */
+  aspect-ratio: 16 / 9;
+}
+
+.showcaseCardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.showcaseCardHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.showcaseCardTitle {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 16px;
+}
+
+.showcaseCardLink {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.showcaseCardTitle a {
+  text-decoration: none;
+  color: #1d2129;
+  font-weight: 600;
+  background: linear-gradient(
+      var(--ifm-color-primary),
+      var(--ifm-color-primary)
+    )
+    0% 100% / 0% 1px no-repeat;
+  transition: background-size ease-out 200ms;
+}
+
+.showcaseCardTitle a:not(:focus):hover {
+  background-size: 100% 1px;
+}
+
+.showcaseCardTitle,
+.showcaseCardHeader {
+  margin-right: 0.25rem;
+}
+
+.showcaseCardSrcBtn {
+  margin-left: 6px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border: none;
+}
+.linkIcon {
+  width: 24px;
+  height: 24px;
+}
+.sourceIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.showcaseCardSrcBtn:focus-visible {
+  background-color: var(--ifm-color-secondary-dark);
+}
+
+[data-theme='dark'] .showcaseCardSrcBtn {
+  background-color: var(--ifm-color-emphasis-200) !important;
+  color: inherit;
+}
+
+[data-theme='dark'] .showcaseCardSrcBtn:hover {
+  background-color: var(--ifm-color-emphasis-300) !important;
+}
+
+.showcaseCardBody {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #86909c;
+  display: -webkit-box; /* 创建弹性伸缩盒子模型 */
+  -webkit-line-clamp: 2; /* 限制显示两行文本 */
+  -webkit-box-orient: vertical; /* 垂直排列子元素 */
+  overflow: hidden; /* 隐藏超出容器的内容 */
+  text-overflow: ellipsis; /* 超出部分显示省略号 */
+}
+
+.cardFooter {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 0.675rem;
+  border: 1px solid transparent;
+  cursor: default;
+  margin-right: 6px;
+  margin-bottom: 6px !important;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+
+  height: 24px;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 1px 8px;
+}
+
+.tag .textLabel {
+  /* margin-left: 8px; */
+}
+
+.tag .colorLabel {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+.cardWrap {
+  box-shadow: unset;
+  [data-theme='dark'] & {
+    background-color: var(--color-fill-1);
+  }
+}
