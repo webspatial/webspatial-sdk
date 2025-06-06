@@ -1,5 +1,12 @@
 # @webspatial/platform-avp
 
+## 0.1.20
+
+### Patch Changes
+
+- 3c4acf0: Fixed the issue where the relative path page was empty when using a local project
+- c3aa903: Navigation using new style
+
 ## 0.1.19
 
 ## 0.1.18
