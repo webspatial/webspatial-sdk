@@ -1,5 +1,15 @@
 # ci-test
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [ec06fc2]
+- Updated dependencies [3c52171]
+  - @webspatial/react-sdk@0.1.19
+  - @webspatial/builder@0.1.19
+  - @webspatial/core-sdk@0.1.19
+
 ## 0.0.5
 
 ### Patch Changes
