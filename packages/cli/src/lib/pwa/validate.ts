@@ -190,9 +190,17 @@ export async function checkIcons(
   // Check if the image is completely opaque
   if (maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)) {
     if (isDev) {
+      manifest.icons = [
+        {
+          src: join(__dirname, '../../assets/icon-default.png'),
+          sizes: '1024x1024',
+          purpose: 'maskable',
+        },
+      ]
       CliLog.warn(
         'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
       )
+      CliLog.warn('No matching icon found, use default icon')
       return
     }
     throw new CustomError({
