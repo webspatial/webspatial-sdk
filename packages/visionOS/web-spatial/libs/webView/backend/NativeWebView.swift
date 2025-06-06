@@ -175,9 +175,13 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             return nil
         }
 
-        let wvNative = WebViewNative()
-
-        _ = wvNative.createResources(configuration: configuration)
+        var wvNative = WebViewNative()
+        var needsUpdate = false
+        if resource.starts(with: "file://") {
+            wvNative.url = URL(string: resource)!
+            needsUpdate = true
+        }
+        _ = wvNative.createResources(configuration: configuration, needsUpdate: needsUpdate)
 
         webViewRef!.didSpawnWebView(wv: wvNative)
 
@@ -229,7 +233,7 @@ struct WebViewNative: UIViewRepresentable {
         return c
     }
 
-    func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
+    func createResources(configuration: WKWebViewConfiguration? = nil, needsUpdate: Bool = false) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
@@ -259,7 +263,7 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
-            webViewHolder.needsUpdate = (configuration != nil) ? false : true
+            webViewHolder.needsUpdate = (configuration != nil && !needsUpdate) ? false : true
         }
 
         return webViewHolder.appleWebView!
