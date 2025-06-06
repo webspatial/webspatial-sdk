@@ -3,7 +3,6 @@
 **/*/visionOS/web-spatial/web-project
 **/*/visionOS/icon.*
 **/*/visionOS/build/**
-**/*/visionOS/web-spatial/Assets.xcassets
 
 # We only allow pnpm lock files
 **/*/yarn.lock
