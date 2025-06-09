@@ -15,12 +15,13 @@ Basic concepts:
 
 With the help of the [WebSpatial SDK](), two main subjects in every application [scene]() can dynamically render their background based on the surrounding spatial environment.
 
+<a id="for-window-scenes"></a>
 ## Translucent or Fully Transparent Window Scenes
 
 The first subject is the entire [window scene]() and the page itself.
 You can give the `<html>` tag a style that makes the whole window use a translucent material background with rounded corners, or turn the window fully transparent and border-less.
 
-Example based on the [Quick Start sample](): a window scene with a translucent material background and rounded corners
+Example based on the [Quick Example sample](): a window scene with a translucent material background and rounded corners
 
 ```css
 html.is-spatial {
@@ -48,6 +49,7 @@ html.is-spatial {
 
 ![](../../../assets/guide/2-2.png)
 
+<a id="for-html-elements"></a>
 ## Translucent HTML Elements
 
 The second subject is any [spatialized HTML element]().
@@ -58,7 +60,7 @@ For a spatialized HTML element, `--xr-background-material: none` (no custom sett
 
 However, you can only perceive this fully transparent material once the spatialized HTML element has been [elevated]() into 3D space.
 
-Example based on the [Quick Start sample]():
+Example based on the [Quick Example sample]():
 
 ```diff
   .link-card {
@@ -75,7 +77,7 @@ Removing the background-material property from the `.link-card` element reveals 
 
 Whether or not the spatialized HTML element is elevated, you can set `--xr-background-material: translucent` (or one of the other options) to give it a translucent background.
 
-Example based on the [Quick Start sample]():
+Example based on the [Quick Example sample]():
 
 ```diff
   .link-card {
@@ -84,6 +86,7 @@ Example based on the [Quick Start sample]():
 
 ![](../../../assets/guide/2-4.png)
 
+<a id="translucent-options"></a>
 ## Additional Material Options
 
 Besides `none` (no custom setting), `transparent` (fully transparent), and `translucent` (default translucent material), `--xr-background-material` supports:
@@ -130,11 +133,13 @@ The sidebar menu itself uses a translucent material background. Items inside the
 
 ![](../../../assets/guide/2-5.png)
 
+<a id="opacity"></a>
 ## Content Visibility and Opacity
 
 For spatialized HTML elements with a translucent background, you can still use the CSS `display` and `visibility` properties to control the visibility of the whole element.
 The CSS `opacity` property continues to affect the entire element, including both the material background and the foreground content.
 
+<a id="stacking-order"></a>
 ## Layer Order
 
 If a spatialized HTML element is **not** [elevated](), it remains part of the **plane of its parent element**. That plane can be the whole window scene’s plane, or a new plane created by an elevated parent element.

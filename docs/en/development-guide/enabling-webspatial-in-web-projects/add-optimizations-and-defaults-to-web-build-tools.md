@@ -13,6 +13,7 @@ If your project relies directly on a lower-level Web Builder such as Rspack or W
 > [!NOTE]
 > A detailed list of optimizations and default settings appears in “[Generate a WebSpatial-Specific Website](generate-a-webspatial-specific-website.md)” and “[Check if Running in WebSpatial Mode](check-if-running-in-webspatial-mode.md).”
 
+<a id="vite"></a>
 ## React + Vite
 
 Add the WebSpatial Vite plugin directly in `vite.config.ts` or `vite.config.js`:
@@ -29,21 +30,25 @@ export default defineConfig({
     react({
 ```
 
+<a id="next"></a>
 ## React + Next.js
 
 > [!WARNING]
 > In testing. Documentation coming soon.
 
+<a id="rsbuild"></a>
 ## React + Rsbuild
 
 > [!WARNING]
 > In testing. Documentation coming soon.
 
+<a id="rspack"></a>
 ## React + Rspack / Webpack
 
 > [!WARNING]
 > In testing. Documentation coming soon.
 
+<a id="no-plugins"></a>
 ## Configuration Without Plugins
 
 > [!WARNING]

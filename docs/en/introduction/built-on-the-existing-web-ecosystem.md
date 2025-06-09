@@ -4,16 +4,16 @@ Previous section: [Make the Web Spatial Too](make-the-web-spatial-too.md)
 
 ---
 
-While the mainstream Web ecosystem is ultimately built on HTML/CSS, most Web developers **do not work directly with raw HTML/CSS** when creating applications. Instead, they rely on **UI frameworks or even full-featured application frameworks**. React is currently the most popular choice: developers use HTML through React’s JSX API and component model, and CSS through APIs such as TailwindCSS, PostCSS, or CSS-in-JS.
+While the mainstream Web ecosystem is ultimately built on HTML/CSS, most Web developers **do not work directly with raw HTML/CSS** when creating applications. Instead, they rely on **UI frameworks or full-featured application frameworks**. React is currently the most popular choice - developers use HTML through React's JSX API and component-based architecture, and CSS through APIs such as TailwindCSS, PostCSS, or CSS-in-JS.
 
-To address pressing real-world needs without delay, the WebSpatial project provides a **[WebSpatial SDK]() designed for Web frameworks (for example, React + Vite)**. This lets Web developers immediately start using the WebSpatial API within their framework’s HTML (JSX) and CSS APIs, without waiting for browser engines to ship these capabilities.
+To quickly put the [WebSpatial API](../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) into practice in the real world and meet the urgent needs of the Web ecosystem, the WebSpatial open-source project provides a **[WebSpatial SDK](../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) designed for Web frameworks (for example, React + Vite)**. This lets Web developers immediately start using the WebSpatial API within their framework's HTML (JSX) and CSS APIs, **without waiting for browser engines to ship these capabilities**.
 
-In its first release, WebSpatial offers **out-of-the-box support for [React projects]() (compatible with Vite and other mainstream Web build tools)**.
+In its first release, WebSpatial SDK offers **out-of-the-box support for [React projects](../development-guide/web-projects-that-support-webspatial/README.md)**.
 
 > [!NOTE]
-> Additional UI framework support will be added soon. WebSpatial also offers a **framework-agnostic Core SDK composed solely of pure JS APIs**, so developers can implement the WebSpatial API in other frameworks or import specific features directly from the Core SDK.
+> We hope to work with the community to add support for more UI frameworks in the future. WebSpatial also offers a **framework-agnostic Core SDK composed solely of pure JS APIs**, so developers can implement the WebSpatial API in other frameworks or import specific spatial features directly from the Core SDK.
 
-You can call WebSpatial’s [**HTML API**]() and [**DOM API**]() directly inside React JSX:
+You can call WebSpatial's [**HTML API**](../development-guide/using-the-webspatial-api/spatialize-html-elements.md) and [**DOM API**](../development-guide/using-the-webspatial-api/spatialize-html-elements.md#dom) directly inside React JSX:
 
 ```diff
 -             <div className="card count-card">
@@ -30,7 +30,7 @@ You can call WebSpatial’s [**HTML API**]() and [**DOM API**]() directly inside
 
 <!-- TODO：补充 Model 的例子 -->
 
-You can also use WebSpatial’s [**CSS API**]() in a React project together with TailwindCSS, PostCSS, Styled Components, and similar solutions:
+You can also use WebSpatial's [**CSS API**](../development-guide/using-the-webspatial-api/spatialize-html-elements.md#css) in a React project together with TailwindCSS, PostCSS, Styled Components, and similar solutions:
 
 ```diff
 .count-card {
@@ -48,7 +48,7 @@ You can also use WebSpatial’s [**CSS API**]() in a React project together with
   }
 ```
 
-You can use the **existing link element and window-related DOM APIs** defined in Web standards—together with WebSpatial’s new **[Scene Initialization]() API**—to treat [scenes in a spatial app]() as browser windows and manage them accordingly.
+You can use the **existing link element and window-related DOM APIs** in Web standards together with WebSpatial's new **[Scene Initialization](../core-concepts/scenes-and-spatial-layouts.md#scene-init) API** - to treat and manage [scenes within spatial apps](../core-concepts/scenes-and-spatial-layouts.md) as regular web page windows.
 
 
 ```diff
@@ -80,7 +80,7 @@ You can use the **existing link element and window-related DOM APIs** defined in
                 </p>
 ```
 
-You can manage **app-level configurations** such as the WebSpatial app’s start scene, offline packaging, native window UI, and app icons by using the **[Web App Manifest]() from the PWA standard**.
+You can manage **app-level configurations** such as the WebSpatial app's [start scene](../core-concepts/scenes-and-spatial-layouts.md#start-scene), offline packaging, [native window UI](../core-concepts/scenes-and-spatial-layouts.md#scene-menu), and app icons by using the **[Web App Manifest](../development-guide/enabling-webspatial-in-web-projects/add-web-app-manifest.md) from the [PWA standard](../development-guide/enabling-webspatial-in-web-projects/prerequisite-become-a-minimal-pwa.md)**.
 
 
 ```json5
@@ -104,13 +104,16 @@ You can manage **app-level configurations** such as the WebSpatial app’s start
       "purpose": "maskable"
 ```
 
-A Web project that integrates the WebSpatial SDK is still a **cross-platform website that conforms to Web standards**. Your existing development workflow, codebase, and best practices built on the mainstream Web ecosystem stay unchanged, and the UI, interactions, and performance on traditional desktop and mobile platforms remain **unaffected**. The new WebSpatial APIs fit naturally alongside existing APIs and implementation patterns, preserving cross-platform compatibility as well as your established development habits and mental models.
+A Web project that integrates the WebSpatial SDK is still a **cross-platform website that conforms to Web standards**. Your existing development workflow, codebase, and best practices built on the mainstream Web ecosystem stay unchanged, and the UI, interactions, and performance on desktop and mobile platforms remain **unaffected**. The new WebSpatial APIs fit naturally alongside existing APIs and implementation methods, preserving cross-platform compatibility as well as your established development habits and mental models.
 
 ---
 
+<a name="example-techshop"></a>
+## Example - Techshop
+
 Example project: <https://github.com/webspatial/sample-techshop>
 
-The screenshots below show how this sample project looks on different platforms. Only the last screenshot runs as a [Packaged WebSpatial App]() on visionOS and activates spatial UI. All other screenshots show the project running directly in browsers that do **not** support the [WebSpatial API]() (including Safari on visionOS).
+The screenshots below show how this sample project looks on different platforms. Only the last screenshot runs as a [Packaged WebSpatial App](../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) on visionOS and activates spatialized UI. All other screenshots show the project running directly in regular browsers that do **not** support the [WebSpatial API](../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) (including Safari on visionOS).
 
 | Large Screen | Small Window |
 |:---:|:---:|

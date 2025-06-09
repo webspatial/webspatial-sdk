@@ -6,10 +6,12 @@ Current location: [Step 3 – Integrate WebSpatial SDK into Web Build Tools](ste
 
 After integrating the [WebSpatial SDK]() into the project’s [TS/JS compiler]() and [Web build tool & Web server](), the site can—without affecting the original desktop/mobile site—produce a dedicated build for the [WebSpatial App Shell]. This build is essentially a standalone website that loads only inside a native spatial app containing the App Shell (for example, a [Packaged WebSpatial App]() built with [WebSpatial Builder]()). Web code in this context can tightly cooperate with native features to deliver spatial capabilities.
 
+<a id="for-simulator"></a>
 ## Simulator debugging phase
 
 > All examples below are [based on Vite]()
 
+<a id="regular-dev-server"></a>
 ### Run the regular Dev Server
 
 Run the project’s `dev` script as usual. The served site targets desktop/mobile browsers (including the default browser on XR platforms, such as Safari on visionOS).
@@ -21,6 +23,7 @@ pnpm dev
 - The HTML/CSS/JS output **does not** include WebSpatial SDK; all [WebSpatial API]() calls are removed or ignored.
 - Unsuitable for loading in the WebSpatial App Shell (no spatial effects).
 
+<a id="dedicated-dev-server"></a>
 ### Run the dedicated Dev Server
 
 To build specifically for the WebSpatial App Shell on visionOS, set the environment variable `$XR_ENV` to `avp` when running `dev`.
@@ -50,6 +53,7 @@ XR_ENV=avp pnpm dev
 > ```
 - Only suitable for loading in the WebSpatial App Shell; regular browsers render incorrectly.
 
+<a id="use-dedicated-dev-server"></a>
 ### Use the dedicated Dev Server
 
 Combine the Dev Server with [`webspatial-builder run`]() (or the [`run:avp` script]()) to package and install a visionOS app in the simulator.
@@ -116,12 +120,14 @@ In JSX, prefer `<Link />` over raw `<a>` tags or `window.open`, letting `react-r
                   </Link>
 ```
 
+<a id="for-real-device"></a>
 ## Real-device testing & distribution phase
 
 At this stage you must deploy the site to a server accessible from real devices.
 
 > All examples below are [based on Vite]()
 
+<a id="multi-web-server"></a>
 ### Multi-Web-Server mode
 
 The quickest path is to deploy two sites on different domains, mirroring the simulator workflow.
@@ -187,6 +193,7 @@ export default defineConfig({
       react(),
 ```
 
+<a id="single-web-server"></a>
 ### Single-Web-Server mode
 
 Alternatively, one Web server can publish both versions to reduce deployment overhead.
@@ -269,6 +276,7 @@ export default defineConfig({
 +   base: 'https://myproject.com/'，
 ```
 
+<a id="static-web-server"></a>
 ### Scenario 1: Static Web server bundled with the build tool
 
 > Examples: Vite, rsbuild / rspack
@@ -280,6 +288,7 @@ pnpm preview
 Best aligned with the [multi-Web-Server]() approach.
 With custom routing (mapping `/webspatial/avp/` to `dist/webspatial/avp/`), the [single-Web-Server]() approach also works.
 
+<a id="static-web-hosting"></a>
 ### Scenario 2: Third-party static hosting
 
 > Examples: Vercel, Cloudflare Pages, GitHub Pages
@@ -293,6 +302,7 @@ npm install -D gh-pages
 gh-pages -d dist/webspatial/avp
 ```
 
+<a id="ssr-server></a>
 ### Scenario 3: Dynamic Web server with SSR
 
 > Example: Next.js
@@ -314,6 +324,7 @@ module.exports = {
     : '/static/webspatial/avp',
 ```
 
+<a id="dynamic-web-server></a>
 ### Scenario 4: Self-hosted dynamic Web server
 
 > Example: a Node.js server based on NestJS

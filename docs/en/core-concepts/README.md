@@ -9,7 +9,7 @@
 
 Previous chapters:
 - [Introduction](../introduction/README.md)
-- [Quick Start](../quick-start/README.md)
+- [Quick Example](../quick-start/README.md)
 
 ---
 

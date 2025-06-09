@@ -20,6 +20,7 @@ Fundamental concepts:
 
 A WebSpatial app always starts from an [entry scene](), which loads the first [web page]() of the current run. Starting from this page, you can open additional pages in new scenes, so the app is composed of multiple [scenes]().
 
+<a id="start-scene"></a>
 ## Managing the Entry Scene
 
 As the starting point of the entire WebSpatial app, the entry scene is created and initialized entirely by native code (for example, the [WebSpatial App Shell]()). **Web code only runs after this entry scene already exists.**
@@ -58,6 +59,7 @@ The [WebSpatial App Shell]() automatically registers these URLs with the system 
 
 If the app is launched from one of these URLs, the entry scene loads that specific URL instead of the `start_url`.
 
+<a id="new-scene"></a>
 ## Creating a New Scene
 
 All later scenes in a WebSpatial app are created by web code.
@@ -112,6 +114,7 @@ Current web standards lack an initialization concept for this purpose, so there 
 
 The WebSpatial SDK therefore provides two new APIs specifically for initializing new scenes:
 
+<a id="init-scene"></a>
 ### `initScene()`
 
 Call this API in the parent page to specify initialization settings for a soon-to-be-created scene.
@@ -140,6 +143,7 @@ window.open(newSceneUrl, "newSceneName")
 > [!IMPORTANT]
 > Following the best practice above, if you provide initialization settings for a name in one page, you should only create scenes with that name in the same page. Creating from another page can miss the settings and cause unexpected behavior.
 
+<a id="current-scene-defaults"></a>
 ### `window.xrCurrentSceneDefaults`
 
 This hook lets a page supply initialization settings for **its own** scene.
@@ -211,6 +215,7 @@ When you click the button, `initScene()` supplies settings for the window name `
 
 ![](../../../assets/concepts/3-30.png)
 
+<a id="multi-scenes"></a>
 ## Managing Multiple Scenes
 
 All scenes after the entry scene are created by web code, and each scene in the app is likewise managed by web code.

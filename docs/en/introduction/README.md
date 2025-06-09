@@ -21,4 +21,4 @@ This section introduces the problems WebSpatial solves and the benefits it bring
 
 ---
 
-Next chapter: [Quick Start](../quick-start/README.md) to experience WebSpatial in action.
+Next chapter: [Quick Example](../quick-start/README.md) to experience WebSpatial in action.

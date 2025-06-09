@@ -1,12 +1,12 @@
 # Enable WebSpatial in a Web Project
 
-Previous step:
-- Use an existing Web project: [Web Projects That Support WebSpatial](../web-projects-that-support-webspatial/README.md)
-- Create a brand-new WebSpatial project: [Creating New Web Projects](../web-projects-that-support-webspatial/creating-new-web-projects.md)
+Previous step (2 choices):
+- Option 1: [Use an existing Web project](../web-projects-that-support-webspatial/README.md)
+- Option 2: [Create a brand-new WebSpatial project](../web-projects-that-support-webspatial/creating-new-web-projects.md)
 
 ---
 
-Next, bring the [WebSpatial API]() into your Web project and set up the WebSpatial development environment.
+Next, bring the [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) into your Web project and set up the WebSpatial development environment.
 
 - [Prerequisite: Become a Minimal PWA](prerequisite-become-a-minimal-pwa.md)
 - [Step 1: Install the WebSpatial SDK](step-1-install-the-webspatial-sdk.md)

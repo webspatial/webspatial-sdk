@@ -9,7 +9,7 @@
 
 Welcome to the WebSpatial Handbook.
 
-It is recommended that you read this documentation in sequence, particularly the first three chapters—[Introduction](introduction/README.md), [Quick Start](quick-start/README.md), and [Core Concepts](core-concepts/README.md). The fourth chapter provides comprehensive and detailed [development documentation](development-guide/README.md), which you may consult as needed.
+It is recommended that you read this documentation in sequence, particularly the first three chapters—[Introduction](introduction/README.md), [Quick Example](quick-start/README.md), and [Core Concepts](core-concepts/README.md). The fourth chapter provides comprehensive and detailed [development documentation](development-guide/README.md), which you may consult as needed.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ It is recommended that you read this documentation in sequence, particularly the
 	- [Make the Web Spatial Too](introduction/make-the-web-spatial-too.md)
 	- [Built on the Existing Web Ecosystem](introduction/built-on-the-existing-web-ecosystem.md)
 	- [If You Are a ___ Developer](introduction/if-you-are-a-developer.md)
-2. [Quick Start](quick-start/README.md)
+2. [Quick Example](quick-start/README.md)
 3. [Core Concepts](core-concepts/README.md)
 	- [Shared Space and Spatial Apps](core-concepts/shared-space-and-spatial-apps.md)
 	- [Unique Concepts in WebSpatial](core-concepts/unique-concepts-in-webspatial.md)

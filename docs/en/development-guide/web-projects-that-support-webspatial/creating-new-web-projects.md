@@ -1,93 +1,98 @@
 # Creating a New Web Project
 
-> You can also start from an existing Web project: [Web Projects that Support WebSpatial](README.md)
+> [!TIP]
+> You can also start from [existing Web projects](./README.md)
 
----
-
-## Essentials of a Modern Web Project
+<a id="requirements"></a>
+## Modern Web Project Essentials
 
 To build a brand-new WebSpatial project from scratch, first create a modern Web project (currently React-only) that meets the following requirements:
 
 - Use HTML APIs (for example, JSX) through a UI framework such as React
-- Use CSS APIs through the same UI framework (supports [PostCSS, TailwindCSS](), CSS-in-JS, and other approaches)
-- Manage project dependencies with npm or any npm-compatible package manager (for example, [pnpm]())
+- Use CSS APIs through the same UI framework (supports [PostCSS, TailwindCSS](./adding-tailwindcss-and-postcss.md), CSS-in-JS, and other approaches)
+- Manage project dependencies with npm or any npm-compatible package manager (like [pnpm](./adding-pnpm.md))
 - Compile and build HTML and static web assets (JS, CSS, images, etc.) that run directly in desktop / mobile browsers
 - Run a Web server that exposes URLs accessible from desktop / mobile browsers
 
-> [!TIP]
-> During development, run the built-in Dev Server with the `dev` script, which includes compilation and hot reload.
-> For production, serve the built output with a production-grade static or dynamic Web server by running the `build` and `start` scripts.
+<a id="templates"></a>
+## Project Templates for Getting Started
 
-## Initial Project Templates
+Below are several options for creating a modern Web project that satisfies the requirements above. Any of these can serve as the starting point before you add the [WebSpatial SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk).
 
-Below are several options for creating a modern Web project that satisfies the requirements above. Any of these can serve as the starting point before you add the [WebSpatial SDK]().
+> [!NOTE]
+> Ensure Node.js is installed first. See the [official Node.js site](https://nodejs.org/en/download) for installation instructions.
 
-> Ensure Node.js is installed first. See the [official Node.js site]() for installation instructions.
+1. React + Vite
 
-### React + Vite
+   ```shell
+   npx create-vite --template react
+   ```
 
-```shell
-npx create-vite --template react
-```
+2. React + Vite + TypeScript
 
-### React + Vite + TypeScript
+   ```shell
+   npx create-vite --template react-ts
+   ```
 
-```shell
-npx create-vite --template react-ts
-```
+3. React + Next.js
 
-### React + Next.js
-> [!CAUTION]
-> In testing — documentation coming soon
+   > [!CAUTION]
+   > In testing — more docs to be added
 
-```shell
-npx create-next-app --js
-```
+   ```shell
+   npx create-next-app --js
+   ```
 
-### React + Next.js + TypeScript
-> [!CAUTION]
-> In testing — documentation coming soon
+4. React + Next.js + TypeScript
 
-```shell
-npx create-next-app --ts
-```
+   > [!CAUTION]
+   > In testing — more docs to be added
 
-### React + Rsbuild
-> [!CAUTION]
-> In testing — documentation coming soon
+   ```shell
+   npx create-next-app --ts
+   ```
 
-```shell
-npx create-rsbuild --template react
-```
+5. React + Rsbuild
 
-### React + Rsbuild + TypeScript
-> [!CAUTION]
-> In testing — documentation coming soon
+   > [!CAUTION]
+   > In testing — more docs to be added
 
-```shell
-npx create-rsbuild --template react-ts
-```
+   ```shell
+   npx create-rsbuild --template react
+   ```
 
-### React + Rspack
-> [!CAUTION]
-> In testing — documentation coming soon
+6. React + Rsbuild + TypeScript
 
-```shell
-npx create-rspack --template react
-```
+   > [!CAUTION]
+   > In testing — more docs to be added
 
-### React + Rspack + TypeScript
-> [!CAUTION]
-> In testing — documentation coming soon
+   ```shell
+   npx create-rsbuild --template react-ts
+   ```
 
-```shell
-npx create-rspack --template react-ts
-```
+7. React + Rspack
 
+   > [!CAUTION]
+   > In testing — more docs to be added
+
+   ```shell
+   npx create-rspack --template react
+   ```
+
+8. React + Rspack + TypeScript
+
+   > [!CAUTION]
+   > In testing — more docs to be added
+
+   ```shell
+   npx create-rspack --template react-ts
+   ```
+
+<a id="other-features"></a>
 ## Adding Other Common Features (Optional)
 
-- [Add TailwindCSS + PostCSS](adding-tailwindcss-and-postcss.md)
-- [Add pnpm](adding-pnpm.md)
+- [Add TailwindCSS + PostCSS](./adding-tailwindcss-and-postcss.md)
+- [Add pnpm](./adding-pnpm.md)
 
 ---
 

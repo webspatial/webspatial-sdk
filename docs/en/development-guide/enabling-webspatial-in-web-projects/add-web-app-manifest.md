@@ -4,15 +4,15 @@ Previous step: [Add Icon Files](add-icon-files.md)
 
 ---
 
-## Create the Web App Manifest file
+<a id="manifest-file"></a>
+## Create the Manifest file
 
-First, create either `public/manifest.webmanifest` or `public/manifest.json` in your project.
+First, create either `manifest.webmanifest` or `manifest.json` in your project.
 
 > [!TIP]
-> Both file types must be served as JSON by your web server. Any JSON MIME type is acceptable, such as `application/json`, but the recommended type is `application/manifest+json`.
+> Both file types must be served as JSON by your web server. Any JSON MIME type is acceptable, such as `application/json`, the recommended type is `application/manifest+json`.
 
-Because the manifest is placed at the root of the public directory, the file should be reachable once the site is running under a URL like `https://www.myapp.com/manifest.webmanifest`.
-> This is similar to how static files such as `robots.txt` and `favicon.ico` are served.
+Similar to static web files such as `robots.txt` and `favicon.ico` that are used without compilation or build process, the manifest file should be placed in a directory such as `public/`. Once the web server is running, these files should be directly accessible via URLs (e.g., `https://www.myapp.com/manifest.webmanifest`).
 
 The manifest must contain at least the following properties:
 
@@ -39,62 +39,69 @@ The manifest must contain at least the following properties:
 ```
 
 > [!IMPORTANT]
-> The [Add Icon Files](add-icon-files.md) section lists the exact icon requirements and provides ready-to-use sample icons.
-> If you only need to build an app that installs and runs in the visionOS simulator, you may omit the manifest entirely or exclude any of the properties above. For missing properties, [WebSpatial Builder]() will fill in default placeholders automatically.
+> The [Add Icon Files](./add-icon-files.md) section lists the exact icon requirements and provides ready-to-use sample icons.
+>
+> If you only need to build an app that installs and runs in the visionOS simulator, you may omit the manifest entirely or exclude any of the properties above. For missing properties, [WebSpatial Builder](./step-2-add-build-tool-for-packaged-webspatial-apps.md) will fill in default placeholders automatically.
 
+<a id="manifest-props"></a>
 ## How manifest properties affect a WebSpatial app
 
+<a id="start-url"></a>
 ### `start_url`
 
-The entry point that loads when the app starts. This property both sets the WebSpatial app’s default [**Start Scene**]() and **determines how the app is packaged**:
+The entry point that loads when the app starts.
 
-- If `start_url` is an absolute URL (including an `http`-prefixed domain) or is converted to one via [`--base`](), the packaged app will **not** include your site’s built assets (for example, the files Vite outputs to `dist/`). Instead, the app will **load all pages and static files on demand** from the server at runtime.
-- If `start_url` is a relative path and you do **not** supply a domain through [`--base`](), the packaged app will bundle your entire site (for example, everything in `dist/`). This produces a **fully offline** app that loads HTML and other static files directly from the package.
+This property both sets the WebSpatial app's default [**Start Scene**](../../core-concepts/scenes-and-spatial-layouts.md#start-scene) and **determines how the app is packaged**:
 
+- If [`start_url`](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/start_url) is an full URL (including an http-prefixed domain) or is completed into a full URL via the [`--base`](./parameters-of-the-webspatial-builder.md#base-for-devserver) option of the [WebSpatial Builder](./step-2-add-build-tool-for-packaged-webspatial-apps.md), the [Packaged WebSpatial App](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) will **NOT** include website files (for example, the files Vite outputs to `dist/`). Instead, the [WebSpatial App Shell](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) will **load all pages and static files on demand from the web server** at runtime.
+- If `start_url` is a relative path and you do NOT supply a domain through [`--base`](./parameters-of-the-webspatial-builder.md#base-for-devserver), the [Packaged WebSpatial App](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) will bundle your entire website files (for example, everything in `dist/`). This produces a **fully offline** app that loads HTML and other static files directly from the package.
+
+<a id="scope"></a>
 ### `scope`
 
-(Optional) The [URL scope]() of the app. Defaults to all pages under the same path as `start_url`.
+(Optional) The [URL scope](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/scope) of the app. Defaults to all pages under the same path as `start_url`.
 
-This property decides which URLs open inside the WebSpatial app (either navigating within the current [Scene]() or opening a new one). URLs outside the scope open in the browser.
+This property decides which URLs open inside the WebSpatial app (either navigating within the current [Scene](../../core-concepts/scenes-and-spatial-layouts.md) or opening a new one). URLs outside the scope open in the browser.
 
+<a id="display"></a>
 ### `display`
 
-Sets the display mode, which controls which native options appear in each Scene’s **native scene menu**.
+Sets the [display](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/display) mode, which controls which native features appear in each Scene's **native [Scene Menu](../../core-concepts/scenes-and-spatial-layouts.md#scene-menu)**.
 
-| Mode           | Menu Behavior                                                                                                  |
-| -------------- | --------------------------------------------------------------------------------------------------------------- |
-| **`minimal-ui`** | Adds native navigation controls such as **Back** and **Reload**. Your pages don’t need to implement full navigation (similar to a traditional website). |
-| **`standalone`** | Removes native navigation (e.g. no **Back** button). Only basic options like **View URL** remain. Your pages must handle all navigation (similar to a native app). |
-| **`fullscreen`** | Hides the scene menu by default—comparable to a game running full-screen on mobile (no battery/time indicators). |
-| **`tabbed`**     | Tabs are not supported in WebSpatial. This mode automatically falls back to **minimal-ui**. |
-| **`browser`**    | Not supported by PWAs or WebSpatial apps. |
+- **`minimal-ui`** - Adds native navigation buttons such as the "Back" button. Your pages don't need to implement full navigation (similar to a traditional website).
+- **`standalone`** - Removes native navigation buttons such as the "Back" button. Only basic features like "View URL" remain. Your pages must handle all navigation (similar to a native app).
+- **`fullscreen`** - Comparable to a game running full-screen on mobile (no battery/time indicators).
+- **`tabbed`** - Tabs are not supported in WebSpatial. This mode automatically falls back to `minimal-ui`.
+- **`browser`** - Not supported by PWAs or WebSpatial apps.
 
+<a id="icons"></a>
 ### `icons`
 
-Icons used during installation. [WebSpatial Builder]() will read compatible files specified here.
+Icons used during installation. [WebSpatial Builder](./step-2-add-build-tool-for-packaged-webspatial-apps.md) uses this setting to find icon files that meet spatial computing platform requirements.
 
 At minimum, include:
 
 - An icon with `"purpose": "any"` (required for all PWAs)
-- A maskable icon at least 1024×1024 px with `"purpose": "maskable"` (required by [visionOS apps]())
+- A **maskable** icon at least **1024×1024** px with `"purpose": "maskable"` ([required by visionOS apps](./add-icon-files.md))
 
 > [!IMPORTANT]
 > Manifest properties not mentioned above are currently ignored by WebSpatial apps.
 
+<a id="manifest-link"></a>
 ## Link the Web App Manifest in HTML
 
-Add a `<link rel="manifest" ...>` pointing to the manifest URL in the `<head>` of **every** HTML template file.
+Add a `<link rel="manifest" ...>` pointing to the manifest URL in the `<head>` of **every** HTML file.
 
 > [!IMPORTANT]
-> Under the PWA spec, every page that belongs to this PWA site must reference the manifest via a `<link>` tag. Otherwise the page cannot be recognized as part of the Web App.
-> WebSpatial follows the same requirement—any page that should open inside the WebSpatial app (rather than in the browser) must include the manifest URL.
+> Under the PWA spec, every page that belongs to this PWA site must reference the manifest via a `<link>` tag. Otherwise the page cannot be recognized as part of the PWA.
+> WebSpatial follows the same requirement - any page that should open inside the WebSpatial app (rather than in the browser) must include the manifest URL.
 
 ```html
 <link rel="manifest" href="/manifest.webmanifest" />
 ```
 
 > [!TIP]
-> If your build tool hides the HTML template and you can’t edit `<head>` directly, it should offer a way to inject custom `<link>` tags.
+> If your web project hides the HTML template and you can't edit `<head>` directly, it should offer a way to inject custom `<link>` tags.
 > For example, in **rsbuild** you can modify the built-in HTML template through `rsbuild.config.js`:
 >```js
 >  plugins: [pluginReact()],
@@ -108,11 +115,12 @@ Add a `<link rel="manifest" ...>` pointing to the manifest URL in the `<head>` o
 >  },
 > ```
 
+<a id="manifest-tool"></a>
 ## Automatically add the manifest with tooling
 
 If you prefer not to create the manifest file and modify HTML by hand, many tools can generate a Web App Manifest and inject it into every HTML file for you.
 
-Example: In a Vite project, use the **VitePWA** plugin.
+Example: In a Vite project, use the [VitePWA](https://vite-pwa-org.netlify.app/) plugin.
 
 > [!NOTE]
 > The following example shows the minimal configuration, disabling the Service Worker features that VitePWA enables by default and adding only the manifest.

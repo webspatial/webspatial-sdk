@@ -22,6 +22,7 @@ This code should **not** run and **must not** be bundled in the build aimed at d
 
 To achieve this optimization, you need a reliable way—inside both JS and CSS—to know whether the code is running in a WebSpatial app or in a regular website.
 
+<a id="js-solution"></a>
 ## Recommended JS solution
 
 Configure your web build tool so that client-side JS can read the built-in WebSpatial environment variable **`$XR_ENV`**.
@@ -47,7 +48,7 @@ export default defineConfig({
 > [!NOTE]
 > The [WebSpatial Vite plugin]() automatically injects **`__XR_ENV_BASE__`**, so you can skip the manual config above.
 
-See the usage example in the **[Quick Start](../quick-start/README.md)** guide.
+See the usage example in the **[Quick Example](../quick-start/README.md)** guide.
 
 ```jsx
 <Router basename={__XR_ENV_BASE__}>
@@ -59,6 +60,7 @@ See the usage example in the **[Quick Start](../quick-start/README.md)** guide.
    }}>
 ```
 
+<a id="css-solution"></a>
 ## Recommended CSS solution
 
 ### A future standardizable approach
