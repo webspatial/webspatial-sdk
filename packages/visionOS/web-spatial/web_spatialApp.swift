@@ -11,7 +11,7 @@ let clock = PerfClock()
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
-let nativeAPIVersion = getPackageVersion()
+let nativeAPIVersion = pwaManager.getVersion()
 
 // start URL
 let startURL = pwaManager.start_url

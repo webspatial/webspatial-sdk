@@ -91,7 +91,7 @@ export default class XcodeProject {
     }
     this.updateExportOptions()
     if (option.icon) await this.bindIcon(option.icon)
-    this.bindManifestInfo(project, option.manifestInfo.json, isDev)
+    await this.bindManifestInfo(project, option.manifestInfo.json, isDev)
     if (option['version']) {
       this.updateVersion(project, option['version'])
     } else {
@@ -241,7 +241,7 @@ export default class XcodeProject {
     )
   }
 
-  private static bindManifestInfo(
+  private static async bindManifestInfo(
     xcodeProject: any,
     manifest: any,
     isDev: boolean = false,
@@ -255,7 +255,7 @@ export default class XcodeProject {
       )
     }
     this.updateDeeplink(manifest.protocol_handlers ?? [])
-    this.modifySwift(manifest)
+    await this.modifySwift(manifest)
   }
 
   private static updateVersion(xcodeProject: any, version: string) {
@@ -272,12 +272,18 @@ export default class XcodeProject {
     fs.writeFileSync(infoPlistPath, newInfoPlist)
   }
 
-  private static modifySwift(manifest: any) {
+  private static async modifySwift(manifest: any) {
     const manifestSwiftPath = join(
       PROJECT_DIRECTORY,
       './web-spatial/libs/webView/manifest.swift',
     )
+    const xcodePackageJsonPath = join(PROJECT_DIRECTORY, 'package.json')
+    const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
     let manifestSwift = manifestSwiftTemplate
+    manifestSwift = manifestSwift.replace(
+      'PACKAGE_VERSION',
+      packageJson.version ?? '0.0.0',
+    )
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     manifestSwift = manifestSwift.replace('AppName', manifest.name)
