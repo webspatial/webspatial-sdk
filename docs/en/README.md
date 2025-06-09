@@ -1,7 +1,5 @@
 <div align="center">
   <img src="../assets/logo.png" alt="WebSpatial Logo" width="400"/>
-
- [中文文档](../zh/README.md)
  <br>
 </div>
 
@@ -9,7 +7,7 @@
 
 Welcome to the WebSpatial Handbook.
 
-It is recommended that you read this documentation in sequence, particularly the first three chapters—[Introduction](introduction/README.md), [Quick Example](quick-start/README.md), and [Core Concepts](core-concepts/README.md). The fourth chapter provides comprehensive and detailed [development documentation](development-guide/README.md), which you may consult as needed.
+It is recommended that you read this documentation in sequence, particularly the first three chapters—[Introduction](introduction/README.md), [Quick Example](quick-start/README.md), and [Core Concepts](core-concepts/README.md). The fourth chapter provides comprehensive and detailed [development documentation](development-guide/README.md).
 
 ## Table of Contents
 
@@ -50,9 +48,6 @@ It is recommended that you read this documentation in sequence, particularly the
 	  - [Elevate 2D Elements](development-guide/using-the-webspatial-api/elevate-2d-elements.md)
 	  - [Manage Multiple Scenes](development-guide/using-the-webspatial-api/manage-multiple-scenes.md)
 	  - [Add 3D Content](development-guide/using-the-webspatial-api/add-3d-content.md)
-	- [Using the Core SDK](development-guide/using-the-core-sdk/README.md)
-	- [FAQ](faq.md)
-	- [Troubleshooting](troubleshooting.md)
 
 ## Feedback & Support
 

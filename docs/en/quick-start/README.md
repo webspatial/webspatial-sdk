@@ -1,7 +1,6 @@
 <div align="center">
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 
-  [中文文档](../../zh/quick-start/README.md)
 </div>
 
 # Quick Example
@@ -11,11 +10,14 @@
 Use a minimal example to get a quick feel for the actual results and development experience of the [WebSpatial SDK](../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk), covering project setup, SDK installation and configuration, a sample development workflow, and a preview of spatial features.
 
 > [!IMPORTANT]
-> This is NOT a development guide.
-> To keep this example short and clear to quickly show real results, no explanations are given here.
-> To make sure everything runs properly, please follow each step exactly - many of them are absolutely essential.
-> This document includes detailed links, feel free to skip them for a quick example run.
-> After you have completed the demo, you can dive into [the real development guide](../development-guide/README.md).
+> - This is NOT a development guide.
+> - To keep this example short and clear to quickly show real results, no explanations are given here.
+> - To make sure everything runs properly, please follow each step exactly - many of them are absolutely essential.
+> - This document includes detailed links, feel free to skip them for a quick example run.
+> - After you have completed the demo, you can dive into [the real development guide](../development-guide/README.md).
+
+> [!TIP]
+> You can follow this doc to build the demo from scratch, or just grab the ready-made version from [the repo](https://github.com/webspatial/quick-example). You can also watch this [video](https://youtu.be/ddBBDBq7nhs) for a quick overview of everything in the doc.
 
 <a id="create-project"></a>
 ## 1. Create a modern Web project that supports WebSpatial
