@@ -24,6 +24,7 @@ struct PWAManager: Codable {
         resizability: SceneResizability
     )
     var useMainScene: Bool = USE_MAIN_SCENE
+    private var version: String = "PACKAGE_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -85,6 +86,10 @@ struct PWAManager: Codable {
             resource += "#" + (newUrl?.fragment())!
         }
         return resource
+    }
+    
+    func getVersion() -> String {
+        return version
     }
 }
 
