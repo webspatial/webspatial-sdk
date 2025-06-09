@@ -42,7 +42,7 @@ WebSpatial is a set of spatial APIs and ready-to-use SDK that extend the standar
 
 - [Table of Contents](docs/en/README.md)
 - [Introduction](docs/en/introduction/README.md)
-- [Quick Start](docs/en/quick-start/README.md)
+- [Quick Example](docs/en/quick-start/README.md)
 - [Core Concepts](docs/en/core-concepts/README.md)
 - [Development Guide](docs/en/development-guide/README.md)
 

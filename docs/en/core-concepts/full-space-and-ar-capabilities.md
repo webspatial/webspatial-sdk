@@ -1,4 +1,4 @@
-# Full-Space and AR Capabilities
+# Full Space and AR Capabilities
 
 > [!NOTE]
 > Not supported in the current version of the WebSpatial SDK.

@@ -6,26 +6,26 @@ Previous step:
 
 ---
 
-To give a WebSpatial app native spatial-app capabilities and a proper user experience (for example, having **its own independent window** instead of running only inside a browser), the project must become an **application**, not just “a collection of pages.” You need to add **app-level details** such as the app name, icons, and a [starting screen]().
+To give a WebSpatial app the capabilities and experience of a native [spatial app](../../core-concepts/shared-space-and-spatial-apps.md#spatial-apps) - like having its own [standalone window](../../core-concepts/scenes-and-spatial-layouts.md#scene-menu) instead of just running inside a browser - it needs to be more than just a bunch of webpages. **It has to become an actual "app" which means adding app-level info** like the app name, app icon, [which pages it includes](./add-web-app-manifest.md#scope), and [what the start page is](../../core-concepts/scenes-and-spatial-layouts.md#start-scene).
 
-> Traditional websites are a loose set of pages and do not include this information, containing only page-level details like the page title and favicon.
+> Traditional websites are a loose set of pages and do not include application-level metadata, containing only page-level info like the page title and favicon (page icon).
 
-Some WebSpatial apps also need to ship through an app store, reaching users on the platform the same way native apps do.
+Some WebSpatial apps also need to be listed in app stores like native apps, reaching users on the platform the same way native apps do. That also requires adding app-level metadata.
 
 > [!TIP]
-> For today’s **Hybrid-based** WebSpatial apps, listing in an app store is often essential for user acquisition.
+> For today's [Hybrid-based](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) WebSpatial apps, listing in app stores is essential for user acquisition.
 
-While becoming an application, the project must remain a **standard website** that can still run in the browser. This keeps existing Web strengths: true cross-platform reach, shareable URLs, and on-demand usage without installation.
+While becoming an actual "app", the project must remain a **standard website** that can still run in regular browsers. This keeps [**key Web strengths**](https://developer.picoxr.com/document/web/introduce-power-of-web/): true cross-platform reach, shareable URLs, and on-demand usage without installation.
 
-The **[PWA technology]()** defined in Web standards meets these requirements. It adds app-level information to a site and makes it installable. WebSpatial builds on many existing mainstream Web APIs, including the PWA standard.
+The **[PWA technology](https://web.dev/explore/progressive-web-apps)** defined in Web standards meets these requirements. It adds app-level info to a website and makes it installable. WebSpatial builds on many existing mainstream Web APIs, including the PWA standard.
 
 Therefore, before introducing the WebSpatial API, make sure your site is already a valid PWA.
 
-> [!IMPORTANT]
-> If you only need to create an app **that installs and runs in the visionOS simulator**, you do not have to convert the site to a PWA first. **WebSpatial Builder** will automatically supply placeholder values like the app name and icon.
-> However, to generate an installable package, **install it on a real Vision Pro device**, or **distribute via App Store Connect** with a real name, icon, and other baseline app details, you must first turn the site into a PWA.
+If your site is not yet a PWA, you only need to create the **simplest possible PWA** - as long as the site includes a valid [**Web App Manifest**](./add-web-app-manifest.md), it can be installed as a PWA and meet WebSpatial's requirements.
 
-If your site is not yet a PWA, you only need to create the **simplest possible PWA**—as long as the site includes a **Web App Manifest** and can be installed as a PWA, it satisfies WebSpatial’s requirements.
+> [!IMPORTANT]
+> If you only need to create an app for [**installation and execution in the visionOS simulator**](./step-2-add-build-tool-for-packaged-webspatial-apps.md#run), you do not have to convert the site to a PWA first. [**WebSpatial Builder**](./step-2-add-build-tool-for-packaged-webspatial-apps.md) will automatically supply placeholder values like the app name and icon.
+> However, to generate an installable app package, [**install it on a real Vision Pro device**](./step-2-add-build-tool-for-packaged-webspatial-apps.md#build), or [**distribute via App Store Connect**](./step-2-add-build-tool-for-packaged-webspatial-apps.md#publish) with a real name, icon, and other baseline app details, you must first turn the site into a PWA.
 
 Follow these steps:
 

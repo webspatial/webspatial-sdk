@@ -4,7 +4,7 @@ Previous step: [Add Web App Manifest](add-web-app-manifest.md)
 
 ---
 
-You can now launch the React site locally using your project’s existing workflow.
+You can now launch the React site locally using your project's existing workflow.
 
 Run the DevServer:
 
@@ -19,12 +19,12 @@ pnpm build
 pnpm preview # `pnpm start` for Next.js
 ```
 
-Then open the site’s local URL in Chrome or Edge. You should see the PWA install button in the address bar:
+Then open the site's local URL in Chrome or Edge. You should see the PWA install button in the address bar of your browser:
 
 ![](../../../assets/guide/pwa-1.png)
 ![](../../../assets/guide/pwa-2.png)
 
-Open DevTools in the browser and check the parsed Web App Manifest for this page:
+Open your browser's DevTools, you should see how the browser has parsed the Web App Manifest for this page.
 
 ![](../../../assets/guide/pwa-3.png)
 

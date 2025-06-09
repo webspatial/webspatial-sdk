@@ -10,6 +10,7 @@ Basic concept: [Spatialized Elements and 3D Container Elements](../../core-conce
 > - `enable-xr`, `__enableXr__`, `enableXr`
 > - `cursor: pointer`
 
+<a id="spatialize"></a>
 ## Enable spatialization
 
 With the current WebSpatial SDK an HTML element must be marked with a temporary flag before you can use any [other spatial APIs]().
@@ -103,6 +104,7 @@ const Card = ({
 
 After the flag is applied the element keeps all of its original capabilities and also gains access to the [spatial APIs]() provided by the WebSpatial SDK, including the CSS APIs and DOM APIs described below.
 
+<a id="cross-platform"></a>
 ## Cross-platform behavior
 
 A spatialized element has spatial capabilities only when running inside the [WebSpatial App Shell]().
@@ -110,7 +112,8 @@ On desktop or mobile browsers the build output does **not** include the WebSpati
 
 You therefore **do not need any if-else checks** when spatializing elements. The API works cross-platform by default.
 
-## CSS capabilities
+<a id="css"></a>
+## CSS Capabilities
 
 Inside a spatialized element you can use WebSpatial APIs in all common CSS authoring styles, including:
 
@@ -183,7 +186,8 @@ function App() {
 
 CSS Modules, PostCSS, and other pre-compiled CSS pipelines work as well.
 
-## DOM capabilities
+<a id="dom"></a>
+## DOM Capabilities
 
 If you bypass React and manipulate the element directly through `querySelector` or similar DOM APIs, the [WebSpatial API will not work correctly]().
 
@@ -213,7 +217,8 @@ You can also modify `ref.current.className` as needed.
 
 If the original `style` or `className` contains WebSpatial properties, changing them through these DOM APIs immediately updates the spatial effect.
 
-## Animation capabilities
+<a id="animation"></a>
+## Animation Capabilities
 
 The WebSpatial SDK does not yet support using spatial APIs inside pure CSS animations.
 For animation effects use JavaScript—update the WebSpatial properties frame by frame with the Ref and DOM APIs mentioned above.
@@ -226,12 +231,14 @@ The following JavaScript animation libraries have been tested:
 - Tween.js
 - Anime.js
 
-## Internal interaction
+<a id="content-interaction"></a>
+## Internal Content Interaction
 
 Whether or not an element itself is spatialized, its child-element interactions on spatial platforms such as visionOS are based on *natural interaction*.
 
 Most behaviors mirror touch interaction. One key difference is that during *indirect interaction* (eye-hand interaction) an element must qualify as an *Interaction Region* to receive the system-provided *Hover Effect*.
 
+<a id="hover-effect"></a>
 ### Hover Effect
 
 During the *Select (Navigation)* phase—indirect or direct—no JavaScript events fire and no CSS state changes (such as `:hover`) occur, just like on a touch screen.
@@ -253,6 +260,7 @@ An element becomes an Interaction Region if any of the following is true:
 
 ![](../../../assets/guide/hand-1.png)
 
+<a id="js-events"></a>
 ### JavaScript events
 
 After the *Confirm (Activate)* phase, indirect and direct interactions fire the same JavaScript events as touch screens:
@@ -277,6 +285,7 @@ You can build higher-level gestures such as drag-and-drop on top of these low-le
 Example:
 [![](../../../assets/guide/hand-4.png)](https://youtu.be/d8RcEiV-WM4?si=MyfgPKQ4qGZN80lw)
 
+<a id="self-interaction"></a>
 ## Self interaction
 
 > To be added

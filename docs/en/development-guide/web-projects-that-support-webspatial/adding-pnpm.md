@@ -1,4 +1,4 @@
-# Add pnpm
+#  (Optional) Add pnpm
 
 Previous step: [Creating New Web Projects](creating-new-web-projects.md)
 
@@ -10,7 +10,7 @@ pnpm is a drop-in replacement for npm. It saves disk space by using hard links a
 
 Create an `.npmrc` file in the project root.
 
-```
+```ini
 shamefully-hoist=true
 strict-peer-dependencies=false
 auto-install-peers=true
@@ -29,10 +29,10 @@ Add the appropriate pnpm-related entries to `.gitignore`.
 ## Verify pnpm is installed globally
 
 Make sure pnpm is installed globally on your system.
+
 > [!TIP]
 > You can install it with Corepack,
 > ```shell
-> npm install --global corepack
 > corepack enable pnpm
 > ```
 > or directly with npm.
@@ -49,7 +49,8 @@ rm -rf node_modules
 pnpm install
 ```
 
-## [Optional] Add npm scripts
+<a id="npm-scripts"></a>
+## (Optional) Add npm scripts
 
 You can add helper npm scripts in `package.json` to simplify common pnpm commands.
 

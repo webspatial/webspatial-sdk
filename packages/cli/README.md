@@ -15,6 +15,6 @@ For WebSpatial Builder:
 For WebSpatial:
 - [Table of Contents](../../docs/en/README.md)
 - [Introduction](../../docs/en/introduction/README.md)
-- [Quick Start](../../docs/en/quick-start/README.md)
+- [Quick Example](../../docs/en/quick-start/README.md)
 - [Core Concepts](../../docs/en/core-concepts/README.md)
 - [Development Guide](../../docs/en/development-guide/README.md)

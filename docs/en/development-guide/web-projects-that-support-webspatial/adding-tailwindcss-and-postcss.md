@@ -1,20 +1,20 @@
-# Add TailwindCSS and PostCSS
+#  (Optional) Add TailwindCSS and PostCSS
 
 Previous step: [Creating New Web Projects](creating-new-web-projects.md)
 
 ---
 
 TailwindCSS is a utility-first CSS framework that provides a large set of atomic classes to speed up UI development.
-PostCSS is a tool for transforming CSS with JavaScript, allowing you to use upcoming CSS features today.
+PostCSS is a tool for transforming CSS, allowing you to use upcoming CSS features today.
 
+<a id="install"></a>
 ## Install dependencies
-
-Install the required packages with your package manager.
 
 ```bash
 npm install -D tailwindcss postcss autoprefixer
 ```
 
+<a id="config"></a>
 ## Generate configuration files
 
 Run the following command to generate the TailwindCSS and PostCSS configuration files.
@@ -24,8 +24,6 @@ npx tailwindcss init -p
 ```
 
 It will create `tailwind.config.js` and `postcss.config.js`.
-
-## Configure template paths
 
 Edit `tailwind.config.js` and specify the template paths that TailwindCSS should scan.
 
@@ -43,7 +41,8 @@ export default {
 }
 ```
 
-## Integrate with your build tool
+<a id="build"></a>
+## Integrate with your web build tool
 
 Finally, add the necessary configuration to your web build tool.
 For example, if you are using Vite, add the TailwindCSS plugin in `vite.config.js`.

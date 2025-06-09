@@ -22,8 +22,10 @@ On top of that baseline, a spatialized HTML element can use the [WebSpatial API]
 
 Multiple APIs can achieve this elevation and can be grouped into three categories based on how they affect the layout flow.
 
+<a id="affect-layout"></a>
 ## APIs that remove the element from the layout flow
 
+<a id="position-absolute"></a>
 ### `position: absolute`
 
 With absolute positioning, the element is positioned relative to the nearest ancestor **containing block** (an ancestor whose `position` value is not `static`, or one that has a `transform` property). If no such ancestor exists, it is positioned relative to the entire window.
@@ -53,7 +55,7 @@ In the current WebSpatial SDK, the value is interpreted relative to the **neares
 
 > In a future Web standard, a `back` property should behave like `top`/`bottom`/`left`/`right`, positioning relative to the nearest **containing block**. For forward compatibility, best practice today is to give the parent `position: relative` (if it is not already `absolute` or `fixed`) whenever a spatialized child should use that parent as its containing block for the Z-axis.
 
-Example based on the [Quick Start]():
+Example based on the [Quick Example]():
 
 ```diff {highlight=12-16}
 html.is-spatial {
@@ -80,6 +82,7 @@ The `<p>` text is positioned on the Y-axis relative to its containing block `.co
 
 ![](../../../assets/guide/3-4.png)
 
+<a id="position-fixed"></a>
 ### `position: fixed`
 
 With fixed positioning, the element is positioned against the **initial containing block** (effectively the page plane of the window scene) and does not scroll with the page.
@@ -132,10 +135,12 @@ While the page scrolls, the left product image scrolls too, but the right info p
 
 ![](../../../assets/guide/3-6.png)
 
+<a id="not-affect-layout"></a>
 ## APIs that do not affect the layout flow
 
 The element remains in the flow, keeping its original space and dimensions.
 
+<a id="position-relative"></a>
 ### Change only the position: `position: relative`
 
 With relative positioning, the element can move along X and Y using the four CSS properties.
@@ -144,7 +149,7 @@ With relative positioning, the element can move along X and Y using the four CSS
 
 It can also move along Z with `--xr-back`. The initial Z position is **the plane where the element originally sits**, which works as the “back surface.”
 
-Example based on the [Quick Start]():
+Example based on the [Quick Example]():
 
 ```diff {highlight=10-11}
 html.is-spatial {
@@ -167,7 +172,7 @@ The `.link-card` is below `.count-card` in the original flow. In relative mode, 
 
 ![](../../../assets/guide/3-8.png)
 
-Another example from the [Quick Start]():
+Another example from the [Quick Example]():
 
 ```css
   .count-card {
@@ -190,6 +195,7 @@ Another example from the [Quick Start]():
 
 ![](../../../assets/guide/3-9.png)
 
+<a id="css-transform"></a>
 ### Change position and shape: CSS Transform
 
 CSS Transform leaves the element’s original position, size, and layout relations intact, modifying only the rendered image via a matrix.
@@ -216,7 +222,7 @@ Transforms that affect the Z-axis and are supported on spatialized elements:
 > [!WARNING]
 > `skew` is not supported.
 
-Example based on the [Quick Start]():
+Example based on the [Quick Example]():
 
 ```diff  {highlight=10-14}
 html.is-spatial {
@@ -255,12 +261,14 @@ The side menu is fixed at the far left, then transformed: it moves 320 px forwar
 
 ![](../../../assets/guide/3-15.png)
 
+<a id="with-layout"></a>
 ## APIs based on the layout flow
 
 These APIs change the parent’s layout flow so that children are laid out from back to front along the Z-axis, assigning Z positions through layout relationships.
 
 They are **not yet supported** in the current WebSpatial SDK.
 
+<a id="dynamic-change"></a>
 ## Dynamic changes to the layout flow
 
 As noted at the start, once an element is spatialized it still lives in the original layout flow. Updates in React may dynamically change CSS and layout, altering a spatialized element’s X/Y position or size—whether or not the element is elevated.

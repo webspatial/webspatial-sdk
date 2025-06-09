@@ -4,6 +4,7 @@ Previous step: [Step 1: Install the WebSpatial SDK](step-1-install-the-webspatia
 
 ---
 
+<a id="webspatial-builder"></a>
 ## WebSpatial Builder
 
 To enable the [WebSpatial API]() features that current browsers do not yet support and unlock spatial capabilities, your site must run inside the [WebSpatial App Shell]().
@@ -21,6 +22,7 @@ During distribution you need to build the app, submit it to a platform such as A
 
 WebSpatial Builder is a command-line tool. The main command is `webspatial-builder`, which provides three subcommands:
 
+<a id="run"></a>
 ### `run`
 
 ```shell
@@ -44,6 +46,7 @@ Therefore, when you use `run`, you almost always need the [`--base` option]() to
 
 All [other `run` options]() are optional.
 
+<a id="build"></a>
 ### `build`
 
 ```shell
@@ -64,6 +67,7 @@ When you use `build`, you must always provide [`--bundle-id`]() and [`--teamId`]
 
 All [other `build` options]() are optional.
 
+<a id="publish"></a>
 ### `publish`
 
 ```shell
@@ -76,6 +80,7 @@ When you use `publish`, you must always provide [`--bundle-id`]() , [`--teamId`]
 
 All [other `publish` options]() are optional.
 
+<a id="npm-scripts"></a>
 ## npm scripts
 
 You could type the WebSpatial Builder command and all of the options above every time you run it, but that is inefficient. A best practice is to add npm scripts to `package.json` so the options become environment variables and you can run WebSpatial Builder through familiar npm commands.

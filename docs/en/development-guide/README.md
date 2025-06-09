@@ -9,10 +9,10 @@
 # Development Guide
 
 - [Introduction](../introduction/README.md)
-- [Quick Start](../quick-start/README.md)
+- [Quick Example](../quick-start/README.md)
 - [Core Concepts](../core-concepts/README.md)
 
-> It is strongly recommended that you try the [Quick Start demo](../quick-start/README.md) and familiarize yourself with the [Core Concepts](../core-concepts/README.md) before using this Development Guide.
+> It is strongly recommended that you try the [Quick Example demo](../quick-start/README.md) and familiarize yourself with the [Core Concepts](../core-concepts/README.md) before using this Development Guide.
 
 ---
 

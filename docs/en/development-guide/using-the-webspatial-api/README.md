@@ -1,9 +1,7 @@
 # Using the WebSpatial API
 
-The WebSpatial API is currently available **only** in Web projects that have the WebSpatial SDK installed:
-
-- [Web Projects That Support WebSpatial](../web-projects-that-support-webspatial/README.md)
-- [Enabling WebSpatial in Web Projects](../enabling-webspatial-in-web-projects/README.md)
+> [!NOTE]
+> The [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) is currently available only in [React projects](../web-projects-that-support-webspatial/README.md) that [have the WebSpatial SDK installed](../enabling-webspatial-in-web-projects/README.md):
 
 ---
 

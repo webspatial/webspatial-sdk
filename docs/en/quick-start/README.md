@@ -1,27 +1,26 @@
-![status: preview](https://img.shields.io/badge/status-preview-orange)
-> ⚠️ This project is in **preview**. Expect some missing docs and potential stability issues. APIs and features may change.
-
 <div align="center">
   <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 
   [中文文档](../../zh/quick-start/README.md)
 </div>
 
-# Quick Start
+# Quick Example
 
 > Previous chapter: [What Is WebSpatial](../introduction/README.md)
 
-Use a minimal example to get hands-on with the [WebSpatial SDK](), covering project setup, SDK installation and configuration, a sample development workflow, and a preview of spatial features.
+Use a minimal example to get a quick feel for the actual results and development experience of the [WebSpatial SDK](../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk), covering project setup, SDK installation and configuration, a sample development workflow, and a preview of spatial features.
 
 > [!IMPORTANT]
-> To keep this guide short, clear, and results-oriented, no explanations are given here.
-> Many steps are mandatory, so follow them exactly to ensure everything runs correctly.
-> After you have completed the demo, refer to the more comprehensive [Development Guide]() for real-world projects, full option descriptions, and detailed explanations.
-> Several links in this document point to additional details. If you just want to try the demo quickly, feel free to skip those links for now.
+> This is NOT a development guide.
+> To keep this example short and clear to quickly show real results, no explanations are given here.
+> To make sure everything runs properly, please follow each step exactly - many of them are absolutely essential.
+> This document includes detailed links, feel free to skip them for a quick example run.
+> After you have completed the demo, you can dive into [the real development guide](../development-guide/README.md).
 
+<a id="create-project"></a>
 ## 1. Create a modern Web project that supports WebSpatial
 
-First confirm that Node.js is installed (see the [Node.js official website]()).
+First confirm that Node.js is installed (see the [Node.js official website](https://nodejs.org/en/download)).
 
 Using a standard React + Vite + TypeScript project as an example, run the following commands to create the project:
 
@@ -29,12 +28,16 @@ Using a standard React + Vite + TypeScript project as an example, run the follow
 npx create-vite --template react-ts
 ```
 
+> [!TIP]
+> See [what kinds of web projects are considered WebSpatial-supported](../development-guide/web-projects-that-support-webspatial/README.md) for details.
+
 In the project root, install the dependencies:
 
 ```shell
 npm install
 ```
 
+<a id="install-sdk"></a>
 ## 2. Install the WebSpatial SDK
 
 ```shell
@@ -43,11 +46,12 @@ npm install --save-dev @webspatial/builder @webspatial/platform-visionos @webspa
 ```
 
 > [!TIP]
-> See [which dependencies are installed]() for details.
+> See [which dependencies are installed](../development-guide/enabling-webspatial-in-web-projects/step-1-install-the-webspatial-sdk.md) for details.
 
+<a id="web-build-tool"></a>
 ## 3. Integrate the WebSpatial SDK into the Web build tool (Vite)
 
-First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configuration that [affects JSX compilation]().
+First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configuration that [affects JSX compilation](../development-guide/enabling-webspatial-in-web-projects/configure-js-ts-compiler.md).
 
 ```diff
 {
@@ -57,8 +61,8 @@ First modify `tsconfig.app.json` and `tsconfig.node.json`, adding the configurat
 
 Then modify `vite.config.ts`:
 
-- Add the [WebSpatial Vite plugin]().
-- Inject the [environment variable `$XR_ENV`]() into HTML.
+- Add [WebSpatial's Vite plugin](../development-guide/enabling-webspatial-in-web-projects/add-optimizations-and-defaults-to-web-build-tools.md).
+- Inject the [environment variable `$XR_ENV`](../development-guide/enabling-webspatial-in-web-projects/check-if-running-in-webspatial-mode.md) into HTML.
 
 ```diff
 import { defineConfig } from "vite";
@@ -82,7 +86,7 @@ export default defineConfig({
 });
 ```
 
-Run the Dev Server for desktop/mobile and other non-XR platforms (keep it running in the following steps):
+Run [the Dev Server for desktop/mobile and other non-XR platforms](../development-guide/enabling-webspatial-in-web-projects/generate-a-webspatial-specific-website.md#regular-dev-server) (keep it running in the following steps):
 
 ```shell
 npm run dev
@@ -94,7 +98,7 @@ Open the URL shown in the terminal in a desktop browser such as Chrome to confir
 
 ![](../../assets/quick/2.png)
 
-Next, open a new terminal window (in the project root) and run another Dev Server to generate [Web-only code for WebSpatial](), used as a WebSpatial app on visionOS (keep it running in the following steps):
+Next, open a new terminal window (in the project root) and run another Dev Server to generate [web code specifically for WebSpatial](../development-guide/enabling-webspatial-in-web-projects/generate-a-webspatial-specific-website.md#dedicated-dev-server), used in the WebSpatial app on visionOS (keep it running in the following steps):
 
 ```shell
 XR_ENV=avp npm run dev
@@ -102,38 +106,40 @@ XR_ENV=avp npm run dev
 
 ![](../../assets/quick/3.png)
 
+<a id="package-and-run"></a>
 ## 4. Package and run the WebSpatial app
 
-Before using the [WebSpatial packaging tool](), install Xcode and the visionOS simulator:
+Before using [the packaging tool for WebSpatial](../development-guide/enabling-webspatial-in-web-projects/step-2-add-build-tool-for-packaged-webspatial-apps.md), install Xcode and the visionOS simulator:
 
 > Prerequisite: a Mac computer
-> 1. Open the Mac App Store, search for 'Xcode', and install it.
+> 1. Open the Mac App Store, search for "Xcode", and install it.
 > 2. On first launch, agree to the license and enter the admin password to install additional components.
-> 3. Click the top menu 'Xcode' > 'Settings…'. In the 'Components' tab under 'Platform Support', locate visionOS and visionOS Simulator, then install both.
+> 3. Click the top menu "Xcode" > "Settings…". In the "Components" tab, find visionOS and visionOS Simulator under "Platform Support", then install both.
 
-Run the [development command]() of the WebSpatial packaging tool:
+Run the [development command (`run`)](../development-guide/enabling-webspatial-in-web-projects/step-2-add-build-tool-for-packaged-webspatial-apps.md#run) of the packaging tool:
 
 ```shell
 npx webspatial-builder run --base=$XR_DEV_SERVER
 ```
 
-> [!TIP]
+> [!IMPORTANT]
 > Replace `$XR_DEV_SERVER` with the URL generated by `XR_ENV=avp npm run dev` in the previous step.
 
-The visionOS simulator launches automatically, installs the packaged WebSpatial app, and runs it:
+The visionOS simulator will automatically launch, installs the [Packaged WebSpatial App](../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk), and runs it:
 
 ![](../../assets/quick/4.png)
 ![](../../assets/quick/5.png)
 
-## 5. Set initialization properties for the launch scene
+<a id="start-scene"></a>
+## 5. Set initialization properties for the start scene
 
-Create a minimal [Web App Manifest file]() (only for the `webspatial-builder run` command; [complete it before real-device runs or distribution]()).
+Create a incomplete Web App Manifest file (this only works with the `webspatial-builder run` command, you'll need to [complete it before running on a real device or distributing it](../development-guide/enabling-webspatial-in-web-projects/prerequisite-become-a-minimal-pwa.md)).
 
 ```shell
 touch public/manifest.webmanifest
 ```
 
-In `xr_main_scene`, set the [launch scene]()[default size]():
+Set the [default size](../core-concepts/scenes-and-spatial-layouts.md#spatial-layout) for the [start scene](../core-concepts/scenes-and-spatial-layouts.md#start-scene) in [`xr_main_scene`](../development-guide/using-the-webspatial-api/manage-multiple-scenes.md#start-scene).
 
 ```json5
 {
@@ -146,14 +152,15 @@ In `xr_main_scene`, set the [launch scene]()[default size]():
 }
 ```
 
-Run the WebSpatial packaging tool (`run` command) again. The app’s launch scene now appears with a mobile-app-style layout:
+Run the `run` command of the WebSpatial Builder again. The app's start scene now appears with a mobile app style:
 
 > [!WARNING]
-> A current bug may leave the launch scene blank after repackaging. If this happens, delete the app in the simulator, quit the simulator, then package and run again.
+> A current bug may leave the start scene blank after repackaging. If this happens, delete the app in the simulator, quit the simulator, then package and run again.
 > If the issue persists, delete `node_modules` in the project and reinstall dependencies.
 
 ![](../../assets/quick/6.png)
 
+<a id="new-scene"></a>
 ## 6. Add a new scene
 
 First add a new page. In this demo we use client-side routing.
@@ -205,7 +212,7 @@ Move all existing JSX in `src/App.tsx` into the designated position in the new J
 +       <Route
 +         path="/"
 +         element={
-            /* 把 src/App.tsx 中 App 组件原有的 JSX 内容全部放到这里 */
+            /* Move all JSX from the App component in src/App.tsx into here */
 +         }
 +       />
 +     </Routes>
@@ -214,7 +221,7 @@ Move all existing JSX in `src/App.tsx` into the designated position in the new J
 ```
 
 > [!TIP]
-> What is `__XR_ENV_BASE__`()?
+> What is [`__XR_ENV_BASE__`](../development-guide/enabling-webspatial-in-web-projects/generate-a-webspatial-specific-website.md#use-dedicated-dev-server)?
 
 The new page `/second-page` has been added:
 
@@ -223,7 +230,7 @@ The new page `/second-page` has been added:
 At the end of the existing content in `src/App.tsx` (below `<p className="read-the-docs">`), add a card containing:
 
 - A link that always opens `/second-page` in a new window.
-- A button that opens `/second-page` in a window with the specified `name`.
+- A button that opens `/second-page` in a window with [the specified `name`](../development-guide/using-the-webspatial-api/manage-multiple-scenes.md#new-scene).
 
 ```diff
               <p className="read-the-docs">
@@ -247,19 +254,20 @@ At the end of the existing content in `src/App.tsx` (below `<p className="read-t
 +             </div>
 ```
 
-Clicking the link or button opens a new [spatial-app scene]() that displays the content of `/second-page`:
+Clicking the link or button opens a new [spatial-app scene](../core-concepts/scenes-and-spatial-layouts.md) that displays the content of `/second-page`:
 
 ![](../../assets/intro/intro-4-8.gif)
 
+<a id="init-scene"></a>
 ## 7. Set initialization properties for the new scene
 
-Import the [scene initialization]() API from the WebSpatial SDK in `src/App.tsx`.
+Import the [scene initialization](../core-concepts/scenes-and-spatial-layouts.md#scene-init) API from the WebSpatial SDK in `src/App.tsx`.
 
 ```jsx
 import { initScene } from "@webspatial/react-sdk";
 ```
 
-Before the scene with `name` equal to `"secondScene"` opens, initialize it:
+Before the scene named `"secondScene"` opens, initialize it:
 
 ```diff
                     onClick={() => {
@@ -275,13 +283,15 @@ Before the scene with `name` equal to `"secondScene"` opens, initialize it:
                       window.open(`${__XR_ENV_BASE__}/second-page`, "secondScene");
 ```
 
-Click the button and see that the default size of the `secondScene` scene changes:
+Click the button and see that the [default size](../core-concepts/scenes-and-spatial-layouts.md#spatial-layout) of the `secondScene` scene changes:
 
 ![](../../assets/quick/9.png)
 
+<a id="material-background"></a>
 ## 8. Add material backgrounds
 
-Modify `index.html` to add a `classname` specific to `XR_ENV` mode on `<html>`.
+Edit the `index.html` file to [add a special classname to the `<html>` element](../development-guide/enabling-webspatial-in-web-projects/check-if-running-in-webspatial-mode.md#css-solution) when this web code is executed as a WebSpatial app ([`XR_ENV` mode](../development-guide/enabling-webspatial-in-web-projects/generate-a-webspatial-specific-website.md)).
+
 
 ```diff
 +<%- XR_ENV === 'avp' ? `
@@ -291,7 +301,7 @@ Modify `index.html` to add a `classname` specific to `XR_ENV` mode on `<html>`.
 +    ` %>
 ```
 
-At the end of `src/index.css`, add code that sets the scene background in `XR_ENV` mode to a [fully transparent material]() (using [--xr-background-material]() from the WebSpatial API):
+At the end of `src/index.css`, add code that sets the scene background in `XR_ENV` mode to a [fully transparent material](../development-guide/using-the-webspatial-api/add-material-backgrounds.md) (using `--xr-background-material` from the WebSpatial API):
 
 ```css
 html.is-spatial {
@@ -301,14 +311,12 @@ html.is-spatial {
 ```
 
 > [!TIP]
-> Although style changes take effect automatically via the Dev Server, HMR for WebSpatial logic in React components is not yet supported. If logic changes, refresh manually (via the scene menu in the bottom right) or restart the Dev Server to see updates.
+> Although style changes take effect automatically via the Dev Server, but since the WebSpatial SDK doesn't yet support HMR for specific logic inside React components, you'll need to manually refresh the page (using the [scene menu](../core-concepts/scenes-and-spatial-layouts.md#scene-menu)) or restart the devServer to apply those changes.
 
 | ![](../../assets/quick/10.png) | ![](../../assets/quick/11.png) |
 | :----------------------------: | :----------------------------: |
 
-Modify `src/App.tsx` to make the two card elements [spatialized HTML elements]() by adding a `classname`.
-
-Spatialize the link inside `link-card` as well.
+Modify `src/App.tsx` to make both card elements ["spatialized HTML elements"](../core-concepts/spatialized-elements-and-3d-container-elements.md) by adding [a specific mark](../development-guide/using-the-webspatial-api/spatialize-html-elements.md), and give them different classnames. Spatialize the link inside `link-card` as well.
 
 ```diff
               <h1>Vite + React</h1>
@@ -327,7 +335,7 @@ Spatialize the link inside `link-card` as well.
                   </a>
 ```
 
-In the [styles for `XR_ENV` mode]() in `src/index.css`, set different [translucent materials]() for the backgrounds of the two card elements and for the link inside `link-card`:
+In the [styles for `XR_ENV` mode](../development-guide/enabling-webspatial-in-web-projects/check-if-running-in-webspatial-mode.md#css-solution) in `src/index.css`, set [different translucent materials](../development-guide/using-the-webspatial-api/add-material-backgrounds.md#translucent-options) for the backgrounds of the two card elements and the link.
 
 ```css
 html.is-spatial {
@@ -357,9 +365,10 @@ html.is-spatial {
 | ![](../../assets/quick/12.png) | ![](../../assets/quick/13.png) |
 | :----------------------------: | :----------------------------: |
 
+<a id="elevation"></a>
 ## 9. 'Elevate' spatialized elements
 
-Mark the description text inside `count-card` as a [spatialized HTML element]().
+Mark the description text inside `count-card` as a [spatialized HTML element](../core-concepts/spatialized-elements-and-3d-container-elements.md).
 
 ```diff
 -               <p>
@@ -368,9 +377,7 @@ Mark the description text inside `count-card` as a [spatialized HTML element]().
                 </p>
 ```
 
-In the [`XR_ENV` mode styles]() in `src/index.css`, change this element to `position: relative` and use the WebSpatial Z-axis positioning API (`--xr-back`) to 'elevate' it into 3D space in front of the web plane.
-
-Apply different levels of 'elevation' to the link elements spatialized earlier.
+In the [styles for `XR_ENV` mode](../development-guide/enabling-webspatial-in-web-projects/check-if-running-in-webspatial-mode.md#css-solution) in `src/index.css`, change this element to `position: relative` and use the WebSpatial's [Z-axis positioning API (`--xr-back`)](../development-guide/using-the-webspatial-api/elevate-2d-elements.md) to 'elevate' it into 3D space in front of the web page plane. Also apply different levels of 'elevation' to the link elements spatialized earlier.
 
 ```diff
   .count-card {
@@ -398,9 +405,9 @@ Apply different levels of 'elevation' to the link elements spatialized earlier.
 | ![](../../assets/quick/14.png) | ![](../../assets/quick/15.png) |
 | :----------------------------: | :----------------------------: |
 
-Another way to 'elevate' is to use CSS Transform, which can also [deform and rotate]() in 3D space.
+Another way to 'elevate' is to [use CSS Transform](../development-guide/using-the-webspatial-api/elevate-2d-elements.md#css-transform), which can also [deform and rotate](../introduction/make-the-web-spatial-too.md#transform) in 3D space.
 
-In the [`XR_ENV` mode styles]() in `src/index.css`, move and rotate `link-card` along the Z axis (around the X axis):
+In the [styles for `XR_ENV` mode](../development-guide/enabling-webspatial-in-web-projects/check-if-running-in-webspatial-mode.md#css-solution) in `src/index.css`, move and rotate `link-card` along the Z axis (around the X axis):
 
 ```diff
   .link-card {
@@ -416,17 +423,19 @@ In the [`XR_ENV` mode styles]() in `src/index.css`, move and rotate `link-card` 
 | ![](../../assets/quick/16.png) | ![](../../assets/quick/17.png) |
 | :----------------------------: | :----------------------------: |
 
+<a id="static-3d"></a>
 ## 10. Add static 3D content
 
 > To be added
 
+<a id="final-result"></a>
 ## Final result
 
 The full source code for this demo is in the repository:
 <https://github.com/webspatial/quick-example>
 
-Follow the README to run it and view the result on the visionOS simulator or a physical device.
+You can either follow the steps in this article to build an identical demo project from scratch, or just clone the repo and run it using the README instructions.
 
 ---
 
-Next chapter: Learn more about WebSpatial’s [Core Concepts](../core-concepts/README.md)
+Next chapter: Learn more about WebSpatial's [Core Concepts](../core-concepts/README.md)
