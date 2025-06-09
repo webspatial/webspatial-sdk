@@ -1,5 +1,17 @@
 # @webspatial/builder
 
+## 0.1.20
+
+### Patch Changes
+
+- 8a99e49: Inject the version number using the CLI tool instead of loading package.json in native
+- c3aa903: Navigation using new style
+- dc16c7c: Fixed the issue where the icon under the run command did not meet the requirements and may result in an error
+- Updated dependencies [3c4acf0]
+- Updated dependencies [8a99e49]
+- Updated dependencies [c3aa903]
+  - @webspatial/platform-visionos@0.1.20
+
 ## 0.1.19
 
 ### Patch Changes
