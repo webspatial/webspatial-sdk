@@ -120,7 +120,7 @@ export function showSample(MySample: any, hasCode = true) {
                     </li>
                     <li>
                       <a href="/src/docsWebsite?docFile=helloWorld.md">
-                        Quick Start (Hello world)
+                        Quick Example (Hello world)
                       </a>
                     </li>
                     <li>
