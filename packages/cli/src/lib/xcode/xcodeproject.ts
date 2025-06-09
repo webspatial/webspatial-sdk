@@ -272,12 +272,18 @@ export default class XcodeProject {
     fs.writeFileSync(infoPlistPath, newInfoPlist)
   }
 
-  private static modifySwift(manifest: any) {
+  private static async modifySwift(manifest: any) {
     const manifestSwiftPath = join(
       PROJECT_DIRECTORY,
       './web-spatial/libs/webView/manifest.swift',
     )
+    const xcodePackageJsonPath = join(PROJECT_DIRECTORY, 'package.json')
+    const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
     let manifestSwift = manifestSwiftTemplate
+    manifestSwift = manifestSwift.replace(
+      'PACKAGE_VERSION',
+      packageJson.version ?? '0.0.0',
+    )
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     manifestSwift = manifestSwift.replace('AppName', manifest.name)
