@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.21
+
+### Patch Changes
+
+- ac3b3e1: Fix the issue of incorrect scope configuration in offline environment
+  - @webspatial/platform-visionos@0.1.21
+
 ## 0.1.20
 
 ### Patch Changes
