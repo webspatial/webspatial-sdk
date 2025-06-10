@@ -23,17 +23,22 @@ export function configStartUrl(
   isNet: boolean,
 ) {
   let start_url = manifestJson.start_url ?? '/index.html'
+
+  if (!start_url.match(/\.html(\?|$)/)) {
+    const [path, query] = start_url.split('?')
+    start_url = path.endsWith('/') ? `${path}index.html` : `${path}/index.html`
+    if (query) start_url += `?${query}`
+  }
+
   const isStartUrl = validateURL(start_url)
   const hasBase = base.length > 0
   if (hasBase) {
     const isBaseUrl = validateURL(base)
     if (!isStartUrl && !isBaseUrl) {
       const staticWebRoot = resolve('./static-web')
-      const resolvedPath = resolve(staticWebRoot, base, start_url)
+      const resolvedPath = join(base, start_url)
       const normalizedPath = normalize(resolvedPath)
-
       const safePath = join(staticWebRoot, normalizedPath)
-
       start_url = relative(process.cwd(), safePath)
         .replace(/^(\.\.\/)+/, './')
         .replace(/\/$/, '')
