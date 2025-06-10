@@ -34,7 +34,7 @@ struct PWAManager: Codable {
             }
             let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
             start_url = startUrl!.absoluteString
-            scope = URL(string: (scope.starts(with: "/") ? ".." : "../") + scope, relativeTo: startUrl)!.absoluteString
+            scope = URL(string: (scope.starts(with: "/") ? "." : "./") + scope, relativeTo: Bundle.main.executableURL)!.absoluteString
             isLocal = true
         }
 
