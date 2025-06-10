@@ -1,5 +1,12 @@
 # web-content
 
+## 0.0.9
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.21
+- @webspatial/react-sdk@0.1.21
+
 ## 0.0.8
 
 ### Patch Changes
