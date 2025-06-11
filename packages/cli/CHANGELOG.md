@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.22
+
+### Patch Changes
+
+- 10e993a: Adjust the start_url verification logic
+  - @webspatial/platform-visionos@0.1.22
+
 ## 0.1.21
 
 ### Patch Changes
