@@ -50,35 +50,16 @@ export class ResourceManager {
     return icon
   }
 
-  /**
-   * @description Check and set the platform path to ensure the existence of the specified platform module.
-   * If the module does not exist, it will be installed automatically.
-   * Also set the project directory, build directory, and export directory.
-   * @param platform The name of the platform to check, defaulting to 'visionos'
-   */
-  public static checkPlatformPath(platform: string) {
+  public static initPlatform(platform: string) {
+    this.setupTempPath(platform)
+    this.pullPlatformModule(platform)
+  }
+
+  public static setupTempPath(platform: string) {
     const usePlatform = platform ?? supportPlatform[0]
     if (!supportPlatform.includes(usePlatform)) {
       throw new Error(
         `not support platform ${usePlatform}, now WebSpatial only support ${supportPlatform.join(',')}`,
-      )
-    }
-    let modulePath = join(
-      process.cwd(),
-      `node_modules/@webspatial/platform-${usePlatform}`,
-    )
-    // If the module does not exist in the current working directory, try to get it from the cli directory
-    if (!fs.existsSync(modulePath)) {
-      modulePath = join(
-        __dirname,
-        `../../../node_modules/@webspatial/platform-${usePlatform}`,
-      )
-    }
-    const hasModule = fs.existsSync(modulePath)
-    // If the module does not exist, execute the npm installation command
-    if (!hasModule) {
-      execSync(
-        `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
     let tempDir = './node_modules/.webspatial-builder-temp'
@@ -106,10 +87,43 @@ export class ResourceManager {
       fs.mkdirSync(temTestDir)
     }
     fs.mkdirSync(tempProjectDir)
-    copyDir(modulePath, tempProjectDir)
     PROJECT_DIRECTORY = tempProjectDir
     PROJECT_BUILD_DIRECTORY = temBuildDir
     PROJECT_EXPORT_DIRECTORY = temExportDir
     PROJECT_TEST_DIRECTORY = temTestDir
+  }
+
+  /**
+   * @description Check and set the platform path to ensure the existence of the specified platform module.
+   * If the module does not exist, it will be installed automatically.
+   * Also set the project directory, build directory, and export directory.
+   * @param platform The name of the platform to check, defaulting to 'visionos'
+   */
+  public static pullPlatformModule(platform: string) {
+    const usePlatform = platform ?? supportPlatform[0]
+    if (!supportPlatform.includes(usePlatform)) {
+      throw new Error(
+        `not support platform ${usePlatform}, now WebSpatial only support ${supportPlatform.join(',')}`,
+      )
+    }
+    let modulePath = join(
+      process.cwd(),
+      `node_modules/@webspatial/platform-${usePlatform}`,
+    )
+    // If the module does not exist in the current working directory, try to get it from the cli directory
+    if (!fs.existsSync(modulePath)) {
+      modulePath = join(
+        __dirname,
+        `../../../node_modules/@webspatial/platform-${usePlatform}`,
+      )
+    }
+    const hasModule = fs.existsSync(modulePath)
+    // If the module does not exist, execute the npm installation command
+    if (!hasModule) {
+      execSync(
+        `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
+      )
+    }
+    copyDir(modulePath, PROJECT_DIRECTORY)
   }
 }
