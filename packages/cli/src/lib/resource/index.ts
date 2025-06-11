@@ -74,19 +74,6 @@ export class ResourceManager {
     if (!fs.existsSync(tempPlatformDir)) {
       fs.mkdirSync(tempPlatformDir)
     }
-    if (fs.existsSync(tempProjectDir)) {
-      execSync(`rm -rf ${tempProjectDir}`)
-    }
-    if (!fs.existsSync(temBuildDir)) {
-      fs.mkdirSync(temBuildDir)
-    }
-    if (!fs.existsSync(temExportDir)) {
-      fs.mkdirSync(temExportDir)
-    }
-    if (!fs.existsSync(temTestDir)) {
-      fs.mkdirSync(temTestDir)
-    }
-    fs.mkdirSync(tempProjectDir)
     PROJECT_DIRECTORY = tempProjectDir
     PROJECT_BUILD_DIRECTORY = temBuildDir
     PROJECT_EXPORT_DIRECTORY = temExportDir
@@ -124,6 +111,19 @@ export class ResourceManager {
         `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
+    if (fs.existsSync(PROJECT_DIRECTORY)) {
+      execSync(`rm -rf ${PROJECT_DIRECTORY}`)
+    }
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY)
+    }
+    if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_EXPORT_DIRECTORY)
+    }
+    if (!fs.existsSync(PROJECT_TEST_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_TEST_DIRECTORY)
+    }
+    fs.mkdirSync(PROJECT_DIRECTORY)
     copyDir(modulePath, PROJECT_DIRECTORY)
   }
 }
