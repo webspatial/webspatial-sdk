@@ -44,7 +44,6 @@ export async function run(args: any) {
   const runCmd = JSON.stringify(args)
   CliHistory.init(runCmd)
   console.log('------------------- parse start -------------------')
-  ResourceManager.checkPlatformPath(args['platform'])
   const manifestInfo = await doPwa(args, true)
   CliHistory.recordManifest(manifestInfo.json)
   /*
@@ -64,6 +63,7 @@ export async function run(args: any) {
       return
     }
   }
+  ResourceManager.checkPlatformPath(args['platform'])
   const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
   await doXcode(args, icon, manifestInfo, true)
   console.log('------------------- parse end -------------------')
