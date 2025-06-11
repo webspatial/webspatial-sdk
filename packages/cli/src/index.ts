@@ -10,6 +10,7 @@ import {
 } from './lib/utils/fetch'
 import { launch } from './lib/cmds/launch'
 import { shutdown } from './lib/cmds/shutdown'
+import { test } from './lib/cmds/test'
 
 module.exports = async (): Promise<void> => {
   if (major(process.versions.node) < 14) {
@@ -112,4 +113,9 @@ async function setupCommands(program: Command) {
       console.log(options)
       await shutdown(options)
     })
+
+  program.command('test').action(async options => {
+    console.log(options)
+    test()
+  })
 }
