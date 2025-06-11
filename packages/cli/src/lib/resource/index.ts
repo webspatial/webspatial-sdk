@@ -50,13 +50,43 @@ export class ResourceManager {
     return icon
   }
 
+  public static initPlatform(platform: string) {
+    this.setupTempPath(platform)
+    this.pullPlatformModule(platform)
+  }
+
+  public static setupTempPath(platform: string) {
+    const usePlatform = platform ?? supportPlatform[0]
+    if (!supportPlatform.includes(usePlatform)) {
+      throw new Error(
+        `not support platform ${usePlatform}, now WebSpatial only support ${supportPlatform.join(',')}`,
+      )
+    }
+    let tempDir = './node_modules/.webspatial-builder-temp'
+    let tempPlatformDir = join(tempDir, `platform-${usePlatform}`)
+    let tempProjectDir = join(tempPlatformDir, './project')
+    let temBuildDir = join(tempPlatformDir, './build')
+    let temExportDir = join(tempPlatformDir, './export')
+    let temTestDir = join(tempPlatformDir, './test')
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir)
+    }
+    if (!fs.existsSync(tempPlatformDir)) {
+      fs.mkdirSync(tempPlatformDir)
+    }
+    PROJECT_DIRECTORY = tempProjectDir
+    PROJECT_BUILD_DIRECTORY = temBuildDir
+    PROJECT_EXPORT_DIRECTORY = temExportDir
+    PROJECT_TEST_DIRECTORY = temTestDir
+  }
+
   /**
    * @description Check and set the platform path to ensure the existence of the specified platform module.
    * If the module does not exist, it will be installed automatically.
    * Also set the project directory, build directory, and export directory.
    * @param platform The name of the platform to check, defaulting to 'visionos'
    */
-  public static checkPlatformPath(platform: string) {
+  public static pullPlatformModule(platform: string) {
     const usePlatform = platform ?? supportPlatform[0]
     if (!supportPlatform.includes(usePlatform)) {
       throw new Error(
@@ -81,35 +111,19 @@ export class ResourceManager {
         `cd ${join(__dirname, '../../../')} && pnpm add @webspatial/platform-${usePlatform}`,
       )
     }
-    let tempDir = './node_modules/.webspatial-builder-temp'
-    let tempPlatformDir = join(tempDir, `platform-${usePlatform}`)
-    let tempProjectDir = join(tempPlatformDir, './project')
-    let temBuildDir = join(tempPlatformDir, './build')
-    let temExportDir = join(tempPlatformDir, './export')
-    let temTestDir = join(tempPlatformDir, './test')
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir)
+    if (fs.existsSync(PROJECT_DIRECTORY)) {
+      execSync(`rm -rf ${PROJECT_DIRECTORY}`)
     }
-    if (!fs.existsSync(tempPlatformDir)) {
-      fs.mkdirSync(tempPlatformDir)
+    if (!fs.existsSync(PROJECT_BUILD_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_BUILD_DIRECTORY)
     }
-    if (fs.existsSync(tempProjectDir)) {
-      execSync(`rm -rf ${tempProjectDir}`)
+    if (!fs.existsSync(PROJECT_EXPORT_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_EXPORT_DIRECTORY)
     }
-    if (!fs.existsSync(temBuildDir)) {
-      fs.mkdirSync(temBuildDir)
+    if (!fs.existsSync(PROJECT_TEST_DIRECTORY)) {
+      fs.mkdirSync(PROJECT_TEST_DIRECTORY)
     }
-    if (!fs.existsSync(temExportDir)) {
-      fs.mkdirSync(temExportDir)
-    }
-    if (!fs.existsSync(temTestDir)) {
-      fs.mkdirSync(temTestDir)
-    }
-    fs.mkdirSync(tempProjectDir)
-    copyDir(modulePath, tempProjectDir)
-    PROJECT_DIRECTORY = tempProjectDir
-    PROJECT_BUILD_DIRECTORY = temBuildDir
-    PROJECT_EXPORT_DIRECTORY = temExportDir
-    PROJECT_TEST_DIRECTORY = temTestDir
+    fs.mkdirSync(PROJECT_DIRECTORY)
+    copyDir(modulePath, PROJECT_DIRECTORY)
   }
 }

@@ -248,7 +248,7 @@ export default class XcodeProject {
   ) {
     xcodeProject.updateProductName(manifest.name)
     // set PRODUCT_BUNDLE_IDENTIFIER need ""
-    if (manifest.id && !isDev) {
+    if (manifest.id) {
       xcodeProject.updateBuildProperty(
         'PRODUCT_BUNDLE_IDENTIFIER',
         `"${manifest.id}"`,

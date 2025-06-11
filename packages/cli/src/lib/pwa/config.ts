@@ -24,12 +24,6 @@ export function configStartUrl(
 ) {
   let start_url = manifestJson.start_url ?? '/index.html'
 
-  if (!start_url.match(/\.html(\?|$)/)) {
-    const [path, query] = start_url.split('?')
-    start_url = path.endsWith('/') ? `${path}index.html` : `${path}/index.html`
-    if (query) start_url += `?${query}`
-  }
-
   const isStartUrl = validateURL(start_url)
   const hasBase = base.length > 0
   if (hasBase) {
@@ -80,6 +74,15 @@ export function configStartUrl(
         .replace(/^(\.\.\/)+/, './')
         .replace(/\/$/, '')
     }
+  }
+
+  if (
+    !start_url.match(/\.html(\?|$)/) &&
+    !(start_url.startsWith('http://') || start_url.startsWith('https://'))
+  ) {
+    const [path, query] = start_url.split('?')
+    start_url = path.endsWith('/') ? `${path}index.html` : `${path}/index.html`
+    if (query) start_url += `?${query}`
   }
 
   return start_url
