@@ -3,6 +3,7 @@ import WebKit
 
 struct NavView: View {
     static let navHeight: CGFloat = 60
+    static let minWidth: CGFloat = 400
     @State var swc: SpatialWindowComponent?
     @StateObject var navInfo: NavInfo
     @State var navWidth: CGFloat = 0
