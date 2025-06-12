@@ -156,7 +156,7 @@ struct SpatialViewUI: View {
                         let entity = entities[key]!
                         let wv = entity.getComponent(SpatialWindowComponent.self)!
                         Attachment(id: key) {
-                            SpatialWebViewUI().environment(entity).frame(width: wv.resolutionX, height: wv.resolutionY)
+                            SpatialWebViewUI(viewWidth: wv.resolutionX).environment(entity).frame(width: wv.resolutionX, height: wv.resolutionY)
                         }
                     }
                 }.gesture(dragGesture).if(!isRoot) { view in

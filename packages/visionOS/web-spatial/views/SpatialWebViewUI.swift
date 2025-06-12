@@ -23,17 +23,18 @@ let zOrderBias = 0.001
 
 struct SpatialWebViewUI: View {
     @Environment(SpatialEntity.self) var ent: SpatialEntity
+    @State var viewWidth: CGFloat = 0
     var body: some View {
         if let wv = ent.getComponent(SpatialWindowComponent.self) {
             let parentYOffset = Float(wv.scrollOffset.y)
 
             let childEntities = ent.getEntities()
             VStack(spacing: 0) {
-                if wv.isRootWebview() && pwaManager.display != .fullscreen {
-                    Spacer(minLength: NavView.navHeight)
-                }
                 // Display child entities of the webview
                 ZStack(alignment: .top) {
+                    if wv.isRootWebview() && pwaManager.display != .fullscreen {
+                        NavView(swc: wv, navInfo: wv.navInfo, navWidth: viewWidth).position(x: viewWidth / 2, y: NavView.navHeight / 2 + 8).offset(z: 10)
+                    }
                     OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                         ZStack {
                             ForEach(Array(childEntities.keys), id: \.self) { key in
@@ -50,7 +51,7 @@ struct SpatialWebViewUI: View {
                                             let anchor = view.rotationAnchor
 
                                             // Matrix = MTranslate X MRotate X MScale
-                                            SpatialWebViewUI().environment(e)
+                                            SpatialWebViewUI(viewWidth: width).environment(e)
                                                 .frame(width: width, height: height)
                                                 // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
                                                 .offset(z: 0.0001)
@@ -150,7 +151,7 @@ struct SpatialWebViewUI: View {
                                     }
                                 }
                             }
-                        }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(z: 0)
+                        }.frame(maxWidth: .infinity, maxHeight: .infinity).frame(maxDepth: 0, alignment: .back).offset(y: NavView.navHeight).offset(z: 0)
                     }
 
                     // Display the main webview
@@ -177,9 +178,6 @@ struct SpatialWebViewUI: View {
                             )
 
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    if wv.isRootWebview() && pwaManager.display != .fullscreen {
-                        NavView(swc: wv, navInfo: wv.navInfo).offset(y: -NavView.navHeight)
                     }
                 }
                 .opacity(wv.opacity)
