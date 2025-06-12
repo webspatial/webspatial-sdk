@@ -93,7 +93,7 @@ class WindowContainerMgr: ObservableObject {
 
     private var wgSetting: WindowContainerPlainDefaultValues = .init(
         defaultSize: CGSize(width: 1080, height: 720 + (pwaManager.display != .fullscreen ? NavView.navHeight : 0)),
-        windowResizability: .automatic
+        windowResizability: .automatic,
         resizeRange: nil
     )
 
