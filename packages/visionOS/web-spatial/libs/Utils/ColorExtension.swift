@@ -1,9 +1,3 @@
-//
-//  ColorExtension.swift
-//  web-spatial
-//
-//  Created by ByteDance on 2025/6/11.
-//
 import SwiftUI
 
 extension Color {
