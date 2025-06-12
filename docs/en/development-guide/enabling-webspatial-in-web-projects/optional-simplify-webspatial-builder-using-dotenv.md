@@ -4,7 +4,7 @@ Return: [Step 2 – Add Build Tool for Packaged WebSpatial Apps](step-2-add-buil
 
 ---
 
-To avoid typing the same environment variables each time you run [these npm scripts](), you can place all required local variables in a [dotenv]() configuration file and have them loaded automatically before the scripts run.
+To avoid typing the same environment variables each time you run these [npm scripts](./step-2-add-build-tool-for-packaged-webspatial-apps.md#npm-scripts), you can place all required variables in a dotenv configuration file and have them loaded automatically before the scripts run.
 
 ## dotenv Files
 
@@ -23,15 +23,14 @@ XR_DEV_PASSWORD=
 
 All developers must then create their own `.env.local` file after cloning the repository:
 
+```shell
+cp .env.example .env.local
+```
+
 > [!TIP]
 > `*.local` is usually listed in `.gitignore`, so `.env.local` will not be committed to Git.
 
-```shell
-cp .env.example .env.local
-# Fill in the Team ID, Username and Password for Apple Developer Program in the .env file.
-```
-
-## Using Environment Variables in npm scripts
+## Used in npm scripts
 
 Install dependencies:
 
@@ -44,7 +43,7 @@ pnpm add -D dotenv dotenv-cli
 
 `dotenv-cli` lets npm scripts access the variables defined in dotenv files.
 
-Wrap each of the three WebSpatial Builder scripts in npm scripts with `dotenv -e .env.local -- sh -c 'original script'`, for example:
+Wrap each of the WebSpatial Builder scripts in npm scripts with `dotenv -e .env.local -- sh -c 'original script'`, for example:
 
 ```json5
 "run:avp": "dotenv -e .env.local -- sh -c 'webspatial-builder run --base=$XR_DEV_SERVER'",
@@ -52,9 +51,9 @@ Wrap each of the three WebSpatial Builder scripts in npm scripts with `dotenv -e
 "publish:avp": "dotenv -e .env.local -- sh -c 'webspatial-builder publish  --base=$XR_PROD_SERVER --bundle-id=$XR_BUNDLE_ID --teamId=$XR_TEAM_ID --version=$XR_VERSION --u=$XR_DEV_NAME --p=$XR_DEV_PASSWORD'",
 ```
 
-## Using Environment Variables in Node.js Scripts
+## Used in Node.js Scripts
 
-If you need to use variables from dotenv files in other Node.js-based scripts, add the following line at the top of the script:
+If you need to use environment variables from dotenv files in other Node.js-based scripts, add the following line at the top of the script:
 
 ```js
 import dotenv from "dotenv";
@@ -65,7 +64,7 @@ console.log(process.env.XR_ENV);
 ```
 
 > [!TIP]
-> In Vite projects you can use Vite’s built-in utilities to load variables from dotenv files in Node.js scripts.
+> In Vite projects you can use Vite's built-in utilities to load variables from dotenv files in Node.js scripts.
 > For example, in `vite.config.js`:
 > ```diff
 > -import { defineConfig } from 'vite'
@@ -88,9 +87,9 @@ console.log(process.env.XR_ENV);
 > console.log(env.XR_ENV);
 > ```
 
-## Using Environment Variables in Client-side JS Code
+## Used in Client-side JS Code
 
-See “[Check if Running in WebSpatial Mode](check-if-running-in-webspatial-mode.md)” in [Step 3](step-3-integrate-webspatial-sdk-into-web-build-tools.md).
+See ["Check if Running in WebSpatial Mode"](check-if-running-in-webspatial-mode.md).
 
 ---
 

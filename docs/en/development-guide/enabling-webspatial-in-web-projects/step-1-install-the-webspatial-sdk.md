@@ -1,34 +1,31 @@
-# Step&nbsp;1: Install the WebSpatial SDK
+# Step 1: Install the WebSpatial SDK
 
 Previous step: [Prerequisite: Become a (Minimal) PWA](prerequisite-become-a-minimal-pwa.md)
 
 ---
 
-> [!TIP]
-> If you are working with a [newly created Web project], follow the steps in “Add pnpm” to switch the project to pnpm. This will make the dependency installation below noticeably faster.
-
 <a id="core-deps-for-runtime"></a>
-## Install core dependencies required at runtime
+## Core runtime dependencies
 
 ```shell
 pnpm add @webspatial/react-sdk @webspatial/core-sdk @google/model-viewer three
 ```
 
+> [!NOTE]
+> `@google/model-viewer` and `three` are dependencies used inside the SDK, but their package sizes are relatively large compared to the SDK itself. Plus, many web projects might already use them, and having multiple versions installed could cause conflicts. In the future, the SDK might remove direct dependencies on them. So, they're declared as peerDependencies for now, you'll need to install them explicitly in your web project.
+
 <a id="react-sdk"></a>
 ### `@webspatial/react-sdk`
 
-The React SDK from the [WebSpatial SDK]() makes the [WebSpatial API]() immediately available inside React.
+The [SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) offered by WebSpatial for React, which can be plugged into existing regular React projects to enable immediate use of the [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api).
 
 <a id="core-sdk"></a>
 ### `@webspatial/core-sdk`
 
-Both the React SDK (and forthcoming SDKs for other Web frameworks) are implemented on top of the Core SDK. The Core SDK is a framework-agnostic, lower-level pure-JS API that relies internally on a non-standard JS Bridge API so that the WebSpatial App Shell can natively spatialize 2D HTML content and render 3D content.
-
-> [!NOTE]
-> `@google/model-viewer` and `three` are required internally by the SDK. Because these packages are large, are often needed directly by Web projects themselves, and may become optional in future SDK versions, they are declared as peerDependencies. You need to install them explicitly in your Web project.
+Both the React SDK (and forthcoming SDKs for other Web frameworks) are implemented on top of the Core SDK. The Core SDK is a framework-agnostic, lower-level pure-JS API that relies internally on a non-standard JS Bridge API so that the [WebSpatial App Shell](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) can natively spatialize 2D HTML content and render 3D content.
 
 <a id="core-deps-for-building"></a>
-## Install core dependencies required at build time
+## Core build-time dependencies
 
 ```shell
 pnpm add -D @webspatial/builder
@@ -37,42 +34,49 @@ pnpm add -D @webspatial/builder
 <a id="builder"></a>
 ### `@webspatial/builder`
 
-The WebSpatial build tool packages the current Web site into a [Packaged WebSpatial App](). It is currently essential for developing, debugging, and distributing WebSpatial apps on visionOS.
+WebSpatial's packaging tool turns your website into a [Packaged WebSpatial App](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk). It's the must-have dev tool right now for developing, testing, and distributing WebSpatial apps on visionOS.
 
-See the detailed API in [Step 2: Add the WebSpatial App Build Tool](step-2-add-build-tool-for-packaged-webspatial-apps.md).
+See ["Step 2: Add the WebSpatial App Build Tool"](./step-2-add-build-tool-for-packaged-webspatial-apps.md) for how to use it.
 
 <a id="optional-deps-for-building"></a>
-### Optional core dependencies for build time
+### Optional core build-time dependencies
 
 These optional dependencies let each Web project include only the platform support it actually needs, keeping builds lean.
 
-> [!NOTE]
-> For now they are effectively required, because visionOS is the only spatial-computing platform currently supported by WebSpatial.
+<a id="visionos"></a>
+#### `@webspatial/platform-visionos`
 
 ```shell
 pnpm add -D @webspatial/platform-visionos
 ```
 
-<a id="visionos"></a>
-### `@webspatial/platform-visionos`
+Includes the [WebSpatial App Shell](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) needed to generate a visionOS app and provide spatial capabilities.
 
-Includes the [WebSpatial App Shell]() needed to generate a visionOS app and provide spatial capabilities.
+
+> [!NOTE]
+> This package is currently required, as visionOS is the sole spatial computing platform supported by WebSpatial at this stage.
 
 <a id="visionos-simulator"></a>
-#### Install Xcode and the visionOS Simulator
 
-To build and package a visionOS app and debug it in the simulator, you need the global tools Xcode and the visionOS Simulator. Steps:
-
-> Prerequisite: you must use a Mac.
-
-1. Open the Mac App Store, search for “Xcode,” and install it.
-2. Launch Xcode for the first time, accept the license, and enter your administrator password to install additional components.
-3. Choose **Xcode ▸ Settings…**, open the **Components** tab, and in **Platform Support** find **visionOS** and **visionOS Simulator**. Download and install both items.
+> [!TIP]
+> **Install Xcode and the visionOS Simulator**
+>
+> To build and package a visionOS app and debug it in the visionOS simulator, you need to install the relevant global dependencies: Xcode and the visionOS Simulator.
+>
+> Prerequisite: a Mac computer
+>
+> Steps:
+> 1. Open the Mac App Store, search for "Xcode", and install it.
+> 2. On first launch, agree to the license and enter the admin password to install additional components.
+> 3. Click the top menu "Xcode" > "Settings…". In the "Components" tab, find visionOS and visionOS Simulator under "Platform Support", then install both.
 
 <a id="non-core-deps-for-building"></a>
-## Non-core dependencies for build time
+## Non-core build-time dependencies
 
-These plugins integrate with popular third-party toolchains to simplify setup and apply [essential performance optimizations and sensible defaults]().
+These plugins integrate with popular third-party toolchains to simplify setup and apply [essential performance optimizations and sensible defaults](./add-optimizations-and-defaults-to-web-build-tools.md).
+
+<a id="plugin-vite"></a>
+### `@webspatial/vite-plugin`
 
 If you use a React + Vite project:
 
@@ -80,10 +84,10 @@ If you use a React + Vite project:
 pnpm add -D @webspatial/vite-plugin
 ```
 
-<a id="plugin-vite"></a>
-### `@webspatial/vite-plugin`
+WebSpatial's Vite plugin adds the required optimizations and defaults when your Web project uses Vite as its web build tool and web server.
 
-The WebSpatial Vite plugin adds the required optimizations and defaults when your Web project uses Vite as its Web builder and development server.
+<a id="plugin-next"></a>
+### `@webspatial/next-plugin`
 
 If you use a React + Next.js project:
 
@@ -91,40 +95,29 @@ If you use a React + Next.js project:
 pnpm add -D @webspatial/next-plugin
 ```
 
-<a id="plugin-next"></a>
-### `@webspatial/next-plugin`
+WebSpatial's Next.js plugin adds the required optimizations and defaults when your Web project is based on Next.js framework.
 
-> [!WARNING]
-> Currently in testing; documentation coming soon.
+<a id="plugin-rsbuild"></a>
+### `@webspatial/rsbuild-plugin`
 
-If you use a React + rsbuild project:
+If you use a React + Rsbuild project:
 
 ```shell
 pnpm add -D @webspatial/rsbuild-plugin
 ```
 
-<a id="plugin-rsbuild"></a>
-### `@webspatial/rsbuild-plugin`
+WebSpatial's Rsbuild plugin adds the required optimizations and defaults when your Web project uses Rsbuild as its web build tool and web server.
 
-> [!WARNING]
-> Currently in testing; documentation coming soon.
+<a id="plugin-rspack"></a>
+### `@webspatial/rspack-plugin`
 
-If you use a React + rspack project:
+If you use a React + Rspack project:
 
 ```shell
 pnpm add -D @webspatial/rspack-plugin
 ```
 
-<a id="plugin-rspack"></a>
-### `@webspatial/rspack-plugin`
-
-> [!WARNING]
-> Currently in testing; documentation coming soon.
-
-If you use a React + webpack project:
-
-> [!WARNING]
-> Currently in testing; documentation coming soon.
+WebSpatial's Rspack plugin adds the required optimizations and defaults when your Web project uses Rspack as its web build tool and web server.
 
 ---
 

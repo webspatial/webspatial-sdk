@@ -37,7 +37,7 @@
 	    - [测试 PWA 可安装性](development-guide/enabling-webspatial-in-web-projects/test-pwa-installability.md)
 	  - [步骤 1：安装 WebSpatial SDK](development-guide/enabling-webspatial-in-web-projects/step-1-install-the-webspatial-sdk.md)
 	  - [步骤 2：添加 WebSpatial 应用打包构建工具](development-guide/enabling-webspatial-in-web-projects/step-2-add-build-tool-for-packaged-webspatial-apps.md)
-	    - [WebSpatial Builder 的参数](development-guide/enabling-webspatial-in-web-projects/parameters-of-the-webspatial-builder.md)
+	    - [WebSpatial Builder 的参数](development-guide/enabling-webspatial-in-web-projects/options-of-the-webspatial-builder.md)
 	    - [[可选] 用 dotenv 简化 Builder 的用法](development-guide/enabling-webspatial-in-web-projects/optional-simplify-webspatial-builder-using-dotenv.md)
 	  - [步骤 3：在 Web 构建工具中集成 WebSpatial SDK](development-guide/enabling-webspatial-in-web-projects/step-3-integrate-webspatial-sdk-into-web-build-tools.md)
 	    - [配置 JS/TS 编译器](development-guide/enabling-webspatial-in-web-projects/configure-js-ts-compiler.md)
