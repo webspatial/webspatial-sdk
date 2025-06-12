@@ -30,11 +30,10 @@ struct SpatialWebViewUI: View {
             let childEntities = ent.getEntities()
             VStack(spacing: 0) {
                 if wv.isRootWebview() && pwaManager.display != .fullscreen {
-                    NavView(swc: wv, navInfo: wv.navInfo)
-                    Spacer()
+                    Spacer(minLength: NavView.navHeight)
                 }
                 // Display child entities of the webview
-                ZStack {
+                ZStack(alignment: .top) {
                     OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
                         ZStack {
                             ForEach(Array(childEntities.keys), id: \.self) { key in
@@ -179,14 +178,12 @@ struct SpatialWebViewUI: View {
 
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    if wv.isRootWebview() && pwaManager.display != .fullscreen {
+                        NavView(swc: wv, navInfo: wv.navInfo).offset(y: -NavView.navHeight)
+                    }
                 }
                 .opacity(wv.opacity)
                 .hidden(!ent.visible)
-                //            .ornament(attachmentAnchor: .scene(.top), contentAlignment: .top) {
-                //                if wv.isRootWebview() && pwaManager.display != .fullscreen {
-                //                    NavView(swc: wv, navInfo: wv.navInfo)
-                //                }
-                //            }
             }
         }
     }
