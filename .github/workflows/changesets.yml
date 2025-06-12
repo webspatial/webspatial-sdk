@@ -24,7 +24,7 @@ jobs:
       - name: Checkout code repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Use full git history to enable tagging
+          fetch-depth: 0 # Use full git history to enable tagging
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -33,11 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-      
+          cache: "pnpm"
+
       - name: Install dependencies and build
         run: pnpm run setup
-      
+
       - name: Create and publish versions
         id: changesets
         uses: changesets/action@v1
@@ -69,3 +69,14 @@ jobs:
 
           # push tags
           git push origin "$tag"
+      - name: Create or update Pull Request to stable
+        if: steps.changesets.outputs.published == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: sync main → stable"
+          title: "Merge main into stable"
+          body: |
+            This pull request was created automatically by GitHub Actions.
+            It merges the latest release from `main` into `stable`.
+          branch: "sync-main-to-stable"
+          base: "stable"
