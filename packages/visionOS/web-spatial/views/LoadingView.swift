@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftUICore
 
 struct LoadingView: View {
     var body: some View {

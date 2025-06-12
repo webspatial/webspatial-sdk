@@ -2,16 +2,19 @@ import SwiftUI
 import WebKit
 
 struct NavView: View {
-    static let navHeight: CGFloat = 80
+    static let navHeight: CGFloat = 52
     @State var swc: SpatialWindowComponent?
     @StateObject var navInfo: NavInfo
-    @State var showUrl: Bool = false
-    @State private var showNav: Bool = false
     @State private var showCopyTip = false
     @State private var navWidth: CGFloat = 0
-    @State private var contentHeight: CGFloat = 68
+    @State private var contentHeight: CGFloat = 60
     @State private var texWidth: CGFloat = 0
     @State private var firstGetSize: Bool = true
+    @State private var timer: Timer?
+    @State private var timeRemaining = 5
+    @State private var showEnter: Double = 1
+    @State private var showNav: Double = 0
+    @State private var showUrl: Double = 0
     @Namespace var hoverNamespace
     var navHoverGroup: HoverEffectGroup {
         HoverEffectGroup(hoverNamespace)
@@ -20,83 +23,106 @@ struct NavView: View {
     var body: some View {
         ZStack {
             ZStack {
-                HStack {
-                    Image("logo").resizable().frame(width: 44, height: 44)
+                HStack(spacing: 10) {
+                    Image("logo").resizable().frame(width: 32, height: 32)
                         .cornerRadius(100)
-                    NavButton(action: { print("click"); showNav = true }, children: Image(systemName: "link"))
+                    if pwaManager.display == .minimal {
+                        NavButton(action: { swc?.goBack() }, children: Image("arrow_left"), clearBackGround: true).disabled(!(swc?.canGoBack ?? false))
+                        NavButton(action: { swc?.goForward() }, children: Image("arrow_right"), clearBackGround: true).disabled(!(swc?.canGoBack ?? false))
+                        NavButton(action: { swc?.reload() }, children: Image("refresh"), clearBackGround: true)
+                        NavDivider()
+                    }
+                    NavButton(action: { print("click"); withAnimation(.easeInOut(duration: 0.5)) { showNav = 1.0; showEnter = 0 } }, children: Image("more"), clearBackGround: true)
                 }
                 .padding(12)
-                .background(.thinMaterial)
+                .background(Color(hex: "#161616E5"))
                 .hoverEffect(in: navHoverGroup) { effect, isActive, _ in
-                    effect.opacity((isActive && !showNav) ? 1 : 0)
+                    effect.opacity((isActive && showNav == 0 && showUrl == 0) ? 1 : 0)
                 }
-                Image("nav").resizable().frame(width: 29, height: 29).hoverEffect(.highlight).hoverEffect(in: navHoverGroup) { effect, isActive, _ in
-                    effect.opacity((isActive && !showNav) ? 0 : 1)
+                Image("nav").resizable().frame(width: 32, height: 32).hoverEffect(.highlight).hoverEffect(in: navHoverGroup) { effect, isActive, _ in
+                    effect.opacity((isActive && showNav == 0 && showUrl == 0) ? 0 : 1)
                 }
             }
             .frame(height: contentHeight)
             .cornerRadius(100)
-            .hoverEffect(in: navHoverGroup) { effect, isActive, proxy in
-                effect.clipShape(.capsule.size(
-                    width: isActive ? proxy.size.width : proxy.size.height,
-                    height: proxy.size.height,
-                    anchor: .center
-                ))
-            }
-            .opacity(showNav ? 0 : 1)
-//            if showNav {
+            .opacity(showEnter)
             HStack(spacing: 14) {
                 if pwaManager.display == .minimal {
-                    NavButton(action: { swc?.goBack() }, children: Image(systemName: "arrow.left"), clearBackGround: true).disabled(!(swc?.canGoBack ?? false))
-                    NavButton(action: { swc?.goForward() }, children: Image(systemName: "arrow.right"), clearBackGround: true).disabled(!(swc?.canGoBack ?? false))
+                    NavButton(action: { swc?.goBack() }, children: Image("arrow_left")).disabled(!(swc?.canGoBack ?? false))
+                    NavButton(action: { swc?.goForward() }, children: Image("arrow_right")).disabled(!(swc?.canGoBack ?? false))
+                    NavButton(action: { swc?.reload() }, children: Image("refresh"))
+                    NavDivider()
                 }
-                NavButton(action: { swc?.reload() }, children: Image(systemName: "arrow.clockwise"), clearBackGround: true)
-                NavButton(action: { swc?.navigateToURL(url: URL(string: pwaManager.start_url)!) }, children: Image(systemName: "house.fill"), clearBackGround: true)
-                NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = true } }, children: Image(systemName: "link"), clearBackGround: true)
-                NavButton(action: { showNav = false }, children: Image(systemName: "chevron.up"))
+                NavButton(action: { swc?.navigateToURL(url: URL(string: pwaManager.start_url)!) }, children: Image("home"))
+                NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = 1; showNav = 0 } }, children: Image("link"))
+                NavButton(action: { showNav = 0; showEnter = 1 }, children: Image("back"))
             }
             .padding(12)
-            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 100))
-            .opacity(withAnimation(.easeInOut(duration: 0.5)) { showNav ? 1 : 0 })
-            .ornament(attachmentAnchor: .scene(.top), contentAlignment: .top) {
-                if showUrl {
-                    HStack(spacing: 14) {
-                        Text(navInfo.url.count > 0 ? navInfo.url : (swc?.getURL()?.absoluteString ?? ""))
-                            .padding()
-                            .lineLimit(1)
-                            .overlay(GeometryReader { geo -> AnyView in
-                                DispatchQueue.main.async {
-                                    if geo.size.width > 0 {
-                                        texWidth = .minimum(300, geo.size.width)
-                                    }
-                                }
-                                return AnyView(EmptyView())
-                            })
-                            .frame(width: .maximum(300, texWidth))
-                        NavButton(action: {
-                            UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
-                            showCopyTip = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                showCopyTip = false
-                            }
-                        }, children: Image(systemName: "square.on.square"))
-                        NavButton(action: { showUrl = false }, children: Image(systemName: "xmark"))
-                    }
-                    .padding(12)
-                    .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 100))
-                    .popover(isPresented: $showCopyTip) {
-                        Text("copied！")
-                            .padding()
-                            .cornerRadius(10)
-                    }
+            .background(Color(hex: "#161616E5"))
+            .cornerRadius(100)
+            .opacity(showNav)
+            .onChange(of: showNav) { _, newValue in
+                if newValue == 1 {
+                    startTimer()
+                } else {
+                    stopTimer()
                 }
             }
-//            }
+            HStack(spacing: 6) {
+                Text(navInfo.url.count > 0 ? navInfo.url : (swc?.getURL()?.absoluteString ?? ""))
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .frame(width: 500, height: 44)
+                    .background(.black)
+                    .cornerRadius(100)
+                NavButton(action: {
+                    UIPasteboard.general.string = swc?.getURL()?.absoluteString ?? ""
+                    showCopyTip = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showCopyTip = false
+                    }
+                    withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
+                }, children: Image("copy"))
+                NavButton(action: {
+                    print("open browser")
+                    UIApplication.shared.open(URL(string: navInfo.url.count > 0 ? navInfo.url : (swc?.getURL()?.absoluteString ?? ""))!, options: [:], completionHandler: nil)
+                    withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
+                }, children: Image("browser"))
+                NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 } }, children: Image("close"))
+            }
+            .popover(isPresented: $showCopyTip) {
+                Text("copied！")
+                    .padding()
+                    .background(Color(hex: "#161616E5"))
+                    .cornerRadius(10)
+            }
+            .padding(8)
+            .background(Color(hex: "#161616E5"))
+            .cornerRadius(100)
+            .opacity(showUrl)
         }
+    }
 
-//        else{
+    private func startTimer() {
+        timeRemaining = 5
+        timer = Timer.scheduledTimer(
+            withTimeInterval: 1,
+            repeats: true
+        ) { _ in
+            timeRemaining -= 1
 
-//        }
+            if timeRemaining <= 0 {
+                showNav = 0
+                showEnter = 1
+                stopTimer()
+            }
+        }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
     }
 }
 
@@ -112,27 +138,45 @@ struct NavButton: View {
     var children: Image
     var size: CGFloat = 44
     var padding: CGFloat = 10
-    var clearBackGround: Bool = false
+    var clearBackGround: Bool = true
     var body: some View {
         if clearBackGround {
             Button(action: action, label: {
-                Circle()
-                    .fill(Color.white.opacity(0))
-                    .frame(width: size, height: size)
-                    .overlay(
-                        children.frame(width: size, height: size).padding(padding)
-                    )
-            }).frame(width: size, height: size).buttonStyle(NavButtonStyle()).hoverEffect(.highlight)
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0))
+                        .frame(width: size, height: size)
+                        .overlay(
+                            children.resizable().frame(width: size - padding * 2, height: size - padding * 2)
+                        )
+                        .contentShape(Circle())
+                }
+            }).buttonStyle(NavButtonStyle()).frame(width: size, height: size).hoverEffect(.highlight)
         } else {
             Button(action: action, label: {
                 Circle()
                     .fill(Color.white.opacity(0))
                     .frame(width: size, height: size)
                     .overlay(
-                        children.frame(width: size, height: size).padding(padding)
+                        children.resizable().frame(width: size - padding * 2, height: size - padding * 2)
                     )
-            }).frame(width: size, height: size).hoverEffect(.highlight)
+                    .contentShape(Circle())
+            }).hoverEffect(.highlight)
         }
+    }
+}
+
+struct NavDivider: View {
+    var width: CGFloat = 1
+    var height: CGFloat = 16
+    var paddingLR: CGFloat = 4
+    var paddingTB: CGFloat = 12
+    var body: some View {
+        VStack {
+            Rectangle().fill(Color(hex: "#FFFFFF3D")).frame(width: width, height: height)
+        }
+        .padding([.top, .bottom], paddingTB)
+        .padding([.leading, .trailing], paddingLR)
     }
 }
 

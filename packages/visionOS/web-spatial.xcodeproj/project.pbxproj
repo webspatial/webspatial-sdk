@@ -21,8 +21,8 @@
 		2B2F1D992BEDA8EF006897EE /* VolumetricWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */; };
 		2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */; };
 		2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */; };
+		2B48B3F12DF9866700826889 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B48B3F02DF9866100826889 /* ColorExtension.swift */; };
 		2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B67BBAB2D151C1500BBC689 /* manifest.swift */; };
-		2B6BA5DF2DF0607400D40337 /* nav.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B6BA5DE2DF0607400D40337 /* nav.png */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
 		2BA06D712D4380C60020B505 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA06D702D4380C30020B505 /* LoadingView.swift */; };
@@ -76,8 +76,8 @@
 		2B2F1D982BEDA8EF006897EE /* VolumetricWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumetricWindowContainerView.swift; sourceTree = "<group>"; };
 		2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowContainerView.swift; sourceTree = "<group>"; };
 		2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialWithBorderCornerModifier.swift; sourceTree = "<group>"; };
+		2B48B3F02DF9866100826889 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		2B67BBAB2D151C1500BBC689 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
-		2B6BA5DE2DF0607400D40337 /* nav.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav.png; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2BA06D702D4380C30020B505 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
@@ -125,6 +125,7 @@
 		2B0B1C0E2C494E4100E644F9 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				2B48B3F02DF9866100826889 /* ColorExtension.swift */,
 				2B0FF4F32DD2711800C3F20A /* PerfClock.swift */,
 				2BD510552D54A2FF0001E5E6 /* SceneManager.swift */,
 				2B0B43092CBE21540003CEF3 /* CommandManager.swift */,
@@ -160,7 +161,6 @@
 				2B2F1D8A2BED4CD0006897EE /* libs */,
 				2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */,
 				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
-				2B6BA5DE2DF0607400D40337 /* nav.png */,
 				2B2F1D752BEBFAAC006897EE /* Info.plist */,
 				2B2F1D722BEBFAAC006897EE /* Preview Content */,
 			);
@@ -354,7 +354,6 @@
 			files = (
 				2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */,
 				2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */,
-				2B6BA5DF2DF0607400D40337 /* nav.png in Resources */,
 				2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,6 +391,7 @@
 				2BDBED5F2D3F885A0065443F /* SpatialModel3DComponent.swift in Sources */,
 				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
 				2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */,
+				2B48B3F12DF9866700826889 /* ColorExtension.swift in Sources */,
 				2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */,
 				2BC261222D38F1DA00BCA977 /* NavView.swift in Sources */,
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
