@@ -40,7 +40,7 @@ struct PlainWindowContainerView: View {
                         let wc = e.getComponent(SpatialWindowComponent.self)
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
 
-                        SpatialWebViewUI().environment(e)
+                        SpatialWebViewUI(viewWidth: width).environment(e)
                             .frame(width: width, height: height).padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
