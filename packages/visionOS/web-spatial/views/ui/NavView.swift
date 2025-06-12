@@ -2,11 +2,12 @@ import SwiftUI
 import WebKit
 
 struct NavView: View {
-    static let navHeight: CGFloat = 52
+    static let navHeight: CGFloat = 60
+    static let minWidth: CGFloat = 400
     @State var swc: SpatialWindowComponent?
     @StateObject var navInfo: NavInfo
+    @State var navWidth: CGFloat = 0
     @State private var showCopyTip = false
-    @State private var navWidth: CGFloat = 0
     @State private var contentHeight: CGFloat = 60
     @State private var texWidth: CGFloat = 0
     @State private var firstGetSize: Bool = true
@@ -73,7 +74,7 @@ struct NavView: View {
                     .lineLimit(1)
                     .textSelection(.enabled)
                     .padding(12)
-                    .frame(width: 500, height: 44)
+                    .frame(width: navWidth - 166, height: 44)
                     .background(.black)
                     .cornerRadius(100)
                 NavButton(action: {
