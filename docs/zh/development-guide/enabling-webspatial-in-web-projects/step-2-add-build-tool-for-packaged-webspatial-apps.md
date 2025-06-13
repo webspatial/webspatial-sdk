@@ -100,5 +100,5 @@ webspatial-builder publish  --base=$XR_PROD_SERVER --bundle-id=$XR_BUNDLE_ID --t
 
 ---
 
-- 了解 [WebSpatial Builder 的参数](parameters-of-the-webspatial-builder.md)
+- 了解 [WebSpatial Builder 的参数](options-of-the-webspatial-builder.md)
 - 或直接进入下一步：[步骤 3：在 Web 构建工具中集成 WebSpatial SDK](step-3-integrate-webspatial-sdk-into-web-build-tools.md)
