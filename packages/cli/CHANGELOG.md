@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [19754cd]
+  - @webspatial/platform-visionos@0.1.23
+
 ## 0.1.22
 
 ### Patch Changes
