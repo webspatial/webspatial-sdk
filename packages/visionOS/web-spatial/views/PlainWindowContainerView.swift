@@ -39,16 +39,20 @@ struct PlainWindowContainerView: View {
                         // Avoid showing webview until its loading completes
                         let wc = e.getComponent(SpatialWindowComponent.self)
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
-                        let needLimitSize = wc != nil ? (wc!.isRootWebview() && pwaManager.display != .fullscreen) : false
-                        let viewWidth = needLimitSize ? max(NavView.minWidth, width) : width
-                        let viewHeight = needLimitSize ? (height - NavView.navHeight) : height
-                        SpatialWebViewUI(viewWidth: viewWidth, viewHeight: viewHeight).environment(e)
-                            .frame(width: viewWidth, height: height).padding3D(.front, -100_000)
+                        SpatialWebViewUI().environment(e)
+                            .frame(width: width, height: height).padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
                             .opacity(didFinishFirstLoad ? 1.0 : 0.0)
                             .animation(.linear(duration: 0.2), value: didFinishFirstLoad)
+                            .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
+                                if pwaManager.display != .fullscreen {
+                                    ZStack {
+                                        NavView(swc: wc, navInfo: wc!.navInfo).offset(y: -15)
+                                    }.frame(height: 100)
+                                }
+                            }
                     }
                 }
             }

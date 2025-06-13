@@ -155,11 +155,8 @@ struct SpatialViewUI: View {
                     ForEach(Array(entities.keys), id: \.self) { key in
                         let entity = entities[key]!
                         let wv = entity.getComponent(SpatialWindowComponent.self)!
-                        let needLimitSize = wv.isRootWebview() && pwaManager.display != .fullscreen
-                        let viewWidth = needLimitSize ? max(NavView.minWidth, wv.resolutionX) : wv.resolutionX
-                        let viewHeight = needLimitSize ? (wv.resolutionY - NavView.navHeight) : wv.resolutionY
                         Attachment(id: key) {
-                            SpatialWebViewUI(viewWidth: viewWidth, viewHeight: viewHeight).environment(entity).frame(width: viewWidth, height: wv.resolutionY)
+                            SpatialWebViewUI().environment(entity).frame(width: wv.resolutionX, height: wv.resolutionY)
                         }
                     }
                 }.gesture(dragGesture).if(!isRoot) { view in
