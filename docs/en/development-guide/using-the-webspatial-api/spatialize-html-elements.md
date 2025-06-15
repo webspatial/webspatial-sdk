@@ -4,7 +4,7 @@ Basic concept: [Spatialized Elements and 3D Container Elements](../../core-conce
 
 ---
 
-> Because the [WebSpatial SDK]() currently offers only a React SDK, all examples in this document use React.
+> Because the [WebSpatial SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) currently offers only a [React SDK](../enabling-webspatial-in-web-projects/step-1-install-the-webspatial-sdk.md#react-sdk), all examples in this document use React.
 >
 > APIs covered in this section:
 > - `enable-xr`, `__enableXr__`, `enableXr`
@@ -13,9 +13,9 @@ Basic concept: [Spatialized Elements and 3D Container Elements](../../core-conce
 <a id="spatialize"></a>
 ## Enable spatialization
 
-With the current WebSpatial SDK an HTML element must be marked with a temporary flag before you can use any [other spatial APIs]().
+With the current WebSpatial SDK, an HTML element must be marked with a temporary flag before you can use any [spatial APIs](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api).
 
-> In a future W3C specification an element will not need an explicit flag. Using a spatial API will implicitly make it a [spatialized HTML element](). For now the flag is required for performance and other practical reasons.
+> In a future W3C specification, we hope that HTML elements won't need to be explicitly marked as spatial to use spatial APIs - just using a spatial API should implicitly make them [spatialized HTML elements](../../core-concepts/spatialized-elements-and-3d-container-elements.md). For now the flag is required for performance and other practical reasons.
 
 You can apply the flag in three ways:
 
@@ -25,13 +25,13 @@ You can apply the flag in three ways:
 <div className="card" enable-xr>
 ```
 
-2. Add the marker `__enableXr__` to the element’s `className`.
+2. Add `__enableXr__` to the element's class name.
 
 ```jsx
 <div className="card __enableXr__">
 ```
 
-3. Add the inline style `enableXr: true` to the element’s `style` prop.
+3. Add `enableXr: true` in the element's inline style.
 
 ```jsx
 <div className="card" style={{ enableXr: true, marginTop: '10px' }}>
@@ -39,7 +39,7 @@ You can apply the flag in three ways:
 
 Supporting all three options lets you work with a wide range of third-party component libraries.
 
-Most libraries expose at least one of these hooks (attribute, `className`, or `style`), so you can pass the flag down and spatialize the elements rendered inside the component.
+Most component libraries let you customize things like attributes, className, or style on internal HTML elements for styling. As long as you have access to any of these, you can pass in the special marker to spatialize the element inside the component.
 
 Example 1:
 
@@ -102,22 +102,23 @@ const Card = ({
 </Card>
 ```
 
-After the flag is applied the element keeps all of its original capabilities and also gains access to the [spatial APIs]() provided by the WebSpatial SDK, including the CSS APIs and DOM APIs described below.
+After the flag is applied, the element keeps all of its original capabilities and also gains access to the [spatial APIs](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) provided by the WebSpatial SDK, including the [CSS APIs](#css) and [DOM APIs](#dom) described below.
 
 <a id="cross-platform"></a>
-## Cross-platform behavior
+## Cross-platform
 
-A spatialized element has spatial capabilities only when running inside the [WebSpatial App Shell]().
-On desktop or mobile browsers the build output does **not** include the WebSpatial SDK implementation. Calls to the WebSpatial API are removed automatically, and the elements remain ordinary HTML elements in the React DOM.
+A spatialized element has spatial capabilities only when running inside the [WebSpatial App Shell](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk).
 
-You therefore **do not need any if-else checks** when spatializing elements. The API works cross-platform by default.
+On desktop/mobile platforms and regular browsers, [the build output does not include the WebSpatial SDK implementation](../enabling-webspatial-in-web-projects/generate-a-webspatial-specific-website.md). Calls to the WebSpatial API are removed automatically, and the elements remain ordinary HTML elements in the React DOM.
+
+So when you enable spatialization for an HTML element, you **do not need to write any if-else logic**, this API is designed to work cross-platform by default.
 
 <a id="css"></a>
 ## CSS Capabilities
 
-Inside a spatialized element you can use WebSpatial APIs in all common CSS authoring styles, including:
+On a spatialized element, you can use WebSpatial APIs in all common CSS authoring styles, including:
 
-1. global embedded CSS
+1. Embedded Global CSS
 
 ```diff
 import React from 'react';
@@ -135,7 +136,7 @@ function App() {
       >Hello World</h1>
 ```
 
-2. global linked CSS
+2. Linked Global CSS
 
 ```diff
 import React from 'react';
@@ -154,7 +155,7 @@ h1 {
 }
 ```
 
-3. inline CSS
+3. Inline CSS
 
 ```diff
 import React from 'react';
@@ -170,7 +171,7 @@ function App() {
       >Hello World</h1>
 ```
 
-Dynamic CSS-in-JS solutions such as styled-components are also supported.
+4. CSS-in-JS solutions that dynamically change global styles, like styled-components.
 
 ```diff
 const StyledTitle = styled.h1`
@@ -189,9 +190,9 @@ CSS Modules, PostCSS, and other pre-compiled CSS pipelines work as well.
 <a id="dom"></a>
 ## DOM Capabilities
 
-If you bypass React and manipulate the element directly through `querySelector` or similar DOM APIs, the [WebSpatial API will not work correctly]().
+If you bypass React and manipulate the spatialized element directly through `querySelector` or similar DOM APIs, the [WebSpatial API will not work correctly](../web-projects-that-support-webspatial/).
 
-Instead, obtain the DOM node via React’s Ref API, for example:
+Instead, obtain the DOM node of the spatialized element via React's Ref API, for example:
 
 ```diff
 import React from 'react';
@@ -211,19 +212,18 @@ function App() {
       >Hello World</h1>
 ```
 
-You can then read or write `--xr-back` through `ref.current.style`, or remove it with `ref.current.style.removeProperty`.
+You can then read or write [`--xr-back`](./elevate-2d-elements.md) through `ref.current.style`, or remove it with `ref.current.style.removeProperty`.
 
 You can also modify `ref.current.className` as needed.
-
-If the original `style` or `className` contains WebSpatial properties, changing them through these DOM APIs immediately updates the spatial effect.
 
 <a id="animation"></a>
 ## Animation Capabilities
 
 The WebSpatial SDK does not yet support using spatial APIs inside pure CSS animations.
-For animation effects use JavaScript—update the WebSpatial properties frame by frame with the Ref and DOM APIs mentioned above.
 
-The following JavaScript animation libraries have been tested:
+You can create animations with JS animations. For example, using the Ref API and DOM API [mentioned earlier](#dom) to update WebSpatial styles frame by frame.
+
+The following JS animation libraries have been tested:
 
 - Popmotion
 - React Spring
@@ -234,21 +234,22 @@ The following JavaScript animation libraries have been tested:
 <a id="content-interaction"></a>
 ## Internal Content Interaction
 
-Whether or not an element itself is spatialized, its child-element interactions on spatial platforms such as visionOS are based on *natural interaction*.
+Whether or not an element itself is spatialized, its child-element interactions on spatial-computing platforms such as visionOS are based on [natural interaction](../../core-concepts/spatialized-elements-and-3d-container-elements.md#nature-interaction).
 
-Most behaviors mirror touch interaction. One key difference is that during *indirect interaction* (eye-hand interaction) an element must qualify as an *Interaction Region* to receive the system-provided *Hover Effect*.
+Most of the natural interactions work like touch interactions. One key difference is that during *indirect interaction* (eye-hand interaction) an element must qualify as an **Interaction Region** to receive the system-provided **Hover Effect**.
 
 <a id="hover-effect"></a>
 ### Hover Effect
 
-During the *Select (Navigation)* phase—indirect or direct—no JavaScript events fire and no CSS state changes (such as `:hover`) occur, just like on a touch screen.
-The page has no knowledge of what the user is currently targeting.
+During the *Select (Navigation)* phase - indirect or direct - no JS events fire and no CSS state changes (such as `:hover`) occur, just like on a touch screen.
 
-> For privacy reasons only the operating system knows which element the user’s gaze is on or which element the finger is approaching; the web page itself does not.
+So web code can't show any interaction cues at all. Basically, the page has no idea what the user is trying to do at that moment.
+
+> For privacy reasons only the operating system knows which element the user's gaze is on or which element the finger is approaching, the web page itself does not.
 
 Instead the operating system (including the browser engine) shows **native visual feedback**:
-- In direct interaction, the motion of the user’s finger itself serves as feedback.
-- In indirect interaction, the system renders a *Hover Effect* (for example, a glowing outline floating in front of the element under gaze). This is not the CSS `:hover` state; it is a native effect.
+- In direct interaction, the motion of the user's finger itself serves as feedback.
+- In indirect interaction, the system renders a **Hover Effect** (for example, a glowing outline floating in front of the element under gaze). This is not the CSS `:hover` state; it is a native effect.
 
 Only elements recognized as **Interaction Regions** can be targeted and will display the Hover Effect.
 

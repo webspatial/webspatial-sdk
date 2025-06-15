@@ -4,75 +4,34 @@ Current location: [Step 3 – Integrate WebSpatial SDK into Web Build Tools](ste
 
 ---
 
-After integrating the [WebSpatial SDK]() into the project’s [TS/JS compiler]() and [Web build tool & Web server](), the site can—without affecting the original desktop/mobile site—produce a dedicated build for the [WebSpatial App Shell]. This build is essentially a standalone website that loads only inside a native spatial app containing the App Shell (for example, a [Packaged WebSpatial App]() built with [WebSpatial Builder]()). Web code in this context can tightly cooperate with native features to deliver spatial capabilities.
+After integrating the [WebSpatial SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) into the project's [TS/JS compiler](./configure-js-ts-compiler.md) and [Web build tool & Web server](./add-optimizations-and-defaults-to-web-build-tools.md), your web project can produce a dedicated build for the [WebSpatial App Shell](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk), without affecting the original desktop/mobile site.
+
+This build is essentially a standalone website that loads only inside a native spatial app ([Packaged WebSpatial App](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk)) containing the App Shell built with [WebSpatial Builder](./step-2-add-build-tool-for-packaged-webspatial-apps.md). Web code in this context can tightly cooperate with native parts of the app to deliver web-controlled spatial capabilities.
 
 <a id="for-simulator"></a>
-## Simulator debugging phase
+## During simulator debugging
 
-> All examples below are [based on Vite]()
+> All examples below are [based on Vite](./add-optimizations-and-defaults-to-web-build-tools.md)
 
 <a id="regular-dev-server"></a>
 ### Run the regular Dev Server
 
-Run the project’s `dev` script as usual. The served site targets desktop/mobile browsers (including the default browser on XR platforms, such as Safari on visionOS).
+Run the project's `dev` script as usual. The served site targets desktop/mobile platforms and regular browsers (including the default browser on XR platforms, such as Safari on visionOS).
 
 ```shell
 pnpm dev
 ```
 
-- The HTML/CSS/JS output **does not** include WebSpatial SDK; all [WebSpatial API]() calls are removed or ignored.
+- The HTML/CSS/JS output does NOT include WebSpatial SDK; all [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) calls are removed or ignored.
 - Unsuitable for loading in the WebSpatial App Shell (no spatial effects).
 
 <a id="dedicated-dev-server"></a>
 ### Run the dedicated Dev Server
 
-To build specifically for the WebSpatial App Shell on visionOS, set the environment variable `$XR_ENV` to `avp` when running `dev`.
+To build specifically for the WebSpatial App Shell on visionOS, set the environment variable [`$XR_ENV`](./check-if-running-in-webspatial-mode.md) from the WebSpatial SDK  to `avp` when running `dev`.
 
 ```shell
 XR_ENV=avp pnpm dev
-```
-
-- The HTML/CSS/JS output **does** include WebSpatial SDK.
-- To remain functional in runtimes without [WebSpatial API](), HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API]() calls inside the JS output.
-- The served URL automatically adds the base segment `/webspatial/avp/` and increments the port by 1.
-> Example: the desktop/mobile Dev Server runs at `http://localhost:3000`; the visionOS Dev Server runs at `http://localhost:3001/webspatial/avp/`.
-- If the project defines a custom base, `/webspatial/avp/` is *not* prepended.
-> Example: with `base = '/my-project/'`, URLs become `http://localhost:3000/my-project/` and `http://localhost:3001/my-project/`.
-> ```diff
-> import { defineConfig } from 'vite'
-> import vue from '@vitejs/plugin-react'
-> import WebSpatial from "@webspatial/vite-plugin";
->
-> export default defineConfig({
->   plugins: [
->     react(),
->     WebSpatial(),
->   ],
-> + base: '/my-project/',
-> })
-> ```
-- Only suitable for loading in the WebSpatial App Shell; regular browsers render incorrectly.
-
-<a id="use-dedicated-dev-server"></a>
-### Use the dedicated Dev Server
-
-Combine the Dev Server with [`webspatial-builder run`]() (or the [`run:avp` script]()) to package and install a visionOS app in the simulator.
-
-Pass the Dev Server URL as the [`--base` option]() (or `$XR_DEV_SERVER`) to replace the original [`start_url`]() in the Web App Manifest.
-
-> [!TIP]
-> If no manifest or `start_url` is provided during `run`, `/` is used by default. Adding `--base` makes the start URL identical to the Dev Server URL.
-
-For example, just run the `run` command:
-
-```shell
-npx webspatial-builder run --base=http://localhost:3001/webspatial/avp/
-```
-
-or the `run:avp` script:
-
-```shell
-XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 ```
 
 > [!TIP]
@@ -82,9 +41,48 @@ XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
 > "dev:avp": "XR_ENV=avp vite",
 > ```
 
-After launch, the simulator loads the Dev Server URL automatically.
+- The HTML/CSS/JS output does include WebSpatial SDK.
+- To make sure the HTML/CSS works fine in regular browser engines that don't support the [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) (like the default system WebView), all WebSpatial API calls in the HTML/CSS source are either removed or ignored and replaced with [non-standard JS Bridge API calls](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) in the JS output.
+- Only suitable for loading in the WebSpatial App Shell; not suitable for regular browsers like Chrome on your computer, since it lacks the WebSpatial App Shell and the web UI won't display correctly.
+- The served URL automatically adds the base segment `/webspatial/avp/` to keep things consistent with the distribution phase while still making development efficient during debugging.
+  > Example: the regular Dev Server runs at `http://localhost:3000`; the dedicated Dev Server for visionOS runs at `http://localhost:3001/webspatial/avp/`.
+- If the project defines a custom base, `/webspatial/avp/` is not prepended.
+  > Example:
+  > ```diff
+  > // vite.config.js
+  > import { defineConfig } from 'vite'
+  > import vue from '@vitejs/plugin-react'
+  > import WebSpatial from "@webspatial/vite-plugin";
+  >
+  > export default defineConfig({
+  >   plugins: [
+  >     react(),
+  >     WebSpatial(),
+  >   ],
+  > + base: '/my-project/',
+  > })
+  > ```
+  >  URLs for the regular and dedicated Dev Servers become `http://localhost:3000/my-project/` and `http://localhost:3001/my-project/`.
 
-Because `/webspatial/avp/` is injected as the base segment, every Web-build-tool-processed URL (for example static assets) automatically includes `webspatial/avp/`, for example:
+<a id="use-dedicated-dev-server"></a>
+### Use the dedicated Dev Server
+
+Combine the dedicated Dev Server with [`webspatial-builder run`](./step-2-add-build-tool-for-packaged-webspatial-apps.md#run) (or the [`run:avp` script](./step-2-add-build-tool-for-packaged-webspatial-apps.md#npm-scripts)) to package and install a visionOS app in the simulator.
+
+> [!TIP]
+> Pass the dedicated Dev Server URL as the [`--base` option (or `$XR_DEV_SERVER`) to replace the original `start_url` in the Web App Manifest](./step-2-add-build-tool-for-packaged-webspatial-apps.md#run).
+
+```shell
+npx webspatial-builder run --base=http://localhost:3001/webspatial/avp/
+```
+
+```shell
+XR_DEV_SERVER=http://localhost:3001/webspatial/avp/ pnpm run:avp
+```
+
+Once the app starts in the visionOS simulator, it'll automatically load the URL from the dedicated Dev Server.
+
+Because `/webspatial/avp/` is injected as the base segment, every Web-build-tool-processed URL automatically includes `webspatial/avp/`, for example:
 
 ```html
 <link rel="icon" href="/webspatial/avp/favicon.ico" sizes="any"/>
@@ -93,9 +91,9 @@ Because `/webspatial/avp/` is injected as the base segment, every Web-build-tool
 <link rel="stylesheet" crossorigin href="/webspatial/avp/assets/index-B4Bp50KL.css">
 ```
 
-For in-page links, add the base manually.
+But when URLs appear within the JS logic, the web build tool won't automatically add that base part, you'll need to add it yourself.
 
-In JS the base string is available through [`__XR_ENV_BASE__`]().
+In your JS code, you can use [`__XR_ENV_BASE__`](./check-if-running-in-webspatial-mode.md) to get that base string.
 
 ```jsx
  <button
@@ -104,7 +102,9 @@ In JS the base string is available through [`__XR_ENV_BASE__`]().
    }}>
 ```
 
-If client-side routing is used (e.g., `react-router-dom`), configure the router’s `basename` once on the root `<Router>`:
+If you're using client-side routing like in the [Quick Example](../../quick-start#new-scene), you can set the base path centrally in the routing library so it's handled consistently.
+
+Using `react-router-dom` as an example:
 
 ```jsx
   return (
@@ -112,7 +112,7 @@ If client-side routing is used (e.g., `react-router-dom`), configure the router�
       <Routes>
 ```
 
-In JSX, prefer `<Link />` over raw `<a>` tags or `window.open`, letting `react-router-dom` handle the base automatically:
+In this case, prefer `<Link />` over raw `<a>` tags or `window.open`, letting `react-router-dom` handle the base automatically:
 
 ```jsx
                   <Link to="/second-page" target="_blank">
@@ -121,16 +121,16 @@ In JSX, prefer `<Link />` over raw `<a>` tags or `window.open`, letting `react-r
 ```
 
 <a id="for-real-device"></a>
-## Real-device testing & distribution phase
+## During device testing and distribution
 
-At this stage you must deploy the site to a server accessible from real devices.
+At this stage you must deploy the site to a web server accessible from real devices.
 
-> All examples below are [based on Vite]()
+> Examples below use [Vite](add-optimizations-and-defaults-to-web-build-tools.md).
 
 <a id="multi-web-server"></a>
 ### Multi-Web-Server mode
 
-The quickest path is to deploy two sites on different domains, mirroring the simulator workflow.
+The quickest and easiest way is to deploy two sites on different domains, just like [in the simulator debugging phase](#for-simulator).
 
 One site serves the desktop/mobile version:
 
@@ -139,10 +139,12 @@ pnpm build
 pnpm preview
 ```
 
-- WebSpatial SDK is **not** included; [WebSpatial API]() calls are stripped.
-- Not suitable for the WebSpatial App Shell.
+- The HTML/CSS/JS output does NOT include WebSpatial SDK; all [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) calls are removed or ignored.
+- Unsuitable for loading in the WebSpatial App Shell (no spatial effects).
 
-The second site serves the visionOS-specific version (build with `$XR_ENV=avp`):
+The second site serves the visionOS-specific version.
+
+When building and starting it, you need to set the [`$XR_ENV`](./check-if-running-in-webspatial-mode.md) environment variable from the WebSpatial SDK to `avp`.
 
 ```shell
 XR_ENV=avp pnpm build
@@ -151,23 +153,25 @@ XR_ENV=avp pnpm preview
 
 The files in the `webspatial/avp/` path under the output folder (like `/dist`) are specifically for the WebSpatial App Shell on visionOS.
 
-- WebSpatial SDK **is** included.
-- HTML/CSS calls are stripped or ignored and replaced by [non-standard JS Bridge API]() calls.
-- Only suitable for the WebSpatial App Shell.
-- All builder-processed URLs prepend `webspatial/avp/`.
-```html
-<link rel="icon" href="/webspatial/avp/favicon.ico" sizes="any"/>
-<link rel="apple-touch-icon" href="/webspatial/avp/icons/apple-touch-icon.png"/>
-<script type="module" crossorigin src="/webspatial/avp/assets/index-CpANHSXr.js"></script>
-<link rel="stylesheet" crossorigin href="/webspatial/avp/assets/index-B4Bp50KL.css">
-```
-- Add the base manually to page links, or supply it via your routing library.
+- The HTML/CSS/JS output does include WebSpatial SDK.
+- To make sure the HTML/CSS works fine in regular browser engines that don't support the [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) (like the default system WebView), all WebSpatial API calls in the HTML/CSS source are either removed or ignored and replaced with [non-standard JS Bridge API calls](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) in the JS output.
+- Only suitable for loading in the WebSpatial App Shell; not suitable for regular browsers like Chrome on your computer, since it lacks the WebSpatial App Shell and the web UI won't display correctly.
 
-To simplify URLs, host each version on its own domain and keep `/` as base (disable the automatic `/webspatial/avp/`):
+Under default settings:
 
-- Always output to the `dist/` root directory.
-- Configure different `base` values per domain.
-- If the current project defines a custom base, the WebSpatial SDK will not automatically append `/webspatial/avp/`.
+- The starting URL, along with all Web-build-tool-processed URL will automatically get `/webspatial/avp/` added to the base. For example:
+  ```html
+  <link rel="icon" href="/webspatial/avp/favicon.ico" sizes="any"/>
+  <link rel="apple-touch-icon" href="/webspatial/avp/icons/apple-touch-icon.png"/>
+  <script type="module" crossorigin src="/webspatial/avp/assets/index-CpANHSXr.js"></script>
+  <link rel="stylesheet" crossorigin href="/webspatial/avp/assets/index-B4Bp50KL.css">
+  ```
+- Just like when [using the dedicated Dev Server](#use-dedicated-dev-server), you need to manually add the base part to URLs in the JS logic. If you're using client-side routing, you can set this base path centrally through your routing library.
+
+To use different domains to separate the two versions of the site and just use `/` as the base (skipping `webspatial/avp/`), configure as follows:
+
+- Begin by configuring a custom base in the URL to differentiate the two site versions. With a custom base, WebSpatial SDK skips adding `/webspatial/avp/` automatically.
+- Always output to the root directory of `dist/`.
 
 ```diff
 // vite.config.js
@@ -196,28 +200,27 @@ export default defineConfig({
 <a id="single-web-server"></a>
 ### Single-Web-Server mode
 
-Alternatively, one Web server can publish both versions to reduce deployment overhead.
+Another option is to use a single web server to serve both the desktop/mobile version and the version for the WebSpatial App Shell in visionOS. This avoids extra deployment steps, domains, and server resource usage.
 
-Run the project’s `build` script twice:
+In this case, you'll need to run the project's build script twice, one after the other.
 
-1. First build: desktop/mobile output.
-2. Second build: with `XR_ENV=avp`, visionOS WebSpatial output.
+1. First build: generates the usual HTML and static files for desktop, mobile, and regular browsers.
+2. Second build: with [`XR_ENV=avp`](./check-if-running-in-webspatial-mode.md), generates the HTML and static assets specifically tailored for the WebSpatial App Shell in visionOS.
 
 > [!IMPORTANT]
-> During the second build, the WebSpatial plugin keeps the first build’s files and appends new files.
+> During the second build, the WebSpatial plugin keeps the first build's files and appends new files.
 
 ```shell
 pnpm build && XR_ENV=avp pnpm build
 ```
 
-**Best practice**: chain both builds in one npm script.
-```shell
-"build": "vite build && XR_ENV=avp vite build",
-```
+> [!TIP]
+> Best practice: chain both builds in one npm script.
+> ```json5
+> "build": "vite build && XR_ENV=avp vite build",
+> ```
 
-Output location is set by the build tool’s defaults and custom config.
-
-Vite, for instance, outputs to `dist/` by default (customizable via `build.outDir`):
+Output location is set by the web build tool's defaults and custom config. For example, Vite puts build output in the `dist/` by default, you can change that with `build.outDir`.
 
 ```diff
 // vite.config.js
@@ -261,39 +264,39 @@ web-dist
 
 - Root level: desktop/mobile files.
 - `webspatial/avp/`: visionOS WebSpatial files (different hashes because the SDK is included).
-- Within `webspatial/avp/`, all builder-processed URLs prepend `webspatial/avp/`.
+- Within `webspatial/avp/`, all web-build-tool-processed URLs prepend `webspatial/avp/`.
 
 Two serving approaches:
 
-1. Configure the server so requests with base `/webspatial/avp/` read HTML from `dist/webspatial/avp/`.
-   - As with the simulator Dev Server, manually add the base to links or supply it via your router.
-
-2. Detect the special User-Agent of the visionOS WebSpatial App Shell. Serve HTML from `dist/webspatial/avp` for those requests; otherwise serve from `dist/`.
-   - In this case you must configure a custom `base`; WebSpatial SDK will not auto-prepend `/webspatial/avp/`.
-```diff
-// vite.config.js
-export default defineConfig({
-+   base: 'https://myproject.com/'，
-```
+1. Configure the server so all web page requests with `/webspatial/avp/` as the base will read HTML files from the `dist/webspatial/avp/` directory.
+   > In this case, just like with the [dedicated Dev Server](#use-dedicated-dev-server) or the [multi-web-server](#multi-web-server) mode, you'll need to manually add the base part to your web links in JS logic. If you're using client-side routing, you can set the base path centrally in the routing library for consistency.
+2. Detect the [special User-Agent string of the WebSpatial App Shell](./check-if-running-in-webspatial-mode.md#ua). Serve HTML files from `dist/webspatial/avp` for those web page requests; otherwise serve from `dist/`.
+   > In this case you'll need to set a custom base URL in your web build tool's config, then the WebSpatial SDK won't automatically add `/webspatial/avp/`.
+   >
+   > ```diff
+   > // vite.config.js
+   > export default defineConfig({
+   > +  base: 'https://myproject.com/'，
+   > ```
 
 <a id="static-web-server"></a>
-### Scenario 1: Static Web server bundled with the build tool
+### Usage 1: Use built-in Static Web server from your web build tool
 
-> Examples: Vite, rsbuild / rspack
+E.g. with [Vite or Rsbuild/Rspack](add-optimizations-and-defaults-to-web-build-tools.md):
 
 ```shell
 pnpm preview
 ```
 
-Best aligned with the [multi-Web-Server]() approach.
-With custom routing (mapping `/webspatial/avp/` to `dist/webspatial/avp/`), the [single-Web-Server]() approach also works.
+Best aligned with the [multi-Web-Server](#multi-web-server) approach.
+With custom routing (mapping `/webspatial/avp/` requests to HTML files in `dist/webspatial/avp/` directory), the [single-Web-Server](#single-web-server) approach also works.
 
 <a id="static-web-hosting"></a>
-### Scenario 2: Third-party static hosting
+### Usage 2: Use third-party static web hosting
 
-> Examples: Vercel, Cloudflare Pages, GitHub Pages
+E.g. with Vercel, Cloudflare Pages, or GitHub Pages.
 
-Similar to Scenario 1 and suits the [multi-Web-Server]() approach.
+Similar to [Usage 1](#static-web-server) and suits the [multi-Web-Server](#multi-web-server) approach.
 
 For GitHub Pages, deploy the WebSpatial version separately:
 
@@ -302,18 +305,18 @@ npm install -D gh-pages
 gh-pages -d dist/webspatial/avp
 ```
 
-<a id="ssr-server></a>
-### Scenario 3: Dynamic Web server with SSR
+<a id="ssr-server"></a>
+### Usage 3: Use dynamic Web server with SSR
 
-> Example: Next.js
+E.g. with Next.js:
 
 ```shell
 pnpm start
 ```
 
-Because pages share a single HTML template (or none), differentiating by template is impossible. The [multi-Web-Server]() approach is recommended.
+Because in this case webpages share a single HTML template (or none), differentiating by template is impossible. The [multi-Web-Server](#multi-web-server) approach is recommended.
 
-Deploy a dedicated SSR service for WebSpatial and point its static asset base to the WebSpatial-specific assets.
+Deploy a dedicated SSR server for WebSpatial and set the root path for static web file URLs to point to the directory or CDN address where the WebSpatial-specific files are stored.
 
 In `next.config.js`, for example:
 
@@ -324,12 +327,12 @@ module.exports = {
     : '/static/webspatial/avp',
 ```
 
-<a id="dynamic-web-server></a>
-### Scenario 4: Self-hosted dynamic Web server
+<a id="dynamic-web-server"></a>
+### Usage 4: Use self-hosted dynamic web server
 
-> Example: a Node.js server based on NestJS
+E.g. with a Node.js server based on NestJS framework
 
-Use the second serving option of the [single-Web-Server]() approach: detect the visionOS User-Agent and serve from `dist/webspatial/avp`, otherwise from `dist/`.
+Use the second serving option of the [single-Web-Server](#single-web-server) approach: detect the [WebSpatial App Shell's User-Agent string](./check-if-running-in-webspatial-mode.md#ua) and serve HTML files from `dist/webspatial/avp` directory, otherwise from `dist/` directory.
 
 ---
 
