@@ -5,7 +5,7 @@ Basic concepts:
 
 ---
 
-> Because the [WebSpatial SDK]() currently provides only the React SDK, all examples in this document use React.
+> Because the [WebSpatial SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) currently offers only a [React SDK](../enabling-webspatial-in-web-projects/step-1-install-the-webspatial-sdk.md#react-sdk), all examples in this document use React.
 >
 > APIs referenced in this section:
 > - `position: absolute`, `position: fixed`, `position: relative`
@@ -16,24 +16,27 @@ Basic concepts:
 >   - `scaleZ()`, `scale3d()`
 > - `enable-xr-monitor`
 
-When an HTML element has **spatialization enabled**, it still sits on the web page plane inside a [window scene](), participating in the original HTML/CSS layout flow. Its X and Y positions and dimensions—determined by existing CSS properties and layout rules—remain unchanged.
+When an HTML element has [spatialization enabled](./spatialize-html-elements.md), it still sits on the web page plane inside a [Window Scene](../../core-concepts/scenes-and-spatial-layouts.md), participating in the original HTML/CSS layout flow. Its X and Y positions and dimensions - [determined by existing CSS properties and layout rules](../../core-concepts/spatialized-elements-and-3d-container-elements.md#2d-elements) - remain unchanged.
 
-On top of that baseline, a spatialized HTML element can use the [WebSpatial API]() to move, transform, and lay itself out along the Z-axis in front of the page plane. This “elevation” brings the web content into 3-D space and gives the page visual depth.
+On top of that baseline, a spatialized HTML element can use the [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) to move, transform, and lay itself out along the Z-axis in front of the web page plane. This "elevation" brings the web content into 3D space and gives the web page visual depth.
 
-Multiple APIs can achieve this elevation and can be grouped into three categories based on how they affect the layout flow.
+Multiple spatial APIs can achieve this elevation and can be grouped into three categories based on how they affect the layout flow.
 
 <a id="affect-layout"></a>
-## APIs that remove the element from the layout flow
+## Out-of-layout-flow API
+
+This category of APIs makes the HTML element completely leave the normal layout flow, meaning it no longer occupies its original position.
+
 
 <a id="position-absolute"></a>
 ### `position: absolute`
 
-With absolute positioning, the element is positioned relative to the nearest ancestor **containing block** (an ancestor whose `position` value is not `static`, or one that has a `transform` property). If no such ancestor exists, it is positioned relative to the entire window.
+With absolute positioning, the element is positioned relative to the nearest ancestor [containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_display/Containing_block#identifying_the_containing_block) - an ancestor whose `position` value is not `static`, or one that has a `transform` property. If no such ancestor exists, it is positioned relative to the entire window.
 
 ![](../../../assets/guide/3-1.png)
 ![](../../../assets/guide/3-2.png)
 
-Under CSS, four properties move (position) the element along the X and Y axes:
+In this mode, there are four CSS properties in the current web standard that let you "move" (position) an element in the four directions along the X and Y axes:
 
 - `top`: moves downward along the Y-axis
 - `bottom`: moves upward along the Y-axis
@@ -42,7 +45,7 @@ Under CSS, four properties move (position) the element along the X and Y axes:
 
 ![](../../../assets/guide/3-3.png)
 
-The WebSpatial API adds a new CSS property that positions the element along the Z-axis:
+The [WebSpatial API](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-api) adds a new CSS property that positions the element along the Z-axis:
 
 - `--xr-back`: moves (positions) forward along the Z-axis
 
@@ -50,12 +53,14 @@ The WebSpatial API adds a new CSS property that positions the element along the 
 
 In the current WebSpatial SDK, the value is interpreted relative to the **nearest ancestor spatialized element**. If none exists, it is relative to the **original web page plane**. Conceptually:
 
-- If a spatialized element contains another absolutely positioned spatialized element (regardless of intermediate non-spatialized elements), the child’s initial Z position is the **plane of that ancestor**. Think of it as a "back surface" from which `--xr-back` moves forward.
-- If an absolutely positioned spatialized element has no ancestral spatialized elements, its initial Z position is the **web page plane of the entire window scene**; that plane works as the “back surface.”
+- If a spatialized element contains another absolutely positioned spatialized element (regardless of intermediate non-spatialized elements), the child's initial Z position is the **plane of that ancestor**. Think of it as a "back surface" from which `--xr-back` moves forward.
+- If an absolutely positioned spatialized element has no ancestral spatialized elements, its initial Z position ("back surface") is the **web page plane of the entire window scene**.
 
-> In a future Web standard, a `back` property should behave like `top`/`bottom`/`left`/`right`, positioning relative to the nearest **containing block**. For forward compatibility, best practice today is to give the parent `position: relative` (if it is not already `absolute` or `fixed`) whenever a spatialized child should use that parent as its containing block for the Z-axis.
+> In a future Web standard, a `back` property should behave like `top`/`bottom`/`left`/`right`, positioning relative to the nearest [containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_display/Containing_block#identifying_the_containing_block).
+> To keep your WebSpatial code forward-compatible, best practice today is:
+> If a spatialized element has absolutely positioned spatial children and you want the parent to serve as the Z-axis origin for their positioning, then you should at least set `position: relative` on the parent (if it's not already `absolute` or `fixed`), so it becomes a containing block.
 
-Example based on the [Quick Example]():
+Example based on the [Quick Example](../../quick-start/):
 
 ```diff {highlight=12-16}
 html.is-spatial {
@@ -78,18 +83,20 @@ html.is-spatial {
   }
 ```
 
-The `<p>` text is positioned on the Y-axis relative to its containing block `.count-card`, which is `relative`. On the Z-axis, `--xr-back` positions the `<p>` relative to the plane of `.count-card`, which is both a semi-transparent spatialized element and a containing block.
+The `<p>` text is positioned on the Y-axis relative to its containing block `.count-card`, which is `relative`.
+
+On the Z-axis, `--xr-back` also positions the `<p>` relative to the plane of `.count-card`, which is both a semi-transparent spatialized element and a containing block.
 
 ![](../../../assets/guide/3-4.png)
 
 <a id="position-fixed"></a>
 ### `position: fixed`
 
-With fixed positioning, the element is positioned against the **initial containing block** (effectively the page plane of the window scene) and does not scroll with the page.
+With fixed positioning, the element is positioned against the [initial containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_display/Containing_block#identifying_the_containing_block) (effectively the page plane of the window scene) and does not scroll with the page.
 
-Just like absolute positioning, spatialized elements may use the four CSS properties on X and Y and the WebSpatial `--xr-back` on Z. Here, the initial Z position is **always the web page plane of the window scene**.
+Just like absolute positioning, spatialized elements may use the four CSS properties on X and Y and the WebSpatial `--xr-back` on Z. Note that in this case, the initial Z position is **always the web page plane of the window scene**.
 
-Example from the [Techshop demo]():
+Example from the [Techshop demo](../../introduction/built-on-the-existing-web-ecosystem.md#example-techshop):
 
 ```css {highlight=5-14}
   .navbar {
@@ -110,11 +117,11 @@ Example from the [Techshop demo]():
     left: 0;
 ```
 
-The top bar and side bar are fixed; the product list remains in the page flow. Shrinking the window with the drag handle clips the list, which scrolls, while the bars stay in place.
+The top bar and side bar are fixed; the product list remains in the page flow. Shrinking the window with the drag handle clips the list, which scrolls, while the top bar and side bar stay in place.
 
 ![](../../../assets/guide/3-5.png)
 
-Clicking “View Details” opens a new product-detail window scene:
+Clicking "View Details" opens a new product-detail window scene:
 
 ```css {highlight=5-9}
   .product-detail-info {
@@ -136,20 +143,20 @@ While the page scrolls, the left product image scrolls too, but the right info p
 ![](../../../assets/guide/3-6.png)
 
 <a id="not-affect-layout"></a>
-## APIs that do not affect the layout flow
+## In-layout-flow API
 
-The element remains in the flow, keeping its original space and dimensions.
+This category of APIs do not affect the normal layout flow. The HTML element still occupies its original space in the layout, and its size is still controlled by the layout flow.
 
 <a id="position-relative"></a>
-### Change only the position: `position: relative`
+### `position: relative` - change only the position
 
 With relative positioning, the element can move along X and Y using the four CSS properties.
 
 ![](../../../assets/guide/3-7.png)
 
-It can also move along Z with `--xr-back`. The initial Z position is **the plane where the element originally sits**, which works as the “back surface.”
+It can also move along Z with `--xr-back`. The initial Z position is **the plane where the element originally sits**, which works as the "back surface."
 
-Example based on the [Quick Example]():
+Example based on the [Quick Example](../../quick-start/):
 
 ```diff {highlight=10-11}
 html.is-spatial {
@@ -168,11 +175,11 @@ html.is-spatial {
 -   transform: translateZ(30px) rotateX(30deg);
 ```
 
-The `.link-card` is below `.count-card` in the original flow. In relative mode, `--xr-back` moves it 50 units forward along Z while leaving its X/Y position untouched.
+The `.link-card` is below `.count-card` in the original flow. In relative positioning mode, `--xr-back` moves it 50 units forward along Z while leaving its X/Y position untouched.
 
 ![](../../../assets/guide/3-8.png)
 
-Another example from the [Quick Example]():
+Another example from the [Quick Example](../../quick-start/):
 
 ```css
   .count-card {
@@ -191,38 +198,41 @@ Another example from the [Quick Example]():
   }
 ```
 
-`.count-card` moves 50 units forward in Z with relative positioning. Inside it, an absolutely positioned `<p>` moves an additional 20 units forward relative to the `.count-card` plane.
+`.count-card` moves 50 units forward in Z with relative positioning, while keeping its original X and Y position. Inside it, an absolutely positioned `<p>` moves an additional 20 units forward relative to the `.count-card` plane.
 
 ![](../../../assets/guide/3-9.png)
 
 <a id="css-transform"></a>
-### Change position and shape: CSS Transform
+### CSS Transform - change position and shape
 
-CSS Transform leaves the element’s original position, size, and layout relations intact, modifying only the rendered image via a matrix.
+CSS Transform leaves the element's original position, size, and layout relations intact, modifying only the rendered image via a matrix.
 
-Standard CSS already allows transforms along all three axes, but depth effects are projected onto the 2-D page. With WebSpatial, spatialized elements using transforms actually occupy 3-D space.
+Standard CSS already allows transforms along all three axes, but depth effects are projected onto the 2D page, meaning the final visual outcome lacks actual spatial depth.
 
 | ![intro-3-7](../../../assets/intro/intro-3-7.png) | ![intro-3-8](../../../assets/intro/intro-3-8.png) |
 |:---:|:---:|
 
+The WebSpatial SDK reuses the existing CSS Transform API. For non-spatial HTML elements, transforms along the Z-axis continue to be projected onto the flat page. But for spatial HTML elements, Z-axis transforms actually move them into 3D space.
+
 The X/Y/Z origin is **always the plane where the element originally sits**. `transform-origin` can shift the origin in X and Y, but never in Z.
 
-Spatialized elements treat that plane as the “back surface,” letting the transformed image extend into the space in front.
+Spatialized elements treat that plane as the "back surface," letting the transformed image extend into the space in front.
 
 ![](../../../assets/guide/3-13.png)
 
-`transform: perspective()` becomes unnecessary for spatialized elements because projection is handled natively.
+`transform: perspective()` becomes unnecessary for spatialized elements since there's no need to define the projection.
 
-Transforms that affect the Z-axis and are supported on spatialized elements:
+Spatial elements support three types of CSS Transform that affect the Z-axis:
 
-- `translateZ()`, `translate3d()`: displacement. Similar to `--xr-back`, originating from the back surface. Units stay the same as before.
-- `rotateX()`, `rotateY()`, `rotate3d()`: rotation. Rotating around X or Y pushes parts of the element into 3-D space.
+- `translateZ()`, `translate3d()`: displacement. Similar to `--xr-back`, originating from the back surface.
+   > Note that the unit for `translateZ()` is still the same as before.
+- `rotateX()`, `rotateY()`, `rotate3d()`: rotation. Rotating around X or Y pushes parts of the element into 3D space.
 - `scaleZ()`, `scale3d()`: scaling along Z.
 
 > [!WARNING]
 > `skew` is not supported.
 
-Example based on the [Quick Example]():
+Example based on the [Quick Example](../../introduction/built-on-the-existing-web-ecosystem.md#example-techshop):
 
 ```diff  {highlight=10-14}
 html.is-spatial {
@@ -245,7 +255,7 @@ html.is-spatial {
 
 ![](../../../assets/guide/3-14.png)
 
-A [Techshop demo]() example:
+Example from [Techshop demo](../../introduction/built-on-the-existing-web-ecosystem.md#example-techshop):
 
 ```css
   .list-meun {
@@ -262,22 +272,24 @@ The side menu is fixed at the far left, then transformed: it moves 320 px forwar
 ![](../../../assets/guide/3-15.png)
 
 <a id="with-layout"></a>
-## APIs based on the layout flow
+## Layout-dependent API
 
-These APIs change the parent’s layout flow so that children are laid out from back to front along the Z-axis, assigning Z positions through layout relationships.
+These APIs change the parent's layout flow so that children are laid out from back to front along the Z-axis, assigning Z positions through layout relationships.
 
 They are **not yet supported** in the current WebSpatial SDK.
 
 <a id="dynamic-change"></a>
 ## Dynamic changes to the layout flow
 
-As noted at the start, once an element is spatialized it still lives in the original layout flow. Updates in React may dynamically change CSS and layout, altering a spatialized element’s X/Y position or size—whether or not the element is elevated.
+As noted at the start, once an element is spatialized it still lives in the original layout flow. Its position and size on the X and Y axes - based on regular CSS properties and layout rules - stay the same.
 
-[WebSpatial SDK]() automatically detects style changes on the spatialized element itself.
+Updates in React may dynamically change CSS and layout, altering a spatialized element's X/Y position or size - whether or not the element is elevated.
 
-However, if changes in **parent** layout move or resize the spatialized element, the SDK does not auto-detect those changes yet (for performance reasons).
+[WebSpatial SDK](../../core-concepts/unique-concepts-in-webspatial.md#webspatial-sdk) automatically detects style changes on the spatialized element itself.
 
-To handle this, the SDK provides a temporary marker, `enable-xr-monitor`. Add it to a parent to activate auto-detection. If the parent’s styles or internal layout change, WebSpatial will update its spatialized children’s X/Y positions and sizes accordingly.
+But if a layout change in a parent element causes a spatialized element's X/Y position or size to change, the WebSpatial SDK won't auto-detect those changes yet (for performance reasons)
+
+To handle this, the SDK provides a temporary marker, `enable-xr-monitor`. Add it to a parent to activate auto-detection. If the parent's styles or internal layout change, WebSpatial will update its spatialized children's X/Y positions and sizes accordingly.
 
 Example:
 
@@ -303,7 +315,7 @@ function CardList() {
 }
 ```
 
-If “first card” disappears, the spatialized “second card” automatically shifts upward along Y.
+If "first card" disappears, the spatialized "second card" automatically shifts upward along Y.
 
 ---
 
