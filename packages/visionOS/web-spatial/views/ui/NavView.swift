@@ -74,7 +74,9 @@ struct NavView: View {
                     .lineLimit(1)
                     .textSelection(.enabled)
                     .padding(12)
-                    .frame(width: navWidth - 166, height: 44)
+                    .frame(minWidth: 200)
+                    .frame(maxWidth: 500)
+                    .frame(height: 44)
                     .background(.black)
                     .cornerRadius(100)
                 NavButton(action: {
