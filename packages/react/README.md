@@ -10,6 +10,6 @@ The React SDK from the WebSpatial SDK makes the WebSpatial API immediately avail
 ## Documentation
 
 - [Introduction](https://webspatial.dev/docs/introduction)
-- [Quick Example](https://webspatial.dev/docs/quick-start)
+- [Quick Example](https://webspatial.dev/docs/quick-example)
 - [Core Concepts](https://webspatial.dev/docs/core-concepts)
 - [Development Guide](https://webspatial.dev/docs/development-guide)
