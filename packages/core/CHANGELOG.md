@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 0.1.23
+
+### Patch Changes
+
+- 3a42a35: Fixed the issue where the default version number of the native was “PACKAGE_VERSION” and the client got the version incorrectly
+
 ## 0.1.22
 
 ## 0.1.21
