@@ -3,6 +3,7 @@ import { runWebSpatialBuilder } from './websptial-builder-utils'
 import { AddressInfo } from 'node:net'
 import { AsyncPromise } from '../utils/AsyncPromise'
 import { assert } from 'chai'
+import { postResultToLark } from '../src/api.ts'
 const fail = assert.fail
 
 describe('E2E Test For Webspatial SDK', function () {
@@ -29,6 +30,10 @@ describe('E2E Test For Webspatial SDK', function () {
 
       // wait for mocha result finished
       const result = await promise.waitFinish()
+
+      if (process.env.pingLark) {
+        postResultToLark(result)
+      }
       const hasError = result.failures.length > 0
       if (hasError) {
         console.error('Failures', result.failures)
