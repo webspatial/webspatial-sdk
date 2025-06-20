@@ -78,5 +78,5 @@ jobs:
           body: |
             This pull request was created automatically by GitHub Actions.
             It merges the latest release from `main` into `stable`.
-          branch: "sync-main-to-stable"
+          branch: "main"
           base: "stable"
