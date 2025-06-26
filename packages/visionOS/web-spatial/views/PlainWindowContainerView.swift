@@ -17,32 +17,6 @@ struct PlainWindowContainerView: View {
             )
     }
 
-    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
-        sceneDelegate.window?.windowScene?
-            .requestGeometryUpdate(
-                .Vision(
-                    resizingRestrictions: resizingRestrictions
-                )
-            )
-    }
-
-    private func setResizeRange(resizeRange: ResizeRange) {
-        sceneDelegate.window?.windowScene?
-            .requestGeometryUpdate(
-                .Vision(
-                    minimumSize: CGSize(
-                        width: resizeRange.minWidth ?? 0,
-                        height: resizeRange
-                            .minHeight ?? 0
-                    ),
-                    maximumSize: CGSize(
-                        width: resizeRange.maxWidth ?? .infinity,
-                        height: resizeRange.maxHeight ?? .infinity
-                    )
-                )
-            )
-    }
-
     var body: some View {
         OpenDismissHandlerUI().environment(windowContainerContent).onDisappear {
             windowContainerContent.destroy()
@@ -89,17 +63,6 @@ struct PlainWindowContainerView: View {
             }
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
-            }
-            .onAppear {
-                let wd = WindowContainerMgr.Instance.getValue()
-                if let range = wd.resizeRange {
-                    self.setResizeRange(resizeRange: range)
-                    if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
-                        self.setResizibility(resizingRestrictions: .none)
-                    } else {
-                        self.setResizibility(resizingRestrictions: .freeform)
-                    }
-                }
             }
             .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized

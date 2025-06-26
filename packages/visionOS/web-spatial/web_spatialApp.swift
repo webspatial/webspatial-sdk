@@ -56,14 +56,23 @@ struct web_spatialApp: App {
             let wg = SpatialWindowContainer.getOrCreateSpatialWindowContainer(
                 windowData.windowContainerID, windowData
             )
+            let rr = windowData.formattedResizeRange()
+
             PlainWindowContainerView().environment(wg)
+                .frame(
+                    minWidth: rr.minWidth,
+                    maxWidth: rr.maxWidth,
+                    minHeight: rr.minHeight,
+                    maxHeight: rr.maxHeight
+                )
             // https://stackoverflow.com/questions/78567737/how-to-get-initial-windowgroup-to-reopen-on-launch-visionos
 //                    .handlesExternalEvents(preferring: [], allowing: [])
         }
         defaultValue: {
             let windowData = WindowContainerData(
                 windowStyle: "Plain",
-                windowContainerID: SpatialWindowContainer.getRootID()
+                windowContainerID: SpatialWindowContainer.getRootID(),
+                resizeRange: nil
             )
 
             // Initialize entity and webview for deafult value
@@ -116,7 +125,8 @@ struct web_spatialApp: App {
         }.defaultSize(
             getDefaultSize()
         ).windowResizability(
-            wgm.getValue().windowResizability!
+            .contentSize
+            // wgm.getValue().windowResizability!
         )
 
         WindowGroup(id: "Volumetric", for: WindowContainerData.self) { $windowData in

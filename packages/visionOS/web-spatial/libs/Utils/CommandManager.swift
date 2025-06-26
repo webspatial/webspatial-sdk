@@ -516,7 +516,9 @@ class CommandManager {
     private func createWindowContainer(target: SpatialWindowComponent, info: CommandInfo) {
         if let windowStyle: String = info.cmd.data!.windowStyle {
             let uuid = UUID().uuidString
-            let wgd = WindowContainerData(windowStyle: windowStyle, windowContainerID: uuid)
+            let wgd = WindowContainerData(windowStyle: windowStyle, windowContainerID: uuid,
+                                          // TODO: we should support set resizability in createWindowContainer/updateWindowContainer.
+                                          resizeRange: nil)
 
             // Force window container creation to happen now so it can be accessed after complete event returns
             _ = SpatialWindowContainer.getOrCreateSpatialWindowContainer(uuid, wgd)
