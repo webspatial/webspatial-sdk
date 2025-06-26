@@ -13,7 +13,8 @@ class SceneManager {
         // open window
         let wgd = WindowContainerData(
             windowStyle: "Plain",
-            windowContainerID: windowContainerID
+            windowContainerID: windowContainerID,
+            resizeRange: nil
         )
         let ent = SpatialEntity()
         ent.coordinateSpace = CoordinateSpaceMode.ROOT
@@ -63,6 +64,11 @@ class SceneManager {
                target.parentWindowContainerID
            )
         {
+            // set resizeRange
+            if let resizeRange = config.resizability {
+                wg.wgd.resizeRange = resizeRange
+            }
+
             WindowContainerMgr.Instance
                 .updateWindowContainerPlainDefaultValues(
                     plainDV

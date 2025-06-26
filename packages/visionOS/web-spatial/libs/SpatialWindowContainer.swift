@@ -146,7 +146,11 @@ extension SpatialWindowContainer {
             logger.warning("Immersive already created! ")
             return windowContainer
         }
-        let wgd = WindowContainerData(windowStyle: "ImmersiveSpace", windowContainerID: "ImmersiveSpace")
+        let wgd = WindowContainerData(
+            windowStyle: "ImmersiveSpace",
+            windowContainerID: "ImmersiveSpace",
+            resizeRange: nil
+        )
         return SpatialWindowContainer(ImmersiveID, wgd)
     }
 }
