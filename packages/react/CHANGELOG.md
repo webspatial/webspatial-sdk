@@ -1,5 +1,11 @@
 # @webspatial/react-sdk
 
+## 0.1.24
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.24
+
 ## 0.1.23
 
 ### Patch Changes
