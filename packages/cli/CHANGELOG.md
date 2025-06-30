@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 0.1.24
+
+### Patch Changes
+
+- 6b84f95: config default manifest params
+  - @webspatial/platform-visionos@0.1.24
+
 ## 0.1.23
 
 ### Patch Changes
