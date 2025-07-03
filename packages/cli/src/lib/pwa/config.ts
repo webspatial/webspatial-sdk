@@ -141,7 +141,7 @@ export function configMainScene(manifestJson: Record<string, any>) {
       width: 1280,
       height: 1280,
     },
-    resizability: 'automatic',
+    resizability: 'nil',
   }
   if (manifestJson.xr_main_scene) {
     if (typeof manifestJson.xr_main_scene === 'object') {
@@ -157,7 +157,7 @@ export function configMainScene(manifestJson: Record<string, any>) {
         manifestJson.xr_main_scene.resizability,
       )
         ? manifestJson.xr_main_scene.resizability
-        : 'automatic'
+        : 'nil'
 
       manifestJson.mainScene = mainScene
     } else if (typeof manifestJson.xr_main_scene === 'string') {
