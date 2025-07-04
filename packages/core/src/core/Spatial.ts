@@ -24,6 +24,7 @@ export class Spatial {
    * @returns true if web spatial is supported by this webpage
    */
   isSupported() {
+    // todo: enhance judgement
     return this.getNativeVersion() === this.getClientVersion()
   }
 
