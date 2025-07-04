@@ -1,4 +1,5 @@
 import { forwardRef, useMemo, useContext } from 'react'
+import { createPortal } from 'react-dom'
 import {
   SpatialReactComponentProps,
   SpatialReactComponentRef,
@@ -15,6 +16,7 @@ import { SpatialIsStandardInstanceContext } from './SpatialIsStandardInstanceCon
 import { SpatialID } from './const'
 import { SpatialLayerContext } from './SpatialLayerContext'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
+import { SpatialPortalContext } from './SpatialPortalContext'
 
 function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
   const {
@@ -41,7 +43,17 @@ function renderWebReactComponent(
 ) {
   const { componentDesc, props } = parseProps(inProps)
   const { El } = componentDesc
-  return <El {...props} ref={ref} />
+
+  const spatialPortalContext = useContext(SpatialPortalContext)
+  if (spatialPortalContext) {
+    return createPortal(
+      <El {...props} ref={ref} />,
+      spatialPortalContext.container,
+      spatialPortalContext.key,
+    )
+  } else {
+    return <El {...props} ref={ref} />
+  }
 }
 
 function renderSpatialReactComponent(

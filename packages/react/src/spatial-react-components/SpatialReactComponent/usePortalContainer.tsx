@@ -6,6 +6,8 @@ import { SpatialWindowManagerContext } from './SpatialWindowManagerContext'
 import { useForceUpdate } from '../hooks/useForceUpdate'
 
 type PortalContainerOption = {
+  inSpatialPortalContext?: boolean
+
   onContainerSpawned: (
     spatialWindowManager: SpatialWindowManager,
   ) => Promise<any>
@@ -33,7 +35,11 @@ export function usePortalContainer(options: PortalContainerOption) {
 
       // Create spatial window
       let windowMgr = new SpatialWindowManager({
-        parentSpatialWindowManager: parentSpatialWindowManager || undefined,
+        // if inSpatialPortalContext is true, then the new entity should be created in the root
+        // don't support createPortal in another spatialdiv
+        parentSpatialWindowManager: options.inSpatialPortalContext
+          ? undefined
+          : parentSpatialWindowManager || undefined,
       })
       await windowMgr.initFromWidow()
 
