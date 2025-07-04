@@ -2,9 +2,10 @@ import {
   BackgroundMaterialType,
   CornerRadius,
   SpatialComponent,
-  SpatialEntity,
+  //   SpatialEntity,
   SpatialMeshResource,
   SpatialModelComponent,
+  SpatialModelDragEvent,
   Vec3,
   Vec4,
 } from '../dist'
@@ -76,6 +77,12 @@ class SpatializedElement extends SpatialObject {
    */
   async setVisible(visible: boolean) {}
 
+  /**
+   * Defaults to false. If set to true, scrolling the parent page will also scroll this window with it like other dom elements
+   * @param scrollWithParent value to set
+   */
+  async setScrollWithParent(scrollWithParent: boolean) {}
+
   async removeFromParent() {}
 }
 
@@ -104,12 +111,6 @@ class Spatialized2DElement extends SpatializedElement {
   async setScrollEnabled(enabled: boolean) {}
 
   /**
-   * Defaults to false. If set to true, scrolling the parent page will also scroll this window with it like other dom elements
-   * @param scrollWithParent value to set
-   */
-  async setScrollWithParent(scrollWithParent: boolean) {}
-
-  /**
    * Syncs the zIndex with the renderer
    */
   async updateZIndex(zIndex: number) {}
@@ -129,12 +130,45 @@ class SpatializedModel3DElement extends SpatializedElement {
    * @param aspectRatio number
    */
   async setAspectRatio(aspectRatio: number) {}
+
+  /**
+   * Sets whether the model appear in original size or fit the rect
+   * @param resizable
+   */
+  async setResizable(resizable: boolean) {}
+
+  /**
+   * Callback fired when model was dragged
+   * @param dragEvent
+   */
+  set onDrag(
+    callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
+  ) {}
+
+  /**
+   * Callback fired when model was dragged at the ending
+   * @param dragEvent
+   */
+  set onDragEnd(
+    callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
+  ) {}
+
+  /**
+   * Callback fired when model was tapped
+   */
+  public set onTap(callback: (() => void) | undefined) {}
+
+  /** Callback fired when model was double tapped */
+  public set onDoubleTap(callback: (() => void) | undefined) {}
+
+  /** Callback fired when model was long pressed */
+  public set onLongPress(callback: (() => void) | undefined) {}
 }
 
 /**
  * Entity used to describe an object that can be added to the scene
  */
-export class SpatialEntityPlus extends SpatialObject {
+export class SpatialEntity extends SpatialObject {
   /**
    * Transform corresponding to the entity
    * note: updateTransform must be called for transform to be synced to rendering
