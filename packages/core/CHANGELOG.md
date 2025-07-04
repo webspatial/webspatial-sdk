@@ -1,5 +1,15 @@
 # @webspatial/core-sdk
 
+## 1.0.0
+
+### Major Changes
+
+- bfb72fc: first major version
+
+### Patch Changes
+
+- bc1fcc1: support initScene with resizeRange
+
 ## 0.1.23
 
 ### Patch Changes

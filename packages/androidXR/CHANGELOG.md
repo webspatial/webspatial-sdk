@@ -1,5 +1,7 @@
 # @webspatial/platform-androidxrapp
 
+## 1.0.0
+
 ## 0.1.23
 
 ## 0.1.22
