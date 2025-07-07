@@ -116,6 +116,7 @@ class Spatialized2DElement extends SpatializedElement {
   async updateZIndex(zIndex: number) {}
 }
 
+// lack model url
 class SpatializedModel3DElement extends SpatializedElement {
   /**
    * Sets how the model fill the rect
@@ -230,6 +231,8 @@ interface SpatialScene {
 
   setCornerRadius(cornerRadius: number | CornerRadius): Promise<void>
 
+  close(): Promise<void>
+
   // for debug
   _inspect(): Promise<SpatialSceneInfo>
   _getSpatializedElement(uuid: String): Promise<SpatializedElement>
@@ -242,6 +245,29 @@ enum SpatialSceneStatus {
 }
 
 type ProgressUpdateHandler = (status: SpatialSceneStatus, reason: string) => {}
+
+interface SceneOption {
+  url?: string
+  target?: string
+  features?: string
+
+  spatialConfig: {
+    // ??
+    windowStyle: 'Plain' | 'Volumetric'
+
+    defaultSize?: {
+      width: number // Initial width of the window
+      height: number // Initial height of the window
+    }
+
+    resizability?: {
+      minWidth?: number
+      minHeight?: number
+      maxWidth?: number
+      maxHeight?: number
+    }
+  }
+}
 
 interface SpatialSession {
   getSpatialScene(): Promise<SpatialScene>
@@ -257,6 +283,9 @@ interface SpatialSession {
   //  Todo: @fukang
   createMeshResource(): Promise<SpatialMeshResource>
 
-  // used to open a new SpatialScene, but return scene's WindowProxy
-  createSpatialScene(progressUpdate: ProgressUpdateHandler): WindowProxy // @wangyang need to consider it more seirousely
+  // used to open a new SpatialScene, but return scene's WindowProxy, will post Scene Created Events
+  createSpatialScene(
+    sceneOption: SceneOption,
+    progressUpdate: ProgressUpdateHandler,
+  ): WindowProxy
 }
