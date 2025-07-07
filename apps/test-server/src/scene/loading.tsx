@@ -12,7 +12,6 @@ window.xrCurrentSceneDefaults = async () => {
       width: 900,
       height: 900,
     },
-    resizability: 'contentSize',
   }
 }
 
