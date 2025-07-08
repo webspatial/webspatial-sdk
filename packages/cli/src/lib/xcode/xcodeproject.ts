@@ -304,18 +304,18 @@ export default class XcodeProject {
       )
     }
 
-    if (typeof manifest.mainScene === 'object') {
+    if (typeof manifest.xr_main_scene === 'object') {
       manifestSwift = manifestSwift.replace(
         'SceneWidth',
-        manifest.mainScene.defaultSize.width,
+        manifest.xr_main_scene.defaultSize.width,
       )
       manifestSwift = manifestSwift.replace(
         'SceneHeight',
-        manifest.mainScene.defaultSize.height,
+        manifest.xr_main_scene.defaultSize.height,
       )
       manifestSwift = manifestSwift.replace(
         'SceneResizability',
-        `"${manifest.mainScene.resizability}"`,
+        `${manifest.xr_main_scene.resizability ? JSON.stringify(manifest.xr_main_scene.resizability) : 'nil'}`,
       )
       manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'true')
     } else {
