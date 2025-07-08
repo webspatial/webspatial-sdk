@@ -89,6 +89,9 @@ export default class CliHistory {
     obj1: Record<string, any>,
     obj2: Record<string, any>,
   ): boolean {
+    if (obj1 === null || obj2 === null) {
+      return false
+    }
     // 1. Check if the number of properties is the same
     const keys1 = Object.keys(obj1)
     const keys2 = Object.keys(obj2)
