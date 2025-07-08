@@ -304,28 +304,18 @@ export default class XcodeProject {
       )
     }
 
-    if (typeof manifest.xr_main_scene === 'object') {
-      manifestSwift = manifestSwift.replace(
-        'SceneWidth',
-        manifest.xr_main_scene.defaultSize.width,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneHeight',
-        manifest.xr_main_scene.defaultSize.height,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneResizability',
-        `${manifest.xr_main_scene.resizability ? JSON.stringify(manifest.xr_main_scene.resizability) : 'nil'}`,
-      )
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'true')
-    } else {
-      // string or other type
-      // set these to bypass lint
-      manifestSwift = manifestSwift.replace('SceneWidth', '1280')
-      manifestSwift = manifestSwift.replace('SceneHeight', '1280')
-      manifestSwift = manifestSwift.replace('SceneResizability', `nil`)
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'false')
-    }
+    manifestSwift = manifestSwift.replace(
+      'SceneWidth',
+      manifest.xr_main_scene.defaultSize.width,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneHeight',
+      manifest.xr_main_scene.defaultSize.height,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneResizability',
+      `${manifest.xr_main_scene.resizability ? JSON.stringify(manifest.xr_main_scene.resizability) : 'nil'}`,
+    )
 
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }
