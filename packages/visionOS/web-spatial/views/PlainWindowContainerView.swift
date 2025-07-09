@@ -96,10 +96,9 @@ struct PlainWindowContainerView: View {
             }
             .onAppear {
                 let wd = WindowContainerMgr.Instance.getValue()
-                print("wd:", wd)
                 if let range = wd.resizeRange {
                     self.setResizeRange(resizeRange: range)
-                    if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                    if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
                         self.setResizibility(resizingRestrictions: .none)
                     } else {
                         self.setResizibility(resizingRestrictions: .freeform)
