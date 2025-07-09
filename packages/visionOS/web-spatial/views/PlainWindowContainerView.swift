@@ -27,20 +27,24 @@ struct PlainWindowContainerView: View {
     }
 
     private func setResizeRange(resizeRange: ResizeRange) {
-        sceneDelegate.window?.windowScene?
-            .requestGeometryUpdate(
-                .Vision(
-                    minimumSize: CGSize(
-                        width: resizeRange.minWidth ?? 0,
-                        height: resizeRange
-                            .minHeight ?? 0
-                    ),
-                    maximumSize: CGSize(
-                        width: resizeRange.maxWidth ?? .infinity,
-                        height: resizeRange.maxHeight ?? .infinity
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
                     )
-                )
-            )
+                ) { error in
+                    print("error:", error)
+                }
+        }
     }
 
     var body: some View {
@@ -92,6 +96,7 @@ struct PlainWindowContainerView: View {
             }
             .onAppear {
                 let wd = WindowContainerMgr.Instance.getValue()
+                print("wd:", wd)
                 if let range = wd.resizeRange {
                     self.setResizeRange(resizeRange: range)
                     if (range.minWidth != nil || range.minWidth != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
