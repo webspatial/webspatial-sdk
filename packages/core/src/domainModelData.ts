@@ -1,9 +1,41 @@
-import {
-  BackgroundMaterialType,
-  CornerRadius,
-  SpatialTransform,
-  Vec3,
-} from '../dist'
+type BackgroundMaterialType =
+  | 'none'
+  | 'translucent'
+  | 'thick'
+  | 'regular'
+  | 'thin'
+  | 'transparent'
+
+type CornerRadius = {
+  topLeading: number
+  bottomLeading: number
+  topTrailing: number
+  bottomTrailing: number
+}
+
+type Vec2 = {
+  x: number
+  y: number
+}
+
+type Vec3 = {
+  x: number
+  y: number
+  z: number
+}
+
+type Vec4 = {
+  x: number
+  y: number
+  z: number
+  w: number
+}
+
+type SpatialTransform = {
+  position: Vec3
+  orientation: Vec4
+  scale: Vec3
+}
 
 // inspect return value
 
@@ -12,16 +44,10 @@ interface SpatialObjectData {
   name: string
 }
 
-interface ProtocolDefData {
-  url: string
-  protocol: string
-}
-
 interface SpatialAppData {
   displayMode: string
   startUrl: string
   scope: string
-  protocolDefinition: Array<ProtocolDefData>
 }
 
 interface SpatialSceneData extends SpatialObjectData {
@@ -40,17 +66,19 @@ interface SpatialSceneData extends SpatialObjectData {
   spatialized2DElement: Array<Spatialized2DElementData>
   spatializedModel3DElement: Array<SpatializedModel3DElementData>
   spatializedDynamic3DElement: Array<SpatializedDynamic3DElementData>
+
+  offset: Vec2
 }
 
 interface SpatializedElementData extends SpatialObjectData {
-  width: Number
-  height: Number
+  width: number
+  height: number
   transform: SpatialTransform
   rotationAnchor: Vec3
   opacity: number
   visible: boolean
 
-  parent: String
+  parent: string
 }
 
 interface SpatializedModel3DElementData extends SpatializedElementData {
@@ -68,6 +96,8 @@ interface Spatialized2DElementData extends SpatializedElementData {
 
   scrollEnabled: boolean
   zIndex: number
+
+  offset: Vec2
 }
 
 interface SpatialComponentData extends SpatialObjectData {
