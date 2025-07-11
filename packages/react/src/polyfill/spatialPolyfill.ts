@@ -85,8 +85,7 @@ async function setHtmlVisible(visible: boolean) {
 function checkHtmlVisible() {
   const computedStyle = getComputedStyle(document.documentElement)
   const visibility = computedStyle.getPropertyValue('visibility') !== 'hidden'
-  const widthGtZero = parseFloat(computedStyle.getPropertyValue('width')) > 0
-  setHtmlVisible(visibility && widthGtZero)
+  setHtmlVisible(visibility)
 }
 
 function hijackDocumentElementStyle() {
@@ -195,6 +194,11 @@ function monitorHTMLAttributeChange() {
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['style', 'class'],
+  })
+
+  // some css may still loading, need to checkCSSProperties after all window document loaded
+  window.addEventListener('load', () => {
+    checkCSSProperties()
   })
 }
 

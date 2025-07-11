@@ -25,7 +25,7 @@ export class XcodeManager {
     if (option['u'] && option['p']) {
       // use username, password
       Xcrun.uploadApp(
-        join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
+        '"' + join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`) + '"',
         option['u'],
         option['p'],
         true,
@@ -33,7 +33,7 @@ export class XcodeManager {
     } else if (option['k'] && option['i']) {
       // use apiKey, apiIssuer
       Xcrun.uploadApp(
-        join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`),
+        '"' + join(PROJECT_EXPORT_DIRECTORY, `${appInfo.name}.ipa`) + '"',
         option['k'],
         option['i'],
         false,

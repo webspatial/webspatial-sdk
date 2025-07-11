@@ -125,7 +125,6 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                 // backward/forward
                 webViewRef?.didNavBackForward()
             }
-            webViewRef?.navInfo.url = resource
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)
@@ -211,6 +210,34 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             wg.updateFrame = !(wg.updateFrame)
         }
     }
+
+    private var isObserving = false
+    func startObserving(webView: WKWebView) {
+        guard !isObserving else { return }
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
+        isObserving = true
+    }
+
+    func stopObserving(webView: WKWebView) {
+        guard isObserving else { return }
+        webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        isObserving = false
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of object: Any?,
+        change: [NSKeyValueChangeKey: Any]?,
+        context: UnsafeMutableRawPointer?
+    ) {
+        if keyPath == #keyPath(WKWebView.url),
+           let url = (object as? WKWebView)?.url?.absoluteString
+        {
+            DispatchQueue.main.async {
+                self.webViewRef?.navInfo.url = url
+            }
+        }
+    }
 }
 
 struct WebViewNative: UIViewRepresentable {
@@ -250,6 +277,7 @@ struct WebViewNative: UIViewRepresentable {
                 myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "file")
             }
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
+            webViewHolder.webViewCoordinator!.startObserving(webView: webViewHolder.appleWebView!)
             let configUA = myConfig.applicationNameForUserAgent as? String ?? ""
 
             // change webview ua
@@ -283,6 +311,10 @@ struct WebViewNative: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         initialLoad()
+    }
+
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        coordinator.stopObserving(webView: uiView)
     }
 }
 

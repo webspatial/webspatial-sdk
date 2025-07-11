@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/platform-androidxrapp",
-  "version": "0.1.22",
+  "version": "1.0.0",
   "private": true,
   "files": [
     "webspatiallib",

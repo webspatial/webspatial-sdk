@@ -323,7 +323,7 @@ export default class XcodeProject {
       // set these to bypass lint
       manifestSwift = manifestSwift.replace('SceneWidth', '1280')
       manifestSwift = manifestSwift.replace('SceneHeight', '1280')
-      manifestSwift = manifestSwift.replace('SceneResizability', `"automatic"`)
+      manifestSwift = manifestSwift.replace('SceneResizability', `nil`)
       manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'false')
     }
 
