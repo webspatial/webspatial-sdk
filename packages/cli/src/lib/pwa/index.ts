@@ -97,7 +97,10 @@ export class PWAGenerator {
   }
 
   private static compareManifest(manifest: Record<string, any>) {
-    manifest.name = manifest.name ?? this.defaultManifestJson.name
+    manifest.name =
+      manifest.name && manifest.name.length > 0
+        ? manifest.name
+        : this.defaultManifestJson.name
     manifest.display = manifest.display ?? this.defaultManifestJson.display
     manifest.start_url =
       manifest.start_url ?? this.defaultManifestJson.start_url

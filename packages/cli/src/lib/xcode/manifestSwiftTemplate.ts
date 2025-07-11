@@ -23,7 +23,6 @@ struct PWAManager: Codable {
         ),
         resizability: SceneResizability
     )
-    var useMainScene: Bool = USE_MAIN_SCENE
     private var version: String = "PACKAGE_VERSION"
 
     mutating func _init() {
