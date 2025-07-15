@@ -94,6 +94,9 @@ struct PlainWindowContainerView: View {
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
             }
+            .onReceive(windowContainerContent.setResizeRange) { resizeRange in
+                self.setResizeRange(resizeRange: resizeRange)
+            }
             .onAppear {
                 let wd = WindowContainerMgr.Instance.getValue()
                 if let range = wd.resizeRange {
