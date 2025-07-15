@@ -54,17 +54,17 @@ export async function run(args: any) {
     If it is the same, it will be defaulted as already compiled, and the compilation will be skipped and the application will be launched directly.
   */
   // fixme: the cache not invalidate when npm version change
-  // if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
-  //   // If this command is a new command, go through the build process; otherwise, go through the launch process
-  //   if (
-  //     CliHistory.checkManifest(manifestInfo.json) &&
-  //     CliHistory.checkTestAppIsExist()
-  //   ) {
-  //     console.log('Same as the previous record')
-  //     await XcodeManager.runWithHistory()
-  //     return
-  //   }
-  // }
+  if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
+    // If this command is a new command, go through the build process; otherwise, go through the launch process
+    if (
+      CliHistory.checkManifest(manifestInfo.json) &&
+      CliHistory.checkTestAppIsExist()
+    ) {
+      console.log('Same as the previous record')
+      await XcodeManager.runWithHistory()
+      return
+    }
+  }
   ResourceManager.pullPlatformModule(args['platform'])
   const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
   await doXcode(args, icon, manifestInfo, true)
