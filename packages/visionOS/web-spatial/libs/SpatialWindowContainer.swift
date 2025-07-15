@@ -76,6 +76,7 @@ class SpatialWindowContainer: SpatialObject {
     var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
 
     var setSize = PassthroughSubject<CGSize, Never>()
+    var setResizeRange = PassthroughSubject<ResizeRange, Never>()
 
     var updateFrame = false
     var openWindowData = PassthroughSubject<WindowContainerData, Never>()
