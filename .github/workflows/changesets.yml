@@ -20,6 +20,8 @@ jobs:
     if: github.repository == 'webspatial/webspatial-sdk'
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
