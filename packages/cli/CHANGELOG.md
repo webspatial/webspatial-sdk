@@ -1,5 +1,12 @@
 # @webspatial/builder
 
+## 1.0.1
+
+### Patch Changes
+
+- b882515: fix resizability config
+  - @webspatial/platform-visionos@1.0.1
+
 ## 1.0.0
 
 ### Patch Changes
