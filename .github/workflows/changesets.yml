@@ -9,7 +9,7 @@ permissions:
 on:
   push:
     branches:
-      - main
+      - stable
 
 env:
   CI: true
@@ -69,14 +69,34 @@ jobs:
 
           # push tags
           git push origin "$tag"
-      - name: Create or update Pull Request to stable
-        if: steps.changesets.outputs.published == 'true'
+
+  sync_main:
+    name: Sync stable to main
+    needs: version
+    if: needs.version.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          fetch-depth: 0
+
+      - name: Reset main to stable
+        run: |
+          git fetch origin stable
+          git reset --hard origin/stable
+
+      - name: Create sync PR
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "chore: sync main → stable"
-          title: "Merge main into stable"
+          commit-message: 'chore: sync stable → main'
+          title: 'Merge stable into main'
+          token: ${{ secrets.PAT_TOKEN }}
           body: |
             This pull request was created automatically by GitHub Actions.
-            It merges the latest release from `main` into `stable`.
-          branch: "main"
-          base: "stable"
+            It merges the latest release from `stable` into `main` again.
+          branch: 'stable-merge-main'
+          base: 'main'
+          labels: 'BranchAutoMerge'
+          delete-branch: true
