@@ -304,28 +304,27 @@ export default class XcodeProject {
       )
     }
 
-    if (typeof manifest.mainScene === 'object') {
-      manifestSwift = manifestSwift.replace(
-        'SceneWidth',
-        manifest.mainScene.defaultSize.width,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneHeight',
-        manifest.mainScene.defaultSize.height,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneResizability',
-        `"${manifest.mainScene.resizability}"`,
-      )
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'true')
-    } else {
-      // string or other type
-      // set these to bypass lint
-      manifestSwift = manifestSwift.replace('SceneWidth', '1280')
-      manifestSwift = manifestSwift.replace('SceneHeight', '1280')
-      manifestSwift = manifestSwift.replace('SceneResizability', `"automatic"`)
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'false')
+    manifestSwift = manifestSwift.replace(
+      'SceneWidth',
+      manifest.xr_main_scene.defaultSize.width,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneHeight',
+      manifest.xr_main_scene.defaultSize.height,
+    )
+    let res = 'nil'
+    const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+    if (manifest.xr_main_scene.resizability) {
+      res = 'ResizeRange('
+      for (var i = 0; i < resizabilities.length; i++) {
+        if (manifest.xr_main_scene.resizability[resizabilities[i]] >= 0) {
+          res += `${resizabilities[i]}: ${manifest.xr_main_scene.resizability[resizabilities[i]]},`
+        }
+      }
+      res = res.substring(0, res.length - 1)
+      res += ')'
     }
+    manifestSwift = manifestSwift.replace('SceneResizability', res)
 
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }

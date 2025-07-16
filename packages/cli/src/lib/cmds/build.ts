@@ -53,6 +53,7 @@ export async function run(args: any) {
     If the --tryWithoutBuild=true parameter is used, it will be judged whether it is the same as the previous command.
     If it is the same, it will be defaulted as already compiled, and the compilation will be skipped and the application will be launched directly.
   */
+  // fixme: the cache not invalidate when npm version change
   if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
     // If this command is a new command, go through the build process; otherwise, go through the launch process
     if (

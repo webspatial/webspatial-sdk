@@ -1,5 +1,21 @@
 # @webspatial/react-sdk
 
+## 1.0.0
+
+### Patch Changes
+
+- 4dc56c3: fix bug: when refresh page in safari tool, the page may be invisible occasionally
+- Updated dependencies [bfb72fc]
+- Updated dependencies [bc1fcc1]
+  - @webspatial/core-sdk@1.0.0
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [3a42a35]
+  - @webspatial/core-sdk@0.1.23
+
 ## 0.1.22
 
 ### Patch Changes

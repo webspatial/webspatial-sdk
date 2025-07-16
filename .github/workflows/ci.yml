@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - stable
   pull_request:
 
 env:
@@ -37,3 +38,16 @@ jobs:
       - name: Test changeset
         run: npx changeset version
       
+      - name: Report legacy status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              context: 'ci/github-actions',      
+              description: 'CI passed'
+            });

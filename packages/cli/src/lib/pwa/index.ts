@@ -26,7 +26,7 @@ export class PWAGenerator {
   private static defaultManifestJson = {
     name: 'WebSpatialTest',
     display: 'minimal-ui',
-    start_url: '/index.html',
+    start_url: '/',
     scope: '/',
   }
 
@@ -78,6 +78,8 @@ export class PWAGenerator {
       manifest = useDefault
         ? this.defaultManifestJson
         : await loadJsonFromDisk(url)
+      manifest =
+        isDev && !useDefault ? this.compareManifest(manifest) : manifest
       this.useDefaultManifestJson = useDefault
     }
     // check manifest.json
@@ -92,6 +94,18 @@ export class PWAGenerator {
       url,
       fromNet: isNetWeb,
     }
+  }
+
+  private static compareManifest(manifest: Record<string, any>) {
+    manifest.name =
+      manifest.name && manifest.name.length > 0
+        ? manifest.name
+        : this.defaultManifestJson.name
+    manifest.display = manifest.display ?? this.defaultManifestJson.display
+    manifest.start_url =
+      manifest.start_url ?? this.defaultManifestJson.start_url
+    manifest.scope = manifest.scope ?? this.defaultManifestJson.scope
+    return manifest
   }
 
   // generate manifest

@@ -9,7 +9,42 @@ struct PlainWindowContainerView: View {
     @State private var timer: Timer?
 
     private func setSize(size: CGSize) {
-        sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    size: size
+                )
+            )
+    }
+
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
+
+    private func setResizeRange(resizeRange: ResizeRange) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
+                    )
+                ) { error in
+                    print("error:", error)
+                }
+        }
     }
 
     var body: some View {
@@ -39,21 +74,39 @@ struct PlainWindowContainerView: View {
                         // Avoid showing webview until its loading completes
                         let wc = e.getComponent(SpatialWindowComponent.self)
                         let didFinishFirstLoad = wc != nil ? wc!.didFinishFirstLoad : false
-                        let needLimitSize = wc != nil ? (wc!.isRootWebview() && pwaManager.display != .fullscreen) : false
-                        let viewWidth = needLimitSize ? max(NavView.minWidth, width) : width
-                        let viewHeight = needLimitSize ? (height - NavView.navHeight) : height
-                        SpatialWebViewUI(viewWidth: viewWidth, viewHeight: viewHeight).environment(e)
-                            .frame(width: viewWidth, height: height).padding3D(.front, -100_000)
+                        SpatialWebViewUI().environment(e)
+                            .frame(width: width, height: height).padding3D(.front, -100_000)
                             .rotation3DEffect(Rotation3D(simd_quatf(ix: e.modelEntity.orientation.vector.x, iy: e.modelEntity.orientation.vector.y, iz: e.modelEntity.orientation.vector.z, r: e.modelEntity.orientation.vector.w)))
                             .position(x: x, y: y)
                             .offset(z: z)
                             .opacity(didFinishFirstLoad ? 1.0 : 0.0)
                             .animation(.linear(duration: 0.2), value: didFinishFirstLoad)
+                            .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
+                                if pwaManager.display != .fullscreen {
+                                    ZStack {
+                                        NavView(swc: wc, navInfo: wc!.navInfo).offset(y: -15)
+                                    }.frame(height: 100)
+                                }
+                            }
                     }
                 }
             }
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
+            }
+            .onReceive(windowContainerContent.setResizeRange) { resizeRange in
+                self.setResizeRange(resizeRange: resizeRange)
+            }
+            .onAppear {
+                let wd = WindowContainerMgr.Instance.getValue()
+                if let range = wd.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
+                }
             }
             .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized

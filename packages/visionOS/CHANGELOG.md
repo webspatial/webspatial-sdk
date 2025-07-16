@@ -1,5 +1,20 @@
 # @webspatial/platform-avp
 
+## 1.0.0
+
+### Patch Changes
+
+- 251e31f: add observe to listen WebView url changes
+- fa91d08: support fixed scene size and set resizeRange
+
+## 0.1.23
+
+### Patch Changes
+
+- b9fadd1: Move NavView to PlainWindowContainerView to make the structure more reasonable
+- 19754cd: update nav style
+- 36ee1ba: fix spatial div frame height
+
 ## 0.1.22
 
 ## 0.1.21
