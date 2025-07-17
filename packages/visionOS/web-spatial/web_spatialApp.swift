@@ -108,6 +108,9 @@ struct web_spatialApp: App {
                         }
                         // reset to mainScene size
                         wgm.setToMainSceneCfg()
+                        if let resizeRange = wgm.getValue().resizeRange {
+                            wc.setResizeRange.send(resizeRange)
+                        }
                         wc.setSize.send(getDefaultSize())
                     }
                 }
