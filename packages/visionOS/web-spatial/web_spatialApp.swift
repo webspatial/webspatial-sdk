@@ -20,7 +20,7 @@ let startURL = pwaManager.start_url
 var sceneStateChangedCB: ((Any) -> Void) = { _ in
 }
 
-@main
+// @main
 struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var initialLaunch = true
