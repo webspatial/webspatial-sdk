@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { useSpatialStyle } from './useSpatialStyle'
 import {
   SpatialReactComponent,
@@ -23,6 +24,13 @@ import {
   CSSSpatialRootContext,
   CSSSpatialRootContextObject,
 } from './CSSSpatialRootContext'
+
+//
+const cssParserDivContainer = document.createElement('div')
+window.addEventListener('load', () => {
+  cssParserDivContainer.style.position = 'absolute'
+  document.body.appendChild(cssParserDivContainer)
+})
 
 interface CSSSpatialComponentWithUniqueIDProps
   extends SpatialReactComponentProps {
@@ -69,6 +77,17 @@ function renderRootCSSSpatialComponent(
 
   const divRefClassName = className + ' ' + InjectClassName
 
+  const cssParserDom = createPortal(
+    <El
+      style={divRefStyle}
+      className={divRefClassName}
+      {...props}
+      ref={ref}
+      data-cssparser
+    />,
+    cssParserDivContainer,
+  )
+
   return (
     <CSSSpatialRootContext.Provider value={cssSpatialRootContextObject}>
       {ready && (
@@ -84,13 +103,7 @@ function renderRootCSSSpatialComponent(
         />
       )}
 
-      <El
-        style={divRefStyle}
-        className={divRefClassName}
-        {...props}
-        ref={ref}
-        data-cssparser
-      />
+      {cssParserDom}
     </CSSSpatialRootContext.Provider>
   )
 }
@@ -169,6 +182,11 @@ function renderInPortalInstance(
     cssSpatialRootContextObject.setCSSParserRef(cssSpatialID, ref.current)
   }, [ref.current])
 
+  const cssParserDom = createPortal(
+    <El style={divRefStyle} className={divRefClassName} {...props} ref={ref} />,
+    cssParserDivContainer,
+  )
+
   return (
     <>
       {ready && (
@@ -182,12 +200,7 @@ function renderInPortalInstance(
           debugShowStandardInstance={debugShowStandardInstance}
         />
       )}
-      <El
-        style={divRefStyle}
-        className={divRefClassName}
-        {...props}
-        ref={ref}
-      />
+      {cssParserDom}
     </>
   )
 }
