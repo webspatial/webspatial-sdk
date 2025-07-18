@@ -10,7 +10,7 @@ import CliHistory from '../utils/history'
 // build and export ipa
 export async function build(args: any) {
   console.log('------------------- parse start -------------------')
-  ResourceManager.checkPlatformPath(args['platform'])
+  ResourceManager.initPlatform(args['platform'])
   const manifestInfo = await doPwa(args)
   const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
   await doXcode(args, icon, manifestInfo)
@@ -21,7 +21,7 @@ export async function build(args: any) {
 
 // build and upload ipa to App Store Connect
 export async function store(args: any) {
-  ResourceManager.checkPlatformPath(args['platform'])
+  ResourceManager.initPlatform(args['platform'])
   checkStoreParams(args)
   /*
     There are two ways to upload ipa to App Store Connect:
@@ -43,8 +43,8 @@ export async function store(args: any) {
 export async function run(args: any) {
   const runCmd = JSON.stringify(args)
   CliHistory.init(runCmd)
+  ResourceManager.setupTempPath(args['platform'])
   console.log('------------------- parse start -------------------')
-  ResourceManager.checkPlatformPath(args['platform'])
   const manifestInfo = await doPwa(args, true)
   CliHistory.recordManifest(manifestInfo.json)
   /*
@@ -53,6 +53,7 @@ export async function run(args: any) {
     If the --tryWithoutBuild=true parameter is used, it will be judged whether it is the same as the previous command.
     If it is the same, it will be defaulted as already compiled, and the compilation will be skipped and the application will be launched directly.
   */
+  // fixme: the cache not invalidate when npm version change
   if (manifestInfo.fromNet || args['tryWithoutBuild'] === 'true') {
     // If this command is a new command, go through the build process; otherwise, go through the launch process
     if (
@@ -64,6 +65,7 @@ export async function run(args: any) {
       return
     }
   }
+  ResourceManager.pullPlatformModule(args['platform'])
   const icon = await doReadyProject(args['project'] ?? 'dist', manifestInfo)
   await doXcode(args, icon, manifestInfo, true)
   console.log('------------------- parse end -------------------')

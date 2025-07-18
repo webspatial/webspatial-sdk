@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import {
   BACK_APPICON_DIRECTORY,
+  LOGO_DIRECTORY,
   MIDDLE_APPICON_DIRECTORY,
   PROJECT_BUILD_DIRECTORY,
   PROJECT_DIRECTORY,
@@ -90,7 +91,7 @@ export default class XcodeProject {
     }
     this.updateExportOptions()
     if (option.icon) await this.bindIcon(option.icon)
-    this.bindManifestInfo(project, option.manifestInfo.json, isDev)
+    await this.bindManifestInfo(project, option.manifestInfo.json, isDev)
     if (option['version']) {
       this.updateVersion(project, option['version'])
     } else {
@@ -213,6 +214,15 @@ export default class XcodeProject {
       middleConfig.images[0]['filename'] = middleIconFileName
       await middleIcon.writeAsync(middleIconFullPath)
       await fs.writeFileSync(middleIconConfigPath, JSON.stringify(middleConfig))
+
+      const logoConfigDirectory = join(PROJECT_DIRECTORY, LOGO_DIRECTORY)
+      const logoConfigPath = join(logoConfigDirectory, 'Contents.json')
+      let logoConfig = await loadJsonFromDisk(logoConfigPath)
+      const logoFileName = 'logo.' + icon.getMIME().replace('image/', '')
+      const logoFullPath = join(logoConfigDirectory, logoFileName)
+      logoConfig.images[0]['filename'] = logoFileName
+      await icon.writeAsync(logoFullPath)
+      await fs.writeFileSync(logoConfigPath, JSON.stringify(logoConfig))
     }
   }
 
@@ -231,21 +241,21 @@ export default class XcodeProject {
     )
   }
 
-  private static bindManifestInfo(
+  private static async bindManifestInfo(
     xcodeProject: any,
     manifest: any,
     isDev: boolean = false,
   ) {
     xcodeProject.updateProductName(manifest.name)
     // set PRODUCT_BUNDLE_IDENTIFIER need ""
-    if (manifest.id && !isDev) {
+    if (manifest.id) {
       xcodeProject.updateBuildProperty(
         'PRODUCT_BUNDLE_IDENTIFIER',
         `"${manifest.id}"`,
       )
     }
     this.updateDeeplink(manifest.protocol_handlers ?? [])
-    this.modifySwift(manifest)
+    await this.modifySwift(manifest)
   }
 
   private static updateVersion(xcodeProject: any, version: string) {
@@ -262,12 +272,18 @@ export default class XcodeProject {
     fs.writeFileSync(infoPlistPath, newInfoPlist)
   }
 
-  private static modifySwift(manifest: any) {
+  private static async modifySwift(manifest: any) {
     const manifestSwiftPath = join(
       PROJECT_DIRECTORY,
       './web-spatial/libs/webView/manifest.swift',
     )
+    const xcodePackageJsonPath = join(PROJECT_DIRECTORY, 'package.json')
+    const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
     let manifestSwift = manifestSwiftTemplate
+    manifestSwift = manifestSwift.replace(
+      'PACKAGE_VERSION',
+      packageJson.version ?? '0.0.0',
+    )
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     manifestSwift = manifestSwift.replace('AppName', manifest.name)
@@ -288,28 +304,27 @@ export default class XcodeProject {
       )
     }
 
-    if (typeof manifest.mainScene === 'object') {
-      manifestSwift = manifestSwift.replace(
-        'SceneWidth',
-        manifest.mainScene.defaultSize.width,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneHeight',
-        manifest.mainScene.defaultSize.height,
-      )
-      manifestSwift = manifestSwift.replace(
-        'SceneResizability',
-        `"${manifest.mainScene.resizability}"`,
-      )
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'true')
-    } else {
-      // string or other type
-      // set these to bypass lint
-      manifestSwift = manifestSwift.replace('SceneWidth', '1280')
-      manifestSwift = manifestSwift.replace('SceneHeight', '1280')
-      manifestSwift = manifestSwift.replace('SceneResizability', `"automatic"`)
-      manifestSwift = manifestSwift.replace('USE_MAIN_SCENE', 'false')
+    manifestSwift = manifestSwift.replace(
+      'SceneWidth',
+      manifest.xr_main_scene.defaultSize.width,
+    )
+    manifestSwift = manifestSwift.replace(
+      'SceneHeight',
+      manifest.xr_main_scene.defaultSize.height,
+    )
+    let res = 'nil'
+    const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+    if (manifest.xr_main_scene.resizability) {
+      res = 'ResizeRange('
+      for (var i = 0; i < resizabilities.length; i++) {
+        if (manifest.xr_main_scene.resizability[resizabilities[i]] >= 0) {
+          res += `${resizabilities[i]}: ${manifest.xr_main_scene.resizability[resizabilities[i]]},`
+        }
+      }
+      res = res.substring(0, res.length - 1)
+      res += ')'
     }
+    manifestSwift = manifestSwift.replace('SceneResizability', res)
 
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }

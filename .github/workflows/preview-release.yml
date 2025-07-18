@@ -1,0 +1,39 @@
+name: Preview release
+
+permissions:
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+jobs:
+  preview:
+    if: >
+      github.repository == 'webspatial/webspatial-sdk' &&
+      (github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'trigger: preview')))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Use full git history to enable tagging
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      
+      - name: Install dependencies and build
+        run: pnpm run setup
+      
+      - run: pnpm dlx pkg-pr-new@0.0 publish --compact --pnpm ./packages/* --packageManager=pnpm

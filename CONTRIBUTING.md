@@ -56,6 +56,12 @@ npm run dev
    - You should now see webspatial running in the simulator
    - To set a custom initial URL, you can modify `manifest.swift`
 
+## Packages
+
+- [@webspatial/react-sdk](packages/react/README.md) - The React SDK makes the WebSpatial API immediately available inside React.
+- [@webspatial/core-sdk](packages/core/README.md) - The React SDK is implemented on top of the Core SDK, which is a framework-agnostic pure-JS API that enables the WebSpatial App Shell to natively spatialize 2D HTML content and render 3D content.
+- [@webspatial/builder](packages/cli/README.md) - The build tool transforms websites into Packaged WebSpatial Apps for debugging and distributing on spatial computing platforms.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
@@ -64,7 +70,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 This project uses the following third-party libraries:
 
-- [loglevel@1.9.2](https://github.com/pimterry/loglevel) - Licensed under the MIT
 - [tsup@8.4.0](https://github.com/egoist/tsup) - Licensed under the MIT
 - [typedoc-plugin-markdown@4.6.3](https://github.com/typedoc2md/typedoc-plugin-markdown) - Licensed under the MIT
 - [typedoc@0.26.11](https://github.com/TypeStrong/TypeDoc) - Licensed under the Apache-2.0

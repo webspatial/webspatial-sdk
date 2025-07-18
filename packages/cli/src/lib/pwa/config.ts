@@ -23,17 +23,16 @@ export function configStartUrl(
   isNet: boolean,
 ) {
   let start_url = manifestJson.start_url ?? '/'
+
   const isStartUrl = validateURL(start_url)
   const hasBase = base.length > 0
   if (hasBase) {
     const isBaseUrl = validateURL(base)
     if (!isStartUrl && !isBaseUrl) {
       const staticWebRoot = resolve('./static-web')
-      const resolvedPath = resolve(staticWebRoot, base, start_url)
+      const resolvedPath = join(base, start_url)
       const normalizedPath = normalize(resolvedPath)
-
       const safePath = join(staticWebRoot, normalizedPath)
-
       start_url = relative(process.cwd(), safePath)
         .replace(/^(\.\.\/)+/, './')
         .replace(/\/$/, '')
@@ -75,6 +74,15 @@ export function configStartUrl(
         .replace(/^(\.\.\/)+/, './')
         .replace(/\/$/, '')
     }
+  }
+
+  if (
+    !start_url.match(/\.html(\?|$)/) &&
+    !(start_url.startsWith('http://') || start_url.startsWith('https://'))
+  ) {
+    const [path, query] = start_url.split('?')
+    start_url = path.endsWith('/') ? `${path}index.html` : `${path}/index.html`
+    if (query) start_url += `?${query}`
   }
 
   return start_url
@@ -127,36 +135,41 @@ export function configDisplay(manifestJson: Record<string, any>) {
 }
 
 export function configMainScene(manifestJson: Record<string, any>) {
-  const resizabilities = ['automatic', 'contentMinSize', 'contentSize']
+  const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
   let mainScene = {
     defaultSize: {
       width: 1280,
       height: 1280,
     },
-    resizability: 'automatic',
+    resizability: {} as any,
   }
-  if (manifestJson.xr_main_scene) {
-    if (typeof manifestJson.xr_main_scene === 'object') {
-      mainScene.defaultSize.width =
-        Number(manifestJson.xr_main_scene.default_size?.width) > 0
-          ? manifestJson.xr_main_scene.default_size.width
-          : 1280
-      mainScene.defaultSize.height =
-        Number(manifestJson.xr_main_scene.default_size?.height) > 0
-          ? manifestJson.xr_main_scene.default_size.height
-          : 1280
-      mainScene.resizability = resizabilities.includes(
-        manifestJson.xr_main_scene.resizability,
-      )
-        ? manifestJson.xr_main_scene.resizability
-        : 'automatic'
-
-      manifestJson.mainScene = mainScene
-    } else if (typeof manifestJson.xr_main_scene === 'string') {
-      manifestJson.mainScene = 'dynamic' // only support this
+  let hasResizability = false
+  if (
+    manifestJson.xr_main_scene &&
+    typeof manifestJson.xr_main_scene === 'object'
+  ) {
+    mainScene.defaultSize.width =
+      Number(manifestJson.xr_main_scene.default_size?.width) > 0
+        ? manifestJson.xr_main_scene.default_size.width
+        : 1280
+    mainScene.defaultSize.height =
+      Number(manifestJson.xr_main_scene.default_size?.height) > 0
+        ? manifestJson.xr_main_scene.default_size.height
+        : 1280
+    if (typeof manifestJson.xr_main_scene.resizability === 'object') {
+      for (var i = 0; i < resizabilities.length; i++) {
+        if (manifestJson.xr_main_scene.resizability[resizabilities[i]] >= 0) {
+          hasResizability = true
+          mainScene.resizability[resizabilities[i]] =
+            manifestJson.xr_main_scene.resizability[resizabilities[i]]
+        }
+      }
     }
-    // other type like string should be ignored
   }
+  if (!hasResizability) {
+    mainScene.resizability = null
+  }
+  manifestJson.xr_main_scene = mainScene
 }
 
 export function configDeeplink(manifestJson: Record<string, any>) {

@@ -35,7 +35,9 @@ export class Spatial {
     if (window.__WebSpatialData && window.__WebSpatialData.getNativeVersion) {
       return window.__WebSpatialData.getNativeVersion()
     }
-    return window.WebSpatailNativeVersion
+    return window.WebSpatailNativeVersion === 'PACKAGE_VERSION'
+      ? this.getClientVersion()
+      : window.WebSpatailNativeVersion
   }
 
   /**

@@ -28,7 +28,6 @@ struct SpatialWebViewUI: View {
             let parentYOffset = Float(wv.scrollOffset.y)
 
             let childEntities = ent.getEntities()
-
             // Display child entities of the webview
             ZStack {
                 OptionalClip(clipEnabled: ent.coordinateSpace != .ROOT && wv.isScrollEnabled()) {
@@ -91,12 +90,10 @@ struct SpatialWebViewUI: View {
                                                     }
                                                     .onEnded { _ in
                                                         let scrollEnabled = view.isScrollEnabled()
-
                                                         if !scrollEnabled {
                                                             if let targetScrollWV = wv.findNearestScrollEnabledSpatialWindowComponent() {
                                                                 view.dragStarted = false
                                                                 view.dragStart = 0
-
                                                                 targetScrollWV.stopScrolling()
                                                             }
                                                         }
@@ -172,17 +169,11 @@ struct SpatialWebViewUI: View {
                             wv.backgroundMaterial,
                             wv.cornerRadius
                         )
-
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .opacity(wv.opacity)
             .hidden(!ent.visible)
-            .ornament(attachmentAnchor: .scene(.bottomTrailing), contentAlignment: .bottomTrailing) {
-                if wv.isRootWebview() && pwaManager.display != .fullscreen {
-                    NavView(swc: wv, navInfo: wv.navInfo)
-                }
-            }
         }
     }
 }

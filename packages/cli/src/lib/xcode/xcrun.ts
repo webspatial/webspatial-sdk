@@ -142,6 +142,10 @@ export default class Xcrun {
     console.log(`use simulator: ${device.deviceId}`)
     // launch visionOS simulator
     this.launchSimulator(device)
+    try{
+      this.terminateApp(device.deviceId, appInfo.id)
+    }
+    catch{}
     // install app
     console.log('installing app')
     this.installApp(PROJECT_TEST_DIRECTORY, device.deviceId, appInfo.name)
@@ -193,11 +197,19 @@ export default class Xcrun {
     try {
       const res = execSync(buildCMD)
       if (res.toString().includes('** BUILD FAILED **')) {
+        console.log(res.toString())
         return false
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log(e)
+      return false
+    }
     console.log('------------------- build end -------------------')
     return true
+  }
+
+  private static terminateApp(deviceId: string, appId: string) {
+    execSync(new XcrunCMD().simctl().terminate(deviceId, appId).line)
   }
 
   private static installApp(path: string, deviceId: string, appName: string) {

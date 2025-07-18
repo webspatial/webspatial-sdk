@@ -9,7 +9,7 @@ permissions:
 on:
   push:
     branches:
-      - main
+      - stable
 
 env:
   CI: true
@@ -17,13 +17,16 @@ env:
 
 jobs:
   version:
+    if: github.repository == 'webspatial/webspatial-sdk'
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Use full git history to enable tagging
+          fetch-depth: 0 # Use full git history to enable tagging
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,11 +35,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-      
+          cache: "pnpm"
+
       - name: Install dependencies and build
         run: pnpm run setup
-      
+
       - name: Create and publish versions
         id: changesets
         uses: changesets/action@v1
@@ -51,22 +54,51 @@ jobs:
       - name: Create and push Git tags for published packages
         if: steps.changesets.outputs.published == 'true'
         run: |
-          echo "Published packages: ${{ steps.changesets.outputs.publishedPackages }}"
           # Configure Git user
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Loop through each published package using jq (jq is pre-installed on ubuntu-latest)
-          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -c '.[]' | while read package; do
-            name=$(echo $package | jq -r '.name')
-            version=$(echo $package | jq -r '.version')
-            tag="${name}@${version}"
-            echo "Creating tag $tag"
-            # Check if the tag already exists
-            if git rev-parse "$tag" >/dev/null 2>&1; then
-              echo "Tag $tag already exists, skipping."
-            else
-              git tag "$tag"
-            fi
-          done
-          # Push all tags to the remote repository
-          git push --tags
+
+          # get version from publishedPackages JSON first element
+          version=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[0].version')
+          tag="v${version}"
+
+          echo "Creating tag $tag"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists, skipping."
+          else
+            git tag "$tag"
+          fi
+
+          # push tags
+          git push origin "$tag"
+
+  sync_main:
+    name: Sync stable to main
+    needs: version
+    if: needs.version.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          fetch-depth: 0
+
+      - name: Reset main to stable
+        run: |
+          git fetch origin stable
+          git reset --hard origin/stable
+
+      - name: Create sync PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore: sync stable → main'
+          title: 'Merge stable into main'
+          token: ${{ secrets.PAT_TOKEN }}
+          body: |
+            This pull request was created automatically by GitHub Actions.
+            It merges the latest release from `stable` into `main` again.
+          branch: 'stable-merge-main'
+          base: 'main'
+          labels: 'BranchAutoMerge'
+          delete-branch: true

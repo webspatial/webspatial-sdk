@@ -1,5 +1,74 @@
 # @webspatial/builder
 
+## 1.0.1
+
+### Patch Changes
+
+- b882515: fix resizability config
+  - @webspatial/platform-visionos@1.0.1
+
+## 1.0.0
+
+### Patch Changes
+
+- 6b84f95: config default manifest params
+- 524870a: App names that support uploading contain spaces
+- Updated dependencies [251e31f]
+- Updated dependencies [fa91d08]
+  - @webspatial/platform-visionos@1.0.0
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [b9fadd1]
+- Updated dependencies [19754cd]
+- Updated dependencies [36ee1ba]
+  - @webspatial/platform-visionos@0.1.23
+
+## 0.1.22
+
+### Patch Changes
+
+- 10e993a: Adjust the start_url verification logic
+  - @webspatial/platform-visionos@0.1.22
+
+## 0.1.21
+
+### Patch Changes
+
+- ac3b3e1: Fix the issue of incorrect scope configuration in offline environment
+  - @webspatial/platform-visionos@0.1.21
+
+## 0.1.20
+
+### Patch Changes
+
+- 8a99e49: Inject the version number using the CLI tool instead of loading package.json in native
+- c3aa903: Navigation using new style
+- dc16c7c: Fixed the issue where the icon under the run command did not meet the requirements and may result in an error
+- Updated dependencies [3c4acf0]
+- Updated dependencies [8a99e49]
+- Updated dependencies [c3aa903]
+  - @webspatial/platform-visionos@0.1.20
+
+## 0.1.19
+
+### Patch Changes
+
+- 3c52171: Modify the export path of the test package
+  - @webspatial/platform-visionos@0.1.19
+
+## 0.1.18
+
+### Patch Changes
+
+- ec0277b: fix scope setup when the web project is a offline project
+- Updated dependencies [bf6f9b3]
+- Updated dependencies [db957ab]
+- Updated dependencies [46f7f26]
+  - @webspatial/platform-visionos@0.1.18
+
 ## 0.1.17
 
 ### Patch Changes

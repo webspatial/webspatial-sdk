@@ -1,5 +1,85 @@
 # ci-test
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [b882515]
+  - @webspatial/builder@1.0.1
+  - @webspatial/core-sdk@1.0.1
+  - @webspatial/react-sdk@1.0.1
+
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies [6b84f95]
+- Updated dependencies [bfb72fc]
+- Updated dependencies [524870a]
+- Updated dependencies [bc1fcc1]
+- Updated dependencies [4dc56c3]
+  - @webspatial/builder@1.0.0
+  - @webspatial/core-sdk@1.0.0
+  - @webspatial/react-sdk@1.0.0
+
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [3a42a35]
+  - @webspatial/core-sdk@0.1.23
+  - @webspatial/builder@0.1.23
+  - @webspatial/react-sdk@0.1.23
+
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [10e993a]
+  - @webspatial/builder@0.1.22
+  - @webspatial/core-sdk@0.1.22
+  - @webspatial/react-sdk@0.1.22
+
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [ac3b3e1]
+  - @webspatial/builder@0.1.21
+  - @webspatial/core-sdk@0.1.21
+  - @webspatial/react-sdk@0.1.21
+
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [8a99e49]
+- Updated dependencies [c3aa903]
+- Updated dependencies [dc16c7c]
+  - @webspatial/builder@0.1.20
+  - @webspatial/core-sdk@0.1.20
+  - @webspatial/react-sdk@0.1.20
+
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [ec06fc2]
+- Updated dependencies [3c52171]
+  - @webspatial/react-sdk@0.1.19
+  - @webspatial/builder@0.1.19
+  - @webspatial/core-sdk@0.1.19
+
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [ec0277b]
+- Updated dependencies [126c45a]
+  - @webspatial/builder@0.1.18
+  - @webspatial/react-sdk@0.1.18
+  - @webspatial/core-sdk@0.1.18
+
 ## 0.0.4
 
 ### Patch Changes

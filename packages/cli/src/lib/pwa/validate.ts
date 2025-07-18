@@ -10,7 +10,11 @@ export function checkManifestJson(
   isDev: boolean = false,
 ) {
   const errors = []
-  if (!manifestJson.name && !manifestJson['short_name'] && !isDev) {
+  if (
+    (!manifestJson.name || manifestJson.name.length === 0) &&
+    !manifestJson['short_name'] &&
+    !isDev
+  ) {
     errors.push({
       code: 3006,
       message:
@@ -48,47 +52,18 @@ export function checkStartUrl(
   isNet: boolean,
   isDev: boolean = false,
 ): boolean {
-  var isNetWeb = false
   if (isDev) {
     return startUrl.startsWith('https://') || startUrl.startsWith('http://')
   }
-  if (isNet) {
-    // Determine whether it is of the same origin as the manifest
-    if (startUrl.startsWith('https://')) {
-      const urlStart: URL = new URL(startUrl)
-      const urlManifest: URL = new URL(manifestUrl)
-      // The start_url and manifest need to be of the same origin
-      if (urlStart.host !== urlManifest.host) {
-        throw new CustomError({
-          code: 4000,
-          // eslint-disable-next-line @typescript-eslint/camelcase
-          message:
-            'In the WebSpatial App Manifest, the start_url must be the same origin with manifest',
-          message_staring_params: {},
-        })
-      }
-    }
-    // Start_url must be HTTPS protocol
-    else if (startUrl.startsWith('http://')) {
-      throw new CustomError({
-        code: 4000,
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        message:
-          'In the Web Spatial App Manifest, the start_url must use https',
-        message_staring_params: {},
-      })
-    }
-  } else {
-    if (startUrl.startsWith('https://') || startUrl.startsWith('http://')) {
-      throw new CustomError({
-        code: 4000,
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        message: 'Local manifest cannot package network project',
-        message_staring_params: {},
-      })
-    }
+  if (startUrl.startsWith('http://')) {
+    throw new CustomError({
+      code: 4000,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      message: 'In the Web Spatial App Manifest, the start_url must use https',
+      message_staring_params: {},
+    })
   }
-  return isNetWeb
+  return startUrl.startsWith('https://')
 }
 
 export async function checkIcons(
@@ -190,9 +165,17 @@ export async function checkIcons(
   // Check if the image is completely opaque
   if (maxSizeImage && !ImageHelper.isFullyOpaque(maxSizeImage)) {
     if (isDev) {
+      manifest.icons = [
+        {
+          src: join(__dirname, '../../assets/icon-default.png'),
+          sizes: '1024x1024',
+          purpose: 'maskable',
+        },
+      ]
       CliLog.warn(
         'In the Web Spatial App on VisionPro, the icon must be greater than or equal to 1024x1024, and the purpose parameter must include maskable',
       )
+      CliLog.warn('No matching icon found, use default icon')
       return
     }
     throw new CustomError({

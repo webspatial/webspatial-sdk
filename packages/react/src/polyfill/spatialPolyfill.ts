@@ -85,8 +85,7 @@ async function setHtmlVisible(visible: boolean) {
 function checkHtmlVisible() {
   const computedStyle = getComputedStyle(document.documentElement)
   const visibility = computedStyle.getPropertyValue('visibility') !== 'hidden'
-  const widthGtZero = parseFloat(computedStyle.getPropertyValue('width')) > 0
-  setHtmlVisible(visibility && widthGtZero)
+  setHtmlVisible(visibility)
 }
 
 function hijackDocumentElementStyle() {
@@ -183,6 +182,26 @@ function hijackWindowOpen() {
   XRApp.getInstance().init()
 }
 
+function monitorHTMLAttributeChange() {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'attributes' && mutation.attributeName) {
+        checkCSSProperties()
+      }
+    })
+  })
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  })
+
+  // some css may still loading, need to checkCSSProperties after all window document loaded
+  window.addEventListener('load', () => {
+    checkCSSProperties()
+  })
+}
+
 export function spatialPolyfill() {
   if (!isWebSpatialEnv) {
     return
@@ -194,4 +213,5 @@ export function spatialPolyfill() {
   hijackGetComputedStyle()
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
+  monitorHTMLAttributeChange()
 }

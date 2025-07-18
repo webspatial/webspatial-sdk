@@ -11,7 +11,7 @@ let clock = PerfClock()
 let logger = Logger()
 
 // To load a local path, remove http:// eg.  "static-web/"
-let nativeAPIVersion = getPackageVersion()
+let nativeAPIVersion = pwaManager.getVersion()
 
 // start URL
 let startURL = pwaManager.start_url
@@ -100,12 +100,17 @@ struct web_spatialApp: App {
 
                         if let wv = rootEntity?.getComponent(SpatialWindowComponent.self) {
                             // remove the webview's name to behave like new opened root scene
-                            wv.removeWebviewName {
-                                wv.navigateToURL(url: fileUrl)
+                            if wv.getURL() != fileUrl {
+                                wv.removeWebviewName {
+                                    wv.navigateToURL(url: fileUrl)
+                                }
                             }
                         }
                         // reset to mainScene size
                         wgm.setToMainSceneCfg()
+                        if let resizeRange = wgm.getValue().resizeRange {
+                            wc.setResizeRange.send(resizeRange)
+                        }
                         wc.setSize.send(getDefaultSize())
                     }
                 }

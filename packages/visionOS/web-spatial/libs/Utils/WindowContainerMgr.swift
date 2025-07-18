@@ -16,6 +16,10 @@ struct WindowContainerData: Decodable, Hashable, Encodable {
     let windowContainerID: String
 }
 
+struct WindowContainerResizability: Decodable, Encodable {
+    let resizeRange: ResizeRange?
+}
+
 enum LoadingMethod: String, Decodable, Encodable, Hashable {
     case show
     case hide
@@ -29,6 +33,7 @@ struct LoadingWindowContainerData: Decodable, Hashable, Encodable {
 struct WindowContainerPlainDefaultValues {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?
+    var resizeRange: ResizeRange?
 }
 
 // support WindowContainerOptions => WindowContainerPlainDefaultValues
@@ -38,19 +43,28 @@ extension WindowContainerPlainDefaultValues {
             width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
             height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
         )
-        windowResizability = getWindowResizability(options.resizability)
+        windowResizability = getWindowResizability(nil)
+        resizeRange = options.resizability
     }
+}
+
+struct ResizeRange: Codable {
+    var minWidth: Double?
+    var minHeight: Double?
+    var maxWidth: Double?
+    var maxHeight: Double?
 }
 
 // incomming JSB data
 struct WindowContainerOptions: Codable {
     // windowContainer
     let defaultSize: Size?
-    let resizability: String?
     struct Size: Codable {
         var width: Double
         var height: Double
     }
+
+    let resizability: ResizeRange?
 }
 
 func getWindowResizability(_ windowResizability: String?) -> WindowResizability {
@@ -78,8 +92,9 @@ class WindowContainerMgr: ObservableObject {
     }
 
     private var wgSetting: WindowContainerPlainDefaultValues = .init(
-        defaultSize: CGSize(width: 1080, height: 720),
-        windowResizability: .automatic
+        defaultSize: CGSize(width: 1080, height: 720 + (pwaManager.display != .fullscreen ? NavView.navHeight : 0)),
+        windowResizability: .automatic,
+        resizeRange: nil
     )
 
     func getValue() -> WindowContainerPlainDefaultValues {
@@ -93,11 +108,15 @@ class WindowContainerMgr: ObservableObject {
     }
 
     func updateWindowContainerPlainDefaultValues(_ data: WindowContainerPlainDefaultValues) {
-        if let newSize = data.defaultSize {
+        if var newSize = data.defaultSize {
+            newSize.height += (pwaManager.display != .fullscreen ? NavView.navHeight : 0)
             wgSetting.defaultSize = newSize
         }
         if let newResizability = data.windowResizability {
             wgSetting.windowResizability = newResizability
+        }
+        if let newResizeRange = data.resizeRange {
+            wgSetting.resizeRange = newResizeRange
         }
     }
 }

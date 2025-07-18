@@ -1,5 +1,44 @@
 # @webspatial/platform-avp
 
+## 1.0.1
+
+## 1.0.0
+
+### Patch Changes
+
+- 251e31f: add observe to listen WebView url changes
+- fa91d08: support fixed scene size and set resizeRange
+
+## 0.1.23
+
+### Patch Changes
+
+- b9fadd1: Move NavView to PlainWindowContainerView to make the structure more reasonable
+- 19754cd: update nav style
+- 36ee1ba: fix spatial div frame height
+
+## 0.1.22
+
+## 0.1.21
+
+## 0.1.20
+
+### Patch Changes
+
+- 3c4acf0: Fixed the issue where the relative path page was empty when using a local project
+- 8a99e49: Inject the version number using the CLI tool instead of loading package.json in native
+- c3aa903: Navigation using new style
+
+## 0.1.19
+
+## 0.1.18
+
+### Patch Changes
+
+- bf6f9b3: reduce flicker on reopen
+- db957ab: Add the WebSpatial flag to the user agent of webview
+- 46f7f26: fix nav url not show when open a new page
+
 ## 0.1.17
 
 ## 0.1.16

@@ -125,7 +125,6 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
                 // backward/forward
                 webViewRef?.didNavBackForward()
             }
-            webViewRef?.navInfo.url = resource
             decisionHandler(.allow)
         } else {
             decisionHandler(.cancel)
@@ -163,19 +162,25 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        let url = navigationAction.request.url?.absoluteString ?? ""
-
-        if url != "webspatial://createWindowContext",
-           !pwaManager.checkInScope(url: url)
+        var resource = navigationAction.request.url!.absoluteString
+        if pwaManager.isLocal {
+            resource = pwaManager.getLocalResourceURL(url: resource)
+        }
+        if resource != "webspatial://createWindowContext",
+           !pwaManager.checkInScope(url: resource)
         {
             // open in safari
             UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
             return nil
         }
 
-        let wvNative = WebViewNative()
-
-        _ = wvNative.createResources(configuration: configuration)
+        var wvNative = WebViewNative()
+        var needsUpdate = false
+        if resource.starts(with: "file://") {
+            wvNative.url = URL(string: resource)!
+            needsUpdate = true
+        }
+        _ = wvNative.createResources(configuration: configuration, needsUpdate: needsUpdate)
 
         webViewRef!.didSpawnWebView(wv: wvNative)
 
@@ -205,6 +210,34 @@ class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUID
             wg.updateFrame = !(wg.updateFrame)
         }
     }
+
+    private var isObserving = false
+    func startObserving(webView: WKWebView) {
+        guard !isObserving else { return }
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
+        isObserving = true
+    }
+
+    func stopObserving(webView: WKWebView) {
+        guard isObserving else { return }
+        webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        isObserving = false
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of object: Any?,
+        change: [NSKeyValueChangeKey: Any]?,
+        context: UnsafeMutableRawPointer?
+    ) {
+        if keyPath == #keyPath(WKWebView.url),
+           let url = (object as? WKWebView)?.url?.absoluteString
+        {
+            DispatchQueue.main.async {
+                self.webViewRef?.navInfo.url = url
+            }
+        }
+    }
 }
 
 struct WebViewNative: UIViewRepresentable {
@@ -227,7 +260,7 @@ struct WebViewNative: UIViewRepresentable {
         return c
     }
 
-    func createResources(configuration: WKWebViewConfiguration? = nil) -> WKWebView {
+    func createResources(configuration: WKWebViewConfiguration? = nil, needsUpdate: Bool = false) -> WKWebView {
         if webViewHolder.appleWebView == nil {
             webViewHolder.webViewCoordinator = makeCoordinator()
             let userContentController = WKUserContentController()
@@ -244,6 +277,7 @@ struct WebViewNative: UIViewRepresentable {
                 myConfig.setURLSchemeHandler(webViewHolder.webViewCoordinator, forURLScheme: "file")
             }
             webViewHolder.appleWebView = WKWebView(frame: .zero, configuration: myConfig)
+            webViewHolder.webViewCoordinator!.startObserving(webView: webViewHolder.appleWebView!)
             let configUA = myConfig.applicationNameForUserAgent as? String ?? ""
 
             // change webview ua
@@ -257,7 +291,7 @@ struct WebViewNative: UIViewRepresentable {
             webViewHolder.appleWebView!.allowsLinkPreview = true
             webViewHolder.appleWebView!.navigationDelegate = webViewHolder.webViewCoordinator
             webViewHolder.appleWebView!.scrollView.delegate = webViewHolder.webViewCoordinator
-            webViewHolder.needsUpdate = (configuration != nil) ? false : true
+            webViewHolder.needsUpdate = (configuration != nil && !needsUpdate) ? false : true
         }
 
         return webViewHolder.appleWebView!
@@ -277,6 +311,10 @@ struct WebViewNative: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         initialLoad()
+    }
+
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        coordinator.stopObserving(webView: uiView)
     }
 }
 

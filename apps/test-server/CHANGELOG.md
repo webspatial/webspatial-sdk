@@ -1,5 +1,67 @@
 # web-content
 
+## 0.0.13
+
+### Patch Changes
+
+- @webspatial/core-sdk@1.0.1
+- @webspatial/react-sdk@1.0.1
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [bfb72fc]
+- Updated dependencies [bc1fcc1]
+- Updated dependencies [4dc56c3]
+  - @webspatial/core-sdk@1.0.0
+  - @webspatial/react-sdk@1.0.0
+
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies [3a42a35]
+  - @webspatial/core-sdk@0.1.23
+  - @webspatial/react-sdk@0.1.23
+
+## 0.0.10
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.22
+- @webspatial/react-sdk@0.1.22
+
+## 0.0.9
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.21
+- @webspatial/react-sdk@0.1.21
+
+## 0.0.8
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.20
+- @webspatial/react-sdk@0.1.20
+
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [ec06fc2]
+  - @webspatial/react-sdk@0.1.19
+  - @webspatial/core-sdk@0.1.19
+
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [126c45a]
+  - @webspatial/react-sdk@0.1.18
+  - @webspatial/core-sdk@0.1.18
+
 ## 0.0.5
 
 ### Patch Changes

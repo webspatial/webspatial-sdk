@@ -1,5 +1,59 @@
 # @webspatial/react-sdk
 
+## 1.0.1
+
+### Patch Changes
+
+- @webspatial/core-sdk@1.0.1
+
+## 1.0.0
+
+### Patch Changes
+
+- 4dc56c3: fix bug: when refresh page in safari tool, the page may be invisible occasionally
+- Updated dependencies [bfb72fc]
+- Updated dependencies [bc1fcc1]
+  - @webspatial/core-sdk@1.0.0
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [3a42a35]
+  - @webspatial/core-sdk@0.1.23
+
+## 0.1.22
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.22
+
+## 0.1.21
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.21
+
+## 0.1.20
+
+### Patch Changes
+
+- @webspatial/core-sdk@0.1.20
+
+## 0.1.19
+
+### Patch Changes
+
+- ec06fc2: set spatialdiv portalinstance body background transparent
+  - @webspatial/core-sdk@0.1.19
+
+## 0.1.18
+
+### Patch Changes
+
+- 126c45a: check html spatial style when html className changed
+  - @webspatial/core-sdk@0.1.18
+
 ## 0.1.17
 
 ### Patch Changes

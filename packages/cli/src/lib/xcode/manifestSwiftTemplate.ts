@@ -23,7 +23,7 @@ struct PWAManager: Codable {
         ),
         resizability: SceneResizability
     )
-    var useMainScene: Bool = USE_MAIN_SCENE
+    private var version: String = "PACKAGE_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -33,7 +33,7 @@ struct PWAManager: Codable {
             }
             let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
             start_url = startUrl!.absoluteString
-            scope = URL(string: scope, relativeTo: startUrl)!.absoluteString
+            scope = URL(string: (scope.starts(with: "/") ? "." : "./") + scope, relativeTo: Bundle.main.executableURL)!.absoluteString
             isLocal = true
         }
 
@@ -85,6 +85,10 @@ struct PWAManager: Codable {
             resource += "#" + (newUrl?.fragment())!
         }
         return resource
+    }
+    
+    func getVersion() -> String {
+        return version
     }
 }
 
