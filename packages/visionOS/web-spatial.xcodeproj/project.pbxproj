@@ -22,6 +22,18 @@
 		2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */; };
 		2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */; };
 		2B48B3F12DF9866700826889 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B48B3F02DF9866100826889 /* ColorExtension.swift */; };
+		2B53119C2E28FD2D00A658AC /* SpatialScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B53119B2E28FD2700A658AC /* SpatialScene.swift */; };
+		2B53119E2E29011700A658AC /* SpatialSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B53119D2E29010E00A658AC /* SpatialSceneView.swift */; };
+		2B5311A02E2A1EDF00A658AC /* Spatialized2DElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B53119F2E2A1EDA00A658AC /* Spatialized2DElement.swift */; };
+		2B5311A22E2A1F0D00A658AC /* SpatializedDynamic3DElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5311A12E2A1F0B00A658AC /* SpatializedDynamic3DElement.swift */; };
+		2B4FC5292E2A770500D6BF25 /* JSBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4FC5282E2A770500D6BF25 /* JSBManager.swift */; };
+		2B4FC52D2E2A771000D6BF25 /* SpatialWebViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4FC52C2E2A771000D6BF25 /* SpatialWebViewModel.swift */; };
+		2B4FC52E2E2A771000D6BF25 /* SpatialWebController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4FC52A2E2A771000D6BF25 /* SpatialWebController.swift */; };
+		2B4FC52F2E2A771000D6BF25 /* SpatialWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4FC52B2E2A771000D6BF25 /* SpatialWebView.swift */; };
+		2B5311A42E2A322C00A658AC /* SpatialWebviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5311A32E2A322B00A658AC /* SpatialWebviewModel.swift */; };
+		2B5311A62E2A397400A658AC /* SpatializedStatic3DElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5311A52E2A397300A658AC /* SpatializedStatic3DElement.swift */; };
+		2B5311A82E2A39D500A658AC /* SpatializedElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5311A72E2A39D300A658AC /* SpatializedElement.swift */; };
+		2B5311AA2E2A4CE600A658AC /* SpatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5311A92E2A4CDF00A658AC /* SpatialApp.swift */; };
 		2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B67BBAB2D151C1500BBC689 /* manifest.swift */; };
 		2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */; };
 		2B9909932C3605A9004826D1 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9909922C3605A9004826D1 /* Window.swift */; };
@@ -77,6 +89,18 @@
 		2B2F1D9A2BEDA975006897EE /* PlainWindowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainWindowContainerView.swift; sourceTree = "<group>"; };
 		2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialWithBorderCornerModifier.swift; sourceTree = "<group>"; };
 		2B48B3F02DF9866100826889 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		2B53119B2E28FD2700A658AC /* SpatialScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialScene.swift; sourceTree = "<group>"; };
+		2B53119D2E29010E00A658AC /* SpatialSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialSceneView.swift; sourceTree = "<group>"; };
+		2B53119F2E2A1EDA00A658AC /* Spatialized2DElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spatialized2DElement.swift; sourceTree = "<group>"; };
+		2B5311A12E2A1F0B00A658AC /* SpatializedDynamic3DElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedDynamic3DElement.swift; sourceTree = "<group>"; };
+		2B4FC5282E2A770500D6BF25 /* JSBManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSBManager.swift; sourceTree = "<group>"; };
+		2B4FC52A2E2A771000D6BF25 /* SpatialWebController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebController.swift; sourceTree = "<group>"; };
+		2B4FC52B2E2A771000D6BF25 /* SpatialWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebView.swift; sourceTree = "<group>"; };
+		2B4FC52C2E2A771000D6BF25 /* SpatialWebViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebViewModel.swift; sourceTree = "<group>"; };
+		2B5311A32E2A322B00A658AC /* SpatialWebviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialWebviewModel.swift; sourceTree = "<group>"; };
+		2B5311A52E2A397300A658AC /* SpatializedStatic3DElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedStatic3DElement.swift; sourceTree = "<group>"; };
+		2B5311A72E2A39D300A658AC /* SpatializedElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElement.swift; sourceTree = "<group>"; };
+		2B5311A92E2A4CDF00A658AC /* SpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialApp.swift; sourceTree = "<group>"; };
 		2B67BBAB2D151C1500BBC689 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
 		2B85209B2BFD5FDB0038FE29 /* UpdateSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSystem.swift; sourceTree = "<group>"; };
 		2B9909922C3605A9004826D1 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
@@ -165,6 +189,7 @@
 				2B2F1D972BEDA8BD006897EE /* views */,
 				2B2F1D8A2BED4CD0006897EE /* libs */,
 				2B2F1D6A2BEBFAAA006897EE /* web_spatialApp.swift */,
+				2B5311A92E2A4CDF00A658AC /* SpatialApp.swift */,
 				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
 				2B2F1D752BEBFAAC006897EE /* Info.plist */,
 				2B2F1D722BEBFAAC006897EE /* Preview Content */,
@@ -191,6 +216,12 @@
 		2B2F1D8A2BED4CD0006897EE /* libs */ = {
 			isa = PBXGroup;
 			children = (
+				2B5311A72E2A39D300A658AC /* SpatializedElement.swift */,
+				2B5311A52E2A397300A658AC /* SpatializedStatic3DElement.swift */,
+				2B5311A32E2A322B00A658AC /* SpatialWebviewModel.swift */,
+				2B5311A12E2A1F0B00A658AC /* SpatializedDynamic3DElement.swift */,
+				2B53119F2E2A1EDA00A658AC /* Spatialized2DElement.swift */,
+				2B53119B2E28FD2700A658AC /* SpatialScene.swift */,
 				2BAC1BDF2CDC34410022E29B /* SpatialViewComponent.swift */,
 				2BDBED5E2D3F885A0065443F /* SpatialModel3DComponent.swift */,
 				2BE1E8F92C90331C00EAE76A /* SpatialObject.swift */,
@@ -242,6 +273,7 @@
 			children = (
 				2BC261212D38F1DA00BCA977 /* ui */,
 				2BA06D702D4380C30020B505 /* LoadingView.swift */,
+				2B53119D2E29010E00A658AC /* SpatialSceneView.swift */,
 				2BDBED622D3FE8EA0065443F /* SpatialModel3DView.swift */,
 				2B37E8E02D002C2B0096749A /* MaterialWithBorderCornerModifier.swift */,
 				2BC9A2202D1E829B00912170 /* HideViewModifier.swift */,
@@ -383,21 +415,26 @@
 				2BE1E9092C90497C00EAE76A /* SpatialWindowComponent.swift in Sources */,
 				2BE1E90D2C905FB800EAE76A /* SpatialPhysicallyBasedMaterial.swift in Sources */,
 				2B85209C2BFD5FDB0038FE29 /* UpdateSystem.swift in Sources */,
+				2B5311A22E2A1F0D00A658AC /* SpatializedDynamic3DElement.swift in Sources */,
 				2BE1E9032C9035DB00EAE76A /* SpatialInputComponent.swift in Sources */,
 				2B2F1D9B2BEDA975006897EE /* PlainWindowContainerView.swift in Sources */,
 				2BE1E8FA2C90332400EAE76A /* SpatialObject.swift in Sources */,
 				2B0FF4F42DD2711E00C3F20A /* PerfClock.swift in Sources */,
 				2BB28CCC2C747DB0007F4BDC /* OpenDismissHandlerUI.swift in Sources */,
 				2BDBED632D3FE8EC0065443F /* SpatialModel3DView.swift in Sources */,
+				2B53119C2E28FD2D00A658AC /* SpatialScene.swift in Sources */,
+				2B53119E2E29011700A658AC /* SpatialSceneView.swift in Sources */,
 				2B67BBAC2D151C1A00BBC689 /* manifest.swift in Sources */,
 				2B2F1D8F2BED4D7A006897EE /* JsonParser.swift in Sources */,
 				2BE1E9012C9035AB00EAE76A /* SpatialComponent.swift in Sources */,
+				2B5311AA2E2A4CE600A658AC /* SpatialApp.swift in Sources */,
 				2BE1E9152C9194DC00EAE76A /* SpatialWebViewUI.swift in Sources */,
 				2B2F1D912BED61A8006897EE /* NativeWebView.swift in Sources */,
 				2B2F1D992BEDA8EF006897EE /* VolumetricWindowContainerView.swift in Sources */,
 				2BE1E9072C903E2C00EAE76A /* EventEmitter.swift in Sources */,
 				2BDBED5F2D3F885A0065443F /* SpatialModel3DComponent.swift in Sources */,
 				2B2F1D6B2BEBFAAA006897EE /* web_spatialApp.swift in Sources */,
+				2B5311A82E2A39D500A658AC /* SpatializedElement.swift in Sources */,
 				2B0B1C102C494E5400E644F9 /* Logger.swift in Sources */,
 				2B48B3F12DF9866700826889 /* ColorExtension.swift in Sources */,
 				2B37E8E12D002C4D0096749A /* MaterialWithBorderCornerModifier.swift in Sources */,
@@ -405,6 +442,7 @@
 				2BAC1BE22CDC49040022E29B /* SpatialViewUI.swift in Sources */,
 				2B0B430A2CBE21580003CEF3 /* CommandManager.swift in Sources */,
 				2B23CB3F2D0BEE6900E70D95 /* WindowContainerMgr.swift in Sources */,
+				2B5311A42E2A322C00A658AC /* SpatialWebviewModel.swift in Sources */,
 				2BD510562D54A30D0001E5E6 /* SceneManager.swift in Sources */,
 				2BAC1BE02CDC34500022E29B /* SpatialViewComponent.swift in Sources */,
 				2BE1E9052C90375F00EAE76A /* SpatialWindowContainer.swift in Sources */,
@@ -413,8 +451,10 @@
 				2B9909932C3605A9004826D1 /* Window.swift in Sources */,
 				2BC9A2212D1E829B00912170 /* HideViewModifier.swift in Sources */,
 				2BE1E8FF2C90359400EAE76A /* SpatialEntity.swift in Sources */,
+				2B5311A02E2A1EDF00A658AC /* Spatialized2DElement.swift in Sources */,
 				2BA06D712D4380C60020B505 /* LoadingView.swift in Sources */,
 				2BE1E90B2C905DA300EAE76A /* SpatialMeshResource.swift in Sources */,
+				2B5311A62E2A397400A658AC /* SpatializedStatic3DElement.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
