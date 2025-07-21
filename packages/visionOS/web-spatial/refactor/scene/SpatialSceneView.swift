@@ -7,9 +7,20 @@ struct SpatialSceneView: View {
     @State var web: SpatialWebViewModel?
 
     var body: some View {
-        ZStack {}.onAppear {
+        if let model = scene.spatialWebviewModel {
+            model.getView()
+        }
+
+        ZStack {
+//            if let _web = web {
+//                _web.getView()
+//            }
+        }.onAppear {
             print("scene.url", scene.url)
+            scene.spatialWebviewModel?.load()
+//            scene.spatialWebviewModel?.load(scene.url)
             web = SpatialWebViewModel(url: scene.url)
+            scene.spatialWebviewModel = web
             web?.load()
 //            web!.onCallBack("forceStyle") { _ in
 //                // TODO: handle forceStyle
@@ -18,9 +29,7 @@ struct SpatialSceneView: View {
 //            web!.addJSBListener("createSpatialDiv") { _ in
 //                print("got createSpatialDiv")
 //            }
-        }
-        if let _web = web {
-            _web.getView()
+//        }
         }
     }
 }

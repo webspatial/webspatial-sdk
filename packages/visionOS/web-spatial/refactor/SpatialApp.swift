@@ -28,24 +28,27 @@ struct SpatialApp: App {
 
         // create Immersive SpatialWindowContainer
 //        let _ = SpatialWindowContainer.createImmersiveWindowContainer()
+
+        // create first scene
+        let wgd = SceneData(
+            windowStyle: "Plain",
+            sceneID: SpatialScene.getRootID()
+        )
+        _ = SpatialScene(SpatialScene.getRootID(), startURL, wgd)
     }
 
     var body: some Scene {
-        WindowGroup(id: "Plain", for: WindowContainerData.self) { $windowData in
+        WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
             let scene = SpatialScene.getOrCreateSpatialScene(
-                windowData.windowContainerID,
+                windowData.sceneID,
                 windowData
             )
-            // init root scene's url
-            if windowData.windowContainerID == SpatialScene.getRootID() {
-                let _ = scene!.url = startURL
-            }
             SpatialSceneView().environment(scene)
         }
         defaultValue: {
-            let windowData = WindowContainerData(
+            let windowData = SceneData(
                 windowStyle: "Plain",
-                windowContainerID: SpatialScene.getRootID()
+                sceneID: SpatialScene.getRootID()
             )
 
             return windowData

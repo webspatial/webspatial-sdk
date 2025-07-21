@@ -1,5 +1,10 @@
 import Foundation
 
+struct SceneData: Decodable, Hashable, Encodable {
+    let windowStyle: String
+    let sceneID: String
+}
+
 @Observable
 class SpatialScene: SpatialObject {
     private static let RootID = "root"
@@ -22,15 +27,25 @@ class SpatialScene: SpatialObject {
     var spatializedDynamic3DElement = [String: SpatializedDynamic3DElement]() // id => ele
     var offset: [Double] = [0, 0]
 
-    var wgd: WindowContainerData // windowGroupData used to open/dismiss
+    var wgd: SceneData // windowGroupData used to open/dismiss
 
 //    private var spatialWebviewModel: SpatialWebviewModelFake?
 
+    var spatialWebviewModel: SpatialWebViewModel?
+
     private var childResources = [String: SpatializedElement]() // id => ele
 
-    init(_ name: String, _ data: WindowContainerData) {
+    init(_ name: String, _ data: SceneData) {
         wgd = data
         super.init(name)
+    }
+
+    init(_ name: String, _ url: String, _ data: SceneData) {
+        wgd = data
+        self.url = url
+        super.init(name)
+//        spatialWebviewModel = SpatialWebViewModel(url: url)
+//        spatialWebviewModel?.load()
     }
 
     func addChildResource(_ element: SpatializedElement) {
@@ -60,7 +75,7 @@ class SpatialScene: SpatialObject {
         return SpatialObject.get(name) as? SpatialScene
     }
 
-    static func getOrCreateSpatialScene(_ name: String, _ data: WindowContainerData) -> SpatialScene? {
+    static func getOrCreateSpatialScene(_ name: String, _ data: SceneData) -> SpatialScene? {
         if let scene = getSpatialScene(name) {
             return scene
         }
