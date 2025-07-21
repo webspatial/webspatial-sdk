@@ -36,6 +36,7 @@ struct SpatialApp: App {
                 windowData.windowContainerID,
                 windowData
             )
+            // init root scene's url
             if windowData.windowContainerID == SpatialScene.getRootID() {
                 let _ = scene!.url = startURL
             }
@@ -50,5 +51,10 @@ struct SpatialApp: App {
             return windowData
         }
         .windowStyle(.plain)
+        .defaultSize(
+            wgm.getValue().defaultSize!
+        ).windowResizability(
+            wgm.getValue().windowResizability!
+        )
     }
 }
