@@ -3,7 +3,7 @@ import SwiftUI
 // THIS IS A FAKE MODULE
 
 @Observable
-class SpatialWebviewModel {
+class SpatialWebviewModelFake {
     var url: String
     init(url: String) {
         self.url = url
