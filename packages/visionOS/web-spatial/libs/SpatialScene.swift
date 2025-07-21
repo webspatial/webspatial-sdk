@@ -24,7 +24,7 @@ class SpatialScene: SpatialObject {
 
     var wgd: WindowContainerData // windowGroupData used to open/dismiss
 
-    private var spatialWebviewModel: SpatialWebviewModelFake?
+//    private var spatialWebviewModel: SpatialWebviewModelFake?
 
     private var childResources = [String: SpatializedElement]() // id => ele
 

@@ -36,6 +36,9 @@ struct SpatialApp: App {
                 windowData.windowContainerID,
                 windowData
             )
+            if windowData.windowContainerID == SpatialScene.getRootID() {
+                let _ = scene!.url = startURL
+            }
             SpatialSceneView().environment(scene)
         }
         defaultValue: {
