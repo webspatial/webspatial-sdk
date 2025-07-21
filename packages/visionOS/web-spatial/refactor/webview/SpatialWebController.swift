@@ -2,42 +2,42 @@ import SwiftUI
 @preconcurrency import WebKit
 
 class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
-    var id:String
-    weak var model:SpatialWebViewModel? = nil
+    var id: String
+    weak var model: SpatialWebViewModel? = nil
     private var isObserving = false
-    private var navigationInvoke:((_ data: String) -> Any)? = nil
-    private var openWindowInvoke:((_ data: String) -> Any)? = nil
-    private var jsbInvoke:((_ data: String) -> Any)? = nil
-    
+    private var navigationInvoke: ((_ data: String) -> Any)? = nil
+    private var openWindowInvoke: ((_ data: String) -> Any)? = nil
+    private var jsbInvoke: ((_ data: String) -> Any)? = nil
+
     override public init() {
-        self.id = UUID().uuidString
+        id = UUID().uuidString
         WKWebView.enableFileScheme() // ensure the handler is usable
     }
-    
+
     deinit {}
-    
-    func registerNavigationInvoke(invoke:@escaping (_ data: String) -> Any){
+
+    func registerNavigationInvoke(invoke: @escaping (_ data: String) -> Any) {
         navigationInvoke = invoke
     }
-    
-    func registerOpenWindowInvoke(invoke:@escaping (_ data: String) -> Any){
+
+    func registerOpenWindowInvoke(invoke: @escaping (_ data: String) -> Any) {
         openWindowInvoke = invoke
     }
-    
-    func registerJSBInvoke(invoke:@escaping (_ data: String) -> Any){
+
+    func registerJSBInvoke(invoke: @escaping (_ data: String) -> Any) {
         jsbInvoke = invoke
     }
-    
+
     // navigation request
     // SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        if let deciside = navigationInvoke?(navigationAction.request.url!.absoluteString) as? Bool{
+        if let deciside = navigationInvoke?(navigationAction.request.url!.absoluteString) as? Bool {
             decisionHandler(deciside ? .allow : .cancel)
             return
         }
         decisionHandler(.allow)
     }
-    
+
     // open window request
     func webView(
         _ webView: WKWebView,
@@ -45,12 +45,12 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        if let model = openWindowInvoke?(navigationAction.request.url!.absoluteString) as? SpatialWebViewModel{
+        if let model = openWindowInvoke?(navigationAction.request.url!.absoluteString) as? SpatialWebViewModel {
             return model.getView()?.getView()
         }
         return nil
     }
-    
+
     // invoke jsb
     func userContentController(
         _ userContentController: WKUserContentController,
@@ -58,14 +58,14 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     ) {
         _ = jsbInvoke?(message.body as! String)
     }
-    
+
     // custom scheme request
     func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
         print("urlSchemeTask")
         let url = urlSchemeTask.request.url
         if url!.absoluteString.starts(with: "file://") {
             var urlRequest = urlSchemeTask.request
-            
+
             let session = URLSession(configuration: URLSessionConfiguration.default)
             let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in
                 guard let task = task as? WKURLSchemeTask else { return }
@@ -77,21 +77,24 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             dataTask.resume()
         }
     }
-    
+
     func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
     func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
         model?.onWebViewUpdate(type: "controller:didStartLoadPage")
     }
+
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         model?.onWebViewUpdate(type: "controller:didReceivePageContent")
     }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         model?.onWebViewUpdate(type: "controller:didFinishLoadPage")
     }
-    
+
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
         decisionHandler(.allow)
     }
+
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         if let urlError = (error as? URLError) {
             if urlError.code == .cannotConnectToHost {
@@ -99,19 +102,18 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             }
         }
     }
-    
-    
+
     func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard let serverTrust = challenge.protectionSpace.serverTrust else { return completionHandler(.useCredential, nil) }
         let exceptions = SecTrustCopyExceptions(serverTrust)
         SecTrustSetExceptions(serverTrust, exceptions)
         completionHandler(.useCredential, URLCredential(trust: serverTrust))
     }
-    
+
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         model!.onUpdateScroll(point: scrollView.contentOffset)
     }
-    
+
     func startObserving(webView: WKWebView) {
         guard !isObserving else { return }
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
@@ -142,8 +144,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 }
 
 //// extend webview to support file://
-//@available(iOS 11.0, *)
-//extension WKWebView {
+// @available(iOS 11.0, *)
+// extension WKWebView {
 //    /// WKWebView,  Support setting file scheme in configuration
 //    public private(set) static var isEnableFileSupport = false
 //    public static func enableFileScheme() {
@@ -170,4 +172,4 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 //        if urlScheme == "file" { return false }
 //        return wrapHandles(urlScheme: urlScheme)
 //    }
-//}
+// }
