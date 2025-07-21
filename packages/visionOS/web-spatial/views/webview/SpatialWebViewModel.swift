@@ -132,11 +132,14 @@ class SpatialWebViewModel{
     private func onJSBInvoke(_ command:String) -> Result<CommandDataProtocol, JSBManager.SerializationError>{
         do{
             let jsbInfo = command.components(separatedBy: "::")
-            let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
-            if let action = commandList[jsbInfo[0]]{
-                _ = action(data)
+            if jsbInfo.count == 2{
+                let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
+                if let action = commandList[jsbInfo[0]]{
+                    _ = action(data)
+                }
+                return .success(data)
             }
-            return .success(data)
+            return .failure(.unknownType)
         } catch _ as JSBManager.SerializationError{
             return .failure(.unknownType)
         } catch {
