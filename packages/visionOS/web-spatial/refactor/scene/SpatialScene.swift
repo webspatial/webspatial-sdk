@@ -44,7 +44,11 @@ class SpatialScene: SpatialObject {
         wgd = data
         self.url = url
         super.init(name)
-//        spatialWebviewModel = SpatialWebViewModel(url: url)
+        spatialWebviewModel = SpatialWebViewModel(url: url)
+        spatialWebviewModel?.addOpenWindowListener(protocal: "", event: { url in
+            print("url,", url)
+            return SpatialWebViewModel(url: url)
+        })
 //        spatialWebviewModel?.load()
     }
 

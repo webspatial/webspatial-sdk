@@ -8,7 +8,9 @@ struct SpatialSceneView: View {
 
     var body: some View {
         if let model = scene.spatialWebviewModel {
-            model.getView()
+            model.getView()?.onAppear {
+                model.load()
+            }
         }
 
         ZStack {
@@ -17,11 +19,11 @@ struct SpatialSceneView: View {
 //            }
         }.onAppear {
             print("scene.url", scene.url)
-            scene.spatialWebviewModel?.load()
+//            scene.spatialWebviewModel?.load()
 //            scene.spatialWebviewModel?.load(scene.url)
-            web = SpatialWebViewModel(url: scene.url)
-            scene.spatialWebviewModel = web
-            web?.load()
+//            web = SpatialWebViewModel(url: scene.url)
+//            scene.spatialWebviewModel = web
+//            web?.load()
 //            web!.onCallBack("forceStyle") { _ in
 //                // TODO: handle forceStyle
 //                print("got forceStyle")
