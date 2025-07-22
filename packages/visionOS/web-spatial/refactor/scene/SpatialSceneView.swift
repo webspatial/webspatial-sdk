@@ -7,6 +7,10 @@ struct SpatialSceneView: View {
     @State var web: SpatialWebViewModel?
 
     var body: some View {
+        SceneHandlerUI().environment(scene).onDisappear {
+            print("SceneHandlerUI::onDisapper", scene.wgd)
+            scene.destroy()
+        }
         if let model = scene.spatialWebviewModel {
             model.getView()?.onAppear {
                 model.load()

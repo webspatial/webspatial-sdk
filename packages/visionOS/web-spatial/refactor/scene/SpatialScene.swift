@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 struct SceneData: Decodable, Hashable, Encodable {
@@ -11,6 +12,17 @@ class SpatialScene: SpatialObject {
     static func getRootID() -> String {
         return RootID
     }
+
+    var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
+
+    var setSize = PassthroughSubject<CGSize, Never>()
+    var setResizeRange = PassthroughSubject<ResizeRange, Never>()
+
+    var updateFrame = false
+    var openWindowData = PassthroughSubject<SceneData, Never>()
+    var closeWindowData = PassthroughSubject<WindowContainerData, Never>()
+
+    var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
     var width: Double = 0
     var height: Double = 0
@@ -45,9 +57,17 @@ class SpatialScene: SpatialObject {
         self.url = url
         super.init(name)
         spatialWebviewModel = SpatialWebViewModel(url: url)
-        spatialWebviewModel?.addOpenWindowListener(protocal: "", event: { url in
+        spatialWebviewModel?.addOpenWindowListener(protocal: "http", event: { url in
             print("url,", url)
-            return SpatialWebViewModel(url: url)
+//            let newWeb =  SpatialWebViewModel(url: url)
+            let sceneId = UUID().uuidString
+            let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
+            let newScene = SpatialScene(sceneId, url, wgd)
+
+            self.openWindowData.send(wgd)
+
+//            SpatialScene
+            return newScene.spatialWebviewModel!
         })
 //        spatialWebviewModel?.load()
     }
