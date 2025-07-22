@@ -3,7 +3,7 @@ import RealityKit
 import SwiftUI
 
 @Observable
-class Spatialized2DElement: SpatializedElement {
+class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContainer {
     private var _backgroundMaterial = BackgroundMaterial.None
     var backgroundMaterial: BackgroundMaterial {
         get {
@@ -83,7 +83,7 @@ class Spatialized2DElement: SpatializedElement {
         return typedChildren
     }
 
-    func findNearestScrollEnabledSpatialized2DElement() -> Spatialized2DElement? {
+    func findNearestScrollEnabledSpatialized2DElement() -> SpatialScrollAble? {
         while let current = parent {
             if current.scrollEnabled {
                 return current

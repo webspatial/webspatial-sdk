@@ -42,13 +42,12 @@ struct Spatialized2DView: View {
 
     private var dragGesture: some Gesture {
         DragGesture()
-
             .onChanged { gesture in
                 let needBubbleUp = !spatialized2DElement.scrollEnabled
                 if needBubbleUp {
                     // Check if there is a nearest scroll-enabled Spatialized2DElement
                     // and scroll it if it exists
-                    if let targetSpatialized2DElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
+                    if let targetElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
                         if !gestureData.dragStarted {
                             gestureData.dragStarted = true
                             gestureData.dragStart = (gesture.translation.height)
@@ -57,17 +56,17 @@ struct Spatialized2DView: View {
                         // TODO: this should have velocity
                         let delta = gestureData.dragStart - gesture.translation.height
                         gestureData.dragStart = gesture.translation.height
-                        targetSpatialized2DElement.updateScrollOffset(delta)
+                        targetElement.updateScrollOffset(delta)
                     }
                 }
             }
             .onEnded { _ in
                 let needBubbleUp = !spatialized2DElement.scrollEnabled
                 if needBubbleUp {
-                    if let targetSpatialized2DElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
+                    if let targetElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
                         gestureData.dragStarted = false
                         gestureData.dragStart = 0
-                        targetSpatialized2DElement.stopScrolling()
+                        targetElement.stopScrolling()
                     }
                 }
             }

@@ -18,9 +18,9 @@ class SpatializedElement: SpatialObject {
     var opacity: Double = 1.0
     var visible = true
 
-    private(set) var parent: Spatialized2DElement?
+    private(set) var parent: ScrollAbleSpatialElementContainer?
 
-    func setParent(_ parent: Spatialized2DElement?) {
+    func setParent(_ parent: ScrollAbleSpatialElementContainer?) {
         if let prevParent = self.parent {
             prevParent.removeChild(self)
         }
