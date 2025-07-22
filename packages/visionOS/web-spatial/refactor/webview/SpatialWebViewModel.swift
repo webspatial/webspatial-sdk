@@ -5,7 +5,7 @@ import SwiftUI
 class SpatialWebViewModel {
     private(set) var viewState = ""
     var url = ""
-    private var view: SpatialWebView?
+    private var view: SpatialWebView
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: String) -> Any] = [:]
     private var openWindowList: [String: (_ data: String) -> Any] = [:]
@@ -17,15 +17,19 @@ class SpatialWebViewModel {
 
     init(url: String?) {
         controller = SpatialWebController()
+
+        view = SpatialWebView()
+
+        view.controller = controller!
+        view.initView()
+        self.url = url ?? ""
+
         controller!.model = self
+        view.model = self
+
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerJSBInvoke(invoke: onJSBInvoke)
-        view = SpatialWebView()
-        view!.model = self
-        view!.controller = controller!
-        view?.initView()
-        self.url = url ?? ""
     }
 
     func load() {
@@ -34,10 +38,10 @@ class SpatialWebViewModel {
     }
 
     func load(_ url: String) {
-        view?.load(url: url)
+        view.load(url: url)
     }
 
-    func getView() -> SpatialWebView? {
+    func getView() -> SpatialWebView {
         return view
     }
 
@@ -138,7 +142,7 @@ class SpatialWebViewModel {
     }
 
     func evaluateJS(js: String) {
-        view?.callJS(js: js)
+        view.callJS(js: js)
     }
 
     func destory() {

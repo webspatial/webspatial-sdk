@@ -3,13 +3,13 @@ import SwiftUI
 
 class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     var id: String
-    weak var model: SpatialWebViewModel? = nil
+    weak var model: SpatialWebViewModel?
     private var isObserving = false
-    private var navigationInvoke: ((_ data: String) -> Any)? = nil
-    private var openWindowInvoke: ((_ data: String) -> Any)? = nil
-    private var jsbInvoke: ((_ data: String) -> Any)? = nil
+    private var navigationInvoke: ((_ data: String) -> Any)?
+    private var openWindowInvoke: ((_ data: String) -> Any)?
+    private var jsbInvoke: ((_ data: String) -> Any)?
 
-    override public init() {
+    override init() {
         id = UUID().uuidString
         WKWebView.enableFileScheme() // ensure the handler is usable
     }
@@ -46,7 +46,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         if let model = openWindowInvoke?(navigationAction.request.url!.absoluteString) as? SpatialWebViewModel {
-            return model.getView()?.getView()
+            return model.getView().getView()
         }
         return nil
     }
