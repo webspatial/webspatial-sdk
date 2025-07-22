@@ -30,3 +30,10 @@ export interface sceneDataJSBShape {
   windowID?: string
   windowContainerID?: string
 }
+
+export interface sceneDataJSBShapeNew {
+  method?: 'createRoot' | 'showRoot'
+  sceneConfig?: WindowContainerOptions
+  url?: string
+  sceneID?: string
+}

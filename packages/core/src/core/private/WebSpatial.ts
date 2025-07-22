@@ -5,6 +5,7 @@ import {
   LoadingMethodKind,
   sceneDataShape,
   sceneDataJSBShape,
+  sceneDataJSBShapeNew,
 } from '../types'
 
 declare global {
@@ -120,7 +121,9 @@ export class WebSpatial {
       return
     }
 
-    var msg = JSON.stringify(cmd)
+    const msg = `${cmd.command}::${JSON.stringify(cmd.data)}`
+
+    // var msg = JSON.stringify(cmd)
 
     if (WebSpatial.getBackend() == 'AVP') {
       window.webkit.messageHandlers.bridge.postMessage(msg)
@@ -166,6 +169,34 @@ export class WebSpatial {
       windowStyle: style,
       sceneData: jsbSceneData,
       windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
+    })
+
+    try {
+      await new Promise((res, rej) => {
+        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+        WebSpatial.sendCommand(cmd)
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  static async createSceneNew(
+    style: WindowStyle = 'Plain',
+    cfg: {
+      sceneData: sceneDataShape
+    },
+  ) {
+    const { window: newWindow, ...sceneData } = cfg.sceneData
+    const jsbSceneData: sceneDataJSBShapeNew = {
+      ...sceneData,
+      sceneID: newWindow._webSpatialID,
+    }
+    var cmd = new RemoteCommand('createScene', {
+      windowStyle: style,
+      sceneData: jsbSceneData,
+      // windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
     })
 
     try {

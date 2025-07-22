@@ -254,7 +254,7 @@ export class SpatialSession {
       sceneData: sceneDataShape
     },
   ) {
-    return await WebSpatial.createScene(style, cfg)
+    return await WebSpatial.createSceneNew(style, cfg)
   }
 
   /**

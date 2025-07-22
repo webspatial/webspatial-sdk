@@ -55,7 +55,10 @@ function App() {
   const winCRef = useRef<any>(null)
 
   return (
-    <div enable-xr className="pl-5 pt-2">
+    <div
+      /* enable-xr */
+      className="pl-5 pt-2"
+    >
       <h1 className="text-2xl text-black">resize</h1>
       <button
         className={btnCls}

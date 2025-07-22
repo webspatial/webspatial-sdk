@@ -6,6 +6,14 @@ struct SceneData: Decodable, Hashable, Encodable {
     let sceneID: String
 }
 
+struct SceneJSBDataNew: Codable {
+    var method: String?
+    var sceneName: String?
+    var sceneConfig: WindowContainerOptions?
+    var url: String?
+    var sceneID: String?
+}
+
 @Observable
 class SpatialScene: SpatialObject {
     private static let RootID = "root"
@@ -24,14 +32,14 @@ class SpatialScene: SpatialObject {
 
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
-    var width: Double = 0
-    var height: Double = 0
+//    var width: Double = 0
+//    var height: Double = 0
     var url: String = "" // start_url
     var windowStyle = "Plain" // TODO: type
-    var minWidth: Double = 0
-    var maxWidth: Double = 0
-    var minHeight: Double = 0
-    var maxHeight: Double = 0
+//    var minWidth: Double = 0
+//    var maxWidth: Double = 0
+//    var minHeight: Double = 0
+//    var maxHeight: Double = 0
     var backgroundMaterial: BackgroundMaterial? = nil
     var cornerRadius: CornerRadius? = nil
     var spatialized2DElement = [String: Spatialized2DElement]() // id => ele
@@ -40,6 +48,19 @@ class SpatialScene: SpatialObject {
     var offset: [Double] = [0, 0]
 
     var wgd: SceneData // windowGroupData used to open/dismiss
+
+    var plainDefaultValues: WindowContainerPlainDefaultValues?
+    // TODO: var VolumeDefaultValues: WindowContainerPlainDefaultValues
+
+    enum SceneStateKind: String {
+        case created
+        case configured
+        case active
+    }
+
+    var state: SceneStateKind = .created
+
+    weak var parent: SpatialScene? = nil
 
 //    private var spatialWebviewModel: SpatialWebviewModelFake?
 
@@ -50,6 +71,7 @@ class SpatialScene: SpatialObject {
     init(_ name: String, _ data: SceneData) {
         wgd = data
         super.init(name)
+        // TODO: should we setup this one
     }
 
     init(_ name: String, _ url: String, _ data: SceneData) {
@@ -57,19 +79,69 @@ class SpatialScene: SpatialObject {
         self.url = url
         super.init(name)
         spatialWebviewModel = SpatialWebViewModel(url: url)
+        setup()
+    }
+
+    private func setup() {
+        setupWindowOpen()
+        setupJSB()
+    }
+
+    private func setupWindowOpen() {
         spatialWebviewModel?.addOpenWindowListener(protocal: "http", event: { url in
             print("url,", url)
-//            let newWeb =  SpatialWebViewModel(url: url)
             let sceneId = UUID().uuidString
             let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
             let newScene = SpatialScene(sceneId, url, wgd)
 
-            self.openWindowData.send(wgd)
+//            self.openWindowData.send(wgd) //TODO: should invode in JSB handler
+            DispatchQueue.main.async {
+                newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + sceneId + "'")
+            }
 
-//            SpatialScene
             return newScene.spatialWebviewModel!
         })
-//        spatialWebviewModel?.load()
+    }
+
+    private func setupJSB() {
+        spatialWebviewModel?
+            .addJSBListener(dataClass: SceneCommand.self, event: handleJSB)
+    }
+
+    private func handleJSB(_ data: SceneCommand) {
+        print("Scene::handleJSB", data.sceneData)
+        // find scene
+        if let method = data.sceneData.method,
+           let sceneId = data.sceneData.sceneID,
+           let targetScene = SpatialScene.getSpatialScene(sceneId)
+        {
+            if method == "createRoot" {
+                if let sceneConfig = data.sceneData.sceneConfig {
+                    // config
+                    targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
+
+                    // finish config
+                    targetScene.parent = self
+                    targetScene.state = .configured
+
+                    targetScene.show()
+                }
+            }
+            // check state
+            if targetScene.state == .configured {}
+        }
+    }
+
+    private class SceneCommand: CommandDataProtocol {
+        static let commandType = "createScene"
+
+        var windowStyle: String
+        var sceneData: SceneJSBDataNew
+
+        init(_ msg: String, _ data: SceneJSBDataNew) {
+            windowStyle = msg
+            sceneData = data
+        }
     }
 
     func addChildResource(_ element: SpatializedElement) {
@@ -164,6 +236,28 @@ class SpatialScene: SpatialObject {
 
         if isSuccess {
             element.destroy() // will remove from childResources
+        }
+    }
+
+    func show() {
+        guard state == .configured else { return }
+
+        if let pScene = parent {
+            // set defaultSize and resizability
+
+            state = .active
+
+            // plain show
+            print("plainDefaultValues", plainDefaultValues)
+            if plainDefaultValues != nil {
+                WindowContainerMgr.Instance
+                    .updateWindowContainerPlainDefaultValues(
+                        plainDefaultValues!
+                    ) // set default values
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    pScene.openWindowData.send(self.wgd) // openwindow
+                }
+            }
         }
     }
 }
