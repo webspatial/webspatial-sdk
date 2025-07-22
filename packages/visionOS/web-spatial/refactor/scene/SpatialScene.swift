@@ -239,6 +239,13 @@ class SpatialScene: SpatialObject {
         }
     }
 
+    override func onDestroy() {
+        print("scene::onDestroy")
+        spatialWebviewModel?.destory()
+        childResources.forEach { $0.value.destroy() }
+        childResources = [:]
+    }
+
     func show() {
         guard state == .configured else { return }
 
