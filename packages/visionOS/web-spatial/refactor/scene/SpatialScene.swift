@@ -161,7 +161,7 @@ class SpatialScene: SpatialObject {
 
     private class LoadingCommand: CommandDataProtocol {
         // TODO:
-        static let commandType = "createScene"
+        static let commandType = "setLoading"
 
         var windowStyle: String
         var sceneData: SceneJSBDataNew
