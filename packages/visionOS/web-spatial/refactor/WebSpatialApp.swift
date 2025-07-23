@@ -7,7 +7,7 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
-@main
+// @main
 struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
