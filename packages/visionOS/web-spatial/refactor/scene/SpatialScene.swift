@@ -88,24 +88,29 @@ class SpatialScene: SpatialObject {
     }
 
     private func setupWindowOpen() {
-        spatialWebviewModel?.addOpenWindowListener(protocal: "http", event: { url in
-            print("url,", url)
-            let sceneId = UUID().uuidString
-            let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
-            let newScene = SpatialScene(sceneId, url, wgd)
-
-//            self.openWindowData.send(wgd) //TODO: should invode in JSB handler
-            DispatchQueue.main.async {
-                newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + sceneId + "'")
-            }
-
-            return newScene.spatialWebviewModel!
-        })
+        spatialWebviewModel?
+            .addOpenWindowListener(
+                protocal: "http",
+                event: handleWindowOpen
+            )
     }
 
     private func setupJSB() {
         spatialWebviewModel?
             .addJSBListener(dataClass: SceneCommand.self, event: handleJSB)
+    }
+
+    private func handleWindowOpen(_ url: String) -> SpatialWebViewModel {
+        print("url,", url)
+        let sceneId = UUID().uuidString
+        let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
+        let newScene = SpatialScene(sceneId, url, wgd)
+
+        DispatchQueue.main.async {
+            newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + sceneId + "'")
+        }
+
+        return newScene.spatialWebviewModel!
     }
 
     private func handleJSB(_ data: SceneCommand) {
@@ -208,6 +213,12 @@ class SpatialScene: SpatialObject {
         if isSuccess {
             addChildResource(element)
         }
+    }
+
+    func createElement() {}
+
+    func updateElement() {
+        // TODO:
     }
 
     func removeElement(_ parent_id: String, _ element: SpatializedElement) {
