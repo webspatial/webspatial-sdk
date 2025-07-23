@@ -1,7 +1,7 @@
 import Foundation
 
 @Observable
-class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
+class SpatialScene2: SpatialObject, ScrollAbleSpatialElementContainer {
     override init(_ url: String) {
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
@@ -261,7 +261,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     var cornerRadius: CornerRadius = .init()
 
     func getView() -> SpatialWebView {
-        return spatialWebViewModel.getView()
+        return spatialWebViewModel.getView()!
     }
 
     /*

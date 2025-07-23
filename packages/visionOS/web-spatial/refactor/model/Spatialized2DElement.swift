@@ -61,8 +61,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         children[spatializedElement.id] = spatializedElement
     }
 
-    // Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
+        spatializedElement.setParent(nil)
         children.removeValue(forKey: spatializedElement.id)
     }
 
@@ -94,7 +94,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getView() -> SpatialWebView {
-        return spatialWebViewModel.getView()
+        return spatialWebViewModel.getView()!
     }
 
     override func onDestroy() {
