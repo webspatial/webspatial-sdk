@@ -151,6 +151,8 @@ class SpatialSceneX: SpatialObject {
                     targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
                     // finish config
                     targetScene.state = .configured
+                    // disable hook if we've configured
+                    targetScene.spatialWebviewModel!.evaluateJS(js: "window._SceneHookOff=true;")
                     targetScene.show()
                 }
             } else if method == "showRoot" {
