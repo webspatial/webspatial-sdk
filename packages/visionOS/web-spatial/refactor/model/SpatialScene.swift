@@ -13,7 +13,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
      * Begin Implement SpatializedElementContainer Protocol
      */
 
-    // Spatialized2DElement can hold a collection of SpatializedElement children
+    // SpatialScene can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
     func addChild(_ spatializedElement: SpatializedElement) {
@@ -139,4 +139,32 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     /*
      * End SpatialObjects management
      */
+
+    override func onDestroy() {
+        let spatialObjectArray = spatialObjects.map { $0.value }
+        for spatialObject in spatialObjectArray {
+            spatialObject.destroy()
+        }
+        spatialWebViewModel.destory()
+    }
+
+    override func inspect() -> [String: Any] {
+        let childrenInfo = children.mapValues { spatializedElement in
+            spatializedElement.inspect()
+        }
+
+        var inspectInfo: [String: Any] = [
+            "children": childrenInfo,
+            "backgroundMaterial": backgroundMaterial,
+            "cornerRadius": cornerRadius.toJson(),
+            "scrollOffset": scrollOffset,
+            "url": spatialWebViewModel.url,
+        ]
+
+        let baseInspectInfo = super.inspect()
+        for (key, value) in baseInspectInfo {
+            inspectInfo[key] = value
+        }
+        return inspectInfo
+    }
 }

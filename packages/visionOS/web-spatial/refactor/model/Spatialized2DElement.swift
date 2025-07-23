@@ -109,6 +109,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             "scrollEnabled": scrollEnabled,
             "scrollOffset": scrollOffset,
             "zIndex": zIndex,
+            "type": SpatializedElementType.Spatialized2DElement,
         ]
 
         let baseInspectInfo = super.inspect()
