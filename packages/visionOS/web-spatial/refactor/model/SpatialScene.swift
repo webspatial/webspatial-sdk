@@ -7,7 +7,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         super.init()
 
         spatialWebViewModel.load()
-        print("SpatialScene init")
     }
 
     /*
@@ -87,4 +86,57 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     func getView() -> SpatialWebView {
         return spatialWebViewModel.getView()
     }
+
+    /*
+     * Begin SpatialObjects management
+     */
+
+    // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
+    private var spatialObjects = [String: SpatialObject]()
+
+    func createSpatializedElement<T: SpatializedElement>(type: SpatializedElementType) -> T {
+        let spatializedElement: T = switch type {
+        case .Spatialized2DElement:
+            Spatialized2DElement() as! T
+        case .SpatializedStatic3DElement:
+            SpatializedStatic3DElement() as! T
+        case .SpatializedDynamic3DElement:
+            SpatializedDynamic3DElement() as! T
+        }
+
+        addSpatialObject(spatializedElement)
+
+        return spatializedElement
+    }
+
+    func createEntity() {
+        //      @fukang: add Entity here
+    }
+
+    func createComponent() {
+        //      @fukang: add Component here
+    }
+
+    private func addSpatialObject(_ spatialObject: SpatialObject) {
+        spatialObjects[spatialObject.id] = spatialObject
+        spatialObject
+            .on(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onSptatialObjectDestroyed
+            )
+    }
+
+    private func onSptatialObjectDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialObject
+        spatialObject
+            .off(
+                event: SpatialObject.Events.BeforeDestroyed.rawValue,
+                listener: onSptatialObjectDestroyed
+            )
+        spatialObjects.removeValue(forKey: spatialObject.id)
+    }
+
+    /*
+     * End SpatialObjects management
+     */
 }

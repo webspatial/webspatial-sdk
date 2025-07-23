@@ -29,7 +29,9 @@ class SpatializedElement: SpatialObject {
         self.parent = parent
     }
 
-    func getParent() {}
+    func getParent() -> ScrollAbleSpatialElementContainer? {
+        return parent
+    }
 
     override func onDestroy() {
         if let prevParent = parent {

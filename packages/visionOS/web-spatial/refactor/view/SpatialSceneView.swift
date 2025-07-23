@@ -34,7 +34,29 @@ struct SpatialSceneView: View {
     }
 }
 
-#Preview(windowStyle: .automatic) {
-    SpatialSceneView()
-        .environment(SpatialScene("https://www.baidu.com/"))
+struct PreviewSpatialScene: View {
+    var spatialScene = SpatialScene("https://www.google.com/")
+
+    init() {
+        spatialScene.cornerRadius.bottomLeading = 130
+
+        var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+
+        spatialized2DElement.transform.translation.x = 200
+        spatialized2DElement.transform.translation.y = 200
+        spatialized2DElement.width = 200
+        spatialized2DElement.height = 200
+        spatialized2DElement.loadHtml()
+
+//        spatialScene.addChild(spatialized2DElement)
+    }
+
+    var body: some View {
+        SpatialSceneView()
+            .environment(spatialScene)
+    }
+}
+
+#Preview("Test SpatialScene", windowStyle: .automatic) {
+    PreviewSpatialScene()
 }
