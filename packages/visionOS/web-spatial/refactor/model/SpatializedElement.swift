@@ -17,6 +17,8 @@ class SpatializedElement: SpatialObject {
     var rotationAnchor: UnitPoint3D = .center
     var opacity: Double = 1.0
     var visible = true
+    var scrollWithParent = true
+    var zIndex: Double = 0
 
     private(set) var parent: ScrollAbleSpatialElementContainer?
 

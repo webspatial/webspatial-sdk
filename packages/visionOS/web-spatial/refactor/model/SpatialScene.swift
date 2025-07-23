@@ -5,6 +5,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     override init(_ url: String) {
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
+
+        spatialWebViewModel.load()
+        print("SpatialScene init")
     }
 
     /*
@@ -59,13 +62,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    func updateScrollOffset(_ delta: Double) {
-        <#code#>
-    }
+    func updateScrollOffset(_ delta: Double) {}
 
-    func stopScrolling() {
-        <#code#>
-    }
+    func stopScrolling() {}
 
     /*
      * End Implement SpatialScrollAble Protocol

@@ -4,18 +4,7 @@ import SwiftUI
 
 @Observable
 class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContainer {
-    private var _backgroundMaterial = BackgroundMaterial.None
-    var backgroundMaterial: BackgroundMaterial {
-        get {
-            return _backgroundMaterial
-        }
-        set(newValue) {
-            _backgroundMaterial = newValue
-            // it's spatial div
-//                webViewNative?.webViewHolder.appleWebView?.isOpaque = false
-        }
-    }
-
+    var backgroundMaterial: BackgroundMaterial = .None
     var cornerRadius: CornerRadius = .init()
 
     private var _scrollEnabled = false
@@ -27,8 +16,6 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             _scrollEnabled = newValue
         }
     }
-
-    var zIndex: Double = 0
 
     var _scrollOffset: Vec2 = .init(x: 0, y: 0)
     var scrollOffset: Vec2 {
