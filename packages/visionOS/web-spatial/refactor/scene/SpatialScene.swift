@@ -50,15 +50,16 @@ class SpatialScene: SpatialObject {
     var wgd: SceneData // windowGroupData used to open/dismiss
 
     var plainDefaultValues: WindowContainerPlainDefaultValues?
-    // TODO: var VolumeDefaultValues: WindowContainerPlainDefaultValues
+    // TODO: var volumeDefaultValues: WindowContainerVolumeDefaultValues
 
     enum SceneStateKind: String {
-        case created
+        case loading
         case configured
-        case active
+        case success
+        case fail
     }
 
-    var state: SceneStateKind = .created
+    var state: SceneStateKind = .loading
 
     weak var parent: SpatialScene? = nil
 
@@ -83,21 +84,18 @@ class SpatialScene: SpatialObject {
     }
 
     private func setup() {
-        setupWindowOpen()
-        setupJSB()
-    }
-
-    private func setupWindowOpen() {
         spatialWebviewModel?
             .addOpenWindowListener(
                 protocal: "http",
                 event: handleWindowOpen
             )
-    }
-
-    private func setupJSB() {
         spatialWebviewModel?
-            .addJSBListener(dataClass: SceneCommand.self, event: handleJSB)
+            .addJSBListener(dataClass: SceneCommand.self, event: handleJSBScene)
+        spatialWebviewModel?
+            .addJSBListener(
+                dataClass: LoadingCommand.self,
+                event: handleJSBLoading
+            )
     }
 
     private func handleWindowOpen(_ url: String) -> SpatialWebViewModel {
@@ -113,7 +111,11 @@ class SpatialScene: SpatialObject {
         return newScene.spatialWebviewModel!
     }
 
-    private func handleJSB(_ data: SceneCommand) {
+    private func handleJSBLoading(_ data: LoadingCommand) {
+        // TODO:
+    }
+
+    private func handleJSBScene(_ data: SceneCommand) {
         print("Scene::handleJSB", data.sceneData)
         // find scene
         if let method = data.sceneData.method,
@@ -121,23 +123,44 @@ class SpatialScene: SpatialObject {
            let targetScene = SpatialScene.getSpatialScene(sceneId)
         {
             if method == "createRoot" {
+                // set relationship
+                targetScene.parent = self
                 if let sceneConfig = data.sceneData.sceneConfig {
                     // config
                     targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
-
                     // finish config
-                    targetScene.parent = self
                     targetScene.state = .configured
-
                     targetScene.show()
                 }
+            } else if method == "showRoot" {
+                if let sceneConfig = data.sceneData.sceneConfig {
+                    // config
+                    targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
+                    // finish config
+                    targetScene.state = .configured
+                    targetScene.show()
+                } else {
+                    // error!
+                    print("should have config")
+                }
             }
-            // check state
-            if targetScene.state == .configured {}
         }
     }
 
     private class SceneCommand: CommandDataProtocol {
+        static let commandType = "createScene"
+
+        var windowStyle: String
+        var sceneData: SceneJSBDataNew
+
+        init(_ msg: String, _ data: SceneJSBDataNew) {
+            windowStyle = msg
+            sceneData = data
+        }
+    }
+
+    private class LoadingCommand: CommandDataProtocol {
+        // TODO:
         static let commandType = "createScene"
 
         var windowStyle: String
@@ -263,7 +286,7 @@ class SpatialScene: SpatialObject {
         if let pScene = parent {
             // set defaultSize and resizability
 
-            state = .active
+            state = .success
 
             // plain show
             print("plainDefaultValues", plainDefaultValues)
