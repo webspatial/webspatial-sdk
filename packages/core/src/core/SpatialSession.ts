@@ -452,6 +452,6 @@ export class SpatialSession {
   // set loading view.
   /** @hidden */
   async setLoading(method: LoadingMethodKind, style?: string) {
-    return WebSpatial.setLoading(method, style)
+    return WebSpatial.setLoadingNew(method, style)
   }
 }

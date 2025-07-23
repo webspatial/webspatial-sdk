@@ -14,6 +14,11 @@ struct SceneJSBDataNew: Codable {
     var sceneID: String?
 }
 
+struct LoadingJSBDataNew: Codable {
+    var method: String?
+    var style: String?
+}
+
 @Observable
 class SpatialSceneX: SpatialObject {
     private static let RootID = "root"
@@ -112,7 +117,23 @@ class SpatialSceneX: SpatialObject {
     }
 
     private func handleJSBLoading(_ data: LoadingCommand) {
-        // TODO:
+        let method = data.loading.method
+        switch method {
+        case "show":
+            let lwgdata = LoadingWindowContainerData(
+                method: .show,
+                windowStyle: nil
+            )
+            parent?.setLoadingWindowData.send(lwgdata)
+        case "hide":
+            let lwgdata = LoadingWindowContainerData(
+                method: .hide,
+                windowStyle: nil
+            )
+            parent?.setLoadingWindowData.send(lwgdata)
+        default:
+            return
+        }
     }
 
     private func handleJSBScene(_ data: SceneCommand) {
@@ -160,15 +181,14 @@ class SpatialSceneX: SpatialObject {
     }
 
     private class LoadingCommand: CommandDataProtocol {
-        // TODO:
         static let commandType = "setLoading"
 
-        var windowStyle: String
-        var sceneData: SceneJSBDataNew
+        var sceneID: String
+        var loading: LoadingJSBDataNew
 
-        init(_ msg: String, _ data: SceneJSBDataNew) {
-            windowStyle = msg
-            sceneData = data
+        init(_ msg: String, _ data: LoadingJSBDataNew) {
+            sceneID = msg
+            loading = data
         }
     }
 

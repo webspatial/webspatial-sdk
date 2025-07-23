@@ -43,5 +43,9 @@ struct web_spatialApp_x: App {
         ).windowResizability(
             wgm.getValue().windowResizability!
         )
+
+        WindowGroup(id: "loading") {
+            LoadingView()
+        }
     }
 }

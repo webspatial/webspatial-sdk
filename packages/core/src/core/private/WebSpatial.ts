@@ -383,6 +383,22 @@ export class WebSpatial {
     return result
   }
 
+  static async setLoadingNew(method: LoadingMethodKind, style?: string) {
+    var cmd = new RemoteCommand('setLoading', {
+      sceneID: window._webSpatialID,
+      loading: {
+        method,
+        style,
+      },
+    })
+
+    var result = await new Promise((res, rej) => {
+      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
+      WebSpatial.sendCommand(cmd)
+    })
+    return result
+  }
+
   static async openImmersiveSpace() {
     var cmd = new RemoteCommand('openImmersiveSpace')
     await WebSpatial.sendCommand(cmd)
