@@ -33,7 +33,7 @@ class SpatialSceneX: SpatialObject {
 
     var updateFrame = false
     var openWindowData = PassthroughSubject<SceneData, Never>()
-    var closeWindowData = PassthroughSubject<WindowContainerData, Never>()
+    var closeWindowData = PassthroughSubject<SceneData, Never>()
 
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
@@ -95,6 +95,11 @@ class SpatialSceneX: SpatialObject {
                 event: handleWindowOpen
             )
         spatialWebviewModel?
+            .addCloseWindowListener(
+                protocal: "*",
+                event: handleWindowClose
+            )
+        spatialWebviewModel?
             .addJSBListener(dataClass: SceneCommand.self, event: handleJSBScene)
         spatialWebviewModel?
             .addJSBListener(
@@ -114,6 +119,11 @@ class SpatialSceneX: SpatialObject {
         }
 
         return newScene.spatialWebviewModel!
+    }
+
+    private func handleWindowClose(_ url: String) {
+//        print("window.close")
+        closeWindowData.send(wgd)
     }
 
     private func handleJSBLoading(_ data: LoadingCommand) {
