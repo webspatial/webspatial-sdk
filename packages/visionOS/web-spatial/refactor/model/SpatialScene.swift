@@ -1,7 +1,7 @@
 import Foundation
 
 @Observable
-class SpatialScene2: SpatialObject, ScrollAbleSpatialElementContainer {
+class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     override init(_ url: String) {
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()

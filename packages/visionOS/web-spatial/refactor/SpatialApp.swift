@@ -32,23 +32,24 @@ struct SpatialApp: App {
         // create first scene
         let wgd = SceneData(
             windowStyle: "Plain",
-            sceneID: SpatialScene.getRootID()
+            sceneID: SpatialSceneX.getRootID()
         )
-        _ = SpatialScene(SpatialScene.getRootID(), startURL, wgd)
+        // TODO:
+        _ = SpatialSceneX(SpatialSceneX.getRootID(), startURL, wgd)
     }
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
-            let scene = SpatialScene.getOrCreateSpatialScene(
+            let scene = SpatialSceneX.getOrCreateSpatialScene(
                 windowData.sceneID,
                 windowData
             )
-            SpatialSceneView().environment(scene)
+            SpatialSceneXView().environment(scene)
         }
         defaultValue: {
             let windowData = SceneData(
                 windowStyle: "Plain",
-                sceneID: SpatialScene.getRootID()
+                sceneID: SpatialSceneX.getRootID()
             )
 
             return windowData

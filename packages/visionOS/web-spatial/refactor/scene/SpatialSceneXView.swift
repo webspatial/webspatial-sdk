@@ -2,8 +2,8 @@
 
 import SwiftUI
 
-struct SpatialSceneView: View {
-    @Environment(SpatialScene.self) private var scene: SpatialScene
+struct SpatialSceneXView: View {
+    @Environment(SpatialSceneX.self) private var scene: SpatialSceneX
     @State var web: SpatialWebViewModel?
 
     var body: some View {

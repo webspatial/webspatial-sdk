@@ -15,7 +15,7 @@ struct SceneJSBDataNew: Codable {
 }
 
 @Observable
-class SpatialScene: SpatialObject {
+class SpatialSceneX: SpatialObject {
     private static let RootID = "root"
     static func getRootID() -> String {
         return RootID
@@ -61,7 +61,7 @@ class SpatialScene: SpatialObject {
 
     var state: SceneStateKind = .loading
 
-    weak var parent: SpatialScene? = nil
+    weak var parent: SpatialSceneX? = nil
 
 //    private var spatialWebviewModel: SpatialWebviewModelFake?
 
@@ -102,7 +102,7 @@ class SpatialScene: SpatialObject {
         print("url,", url)
         let sceneId = UUID().uuidString
         let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
-        let newScene = SpatialScene(sceneId, url, wgd)
+        let newScene = SpatialSceneX(sceneId, url, wgd)
 
         DispatchQueue.main.async {
             newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + sceneId + "'")
@@ -120,7 +120,7 @@ class SpatialScene: SpatialObject {
         // find scene
         if let method = data.sceneData.method,
            let sceneId = data.sceneData.sceneID,
-           let targetScene = SpatialScene.getSpatialScene(sceneId)
+           let targetScene = SpatialSceneX.getSpatialScene(sceneId)
         {
             if method == "createRoot" {
                 // set relationship
@@ -195,15 +195,15 @@ class SpatialScene: SpatialObject {
         removeChildResource(element)
     }
 
-    static func getSpatialScene(_ name: String) -> SpatialScene? {
-        return SpatialObject.get(name) as? SpatialScene
+    static func getSpatialScene(_ name: String) -> SpatialSceneX? {
+        return SpatialObject.get(name) as? SpatialSceneX
     }
 
-    static func getOrCreateSpatialScene(_ name: String, _ data: SceneData) -> SpatialScene? {
+    static func getOrCreateSpatialScene(_ name: String, _ data: SceneData) -> SpatialSceneX? {
         if let scene = getSpatialScene(name) {
             return scene
         }
-        let newScene = SpatialScene(name, data)
+        let newScene = SpatialSceneX(name, data)
         return newScene
     }
 
