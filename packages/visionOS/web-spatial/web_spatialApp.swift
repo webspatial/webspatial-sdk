@@ -25,7 +25,7 @@ struct web_spatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State var initialLaunch = true
 
-    @ObservedObject var wgm = WindowContainerMgr.Instance
+    @State var wgm = WindowContainerMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 

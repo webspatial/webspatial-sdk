@@ -81,11 +81,11 @@ func getWindowResizability(_ windowResizability: String?) -> WindowResizability 
 }
 
 @Observable
-class WindowContainerMgr: ObservableObject {
+class WindowContainerMgr {
     static let Instance = WindowContainerMgr()
 
     // cache for dynamic loading scene reopen
-    var memorizedMainSceneConfig: WindowContainerPlainDefaultValues? = nil
+    var memorizedMainSceneConfig: WindowContainerPlainDefaultValues?
 
     private init() {
         setToMainSceneCfg()

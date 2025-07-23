@@ -9,33 +9,16 @@ import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
 @main
-struct SpatialApp: App {
+struct web_spatialApp_x: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var initialLaunch = true
-
-    @ObservedObject var wgm = WindowContainerMgr.Instance
+    @State var app: SpatialApp
+    @State var wgm = WindowContainerMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
-
-        // init global logger
-        Logger.initLogger()
-
-        // init pwa manager
-        pwaManager._init()
-
-        // create Immersive SpatialWindowContainer
-//        let _ = SpatialWindowContainer.createImmersiveWindowContainer()
-
-        // create first scene
-        let wgd = SceneData(
-            windowStyle: "Plain",
-            sceneID: SpatialSceneX.getRootID()
-        )
-        // TODO:
-        _ = SpatialSceneX(SpatialSceneX.getRootID(), startURL, wgd)
+        app = SpatialApp()
+        app.createRootScene()
     }
 
     var body: some Scene {
