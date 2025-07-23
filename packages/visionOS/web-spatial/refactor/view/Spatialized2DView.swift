@@ -2,14 +2,17 @@ import RealityKit
 import SwiftUI
 
 class Spatialized2DViewGestureData {
-    var isDragging = false
     var dragStarted = false
     var dragStart = 0.0
     var dragVelocity = 0.0
 }
 
 struct Spatialized2DView: View {
-    @Environment(Spatialized2DElement.self) var spatialized2DElement: Spatialized2DElement
+    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+
+    private var spatialized2DElement: Spatialized2DElement {
+        return spatializedElement as! Spatialized2DElement
+    }
 
     @State private var gestureData = Spatialized2DViewGestureData()
 

@@ -16,6 +16,21 @@ struct WebSpatialApp: App {
     init() {
 //        appModel = SpatialScene("https://www.baidu.com/")
         appModel = SpatialScene("http://localhost:5173/")
+
+        var spatialScene = appModel
+
+        spatialScene.cornerRadius.bottomLeading = 130
+
+        var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+
+        spatialized2DElement.transform.translation.x = 200
+        spatialized2DElement.transform.translation.y = 200
+        spatialized2DElement.transform.translation.z = 200
+        spatialized2DElement.width = 200
+        spatialized2DElement.height = 200
+        spatialized2DElement.loadHtml()
+
+        spatialScene.addChild(spatialized2DElement)
     }
 
     var body: some Scene {

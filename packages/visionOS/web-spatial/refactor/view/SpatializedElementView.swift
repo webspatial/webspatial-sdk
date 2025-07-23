@@ -14,8 +14,6 @@ struct SpatializedElementView<Content: View>: View {
 
     @ViewBuilder
     var body: some View {
-        let spatialized2DElement = spatializedElement as! Spatialized2DElement
-        let isSpatialized2DElement = spatializedElement is Spatialized2DElement
         let transform = spatializedElement.transform
 
         let translation = transform.translation
@@ -33,7 +31,7 @@ struct SpatializedElementView<Content: View>: View {
         let visible = spatializedElement.visible
 
         // Matrix = MTranslate X MRotate X MScale
-        content.environment(spatializedElement)
+        content
             .frame(width: width, height: height)
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
             .offset(z: 0.0001)
