@@ -11,6 +11,14 @@ class JSBManager {
         typeMap[T.commandType] = type
     }
 
+    func remove<T: CommandDataProtocol>(_ type: T.Type) {
+        typeMap.removeValue(forKey: T.commandType)
+    }
+
+    func clear() {
+        typeMap = [String: CommandDataProtocol.Type]()
+    }
+
     func typeof(for key: String) -> CommandDataProtocol.Type? {
         return typeMap[key]
     }

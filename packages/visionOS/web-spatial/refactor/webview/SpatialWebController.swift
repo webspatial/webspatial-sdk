@@ -8,6 +8,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var navigationInvoke: ((_ data: String) -> Any)?
     private var openWindowInvoke: ((_ data: String) -> Any)?
     private var jsbInvoke: ((_ data: String) -> Any)?
+    var webview: WKWebView?
 
     override init() {
         id = UUID().uuidString
@@ -46,7 +47,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         if let model = openWindowInvoke?(navigationAction.request.url!.absoluteString) as? SpatialWebViewModel {
-            return model.getView().getView()
+            return model.getController().webview
         }
         return nil
     }
@@ -139,6 +140,20 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
                 print("url change", url)
                 self.model?.url = url
             }
+        }
+    }
+
+    func destoryView() {
+        webview?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
+        webview?.uiDelegate = nil
+        webview?.navigationDelegate = nil
+        webview?.scrollView.delegate = nil
+        webview = nil
+    }
+
+    func callJS(_ js: String) {
+        if webview != nil {
+            webview!.evaluateJavaScript(js)
         }
     }
 }

@@ -2,10 +2,10 @@ import SwiftUI
 @preconcurrency import WebKit
 
 @Observable
-class SpatialWebViewModel {
+class SpatialWebViewModel: SpatialObject {
     private(set) var viewState = ""
     var url = ""
-    private var view: SpatialWebView
+    private var view: SpatialWebView?
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: String) -> Any] = [:]
     private var openWindowList: [String: (_ data: String) -> Any] = [:]
@@ -16,37 +16,38 @@ class SpatialWebViewModel {
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
+        super.init()
         controller = SpatialWebController()
-
-        view = SpatialWebView()
-
-        view.controller = controller!
-        view.initView()
         self.url = url ?? ""
-
         controller!.model = self
-        view.model = self
-
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerJSBInvoke(invoke: onJSBInvoke)
+        _ = WKWebViewManager.Instance.create(controller: controller!)
     }
 
     func load() {
-        print("load", url)
         load(url)
     }
 
     func load(_ url: String) {
-        view.load(url: url)
+        controller!.webview!.load(URLRequest(url: URL(string: url)!))
     }
 
     func getView() -> SpatialWebView {
-        return view
+        if view == nil {
+            view = SpatialWebView()
+            view!.model = self
+        }
+        return view!
+    }
+
+    func getController() -> SpatialWebController {
+        return controller!
     }
 
     func onWebViewUpdate(type: String) {
-        print(type)
+//        print(type)
         switch type {
         case "view:updateUI":
 //            load()
@@ -97,6 +98,30 @@ class SpatialWebViewModel {
         }
     }
 
+    func removeJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type) {
+        cmdManager.remove(dataClass)
+        commandList.removeValue(forKey: dataClass.commandType)
+    }
+
+    func removeAllJSBListener() {
+        commandList = [:]
+        cmdManager.clear()
+    }
+
+    func removeAllNavigationListener() {
+        navigationList = [:]
+    }
+
+    func removeAllOpenWindowListener() {
+        openWindowList = [:]
+    }
+
+    func removeAllListener() {
+        removeAllJSBListener()
+        removeAllNavigationListener()
+        removeAllOpenWindowListener()
+    }
+
     private func onNavigationInvoke(_ url: String) -> Any {
         var protocolRes: Any? = nil
         for key in navigationList.keys {
@@ -121,8 +146,10 @@ class SpatialWebViewModel {
         return protocolRes
     }
 
-    // todo
-    // parse codable
+    func fireMockJSB(_ command: String) {
+        _ = onJSBInvoke(command)
+    }
+
     private func onJSBInvoke(_ command: String) -> Result<CommandDataProtocol, JSBManager.SerializationError> {
         do {
             let jsbInfo = command.components(separatedBy: "::")
@@ -142,7 +169,7 @@ class SpatialWebViewModel {
     }
 
     func evaluateJS(js: String) {
-        view.callJS(js: js)
+        controller?.callJS(js)
     }
 
     func destory() {
