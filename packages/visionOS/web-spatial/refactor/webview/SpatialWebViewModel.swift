@@ -86,7 +86,7 @@ class SpatialWebViewModel {
         openWindowList[protocal] = event
     }
 
-    func addJSBListener<T: CommandDataProtocol>(dataClass: T.Type, event: @escaping (_ data: T) -> Any) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T) -> Any) {
         cmdManager.register(dataClass)
         commandList[dataClass.commandType] = { data in
             guard let concreteData = data as? T else {

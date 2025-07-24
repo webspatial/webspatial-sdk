@@ -7,6 +7,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         super.init()
 
         spatialWebViewModel.load()
+
+        setupJSBListeners()
+    }
+
+    private func setupJSBListeners() {
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { data in
+            print("data \(data)")
+        }
     }
 
     /*
