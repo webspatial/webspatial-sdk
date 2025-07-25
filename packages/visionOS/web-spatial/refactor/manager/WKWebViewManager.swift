@@ -11,7 +11,8 @@ class WKWebViewManager {
         // TODO: get native api instead of PACKAGE_VERSION
         let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = '" + "PACKAGE_VERSION" + "';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userContentController.addUserScript(userScript)
-        userContentController.add(controller, name: "bridge")
+//        userContentController.add(controller, name: "bridge")
+        userContentController.addScriptMessageHandler(controller, contentWorld: .page, name: "bridge")
         let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
         myConfig.userContentController = userContentController
         myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true

@@ -7,10 +7,9 @@ class SpatialWebViewModel: SpatialObject {
     var url = ""
     private var view: SpatialWebView?
     private var controller: SpatialWebController?
-    private var navigationList: [String: (_ data: String) -> Any] = [:]
-    private var openWindowList: [String: (_ data: String) -> Any] = [:]
-    private var protocolList: [String: (_ data: String) -> Any] = [:]
-    private var commandList: [String: (_ data: Any) -> Any] = [:]
+    private var navigationList: [String: (_ data: URL) -> Bool] = [:]
+    private var openWindowList: [String: (_ data: URL) -> SpatialWebViewModel?] = [:]
+    private var commandList: [String: (_ data: Any?, _ resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) -> Void] = [:]
     private var cmdManager = JSBManager()
 
     var scrollOffset: CGPoint = .zero
@@ -79,22 +78,21 @@ class SpatialWebViewModel: SpatialObject {
 //        view.scorll(offset)
     }
 
-    func addNavigationListener(protocal: String, event: @escaping (_ data: String) -> Any) {
+    func addNavigationListener(protocal: String, event: @escaping (_ data: URL) -> Bool) {
         navigationList[protocal] = event
     }
 
-    func addOpenWindowListener(protocal: String, event: @escaping (_ data: String) -> Any) {
+    func addOpenWindowListener(protocal: String, event: @escaping (_ data: URL) -> SpatialWebViewModel) {
         openWindowList[protocal] = event
     }
 
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T) -> Any) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T?, _ resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) -> Void) {
         cmdManager.register(dataClass)
-        commandList[dataClass.commandType] = { data in
+        commandList[dataClass.commandType] = { data, resolve, reject in
             guard let concreteData = data as? T else {
-                print("Command Type mismatch")
-                return
+                return event(nil, resolve, reject)
             }
-            return event(concreteData)
+            return event(concreteData, resolve, reject)
         }
     }
 
@@ -122,10 +120,10 @@ class SpatialWebViewModel: SpatialObject {
         removeAllOpenWindowListener()
     }
 
-    private func onNavigationInvoke(_ url: String) -> Any {
-        var protocolRes: Any? = nil
+    private func onNavigationInvoke(_ url: URL) -> Bool {
+        var protocolRes = true
         for key in navigationList.keys {
-            if url.starts(with: key),
+            if url.absoluteString.starts(with: key),
                let res = navigationList[key]?(url)
             {
                 protocolRes = res
@@ -134,10 +132,10 @@ class SpatialWebViewModel: SpatialObject {
         return protocolRes
     }
 
-    private func onOpenWindowInvoke(_ url: String) -> Any {
-        var protocolRes: Any? = nil
+    private func onOpenWindowInvoke(_ url: URL) -> SpatialWebViewModel? {
+        var protocolRes: SpatialWebViewModel? = nil
         for key in openWindowList.keys {
-            if url.starts(with: key),
+            if url.absoluteString.starts(with: key),
                let res = openWindowList[key]?(url)
             {
                 protocolRes = res
@@ -147,33 +145,31 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     func fireMockJSB(_ command: String) {
-        _ = onJSBInvoke(command)
+        let promise = JSBManager.Promise { _, _ in }
+        onJSBInvoke(command, promise)
     }
 
-    private func onJSBInvoke(_ command: String) -> Result<CommandDataProtocol, JSBManager.SerializationError> {
+    private func onJSBInvoke(_ command: String, _ promise: JSBManager.Promise) {
         do {
             let jsbInfo = command.components(separatedBy: "::")
             if jsbInfo.count == 2 {
                 let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
                 if let action = commandList[jsbInfo[0]] {
-                    _ = action(data)
+                    action(data, promise.resolve, promise.reject)
                 }
-                return .success(data)
+            } else {
+                if let action = commandList[jsbInfo[0]] {
+                    action(nil, promise.resolve, promise.reject)
+                }
             }
-            return .failure(.unknownType)
-        } catch _ as JSBManager.SerializationError {
-            return .failure(.unknownType)
-        } catch {
-            return .failure(.invalidFormat)
-        }
+        } catch {}
+    }
+
+    func destory() {
+        onDestroy()
     }
 
     func evaluateJS(js: String) {
         controller?.callJS(js)
-    }
-
-    func destory() {
-        protocolList = [:]
-        commandList = [:]
     }
 }

@@ -1,13 +1,13 @@
 import SwiftUI
 @preconcurrency import WebKit
 
-class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
+class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     var id: String
     weak var model: SpatialWebViewModel?
     private var isObserving = false
-    private var navigationInvoke: ((_ data: String) -> Any)?
-    private var openWindowInvoke: ((_ data: String) -> Any)?
-    private var jsbInvoke: ((_ data: String) -> Any)?
+    private var navigationInvoke: ((_ data: URL) -> Bool)?
+    private var openWindowInvoke: ((_ data: URL) -> SpatialWebViewModel?)?
+    private var jsbInvoke: ((_ data: String, _ promise: JSBManager.Promise) -> Void)?
     var webview: WKWebView?
 
     override init() {
@@ -17,22 +17,22 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     deinit {}
 
-    func registerNavigationInvoke(invoke: @escaping (_ data: String) -> Any) {
+    func registerNavigationInvoke(invoke: @escaping (_ data: URL) -> Bool) {
         navigationInvoke = invoke
     }
 
-    func registerOpenWindowInvoke(invoke: @escaping (_ data: String) -> Any) {
+    func registerOpenWindowInvoke(invoke: @escaping (_ data: URL) -> SpatialWebViewModel?) {
         openWindowInvoke = invoke
     }
 
-    func registerJSBInvoke(invoke: @escaping (_ data: String) -> Any) {
+    func registerJSBInvoke(invoke: @escaping (_ data: String, _ promise: JSBManager.Promise) -> Void) {
         jsbInvoke = invoke
     }
 
     // navigation request
     // SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        if let deciside = navigationInvoke?(navigationAction.request.url!.absoluteString) as? Bool {
+        if let deciside = navigationInvoke?(navigationAction.request.url!) {
             decisionHandler(deciside ? .allow : .cancel)
             return
         }
@@ -46,7 +46,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        if let model = openWindowInvoke?(navigationAction.request.url!.absoluteString) as? SpatialWebViewModel {
+        if let model = openWindowInvoke?(navigationAction.request.url!) {
             return model.getController().webview
         }
         return nil
@@ -55,9 +55,10 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     // invoke jsb
     func userContentController(
         _ userContentController: WKUserContentController,
-        didReceive message: WKScriptMessage
+        didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void
     ) {
-        _ = jsbInvoke?(message.body as! String)
+        let promise = JSBManager.Promise(replyHandler)
+        jsbInvoke?(message.body as! String, promise)
     }
 
     // custom scheme request

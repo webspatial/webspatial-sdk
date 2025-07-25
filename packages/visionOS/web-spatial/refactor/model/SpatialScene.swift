@@ -12,11 +12,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupJSBListeners() {
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { command in
-            self.backgroundMaterial = command.material
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { command, resolve, _ in
+            self.backgroundMaterial = command!.material
+            resolve(nil)
         }
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command in
-            self.cornerRadius = command.cornerRadius
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command, resolve, _ in
+            self.cornerRadius = command!.cornerRadius
+            resolve(nil)
         }
     }
 
