@@ -8,6 +8,7 @@ export const defaultSceneConfig: WindowContainerOptions = {
   },
 }
 
+const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
 const CONTEXT_WINDOW_URL = 'webspatial://createWindowContext'
 const originalOpen = window.open
 export class XRApp {
@@ -67,57 +68,26 @@ export class XRApp {
     }
   }
   open = (url?: string, target?: string, features?: string) => {
-    const newWindow = originalOpen(url, target, features)
-    if (url === CONTEXT_WINDOW_URL) return newWindow
+    // bypass internal
+    if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
+      return originalOpen(url, target, features)
+    }
+
     // if target is special
     if (target === '_self' || target === '_parent' || target === '_top') {
+      const newWindow = originalOpen(url, target, features)
       return newWindow
     }
-    // should open new scene or focus to
 
-    // _webSpatialID is assigned for the new webview
-    // timer to check _webSpatialID exist
-    let cnt = 2
-    let timer = setInterval(async () => {
-      cnt -= 1
-      if (cnt < 0) {
-        clearInterval(timer)
-        return
-      }
-      // native should createRoot if it see the windowID for the first time
-      // otherwise should focus to
-      if ((newWindow as any)._webSpatialID) {
-        clearInterval(timer)
-        // fixme:
-        let session = getSession()
-        if (!session) {
-          console.error('no session')
-        } else {
-          const cfg = this.getConfig(target)
-          try {
-            await session._createScene(
-              'Plain', // only support Plain for now
-              {
-                sceneData: {
-                  method: 'createRoot',
-                  sceneConfig: cfg,
-                  url: url,
-                  window: newWindow!,
-                  // windowID: (newWindow as any)._webSpatialID,
-                  // windowContainerID: (newWindow as any)._webSpatialGroupID,
-                },
-              },
-            )
-            // remove config after use
-            if (typeof target === 'string' && this.configMap[target]) {
-              delete this.configMap[target]
-            }
-          } catch (error) {
-            console.error(error)
-          }
-        }
-      }
-    }, 0)
+    const cfg = target ? this.getConfig(target) : undefined
+    let schemaUrl = getCreateSceneSchemaUrl(url ?? '', cfg)
+    const newWindow = originalOpen(schemaUrl, target, features)
+    // remove config after use
+    if (typeof target === 'string' && this.configMap[target]) {
+      delete this.configMap[target]
+    }
+
+    // should open new scene or focus to todo:
     return newWindow
   }
   initScene(
@@ -126,4 +96,11 @@ export class XRApp {
   ) {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
+}
+
+function getCreateSceneSchemaUrl(
+  url: string,
+  sceneConfig?: WindowContainerOptions,
+) {
+  return `webspatial://createscene?url=${encodeURIComponent(url)}&config=${encodeURIComponent(JSON.stringify(sceneConfig))}`
 }

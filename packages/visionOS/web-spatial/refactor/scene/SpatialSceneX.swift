@@ -91,8 +91,8 @@ class SpatialSceneX: SpatialObject {
     private func setup() {
         spatialWebviewModel?
             .addOpenWindowListener(
-                protocal: "http",
-                event: handleWindowOpen
+                protocal: "webspatial://createscene",
+                event: handleWindowOpenCustom
             )
         spatialWebviewModel?
             .addCloseWindowListener(
@@ -103,12 +103,73 @@ class SpatialSceneX: SpatialObject {
             .addJSBListener(dataClass: SceneCommand.self, event: handleJSBScene)
     }
 
-    private func handleWindowOpen(_ url: String) -> SpatialWebViewModel {
-        // TODO: get config from url
-        let newScene = SpatialAppX.createScene(url)
+    private func handleWindowOpenCustom(_ url: String) -> SpatialWebViewModel? {
+//        print("handleWindowOpenCustom::url",url)
+        // get config from url
+
+        guard let components = URLComponents(string: url),
+              let queryItems = components.queryItems
+        else {
+            print("❌ fail to parse URL")
+            return nil
+        }
+
+        guard let encodedUrl = queryItems.first(where: { $0.name == "url" })?.value,
+              let decodedUrl = encodedUrl.removingPercentEncoding
+        else {
+            print("❌ lack of required param url")
+            return nil
+        }
+
+        let newScene = SpatialAppX.createScene(decodedUrl)
+        print("newScene url:", newScene.url)
         newScene.setParent(self)
-        // if has config, open(config) otherwise open()
-        return newScene.spatialWebviewModel!
+
+        guard let encodedConfig = queryItems.first(where: { $0.name == "config" })?.value,
+              let decodedConfig = encodedConfig.removingPercentEncoding
+        else {
+            print("no config")
+
+            newScene.open()
+            // no config
+            return newScene.spatialWebviewModel
+        }
+
+        // has config
+
+        let decoder = JSONDecoder()
+        guard let configData = decodedConfig.data(using: .utf8) else {
+            print("❌ no config key")
+            // should not go here
+            return nil
+        }
+
+        var config: WindowContainerOptions? = nil
+
+        if decodedConfig == "undefined" || decodedConfig == "null" {
+            config = nil
+        } else {
+            do {
+                config = try decoder.decode(WindowContainerOptions.self, from: configData)
+            } catch {
+                print("❌ config JSON decode fail: \(decodedConfig)")
+                return nil
+            }
+        }
+
+//        print("config::",config)
+
+        if let cfg = config {
+            newScene.open(WindowContainerPlainDefaultValues(cfg))
+        } else {
+            newScene.open()
+            // FIXME: to trigger load
+            DispatchQueue.main.async {
+                newScene.spatialWebviewModel?.load(decodedUrl)
+            }
+        }
+
+        return newScene.spatialWebviewModel
     }
 
     private func handleWindowClose(_ url: String) {
@@ -123,18 +184,7 @@ class SpatialSceneX: SpatialObject {
            let sceneId = data.sceneData.sceneID,
            let targetScene = SpatialAppX.getScene(sceneId)
         {
-            if method == "createRoot" {
-                // set relationship
-//                targetScene.parent = self
-                if let sceneConfig = data.sceneData.sceneConfig {
-                    // config
-                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
-                    targetScene.spatialWebviewModel!.evaluateJS(js: "window._SceneHookOff=true;")
-                    targetScene.open(cfg)
-                } else {
-                    targetScene.open()
-                }
-            } else if method == "showRoot" {
+            if method == "showRoot" {
                 if let sceneConfig = data.sceneData.sceneConfig {
                     // config
                     let cfg = WindowContainerPlainDefaultValues(sceneConfig)
@@ -156,18 +206,6 @@ class SpatialSceneX: SpatialObject {
         init(_ msg: String, _ data: SceneJSBDataNew) {
             windowStyle = msg
             sceneData = data
-        }
-    }
-
-    private class LoadingCommand: CommandDataProtocol {
-        static let commandType = "setLoading"
-
-        var sceneID: String
-        var loading: LoadingJSBDataNew
-
-        init(_ msg: String, _ data: LoadingJSBDataNew) {
-            sceneID = msg
-            loading = data
         }
     }
 
@@ -280,6 +318,7 @@ class SpatialSceneX: SpatialObject {
             }
 
             state = newState
+            print("currentState:", state)
         } else {
             print("invalid state transition from \(state) to \(newState)")
         }
@@ -316,6 +355,7 @@ class SpatialSceneX: SpatialObject {
     }
 
     func open(_ config: WindowContainerPlainDefaultValues? = nil) {
+        print("open", config, state)
         guard state == .idle || state == .pending else { return }
 
         if state == .idle && config == nil {
