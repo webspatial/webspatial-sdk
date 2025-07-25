@@ -78,6 +78,6 @@ struct PreviewSpatialScene: View {
     }
 }
 
-#Preview("Test SpatialScene", windowStyle: .automatic) {
-    PreviewSpatialScene()
-}
+// #Preview("Test SpatialScene", windowStyle: .automatic) {
+//    PreviewSpatialScene()
+// }

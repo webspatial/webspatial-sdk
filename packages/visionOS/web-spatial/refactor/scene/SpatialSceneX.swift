@@ -21,17 +21,12 @@ struct LoadingJSBDataNew: Codable {
 
 @Observable
 class SpatialSceneX: SpatialObject {
-    private static let RootID = "root"
-    static func getRootID() -> String {
-        return RootID
-    }
-
+    // TOPIC
     var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
 
     var setSize = PassthroughSubject<CGSize, Never>()
     var setResizeRange = PassthroughSubject<ResizeRange, Never>()
 
-    var updateFrame = false
     var openWindowData = PassthroughSubject<SceneData, Never>()
     var closeWindowData = PassthroughSubject<SceneData, Never>()
 
@@ -52,19 +47,24 @@ class SpatialSceneX: SpatialObject {
     var spatializedDynamic3DElement = [String: SpatializedDynamic3DElement]() // id => ele
     var offset: [Double] = [0, 0]
 
-    var wgd: SceneData // windowGroupData used to open/dismiss
+//    var wgd: SceneData // windowGroupData used to open/dismiss
+
+    func getSceneData() -> SceneData {
+        return SceneData(windowStyle: windowStyle, sceneID: id)
+    }
 
     var plainDefaultValues: WindowContainerPlainDefaultValues?
     // TODO: var volumeDefaultValues: WindowContainerVolumeDefaultValues
 
     enum SceneStateKind: String {
-        case loading
+        case idle
+        case pending
         case configured
         case success
         case fail
     }
 
-    var state: SceneStateKind = .loading
+    var state: SceneStateKind = .idle
 
     weak var parent: SpatialSceneX? = nil
 
@@ -74,16 +74,16 @@ class SpatialSceneX: SpatialObject {
 
     private var childResources = [String: SpatializedElement]() // id => ele
 
-    init(_ name: String, _ data: SceneData) {
-        wgd = data
-        super.init(name)
+    override init(_ windowStyle: String) {
+        self.windowStyle = windowStyle
+        super.init()
         // TODO: should we setup this one
     }
 
-    init(_ name: String, _ url: String, _ data: SceneData) {
-        wgd = data
+    init(_ url: String, _ windowStyle: String) {
+        self.windowStyle = windowStyle
         self.url = url
-        super.init(name)
+        super.init()
         spatialWebviewModel = SpatialWebViewModel(url: url)
         setup()
     }
@@ -101,49 +101,19 @@ class SpatialSceneX: SpatialObject {
             )
         spatialWebviewModel?
             .addJSBListener(dataClass: SceneCommand.self, event: handleJSBScene)
-        spatialWebviewModel?
-            .addJSBListener(
-                dataClass: LoadingCommand.self,
-                event: handleJSBLoading
-            )
     }
 
     private func handleWindowOpen(_ url: String) -> SpatialWebViewModel {
-        print("url,", url)
-        let sceneId = UUID().uuidString
-        let wgd = SceneData(windowStyle: "Plain", sceneID: sceneId)
-        let newScene = SpatialSceneX(sceneId, url, wgd)
-
-        DispatchQueue.main.async {
-            newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + sceneId + "'")
-        }
-
+        // TODO: get config from url
+        let newScene = SpatialAppX.createScene(url)
+        newScene.setParent(self)
+        // if has config, open(config) otherwise open()
         return newScene.spatialWebviewModel!
     }
 
     private func handleWindowClose(_ url: String) {
 //        print("window.close")
-        closeWindowData.send(wgd)
-    }
-
-    private func handleJSBLoading(_ data: LoadingCommand) {
-        let method = data.loading.method
-        switch method {
-        case "show":
-            let lwgdata = LoadingWindowContainerData(
-                method: .show,
-                windowStyle: nil
-            )
-            parent?.setLoadingWindowData.send(lwgdata)
-        case "hide":
-            let lwgdata = LoadingWindowContainerData(
-                method: .hide,
-                windowStyle: nil
-            )
-            parent?.setLoadingWindowData.send(lwgdata)
-        default:
-            return
-        }
+        closeWindowData.send(getSceneData())
     }
 
     private func handleJSBScene(_ data: SceneCommand) {
@@ -151,27 +121,24 @@ class SpatialSceneX: SpatialObject {
         // find scene
         if let method = data.sceneData.method,
            let sceneId = data.sceneData.sceneID,
-           let targetScene = SpatialSceneX.getSpatialScene(sceneId)
+           let targetScene = SpatialAppX.getScene(sceneId)
         {
             if method == "createRoot" {
                 // set relationship
-                targetScene.parent = self
+//                targetScene.parent = self
                 if let sceneConfig = data.sceneData.sceneConfig {
                     // config
-                    targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
-                    // finish config
-                    targetScene.state = .configured
-                    // disable hook if we've configured
+                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
                     targetScene.spatialWebviewModel!.evaluateJS(js: "window._SceneHookOff=true;")
-                    targetScene.show()
+                    targetScene.open(cfg)
+                } else {
+                    targetScene.open()
                 }
             } else if method == "showRoot" {
                 if let sceneConfig = data.sceneData.sceneConfig {
                     // config
-                    targetScene.plainDefaultValues = WindowContainerPlainDefaultValues(sceneConfig)
-                    // finish config
-                    targetScene.state = .configured
-                    targetScene.show()
+                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
+                    targetScene.open(cfg)
                 } else {
                     // error!
                     print("should have config")
@@ -204,6 +171,10 @@ class SpatialSceneX: SpatialObject {
         }
     }
 
+    func setParent(_ p: SpatialSceneX) {
+        parent = p
+    }
+
     func addChildResource(_ element: SpatializedElement) {
         childResources[element.id] = element
         element
@@ -225,18 +196,6 @@ class SpatialSceneX: SpatialObject {
                 listener: onSpatializedElementDestroyed
             )
         removeChildResource(element)
-    }
-
-    static func getSpatialScene(_ name: String) -> SpatialSceneX? {
-        return SpatialObject.get(name) as? SpatialSceneX
-    }
-
-    static func getOrCreateSpatialScene(_ name: String, _ data: SceneData) -> SpatialSceneX? {
-        if let scene = getSpatialScene(name) {
-            return scene
-        }
-        let newScene = SpatialSceneX(name, data)
-        return newScene
     }
 
     func addElement(_ parent_id: String, _ element: SpatializedElement) {
@@ -312,14 +271,67 @@ class SpatialSceneX: SpatialObject {
         childResources = [:]
     }
 
-    func show() {
-        guard state == .configured else { return }
+    func moveToState(_ newState: SceneStateKind) {
+        if canEnterState(state, newState) {
+            if state == .idle && newState == .pending {
+                setLoading(true)
+            } else if state == .pending && newState == .configured {
+                setLoading(false)
+            }
+
+            state = newState
+        } else {
+            print("invalid state transition from \(state) to \(newState)")
+        }
+    }
+
+    private func canEnterState(_ from: SceneStateKind, _ to: SceneStateKind) -> Bool {
+        // rules for state transition
+        switch from {
+        case .idle:
+            return to == .configured || to == .pending
+        case .pending:
+            return to == .configured
+        case .configured:
+            return to == .success || to == .fail
+        default:
+            return false
+        }
+    }
+
+    private func setLoading(_ on: Bool) {
+        if on {
+            let lwgdata = LoadingWindowContainerData(
+                method: .show,
+                windowStyle: nil
+            )
+            parent?.setLoadingWindowData.send(lwgdata)
+        } else {
+            let lwgdata = LoadingWindowContainerData(
+                method: .hide,
+                windowStyle: nil
+            )
+            parent?.setLoadingWindowData.send(lwgdata)
+        }
+    }
+
+    func open(_ config: WindowContainerPlainDefaultValues? = nil) {
+        guard state == .idle || state == .pending else { return }
+
+        if state == .idle && config == nil {
+            moveToState(.pending)
+            return
+        }
+
+        if state == .pending && config != nil {
+            moveToState(.configured)
+        }
+
+        if config != nil {
+            plainDefaultValues = config
+        }
 
         if let pScene = parent {
-            // set defaultSize and resizability
-
-            state = .success
-
             // plain show
             print("plainDefaultValues", plainDefaultValues)
             if plainDefaultValues != nil {
@@ -328,7 +340,9 @@ class SpatialSceneX: SpatialObject {
                         plainDefaultValues!
                     ) // set default values
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    pScene.openWindowData.send(self.wgd) // openwindow
+                    pScene.openWindowData
+                        .send(self.getSceneData()) // openwindow
+                    self.moveToState(.success)
                 }
             }
         }

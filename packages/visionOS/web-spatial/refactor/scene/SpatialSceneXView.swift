@@ -48,7 +48,7 @@ struct SpatialSceneXView: View {
 
     var body: some View {
         SceneHandlerUI().environment(scene).onDisappear {
-            print("SceneHandlerUI::onDisapper", scene.wgd)
+            print("SceneHandlerUI::onDisapper", scene.getSceneData())
             scene.destroy()
         }
         if let model = scene.spatialWebviewModel {

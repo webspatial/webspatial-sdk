@@ -11,28 +11,31 @@ import SwiftUI
 @main
 struct web_spatialApp_x: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var app: SpatialApp
+    @State var app: SpatialAppX
     @State var wgm = WindowContainerMgr.Instance
 
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        app = SpatialApp()
-        app.createRootScene()
+        app = SpatialAppX()
     }
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
-            let scene = SpatialSceneX.getOrCreateSpatialScene(
-                windowData.sceneID,
-                windowData
+            // get scene
+            let scene = SpatialAppX.getScene(
+                windowData.sceneID
             )
+            // render
             SpatialSceneXView().environment(scene)
         }
         defaultValue: {
+            let scene = SpatialAppX.createScene(startURL)
+            // the 1st scene always stays idle
+
             let windowData = SceneData(
                 windowStyle: "Plain",
-                sceneID: SpatialSceneX.getRootID()
+                sceneID: scene.id
             )
 
             return windowData
