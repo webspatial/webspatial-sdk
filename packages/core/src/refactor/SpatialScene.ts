@@ -1,5 +1,9 @@
 import { BackgroundMaterialType } from './types'
-import { UpdateSpatialSceneMaterialCommand } from './JSBCommand'
+import {
+  UpdateSpatialSceneCorner,
+  UpdateSpatialSceneMaterialCommand,
+} from './JSBCommand'
+import { CornerRadius } from '../core'
 
 let instance: SpatialScene
 
@@ -13,5 +17,9 @@ export class SpatialScene {
 
   async updateSpatialMaterial(material: BackgroundMaterialType) {
     return new UpdateSpatialSceneMaterialCommand(material).execute()
+  }
+
+  async updateSpatialCorner(cornerRadius: CornerRadius) {
+    return new UpdateSpatialSceneCorner(cornerRadius).execute()
   }
 }

@@ -1,15 +1,12 @@
 // import React from 'react'
 // import ReactDOM from 'react-dom/client'
 
-import { Spatial } from '@webspatial/core-sdk'
+import './jsapi'
 
-const spatial = new Spatial()
-const session = spatial.requestNewSession()
-console.log('session', session)
-if (session) {
-  const spatialScene = session.getSpatialScene()
-  spatialScene.updateSpatialMaterial('translucent')
-}
+// @ts-ignore
+import { testSpatialSceneCorner, testSpatialSceneMaterial } from './jsapi'
+
+testSpatialSceneMaterial()
 
 // function App() {
 //   return (

@@ -15,6 +15,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { command in
             self.backgroundMaterial = command.material
         }
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command in
+            self.cornerRadius = command.cornerRadius
+        }
     }
 
     /*

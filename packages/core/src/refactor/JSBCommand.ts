@@ -1,5 +1,5 @@
 import { createPlatform } from './platform-adapter'
-import { BackgroundMaterialType } from './types'
+import { BackgroundMaterialType, CornerRadius } from './types'
 
 const platform = createPlatform()
 
@@ -27,5 +27,19 @@ export class UpdateSpatialSceneMaterialCommand extends JSBCommand {
     return {
       material: this.material,
     }
+  }
+}
+
+export class UpdateSpatialSceneCorner extends JSBCommand {
+  cornerRadius: CornerRadius
+  commandType = 'updateSpatialSceneCorner'
+
+  constructor(cornerRadius: CornerRadius) {
+    super()
+    this.cornerRadius = cornerRadius
+  }
+
+  protected getParams() {
+    return { cornerRadius: this.cornerRadius }
   }
 }
