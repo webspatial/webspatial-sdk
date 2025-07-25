@@ -1,4 +1,5 @@
 import { SpatialSession } from './SpatialSession'
+import { SpatialSession as NewSpatialSession } from '../refactor/SpatialSession'
 
 /**
  * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr
@@ -15,6 +16,17 @@ export class Spatial {
       this.getNativeVersion() === this.getClientVersion()
     ) {
       return new SpatialSession()
+    } else {
+      return null
+    }
+  }
+
+  requestNewSession() {
+    if (
+      this.isSupported() &&
+      this.getNativeVersion() === this.getClientVersion()
+    ) {
+      return new NewSpatialSession()
     } else {
       return null
     }

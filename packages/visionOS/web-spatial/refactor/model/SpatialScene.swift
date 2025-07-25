@@ -12,8 +12,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupJSBListeners() {
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { data in
-            print("data \(data)")
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterialCommand.self) { command in
+            self.backgroundMaterial = command.material
         }
     }
 
@@ -84,8 +84,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
         set(newValue) {
             _backgroundMaterial = newValue
-            // it's spatial div
-//                webViewNative?.webViewHolder.appleWebView?.isOpaque = false
+//            webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
         }
     }
 

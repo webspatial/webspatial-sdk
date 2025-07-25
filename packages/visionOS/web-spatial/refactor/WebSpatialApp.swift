@@ -16,7 +16,7 @@ struct WebSpatialApp: App {
             SpatialSceneView(sceneId: sceneId)
         }
         defaultValue: {
-            let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
+            let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/src/jsapi-test/")
             spatialScene.cornerRadius.bottomLeading = 130
             var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
             spatialized2DElement.transform.translation.x = 200
