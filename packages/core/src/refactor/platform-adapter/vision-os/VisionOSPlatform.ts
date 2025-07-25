@@ -22,19 +22,23 @@ import {
 // }
 
 export class VisionOSPlatform implements PlatformAbility {
-  callJSB(cmd: string, msg: string): Promise<CommandResult> {
-    window.webkit.messageHandlers.bridge.postMessage(`${cmd}::${msg}`)
-    return Promise.resolve(CommandResultSuccess(''))
+  async callJSB(cmd: string, msg: string): Promise<CommandResult> {
+    try {
+      const result = await window.webkit.messageHandlers.bridge.postMessage(
+        `${cmd}::${msg}`,
+      )
+      return CommandResultSuccess(result)
+    } catch (error) {
+      console.log('dbg', error)
+      return CommandResultFailure('errorNo', 'error')
+    }
+  }
 
-    // return new Promise((resolve, reject) => {
-    //     window.webkit.messageHandlers.bridge.postMessage(
-    //         msg,
-    //         (reply) => {
-    //             resolve(CommandResultSuccess(reply))
-    //         },
-    //         (error) => {
-    //             reject(CommandResultFailure('errorNo', error))
-    //         })
-    // })
+  callWebSpatialProtocol(
+    command: string,
+    query?: string,
+  ): Promise<CommandResult> {
+    const windowProxy = window.open(`webspatial://${command}?${query || ''}`)
+    return Promise.resolve(CommandResultSuccess(windowProxy))
   }
 }

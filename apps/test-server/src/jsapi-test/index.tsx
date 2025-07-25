@@ -1,12 +1,17 @@
+// @ts-nocheck
+
 // import React from 'react'
 // import ReactDOM from 'react-dom/client'
 
 import './jsapi'
 
-// @ts-ignore
-import { testSpatialSceneCorner, testSpatialSceneMaterial } from './jsapi'
+import {
+  testCreateSpatialized2DElementPing,
+  testSpatialSceneCorner,
+  testSpatialSceneMaterial,
+} from './jsapi'
 
-testSpatialSceneMaterial()
+testCreateSpatialized2DElementPing()
 
 // function App() {
 //   return (

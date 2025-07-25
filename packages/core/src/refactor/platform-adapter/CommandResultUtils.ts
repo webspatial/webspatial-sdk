@@ -4,7 +4,7 @@ export function CommandResultSuccess(data: any): CommandResult {
   return {
     success: true,
     data,
-    errorCode: '0',
+    errorCode: '',
     errorMessage: '',
   }
 }

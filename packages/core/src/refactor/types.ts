@@ -26,3 +26,9 @@ export type CornerRadius = {
   topTrailing: number
   bottomTrailing: number
 }
+
+export enum SpatializedElementType {
+  Spatialized2DElement,
+  SpatializedStatic3DElement,
+  SpatializedDynamic3DElement,
+}

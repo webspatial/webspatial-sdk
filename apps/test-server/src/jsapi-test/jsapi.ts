@@ -22,3 +22,17 @@ export function testSpatialSceneMaterial() {
     spatialScene.updateSpatialMaterial('translucent')
   }
 }
+
+export async function testSpatialPing() {
+  if (session) {
+    const ret = await session.ping()
+    console.log('ret', ret)
+  }
+}
+
+export async function testCreateSpatialized2DElementPing() {
+  if (session) {
+    const ret = await session.createSpatialized2DElement()
+    console.log('ret', ret)
+  }
+}

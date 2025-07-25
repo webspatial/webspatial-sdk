@@ -36,6 +36,9 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     private var spatialWebViewModel: SpatialWebViewModel
+    func getWebViewModel() -> SpatialWebViewModel {
+        return spatialWebViewModel
+    }
 
     override init() {
         spatialWebViewModel = SpatialWebViewModel(url: nil)

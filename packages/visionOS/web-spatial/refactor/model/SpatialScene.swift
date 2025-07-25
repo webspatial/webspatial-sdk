@@ -16,9 +16,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             self.backgroundMaterial = command!.material
             resolve(nil)
         }
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command, resolve, _ in
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorerCommand.self) { command, resolve, _ in
             self.cornerRadius = command!.cornerRadius
             resolve(nil)
+        }
+
+        spatialWebViewModel.addJSBListener(PingCommand.self) { _, resolve, _ in
+            let data = ReplyData(success: true, message: "ok")
+            resolve(data)
+        }
+
+        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
+            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
+            return spatialized2DElement.getWebViewModel()
         }
     }
 
