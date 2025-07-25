@@ -152,7 +152,7 @@ class SpatialWebViewModel: SpatialObject {
     private func onJSBInvoke(_ command: String, _ promise: JSBManager.Promise) {
         do {
             let jsbInfo = command.components(separatedBy: "::")
-            if jsbInfo.count == 2 {
+            if jsbInfo.count == 2, jsbInfo[1] != "" {
                 let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
                 if let action = commandList[jsbInfo[0]] {
                     action(data, promise.resolve, promise.reject)
