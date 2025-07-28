@@ -391,7 +391,7 @@ class SpatialSceneX: SpatialObject {
             return
         }
 
-        if state == .pending && config != nil {
+        if (state == .pending || state == .idle) && config != nil {
             moveToState(.configured)
         }
 
