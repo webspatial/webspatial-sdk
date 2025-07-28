@@ -3,7 +3,7 @@ class SpatialSceneManager {
     private var map = [String: SpatialScene]()
 
     func create(_ url: String) -> SpatialScene {
-        let scene = SpatialScene(url)
+        let scene = SpatialScene(url, "Plain")
         map[scene.id] = scene
         return scene
     }

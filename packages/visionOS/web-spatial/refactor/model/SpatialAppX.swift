@@ -29,21 +29,21 @@ class SpatialAppX {
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
     }
 
-    static func createScene(_ url: String) -> SpatialSceneX {
+    static func createScene(_ url: String) -> SpatialScene {
         // TODO: 让SpatialAPP createScene
         print("url,", url)
-        let newScene = SpatialSceneX(url, "Plain")
+        let newScene = SpatialScene(url, "Plain")
 
         // TODO: 下沉到model
         DispatchQueue.main.async {
-            newScene.spatialWebviewModel!.evaluateJS(js: "window._webSpatialID = '" + newScene.id + "'")
+            newScene.spatialWebViewModel.evaluateJS(js: "window._webSpatialID = '" + newScene.id + "'")
         }
 
         return newScene
     }
 
-    static func getScene(_ name: String) -> SpatialSceneX? {
-        return SpatialObject.get(name) as? SpatialSceneX
+    static func getScene(_ name: String) -> SpatialScene? {
+        return SpatialObject.get(name) as? SpatialScene
     }
 
     // TODO: inspect scene

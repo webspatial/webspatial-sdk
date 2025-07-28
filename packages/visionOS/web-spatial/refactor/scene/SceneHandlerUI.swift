@@ -6,7 +6,7 @@ struct SceneHandlerUI: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
 
-    @Environment(SpatialSceneX.self) var scene: SpatialSceneX
+    @Environment(SpatialScene.self) var scene: SpatialScene
 
     @Environment(\.scenePhase) private var scenePhase
 

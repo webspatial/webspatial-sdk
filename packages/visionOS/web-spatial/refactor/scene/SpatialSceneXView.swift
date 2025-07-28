@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SpatialSceneXView: View {
     @EnvironmentObject private var sceneDelegate: SceneDelegate
-    @Environment(SpatialSceneX.self) private var scene: SpatialSceneX
+    @Environment(SpatialScene.self) private var scene: SpatialScene
     @State var web: SpatialWebViewModel?
 
     private func setSize(size: CGSize) {
@@ -51,10 +51,9 @@ struct SpatialSceneXView: View {
             print("SceneHandlerUI::onDisapper", scene.getSceneData())
             scene.destroy()
         }
-        if let model = scene.spatialWebviewModel {
-            model.getView().onAppear {
-                model.load()
-            }
+        let model = scene.spatialWebViewModel
+        model.getView().onAppear {
+            model.load()
         }
 
         ZStack {}
