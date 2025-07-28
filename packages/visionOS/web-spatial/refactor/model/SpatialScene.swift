@@ -13,17 +13,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterial.self) { command, resolve, _ in
-            self.backgroundMaterial = command!.material
-            resolve(nil)
+            self.backgroundMaterial = command.material
+            resolve()
         }
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command, resolve, _ in
-            self.cornerRadius = command!.cornerRadius
-            resolve(nil)
+            self.cornerRadius = command.cornerRadius
+            resolve()
         }
 
         spatialWebViewModel.addJSBListener(PingCommand.self) { _, resolve, _ in
-            let data = ReplyData(success: true, message: "ok")
-            resolve(data)
+            resolve()
         }
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialScene.self, onAddSpatializedElement)
@@ -36,14 +35,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties?, resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) {
+    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
         guard let updateCommand = command else {
-            reject(ReplyData(success: false, message: "invalid updateSpatializedElementProperties command"))
+            reject(.CommandError, "invalid updateSpatializedElementProperties command")
             return
         }
 
         guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
-            reject(ReplyData(success: false, message: "invalid updateSpatializedElementProperties spatial object id not exsit!"))
+            reject(.TypeError, "invalid updateSpatializedElementProperties spatial object id not exsit!")
             return
         }
 
@@ -79,18 +78,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatializedElement.rotationAnchor = .init(x: rotationAnchor.x, y: rotationAnchor.y, z: rotationAnchor.z)
         }
 
-        let data = ReplyData(success: true, message: "ok")
-        resolve(data)
+        resolve()
     }
 
-    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene?, resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) {
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
         guard let addSpatializedElementCommand = command else {
-            reject(ReplyData(success: false, message: "invalid addSpatializedElementCommand command"))
+            reject(.CommandError, "invalid addSpatializedElementCommand command")
             return
         }
 
         guard let spatializedElement: SpatializedElement = findSpatialObject(addSpatializedElementCommand.spatializedElementId) else {
-            reject(ReplyData(success: false, message: "invalid addSpatializedElementCommand spatial object id not exsit!"))
+            reject(.TypeError, "invalid addSpatializedElementCommand spatial object id not exsit!")
             return
         }
 

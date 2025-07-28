@@ -9,7 +9,8 @@ class SpatialWebViewModel: SpatialObject {
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: URL) -> Bool] = [:]
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
-    private var commandList: [String: (_ data: Any?, _ resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) -> Void] = [:]
+    private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
+    private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var cmdManager = JSBManager()
 
     var scrollOffset: CGPoint = .zero
@@ -70,12 +71,6 @@ class SpatialWebViewModel: SpatialObject {
         scrollOffset = point
     }
 
-    func successCallBack(data: String) {}
-
-    func failCallback(data: String) {}
-
-    func postWebMessage(id: String, data: String) {}
-
     func scrollViewOffset(offset: Float) {
 //        view.scorll(offset)
     }
@@ -88,17 +83,18 @@ class SpatialWebViewModel: SpatialObject {
         openWindowList[protocal] = event
     }
 
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T?, _ resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) -> Void) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void) {
         cmdManager.register(dataClass)
         commandList[dataClass.commandType] = { data, resolve, reject in
-            guard let concreteData = data as? T else {
-                return event(nil, resolve, reject)
-            }
-            return event(concreteData, resolve, reject)
+            event(data as! T, resolve, reject)
         }
     }
 
-    func addStatChangeListener(event: @escaping (_ type: String) -> Void) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ resolve: @escaping() -> Void, _ reject: @escaping(_ code: ReplyCode, _ message: String) -> Void) -> Void) {
+        commandListWithoutData[dataClass.commandType] = event
+    }
+
+    func addStateChangeListener(event: @escaping (_ type: String) -> Void) {
         controller?.registerWebviewStateChangeInvoke(invoke: event)
         view?.registerWebviewStateChangeInvoke(invoke: event)
     }
@@ -162,11 +158,11 @@ class SpatialWebViewModel: SpatialObject {
             if jsbInfo.count == 2, jsbInfo[1] != "" {
                 let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
                 if let action = commandList[jsbInfo[0]] {
-                    action(data, promise.resolve, promise.reject)
+                    action(data!, promise.resolve, promise.reject)
                 }
             } else {
-                if let action = commandList[jsbInfo[0]] {
-                    action(nil, promise.resolve, promise.reject)
+                if let action = commandListWithoutData[jsbInfo[0]] {
+                    action(promise.resolve, promise.reject)
                 }
             }
         } catch {}

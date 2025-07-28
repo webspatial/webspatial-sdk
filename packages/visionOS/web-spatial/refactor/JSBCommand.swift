@@ -31,3 +31,14 @@ class UpdateSpatializedElementProperties: CommandDataProtocol {
     let scrollWithParent: Bool?
     let zIndex: Double?
 }
+
+struct ReplyData: Codable {
+    var success: Bool
+    var code: ReplyCode?
+    var message: String?
+}
+
+enum ReplyCode: Codable {
+    case TypeError
+    case CommandError
+}

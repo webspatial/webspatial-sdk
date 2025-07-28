@@ -51,30 +51,23 @@ class JSBManager {
             encode.outputFormatting = .prettyPrinted
         }
 
-        func resolve(_ data: ReplyData? = nil) {
+        func resolve() {
             Task { @MainActor in
-                if data == nil {
-                    replyHandler?("", nil)
-                    return
-                }
-                if let res = parseResult(data!) {
+                if let res = parseResult(ReplyData(success: true)) {
                     replyHandler?(res, nil)
                     return
                 }
-                replyHandler?(nil, "error")
+                replyHandler?(nil, parseResult(ReplyData(success: false, code: .TypeError, message: "error")))
             }
         }
 
-        func reject(_ data: ReplyData? = nil) {
+        func reject(_ code: ReplyCode, _ message: String) {
             Task { @MainActor in
-                if data == nil {
-                    replyHandler?(nil, "error")
+                if let res = parseResult(ReplyData(success: false, code: code, message: message)) {
+                    replyHandler?(nil, res)
                     return
                 }
-                if let res = parseResult(data!) {
-                    replyHandler?(nil, res)
-                }
-                replyHandler?(nil, "error")
+                replyHandler?(nil, parseResult(ReplyData(success: false, code: .CommandError, message: "error")))
             }
         }
 
@@ -86,9 +79,4 @@ class JSBManager {
             return nil
         }
     }
-}
-
-struct ReplyData: Codable {
-    var success: Bool
-    var message: String
 }
