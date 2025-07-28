@@ -23,7 +23,7 @@ abstract class JSBCommand {
 
 export class UpdateSpatialSceneMaterialCommand extends JSBCommand {
   material: BackgroundMaterialType
-  commandType = 'updateSpatialSceneMaterial'
+  commandType = 'UpdateSpatialSceneMaterial'
 
   constructor(material: BackgroundMaterialType) {
     super()
@@ -39,7 +39,7 @@ export class UpdateSpatialSceneMaterialCommand extends JSBCommand {
 
 export class UpdateSpatialSceneCorner extends JSBCommand {
   cornerRadius: CornerRadius
-  commandType = 'updateSpatialSceneCorner'
+  commandType = 'UpdateSpatialSceneCorer'
 
   constructor(cornerRadius: CornerRadius) {
     super()
@@ -54,7 +54,6 @@ export class UpdateSpatialSceneCorner extends JSBCommand {
 export abstract class SpatializedElementCommand extends JSBCommand {
   constructor(readonly spatialObject: SpatialObject) {
     super()
-    // this.spatialObject = spatialObject
   }
 
   protected getParams() {
@@ -67,7 +66,7 @@ export abstract class SpatializedElementCommand extends JSBCommand {
 
 export class UpdateSpatializedElementProperties extends SpatializedElementCommand {
   properties: SpatializedElementProperties
-  commandType = 'updateSpatializedElementProperties'
+  commandType = 'UpdateSpatializedElementProperties'
 
   constructor(
     spatialObject: SpatialObject,
@@ -99,7 +98,7 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
 }
 
 export class PingCommand extends JSBCommand {
-  commandType = 'ping'
+  commandType = 'Ping'
 
   protected getParams() {
     return undefined
