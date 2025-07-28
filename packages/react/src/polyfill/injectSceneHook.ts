@@ -7,8 +7,6 @@ export async function injectSceneHook() {
   if (!window.opener) return
   if ((window as any)._SceneHookOff) return
 
-  // await getSession()?.setLoading('show')
-  getSession()?.setLoading('show') // fixme: this is a workaround
   // see this flag, we have done create the root scene
 
   function onContentLoaded(callback: any) {
@@ -37,8 +35,6 @@ export async function injectSceneHook() {
         resolve(null)
       }, 1000)
     })
-    // await getSession()?.setLoading('hide')
-    getSession()?.setLoading('hide') // fixme: this is a workaround
     await XRApp.getInstance().show(window, cfg)
   })
 }
