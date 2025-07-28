@@ -12,8 +12,8 @@ struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup(id: "Plain", for: String.self) { _ in
-//            SpatialSceneView(sceneId: sceneId)
+        WindowGroup(id: "Plain", for: String.self) { $sceneId in
+            SpatialSceneView(sceneId: sceneId)
         }
         defaultValue: {
             let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/src/jsapi-test/")

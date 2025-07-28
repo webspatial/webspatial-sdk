@@ -3,7 +3,7 @@ import RealityKit
 import SwiftUI
 
 struct SpatialSceneView: View {
-    @Environment(SpatialScene.self) var spatialScene: SpatialScene
+    @State var sceneId: String
 
     var body: some View {
         GeometryReader { proxy3D in
@@ -11,9 +11,9 @@ struct SpatialSceneView: View {
             let height = proxy3D.size.height
 
             ZStack {
-                ZStack {
+                if let spatialScene = SpatialSceneManager.Instance.getScene(sceneId) {
                     ZStack {
-                    let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
+                        let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
 
                         ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
                             SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
@@ -21,7 +21,6 @@ struct SpatialSceneView: View {
                             }
                             .environment(child)
                         }
-                        .environment(child)
                     }
 
                     // Display the main webview
@@ -32,28 +31,18 @@ struct SpatialSceneView: View {
                         )
                         .frame(width: width, height: height).padding3D(.front, -100_000)
                 }
-
-                // Display the main webview
-                spatialScene.getView()
-                    .materialWithBorderCorner(
-                        spatialScene.backgroundMaterial,
-                        spatialScene.cornerRadius
-                    )
-                    .frame(width: width, height: height).padding3D(.front, -100_000)
             }
         }
     }
 }
 
 struct PreviewSpatialScene: View {
-    var spatialScene = SpatialScene("https://www.google.com/")
+    var sceneId: String
 
     init() {
         let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
         spatialScene.cornerRadius.bottomLeading = 130
-
         var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
-
         spatialized2DElement.transform.translation.x = 200
         spatialized2DElement.transform.translation.y = 200
         spatialized2DElement.transform.translation.z = 200
@@ -73,8 +62,7 @@ struct PreviewSpatialScene: View {
     }
 
     var body: some View {
-        SpatialSceneView()
-            .environment(spatialScene)
+        SpatialSceneView(sceneId: sceneId)
     }
 }
 
