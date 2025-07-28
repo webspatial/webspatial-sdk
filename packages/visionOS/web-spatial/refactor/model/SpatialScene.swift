@@ -26,6 +26,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             resolve(data)
         }
 
+        spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialScene.self, onAddSpatializedElement)
+
         spatialWebViewModel.addJSBListener(UpdateSpatializedElementProperties.self, onUpdateSpatializedElementProperties)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
@@ -79,6 +81,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         let data = ReplyData(success: true, message: "ok")
         resolve(data)
+    }
+
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene?, resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) {
+        guard let addSpatializedElementCommand = command else {
+            reject(ReplyData(success: false, message: "invalid addSpatializedElementCommand command"))
+            return
+        }
+
+        guard let spatializedElement: SpatializedElement = findSpatialObject(addSpatializedElementCommand.spatializedElementId) else {
+            reject(ReplyData(success: false, message: "invalid addSpatializedElementCommand spatial object id not exsit!"))
+            return
+        }
+
+        addChild(spatializedElement)
     }
 
     /*

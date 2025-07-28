@@ -1,5 +1,6 @@
 import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
+import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
 import {
   BackgroundMaterialType,
@@ -78,6 +79,22 @@ export class UpdateSpatializedElementProperties extends SpatializedElementComman
 
   protected getExtraParams() {
     return this.properties
+  }
+}
+
+export class AddSpatializedElementToSpatialScene extends JSBCommand {
+  commandType = 'AddSpatializedElementToSpatialScene'
+  spatializedElement: SpatializedElement
+
+  constructor(spatializedElement: SpatializedElement) {
+    super()
+    this.spatializedElement = spatializedElement
+  }
+
+  protected getParams() {
+    return {
+      spatializedElementId: this.spatializedElement.id,
+    }
   }
 }
 

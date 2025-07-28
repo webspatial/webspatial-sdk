@@ -10,6 +10,11 @@ class UpdateSpatialSceneCorerCommand: CommandDataProtocol {
     let cornerRadius: CornerRadius
 }
 
+class AddSpatializedElementToSpatialScene: CommandDataProtocol {
+    static let commandType: String = "AddSpatializedElementToSpatialScene"
+    let spatializedElementId: String
+}
+
 class PingCommand: CommandDataProtocol {
     static let commandType: String = "ping"
 }

@@ -43,5 +43,8 @@ export async function testCreateSpatialized2DElement() {
         z: 0.5,
       },
     })
+
+    const spatialScene = session.getSpatialScene()
+    await spatialScene.addSpatializedElement(spatialized2DElement)
   }
 }
