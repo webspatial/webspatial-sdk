@@ -6,12 +6,12 @@
 import './jsapi'
 
 import {
-  testCreateSpatialized2DElementPing,
+  testCreateSpatialized2DElement,
   testSpatialSceneCorner,
   testSpatialSceneMaterial,
 } from './jsapi'
 
-testCreateSpatialized2DElementPing()
+testCreateSpatialized2DElement()
 
 // function App() {
 //   return (

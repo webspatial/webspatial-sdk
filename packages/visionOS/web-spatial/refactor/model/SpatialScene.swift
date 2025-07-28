@@ -26,10 +26,59 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             resolve(data)
         }
 
+        spatialWebViewModel.addJSBListener(UpdateSpatializedElementProperties.self, onUpdateSpatializedElementProperties)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
+    }
+
+    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties?, resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) {
+        guard let updateCommand = command else {
+            reject(ReplyData(success: false, message: "invalid updateSpatializedElementProperties command"))
+            return
+        }
+
+        guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
+            reject(ReplyData(success: false, message: "invalid updateSpatializedElementProperties spatial object id not exsit!"))
+            return
+        }
+
+        if let width = updateCommand.width {
+            spatializedElement.width = width
+        }
+
+        if let height = updateCommand.height {
+            spatializedElement.height = height
+        }
+
+        if let backOffset = updateCommand.backOffset {
+            spatializedElement.backOffset = backOffset
+        }
+
+        if let opacity = updateCommand.opacity {
+            spatializedElement.opacity = opacity
+        }
+
+        if let scrollWithParent = updateCommand.scrollWithParent {
+            spatializedElement.scrollWithParent = scrollWithParent
+        }
+
+        if let visible = updateCommand.visible {
+            spatializedElement.visible = visible
+        }
+
+        if let zIndex = updateCommand.zIndex {
+            spatializedElement.zIndex = zIndex
+        }
+
+        if let rotationAnchor = updateCommand.rotationAnchor {
+            spatializedElement.rotationAnchor = .init(x: rotationAnchor.x, y: rotationAnchor.y, z: rotationAnchor.z)
+        }
+
+        let data = ReplyData(success: true, message: "ok")
+        resolve(data)
     }
 
     /*
@@ -156,6 +205,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 listener: onSptatialObjectDestroyed
             )
         spatialObjects.removeValue(forKey: spatialObject.id)
+    }
+
+    func findSpatialObject<T: SpatialObject>(_ id: String) -> T? {
+        return spatialObjects[id] as? T
     }
 
     /*

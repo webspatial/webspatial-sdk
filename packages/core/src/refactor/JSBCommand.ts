@@ -1,6 +1,11 @@
 import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
-import { BackgroundMaterialType, CornerRadius } from './types'
+import { SpatialObject } from './SpatialObject'
+import {
+  BackgroundMaterialType,
+  CornerRadius,
+  SpatializedElementProperties,
+} from './types'
 
 const platform = createPlatform()
 
@@ -42,6 +47,37 @@ export class UpdateSpatialSceneCorner extends JSBCommand {
 
   protected getParams() {
     return { cornerRadius: this.cornerRadius }
+  }
+}
+
+export abstract class SpatializedElementCommand extends JSBCommand {
+  constructor(readonly spatialObject: SpatialObject) {
+    super()
+    // this.spatialObject = spatialObject
+  }
+
+  protected getParams() {
+    const extraParams = this.getExtraParams()
+    return { id: this.spatialObject.id, ...extraParams }
+  }
+
+  protected abstract getExtraParams(): Record<string, any> | undefined
+}
+
+export class UpdateSpatializedElementProperties extends SpatializedElementCommand {
+  properties: SpatializedElementProperties
+  commandType = 'updateSpatializedElementProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: SpatializedElementProperties,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
   }
 }
 

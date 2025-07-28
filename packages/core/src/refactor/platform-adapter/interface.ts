@@ -19,5 +19,8 @@ export interface WebSpatialProtocolResult extends CommandResult {
 
 export interface PlatformAbility {
   callJSB(cmd: string, msg: string): Promise<CommandResult>
-  callWebSpatialProtocol(schema: string, query?: string): Promise<CommandResult>
+  callWebSpatialProtocol(
+    schema: string,
+    query?: string,
+  ): Promise<WebSpatialProtocolResult>
 }

@@ -1,4 +1,4 @@
-import { Spatial } from '@webspatial/core-sdk'
+import { Spatial, Spatialized2DElement } from '@webspatial/core-sdk'
 
 const spatial = new Spatial()
 const session = spatial.requestNewSession()
@@ -30,9 +30,18 @@ export async function testSpatialPing() {
   }
 }
 
-export async function testCreateSpatialized2DElementPing() {
+export async function testCreateSpatialized2DElement() {
   if (session) {
-    const ret = await session.createSpatialized2DElement()
-    console.log('ret', ret)
+    const spatialized2DElement: Spatialized2DElement =
+      await session.createSpatialized2DElement()
+    await spatialized2DElement.updateProperties({
+      width: 100,
+      height: 100,
+      rotationAnchor: {
+        x: 1,
+        y: 2,
+        z: 0.5,
+      },
+    })
   }
 }

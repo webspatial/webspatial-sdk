@@ -1,3 +1,9 @@
+export interface Vec3 {
+  x: number
+  y: number
+  z: number
+}
+
 /**
  * Material type for SpatialDiv or HTML document.
  *
@@ -31,4 +37,15 @@ export enum SpatializedElementType {
   Spatialized2DElement,
   SpatializedStatic3DElement,
   SpatializedDynamic3DElement,
+}
+
+export interface SpatializedElementProperties {
+  width?: number
+  height?: number
+  opacity?: number
+  visible?: boolean
+  scrollWithParent?: boolean
+  zIndex?: number
+  backOffset?: number
+  rotationAnchor?: Vec3
 }
