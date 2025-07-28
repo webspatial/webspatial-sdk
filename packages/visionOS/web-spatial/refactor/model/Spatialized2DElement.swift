@@ -94,7 +94,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getView() -> SpatialWebView {
-        return spatialWebViewModel.getView()!
+        return spatialWebViewModel.getView()
     }
 
     override func onDestroy() {

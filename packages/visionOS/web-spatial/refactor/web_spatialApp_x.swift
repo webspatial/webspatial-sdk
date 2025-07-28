@@ -32,7 +32,7 @@ struct web_spatialApp_x: App {
         defaultValue: {
             let scene = SpatialAppX.createScene(startURL)
             // the 1st scene always stays idle
-
+            scene.spatialWebviewModel?.load()
             let windowData = SceneData(
                 windowStyle: "Plain",
                 sceneID: scene.id

@@ -94,20 +94,41 @@ class SpatialSceneX: SpatialObject {
                 protocal: "webspatial://createscene",
                 event: handleWindowOpenCustom
             )
+        spatialWebviewModel?.addStatChangeListener(event: { state in
+            if state == "didClose" {
+                self.handleWindowClose()
+            }
+        })
         spatialWebviewModel?
-            .addCloseWindowListener(
-                protocal: "*",
-                event: handleWindowClose
-            )
-        spatialWebviewModel?
-            .addJSBListener(dataClass: SceneCommand.self, event: handleJSBScene)
+            .addJSBListener(SceneCommand.self) { command, _, _ in
+                guard let sceneData = command?.sceneData else {
+                    return
+                }
+                print("Scene::handleJSB", sceneData)
+                // find scene
+                if let method = sceneData.method,
+                   let sceneId = sceneData.sceneID,
+                   let targetScene = SpatialAppX.getScene(sceneId)
+                {
+                    if method == "showRoot" {
+                        if let sceneConfig = sceneData.sceneConfig {
+                            // config
+                            let cfg = WindowContainerPlainDefaultValues(sceneConfig)
+                            targetScene.open(cfg)
+                        } else {
+                            // error!
+                            print("should have config")
+                        }
+                    }
+                }
+            }
     }
 
-    private func handleWindowOpenCustom(_ url: String) -> SpatialWebViewModel? {
+    private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
 //        print("handleWindowOpenCustom::url",url)
         // get config from url
 
-        guard let components = URLComponents(string: url),
+        guard let components = URLComponents(string: url.absoluteString),
               let queryItems = components.queryItems
         else {
             print("❌ fail to parse URL")
@@ -132,7 +153,11 @@ class SpatialSceneX: SpatialObject {
 
             newScene.open()
             // no config
-            return newScene.spatialWebviewModel
+            return WebViewElementInfo(
+                id: newScene.id,
+                element: newScene.spatialWebviewModel!
+            )
+//            return newScene.spatialWebviewModel
         }
 
         // has config
@@ -168,12 +193,15 @@ class SpatialSceneX: SpatialObject {
                 newScene.spatialWebviewModel?.load(decodedUrl)
             }
         }
-
-        return newScene.spatialWebviewModel
+        return WebViewElementInfo(
+            id: newScene.id,
+            element: newScene.spatialWebviewModel!
+        )
+//        return newScene.spatialWebviewModel
     }
 
-    private func handleWindowClose(_ url: String) {
-//        print("window.close")
+    private func handleWindowClose() {
+        print("window.close")
         closeWindowData.send(getSceneData())
     }
 

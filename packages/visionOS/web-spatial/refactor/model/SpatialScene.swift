@@ -261,7 +261,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     var cornerRadius: CornerRadius = .init()
 
     func getView() -> SpatialWebView {
-        return spatialWebViewModel.getView()!
+        return spatialWebViewModel.getView()
     }
 
     /*

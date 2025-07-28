@@ -52,7 +52,7 @@ struct SpatialSceneXView: View {
             scene.destroy()
         }
         if let model = scene.spatialWebviewModel {
-            model.getView()?.onAppear {
+            model.getView().onAppear {
                 model.load()
             }
         }
