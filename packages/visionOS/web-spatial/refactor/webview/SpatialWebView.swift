@@ -4,21 +4,23 @@ import SwiftUI
 struct SpatialWebView: UIViewRepresentable {
     weak var model: SpatialWebViewModel? = nil
     var url: URL = .init(filePath: "/")
+    private var webviewStateChangeInvoke: ((_ type: String) -> Void)?
 
     func makeUIView(context: Context) -> WKWebView {
-        print("makeUIView")
-        model?.onWebViewUpdate(type: "view:makeUI")
+        webviewStateChangeInvoke?("makeUI")
         return model!.getController().webview!
     }
 
     func makeCoordinator() -> SpatialWebController {
-        print("makeCoordinator")
         return model!.getController()
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        print("updateUIView")
-        model?.onWebViewUpdate(type: "view:updateUI")
+        webviewStateChangeInvoke?("updateUI")
+    }
+
+    mutating func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: String) -> Void) {
+        webviewStateChangeInvoke = invoke
     }
 
     func destroy() {

@@ -39,6 +39,13 @@ export class VisionOSPlatform implements PlatformAbility {
     query?: string,
   ): Promise<CommandResult> {
     const windowProxy = window.open(`webspatial://${command}?${query || ''}`)
-    return Promise.resolve(CommandResultSuccess(windowProxy))
+    const ua = windowProxy?.navigator.userAgent
+    const spatialId = ua?.match(
+      /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi,
+    )?.[0]
+    console.log(spatialId)
+    return Promise.resolve(
+      CommandResultSuccess({ windowProxy: windowProxy, id: spatialId }),
+    )
   }
 }

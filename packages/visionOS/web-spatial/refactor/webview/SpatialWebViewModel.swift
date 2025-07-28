@@ -8,7 +8,7 @@ class SpatialWebViewModel: SpatialObject {
     private var view: SpatialWebView?
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: URL) -> Bool] = [:]
-    private var openWindowList: [String: (_ data: URL) -> SpatialWebViewModel?] = [:]
+    private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
     private var commandList: [String: (_ data: Any?, _ resolve: @escaping (_ data: ReplyData?) -> Void, _ reject: @escaping (_ data: ReplyData?) -> Void) -> Void] = [:]
     private var cmdManager = JSBManager()
 
@@ -22,7 +22,6 @@ class SpatialWebViewModel: SpatialObject {
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerJSBInvoke(invoke: onJSBInvoke)
-        _ = WKWebViewManager.Instance.create(controller: controller!)
     }
 
     func load() {
@@ -30,6 +29,9 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     func load(_ url: String) {
+        if controller!.webview == nil {
+            _ = WKWebViewManager.Instance.create(controller: controller!)
+        }
         controller!.webview!.load(URLRequest(url: URL(string: url)!))
     }
 
@@ -82,7 +84,7 @@ class SpatialWebViewModel: SpatialObject {
         navigationList[protocal] = event
     }
 
-    func addOpenWindowListener(protocal: String, event: @escaping (_ data: URL) -> SpatialWebViewModel) {
+    func addOpenWindowListener(protocal: String, event: @escaping (_ data: URL) -> WebViewElementInfo) {
         openWindowList[protocal] = event
     }
 
@@ -94,6 +96,11 @@ class SpatialWebViewModel: SpatialObject {
             }
             return event(concreteData, resolve, reject)
         }
+    }
+
+    func addStatChangeListener(event: @escaping (_ type: String) -> Void) {
+        controller?.registerWebviewStateChangeInvoke(invoke: event)
+        view?.registerWebviewStateChangeInvoke(invoke: event)
     }
 
     func removeJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type) {
@@ -132,8 +139,8 @@ class SpatialWebViewModel: SpatialObject {
         return protocolRes
     }
 
-    private func onOpenWindowInvoke(_ url: URL) -> SpatialWebViewModel? {
-        var protocolRes: SpatialWebViewModel? = nil
+    private func onOpenWindowInvoke(_ url: URL) -> WebViewElementInfo? {
+        var protocolRes: WebViewElementInfo? = nil
         for key in openWindowList.keys {
             if url.absoluteString.starts(with: key),
                let res = openWindowList[key]?(url)
@@ -172,4 +179,9 @@ class SpatialWebViewModel: SpatialObject {
     func evaluateJS(js: String) {
         controller?.callJS(js)
     }
+}
+
+struct WebViewElementInfo {
+    var id: String
+    var element: SpatialWebViewModel
 }

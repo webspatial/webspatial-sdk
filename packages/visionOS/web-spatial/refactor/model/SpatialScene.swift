@@ -28,7 +28,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
-            return spatialized2DElement.getWebViewModel()
+            return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
     }
 

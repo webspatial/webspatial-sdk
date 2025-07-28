@@ -6,8 +6,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     weak var model: SpatialWebViewModel?
     private var isObserving = false
     private var navigationInvoke: ((_ data: URL) -> Bool)?
-    private var openWindowInvoke: ((_ data: URL) -> SpatialWebViewModel?)?
+    private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var jsbInvoke: ((_ data: String, _ promise: JSBManager.Promise) -> Void)?
+    private var webviewStateChangeInvoke: ((_ type: String) -> Void)?
     var webview: WKWebView?
 
     override init() {
@@ -21,12 +22,16 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         navigationInvoke = invoke
     }
 
-    func registerOpenWindowInvoke(invoke: @escaping (_ data: URL) -> SpatialWebViewModel?) {
+    func registerOpenWindowInvoke(invoke: @escaping (_ data: URL) -> WebViewElementInfo?) {
         openWindowInvoke = invoke
     }
 
     func registerJSBInvoke(invoke: @escaping (_ data: String, _ promise: JSBManager.Promise) -> Void) {
         jsbInvoke = invoke
+    }
+
+    func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: String) -> Void) {
+        webviewStateChangeInvoke = invoke
     }
 
     // navigation request
@@ -46,9 +51,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         for navigationAction: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        if let model = openWindowInvoke?(navigationAction.request.url!) {
-            return model.getController().webview
+        if let modelInfo = openWindowInvoke?(navigationAction.request.url!) {
+            if modelInfo.element.getController().webview == nil {
+                _ = WKWebViewManager.Instance.create(controller: modelInfo.element.getController(), configuration: configuration, spatialId: modelInfo.id)
+            }
+            return modelInfo.element.getController().webview
         }
+        print("no webview")
         return nil
     }
 
@@ -82,15 +91,15 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
     func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
-        model?.onWebViewUpdate(type: "controller:didStartLoadPage")
+        webviewStateChangeInvoke?("didStartLoadPage")
     }
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        model?.onWebViewUpdate(type: "controller:didReceivePageContent")
+        webviewStateChangeInvoke?("didReceivePageContent")
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        model?.onWebViewUpdate(type: "controller:didFinishLoadPage")
+        webviewStateChangeInvoke?("didFinishLoadPage")
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
@@ -100,9 +109,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         if let urlError = (error as? URLError) {
             if urlError.code == .cannotConnectToHost {
-                model?.onWebViewUpdate(type: "controller:didFailLoadPage")
+                webviewStateChangeInvoke?("didFailLoadPage")
             }
         }
+    }
+
+    func webViewDidClose(_ webView: WKWebView) {
+        webviewStateChangeInvoke?("didClose")
     }
 
     func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
