@@ -93,16 +93,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 protocal: "webspatial://createscene",
                 event: handleWindowOpenCustom
             )
-        spatialWebViewModel.addStatChangeListener(event: { state in
-            if state == "didClose" {
+        spatialWebViewModel.addStateListener { state in
+            if state == .didClose {
                 self.handleWindowClose()
             }
-        })
+        }
         spatialWebViewModel
             .addJSBListener(SceneCommand.self) { command, _, _ in
-                guard let sceneData = command?.sceneData else {
-                    return
-                }
+                let sceneData = command.sceneData
                 print("Scene::handleJSB", sceneData)
                 // find scene
                 if let method = sceneData.method,

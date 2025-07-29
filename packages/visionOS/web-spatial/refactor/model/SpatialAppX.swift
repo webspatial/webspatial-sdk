@@ -30,11 +30,9 @@ class SpatialAppX {
     }
 
     static func createScene(_ url: String) -> SpatialScene {
-        // TODO: 让SpatialAPP createScene
         print("url,", url)
         let newScene = SpatialScene(url, "Plain")
 
-        // TODO: 下沉到model
         DispatchQueue.main.async {
             newScene.spatialWebViewModel.evaluateJS(js: "window._webSpatialID = '" + newScene.id + "'")
         }
