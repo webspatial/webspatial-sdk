@@ -43,14 +43,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         spatialWebViewModel.addStateListener { state in
-            print("state change", state)
+//            print("state change", state)
             if state == .didStartLoad {
+                print("---------------onLeavePageSession---------------")
                 self.onLeavePageSession()
             }
         }
 
-        spatialWebViewModel.addScrollUpdateListener { type, point in
-            print("scroll update", type, point)
+        spatialWebViewModel.addScrollUpdateListener { _, _ in
+//            print("scroll update", type, point)
         }
     }
 
@@ -309,7 +310,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        spatialWebViewModel.destory()
+        spatialWebViewModel.destroy()
     }
 
     override func inspect() -> [String: Any] {

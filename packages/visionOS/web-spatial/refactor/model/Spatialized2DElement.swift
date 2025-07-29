@@ -97,6 +97,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getView() -> SpatialWebView {
+        print("get view", id)
         return spatialWebViewModel.getView()
     }
 
@@ -105,7 +106,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         for spatializedElement in spatializedElements {
             spatializedElement.destroy()
         }
-        spatialWebViewModel.destory()
+        spatialWebViewModel.destroy()
     }
 
     override func inspect() -> [String: Any] {
