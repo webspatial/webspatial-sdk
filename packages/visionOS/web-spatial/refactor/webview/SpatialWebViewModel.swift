@@ -11,10 +11,12 @@ class SpatialWebViewModel: SpatialObject {
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
+    private var stateListeners: [SpatialWebViewState: [() -> Void]] = [:]
     private var stateChangeListeners: [(_ type: SpatialWebViewState) -> Void] = []
     private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
     private var isEnableScroll = true
+    private var backgroundTransparent: Bool = false
 
     private(set) var title: String?
     var scrollOffset: CGPoint = .zero
@@ -39,20 +41,24 @@ class SpatialWebViewModel: SpatialObject {
         if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
             controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+            controller!.webview?.isOpaque = backgroundTransparent
         }
         controller?.webview!.load(URLRequest(url: URL(string: url)!))
+        controller?.startObserving()
     }
 
     func loadHTML(_ htmlText: String) {
         if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
             controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+            controller!.webview?.isOpaque = backgroundTransparent
         }
         controller?.webview!.loadHTMLString(htmlText, baseURL: nil)
     }
 
     func getView() -> SpatialWebView {
         if view == nil {
+            print("get spatial webview", id)
             view = SpatialWebView()
             view!.model = self
             view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -66,6 +72,7 @@ class SpatialWebViewModel: SpatialObject {
 
     func setBackgroundTransparent(_ transparent: Bool) {
         controller!.webview?.isOpaque = !transparent
+        backgroundTransparent = !transparent
     }
 
     func enableScroll() {
@@ -149,14 +156,32 @@ class SpatialWebViewModel: SpatialObject {
         stateChangeListeners.append(event)
     }
 
+    func addStateListener(_ state: SpatialWebViewState, _ event: @escaping () -> Void) {
+        if stateListeners[state] == nil {
+            stateListeners[state] = []
+        }
+        stateListeners[state]?.append(event)
+    }
+
     func removeStateListener(_ event: @escaping (_ type: String) -> Void) {
         stateChangeListeners.removeAll(where: {
             $0 as AnyObject === event as AnyObject
         })
     }
 
+    func removeStateListener(_ state: SpatialWebViewState, _ event: @escaping (_ object: Any, _ data: Any) -> Void) {
+        stateListeners[state]?.removeAll(where: {
+            $0 as AnyObject === event as AnyObject
+        })
+    }
+
     func removeAllStateListener() {
         stateChangeListeners.removeAll()
+        stateListeners = [:]
+    }
+
+    func removeStateListener(_ state: SpatialWebViewState) {
+        stateListeners[state] = nil
     }
 
     // scroll update event
@@ -223,9 +248,12 @@ class SpatialWebViewModel: SpatialObject {
         } catch {}
     }
 
-    private func onStateChangeInvoke(_ type: SpatialWebViewState) {
+    private func onStateChangeInvoke(_ state: SpatialWebViewState) {
         for onStateChange in stateChangeListeners {
-            onStateChange(type)
+            onStateChange(state)
+        }
+        stateListeners[state]?.forEach { onStateChange in
+            onStateChange()
         }
     }
 
@@ -249,7 +277,7 @@ class SpatialWebViewModel: SpatialObject {
     }
 }
 
-enum SpatialWebViewState {
+enum SpatialWebViewState: String, CaseIterable {
     case didStartLoad
     case didReceive
     case didFinishLoad

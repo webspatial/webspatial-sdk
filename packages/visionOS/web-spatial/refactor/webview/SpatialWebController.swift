@@ -81,6 +81,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void
     ) {
+//        print(message.body)
         let promise = JSBManager.Promise(replyHandler)
         jsbInvoke?(message.body as! String, promise)
     }
@@ -185,6 +186,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
            let url = (object as? WKWebView)?.url?.absoluteString
         {
             DispatchQueue.main.async {
+//                print("url change", url)
                 self.model?.url = url
             }
         }

@@ -94,7 +94,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getView() -> SpatialWebView {
-        print("get view", id)
+        print("get 2d element view", id)
         return spatialWebViewModel.getView()
     }
 

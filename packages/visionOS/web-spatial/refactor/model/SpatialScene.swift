@@ -48,14 +48,23 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
+    private var firstLoad = true
     private func setupWebViewStateListner() {
         spatialWebViewModel.addStateListener { state in
-//            print("state change", state)
-            if state == .didStartLoad {
-                print("---------------onLeavePageSession---------------")
-                self.onLeavePageSession()
-                self.spatialWebViewModel.setBackgroundTransparent(false)
+            print("state change", state)
+            if state == .didUnload {
+                if self.firstLoad {
+                    self.firstLoad = false
+                } else {
+                    print("---------------onLeavePageSession---------------")
+                    self.onLeavePageSession()
+                    self.spatialWebViewModel.setBackgroundTransparent(false)
+                }
             }
+        }
+
+        spatialWebViewModel.addStateListener(.didUnload) {
+            print("single state")
         }
 
         spatialWebViewModel.addScrollUpdateListener { _, _ in
