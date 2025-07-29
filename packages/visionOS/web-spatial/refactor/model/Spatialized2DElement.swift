@@ -6,16 +6,7 @@ import SwiftUI
 class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContainer {
     var cornerRadius: CornerRadius = .init()
 
-    private var _backgroundMaterial = BackgroundMaterial.None
-    var backgroundMaterial: BackgroundMaterial {
-        get {
-            return _backgroundMaterial
-        }
-        set(newValue) {
-            _backgroundMaterial = newValue
-//            webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
-        }
-    }
+    var backgroundMaterial = BackgroundMaterial.None
 
     private var _scrollEnabled = false
     var scrollEnabled: Bool {
@@ -54,6 +45,12 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         spatialWebViewModel = SpatialWebViewModel(url: nil)
 
         super.init()
+
+        spatialWebViewModel.addStateListener { state in
+            if state == .didStartLoad {
+                self.spatialWebViewModel.setBackgroundTransparent(true)
+            }
+        }
     }
 
     // Spatialized2DElement can hold a collection of SpatializedElement children

@@ -79,7 +79,12 @@ export async function testCreateSpatialized2DElement() {
     })
 
     await spatialized2DElement.addSpatializedElement(subSpatialized2DElement)
-    subSpatialized2DElement.windowProxy.document.body.style.background = 'red'
+    subSpatialized2DElement.windowProxy.document.documentElement.style.setProperty(
+      'background-color',
+      '#ffffff00',
+    )
+    subSpatialized2DElement.windowProxy.document.body.style.background =
+      '#ffffff00'
 
     //  (window as any).spatialized2DElement = spatialized2DElement
   }

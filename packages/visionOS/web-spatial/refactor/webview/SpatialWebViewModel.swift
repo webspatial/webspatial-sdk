@@ -16,7 +16,7 @@ class SpatialWebViewModel: SpatialObject {
     private var cmdManager = JSBManager()
     private var isEnableScroll = true
 
-    private(set) var title: String? = nil
+    private(set) var title: String?
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
@@ -65,7 +65,7 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     func setBackgroundTransparent(_ transparent: Bool) {
-        controller!.webview?.isOpaque = transparent
+        controller!.webview?.isOpaque = !transparent
     }
 
     func enableScroll() {

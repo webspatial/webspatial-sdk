@@ -54,6 +54,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             if state == .didStartLoad {
                 print("---------------onLeavePageSession---------------")
                 self.onLeavePageSession()
+                self.spatialWebViewModel.setBackgroundTransparent(false)
             }
         }
 
@@ -249,7 +250,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
         set(newValue) {
             _backgroundMaterial = newValue
-//            webViewNative?.webViewHolder.appleWebView?.isOpaque = _backgroundMaterial == .None
+            spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
         }
     }
 

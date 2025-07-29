@@ -11,6 +11,7 @@ import {
   testSpatialSceneMaterial,
 } from './jsapi'
 
+testSpatialSceneMaterial()
 testCreateSpatialized2DElement()
 
 // function App() {
