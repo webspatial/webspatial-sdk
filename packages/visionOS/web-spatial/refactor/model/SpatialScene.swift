@@ -44,10 +44,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addStateListener { state in
             print("state change", state)
+            if state == .didStartLoad {
+                self.onLeavePageSession()
+            }
         }
 
         spatialWebViewModel.addScrollUpdateListener { type, point in
             print("scroll update", type, point)
+        }
+    }
+
+    private func onLeavePageSession() {
+        // destroy all SpatialObject asset
+        let spatialObjectArray = spatialObjects.map { $0.value }
+        for spatialObject in spatialObjectArray {
+            spatialObject.destroy()
         }
     }
 
