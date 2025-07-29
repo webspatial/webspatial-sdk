@@ -92,8 +92,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         return nil
     }
 
-    func loadHtml() {
-        spatialWebViewModel.load("http://localhost:5173/src/memoryStats/")
+    func loadHtml(html: String) {
+        spatialWebViewModel.loadHTML(html)
     }
 
     func getView() -> SpatialWebView {
