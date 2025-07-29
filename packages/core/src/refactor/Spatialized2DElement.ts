@@ -1,4 +1,5 @@
 import {
+  AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementCorner,
   UpdateSpatialized2DElementMaterial,
 } from './JSBCommand'
@@ -19,5 +20,12 @@ export class Spatialized2DElement extends SpatializedElement {
 
   async updateSpatialCorner(cornerRadius: CornerRadius) {
     return new UpdateSpatialized2DElementCorner(this, cornerRadius).execute()
+  }
+
+  async addSpatializedElement(element: SpatializedElement) {
+    return new AddSpatializedElementToSpatialized2DElement(
+      this,
+      element,
+    ).execute()
   }
 }

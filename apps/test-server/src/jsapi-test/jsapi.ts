@@ -62,6 +62,25 @@ export async function testCreateSpatialized2DElement() {
       topTrailing: 10,
       bottomTrailing: 10,
     })
+    spatialized2DElement.windowProxy.document.body.style.background = 'green'
+
+    const subSpatialized2DElement: Spatialized2DElement =
+      await session.createSpatialized2DElement()
+    await subSpatialized2DElement.updateTransform({
+      position: {
+        x: 50,
+        y: 50,
+        z: 50,
+      },
+    })
+    await subSpatialized2DElement.updateProperties({
+      width: 50,
+      height: 50,
+    })
+
+    await spatialized2DElement.addSpatializedElement(subSpatialized2DElement)
+    subSpatialized2DElement.windowProxy.document.body.style.background = 'red'
+
     //  (window as any).spatialized2DElement = spatialized2DElement
   }
 }

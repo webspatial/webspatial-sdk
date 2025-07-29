@@ -56,6 +56,12 @@ class UpdateSpatialized2DElementCorner: SpatialObjectCommand {
     let cornerRadius: CornerRadius
 }
 
+class AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
+    static let commandType: String = "AddSpatializedElementToSpatialized2DElement"
+    let id: String
+    let spatializedElementId: String
+}
+
 struct ReplyData: Codable {
     var success: Bool
     var code: ReplyCode?

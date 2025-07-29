@@ -127,6 +127,23 @@ export class UpdateSpatialized2DElementCorner extends SpatializedElementCommand 
   }
 }
 
+export class AddSpatializedElementToSpatialized2DElement extends SpatializedElementCommand {
+  commandType = 'AddSpatializedElementToSpatialized2DElement'
+  spatializedElement: SpatializedElement
+
+  constructor(
+    spatialObject: SpatialObject,
+    spatializedElement: SpatializedElement,
+  ) {
+    super(spatialObject)
+    this.spatializedElement = spatializedElement
+  }
+
+  protected getExtraParams() {
+    return { spatializedElementId: this.spatializedElement.id }
+  }
+}
+
 export class AddSpatializedElementToSpatialScene extends JSBCommand {
   commandType = 'AddSpatializedElementToSpatialScene'
   spatializedElement: SpatializedElement
