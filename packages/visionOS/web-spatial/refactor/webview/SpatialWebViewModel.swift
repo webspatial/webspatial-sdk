@@ -16,6 +16,7 @@ class SpatialWebViewModel: SpatialObject {
     private var cmdManager = JSBManager()
     private var isEnableScroll = true
 
+    private(set) var title: String? = nil
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
@@ -35,24 +36,23 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     func load(_ url: String) {
-        if controller!.webview == nil {
+        if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
             controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
         }
-        controller!.webview!.load(URLRequest(url: URL(string: url)!))
+        controller?.webview!.load(URLRequest(url: URL(string: url)!))
     }
 
     func loadHTML(_ htmlText: String) {
-        if controller!.webview == nil {
+        if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
             controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
         }
-        controller!.webview!.loadHTMLString(htmlText, baseURL: nil)
+        controller?.webview!.loadHTMLString(htmlText, baseURL: nil)
     }
 
     func getView() -> SpatialWebView {
         if view == nil {
-            print("create new webview")
             view = SpatialWebView()
             view!.model = self
             view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -88,6 +88,11 @@ class SpatialWebViewModel: SpatialObject {
 
     func getScrollOffset() -> CGFloat? {
         return controller?.webview?.scrollView.contentOffset.y
+    }
+
+    func setTitle(_ title: String) {
+        self.title = title
+        controller?.setWebViewTitle(title)
     }
 
     // events

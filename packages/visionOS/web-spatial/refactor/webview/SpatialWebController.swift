@@ -10,6 +10,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
     private var scorllUpdateInvoke: ((_ type: ScrollState, _ point: CGPoint) -> Void)?
     var webview: WKWebView?
+    private var webviewTitle: String? = nil
 
     override init() {
         WKWebView.enableFileScheme() // ensure the handler is usable
@@ -35,6 +36,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func registerScrollUpdateInvoke(invoke: @escaping (_ type: ScrollState, _ point: CGPoint) -> Void) {
         scorllUpdateInvoke = invoke
+    }
+
+    func setWebViewTitle(_ title: String) {
+        webviewTitle = title
+        if webview != nil {
+            callJS("document.title='\(title)'")
+        }
     }
 
     // navigation request
@@ -107,6 +115,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         webviewStateChangeInvoke?(.didFinishLoad)
+        if webviewTitle != nil {
+            callJS("document.title='\(webviewTitle!)'")
+        }
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
@@ -174,7 +185,6 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
            let url = (object as? WKWebView)?.url?.absoluteString
         {
             DispatchQueue.main.async {
-                print("url change", url)
                 self.model?.url = url
             }
         }
