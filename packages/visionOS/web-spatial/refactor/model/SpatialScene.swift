@@ -29,6 +29,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedElementProperties.self, onUpdateSpatializedElementProperties)
 
+        spatialWebViewModel.addJSBListener(UpdateSpatializedElementTransform.self, onUpdateSpatializedElementTransform)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
@@ -42,7 +44,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
-            reject(.TypeError, "invalid updateSpatializedElementProperties spatial object id not exsit!")
+            reject(.InvalidSpatialObject, "invalid updateSpatializedElementProperties spatial object id not exsit!")
             return
         }
 
@@ -75,7 +77,33 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         if let rotationAnchor = updateCommand.rotationAnchor {
-            spatializedElement.rotationAnchor = .init(x: rotationAnchor.x, y: rotationAnchor.y, z: rotationAnchor.z)
+            spatializedElement.rotationAnchor = .init(x: CGFloat(rotationAnchor.x), y: CGFloat(rotationAnchor.y), z: CGFloat(rotationAnchor.z))
+        }
+
+        resolve()
+    }
+
+    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let updateCommand = command else {
+            reject(.CommandError, "invalid UpdateSpatializedElementTransform command")
+            return
+        }
+
+        guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
+            reject(.InvalidSpatialObject, "invalid UpdateSpatializedElementTransform spatial object id not exsit!")
+            return
+        }
+
+        if let position = updateCommand.position {
+            spatializedElement.transform.translation = SIMD3<Float>(Float(position.x), Float(position.y), Float(position.z))
+        }
+
+        if let quaternion = updateCommand.quaternion {
+            spatializedElement.transform.rotation.vector = SIMD4<Float>(Float(quaternion.x), Float(quaternion.y), Float(quaternion.z), Float(quaternion.w))
+        }
+
+        if let scale = updateCommand.scale {
+            spatializedElement.transform.scale = SIMD3<Float>(Float(scale.x), Float(scale.y), Float(scale.z))
         }
 
         resolve()
@@ -88,7 +116,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         guard let spatializedElement: SpatializedElement = findSpatialObject(addSpatializedElementCommand.spatializedElementId) else {
-            reject(.TypeError, "invalid addSpatializedElementCommand spatial object id not exsit!")
+            reject(.InvalidSpatialObject, "invalid addSpatializedElementCommand spatial object id not exsit!")
             return
         }
 
@@ -147,7 +175,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    func updateScrollOffset(_ delta: Double) {}
+    func updateScrollOffset(_ delta: CGFloat) {}
 
     func stopScrolling() {}
 

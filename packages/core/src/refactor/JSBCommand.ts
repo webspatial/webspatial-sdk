@@ -6,6 +6,7 @@ import {
   BackgroundMaterialType,
   CornerRadius,
   SpatializedElementProperties,
+  SpatialTransform,
 } from './types'
 
 const platform = createPlatform()
@@ -65,12 +66,12 @@ export abstract class SpatializedElementCommand extends JSBCommand {
 }
 
 export class UpdateSpatializedElementProperties extends SpatializedElementCommand {
-  properties: SpatializedElementProperties
+  properties: Partial<SpatializedElementProperties>
   commandType = 'UpdateSpatializedElementProperties'
 
   constructor(
     spatialObject: SpatialObject,
-    properties: SpatializedElementProperties,
+    properties: Partial<SpatializedElementProperties>,
   ) {
     super(spatialObject)
     this.properties = properties
@@ -78,6 +79,23 @@ export class UpdateSpatializedElementProperties extends SpatializedElementComman
 
   protected getExtraParams() {
     return this.properties
+  }
+}
+
+export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
+  spatialTransform: Partial<SpatialTransform>
+  commandType = 'UpdateSpatializedElementTransform'
+
+  constructor(
+    spatialObject: SpatialObject,
+    spatialTransform: Partial<SpatialTransform>,
+  ) {
+    super(spatialObject)
+    this.spatialTransform = spatialTransform
+  }
+
+  protected getExtraParams() {
+    return this.spatialTransform
   }
 }
 

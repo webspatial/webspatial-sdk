@@ -19,7 +19,11 @@ class PingCommand: CommandDataProtocol {
     static let commandType: String = "Ping"
 }
 
-class UpdateSpatializedElementProperties: CommandDataProtocol {
+protocol SpatialObjectCommand: CommandDataProtocol {
+    var id: String { get }
+}
+
+class UpdateSpatializedElementProperties: SpatialObjectCommand {
     static let commandType: String = "UpdateSpatializedElementProperties"
     let id: String
     let width: Double?
@@ -32,6 +36,14 @@ class UpdateSpatializedElementProperties: CommandDataProtocol {
     let zIndex: Double?
 }
 
+class UpdateSpatializedElementTransform: SpatialObjectCommand {
+    static let commandType: String = "UpdateSpatializedElementTransform"
+    let id: String
+    let position: Vec3?
+    let quaternion: Vec4?
+    let scale: Vec3?
+}
+
 struct ReplyData: Codable {
     var success: Bool
     var code: ReplyCode?
@@ -41,4 +53,5 @@ struct ReplyData: Codable {
 enum ReplyCode: Codable {
     case TypeError
     case CommandError
+    case InvalidSpatialObject
 }

@@ -1,4 +1,6 @@
-struct Vec2 {
-    var x: Double
-    var y: Double
+import CoreFoundation
+
+struct Vec2: Codable {
+    var x: CGFloat
+    var y: CGFloat
 }

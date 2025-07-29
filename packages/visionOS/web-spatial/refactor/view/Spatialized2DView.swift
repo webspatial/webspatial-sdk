@@ -3,8 +3,8 @@ import SwiftUI
 
 class Spatialized2DViewGestureData {
     var dragStarted = false
-    var dragStart = 0.0
-    var dragVelocity = 0.0
+    var dragStart: CGFloat = 0.0
+    var dragVelocity: CGFloat = 0.0
 }
 
 struct Spatialized2DView: View {

@@ -27,7 +27,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         }
     }
 
-    func updateScrollOffset(_ delta: Double) {
+    func updateScrollOffset(_ delta: CGFloat) {
         _scrollOffset.y += delta
     }
 

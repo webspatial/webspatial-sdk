@@ -46,5 +46,14 @@ export async function testCreateSpatialized2DElement() {
 
     const spatialScene = session.getSpatialScene()
     await spatialScene.addSpatializedElement(spatialized2DElement)
+
+    await spatialized2DElement.updateTransform({
+      position: {
+        x: 50,
+        y: 50,
+        z: 50,
+      },
+    })
+    ;(window as any).spatialized2DElement = spatialized2DElement
   }
 }
