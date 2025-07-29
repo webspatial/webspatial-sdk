@@ -44,8 +44,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             print("state change", state)
         }
 
-        spatialWebViewModel.addScrollUpdateListener { point in
-            print("scroll update", point)
+        spatialWebViewModel.addScrollUpdateListener { type, point in
+            print("scroll update", type, point)
         }
     }
 

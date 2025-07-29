@@ -9,7 +9,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var jsbInvoke: ((_ data: String, _ promise: JSBManager.Promise) -> Void)?
     private var webviewStateChangeInvoke: ((_ type: String) -> Void)?
-    private var scorllUpdateInvoke: ((_ point: CGPoint) -> Void)?
+    private var scorllUpdateInvoke: ((_ type: String, _ point: CGPoint) -> Void)?
     var webview: WKWebView?
 
     override init() {
@@ -35,7 +35,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         webviewStateChangeInvoke = invoke
     }
 
-    func registerScrollUpdateInvoke(invoke: @escaping (_ offset: CGPoint) -> Void) {
+    func registerScrollUpdateInvoke(invoke: @escaping (_ type: String, _ point: CGPoint) -> Void) {
         scorllUpdateInvoke = invoke
     }
 
@@ -131,7 +131,19 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        scorllUpdateInvoke?(scrollView.contentOffset)
+        scorllUpdateInvoke?("Scrolling", scrollView.contentOffset)
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        scorllUpdateInvoke?("ScrollEnd", scrollView.contentOffset)
+    }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            scorllUpdateInvoke?("ScrollEnd", scrollView.contentOffset)
+        } else {
+            scorllUpdateInvoke?("ScrollRelease", scrollView.contentOffset)
+        }
     }
 
     func startObserving(webView: WKWebView) {

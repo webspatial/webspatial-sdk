@@ -12,7 +12,7 @@ class SpatialWebViewModel: SpatialObject {
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var stateChangeListeners: [(_ type: String) -> Void] = []
-    private var scrollUpdateListeners: [(_ type: CGPoint) -> Void] = []
+    private var scrollUpdateListeners: [(_ type: String, _ point: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
 
     var scrollOffset: CGPoint = .zero
@@ -99,7 +99,7 @@ class SpatialWebViewModel: SpatialObject {
         })
     }
 
-    func addScrollUpdateListener(_ event: @escaping (_ point: CGPoint) -> Void) {
+    func addScrollUpdateListener(_ event: @escaping (_ type: String, _ point: CGPoint) -> Void) {
         scrollUpdateListeners.append(event)
     }
 
@@ -179,9 +179,9 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    func onScrollUpdateInvoke(_ point: CGPoint) {
+    func onScrollUpdateInvoke(_ type: String, _ point: CGPoint) {
         for onScrollUpdate in scrollUpdateListeners {
-            onScrollUpdate(point)
+            onScrollUpdate(type, point)
         }
     }
 
