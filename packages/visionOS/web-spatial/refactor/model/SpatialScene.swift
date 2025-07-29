@@ -94,12 +94,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 event: handleWindowOpenCustom
             )
         spatialWebViewModel.addStateListener { state in
+            print("state:", state)
             if state == .didClose {
                 self.handleWindowClose()
             }
         }
         spatialWebViewModel
-            .addJSBListener(SceneCommand.self) { command, _, _ in
+            .addJSBListener(SceneCommand.self) { command, resolve, _ in
                 let sceneData = command.sceneData
                 print("Scene::handleJSB", sceneData)
                 // find scene
@@ -118,6 +119,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                         }
                     }
                 }
+                resolve()
             }
         setupJSBListeners()
     }
@@ -183,13 +185,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         //        print("config::",config)
 
         if let cfg = config {
+            newScene.spatialWebViewModel.evaluateJS(js: "window._SceneHookOff=true;")
             newScene.open(WindowContainerPlainDefaultValues(cfg))
         } else {
             newScene.open()
             // FIXME: to trigger load
-            DispatchQueue.main.async {
-                newScene.spatialWebViewModel.load(decodedUrl)
-            }
+//            DispatchQueue.main.async {
+//                newScene.spatialWebViewModel.load(decodedUrl)
+//            }
         }
         return WebViewElementInfo(
             id: newScene.id,
@@ -203,25 +206,25 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         closeWindowData.send(getSceneData())
     }
 
-    private func handleJSBScene(_ data: SceneCommand) {
-        print("Scene::handleJSB", data.sceneData)
-        // find scene
-        if let method = data.sceneData.method,
-           let sceneId = data.sceneData.sceneID,
-           let targetScene = SpatialAppX.getScene(sceneId)
-        {
-            if method == "showRoot" {
-                if let sceneConfig = data.sceneData.sceneConfig {
-                    // config
-                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
-                    targetScene.open(cfg)
-                } else {
-                    // error!
-                    print("should have config")
-                }
-            }
-        }
-    }
+//    private func handleJSBScene(_ data: SceneCommand) {
+//        print("Scene::handleJSB", data.sceneData)
+//        // find scene
+//        if let method = data.sceneData.method,
+//           let sceneId = data.sceneData.sceneID,
+//           let targetScene = SpatialAppX.getScene(sceneId)
+//        {
+//            if method == "showRoot" {
+//                if let sceneConfig = data.sceneData.sceneConfig {
+//                    // config
+//                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
+//                    targetScene.open(cfg)
+//                } else {
+//                    // error!
+//                    print("should have config")
+//                }
+//            }
+//        }
+//    }
 
     private class SceneCommand: CommandDataProtocol {
         static let commandType = "createScene"
@@ -255,8 +258,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
             state = newState
             print("currentState:", state)
+            onEnterState(newState)
         } else {
             print("invalid state transition from \(state) to \(newState)")
+        }
+    }
+
+    private func onEnterState(_ newState: SceneStateKind) {
+        switch newState {
+        case .pending:
+            DispatchQueue.main.async {
+//                    print("pending loading:",self.url)
+                self.spatialWebViewModel.load(self.url)
+            }
+        default:
+            let _ = 1
         }
     }
 
@@ -316,6 +332,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                         plainDefaultValues!
                     ) // set default values
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.spatialWebViewModel.load(self.url)
                     pScene.openWindowData
                         .send(self.getSceneData()) // openwindow
                     self.moveToState(.success)
@@ -634,7 +651,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        spatialWebViewModel.destroy()
+//        spatialWebViewModel.destory()
     }
 
     override func inspect() -> [String: Any] {

@@ -268,7 +268,7 @@ class SpatialWebViewModel: SpatialObject {
         removeAllListener()
         cmdManager.clear()
         view?.destroy()
-        controller?.destroy()
+        controller?.destoryView()
         controller = nil
         view = nil
     }

@@ -36,18 +36,18 @@ struct SpatialSceneView: View {
     }
 }
 
-struct PreviewSpatialScene: View {
-    var sceneId: String
-
-    init() {
-        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
-        spatialScene.cornerRadius.bottomLeading = 130
-        var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
-        spatialized2DElement.transform.translation.x = 200
-        spatialized2DElement.transform.translation.y = 200
-        spatialized2DElement.transform.translation.z = 200
-        spatialized2DElement.width = 200
-        spatialized2DElement.height = 200
+// struct PreviewSpatialScene: View {
+//    var sceneId: String
+//
+//    init() {
+//        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
+//        spatialScene.cornerRadius.bottomLeading = 130
+//        var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+//        spatialized2DElement.transform.translation.x = 200
+//        spatialized2DElement.transform.translation.y = 200
+//        spatialized2DElement.transform.translation.z = 200
+//        spatialized2DElement.width = 200
+//        spatialized2DElement.height = 200
         let htmlString = """
         <!DOCTYPE html>
         <html>
