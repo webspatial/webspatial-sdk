@@ -12,8 +12,9 @@ class SpatialWebViewModel: SpatialObject {
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var stateChangeListeners: [(_ type: String) -> Void] = []
-    private var scrollUpdateListeners: [(_ type: String, _ point: CGPoint) -> Void] = []
+    private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
+    private var isEnableScroll = true
 
     var scrollOffset: CGPoint = .zero
 
@@ -36,6 +37,7 @@ class SpatialWebViewModel: SpatialObject {
     func load(_ url: String) {
         if controller!.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
+            controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
         }
         controller!.webview!.load(URLRequest(url: URL(string: url)!))
     }
@@ -53,18 +55,44 @@ class SpatialWebViewModel: SpatialObject {
         return controller!
     }
 
-    func scrollViewOffset(offset: Float) {
-//        view.scorll(offset)
+    func setBackgroundTransparent(_ transparent: Bool) {
+        controller!.webview?.isOpaque = transparent
     }
 
+    func enableScroll() {
+        isEnableScroll = true
+        controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+    }
+
+    func disableScroll() {
+        isEnableScroll = false
+        controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+    }
+
+    func stopScrolling() {
+        controller!.webview?.scrollView.stopScrollingAndZooming()
+    }
+
+    // events
+    // navigation event
     func addNavigationListener(protocal: String, event: @escaping (_ data: URL) -> Bool) {
         navigationList[protocal] = event
     }
 
+    func removeAllNavigationListener() {
+        navigationList = [:]
+    }
+
+    // open window event
     func addOpenWindowListener(protocal: String, event: @escaping (_ data: URL) -> WebViewElementInfo?) {
         openWindowList[protocal] = event
     }
 
+    func removeAllOpenWindowListener() {
+        openWindowList = [:]
+    }
+
+    // jsb event
     func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void) {
         cmdManager.register(dataClass)
         commandList[dataClass.commandType] = { data, resolve, reject in
@@ -89,6 +117,12 @@ class SpatialWebViewModel: SpatialObject {
         cmdManager.clear()
     }
 
+    func fireMockJSB(_ command: String) {
+        let promise = JSBManager.Promise { _, _ in }
+        onJSBInvoke(command, promise)
+    }
+
+    // webview state event
     func addStateListener(_ event: @escaping (_ type: String) -> Void) {
         stateChangeListeners.append(event)
     }
@@ -99,26 +133,23 @@ class SpatialWebViewModel: SpatialObject {
         })
     }
 
-    func addScrollUpdateListener(_ event: @escaping (_ type: String, _ point: CGPoint) -> Void) {
+    func removeAllStateListener() {
+        stateChangeListeners.removeAll()
+    }
+
+    // scroll update event
+    func addScrollUpdateListener(_ event: @escaping (_ type: ScrollState, _ point: CGPoint) -> Void) {
         scrollUpdateListeners.append(event)
     }
 
-    func removeScrollUpdateListener(_ event: @escaping (_ type: CGPoint) -> Void) {
+    func removeScrollUpdateListener(_ event: @escaping (_ type: ScrollState, _ point: CGPoint) -> Void) {
         scrollUpdateListeners.removeAll(where: {
             $0 as AnyObject === event as AnyObject
         })
     }
 
-    func removeAllNavigationListener() {
-        navigationList = [:]
-    }
-
-    func removeAllOpenWindowListener() {
-        openWindowList = [:]
-    }
-
-    func removeAllStateListener() {
-        stateChangeListeners.removeAll()
+    func removeAllScrollUpdateListener() {
+        scrollUpdateListeners.removeAll()
     }
 
     func removeAllListener() {
@@ -126,8 +157,10 @@ class SpatialWebViewModel: SpatialObject {
         removeAllNavigationListener()
         removeAllOpenWindowListener()
         removeAllStateListener()
+        removeAllScrollUpdateListener()
     }
 
+    // invokes
     private func onNavigationInvoke(_ url: URL) -> Bool {
         var protocolRes = true
         for key in navigationList.keys {
@@ -152,11 +185,6 @@ class SpatialWebViewModel: SpatialObject {
         return protocolRes
     }
 
-    func fireMockJSB(_ command: String) {
-        let promise = JSBManager.Promise { _, _ in }
-        onJSBInvoke(command, promise)
-    }
-
     private func onJSBInvoke(_ command: String, _ promise: JSBManager.Promise) {
         do {
             let jsbInfo = command.components(separatedBy: "::")
@@ -179,13 +207,14 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    func onScrollUpdateInvoke(_ type: String, _ point: CGPoint) {
+    func onScrollUpdateInvoke(_ type: ScrollState, _ point: CGPoint) {
         for onScrollUpdate in scrollUpdateListeners {
             onScrollUpdate(type, point)
         }
     }
 
     func destory() {
+        removeAllListener()
         onDestroy()
     }
 
