@@ -11,6 +11,7 @@ class SpatialWebViewModel: SpatialObject {
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
+    private var stateChangeListeners: [(_ type: String) -> Void] = []
     private var cmdManager = JSBManager()
 
     var scrollOffset: CGPoint = .zero
@@ -23,6 +24,7 @@ class SpatialWebViewModel: SpatialObject {
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerJSBInvoke(invoke: onJSBInvoke)
+        controller?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
     }
 
     func load() {
@@ -40,31 +42,13 @@ class SpatialWebViewModel: SpatialObject {
         if view == nil {
             view = SpatialWebView()
             view!.model = self
+            view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
         }
         return view!
     }
 
     func getController() -> SpatialWebController {
         return controller!
-    }
-
-    func onWebViewUpdate(type: String) {
-//        print(type)
-        switch type {
-        case "view:updateUI":
-//            load()
-            break
-        case "controller:didStartLoadPage":
-            viewState = "startLoad"
-        case "controller:didReceivePageContent":
-            viewState = "loading"
-        case "controller:didFinishLoadPage":
-            viewState = "finishLoad"
-        case "controller:didFailLoadPage":
-            viewState = "failLoad"
-        default:
-            return
-        }
     }
 
     func onUpdateScroll(point: CGPoint) {
@@ -90,23 +74,31 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ resolve: @escaping() -> Void, _ reject: @escaping(_ code: ReplyCode, _ message: String) -> Void) -> Void) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void) {
+        cmdManager.register(dataClass)
         commandListWithoutData[dataClass.commandType] = event
-    }
-
-    func addStateChangeListener(event: @escaping (_ type: String) -> Void) {
-        controller?.registerWebviewStateChangeInvoke(invoke: event)
-        view?.registerWebviewStateChangeInvoke(invoke: event)
     }
 
     func removeJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type) {
         cmdManager.remove(dataClass)
         commandList.removeValue(forKey: dataClass.commandType)
+        commandListWithoutData.removeValue(forKey: dataClass.commandType)
     }
 
     func removeAllJSBListener() {
         commandList = [:]
+        commandListWithoutData = [:]
         cmdManager.clear()
+    }
+
+    func addStateListener(_ event: @escaping (_ type: String) -> Void) {
+        stateChangeListeners.append(event)
+    }
+
+    func removeStateListener(_ event: (_ type: String) -> Void) {
+        stateChangeListeners.removeAll(where: {
+            $0 as AnyObject === event as AnyObject
+        })
     }
 
     func removeAllNavigationListener() {
@@ -117,10 +109,15 @@ class SpatialWebViewModel: SpatialObject {
         openWindowList = [:]
     }
 
+    func removeAllStateListener() {
+        stateChangeListeners.removeAll()
+    }
+
     func removeAllListener() {
         removeAllJSBListener()
         removeAllNavigationListener()
         removeAllOpenWindowListener()
+        removeAllStateListener()
     }
 
     private func onNavigationInvoke(_ url: URL) -> Bool {
@@ -166,6 +163,12 @@ class SpatialWebViewModel: SpatialObject {
                 }
             }
         } catch {}
+    }
+
+    private func onStateChangeInvoke(_ type: String) {
+        for onStateChange in stateChangeListeners {
+            onStateChange(type)
+        }
     }
 
     func destory() {

@@ -37,6 +37,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
+
+        spatialWebViewModel.addStateListener { state in
+            print("state change", state)
+        }
     }
 
     private func onUpdateSpatialized2DElementMaterial(command: UpdateSpatialized2DElementMaterial, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
