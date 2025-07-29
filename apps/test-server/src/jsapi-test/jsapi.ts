@@ -54,6 +54,8 @@ export async function testCreateSpatialized2DElement() {
         z: 50,
       },
     })
-    ;(window as any).spatialized2DElement = spatialized2DElement
+
+    await spatialized2DElement.updateSpatialMaterial('translucent')
+    //  (window as any).spatialized2DElement = spatialized2DElement
   }
 }

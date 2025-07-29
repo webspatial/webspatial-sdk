@@ -22,7 +22,7 @@ abstract class JSBCommand {
   }
 }
 
-export class UpdateSpatialSceneMaterialCommand extends JSBCommand {
+export class UpdateSpatialSceneMaterial extends JSBCommand {
   material: BackgroundMaterialType
   commandType = 'UpdateSpatialSceneMaterial'
 
@@ -96,6 +96,20 @@ export class UpdateSpatializedElementTransform extends SpatializedElementCommand
 
   protected getExtraParams() {
     return this.spatialTransform
+  }
+}
+
+export class UpdateSpatialized2DElementMaterial extends SpatializedElementCommand {
+  material: BackgroundMaterialType
+  commandType = 'UpdateSpatialized2DElementMaterial'
+
+  constructor(spatialObject: SpatialObject, material: BackgroundMaterialType) {
+    super(spatialObject)
+    this.material = material
+  }
+
+  protected getExtraParams() {
+    return { material: this.material }
   }
 }
 

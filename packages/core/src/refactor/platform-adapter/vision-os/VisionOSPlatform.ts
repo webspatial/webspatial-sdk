@@ -29,7 +29,7 @@ export class VisionOSPlatform implements PlatformAbility {
       )
       return CommandResultSuccess(result)
     } catch (error) {
-      console.log('dbg', error)
+      console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
       return CommandResultFailure('errorNo', 'error')
     }
   }

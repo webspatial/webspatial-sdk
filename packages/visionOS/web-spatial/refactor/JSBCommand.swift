@@ -44,6 +44,12 @@ class UpdateSpatializedElementTransform: SpatialObjectCommand {
     let scale: Vec3?
 }
 
+class UpdateSpatialized2DElementMaterial: SpatialObjectCommand {
+    static let commandType: String = "UpdateSpatialized2DElementMaterial"
+    let id: String
+    let material: BackgroundMaterial
+}
+
 struct ReplyData: Codable {
     var success: Bool
     var code: ReplyCode?

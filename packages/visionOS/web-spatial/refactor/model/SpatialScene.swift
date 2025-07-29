@@ -31,10 +31,22 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedElementTransform.self, onUpdateSpatializedElementTransform)
 
+        spatialWebViewModel.addJSBListener(UpdateSpatialized2DElementMaterial.self, onUpdateSpatialized2DElementMaterial)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
+    }
+
+    private func onUpdateSpatialized2DElementMaterial(command: UpdateSpatialized2DElementMaterial, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
+            reject(.InvalidSpatialObject, "invalid UpdateSpatialized2DElementMaterial spatial object id not exsit!")
+            return
+        }
+
+        spatialized2DElement.backgroundMaterial = command.material
+        resolve()
     }
 
     private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
@@ -121,6 +133,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         addChild(spatializedElement)
+        resolve()
     }
 
     /*

@@ -2,7 +2,7 @@ import { BackgroundMaterialType } from './types'
 import {
   AddSpatializedElementToSpatialScene,
   UpdateSpatialSceneCorner,
-  UpdateSpatialSceneMaterialCommand,
+  UpdateSpatialSceneMaterial,
 } from './JSBCommand'
 import { CornerRadius } from '../core'
 import { SpatializedElement } from './SpatializedElement'
@@ -18,7 +18,7 @@ export class SpatialScene {
   }
 
   async updateSpatialMaterial(material: BackgroundMaterialType) {
-    return new UpdateSpatialSceneMaterialCommand(material).execute()
+    return new UpdateSpatialSceneMaterial(material).execute()
   }
 
   async updateSpatialCorner(cornerRadius: CornerRadius) {
