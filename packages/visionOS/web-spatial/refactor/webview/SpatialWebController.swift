@@ -9,6 +9,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var jsbInvoke: ((_ data: String, _ promise: JSBManager.Promise) -> Void)?
     private var webviewStateChangeInvoke: ((_ type: String) -> Void)?
+    private var scorllUpdateInvoke: ((_ point: CGPoint) -> Void)?
     var webview: WKWebView?
 
     override init() {
@@ -32,6 +33,10 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: String) -> Void) {
         webviewStateChangeInvoke = invoke
+    }
+
+    func registerScrollUpdateInvoke(invoke: @escaping (_ offset: CGPoint) -> Void) {
+        scorllUpdateInvoke = invoke
     }
 
     // navigation request
@@ -126,7 +131,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        model!.onUpdateScroll(point: scrollView.contentOffset)
+        scorllUpdateInvoke?(scrollView.contentOffset)
     }
 
     func startObserving(webView: WKWebView) {

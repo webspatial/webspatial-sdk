@@ -43,6 +43,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         spatialWebViewModel.addStateListener { state in
             print("state change", state)
         }
+
+        spatialWebViewModel.addScrollUpdateListener { point in
+            print("scroll update", point)
+        }
     }
 
     private func onUpdateSpatialized2DElementMaterial(command: UpdateSpatialized2DElementMaterial, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {

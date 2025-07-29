@@ -12,6 +12,7 @@ class SpatialWebViewModel: SpatialObject {
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var stateChangeListeners: [(_ type: String) -> Void] = []
+    private var scrollUpdateListeners: [(_ type: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
 
     var scrollOffset: CGPoint = .zero
@@ -25,6 +26,7 @@ class SpatialWebViewModel: SpatialObject {
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerJSBInvoke(invoke: onJSBInvoke)
         controller?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
+        controller?.registerScrollUpdateInvoke(invoke: onScrollUpdateInvoke)
     }
 
     func load() {
@@ -49,10 +51,6 @@ class SpatialWebViewModel: SpatialObject {
 
     func getController() -> SpatialWebController {
         return controller!
-    }
-
-    func onUpdateScroll(point: CGPoint) {
-        scrollOffset = point
     }
 
     func scrollViewOffset(offset: Float) {
@@ -95,8 +93,18 @@ class SpatialWebViewModel: SpatialObject {
         stateChangeListeners.append(event)
     }
 
-    func removeStateListener(_ event: (_ type: String) -> Void) {
+    func removeStateListener(_ event: @escaping (_ type: String) -> Void) {
         stateChangeListeners.removeAll(where: {
+            $0 as AnyObject === event as AnyObject
+        })
+    }
+
+    func addScrollUpdateListener(_ event: @escaping (_ point: CGPoint) -> Void) {
+        scrollUpdateListeners.append(event)
+    }
+
+    func removeScrollUpdateListener(_ event: @escaping (_ type: CGPoint) -> Void) {
+        scrollUpdateListeners.removeAll(where: {
             $0 as AnyObject === event as AnyObject
         })
     }
@@ -168,6 +176,12 @@ class SpatialWebViewModel: SpatialObject {
     private func onStateChangeInvoke(_ type: String) {
         for onStateChange in stateChangeListeners {
             onStateChange(type)
+        }
+    }
+
+    func onScrollUpdateInvoke(_ point: CGPoint) {
+        for onScrollUpdate in scrollUpdateListeners {
+            onScrollUpdate(point)
         }
     }
 
