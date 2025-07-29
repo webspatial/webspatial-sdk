@@ -59,13 +59,13 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     // Spatialized2DElement can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
+    // Called by SpatializedElement.setParent
     func addChild(_ spatializedElement: SpatializedElement) {
         children[spatializedElement.id] = spatializedElement
-        spatializedElement.setParent(self)
     }
 
+    // Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
-        spatializedElement.setParent(nil)
         children.removeValue(forKey: spatializedElement.id)
     }
 
@@ -107,6 +107,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             spatializedElement.destroy()
         }
         spatialWebViewModel.destroy()
+
+        super.onDestroy()
     }
 
     override func inspect() -> [String: Any] {

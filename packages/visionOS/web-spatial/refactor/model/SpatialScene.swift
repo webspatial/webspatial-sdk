@@ -8,6 +8,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.load()
 
+        configSpatialWebView()
+        setupWebViewStateListner()
+    }
+
+    private func configSpatialWebView() {
         setupJSBListeners()
     }
 
@@ -41,7 +46,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
+    }
 
+    private func setupWebViewStateListner() {
         spatialWebViewModel.addStateListener { state in
 //            print("state change", state)
             if state == .didStartLoad {
@@ -85,7 +92,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return
         }
 
-        spatialized2DElement.addChild(targetSpatializedElement)
+        targetSpatializedElement.setParent(spatialized2DElement)
         resolve()
     }
 
@@ -167,7 +174,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return
         }
 
-        addChild(spatializedElement)
+        spatializedElement.setParent(self)
         resolve()
     }
 
@@ -178,13 +185,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     // SpatialScene can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
+    // Called by SpatializedElement.setParent
     func addChild(_ spatializedElement: SpatializedElement) {
         children[spatializedElement.id] = spatializedElement
-        spatializedElement.setParent(self)
     }
 
+    // Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
-        spatializedElement.setParent(nil)
         children.removeValue(forKey: spatializedElement.id)
     }
 
@@ -223,9 +230,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    func updateScrollOffset(_ delta: CGFloat) {}
+    func updateScrollOffset(_ delta: CGFloat) {
+//        spatialWebViewModel
+    }
 
-    func stopScrolling() {}
+    func stopScrolling() {
+        spatialWebViewModel.stopScrolling()
+    }
 
     /*
      * End Implement SpatialScrollAble Protocol

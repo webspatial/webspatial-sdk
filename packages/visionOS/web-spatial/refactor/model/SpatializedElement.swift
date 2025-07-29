@@ -23,9 +23,15 @@ class SpatializedElement: SpatialObject {
     private(set) var parent: ScrollAbleSpatialElementContainer?
 
     func setParent(_ parent: ScrollAbleSpatialElementContainer?) {
+        if self.parent?.id == parent?.id {
+            return
+        }
+
         if let prevParent = self.parent {
             prevParent.removeChild(self)
         }
+
+        parent?.addChild(self)
         self.parent = parent
     }
 
@@ -34,9 +40,7 @@ class SpatializedElement: SpatialObject {
     }
 
     override func onDestroy() {
-        if let prevParent = parent {
-            prevParent.removeChild(self)
-        }
+        setParent(nil)
     }
 
     override func inspect() -> [String: Any] {

@@ -57,7 +57,7 @@ struct PreviewSpatialScene: View {
         </html>
         """
         spatialized2DElement.loadHtml(htmlString)
-        spatialScene.addChild(spatialized2DElement)
+        spatialized2DElement.setParent(spatialScene)
         sceneId = spatialScene.id
     }
 
