@@ -2,7 +2,6 @@ import SwiftUI
 @preconcurrency import WebKit
 
 class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
-    var id: String
     weak var model: SpatialWebViewModel?
     private var isObserving = false
     private var navigationInvoke: ((_ data: URL) -> Bool)?
@@ -13,7 +12,6 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     var webview: WKWebView?
 
     override init() {
-        id = UUID().uuidString
         WKWebView.enableFileScheme() // ensure the handler is usable
     }
 
@@ -43,9 +41,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     // SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
         if let deciside = navigationInvoke?(navigationAction.request.url!) {
+            if deciside == true {
+                webviewStateChangeInvoke?(.didUnload)
+            }
             decisionHandler(deciside ? .allow : .cancel)
             return
         }
+        webviewStateChangeInvoke?(.didUnload)
         decisionHandler(.allow)
     }
 
@@ -152,13 +154,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func startObserving() {
         guard !isObserving else { return }
-        webview!.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
+        webview?.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
         isObserving = true
     }
 
     func stopObserving() {
         guard isObserving else { return }
-        webview!.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
         isObserving = false
     }
 
@@ -178,14 +180,27 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         }
     }
 
-    func destoryView() {
+    func destroy() {
+        destroyView()
+        navigationInvoke = nil
+        openWindowInvoke = nil
+        jsbInvoke = nil
+        webviewStateChangeInvoke = nil
+        scorllUpdateInvoke = nil
+        model = nil
+    }
+
+    func destroyView() {
         stopObserving()
-        webview?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-        webview?.uiDelegate = nil
-        webview?.navigationDelegate = nil
-        webview?.scrollView.delegate = nil
-        webview = nil
-        webviewStateChangeInvoke?(.didDestroyView)
+        if webview != nil {
+            webview?.stopLoading()
+            webview?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
+            webview?.uiDelegate = nil
+            webview?.navigationDelegate = nil
+            webview?.scrollView.delegate = nil
+            webview = nil
+            webviewStateChangeInvoke?(.didDestroyView)
+        }
     }
 
     func callJS(_ js: String) {

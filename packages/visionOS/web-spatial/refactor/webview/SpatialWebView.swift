@@ -23,12 +23,13 @@ struct SpatialWebView: UIViewRepresentable {
         webviewStateChangeInvoke = invoke
     }
 
-    func destroy() {
-        model!.getController().destoryView()
+    mutating func destroy() {
+        webviewStateChangeInvoke = nil
+        model = nil
     }
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: SpatialWebController) {
         print("dismantleUIView")
-        coordinator.destoryView()
+        coordinator.destroyView()
     }
 }

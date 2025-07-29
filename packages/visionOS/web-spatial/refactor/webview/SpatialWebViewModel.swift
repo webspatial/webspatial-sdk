@@ -52,6 +52,7 @@ class SpatialWebViewModel: SpatialObject {
 
     func getView() -> SpatialWebView {
         if view == nil {
+            print("create new webview")
             view = SpatialWebView()
             view!.model = self
             view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -69,16 +70,24 @@ class SpatialWebViewModel: SpatialObject {
 
     func enableScroll() {
         isEnableScroll = true
-        controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+        controller?.webview?.scrollView.isScrollEnabled = isEnableScroll
     }
 
     func disableScroll() {
         isEnableScroll = false
-        controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+        controller?.webview?.scrollView.isScrollEnabled = isEnableScroll
     }
 
     func stopScrolling() {
-        controller!.webview?.scrollView.stopScrollingAndZooming()
+        controller?.webview?.scrollView.stopScrollingAndZooming()
+    }
+
+    func updateScrollOffset(_ delta: CGFloat) {
+        controller?.webview?.scrollView.contentOffset.y += delta
+    }
+
+    func getScrollOffset() -> CGFloat? {
+        return controller?.webview?.scrollView.contentOffset.y
     }
 
     // events
@@ -221,9 +230,13 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    func destory() {
+    override func onDestroy() {
         removeAllListener()
-        onDestroy()
+        cmdManager.clear()
+        view?.destroy()
+        controller?.destroy()
+        controller = nil
+        view = nil
     }
 
     func evaluateJS(js: String) {
@@ -236,6 +249,7 @@ enum SpatialWebViewState {
     case didReceive
     case didFinishLoad
     case didFailLoad
+    case didUnload
     case didClose
     case didMakeView
     case didUpdateView
