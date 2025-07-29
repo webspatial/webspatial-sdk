@@ -42,6 +42,14 @@ class SpatialWebViewModel: SpatialObject {
         controller!.webview!.load(URLRequest(url: URL(string: url)!))
     }
 
+    func loadHTML(_ htmlText: String) {
+        if controller!.webview == nil {
+            _ = WKWebViewManager.Instance.create(controller: controller!)
+            controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+        }
+        controller!.webview!.loadHTMLString(htmlText, baseURL: nil)
+    }
+
     func getView() -> SpatialWebView {
         if view == nil {
             view = SpatialWebView()
