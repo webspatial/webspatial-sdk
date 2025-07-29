@@ -4,7 +4,6 @@ import SwiftUI
 
 @Observable
 class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContainer {
-//    var backgroundMaterial: BackgroundMaterial = .None
     var cornerRadius: CornerRadius = .init()
 
     private var _backgroundMaterial = BackgroundMaterial.None

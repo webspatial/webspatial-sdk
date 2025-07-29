@@ -113,6 +113,20 @@ export class UpdateSpatialized2DElementMaterial extends SpatializedElementComman
   }
 }
 
+export class UpdateSpatialized2DElementCorner extends SpatializedElementCommand {
+  cornerRadius: CornerRadius
+  commandType = 'UpdateSpatialized2DElementCorner'
+
+  constructor(spatialObject: SpatialObject, cornerRadius: CornerRadius) {
+    super(spatialObject)
+    this.cornerRadius = cornerRadius
+  }
+
+  protected getExtraParams() {
+    return { cornerRadius: this.cornerRadius }
+  }
+}
+
 export class AddSpatializedElementToSpatialScene extends JSBCommand {
   commandType = 'AddSpatializedElementToSpatialScene'
   spatializedElement: SpatializedElement

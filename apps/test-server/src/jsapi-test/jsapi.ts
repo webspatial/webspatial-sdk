@@ -56,6 +56,12 @@ export async function testCreateSpatialized2DElement() {
     })
 
     await spatialized2DElement.updateSpatialMaterial('translucent')
+    await spatialized2DElement.updateSpatialCorner({
+      topLeading: 10,
+      bottomLeading: 10,
+      topTrailing: 10,
+      bottomTrailing: 10,
+    })
     //  (window as any).spatialized2DElement = spatialized2DElement
   }
 }

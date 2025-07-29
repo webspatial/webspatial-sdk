@@ -50,6 +50,12 @@ class UpdateSpatialized2DElementMaterial: SpatialObjectCommand {
     let material: BackgroundMaterial
 }
 
+class UpdateSpatialized2DElementCorner: SpatialObjectCommand {
+    static let commandType: String = "UpdateSpatialized2DElementCorner"
+    let id: String
+    let cornerRadius: CornerRadius
+}
+
 struct ReplyData: Codable {
     var success: Bool
     var code: ReplyCode?
