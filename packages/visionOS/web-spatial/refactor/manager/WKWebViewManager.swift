@@ -33,6 +33,7 @@ class WKWebViewManager {
         controller.webview!.allowsLinkPreview = true
         controller.webview!.navigationDelegate = controller
         controller.webview!.scrollView.delegate = controller
+        controller.startObserving()
         return controller.webview!
     }
 }

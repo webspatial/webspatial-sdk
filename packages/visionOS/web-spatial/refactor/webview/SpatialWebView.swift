@@ -4,10 +4,10 @@ import SwiftUI
 struct SpatialWebView: UIViewRepresentable {
     weak var model: SpatialWebViewModel? = nil
     var url: URL = .init(filePath: "/")
-    private var webviewStateChangeInvoke: ((_ type: String) -> Void)?
+    private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
 
     func makeUIView(context: Context) -> WKWebView {
-        webviewStateChangeInvoke?("makeUI")
+        webviewStateChangeInvoke?(.didMakeView)
         return model!.getController().webview!
     }
 
@@ -16,10 +16,10 @@ struct SpatialWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        webviewStateChangeInvoke?("updateUI")
+        webviewStateChangeInvoke?(.didUpdateView)
     }
 
-    mutating func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: String) -> Void) {
+    mutating func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: SpatialWebViewState) -> Void) {
         webviewStateChangeInvoke = invoke
     }
 

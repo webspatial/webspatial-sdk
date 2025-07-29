@@ -11,7 +11,7 @@ class SpatialWebViewModel: SpatialObject {
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
     private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
-    private var stateChangeListeners: [(_ type: String) -> Void] = []
+    private var stateChangeListeners: [(_ type: SpatialWebViewState) -> Void] = []
     private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
     private var isEnableScroll = true
@@ -131,7 +131,7 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     // webview state event
-    func addStateListener(_ event: @escaping (_ type: String) -> Void) {
+    func addStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) {
         stateChangeListeners.append(event)
     }
 
@@ -209,7 +209,7 @@ class SpatialWebViewModel: SpatialObject {
         } catch {}
     }
 
-    private func onStateChangeInvoke(_ type: String) {
+    private func onStateChangeInvoke(_ type: SpatialWebViewState) {
         for onStateChange in stateChangeListeners {
             onStateChange(type)
         }
@@ -229,6 +229,17 @@ class SpatialWebViewModel: SpatialObject {
     func evaluateJS(js: String) {
         controller?.callJS(js)
     }
+}
+
+enum SpatialWebViewState {
+    case didStartLoad
+    case didReceive
+    case didFinishLoad
+    case didFailLoad
+    case didClose
+    case didMakeView
+    case didUpdateView
+    case didDestroyView
 }
 
 struct WebViewElementInfo {
