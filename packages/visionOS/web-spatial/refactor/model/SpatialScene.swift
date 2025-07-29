@@ -87,85 +87,70 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve()
     }
 
-    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let updateCommand = command else {
-            reject(.CommandError, "invalid updateSpatializedElementProperties command")
-            return
-        }
-
-        guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
+    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
             reject(.InvalidSpatialObject, "invalid updateSpatializedElementProperties spatial object id not exsit!")
             return
         }
 
-        if let width = updateCommand.width {
+        if let width = command.width {
             spatializedElement.width = width
         }
 
-        if let height = updateCommand.height {
+        if let height = command.height {
             spatializedElement.height = height
         }
 
-        if let backOffset = updateCommand.backOffset {
+        if let backOffset = command.backOffset {
             spatializedElement.backOffset = backOffset
         }
 
-        if let opacity = updateCommand.opacity {
+        if let opacity = command.opacity {
             spatializedElement.opacity = opacity
         }
 
-        if let scrollWithParent = updateCommand.scrollWithParent {
+        if let scrollWithParent = command.scrollWithParent {
             spatializedElement.scrollWithParent = scrollWithParent
         }
 
-        if let visible = updateCommand.visible {
+        if let visible = command.visible {
             spatializedElement.visible = visible
         }
 
-        if let zIndex = updateCommand.zIndex {
+        if let zIndex = command.zIndex {
             spatializedElement.zIndex = zIndex
         }
 
-        if let rotationAnchor = updateCommand.rotationAnchor {
+        if let rotationAnchor = command.rotationAnchor {
             spatializedElement.rotationAnchor = .init(x: CGFloat(rotationAnchor.x), y: CGFloat(rotationAnchor.y), z: CGFloat(rotationAnchor.z))
         }
 
         resolve()
     }
 
-    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let updateCommand = command else {
-            reject(.CommandError, "invalid UpdateSpatializedElementTransform command")
-            return
-        }
-
-        guard let spatializedElement: SpatializedElement = findSpatialObject(updateCommand.id) else {
+    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
             reject(.InvalidSpatialObject, "invalid UpdateSpatializedElementTransform spatial object id not exsit!")
             return
         }
 
-        if let position = updateCommand.position {
+        if let position = command.position {
             spatializedElement.transform.translation = SIMD3<Float>(Float(position.x), Float(position.y), Float(position.z))
         }
 
-        if let quaternion = updateCommand.quaternion {
+        if let quaternion = command.quaternion {
             spatializedElement.transform.rotation.vector = SIMD4<Float>(Float(quaternion.x), Float(quaternion.y), Float(quaternion.z), Float(quaternion.w))
         }
 
-        if let scale = updateCommand.scale {
+        if let scale = command.scale {
             spatializedElement.transform.scale = SIMD3<Float>(Float(scale.x), Float(scale.y), Float(scale.z))
         }
 
         resolve()
     }
 
-    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene?, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let addSpatializedElementCommand = command else {
-            reject(.CommandError, "invalid addSpatializedElementCommand command")
-            return
-        }
-
-        guard let spatializedElement: SpatializedElement = findSpatialObject(addSpatializedElementCommand.spatializedElementId) else {
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
             reject(.InvalidSpatialObject, "invalid addSpatializedElementCommand spatial object id not exsit!")
             return
         }

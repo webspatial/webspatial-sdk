@@ -48,7 +48,15 @@ struct PreviewSpatialScene: View {
         spatialized2DElement.transform.translation.z = 200
         spatialized2DElement.width = 200
         spatialized2DElement.height = 200
-        spatialized2DElement.loadHtml()
+        let htmlString = """
+        <!DOCTYPE html>
+        <html>
+            <body>
+                hello world
+            </body>
+        </html>
+        """
+        spatialized2DElement.loadHtml(htmlString)
         spatialScene.addChild(spatialized2DElement)
         sceneId = spatialScene.id
     }

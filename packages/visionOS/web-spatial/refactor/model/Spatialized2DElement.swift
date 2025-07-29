@@ -92,7 +92,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         return nil
     }
 
-    func loadHtml(html: String) {
+    func loadHtml(_ html: String) {
         spatialWebViewModel.loadHTML(html)
     }
 
