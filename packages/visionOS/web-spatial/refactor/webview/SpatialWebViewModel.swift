@@ -89,7 +89,6 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     func setScrollOffset(_ offset: Vec2) {
-        print("dbg setScrollOffset x: \(offset.x) y: \(offset.y)")
         controller?.webview?.scrollView.contentOffset.x = offset.x
         controller?.webview?.scrollView.contentOffset.y = offset.y
     }
