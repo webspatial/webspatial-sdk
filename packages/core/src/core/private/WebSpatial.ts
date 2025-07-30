@@ -5,7 +5,6 @@ import {
   LoadingMethodKind,
   sceneDataShape,
   sceneDataJSBShape,
-  sceneDataJSBShapeNew,
 } from '../types'
 
 declare global {
@@ -161,35 +160,6 @@ export class WebSpatial {
   ) {
     const { window: newWindow, ...sceneData } = cfg.sceneData
     const jsbSceneData: sceneDataJSBShape = {
-      ...sceneData,
-      windowID: newWindow._webSpatialID,
-      windowContainerID: newWindow._webSpatialGroupID,
-    }
-    var cmd = new RemoteCommand('createScene', {
-      windowStyle: style,
-      sceneData: jsbSceneData,
-      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
-    })
-
-    try {
-      await new Promise((res, rej) => {
-        WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-        WebSpatial.sendCommand(cmd)
-      })
-      return true
-    } catch (error) {
-      return false
-    }
-  }
-
-  static async createSceneNew(
-    style: WindowStyle = 'Plain',
-    cfg: {
-      sceneData: sceneDataShape
-    },
-  ) {
-    const { window: newWindow, ...sceneData } = cfg.sceneData
-    const jsbSceneData: sceneDataJSBShapeNew = {
       ...sceneData,
       sceneID: newWindow._webSpatialID,
     }
@@ -370,22 +340,6 @@ export class WebSpatial {
   static async setLoading(method: LoadingMethodKind, style?: string) {
     var cmd = new RemoteCommand('setLoading', {
       windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
-      loading: {
-        method,
-        style,
-      },
-    })
-
-    var result = await new Promise((res, rej) => {
-      WebSpatial.eventPromises[cmd.requestID] = { res: res, rej: rej }
-      WebSpatial.sendCommand(cmd)
-    })
-    return result
-  }
-
-  static async setLoadingNew(method: LoadingMethodKind, style?: string) {
-    var cmd = new RemoteCommand('setLoading', {
-      sceneID: window._webSpatialID,
       loading: {
         method,
         style,

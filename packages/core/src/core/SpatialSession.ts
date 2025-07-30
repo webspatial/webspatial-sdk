@@ -254,7 +254,7 @@ export class SpatialSession {
       sceneData: sceneDataShape
     },
   ) {
-    return await WebSpatial.createSceneNew(style, cfg)
+    return await WebSpatial.createScene(style, cfg)
   }
 
   /**
@@ -448,10 +448,5 @@ export class SpatialSession {
     entity.transform.scale.z = parseFloat(sz)
 
     return entity
-  }
-  // set loading view.
-  /** @hidden */
-  async setLoading(method: LoadingMethodKind, style?: string) {
-    return WebSpatial.setLoadingNew(method, style)
   }
 }
