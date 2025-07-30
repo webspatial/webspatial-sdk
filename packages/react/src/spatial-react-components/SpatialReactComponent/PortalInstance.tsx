@@ -22,7 +22,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius, SpatialApp } from '@webspatial/core-sdk'
+import { CornerRadius, hijackWindowATag } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
 
@@ -82,30 +82,30 @@ function setOpenWindowStyle(openedWindow: Window) {
   openedWindow!.document.body.style.margin = '0px'
 }
 
-function handleOpenWindowDocumentClick(openedWindow: Window) {
-  // Overwrite link href to navigate the parents page
-  openedWindow!.document.onclick = function (e) {
-    let element = e.target as HTMLElement | null
-    let found = false
+// function handleOpenWindowDocumentClick(openedWindow: Window) {
+//   // Overwrite link href to navigate the parents page
+//   openedWindow!.document.onclick = function (e) {
+//     let element = e.target as HTMLElement | null
+//     let found = false
 
-    // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
-    while (!found) {
-      if (element && element.tagName == 'A') {
-        // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
+//     // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
+//     while (!found) {
+//       if (element && element.tagName == 'A') {
+//         // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
 
-        // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
-        // we handle all the scenarios
-        SpatialApp.getInstance().handleATag(e)
-        return false // prevent default action and stop event propagation
-      }
-      if (element && element.parentElement) {
-        element = element.parentElement
-      } else {
-        break
-      }
-    }
-  }
-}
+//         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
+//         // we handle all the scenarios
+//         SpatialApp.getInstance().handleATag(e)
+//         return false // prevent default action and stop event propagation
+//       }
+//       if (element && element.parentElement) {
+//         element = element.parentElement
+//       } else {
+//         break
+//       }
+//     }
+//   }
+// }
 
 function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
@@ -473,7 +473,8 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     async (spatialWindowManager: SpatialWindowManager) => {
       const openWindow = spatialWindowManager.window!
       setOpenWindowStyle(openWindow)
-      handleOpenWindowDocumentClick(openWindow)
+
+      hijackWindowATag(openWindow)
 
       syncDefaultSpatialStyle(openWindow, debugName)
 

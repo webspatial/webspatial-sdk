@@ -1,9 +1,8 @@
-import { WindowContainerOptions, SpatialApp } from '@webspatial/core-sdk'
-// import { XRApp } from './XRApp'
+import { SpatialSceneOptions, SpatialSessionNew } from '@webspatial/core-sdk'
 
 export function initScene(
   name: string,
-  callback: (pre: WindowContainerOptions) => WindowContainerOptions,
+  callback: (pre: SpatialSceneOptions) => SpatialSceneOptions,
 ) {
-  return SpatialApp.getInstance().initScene(name, callback)
+  return SpatialSessionNew.initScene(name, callback)
 }

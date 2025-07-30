@@ -8,7 +8,7 @@ import {
 import { CornerRadius } from '../core'
 import { SpatializedElement } from './SpatializedElement'
 
-export interface SceneOptions {
+export interface SpatialSceneOptions {
   defaultSize?: {
     width: number // Initial width of the window
     height: number // Initial height of the window
@@ -44,7 +44,7 @@ export class SpatialScene {
     return new AddSpatializedElementToSpatialScene(element).execute()
   }
 
-  async updateSceneConfig(config: SceneOptions) {
+  async updateSceneConfig(config: SpatialSceneOptions) {
     return new UpdateSceneConfig(config).execute()
   }
 }

@@ -41,3 +41,5 @@ export class SpatialScene {}
 export class SpatialApp {}
 
 export const defaultSceneConfig = {}
+
+export function hijackWindowATag(x) {}

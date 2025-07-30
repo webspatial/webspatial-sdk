@@ -60,11 +60,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setup() {
-        spatialWebViewModel
-            .addOpenWindowListener(
-                protocal: "webspatial://createscene",
-                event: handleWindowOpenCustom
-            )
         spatialWebViewModel.addStateListener { state in
             print("state:", state)
             if state == .didClose {
@@ -85,10 +80,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             }
 
         setupJSBListeners()
+        setupWebViewStateListner()
     }
 
     private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
-        //        print("handleWindowOpenCustom::url",url)
         // get config from url
 
         guard let components = URLComponents(string: url.absoluteString),
@@ -292,7 +287,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialized2DElement.self, onAddSpatializedElementToSpatialized2DElement)
 
-        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
+        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { url in
+            let host = url.host ?? ""
+            print("DIY:", host)
+            if host == "createSpatialScene" {
+                return self.handleWindowOpenCustom(url)
+            }
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }

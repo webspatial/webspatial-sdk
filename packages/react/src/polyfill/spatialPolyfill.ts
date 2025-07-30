@@ -1,7 +1,6 @@
 //@ts-ignore
 import { parseCornerRadius, getSession } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
-import { SpatialApp } from '@webspatial/core-sdk'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -179,9 +178,9 @@ function hijackGetComputedStyle() {
   }
 }
 
-function hijackWindowOpen() {
-  SpatialApp.getInstance().init()
-}
+// function hijackWindowOpen() {
+//   SpatialApp.getInstance().init()
+// }
 
 function monitorHTMLAttributeChange() {
   const observer = new MutationObserver(mutations => {
@@ -209,7 +208,6 @@ export function spatialPolyfill() {
   }
 
   injectSceneHook()
-  hijackWindowOpen()
   checkCSSProperties()
   hijackGetComputedStyle()
   hijackDocumentElementStyle()
