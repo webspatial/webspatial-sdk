@@ -61,8 +61,4 @@ class SpatializedElement: SpatialObject {
         }
         return inspectInfo
     }
-
-    func addChild(_ element: SpatializedElement) {}
-
-    func removeChild(_ element: SpatializedElement) {}
 }
