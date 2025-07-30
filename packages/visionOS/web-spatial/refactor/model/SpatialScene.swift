@@ -646,12 +646,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
      */
 
     override func onDestroy() {
-        print("scene::onDestroy")
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-//        spatialWebViewModel.destory()
     }
 
     override func inspect() -> [String: Any] {
