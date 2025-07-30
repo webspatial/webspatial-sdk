@@ -4,6 +4,7 @@ import {
   UpdateSpatialized2DElementMaterial,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
+import { hijackWindowATag } from './SceneManager'
 import { SpatializedElement } from './SpatializedElement'
 import {
   BackgroundMaterialType,
@@ -17,6 +18,8 @@ export class Spatialized2DElement extends SpatializedElement {
     readonly windowProxy: WindowProxy,
   ) {
     super(id)
+    // hijack a tag event
+    hijackWindowATag(windowProxy)
   }
 
   async updateProperties(properties: Partial<Spatialized2DElementProperties>) {
