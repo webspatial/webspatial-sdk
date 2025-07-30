@@ -40,9 +40,9 @@ struct PreviewSpatialScene: View {
     var sceneId: String
 
     init() {
-        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
+        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/", "Plain")
         spatialScene.cornerRadius.bottomLeading = 130
-        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+        var spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
         spatialized2DElement.transform.translation.x = 200
         spatialized2DElement.transform.translation.y = 200
         spatialized2DElement.transform.translation.z = 200
