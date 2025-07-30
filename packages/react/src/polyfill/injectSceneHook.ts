@@ -1,6 +1,4 @@
-import { SpatialScene } from '@webspatial/core-sdk'
-//@ts-ignore
-import { defaultSceneConfig } from '@webspatial/react-sdk'
+import { SpatialScene, defaultSceneConfig } from '@webspatial/core-sdk'
 
 export async function injectSceneHook() {
   if (!window.opener) return

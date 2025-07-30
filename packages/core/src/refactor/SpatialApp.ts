@@ -1,7 +1,7 @@
-import { WindowContainerOptions } from '@webspatial/core-sdk/'
-import { getSession } from './utils/getSession'
-export type { WindowContainerOptions }
-export const defaultSceneConfig: WindowContainerOptions = {
+import { SceneOptions } from './types'
+
+export type { SceneOptions }
+export const defaultSceneConfig: SceneOptions = {
   defaultSize: {
     width: 900,
     height: 700,
@@ -9,15 +9,14 @@ export const defaultSceneConfig: WindowContainerOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
-const CONTEXT_WINDOW_URL = 'webspatial://createWindowContext'
 const originalOpen = window.open
-export class XRApp {
-  private static instance: XRApp
+export class SpatialApp {
+  private static instance: SpatialApp
   static getInstance() {
-    if (!XRApp.instance) {
-      XRApp.instance = new XRApp()
+    if (!SpatialApp.instance) {
+      SpatialApp.instance = new SpatialApp()
     }
-    return XRApp.instance
+    return SpatialApp.instance
   }
 
   handleATag(event: MouseEvent) {
@@ -43,30 +42,12 @@ export class XRApp {
 
     document.removeEventListener('click', this.handleATag)
   }
-  private configMap: Record<string, WindowContainerOptions> = {} // name=>config
+  private configMap: Record<string, SceneOptions> = {} // name=>config
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
   }
 
-  async show(window: Window, cfg: WindowContainerOptions) {
-    try {
-      let session = getSession()!
-      await session._createScene(
-        'Plain', // only support Plain for now
-        {
-          sceneData: {
-            method: 'showRoot',
-            sceneConfig: cfg,
-            // url: url,
-            window,
-          },
-        },
-      )
-    } catch (error) {
-      console.error(error)
-    }
-  }
   open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
@@ -90,17 +71,11 @@ export class XRApp {
     // should open new scene or focus to todo:
     return newWindow
   }
-  initScene(
-    name: string,
-    callback: (pre: WindowContainerOptions) => WindowContainerOptions,
-  ) {
+  initScene(name: string, callback: (pre: SceneOptions) => SceneOptions) {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
 }
 
-function getCreateSceneSchemaUrl(
-  url: string,
-  sceneConfig?: WindowContainerOptions,
-) {
+function getCreateSceneSchemaUrl(url: string, sceneConfig?: SceneOptions) {
   return `webspatial://createscene?url=${encodeURIComponent(url)}&config=${encodeURIComponent(JSON.stringify(sceneConfig))}`
 }

@@ -22,10 +22,9 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius } from '@webspatial/core-sdk'
+import { CornerRadius, SpatialApp } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
-import { XRApp } from '../../XRApp'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
@@ -96,7 +95,7 @@ function handleOpenWindowDocumentClick(openedWindow: Window) {
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
         // we handle all the scenarios
-        XRApp.getInstance().handleATag(e)
+        SpatialApp.getInstance().handleATag(e)
         return false // prevent default action and stop event propagation
       }
       if (element && element.parentElement) {

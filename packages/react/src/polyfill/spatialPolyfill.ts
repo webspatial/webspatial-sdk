@@ -1,6 +1,7 @@
 //@ts-ignore
-import { parseCornerRadius, getSession, XRApp } from '@webspatial/react-sdk'
+import { parseCornerRadius, getSession } from '@webspatial/react-sdk'
 import { injectSceneHook } from './injectSceneHook'
+import { SpatialApp } from '@webspatial/core-sdk'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -179,7 +180,7 @@ function hijackGetComputedStyle() {
 }
 
 function hijackWindowOpen() {
-  XRApp.getInstance().init()
+  SpatialApp.getInstance().init()
 }
 
 function monitorHTMLAttributeChange() {
