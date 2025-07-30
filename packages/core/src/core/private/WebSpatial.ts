@@ -161,7 +161,6 @@ export class WebSpatial {
     const { window: newWindow, ...sceneData } = cfg.sceneData
     const jsbSceneData: sceneDataJSBShape = {
       ...sceneData,
-      sceneID: newWindow._webSpatialID,
     }
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,

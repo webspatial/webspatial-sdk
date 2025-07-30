@@ -27,5 +27,4 @@ export interface sceneDataJSBShape {
   method?: 'createRoot' | 'showRoot'
   sceneConfig?: WindowContainerOptions
   url?: string
-  sceneID?: string
 }

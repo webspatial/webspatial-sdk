@@ -11,7 +11,6 @@ struct SceneJSBDataNew: Codable {
     var sceneName: String?
     var sceneConfig: WindowContainerOptions?
     var url: String?
-    var sceneID: String?
 }
 
 struct LoadingJSBDataNew: Codable {
@@ -32,16 +31,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     var setLoadingWindowData = PassthroughSubject<LoadingWindowContainerData, Never>()
 
-    //    var width: Double = 0
-    //    var height: Double = 0
     var url: String = "" // start_url
     var windowStyle = "Plain" // TODO: type
-    //    var minWidth: Double = 0
-    //    var maxWidth: Double = 0
-    //    var minHeight: Double = 0
-    //    var maxHeight: Double = 0
-    //    var backgroundMaterial: BackgroundMaterial? = nil
-    //    var cornerRadius: CornerRadius? = nil
+
     var spatialized2DElement = [String: Spatialized2DElement]() // id => ele
     var spatializedStatic3DElement = [String: SpatializedStatic3DElement]() // id => ele
     var spatializedDynamic3DElement = [String: SpatializedDynamic3DElement]() // id => ele
@@ -49,7 +41,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     //    var wgd: SceneData // windowGroupData used to open/dismiss
 
-    func getSceneData() -> SceneData {
+    private func getSceneData() -> SceneData {
         return SceneData(windowStyle: windowStyle, sceneID: id)
     }
 
@@ -68,15 +60,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     weak var parent: SpatialScene? = nil
 
-    //    private var spatialWebViewModel: SpatialWebviewModelFake?
-
     var spatialWebViewModel: SpatialWebViewModel
-
-    //    override init(_ windowStyle: String) {
-    //        self.windowStyle = windowStyle
-    //        super.init()
-    //        // TODO: should we setup this one
-    //    }
 
     init(_ url: String, _ windowStyle: String) {
         self.windowStyle = windowStyle
@@ -105,8 +89,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 print("Scene::handleJSB", sceneData)
                 // find scene
                 if let method = sceneData.method,
-                   let sceneId = sceneData.sceneID,
-                   let targetScene = SpatialAppX.getScene(sceneId)
+//                   let sceneId = sceneData.sceneID,
+                   let targetScene = SpatialAppX.getScene(self.id)
                 {
                     if method == "showRoot" {
                         if let sceneConfig = sceneData.sceneConfig {
@@ -206,26 +190,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         closeWindowData.send(getSceneData())
     }
 
-//    private func handleJSBScene(_ data: SceneCommand) {
-//        print("Scene::handleJSB", data.sceneData)
-//        // find scene
-//        if let method = data.sceneData.method,
-//           let sceneId = data.sceneData.sceneID,
-//           let targetScene = SpatialAppX.getScene(sceneId)
-//        {
-//            if method == "showRoot" {
-//                if let sceneConfig = data.sceneData.sceneConfig {
-//                    // config
-//                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
-//                    targetScene.open(cfg)
-//                } else {
-//                    // error!
-//                    print("should have config")
-//                }
-//            }
-//        }
-//    }
-
     private class SceneCommand: CommandDataProtocol {
         static let commandType = "createScene"
 
@@ -242,13 +206,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         parent = p
     }
 
-    func createElement() {}
-
-    func updateElement() {
-        // TODO:
-    }
-
-    func moveToState(_ newState: SceneStateKind) {
+    private func moveToState(_ newState: SceneStateKind) {
         if canEnterState(state, newState) {
             if state == .idle && newState == .pending {
                 setLoading(true)
@@ -268,8 +226,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         switch newState {
         case .pending:
             DispatchQueue.main.async {
-//                    print("pending loading:",self.url)
+//                print("hehe",self.url)
                 self.spatialWebViewModel.load(self.url)
+                self.spatialWebViewModel.evaluateJS(js: "window._webSpatialID = '" + self.id + "'")
             }
         default:
             let _ = 1
@@ -325,7 +284,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         if let pScene = parent {
             // plain show
-            print("plainDefaultValues", plainDefaultValues)
             if plainDefaultValues != nil {
                 WindowContainerMgr.Instance
                     .updateWindowContainerPlainDefaultValues(
