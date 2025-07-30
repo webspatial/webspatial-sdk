@@ -11,6 +11,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var scorllUpdateInvoke: ((_ type: ScrollState, _ point: CGPoint) -> Void)?
     var webview: WKWebView?
     private var webviewTitle: String? = nil
+    private var firstLoad = true
 
     override init() {
         WKWebView.enableFileScheme() // ensure the handler is usable
@@ -49,13 +50,17 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     // SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
         if let deciside = navigationInvoke?(navigationAction.request.url!) {
-            if deciside == true {
+            if deciside == true && !firstLoad {
                 webviewStateChangeInvoke?(.didUnload)
             }
+            firstLoad = false
             decisionHandler(deciside ? .allow : .cancel)
             return
         }
-        webviewStateChangeInvoke?(.didUnload)
+        if !firstLoad {
+            webviewStateChangeInvoke?(.didUnload)
+        }
+        firstLoad = false
         decisionHandler(.allow)
     }
 
