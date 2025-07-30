@@ -1,7 +1,7 @@
 import CoreFoundation
 
 protocol SpatialScrollAble {
-    func updateScrollOffset(_ delta: CGFloat)
+    func updateDeltaScrollOffset(_ delta: Vec2)
     func stopScrolling()
     var scrollEnabled: Bool { get }
     var scrollOffset: Vec2 { get }

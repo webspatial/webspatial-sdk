@@ -62,3 +62,8 @@ export interface SpatializedElementProperties {
   backOffset: number
   rotationAnchor: Vec3
 }
+
+export interface Spatialized2DElementProperties
+  extends SpatializedElementProperties {
+  scrollEnabled: boolean
+}

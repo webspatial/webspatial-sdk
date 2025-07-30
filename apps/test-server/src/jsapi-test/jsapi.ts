@@ -35,13 +35,14 @@ export async function testCreateSpatialized2DElement() {
     const spatialized2DElement: Spatialized2DElement =
       await session.createSpatialized2DElement()
     await spatialized2DElement.updateProperties({
-      width: 100,
-      height: 100,
+      width: 300,
+      height: 300,
       rotationAnchor: {
         x: 1,
         y: 2,
         z: 0.5,
       },
+      scrollEnabled: false,
     })
 
     const spatialScene = session.getSpatialScene()
@@ -49,8 +50,8 @@ export async function testCreateSpatialized2DElement() {
 
     await spatialized2DElement.updateTransform({
       position: {
-        x: 50,
-        y: 50,
+        x: 450,
+        y: 450,
         z: 50,
       },
     })
@@ -64,27 +65,24 @@ export async function testCreateSpatialized2DElement() {
     })
     spatialized2DElement.windowProxy.document.body.style.background = 'green'
 
-    const subSpatialized2DElement: Spatialized2DElement =
-      await session.createSpatialized2DElement()
-    await subSpatialized2DElement.updateTransform({
-      position: {
-        x: 50,
-        y: 50,
-        z: 50,
-      },
-    })
-    await subSpatialized2DElement.updateProperties({
-      width: 50,
-      height: 50,
-    })
+    // Sub Spatialized2DElement
+    // const subSpatialized2DElement: Spatialized2DElement =
+    //   await session.createSpatialized2DElement()
+    // await subSpatialized2DElement.updateTransform({
+    //   position: {
+    //     x: 50,
+    //     y: 50,
+    //     z: 50,
+    //   },
+    // })
+    // await subSpatialized2DElement.updateProperties({
+    //   width: 50,
+    //   height: 50,
+    // })
 
-    await spatialized2DElement.addSpatializedElement(subSpatialized2DElement)
-    subSpatialized2DElement.windowProxy.document.documentElement.style.setProperty(
-      'background-color',
-      '#ffffff00',
-    )
-    subSpatialized2DElement.windowProxy.document.body.style.background =
-      '#ffffff00'
+    // await spatialized2DElement.addSpatializedElement(subSpatialized2DElement)
+    // subSpatialized2DElement.windowProxy.document.body.style.background =
+    //   '#ffffff00'
 
     //  (window as any).spatialized2DElement = spatialized2DElement
   }

@@ -23,8 +23,21 @@ protocol SpatialObjectCommand: CommandDataProtocol {
     var id: String { get }
 }
 
-class UpdateSpatializedElementProperties: SpatialObjectCommand {
-    static let commandType: String = "UpdateSpatializedElementProperties"
+protocol SpatializedElementProperties {
+    var id: String { get }
+    var width: Double? { get }
+    var height: Double? { get }
+    var backOffset: Double? { get }
+    var rotationAnchor: Vec3? { get }
+    var opacity: Double? { get }
+    var visible: Bool? { get }
+    var scrollWithParent: Bool? { get }
+    var zIndex: Double? { get }
+}
+
+class UpdateSpatialized2DElementProperties: SpatialObjectCommand, SpatializedElementProperties {
+    static let commandType: String = "UpdateSpatialized2DElementProperties"
+    // implement SpatializedElementProperties Protocol
     let id: String
     let width: Double?
     let height: Double?
@@ -34,6 +47,8 @@ class UpdateSpatializedElementProperties: SpatialObjectCommand {
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
+    // Extra Properties
+    let scrollEnabled: Bool?
 }
 
 class UpdateSpatializedElementTransform: SpatialObjectCommand {

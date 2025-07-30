@@ -28,12 +28,12 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         }
     }
 
-    func updateScrollOffset(_ delta: CGFloat) {
-        _scrollOffset.y += delta
+    func updateDeltaScrollOffset(_ delta: Vec2) {
+        spatialWebViewModel.setScrollOffset(_scrollOffset + delta)
     }
 
     func stopScrolling() {
-//        webViewNative!.webViewHolder.appleWebView!.scrollView.stopScrollingAndZooming()
+        spatialWebViewModel.stopScrolling()
     }
 
     private var spatialWebViewModel: SpatialWebViewModel
