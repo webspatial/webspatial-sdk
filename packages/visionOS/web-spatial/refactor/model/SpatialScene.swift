@@ -573,6 +573,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+        spatialWebViewModel.destroy()
     }
 
     override func inspect() -> [String: Any] {

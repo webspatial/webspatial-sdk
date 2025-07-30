@@ -61,8 +61,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         children[spatializedElement.id] = spatializedElement
     }
 
+    // Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
-        spatializedElement.setParent(nil)
         children.removeValue(forKey: spatializedElement.id)
     }
 
