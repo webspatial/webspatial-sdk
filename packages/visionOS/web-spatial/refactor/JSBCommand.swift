@@ -88,3 +88,11 @@ enum ReplyCode: Codable {
     case CommandError
     case InvalidSpatialObject
 }
+
+class UpdateSceneConfigCommand: CommandDataProtocol {
+    static let commandType = "UpdateSceneConfig"
+    let config: WindowContainerOptions
+    init(_ data: WindowContainerOptions) {
+        config = data
+    }
+}

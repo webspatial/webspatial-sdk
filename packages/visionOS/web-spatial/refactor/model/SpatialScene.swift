@@ -6,18 +6,6 @@ struct SceneData: Decodable, Hashable, Encodable {
     let sceneID: String
 }
 
-struct SceneJSBDataNew: Codable {
-    var method: String?
-    var sceneName: String?
-    var sceneConfig: WindowContainerOptions?
-    var url: String?
-}
-
-struct LoadingJSBDataNew: Codable {
-    var method: String?
-    var style: String?
-}
-
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     // TOPIC
@@ -83,28 +71,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 self.handleWindowClose()
             }
         }
+
         spatialWebViewModel
-            .addJSBListener(SceneCommand.self) { command, resolve, _ in
-                let sceneData = command.sceneData
-                print("Scene::handleJSB", sceneData)
+            .addJSBListener(UpdateSceneConfigCommand.self) { command, resolve, _ in
+                let sceneConfig = command.config
+                print("Scene::handleJSB", sceneConfig)
                 // find scene
-                if let method = sceneData.method,
-//                   let sceneId = sceneData.sceneID,
-                   let targetScene = SpatialApp.getScene(self.id)
-                {
-                    if method == "showRoot" {
-                        if let sceneConfig = sceneData.sceneConfig {
-                            // config
-                            let cfg = WindowContainerPlainDefaultValues(sceneConfig)
-                            targetScene.open(cfg)
-                        } else {
-                            // error!
-                            print("should have config")
-                        }
-                    }
+                if let targetScene = SpatialApp.getScene(self.id) {
+                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
+                    targetScene.open(cfg)
                 }
                 resolve()
             }
+
         setupJSBListeners()
     }
 
@@ -188,18 +167,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     private func handleWindowClose() {
         print("window.close")
         closeWindowData.send(getSceneData())
-    }
-
-    private class SceneCommand: CommandDataProtocol {
-        static let commandType = "createScene"
-
-        var windowStyle: String
-        var sceneData: SceneJSBDataNew
-
-        init(_ msg: String, _ data: SceneJSBDataNew) {
-            windowStyle = msg
-            sceneData = data
-        }
     }
 
     func setParent(_ p: SpatialScene) {

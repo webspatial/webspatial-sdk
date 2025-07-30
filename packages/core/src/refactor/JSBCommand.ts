@@ -2,6 +2,7 @@ import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
+import { SceneOptions } from './SpatialScene'
 import {
   BackgroundMaterialType,
   CornerRadius,
@@ -50,6 +51,20 @@ export class UpdateSpatialSceneCorner extends JSBCommand {
 
   protected getParams() {
     return { cornerRadius: this.cornerRadius }
+  }
+}
+
+export class UpdateSceneConfig extends JSBCommand {
+  config: SceneOptions
+  commandType = 'UpdateSceneConfig'
+
+  constructor(config: SceneOptions) {
+    super()
+    this.config = config
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    return { config: this.config }
   }
 }
 

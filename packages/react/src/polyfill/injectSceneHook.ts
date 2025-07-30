@@ -1,7 +1,6 @@
+import { SpatialScene } from '@webspatial/core-sdk'
 //@ts-ignore
-import { getSession } from '@webspatial/react-sdk'
-//@ts-ignore
-import { defaultSceneConfig, XRApp } from '@webspatial/react-sdk'
+import { defaultSceneConfig } from '@webspatial/react-sdk'
 
 export async function injectSceneHook() {
   if (!window.opener) return
@@ -35,6 +34,6 @@ export async function injectSceneHook() {
         resolve(null)
       }, 1000)
     })
-    await XRApp.getInstance().show(window, cfg)
+    await SpatialScene.getInstance().updateSceneConfig(cfg)
   })
 }
