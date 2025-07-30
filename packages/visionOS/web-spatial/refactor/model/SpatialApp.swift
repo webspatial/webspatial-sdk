@@ -1,7 +1,7 @@
 import Foundation
 
 @Observable
-class SpatialAppX {
+class SpatialApp {
     // TODO: read only
     var name: String
     var scope: String

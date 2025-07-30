@@ -90,7 +90,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
                 // find scene
                 if let method = sceneData.method,
 //                   let sceneId = sceneData.sceneID,
-                   let targetScene = SpatialAppX.getScene(self.id)
+                   let targetScene = SpatialApp.getScene(self.id)
                 {
                     if method == "showRoot" {
                         if let sceneConfig = sceneData.sceneConfig {
@@ -126,7 +126,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return nil
         }
 
-        let newScene = SpatialAppX.createScene(decodedUrl)
+        let newScene = SpatialApp.createScene(decodedUrl)
         print("newScene url:", newScene.url)
         newScene.setParent(self)
 
