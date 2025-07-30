@@ -11,10 +11,10 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     private var _scrollEnabled = false
     var scrollEnabled: Bool {
         get {
-            return _scrollEnabled
+            return spatialWebViewModel.scrollEnabled
         }
         set(newValue) {
-            _scrollEnabled = newValue
+            spatialWebViewModel.scrollEnabled = newValue
         }
     }
 
@@ -46,10 +46,10 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
 
         super.init()
 
-        spatialWebViewModel.addStateListener { state in
-            if state == .didStartLoad {
-                self.spatialWebViewModel.setBackgroundTransparent(true)
-            }
+        spatialWebViewModel.setBackgroundTransparent(true)
+        spatialWebViewModel.addScrollUpdateListener { _, point in
+            self._scrollOffset.x = point.x
+            self._scrollOffset.y = point.y
         }
     }
 
@@ -94,7 +94,6 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getView() -> SpatialWebView {
-        print("get 2d element view", id)
         return spatialWebViewModel.getView()
     }
 

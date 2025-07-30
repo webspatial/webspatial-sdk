@@ -3,8 +3,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import './jsapi'
-
 import {
   testCreateSpatialized2DElement,
   testSpatialSceneCorner,
@@ -16,8 +14,8 @@ testCreateSpatialized2DElement()
 
 function App() {
   const style = {
-    width: '100%',
-    height: '150%',
+    width: '100vw',
+    height: '150vh',
   }
   return (
     <div className="min-h-screen bg-gray-900/60 text-white p-6" style={style}>

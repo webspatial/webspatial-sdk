@@ -16,7 +16,7 @@ struct SpatialSceneView: View {
                         let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
 
                         ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                            SpatializedElementView(parentYOffset: 0) {
+                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
                                 Spatialized2DView()
                             }
                             .environment(child)

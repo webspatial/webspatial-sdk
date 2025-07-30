@@ -15,8 +15,18 @@ class SpatialWebViewModel: SpatialObject {
     private var stateChangeListeners: [(_ type: SpatialWebViewState) -> Void] = []
     private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
     private var cmdManager = JSBManager()
-    private var isEnableScroll = true
     private var backgroundTransparent: Bool = false
+
+    private var _scrollEnabled = true
+    var scrollEnabled: Bool {
+        get {
+            return _scrollEnabled
+        }
+        set(newValue) {
+            _scrollEnabled = newValue
+            controller?.webview?.scrollView.isScrollEnabled = newValue
+        }
+    }
 
     var scrollOffset: CGPoint = .zero
 
@@ -39,7 +49,7 @@ class SpatialWebViewModel: SpatialObject {
     func load(_ url: String) {
         if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
-            controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+            controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
         controller?.webview!.load(URLRequest(url: URL(string: url)!))
@@ -49,7 +59,7 @@ class SpatialWebViewModel: SpatialObject {
     func loadHTML(_ htmlText: String) {
         if controller?.webview == nil {
             _ = WKWebViewManager.Instance.create(controller: controller!)
-            controller!.webview?.scrollView.isScrollEnabled = isEnableScroll
+            controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
         controller?.webview!.loadHTMLString(htmlText, baseURL: nil)
@@ -74,21 +84,12 @@ class SpatialWebViewModel: SpatialObject {
         backgroundTransparent = !transparent
     }
 
-    func enableScroll() {
-        isEnableScroll = true
-        controller?.webview?.scrollView.isScrollEnabled = isEnableScroll
-    }
-
-    func disableScroll() {
-        isEnableScroll = false
-        controller?.webview?.scrollView.isScrollEnabled = isEnableScroll
-    }
-
     func stopScrolling() {
         controller?.webview?.scrollView.stopScrollingAndZooming()
     }
 
     func setScrollOffset(_ offset: Vec2) {
+        print("dbg setScrollOffset x: \(offset.x) y: \(offset.y)")
         controller?.webview?.scrollView.contentOffset.x = offset.x
         controller?.webview?.scrollView.contentOffset.y = offset.y
     }

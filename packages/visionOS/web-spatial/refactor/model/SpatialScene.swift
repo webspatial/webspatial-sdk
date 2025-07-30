@@ -56,8 +56,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
 
         spatialWebViewModel.addScrollUpdateListener { _, point in
-//            print("scroll update", type, point)
-            self._scrollOffset.x = point.y
+            self._scrollOffset.x = point.x
             self._scrollOffset.y = point.y
         }
     }

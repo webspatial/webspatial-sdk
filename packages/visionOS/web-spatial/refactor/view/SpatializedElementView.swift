@@ -4,23 +4,23 @@ import SwiftUI
 
 struct SpatializedElementView<Content: View>: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
-    var parentYOffset = Float(0.0)
+    var parentScrollOffset: Vec2
     var content: Content
 
-    init(parentYOffset: Float, @ViewBuilder content: () -> Content) {
-        self.parentYOffset = parentYOffset
+    init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
+        self.parentScrollOffset = parentScrollOffset
         self.content = content()
     }
 
     @ViewBuilder
     var body: some View {
         let transform = spatializedElement.transform
-
+        let parentYOffset = parentScrollOffset.y
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation
         let x = CGFloat(translation.x)
-        let y = CGFloat(translation.y - (spatializedElement.scrollWithParent ? parentYOffset : 0))
+        let y = spatializedElement.scrollWithParent ? (CGFloat(translation.y) - parentYOffset) : 0
 
         let z = CGFloat(translation.z) + (spatializedElement.zIndex * zOrderBias)
         let width = CGFloat(spatializedElement.width)

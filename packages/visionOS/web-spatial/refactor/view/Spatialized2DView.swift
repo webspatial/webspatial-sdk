@@ -21,11 +21,10 @@ struct Spatialized2DView: View {
         return ZStack {
             OptionalClip(clipEnabled: spatialized2DElement.scrollEnabled) {
                 ZStack {
-                    let parentYOffset = Float(spatialized2DElement.scrollOffset.y)
                     let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
                     ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                        SpatializedElementView(parentYOffset: parentYOffset) {
+                        SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
                             Spatialized2DView()
                         }
                         .environment(child)
@@ -63,7 +62,7 @@ struct Spatialized2DView: View {
                         // TODO: this should have velocity
                         let delta = gestureData.dragStart - gesture.translation.height
                         gestureData.dragStart = gesture.translation.height
-                        targetElement.updateDeltaScrollOffset(Vec2(x: delta, y: 0))
+                        targetElement.updateDeltaScrollOffset(Vec2(x: 0, y: delta))
                     }
                 }
             }
