@@ -30,8 +30,10 @@ class SpatialApp {
     }
 
     static func createScene(_ url: String) -> SpatialScene {
-        print("url,", url)
-        let newScene = SpatialScene(url, "Plain")
+        let newScene = SpatialSceneManager.Instance.create(
+            url,
+            "Plain"
+        )
 
         DispatchQueue.main.async {
             newScene.spatialWebViewModel.evaluateJS(js: "window._webSpatialID = '" + newScene.id + "'")
@@ -41,7 +43,7 @@ class SpatialApp {
     }
 
     static func getScene(_ name: String) -> SpatialScene? {
-        return SpatialObject.get(name) as? SpatialScene
+        return SpatialSceneManager.Instance.getScene(name)
     }
 
     // TODO: inspect scene
