@@ -60,7 +60,7 @@ struct Spatialized2DView: View {
                         // TODO: this should have velocity
                         let delta = gestureData.dragStart - gesture.translation.height
                         gestureData.dragStart = gesture.translation.height
-                        targetElement.updateScrollOffset(delta)
+                        targetElement.updateDeltaScrollOffset(Vec2(x: delta, y: 0))
                     }
                 }
             }

@@ -33,7 +33,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialScene.self, onAddSpatializedElement)
 
-        spatialWebViewModel.addJSBListener(UpdateSpatializedElementProperties.self, onUpdateSpatializedElementProperties)
+        spatialWebViewModel.addJSBListener(UpdateSpatialized2DElementProperties.self, onUpdateSpatialized2DElementProperties)
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedElementTransform.self, onUpdateSpatializedElementTransform)
 
@@ -55,8 +55,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             self.onLeavePageSession()
         }
 
-        spatialWebViewModel.addScrollUpdateListener { _, _ in
+        spatialWebViewModel.addScrollUpdateListener { _, point in
 //            print("scroll update", type, point)
+            self._scrollOffset.x = point.y
+            self._scrollOffset.y = point.y
         }
     }
 
@@ -104,12 +106,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve()
     }
 
-    private func onUpdateSpatializedElementProperties(command: UpdateSpatializedElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
+    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
             reject(.InvalidSpatialObject, "invalid updateSpatializedElementProperties spatial object id not exsit!")
             return
         }
+        updateSpatializedElementProperties(spatialized2DElement, command)
+        if let scrollEnabled = command.scrollEnabled {
+            spatialized2DElement.scrollEnabled = scrollEnabled
+        }
 
+        resolve()
+    }
+
+    private func updateSpatializedElementProperties(_ spatializedElement: SpatializedElement, _ command: SpatializedElementProperties) {
         if let width = command.width {
             spatializedElement.width = width
         }
@@ -141,8 +151,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         if let rotationAnchor = command.rotationAnchor {
             spatializedElement.rotationAnchor = .init(x: CGFloat(rotationAnchor.x), y: CGFloat(rotationAnchor.y), z: CGFloat(rotationAnchor.z))
         }
-
-        resolve()
     }
 
     private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
@@ -228,8 +236,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    func updateScrollOffset(_ delta: CGFloat) {
-//        spatialWebViewModel
+    func updateDeltaScrollOffset(_ delta: Vec2) {
+        spatialWebViewModel.setScrollOffset(_scrollOffset + delta)
     }
 
     func stopScrolling() {

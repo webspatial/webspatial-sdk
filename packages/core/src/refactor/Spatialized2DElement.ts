@@ -2,9 +2,14 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementCorner,
   UpdateSpatialized2DElementMaterial,
+  UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { SpatializedElement } from './SpatializedElement'
-import { BackgroundMaterialType, CornerRadius } from './types'
+import {
+  BackgroundMaterialType,
+  CornerRadius,
+  Spatialized2DElementProperties,
+} from './types'
 
 export class Spatialized2DElement extends SpatializedElement {
   constructor(
@@ -12,6 +17,10 @@ export class Spatialized2DElement extends SpatializedElement {
     readonly windowProxy: WindowProxy,
   ) {
     super(id)
+  }
+
+  async updateProperties(properties: Partial<Spatialized2DElementProperties>) {
+    return new UpdateSpatialized2DElementProperties(this, properties).execute()
   }
 
   async updateSpatialMaterial(material: BackgroundMaterialType) {

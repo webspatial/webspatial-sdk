@@ -5,6 +5,7 @@ import { SpatialObject } from './SpatialObject'
 import {
   BackgroundMaterialType,
   CornerRadius,
+  Spatialized2DElementProperties,
   SpatializedElementProperties,
   SpatialTransform,
 } from './types'
@@ -65,9 +66,9 @@ export abstract class SpatializedElementCommand extends JSBCommand {
   protected abstract getExtraParams(): Record<string, any> | undefined
 }
 
-export class UpdateSpatializedElementProperties extends SpatializedElementCommand {
-  properties: Partial<SpatializedElementProperties>
-  commandType = 'UpdateSpatializedElementProperties'
+export class UpdateSpatialized2DElementProperties extends SpatializedElementCommand {
+  properties: Partial<Spatialized2DElementProperties>
+  commandType = 'UpdateSpatialized2DElementProperties'
 
   constructor(
     spatialObject: SpatialObject,

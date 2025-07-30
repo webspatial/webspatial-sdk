@@ -89,12 +89,14 @@ class SpatialWebViewModel: SpatialObject {
         controller?.webview?.scrollView.stopScrollingAndZooming()
     }
 
-    func updateScrollOffset(_ delta: CGFloat) {
-        controller?.webview?.scrollView.contentOffset.y += delta
+    func setScrollOffset(_ offset: Vec2) {
+        controller?.webview?.scrollView.contentOffset.x = offset.x
+        controller?.webview?.scrollView.contentOffset.y = offset.y
     }
 
-    func getScrollOffset() -> CGFloat? {
-        return controller?.webview?.scrollView.contentOffset.y
+    func getScrollOffset() -> Vec2 {
+        let contentOffset = controller!.webview!.scrollView.contentOffset
+        return Vec2(x: contentOffset.x, y: contentOffset.y)
     }
 
     func setTitle(_ title: String) {
