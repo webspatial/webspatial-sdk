@@ -3,8 +3,8 @@ import SwiftUI
 
 @Observable
 class SpatialWebViewModel: SpatialObject {
-    private(set) var viewState = ""
     var url = ""
+    private(set) var title: String?
     private var view: SpatialWebView?
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: URL) -> Bool] = [:]
@@ -18,7 +18,6 @@ class SpatialWebViewModel: SpatialObject {
     private var isEnableScroll = true
     private var backgroundTransparent: Bool = false
 
-    private(set) var title: String?
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
@@ -257,7 +256,7 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    func onScrollUpdateInvoke(_ type: ScrollState, _ point: CGPoint) {
+    private func onScrollUpdateInvoke(_ type: ScrollState, _ point: CGPoint) {
         for onScrollUpdate in scrollUpdateListeners {
             onScrollUpdate(type, point)
         }

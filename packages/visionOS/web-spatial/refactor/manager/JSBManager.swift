@@ -19,10 +19,6 @@ class JSBManager {
         typeMap = [String: CommandDataProtocol.Type]()
     }
 
-    func typeof(for key: String) -> CommandDataProtocol.Type? {
-        return typeMap[key]
-    }
-
     func deserialize(cmdType: String, cmdContent: String?) throws -> CommandDataProtocol? {
         let decoder = JSONDecoder()
 
@@ -37,6 +33,10 @@ class JSBManager {
         return concreteData
     }
 
+    private func typeof(for key: String) -> CommandDataProtocol.Type? {
+        return typeMap[key]
+    }
+
     enum SerializationError: Error {
         case unknownType
         case invalidFormat
@@ -44,11 +44,11 @@ class JSBManager {
 
     class Promise {
         var replyHandler: ((Any?, String?) -> Void)?
-        let encode = JSONEncoder()
+        private let encoder = JSONEncoder()
 
         init(_ callback: @escaping (Any?, String?) -> Void) {
             replyHandler = callback
-            encode.outputFormatting = .prettyPrinted
+            encoder.outputFormatting = .prettyPrinted
         }
 
         func resolve() {
@@ -71,8 +71,8 @@ class JSBManager {
             }
         }
 
-        func parseResult(_ data: ReplyData) -> String? {
-            if let jsonData = try? encode.encode(data) {
+        private func parseResult(_ data: ReplyData) -> String? {
+            if let jsonData = try? encoder.encode(data) {
                 let jsonString = String(data: jsonData, encoding: .utf8)
                 return jsonString!
             }
