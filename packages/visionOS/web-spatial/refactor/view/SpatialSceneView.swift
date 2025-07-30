@@ -48,23 +48,23 @@ struct SpatialSceneView: View {
 //        spatialized2DElement.transform.translation.z = 200
 //        spatialized2DElement.width = 200
 //        spatialized2DElement.height = 200
-        let htmlString = """
-        <!DOCTYPE html>
-        <html>
-            <body>
-                hello world
-            </body>
-        </html>
-        """
-        spatialized2DElement.loadHtml(htmlString)
-        spatialized2DElement.setParent(spatialScene)
-        sceneId = spatialScene.id
-    }
-
-    var body: some View {
-        SpatialSceneView(sceneId: sceneId)
-    }
-}
+//        let htmlString = """
+//        <!DOCTYPE html>
+//        <html>
+//            <body>
+//                hello world
+//            </body>
+//        </html>
+//        """
+//        spatialized2DElement.loadHtml(htmlString)
+//        spatialized2DElement.setParent(spatialScene)
+//        sceneId = spatialScene.id
+//    }
+//
+//    var body: some View {
+//        SpatialSceneView(sceneId: sceneId)
+//    }
+// }
 
 // #Preview("Test SpatialScene", windowStyle: .automatic) {
 //    PreviewSpatialScene()
