@@ -178,10 +178,6 @@ function hijackGetComputedStyle() {
   }
 }
 
-// function hijackWindowOpen() {
-//   SpatialApp.getInstance().init()
-// }
-
 function monitorHTMLAttributeChange() {
   const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {

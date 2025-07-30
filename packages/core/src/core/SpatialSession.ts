@@ -449,4 +449,9 @@ export class SpatialSession {
 
     return entity
   }
+  // set loading view.
+  /** @hidden */
+  async setLoading(method: LoadingMethodKind, style?: string) {
+    return WebSpatial.setLoading(method, style)
+  }
 }

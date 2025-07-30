@@ -43,7 +43,6 @@ export class SceneManager {
     }
 
     const cfg = target ? this.getConfig(target) : undefined
-    console.log('🚀 ~ SceneManager ~ cfg:', cfg)
     const cmd = new createSpatialSceneCommand(url!, cfg)
     const retWindowProxy = cmd.executeSync(() => {})
 
@@ -57,10 +56,6 @@ export class SceneManager {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
 }
-
-// function getCreateSceneSchemaUrl(url: string, sceneConfig?: SceneOptions) {
-//   return `webspatial://createscene?url=${encodeURIComponent(url)}&config=${encodeURIComponent(JSON.stringify(sceneConfig))}`
-// }
 
 export function initScene(
   name: string,

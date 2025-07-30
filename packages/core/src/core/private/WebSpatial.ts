@@ -120,9 +120,7 @@ export class WebSpatial {
       return
     }
 
-    const msg = `${cmd.command}::${JSON.stringify(cmd.data)}`
-
-    // var msg = JSON.stringify(cmd)
+    var msg = JSON.stringify(cmd)
 
     if (WebSpatial.getBackend() == 'AVP') {
       window.webkit.messageHandlers.bridge.postMessage(msg)
@@ -161,11 +159,13 @@ export class WebSpatial {
     const { window: newWindow, ...sceneData } = cfg.sceneData
     const jsbSceneData: sceneDataJSBShape = {
       ...sceneData,
+      windowID: newWindow._webSpatialID,
+      windowContainerID: newWindow._webSpatialGroupID,
     }
     var cmd = new RemoteCommand('createScene', {
       windowStyle: style,
       sceneData: jsbSceneData,
-      // windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
+      windowContainerID: window._webSpatialParentGroupID, // parent WindowContainerID
     })
 
     try {
