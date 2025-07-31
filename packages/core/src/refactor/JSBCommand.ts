@@ -7,6 +7,7 @@ import {
   CornerRadius,
   Spatialized2DElementProperties,
   SpatializedElementProperties,
+  SpatialSceneProperties,
   SpatialTransform,
 } from './types'
 
@@ -23,33 +24,17 @@ abstract class JSBCommand {
   }
 }
 
-export class UpdateSpatialSceneMaterial extends JSBCommand {
-  material: BackgroundMaterialType
-  commandType = 'UpdateSpatialSceneMaterial'
+export class UpdateSpatialSceneProperties extends JSBCommand {
+  properties: Partial<SpatialSceneProperties>
+  commandType = 'UpdateSpatialSceneProperties'
 
-  constructor(material: BackgroundMaterialType) {
+  constructor(properties: Partial<SpatialSceneProperties>) {
     super()
-    this.material = material
+    this.properties = properties
   }
 
   protected getParams() {
-    return {
-      material: this.material,
-    }
-  }
-}
-
-export class UpdateSpatialSceneCorner extends JSBCommand {
-  cornerRadius: CornerRadius
-  commandType = 'UpdateSpatialSceneCorer'
-
-  constructor(cornerRadius: CornerRadius) {
-    super()
-    this.cornerRadius = cornerRadius
-  }
-
-  protected getParams() {
-    return { cornerRadius: this.cornerRadius }
+    return this.properties
   }
 }
 

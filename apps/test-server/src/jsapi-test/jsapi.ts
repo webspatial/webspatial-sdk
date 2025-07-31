@@ -7,11 +7,13 @@ console.log('session', session)
 export function testSpatialSceneCorner() {
   if (session) {
     const spatialScene = session.getSpatialScene()
-    spatialScene.updateSpatialCorner({
-      topLeading: 30,
-      bottomLeading: 10,
-      topTrailing: 10,
-      bottomTrailing: 10,
+    spatialScene.updateSpatialProperties({
+      cornerRadius: {
+        topLeading: 30,
+        bottomLeading: 10,
+        topTrailing: 10,
+        bottomTrailing: 10,
+      },
     })
   }
 }
@@ -19,7 +21,9 @@ export function testSpatialSceneCorner() {
 export function testSpatialSceneMaterial() {
   if (session) {
     const spatialScene = session.getSpatialScene()
-    spatialScene.updateSpatialMaterial('translucent')
+    spatialScene.updateSpatialProperties({
+      material: 'translucent',
+    })
   }
 }
 

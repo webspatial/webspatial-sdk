@@ -18,18 +18,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupJSBListeners() {
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneMaterial.self) { command, resolve, _ in
-            self.backgroundMaterial = command.material
-            resolve()
-        }
-        spatialWebViewModel.addJSBListener(UpdateSpatialSceneCorer.self) { command, resolve, _ in
-            self.cornerRadius = command.cornerRadius
-            resolve()
-        }
-
         spatialWebViewModel.addJSBListener(PingCommand.self) { _, resolve, _ in
             resolve()
         }
+
+        spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialScene.self, onAddSpatializedElement)
 
@@ -67,6 +60,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+    }
+
+    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        if let material = command.material {
+            backgroundMaterial = material
+        }
+
+        if let cornerRadius = command.cornerRadius {
+            self.cornerRadius = cornerRadius
+        }
+
+        resolve()
     }
 
     private func onUpdateSpatialized2DElementMaterial(command: UpdateSpatialized2DElementMaterial, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {

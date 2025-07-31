@@ -46,6 +46,11 @@ export type CornerRadius = {
   bottomTrailing: number
 }
 
+export interface SpatialSceneProperties {
+  cornerRadius: CornerRadius
+  material: BackgroundMaterialType
+}
+
 export enum SpatializedElementType {
   Spatialized2DElement,
   SpatializedStatic3DElement,

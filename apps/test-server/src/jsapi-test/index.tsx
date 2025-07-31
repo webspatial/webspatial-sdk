@@ -10,6 +10,7 @@ import {
 } from './jsapi'
 
 testSpatialSceneMaterial()
+testSpatialSceneCorner()
 testCreateSpatialized2DElement()
 
 function App() {

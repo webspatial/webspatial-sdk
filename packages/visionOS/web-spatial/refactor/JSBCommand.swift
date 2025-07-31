@@ -1,13 +1,9 @@
 import SwiftUI
 
-class UpdateSpatialSceneMaterial: CommandDataProtocol {
-    static let commandType: String = "UpdateSpatialSceneMaterial"
-    let material: BackgroundMaterial
-}
-
-class UpdateSpatialSceneCorer: CommandDataProtocol {
-    static let commandType: String = "UpdateSpatialSceneCorer"
-    let cornerRadius: CornerRadius
+class UpdateSpatialSceneProperties: CommandDataProtocol {
+    static let commandType: String = "UpdateSpatialSceneProperties"
+    let cornerRadius: CornerRadius?
+    let material: BackgroundMaterial?
 }
 
 class AddSpatializedElementToSpatialScene: CommandDataProtocol {
