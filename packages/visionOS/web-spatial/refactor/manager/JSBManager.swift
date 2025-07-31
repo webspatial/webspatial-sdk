@@ -4,6 +4,18 @@ protocol CommandDataProtocol: Codable {
     static var commandType: String { get }
 }
 
+struct ReplyData: Codable {
+    var success: Bool
+    var code: ReplyCode?
+    var message: String?
+}
+
+enum ReplyCode: Codable {
+    case TypeError
+    case CommandError
+    case InvalidSpatialObject
+}
+
 class JSBManager {
     private var typeMap = [String: CommandDataProtocol.Type]()
 

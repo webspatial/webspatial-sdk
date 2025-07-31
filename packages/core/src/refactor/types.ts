@@ -71,4 +71,6 @@ export interface SpatializedElementProperties {
 export interface Spatialized2DElementProperties
   extends SpatializedElementProperties {
   scrollEnabled: boolean
+  cornerRadius: CornerRadius
+  material: BackgroundMaterialType
 }

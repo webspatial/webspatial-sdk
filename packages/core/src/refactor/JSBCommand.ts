@@ -3,8 +3,6 @@ import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
 import {
-  BackgroundMaterialType,
-  CornerRadius,
   Spatialized2DElementProperties,
   SpatializedElementProperties,
   SpatialSceneProperties,
@@ -82,34 +80,6 @@ export class UpdateSpatializedElementTransform extends SpatializedElementCommand
 
   protected getExtraParams() {
     return this.spatialTransform
-  }
-}
-
-export class UpdateSpatialized2DElementMaterial extends SpatializedElementCommand {
-  material: BackgroundMaterialType
-  commandType = 'UpdateSpatialized2DElementMaterial'
-
-  constructor(spatialObject: SpatialObject, material: BackgroundMaterialType) {
-    super(spatialObject)
-    this.material = material
-  }
-
-  protected getExtraParams() {
-    return { material: this.material }
-  }
-}
-
-export class UpdateSpatialized2DElementCorner extends SpatializedElementCommand {
-  cornerRadius: CornerRadius
-  commandType = 'UpdateSpatialized2DElementCorner'
-
-  constructor(spatialObject: SpatialObject, cornerRadius: CornerRadius) {
-    super(spatialObject)
-    this.cornerRadius = cornerRadius
-  }
-
-  protected getExtraParams() {
-    return { cornerRadius: this.cornerRadius }
   }
 }
 

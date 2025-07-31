@@ -45,6 +45,8 @@ class UpdateSpatialized2DElementProperties: SpatialObjectCommand, SpatializedEle
     let zIndex: Double?
     // Extra Properties
     let scrollEnabled: Bool?
+    let material: BackgroundMaterial?
+    let cornerRadius: CornerRadius?
 }
 
 class UpdateSpatializedElementTransform: SpatialObjectCommand {
@@ -55,32 +57,8 @@ class UpdateSpatializedElementTransform: SpatialObjectCommand {
     let scale: Vec3?
 }
 
-class UpdateSpatialized2DElementMaterial: SpatialObjectCommand {
-    static let commandType: String = "UpdateSpatialized2DElementMaterial"
-    let id: String
-    let material: BackgroundMaterial
-}
-
-class UpdateSpatialized2DElementCorner: SpatialObjectCommand {
-    static let commandType: String = "UpdateSpatialized2DElementCorner"
-    let id: String
-    let cornerRadius: CornerRadius
-}
-
 class AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
     static let commandType: String = "AddSpatializedElementToSpatialized2DElement"
     let id: String
     let spatializedElementId: String
-}
-
-struct ReplyData: Codable {
-    var success: Bool
-    var code: ReplyCode?
-    var message: String?
-}
-
-enum ReplyCode: Codable {
-    case TypeError
-    case CommandError
-    case InvalidSpatialObject
 }

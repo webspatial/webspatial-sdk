@@ -30,10 +30,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedElementTransform.self, onUpdateSpatializedElementTransform)
 
-        spatialWebViewModel.addJSBListener(UpdateSpatialized2DElementMaterial.self, onUpdateSpatialized2DElementMaterial)
-
-        spatialWebViewModel.addJSBListener(UpdateSpatialized2DElementCorner.self, onUpdateSpatialized2DElementCorner)
-
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialized2DElement.self, onAddSpatializedElementToSpatialized2DElement)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
@@ -74,16 +70,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve()
     }
 
-    private func onUpdateSpatialized2DElementMaterial(command: UpdateSpatialized2DElementMaterial, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
-            reject(.InvalidSpatialObject, "invalid UpdateSpatialized2DElementMaterial spatial object id not exsit!")
-            return
-        }
-
-        spatialized2DElement.backgroundMaterial = command.material
-        resolve()
-    }
-
     private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id)
         else {
@@ -100,16 +86,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve()
     }
 
-    private func onUpdateSpatialized2DElementCorner(command: UpdateSpatialized2DElementCorner, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
-        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
-            reject(.InvalidSpatialObject, "invalid UpdateSpatialized2DElementMaterial spatial object id not exsit!")
-            return
-        }
-
-        spatialized2DElement.cornerRadius = command.cornerRadius
-        resolve()
-    }
-
     private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
             reject(.InvalidSpatialObject, "invalid updateSpatializedElementProperties spatial object id not exsit!")
@@ -118,6 +94,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         updateSpatializedElementProperties(spatialized2DElement, command)
         if let scrollEnabled = command.scrollEnabled {
             spatialized2DElement.scrollEnabled = scrollEnabled
+        }
+        if let material = command.material {
+            spatialized2DElement.backgroundMaterial = material
+        }
+
+        if let cornerRadius = command.cornerRadius {
+            spatialized2DElement.cornerRadius = cornerRadius
         }
 
         resolve()

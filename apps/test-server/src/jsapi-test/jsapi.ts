@@ -60,12 +60,14 @@ export async function testCreateSpatialized2DElement() {
       },
     })
 
-    await spatialized2DElement.updateSpatialMaterial('translucent')
-    await spatialized2DElement.updateSpatialCorner({
-      topLeading: 10,
-      bottomLeading: 10,
-      topTrailing: 10,
-      bottomTrailing: 10,
+    await spatialized2DElement.updateProperties({ material: 'translucent' })
+    await spatialized2DElement.updateProperties({
+      cornerRadius: {
+        topLeading: 10,
+        bottomLeading: 10,
+        topTrailing: 10,
+        bottomTrailing: 10,
+      },
     })
     spatialized2DElement.windowProxy.document.body.style.background = 'green'
 
