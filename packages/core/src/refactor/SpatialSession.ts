@@ -1,4 +1,5 @@
-import { SpatialScene } from './SpatialScene'
+import { SceneManager } from './SceneManager'
+import { SpatialSceneOptions, SpatialScene } from './SpatialScene'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { createSpatialized2DElement } from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
@@ -20,5 +21,12 @@ export class SpatialSession {
     modelURL: string = '',
   ): Promise<SpatializedStatic3DElement> {
     return createSpatializedStatic3DElement(modelURL)
+  }
+
+  static initScene(
+    name: string,
+    callback: (pre: SpatialSceneOptions) => SpatialSceneOptions,
+  ) {
+    return SceneManager.getInstance().initScene(name, callback)
   }
 }

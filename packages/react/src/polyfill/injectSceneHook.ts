@@ -1,13 +1,9 @@
-//@ts-ignore
-import { getSession } from '@webspatial/react-sdk'
-//@ts-ignore
-import { defaultSceneConfig, XRApp } from '@webspatial/react-sdk'
+import { SpatialScene, defaultSceneConfig } from '@webspatial/core-sdk'
 
 export async function injectSceneHook() {
   if (!window.opener) return
   if ((window as any)._SceneHookOff) return
 
-  await getSession()?.setLoading('show')
   // see this flag, we have done create the root scene
 
   function onContentLoaded(callback: any) {
@@ -36,7 +32,6 @@ export async function injectSceneHook() {
         resolve(null)
       }, 1000)
     })
-    await getSession()?.setLoading('hide')
-    await XRApp.getInstance().show(window, cfg)
+    await SpatialScene.getInstance().updateSceneConfig(cfg)
   })
 }

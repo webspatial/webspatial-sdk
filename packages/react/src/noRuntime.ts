@@ -35,3 +35,9 @@ export class Spatial {
 }
 
 export const version = undefined // no runtime so this should set undefined
+
+export class SpatialScene {}
+
+export const defaultSceneConfig = {}
+
+export function hijackWindowATag(x) {}

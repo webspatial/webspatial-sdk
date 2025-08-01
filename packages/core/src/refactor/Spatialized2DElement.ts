@@ -2,6 +2,7 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
+import { hijackWindowATag } from './SceneManager'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types'
 
@@ -11,6 +12,8 @@ export class Spatialized2DElement extends SpatializedElement {
     readonly windowProxy: WindowProxy,
   ) {
     super(id)
+    // hijack a tag event
+    hijackWindowATag(windowProxy)
   }
 
   async updateProperties(properties: Partial<Spatialized2DElementProperties>) {
