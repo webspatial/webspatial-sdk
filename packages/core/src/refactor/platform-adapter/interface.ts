@@ -23,4 +23,10 @@ export interface PlatformAbility {
     schema: string,
     query?: string,
   ): Promise<WebSpatialProtocolResult>
+
+  callWebSpatialProtocolSync(
+    schema: string,
+    query?: string,
+    resultCallback?: (result: CommandResult) => void,
+  ): WindowProxy | null
 }
