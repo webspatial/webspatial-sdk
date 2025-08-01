@@ -10,28 +10,16 @@ import SwiftUI
 @main
 struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var app: SpatialApp
+
     @State var wgm = WindowContainerMgr.Instance
-
-    @Environment(\.scenePhase) private var scenePhase
-
-    init() {
-        app = SpatialApp()
-    }
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
-            // get scene
-            let scene = SpatialApp.getScene(
-                windowData.sceneID
-            )
-            // render
-            SpatialSceneXView().environment(scene)
+            SpatialSceneView(sceneId: windowData.sceneID)
         }
         defaultValue: {
-            let scene = SpatialApp.createScene(startURL)
-            // the 1st scene always stays idle
-            scene.spatialWebViewModel.load()
+            let startURL = "http://localhost:5173/src/jsapi-test/"
+            let scene = SpatialSceneManager.Instance.create(startURL, "Plain", .success)
             let windowData = SceneData(
                 windowStyle: "Plain",
                 sceneID: scene.id
@@ -40,11 +28,11 @@ struct WebSpatialApp: App {
             return windowData
         }
         .windowStyle(.plain)
-        .defaultSize(
-            wgm.getValue().defaultSize!
-        ).windowResizability(
-            wgm.getValue().windowResizability!
-        )
+//        .defaultSize(
+//            wgm.getValue().defaultSize!
+//        ).windowResizability(
+//            wgm.getValue().windowResizability!
+//        )
 
         WindowGroup(id: "loading") {
             LoadingView()

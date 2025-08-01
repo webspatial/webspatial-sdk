@@ -1,10 +1,11 @@
-import { SceneManager } from './SceneManager'
-import { SpatialSceneOptions, SpatialScene } from './SpatialScene'
+import { initScene } from './scene-polyfill'
+import { SpatialScene } from './SpatialScene'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { createSpatialized2DElement } from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import { ping } from './internal-debug'
+import { SpatialSceneCreationOptions } from './types'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -28,10 +29,10 @@ export class SpatialSession {
     return ping()
   }
 
-  static initScene(
+  initScene(
     name: string,
-    callback: (pre: SpatialSceneOptions) => SpatialSceneOptions,
+    callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
   ) {
-    return SceneManager.getInstance().initScene(name, callback)
+    return initScene(name, callback)
   }
 }

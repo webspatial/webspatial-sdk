@@ -2,7 +2,7 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
-import { hijackWindowATag } from './SceneManager'
+import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types'
 

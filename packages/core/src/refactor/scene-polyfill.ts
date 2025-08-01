@@ -1,8 +1,8 @@
 import { createSpatialSceneCommand } from './JSBCommand'
-import { SceneOptions } from './types'
+import { SpatialScene } from './SpatialScene'
+import { SpatialSceneCreationOptions } from './types'
 
-export type { SceneOptions }
-export const defaultSceneConfig: SceneOptions = {
+const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
     width: 900,
     height: 700,
@@ -11,7 +11,8 @@ export const defaultSceneConfig: SceneOptions = {
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
 const originalOpen = window.open
-export class SceneManager {
+
+class SceneManager {
   private static instance: SceneManager
   static getInstance() {
     if (!SceneManager.instance) {
@@ -24,7 +25,7 @@ export class SceneManager {
     ;(window as any).open = this.open
   }
 
-  private configMap: Record<string, SceneOptions> = {} // name=>config
+  private configMap: Record<string, SpatialSceneCreationOptions> = {} // name=>config
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
@@ -52,14 +53,17 @@ export class SceneManager {
 
     return retWindowProxy
   }
-  initScene(name: string, callback: (pre: SceneOptions) => SceneOptions) {
+  initScene(
+    name: string,
+    callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
+  ) {
     this.configMap[name] = callback({ ...defaultSceneConfig })
   }
 }
 
 export function initScene(
   name: string,
-  callback: (pre: SceneOptions) => SceneOptions,
+  callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
 ) {
   return SceneManager.getInstance().initScene(name, callback)
 }
@@ -105,4 +109,46 @@ function handleATag(event: MouseEvent) {
       window.open(url, target)
     }
   }
+}
+
+async function injectScenePollyfill() {
+  if (!window.opener) return
+  if ((window as any)._SceneHookOff) return
+
+  // see this flag, we have done create the root scene
+
+  function onContentLoaded(callback: any) {
+    if (
+      document.readyState === 'interactive' ||
+      document.readyState === 'complete'
+    ) {
+      callback()
+    } else {
+      document.addEventListener('DOMContentLoaded', callback)
+    }
+  }
+
+  onContentLoaded(async () => {
+    let cfg = defaultSceneConfig
+    if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
+      try {
+        cfg = await (window as any).xrCurrentSceneDefaults?.()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    // fixme: this duration is too short so that hide and show is at racing, so add a little delay to avoid
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(null)
+      }, 1000)
+    })
+    await SpatialScene.getInstance().updateSceneCreationConfig(cfg)
+  })
+}
+
+export function injectSceneHook() {
+  hijackWindowOpen(window)
+  hijackWindowATag(window)
+  injectScenePollyfill()
 }

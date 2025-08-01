@@ -22,7 +22,7 @@ import {
 import { SpatialReactContext } from './SpatialReactContext'
 import { SpatialID } from './const'
 import { SpatialDebugNameContext } from './SpatialDebugNameContext'
-import { CornerRadius, hijackWindowATag } from '@webspatial/core-sdk'
+import { CornerRadius } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
 
@@ -448,8 +448,6 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     async (spatialWindowManager: SpatialWindowManager) => {
       const openWindow = spatialWindowManager.window!
       setOpenWindowStyle(openWindow)
-
-      hijackWindowATag(openWindow)
 
       syncDefaultSpatialStyle(openWindow, debugName)
 
