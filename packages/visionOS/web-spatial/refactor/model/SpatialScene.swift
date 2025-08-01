@@ -1,5 +1,12 @@
 import Foundation
 
+struct CustomReplyData: Codable {
+    let type: String
+    let name: String
+}
+
+let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     override init(_ url: String) {
@@ -18,8 +25,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupJSBListeners() {
-        spatialWebViewModel.addJSBListener(PingCommand.self) { _, resolve, _ in
-            resolve()
+        spatialWebViewModel.addJSBListener(PingCommand.self) { resolve in
+            let data = CustomReplyData(type: "custom", name: "test")
+            resolve(.success(data))
         }
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
@@ -60,7 +68,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         if let material = command.material {
             backgroundMaterial = material
         }
@@ -68,13 +76,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         if let cornerRadius = command.cornerRadius {
             self.cornerRadius = cornerRadius
         }
-
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
-            reject(.InvalidSpatialObject, "invalid updateSpatializedStatic3DElement spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedStatic3DElement spatial object id not exsit!")))
             return
         }
 
@@ -84,28 +91,28 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatializedElement.modelURL = modelURL
         }
 
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id)
         else {
-            reject(.InvalidSpatialObject, "invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!")))
             return
         }
 
         guard let targetSpatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
-            reject(.InvalidSpatialObject, "invalid AddSpatializedElementToSpatialized2DElement target spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddSpatializedElementToSpatialized2DElement target spatial object id not exsit!")))
             return
         }
 
         targetSpatializedElement.setParent(spatialized2DElement)
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
-            reject(.InvalidSpatialObject, "invalid updateSpatializedElementProperties spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedElementProperties spatial object id not exsit!")))
             return
         }
         updateSpatializedElementProperties(spatialized2DElement, command)
@@ -120,7 +127,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatialized2DElement.cornerRadius = cornerRadius
         }
 
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
     private func updateSpatializedElementProperties(_ spatializedElement: SpatializedElement, _ command: SpatializedElementProperties) {
@@ -157,9 +164,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
-            reject(.InvalidSpatialObject, "invalid UpdateSpatializedElementTransform spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid UpdateSpatializedElementTransform spatial object id not exsit!")))
             return
         }
 
@@ -175,17 +182,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatializedElement.transform.scale = SIMD3<Float>(Float(scale.x), Float(scale.y), Float(scale.z))
         }
 
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
         guard let spatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
-            reject(.InvalidSpatialObject, "invalid addSpatializedElementCommand spatial object id not exsit!")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid addSpatializedElementCommand spatial object id not exsit!")))
             return
         }
 
         spatializedElement.setParent(self)
-        resolve()
+        resolve(.success(baseReplyData))
     }
 
     /*

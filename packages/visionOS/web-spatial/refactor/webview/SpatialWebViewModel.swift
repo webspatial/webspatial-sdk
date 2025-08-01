@@ -9,12 +9,9 @@ class SpatialWebViewModel: SpatialObject {
     private var controller: SpatialWebController?
     private var navigationList: [String: (_ data: URL) -> Bool] = [:]
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
-    private var commandList: [String: (_ data: CommandDataProtocol, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
-    private var commandListWithoutData: [String: (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void] = [:]
     private var stateListeners: [SpatialWebViewState: [() -> Void]] = [:]
     private var stateChangeListeners: [(_ type: SpatialWebViewState) -> Void] = []
     private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
-    private var cmdManager = JSBManager()
     private var backgroundTransparent: Bool = false
 
     private var _scrollEnabled = true
@@ -37,7 +34,6 @@ class SpatialWebViewModel: SpatialObject {
         controller!.model = self
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
-        controller?.registerJSBInvoke(invoke: onJSBInvoke)
         controller?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
         controller?.registerScrollUpdateInvoke(invoke: onScrollUpdateInvoke)
     }
@@ -123,33 +119,24 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     // jsb event
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ data: T, _ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void) {
-        cmdManager.register(dataClass)
-        commandList[dataClass.commandType] = { data, resolve, reject in
-            event(data as! T, resolve, reject)
-        }
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+        controller?.registeJSBHandler(dataClass, event)
     }
 
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (_ resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) -> Void) {
-        cmdManager.register(dataClass)
-        commandListWithoutData[dataClass.commandType] = event
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+        controller?.registeJSBHandler(dataClass, event)
     }
 
     func removeJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type) {
-        cmdManager.remove(dataClass)
-        commandList.removeValue(forKey: dataClass.commandType)
-        commandListWithoutData.removeValue(forKey: dataClass.commandType)
+        controller?.unregisterJSBHandler(dataClass)
     }
 
     func removeAllJSBListener() {
-        commandList = [:]
-        commandListWithoutData = [:]
-        cmdManager.clear()
+        controller?.clearJSBHandler()
     }
 
     func fireMockJSB(_ command: String) {
-        let promise = JSBManager.Promise { _, _ in }
-        onJSBInvoke(command, promise)
+        controller?.mockJSB(command)
     }
 
     // webview state event
@@ -233,22 +220,6 @@ class SpatialWebViewModel: SpatialObject {
         return protocolRes
     }
 
-    private func onJSBInvoke(_ command: String, _ promise: JSBManager.Promise) {
-        do {
-            let jsbInfo = command.components(separatedBy: "::")
-            if jsbInfo.count == 2, jsbInfo[1] != "" {
-                let data = try cmdManager.deserialize(cmdType: jsbInfo[0], cmdContent: jsbInfo[1])
-                if let action = commandList[jsbInfo[0]] {
-                    action(data!, promise.resolve, promise.reject)
-                }
-            } else {
-                if let action = commandListWithoutData[jsbInfo[0]] {
-                    action(promise.resolve, promise.reject)
-                }
-            }
-        } catch {}
-    }
-
     private func onStateChangeInvoke(_ state: SpatialWebViewState) {
         for onStateChange in stateChangeListeners {
             onStateChange(state)
@@ -266,7 +237,6 @@ class SpatialWebViewModel: SpatialObject {
 
     override func onDestroy() {
         removeAllListener()
-        cmdManager.clear()
         view?.destroy()
         controller?.destroy()
         controller = nil

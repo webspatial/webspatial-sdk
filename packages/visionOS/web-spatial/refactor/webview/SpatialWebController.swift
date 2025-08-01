@@ -3,15 +3,15 @@ import SwiftUI
 
 class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
     weak var model: SpatialWebViewModel?
+    var webview: WKWebView?
     private var isObserving = false
     private var navigationInvoke: ((_ data: URL) -> Bool)?
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
-    private var jsbInvoke: ((_ data: String, _ promise: JSBManager.Promise) -> Void)?
     private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
     private var scorllUpdateInvoke: ((_ type: ScrollState, _ point: CGPoint) -> Void)?
-    var webview: WKWebView?
     private var webviewTitle: String? = nil
     private var firstLoad = true
+    private var jsbManager = JSBManager()
 
     override init() {
         WKWebView.enableFileScheme() // ensure the handler is usable
@@ -27,8 +27,25 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         openWindowInvoke = invoke
     }
 
-    func registerJSBInvoke(invoke: @escaping (_ data: String, _ promise: JSBManager.Promise) -> Void) {
-        jsbInvoke = invoke
+    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+        jsbManager.register(type, event)
+    }
+
+    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+        print(event)
+        jsbManager.register(type, event)
+    }
+
+    func unregisterJSBHandler<T: CommandDataProtocol>(_ type: T.Type) {
+        jsbManager.remove(type)
+    }
+
+    func clearJSBHandler() {
+        jsbManager.clear()
+    }
+
+    func mockJSB(_ command: String) {
+        jsbManager.handlerMessage(command)
     }
 
     func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: SpatialWebViewState) -> Void) {
@@ -86,9 +103,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void
     ) {
-//        print(message.body)
-        let promise = JSBManager.Promise(replyHandler)
-        jsbInvoke?(message.body as! String, promise)
+//        let promise = JSBManager.Promise(replyHandler)
+        jsbManager.handlerMessage(message.body as! String, replyHandler)
     }
 
     // custom scheme request
@@ -96,7 +112,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         print("urlSchemeTask")
         let url = urlSchemeTask.request.url
         if url!.absoluteString.starts(with: "file://") {
-            var urlRequest = urlSchemeTask.request
+            let urlRequest = urlSchemeTask.request
 
             let session = URLSession(configuration: URLSessionConfiguration.default)
             let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in
@@ -201,7 +217,6 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         destroyView()
         navigationInvoke = nil
         openWindowInvoke = nil
-        jsbInvoke = nil
         webviewStateChangeInvoke = nil
         scorllUpdateInvoke = nil
         model = nil
