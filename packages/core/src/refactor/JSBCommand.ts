@@ -5,6 +5,7 @@ import { SpatialObject } from './SpatialObject'
 import {
   Spatialized2DElementProperties,
   SpatializedElementProperties,
+  SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
   SpatialTransform,
 } from './types'
@@ -83,6 +84,23 @@ export class UpdateSpatializedElementTransform extends SpatializedElementCommand
   }
 }
 
+export class UpdateSpatializedStatic3DElementProperties extends SpatializedElementCommand {
+  properties: Partial<SpatializedStatic3DElementProperties>
+  commandType = 'UpdateSpatializedStatic3DElementProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatializedStatic3DElementProperties>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
 export class AddSpatializedElementToSpatialized2DElement extends SpatializedElementCommand {
   commandType = 'AddSpatializedElementToSpatialized2DElement'
   spatializedElement: SpatializedElement
@@ -113,6 +131,19 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
     return {
       spatializedElementId: this.spatializedElement.id,
     }
+  }
+}
+
+export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
+  commandType = 'CreateSpatializedStatic3DElement'
+
+  constructor(readonly modelURL: string) {
+    super()
+    this.modelURL = modelURL
+  }
+
+  protected getParams() {
+    return { modelURL: this.modelURL }
   }
 }
 

@@ -74,3 +74,8 @@ export interface Spatialized2DElementProperties
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
 }
+
+export interface SpatializedStatic3DElementProperties
+  extends SpatializedElementProperties {
+  modelURL: string
+}

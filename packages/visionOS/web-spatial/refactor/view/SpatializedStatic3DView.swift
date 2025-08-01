@@ -12,11 +12,13 @@ struct SpatializedStatic3DView: View {
 
     @State private var gestureData = SpatializedStatic3DViewGestureData()
 
+    private var spatializedStatic3DElement: SpatializedStatic3DElement {
+        return spatializedElement as! SpatializedStatic3DElement
+    }
+
     @ViewBuilder
     var body: some View {
-        if let element = spatializedElement as? SpatializedStatic3DElement,
-           let url = URL(string: element.modelURL)
-        {
+        if let url = URL(string: spatializedStatic3DElement.modelURL) {
             Model3D(url: url) { phase in
                 switch phase {
                 case let .success(model):

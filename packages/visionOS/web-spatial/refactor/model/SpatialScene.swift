@@ -32,6 +32,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialized2DElement.self, onAddSpatializedElementToSpatialized2DElement)
 
+        spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
             let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
@@ -65,6 +67,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         if let cornerRadius = command.cornerRadius {
             self.cornerRadius = cornerRadius
+        }
+
+        resolve()
+    }
+
+    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping () -> Void, _ reject: @escaping (_ code: ReplyCode, _ message: String) -> Void) {
+        guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
+            reject(.InvalidSpatialObject, "invalid updateSpatializedStatic3DElement spatial object id not exsit!")
+            return
+        }
+
+        updateSpatializedElementProperties(spatializedElement, command)
+
+        if let modelURL = command.modelURL {
+            spatializedElement.modelURL = modelURL
         }
 
         resolve()
