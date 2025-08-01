@@ -2,8 +2,8 @@ class SpatialSceneManager {
     static let Instance: SpatialSceneManager = .init()
     private var map = [String: SpatialScene]()
 
-    func create(_ url: String) -> SpatialScene {
-        let scene = SpatialScene(url)
+    func create(_ url: String, _ style: String) -> SpatialScene {
+        let scene = SpatialScene(url, style)
         map[scene.id] = scene
         return scene
     }

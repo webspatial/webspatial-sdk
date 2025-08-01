@@ -79,3 +79,16 @@ export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
 }
+export interface SceneOptions {
+  defaultSize?: {
+    width: number // Initial width of the window
+    height: number // Initial height of the window
+  }
+
+  resizability?: {
+    minWidth?: number
+    minHeight?: number
+    maxWidth?: number
+    maxHeight?: number
+  }
+}
