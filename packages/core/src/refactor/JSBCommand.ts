@@ -172,12 +172,6 @@ export class PingCommand extends JSBCommand {
 
 /* WebSpatial Protocol Begin */
 abstract class WebSpatialProtocolCommand extends JSBCommand {
-  private windowProxyCallback?: (w: WindowProxy) => void
-
-  setupWindowProxyCallback(windowProxyCallback: (w: WindowProxy) => void) {
-    this.windowProxyCallback = windowProxyCallback
-  }
-
   async execute(): Promise<WebSpatialProtocolResult> {
     const query = this.getQuery()
     return platform.callWebSpatialProtocol(this.commandType, query)
