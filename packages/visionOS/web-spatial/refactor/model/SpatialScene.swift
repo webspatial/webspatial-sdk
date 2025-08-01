@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import SwiftUI
 
 struct SceneData: Decodable, Hashable, Encodable {
     let windowStyle: String
@@ -13,6 +14,21 @@ struct CustomReplyData: Codable {
 
 struct AddSpatializedStatic3DElementReply: Codable {
     let id: String
+}  
+struct ResizeRange: Codable {
+    var minWidth: Double?
+    var minHeight: Double?
+    var maxWidth: Double?
+    var maxHeight: Double?
+}
+
+struct ScenePlainDefaultValues: Codable {
+    let defaultSize: Size?
+    struct Size: Codable {
+        var width: Double
+        var height: Double
+    }
+let resizability: ResizeRange?
 }
 
 struct UpdateSpatializedStatic3DElementReply: Codable {
@@ -21,13 +37,11 @@ struct UpdateSpatializedStatic3DElementReply: Codable {
 
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
-    // TOPIC
+    // TOPIC begin
     var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
-
-    var setSize = PassthroughSubject<CGSize, Never>()
-    var setResizeRange = PassthroughSubject<ResizeRange, Never>()
 
     var openWindowData = PassthroughSubject<SceneData, Never>()
     var closeWindowData = PassthroughSubject<SceneData, Never>()
@@ -48,7 +62,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         return SceneData(windowStyle: windowStyle, sceneID: id)
     }
 
-    var plainDefaultValues: WindowContainerPlainDefaultValues?
+    var plainDefaultValues: ScenePlainDefaultValues?
     // TODO: var volumeDefaultValues: WindowContainerVolumeDefaultValues
 
     enum SceneStateKind: String {
@@ -61,38 +75,35 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     var state: SceneStateKind = .idle
 
-    weak var parent: SpatialScene? = nil
+    // used for window.open logic
+    // refer to the SpatialScene who opened it
+    weak var parent: SpatialScene?
+
+    // TOPIC end
 
     var spatialWebViewModel: SpatialWebViewModel
 
-    init(_ url: String, _ windowStyle: String) {
+    init(_ url: String, _ windowStyle: String, _ state: SceneStateKind) {
         self.windowStyle = windowStyle
         self.url = url
+        self.state = state
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
 
-        setup()
+        setupSpatialWebView()
     }
 
-    private func setup() {
-        spatialWebViewModel.addStateListener { state in
-            print("state:", state)
-            if state == .didClose {
-                self.handleWindowClose()
+    private func setupSpatialWebView() {
+        spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self) { command, resolve, _ in
+            let sceneConfig = command.config
+            print("Scene::handleJSB", sceneConfig)
+            // find scene
+            if let targetScene = SpatialApp.Instance.getScene(self.id) {
+                let cfg = ScenePlainDefaultValues(defaultSize: sceneConfig.defaultSize, resizability: sceneConfig.resizability)
+                targetScene.open(cfg)
             }
+            resolve()
         }
-
-        spatialWebViewModel
-            .addJSBListener(UpdateSceneConfigCommand.self) { command, resolve, _ in
-                let sceneConfig = command.config
-                print("Scene::handleJSB", sceneConfig)
-                // find scene
-                if let targetScene = SpatialApp.getScene(self.id) {
-                    let cfg = WindowContainerPlainDefaultValues(sceneConfig)
-                    targetScene.open(cfg)
-                }
-                resolve()
-            }
 
         setupJSBListeners()
         setupWebViewStateListner()
@@ -100,7 +111,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
         // get config from url
-
         guard let components = URLComponents(string: url.absoluteString),
               let queryItems = components.queryItems
         else {
@@ -115,9 +125,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return nil
         }
 
-        let newScene = SpatialApp.createScene(decodedUrl)
+        let newScene = SpatialApp.Instance.createScene(decodedUrl, "plain", .idle)
         print("newScene url:", newScene.url)
-        newScene.setParent(self)
+        newScene.parent = self
 
         guard let encodedConfig = queryItems.first(where: { $0.name == "config" })?.value,
               let decodedConfig = encodedConfig.removingPercentEncoding
@@ -133,6 +143,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             //            return newScene.spatialWebViewModel
         }
 
+//        createScene(withOption)
+
         // has config
 
         let decoder = JSONDecoder()
@@ -142,13 +154,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return nil
         }
 
-        var config: WindowContainerOptions? = nil
+        var config: ScenePlainDefaultValues? = nil
 
         if decodedConfig == "undefined" || decodedConfig == "null" {
             config = nil
         } else {
             do {
-                config = try decoder.decode(WindowContainerOptions.self, from: configData)
+                config = try decoder.decode(ScenePlainDefaultValues.self, from: configData)
             } catch {
                 print("❌ config JSON decode fail: \(decodedConfig)")
                 return nil
@@ -159,13 +171,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         if let cfg = config {
             newScene.spatialWebViewModel.evaluateJS(js: "window._SceneHookOff=true;")
-            newScene.open(WindowContainerPlainDefaultValues(cfg))
+            let newSceneConfig = ScenePlainDefaultValues(
+                defaultSize: cfg.defaultSize,
+                resizability: cfg.resizability
+            )
+            newScene.open(newSceneConfig)
         } else {
             newScene.open()
-            // FIXME: to trigger load
-//            DispatchQueue.main.async {
-//                newScene.spatialWebViewModel.load(decodedUrl)
-//            }
         }
         return WebViewElementInfo(
             id: newScene.id,
@@ -179,15 +191,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         closeWindowData.send(getSceneData())
     }
 
-    func setParent(_ p: SpatialScene) {
-        parent = p
-    }
-
     private func moveToState(_ newState: SceneStateKind) {
         if canEnterState(state, newState) {
-            if state == .idle && newState == .pending {
+            if state == .idle, newState == .pending {
                 setLoading(true)
-            } else if state == .pending && newState == .configured {
+            } else if state == .pending, newState == .configured {
                 setLoading(false)
             }
 
@@ -205,10 +213,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             DispatchQueue.main.async {
 //                print("hehe",self.url)
                 self.spatialWebViewModel.load(self.url)
-                self.spatialWebViewModel.evaluateJS(js: "window._webSpatialID = '" + self.id + "'")
             }
         default:
-            let _ = 1
+            _ = 1
         }
     }
 
@@ -242,16 +249,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    func open(_ config: WindowContainerPlainDefaultValues? = nil) {
+    // TODO: determin later
+    func open(_ config: ScenePlainDefaultValues? = nil) {
         print("open", config, state)
         guard state == .idle || state == .pending else { return }
 
-        if state == .idle && config == nil {
+        if state == .idle, config == nil {
             moveToState(.pending)
             return
         }
 
-        if (state == .pending || state == .idle) && config != nil {
+        if state == .pending || state == .idle, config != nil {
             moveToState(.configured)
         }
 
@@ -262,7 +270,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         if let pScene = parent {
             // plain show
             if plainDefaultValues != nil {
-                WindowContainerMgr.Instance
+                SpatialApp.Instance
                     .updateWindowContainerPlainDefaultValues(
                         plainDefaultValues!
                     ) // set default values
@@ -314,6 +322,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         spatialWebViewModel.addScrollUpdateListener { _, point in
             self._scrollOffset.x = point.x
             self._scrollOffset.y = point.y
+        }
+
+        spatialWebViewModel.addStateListener(.didClose) {
+            self.handleWindowClose()
         }
     }
 

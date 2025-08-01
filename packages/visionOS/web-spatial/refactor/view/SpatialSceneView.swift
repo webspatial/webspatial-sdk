@@ -1,79 +1,10 @@
-
-import RealityKit
 import SwiftUI
 
-struct SpatialSceneView: View {
+struct SpatialSceneViewX: View {
     @State var sceneId: String
 
     var body: some View {
-        GeometryReader { proxy3D in
-            let width = proxy3D.size.width
-            let height = proxy3D.size.height
-
-            ZStack {
-                if let spatialScene = SpatialSceneManager.Instance.getScene(sceneId) {
-                    ZStack {
-                        let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
-
-                        ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                                Spatialized2DView()
-                            }
-                            .environment(child)
-                        }
-
-                        let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
-                        ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                                SpatializedStatic3DView()
-                            }
-                            .environment(child)
-                        }
-                    }
-
-                    // Display the main webview
-                    spatialScene.getView()
-                        .materialWithBorderCorner(
-                            spatialScene.backgroundMaterial,
-                            spatialScene.cornerRadius
-                        )
-                        .frame(width: width, height: height).padding3D(.front, -100_000)
-                }
-            }
-        }
+//        SceneHandlerUI(sceneId: sceneId)
+//        SpatialSceneRootWebView(sceneId: sceneId)
     }
 }
-
-struct PreviewSpatialScene: View {
-    var sceneId: String
-
-    init() {
-        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/", "Plain")
-        spatialScene.cornerRadius.bottomLeading = 130
-        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(.Spatialized2DElement)
-        spatialized2DElement.transform.translation.x = 200
-        spatialized2DElement.transform.translation.y = 200
-        spatialized2DElement.transform.translation.z = 200
-        spatialized2DElement.width = 200
-        spatialized2DElement.height = 200
-        let htmlString = """
-        <!DOCTYPE html>
-        <html>
-            <body>
-                hello world
-            </body>
-        </html>
-        """
-        spatialized2DElement.loadHtml(htmlString)
-        spatialized2DElement.setParent(spatialScene)
-        sceneId = spatialScene.id
-    }
-
-    var body: some View {
-        SpatialSceneView(sceneId: sceneId)
-    }
-}
-
-// #Preview("Test SpatialScene", windowStyle: .automatic) {
-//    PreviewSpatialScene()
-// }

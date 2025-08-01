@@ -1,20 +1,10 @@
-import {
-  hijackWindowATag,
-  hijackWindowOpen,
-  // SceneManager,
-} from './refactor/SceneManager'
-
-export * from './core/index'
-export { SpatialSession as SpatialSessionNew } from './refactor/SpatialSession'
+export { Spatial } from './refactor/Spatial'
+export { SpatialSession } from './refactor/SpatialSession'
 export { Spatialized2DElement } from './refactor/Spatialized2DElement'
 export { SpatializedStatic3DElement } from './refactor/SpatializedStatic3DElement'
-export { SpatialScene, type SpatialSceneOptions } from './refactor/SpatialScene'
-export {
-  defaultSceneConfig,
-  hijackWindowATag,
-  hijackWindowOpen,
-} from './refactor/SceneManager'
+export { SpatialScene } from './refactor/SpatialScene'
+export * from './refactor/types'
 
 // side effects
-hijackWindowOpen(window)
-hijackWindowATag(window)
+import { injectSceneHook } from './refactor/scene-polyfill'
+injectSceneHook()

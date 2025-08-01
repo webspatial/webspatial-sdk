@@ -16,7 +16,7 @@ struct PWAManager: Codable {
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "web+spatial", url: "./?cmd=%s")]
-    var mainScene: WindowContainerOptions = .init(
+    var mainScene: ScenePlainDefaultValues = .init(
         defaultSize: .init(
             width: 1280,
             height: 720

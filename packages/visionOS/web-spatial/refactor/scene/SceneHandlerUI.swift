@@ -5,41 +5,89 @@ struct SceneHandlerUI: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
+    @EnvironmentObject private var sceneDelegate: SceneDelegate
 
-    @Environment(SpatialScene.self) var scene: SpatialScene
+    @State var sceneId: String
 
     @Environment(\.scenePhase) private var scenePhase
 
-    var body: some View {
-        VStack {}
-            .onAppear()
-            .onReceive(scene.toggleImmersiveSpace) { v in
-                if v {
-                    Task {
-                        await openImmersiveSpace(id: "ImmersiveSpace")
-                    }
-                } else {
-                    Task {
-                        await dismissImmersiveSpace()
-                    }
-                }
-            }
-            .onReceive(scene.openWindowData) { wd in
-                let _ = openWindow(id: wd.windowStyle, value: wd)
-            }
-            .onReceive(scene.closeWindowData) { wd in
-                dismissWindow(id: wd.windowStyle, value: wd)
-            }
-            .onReceive(scene.setLoadingWindowData) { wd in
-                if wd.method == .show {
-                    openWindow(id: "loading")
-                } else if wd.method == .hide {
-                    dismissWindow(id: "loading")
-                }
-            }
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
 
-            .onChange(of: scenePhase) { oldValue, newValue in
-                logger.debug("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
-            }
+    private func setResizeRange(resizeRange: ResizeRange) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
+                    )
+                ) { error in
+                    print("error:", error)
+                }
+        }
+    }
+
+    var body: some View {
+        let scene = sceneId
+
+        if let scene = SpatialSceneManager.Instance.getScene(sceneId) {
+            VStack {}
+                .onAppear {
+                    let wd = WindowContainerMgr.Instance.getValue()
+                    if let range = wd.resizeRange {
+                        self.setResizeRange(resizeRange: range)
+                        if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                            self.setResizibility(resizingRestrictions: .none)
+                        } else {
+                            self.setResizibility(resizingRestrictions: .freeform)
+                        }
+                    }
+                }
+                .onDisappear {
+                    scene.destroy()
+                }
+                .onReceive(scene.toggleImmersiveSpace) { v in
+                    if v {
+                        Task {
+                            await openImmersiveSpace(id: "ImmersiveSpace")
+                        }
+                    } else {
+                        Task {
+                            await dismissImmersiveSpace()
+                        }
+                    }
+                }
+                .onReceive(scene.openWindowData) { wd in
+                    let _ = openWindow(id: wd.windowStyle, value: wd)
+                }
+                .onReceive(scene.closeWindowData) { wd in
+                    dismissWindow(id: wd.windowStyle, value: wd)
+                }
+                .onReceive(scene.setLoadingWindowData) { wd in
+                    if wd.method == .show {
+                        openWindow(id: "loading")
+                    } else if wd.method == .hide {
+                        dismissWindow(id: "loading")
+                    }
+                }
+
+                .onChange(of: scenePhase) { oldValue, newValue in
+                    logger.debug("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
+                }
+        }
     }
 }

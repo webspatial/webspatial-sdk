@@ -2,13 +2,14 @@ import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
-import { SpatialSceneOptions } from './SpatialScene'
+
 import {
   Spatialized2DElementProperties,
   SpatializedElementProperties,
   SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
   SpatialTransform,
+  SpatialSceneCreationOptions,
 } from './types'
 
 const platform = createPlatform()
@@ -39,10 +40,10 @@ export class UpdateSpatialSceneProperties extends JSBCommand {
 }
 
 export class UpdateSceneConfig extends JSBCommand {
-  config: SpatialSceneOptions
+  config: SpatialSceneCreationOptions
   commandType = 'UpdateSceneConfig'
 
-  constructor(config: SpatialSceneOptions) {
+  constructor(config: SpatialSceneCreationOptions) {
     super()
     this.config = config
   }
@@ -222,7 +223,7 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
 
   constructor(
     private url: string,
-    private config: SpatialSceneOptions | undefined,
+    private config: SpatialSceneCreationOptions | undefined,
   ) {
     super()
   }

@@ -1,6 +1,5 @@
 //@ts-ignore
 import { parseCornerRadius, getSession } from '@webspatial/react-sdk'
-import { injectSceneHook } from './injectSceneHook'
 
 const isWebSpatialEnv = getSession() !== null
 
@@ -203,7 +202,6 @@ export function spatialPolyfill() {
     return
   }
 
-  injectSceneHook()
   checkCSSProperties()
   hijackGetComputedStyle()
   hijackDocumentElementStyle()
