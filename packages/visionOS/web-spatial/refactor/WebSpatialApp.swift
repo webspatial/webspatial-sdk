@@ -11,23 +11,31 @@ import SwiftUI
 struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    @State var wgm = WindowContainerMgr.Instance
+
     var body: some Scene {
-        WindowGroup(id: "Plain", for: String.self) { $sceneId in
-            SpatialSceneView(sceneId: sceneId)
+        WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
+            SpatialSceneView(sceneId: windowData.sceneID)
         }
         defaultValue: {
-            let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/src/jsapi-test/")
-            spatialScene.cornerRadius.bottomLeading = 130
-            let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
-//            spatialized2DElement.transform.translation.x = 200
-//            spatialized2DElement.transform.translation.y = 200
-//            spatialized2DElement.transform.translation.z = 200
-//            spatialized2DElement.width = 200
-//            spatialized2DElement.height = 200
-//            spatialized2DElement.loadHtml()
-            spatialized2DElement.setParent(spatialScene)
-            spatialized2DElement.destroy()
-            return spatialScene.id
+            let startURL = "http://localhost:5173/src/jsapi-test/"
+            let scene = SpatialSceneManager.Instance.create(startURL, "Plain", .success)
+            let windowData = SceneData(
+                windowStyle: "Plain",
+                sceneID: scene.id
+            )
+
+            return windowData
+        }
+        .windowStyle(.plain)
+//        .defaultSize(
+//            wgm.getValue().defaultSize!
+//        ).windowResizability(
+//            wgm.getValue().windowResizability!
+//        )
+
+        WindowGroup(id: "loading") {
+            LoadingView()
         }
     }
 }

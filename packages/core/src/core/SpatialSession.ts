@@ -141,6 +141,7 @@ export class SpatialSession {
     var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     var opts = undefined
     if (options) {
+      // @ts-ignore
       opts = { modelURL: options.url }
     }
     let entity = await WebSpatial.createResource(
@@ -162,6 +163,7 @@ export class SpatialSession {
     var [parentWindowContainer, parentWindow] = _parseParentResources(options)
     var opts = undefined
     if (options) {
+      // @ts-ignore
       opts = { modelURL: options.url }
     }
     let entity = await WebSpatial.createResource(
