@@ -86,7 +86,7 @@ class JSBManager {
             action { result in
                 switch result {
                 case let .success(data):
-                    let resultData = data == nil ? "" : self.parseData(data!)
+                    let resultData = data == nil ? "\"\"" : self.parseData(data!)
                     let resultString = self.parseData(JsbReplyData(
                         success: true,
                         data: ""
