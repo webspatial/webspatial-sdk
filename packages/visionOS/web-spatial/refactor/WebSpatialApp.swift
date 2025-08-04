@@ -18,7 +18,7 @@ struct WebSpatialApp: App {
             SpatialSceneView(sceneId: windowData.sceneID)
         }
         defaultValue: {
-            let scene = SpatialSceneManager.Instance.create(
+            let scene = SpatialApp.Instance.createScene(
                 startURL,
                 "Plain",
                 .success

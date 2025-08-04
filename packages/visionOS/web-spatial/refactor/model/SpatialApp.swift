@@ -66,6 +66,8 @@ func decodeWindowResizability(_ windowResizability: String?) -> WindowResizabili
 
 @Observable
 class SpatialApp {
+    private var map = [String: SpatialScene]()
+    
     var name: String
     var scope: String
     var displayMode: PWADisplayMode
@@ -91,17 +93,13 @@ class SpatialApp {
     }
 
     func createScene(_ url: String, _ style: String, _ state: SpatialScene.SceneStateKind) -> SpatialScene {
-        let newScene = SpatialSceneManager.Instance.create(
-            url,
-            style,
-            state
-        )
-
-        return newScene
+        let scene = SpatialScene(url, style, state)
+        map[scene.id] = scene
+        return scene
     }
 
-    func getScene(_ name: String) -> SpatialScene? {
-        return SpatialSceneManager.Instance.getScene(name)
+    func getScene(_ id: String) -> SpatialScene? {
+        return map[id]
     }
 
     // TODO: inspect scene

@@ -10,7 +10,7 @@ struct SpatialSceneRootWebView: View {
             let height = proxy3D.size.height
 
             ZStack {
-                if let spatialScene = SpatialSceneManager.Instance.getScene(sceneId) {
+                if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
                     ZStack {
                         let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
 
@@ -43,7 +43,11 @@ struct PreviewSpatialScene: View {
     var sceneId: String
 
     init() {
-        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/", "Plain", .success)
+        let spatialScene = SpatialApp.Instance.createScene(
+            "http://localhost:5173/",
+            "Plain",
+            .success
+        )
         spatialScene.cornerRadius.bottomLeading = 130
         let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
         spatialized2DElement.transform.translation.x = 200

@@ -43,7 +43,7 @@ struct SceneHandlerUI: View {
 
     var body: some View {
 
-        if let scene = SpatialSceneManager.Instance.getScene(sceneId) {
+        if let scene = SpatialApp.Instance.getScene(sceneId) {
             VStack {}
                 .onAppear {
                     let wd = SpatialApp.Instance.getPlainSceneOptions()
