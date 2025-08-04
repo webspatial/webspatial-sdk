@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SceneHandlerUI: View {
+struct SceneHandlerUIView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
@@ -42,7 +42,6 @@ struct SceneHandlerUI: View {
     }
 
     var body: some View {
-
         if let scene = SpatialApp.Instance.getScene(sceneId) {
             VStack {}
                 .onAppear {
@@ -58,17 +57,6 @@ struct SceneHandlerUI: View {
                 }
                 .onDisappear {
                     scene.destroy()
-                }
-                .onReceive(scene.toggleImmersiveSpace) { v in
-                    if v {
-                        Task {
-                            await openImmersiveSpace(id: "ImmersiveSpace")
-                        }
-                    } else {
-                        Task {
-                            await dismissImmersiveSpace()
-                        }
-                    }
                 }
                 .onReceive(scene.openWindowData) { wd in
                     if let spatialScene = SpatialApp.Instance.getScene(wd.sceneID){

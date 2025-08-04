@@ -21,9 +21,10 @@ struct WebSpatialApp: App {
             let scene = SpatialApp.Instance.createScene(
                 startURL,
                 .plain,
-                .success
+                .visible,
+                app.getPlainSceneOptions()
             )
-            scene.spatialWebViewModel.load()
+            
             let windowData = SceneData(
                 sceneID: scene.id
             )

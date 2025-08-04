@@ -17,7 +17,6 @@ struct XPlainSceneOptions {
     var resizeRange: ResizeRange?
 }
 
-// support WindowContainerOptions => WindowContainerPlainDefaultValues
 extension XPlainSceneOptions {
     init(_ options: XSceneOptionsJSB) {
         defaultSize = CGSize(
@@ -37,18 +36,6 @@ extension XPlainSceneOptions {
     }
 }
 
-// incomming JSB data
-struct XSceneOptionsJSB: Codable {
-    // windowContainer
-    let defaultSize: Size?
-    struct Size: Codable {
-        var width: Double
-        var height: Double
-    }
-    
-    let resizability: ResizeRange?
-}
-
 func decodeWindowResizability(_ windowResizability: String?) -> WindowResizability {
     switch windowResizability {
         case "automatic":
@@ -62,17 +49,17 @@ func decodeWindowResizability(_ windowResizability: String?) -> WindowResizabili
     }
 }
 
-
-
-@Observable
 class SpatialApp {
-    private var map = [String: SpatialScene]()
+    private var scenes = [String: SpatialScene]()
     
     var name: String
     var scope: String
     var displayMode: PWADisplayMode
     var version: String
     var startURL: String
+    
+    // used to cache scene config
+    private var plainSceneOptions: XPlainSceneOptions
 
     static let Instance: SpatialApp = .init()
 
@@ -88,15 +75,21 @@ class SpatialApp {
         Logger.initLogger()
 
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
-
-        self.loadSceneOptionsFromPWAMainSceneCfg()
+        
+        plainSceneOptions = XPlainSceneOptions(from: pwaManager.mainScene);
     }
 
-    func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind) -> SpatialScene {
-        let scene = SpatialScene(url, style, state)
-        map[scene.id] = scene
+    func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: XPlainSceneOptions? = nil) -> SpatialScene {
+        let scene = SpatialScene(url, style, state, sceneOptions)
+        scenes[scene.id] = scene
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
+        
+        // hack code, need to resolve later by @fukang
+        DispatchQueue.main.async() {
+            scene.spatialWebViewModel.load()
+        }
+        
         return scene
     }
     
@@ -105,40 +98,52 @@ class SpatialApp {
         spatialObject
             .off(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
         
-        map.removeValue(forKey: spatialObject.id)
+        scenes.removeValue(forKey: spatialObject.id)
     }
 
     func getScene(_ id: String) -> SpatialScene? {
-        return map[id]
+        return scenes[id]
     }
 
-    // TODO: inspect scene
-    
-    private var plainSceneOptions: XPlainSceneOptions = .init(
-        defaultSize: CGSize(width: 1080, height: 720 + (pwaManager.display != .fullscreen ? NavView.navHeight : 0)),
-        windowResizability: .automatic,
-        resizeRange: nil
-    )
     
     func getPlainSceneOptions() -> XPlainSceneOptions {
         return plainSceneOptions
     }
     
-    private func loadSceneOptionsFromPWAMainSceneCfg() {
-        let cfg = XPlainSceneOptions(from: pwaManager.mainScene);
-        setPlainSceneOptions(cfg)
+    // used form window.open logic
+    public func openWindowGroup(_ targetSpatialScene: SpatialScene, _ sceneData: XPlainSceneOptions) {
+        if let activeScene = firstActiveScene {
+            // cache scene config
+            plainSceneOptions = sceneData
+                        
+            DispatchQueue.main.async() {
+                print(" openWindowData.send \(targetSpatialScene.id)")
+                activeScene.openWindowData.send(SceneData(sceneID: targetSpatialScene.id))
+                
+                targetSpatialScene.spatialWebViewModel.load()
+            }
+
+        }
     }
     
-    func setPlainSceneOptions(_ data: XPlainSceneOptions) {
-        if var newSize = data.defaultSize {
-            newSize.height += (pwaManager.display != .fullscreen ? NavView.navHeight : 0)
-            plainSceneOptions.defaultSize = newSize
+    // used form window.open logic with loading ui
+    public func openLoadingUI(_ open: Bool) {
+        let lwgdata = XLoadingViewData(
+            method: open ? .show : .hide,
+            windowStyle: nil
+        )
+        
+        if let activeScene = firstActiveScene {
+            activeScene.setLoadingWindowData.send(lwgdata)
         }
-        if let newResizability = data.windowResizability {
-            plainSceneOptions.windowResizability = newResizability
-        }
-        if let newResizeRange = data.resizeRange {
-            plainSceneOptions.resizeRange = newResizeRange
+    }
+    
+    private var firstActiveScene: SpatialScene? {
+        get {
+            let activeKV = scenes.first() { kv in
+                kv.value.state == .visible
+            }
+            return (activeKV?.value)
         }
     }
 }

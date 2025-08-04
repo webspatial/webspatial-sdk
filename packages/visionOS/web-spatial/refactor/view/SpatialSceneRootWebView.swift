@@ -3,70 +3,32 @@ import SwiftUI
 
 struct SpatialSceneRootWebView: View {
     @State var sceneId: String
-    
-    @State private var windowResizeInProgress = false
-    @State private var timer: Timer?
+    var width: Double
+    var height: Double
 
     var body: some View {
         GeometryReader { proxy3D in
-            let width = proxy3D.size.width
-            let height = proxy3D.size.height
-
             ZStack {
-                let x = proxy3D.size.width / 2
-                let y = proxy3D.size.height / 2
-                let width = proxy3D.size.width
-                let height = proxy3D.size.height
-                // FIXME: z is read from model entity
-                if windowResizeInProgress {
-                    VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
-                        .position(x: x, y: y)
-//                        .offset(z: z)
-                } else {
-                    if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
-                        ZStack {
-                            let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
-                            
-                            ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                                SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                                    Spatialized2DView()
-                                }
-                                .environment(child)
+                if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
+                    ZStack {
+                        let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
+
+                        ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
+                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                                Spatialized2DView()
                             }
+                            .environment(child)
                         }
-                        
-                        // Display the main webview
-                        spatialScene.getView()
-                            .materialWithBorderCorner(
-                                spatialScene.backgroundMaterial,
-                                spatialScene.cornerRadius
-                            )
-                            .frame(width: width, height: height)
-                            .padding3D(.front, -100_000)
-                            .onAppear(){
-                                spatialScene.spatialWebViewModel.load()
-                            }
                     }
-                }
-                
-            }.onChange(of: proxy3D.size) {
-                if let spatialScene = SpatialApp.Instance.getScene(sceneId){
-                    windowResizeInProgress = true
-                    if timer != nil {
-                        timer!.invalidate()
-                    }
-                    // If we don't detect resolution change after x seconds we treat the resize as complete
-                    timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
-                        windowResizeInProgress = false
-                    }
-                    
-                    // Trigger resize in the webview's body width and fire a window resize event to get the JS on the page to update state while dragging occurs
-                    spatialScene.spatialWebViewModel
-                        .evaluateJS(
-                            js: "var tempWidth_ = document.body.style.width;document.body.style.width='" + String(
-                                Float(proxy3D.size.width)
-                            ) + "px'; window.dispatchEvent(new Event('resize'));"
+
+                    // Display the main webview
+                    spatialScene.getView()
+                        .materialWithBorderCorner(
+                            spatialScene.backgroundMaterial,
+                            spatialScene.cornerRadius
                         )
+                        .frame(width: width, height: height)
+                        .padding3D(.front, -100_000)
                 }
             }
         }
@@ -80,7 +42,7 @@ struct PreviewSpatialScene: View {
         let spatialScene = SpatialApp.Instance.createScene(
             "http://localhost:5173/",
             .plain,
-            .success
+            .visible
         )
         spatialScene.cornerRadius.bottomLeading = 130
         let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
@@ -103,10 +65,6 @@ struct PreviewSpatialScene: View {
     }
 
     var body: some View {
-        SpatialSceneRootWebView(sceneId: sceneId)
+        SpatialSceneRootWebView(sceneId: sceneId, width: 500, height: 500)
     }
 }
-
-// #Preview("Test SpatialScene", windowStyle: .automatic) {
-//    PreviewSpatialScene()
-// }
