@@ -11,7 +11,7 @@ import SwiftUI
 struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    @State var wgm = WindowContainerMgr.Instance
+    @State var app = SpatialApp.Instance
 
     var body: some Scene {
         WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
@@ -33,9 +33,9 @@ struct WebSpatialApp: App {
         }
         .windowStyle(.plain)
         .defaultSize(
-            wgm.getValue().defaultSize!
+            app.getValue().defaultSize!
         ).windowResizability(
-            wgm.getValue().windowResizability!
+            app.getValue().windowResizability!
         )
 
         WindowGroup(id: "loading") {
