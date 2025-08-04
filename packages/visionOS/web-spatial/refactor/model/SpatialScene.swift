@@ -46,7 +46,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     var openWindowData = PassthroughSubject<SceneData, Never>()
     var closeWindowData = PassthroughSubject<SceneData, Never>()
 
-    var setLoadingWindowData = PassthroughSubject<XLoadingWindowContainerData, Never>()
+    var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
     var windowStyle = "Plain" // TODO: type
@@ -62,7 +62,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         return SceneData(windowStyle: windowStyle, sceneID: id)
     }
 
-    var plainDefaultValues: XWindowContainerPlainDefaultValues?
+    var plainDefaultValues: XPlainSceneOptions?
     // TODO: var volumeDefaultValues: WindowContainerVolumeDefaultValues
 
     enum SceneStateKind: String {
@@ -99,7 +99,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             print("Scene::handleJSB", sceneConfig)
             // find scene
             if let targetScene = SpatialApp.Instance.getScene(self.id) {
-                let cfg = XWindowContainerPlainDefaultValues(sceneConfig)
+                let cfg = XPlainSceneOptions(sceneConfig)
                 targetScene.open(cfg)
             }
             resolve()
@@ -154,13 +154,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return nil
         }
 
-        var config: XWindowContainerOptions? = nil
+        var config: XSceneOptionsJSB? = nil
 
         if decodedConfig == "undefined" || decodedConfig == "null" {
             config = nil
         } else {
             do {
-                config = try decoder.decode(XWindowContainerOptions.self, from: configData)
+                config = try decoder.decode(XSceneOptionsJSB.self, from: configData)
             } catch {
                 print("❌ config JSON decode fail: \(decodedConfig)")
                 return nil
@@ -171,7 +171,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         if let cfg = config {
             newScene.spatialWebViewModel.evaluateJS(js: "window._SceneHookOff=true;")
-            newScene.open(XWindowContainerPlainDefaultValues(cfg))
+            newScene.open(XPlainSceneOptions(cfg))
         } else {
             newScene.open()
         }
@@ -231,13 +231,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     private func setLoading(_ on: Bool) {
         if on {
-            let lwgdata = XLoadingWindowContainerData(
+            let lwgdata = XLoadingViewData(
                 method: .show,
                 windowStyle: nil
             )
             parent?.setLoadingWindowData.send(lwgdata)
         } else {
-            let lwgdata = XLoadingWindowContainerData(
+            let lwgdata = XLoadingViewData(
                 method: .hide,
                 windowStyle: nil
             )
@@ -246,7 +246,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     // TODO: determin later
-    func open(_ config: XWindowContainerPlainDefaultValues? = nil) {
+    func open(_ config: XPlainSceneOptions? = nil) {
         print("open", config, state)
         guard state == .idle || state == .pending else { return }
 
@@ -267,7 +267,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             // plain show
             if plainDefaultValues != nil {
                 SpatialApp.Instance
-                    .updateWindowContainerPlainDefaultValues(
+                    .setPlainSceneOptions(
                         plainDefaultValues!
                     ) // set default values
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

@@ -6,31 +6,39 @@ enum XLoadingMethod: String, Decodable, Encodable, Hashable {
     case hide
 }
 
-struct XLoadingWindowContainerData: Decodable, Hashable, Encodable {
+struct XLoadingViewData: Decodable, Hashable, Encodable {
     let method: XLoadingMethod
     let windowStyle: String?
 }
 
-struct XWindowContainerPlainDefaultValues {
+struct XPlainSceneOptions {
     var defaultSize: CGSize?
     var windowResizability: WindowResizability?
     var resizeRange: ResizeRange?
 }
 
 // support WindowContainerOptions => WindowContainerPlainDefaultValues
-extension XWindowContainerPlainDefaultValues {
-    init(_ options: XWindowContainerOptions) {
+extension XPlainSceneOptions {
+    init(_ options: XSceneOptionsJSB) {
         defaultSize = CGSize(
             width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
             height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
         )
-        windowResizability = XgetWindowResizability(nil)
+        windowResizability = decodeWindowResizability(nil)
+        resizeRange = options.resizability
+    }
+    init(from options: WindowContainerOptions) {
+        defaultSize = CGSize(
+            width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
+            height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
+        )
+        windowResizability = decodeWindowResizability(nil)
         resizeRange = options.resizability
     }
 }
 
 // incomming JSB data
-struct XWindowContainerOptions: Codable {
+struct XSceneOptionsJSB: Codable {
     // windowContainer
     let defaultSize: Size?
     struct Size: Codable {
@@ -41,7 +49,7 @@ struct XWindowContainerOptions: Codable {
     let resizability: ResizeRange?
 }
 
-func XgetWindowResizability(_ windowResizability: String?) -> WindowResizability {
+func decodeWindowResizability(_ windowResizability: String?) -> WindowResizability {
     switch windowResizability {
         case "automatic":
             return .automatic
@@ -54,9 +62,10 @@ func XgetWindowResizability(_ windowResizability: String?) -> WindowResizability
     }
 }
 
+
+
 @Observable
 class SpatialApp {
-    // TODO: read only
     var name: String
     var scope: String
     var displayMode: PWADisplayMode
@@ -78,7 +87,7 @@ class SpatialApp {
 
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
 
-//        setToMainSceneCfg()
+        self.loadSceneOptionsFromPWAMainSceneCfg()
     }
 
     func createScene(_ url: String, _ style: String, _ state: SpatialScene.SceneStateKind) -> SpatialScene {
@@ -97,32 +106,31 @@ class SpatialApp {
 
     // TODO: inspect scene
     
-    private var wgSetting: XWindowContainerPlainDefaultValues = .init(
+    private var plainSceneOptions: XPlainSceneOptions = .init(
         defaultSize: CGSize(width: 1080, height: 720 + (pwaManager.display != .fullscreen ? NavView.navHeight : 0)),
         windowResizability: .automatic,
         resizeRange: nil
     )
     
-    func getValue() -> XWindowContainerPlainDefaultValues {
-        return wgSetting
+    func getPlainSceneOptions() -> XPlainSceneOptions {
+        return plainSceneOptions
     }
     
-    func setToMainSceneCfg() {
-        //        if let cfg = memorizedMainSceneConfig != nil ? memorizedMainSceneConfig : WindowContainerPlainDefaultValues(pwaManager.mainScene) {
-        //            updateWindowContainerPlainDefaultValues(cfg)
-        //        }
+    private func loadSceneOptionsFromPWAMainSceneCfg() {
+        let cfg = XPlainSceneOptions(from: pwaManager.mainScene);
+        setPlainSceneOptions(cfg)
     }
     
-    func updateWindowContainerPlainDefaultValues(_ data: XWindowContainerPlainDefaultValues) {
+    func setPlainSceneOptions(_ data: XPlainSceneOptions) {
         if var newSize = data.defaultSize {
             newSize.height += (pwaManager.display != .fullscreen ? NavView.navHeight : 0)
-            wgSetting.defaultSize = newSize
+            plainSceneOptions.defaultSize = newSize
         }
         if let newResizability = data.windowResizability {
-            wgSetting.windowResizability = newResizability
+            plainSceneOptions.windowResizability = newResizability
         }
         if let newResizeRange = data.resizeRange {
-            wgSetting.resizeRange = newResizeRange
+            plainSceneOptions.resizeRange = newResizeRange
         }
     }
 }

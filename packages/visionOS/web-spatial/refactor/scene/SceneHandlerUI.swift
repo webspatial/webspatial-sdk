@@ -46,7 +46,7 @@ struct SceneHandlerUI: View {
         if let scene = SpatialSceneManager.Instance.getScene(sceneId) {
             VStack {}
                 .onAppear {
-                    let wd = WindowContainerMgr.Instance.getValue()
+                    let wd = SpatialApp.Instance.getPlainSceneOptions()
                     if let range = wd.resizeRange {
                         self.setResizeRange(resizeRange: range)
                         if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {

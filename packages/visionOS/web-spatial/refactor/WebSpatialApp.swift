@@ -33,9 +33,9 @@ struct WebSpatialApp: App {
         }
         .windowStyle(.plain)
         .defaultSize(
-            app.getValue().defaultSize!
+            app.getPlainSceneOptions().defaultSize!
         ).windowResizability(
-            app.getValue().windowResizability!
+            app.getPlainSceneOptions().windowResizability!
         )
 
         WindowGroup(id: "loading") {

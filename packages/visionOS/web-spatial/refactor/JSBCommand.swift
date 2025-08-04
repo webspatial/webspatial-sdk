@@ -84,8 +84,8 @@ struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
 
 class UpdateSceneConfigCommand: CommandDataProtocol {
     static let commandType = "UpdateSceneConfig"
-    let config: XWindowContainerOptions
-    init(_ data: XWindowContainerOptions) {
+    let config: XSceneOptionsJSB
+    init(_ data: XSceneOptionsJSB) {
         config = data
     }
 }
