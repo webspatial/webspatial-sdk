@@ -95,7 +95,17 @@ class SpatialApp {
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind) -> SpatialScene {
         let scene = SpatialScene(url, style, state)
         map[scene.id] = scene
+        scene
+            .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
         return scene
+    }
+    
+    private func onSceneDestroyed(_ object: Any, _ data: Any) {
+        let spatialObject = object as! SpatialObject
+        spatialObject
+            .off(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
+        
+        map.removeValue(forKey: spatialObject.id)
     }
 
     func getScene(_ id: String) -> SpatialScene? {
