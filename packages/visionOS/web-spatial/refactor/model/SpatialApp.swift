@@ -41,36 +41,4 @@ class SpatialApp {
     }
 
     // TODO: inspect scene
-
-    // move from WindowContainerMgr
-    private var memorizedMainSceneConfig: ScenePlainDefaultValues?
-
-//    private var wgSetting: ScenePlainDefaultValues = .init(
-//        defaultSize: CGSize(width: 1080, height: 720 + (pwaManager.display != .fullscreen ? NavView.navHeight : 0)),
-//        windowResizability: .automatic,
-//        resizeRange: nil
-//    )
-
-//    func getValue() -> ScenePlainDefaultValues {
-//        return wgSetting
-//    }
-
-//    private func setToMainSceneCfg() {
-//        if let cfg = memorizedMainSceneConfig != nil ? memorizedMainSceneConfig : WindowContainerPlainDefaultValues(pwaManager.mainScene) {
-//            updateWindowContainerPlainDefaultValues(cfg)
-//        }
-//    }
-
-    func updateWindowContainerPlainDefaultValues(_ data: ScenePlainDefaultValues) {
-//        if var newSize = data.defaultSize {
-//            newSize.height += (pwaManager.display != .fullscreen ? NavView.navHeight : 0)
-//            wgSetting.defaultSize = newSize
-//        }
-//        if let newResizability = data.windowResizability {
-//            wgSetting.windowResizability = newResizability
-//        }
-//        if let newResizeRange = data.resizeRange {
-//            wgSetting.resizeRange = newResizeRange
-//        }
-    }
 }

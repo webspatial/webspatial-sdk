@@ -42,7 +42,6 @@ struct SceneHandlerUI: View {
     }
 
     var body: some View {
-        let scene = sceneId
 
         if let scene = SpatialSceneManager.Instance.getScene(sceneId) {
             VStack {}

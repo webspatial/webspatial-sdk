@@ -1,7 +1,7 @@
 import RealityKit
 import SwiftUI
 
-struct SpatialSceneView: View {
+struct SpatialSceneRootWebView: View {
     @State var sceneId: String
 
     var body: some View {
@@ -28,7 +28,11 @@ struct SpatialSceneView: View {
                             spatialScene.backgroundMaterial,
                             spatialScene.cornerRadius
                         )
-                        .frame(width: width, height: height).padding3D(.front, -100_000)
+                        .frame(width: width, height: height)
+                        .padding3D(.front, -100_000)
+                        .onAppear(){
+                            spatialScene.spatialWebViewModel.load()
+                        }
                 }
             }
         }
@@ -61,7 +65,7 @@ struct PreviewSpatialScene: View {
     }
 
     var body: some View {
-//        SpatialSceneRootWebView(sceneId: sceneId)
+        SpatialSceneRootWebView(sceneId: sceneId)
     }
 }
 

@@ -18,8 +18,12 @@ struct WebSpatialApp: App {
             SpatialSceneView(sceneId: windowData.sceneID)
         }
         defaultValue: {
-            let startURL = "http://localhost:5173/src/jsapi-test/"
-            let scene = SpatialSceneManager.Instance.create(startURL, "Plain", .success)
+            let scene = SpatialSceneManager.Instance.create(
+                startURL,
+                "Plain",
+                .success
+            )
+            scene.spatialWebViewModel.load()
             let windowData = SceneData(
                 windowStyle: "Plain",
                 sceneID: scene.id
@@ -28,11 +32,11 @@ struct WebSpatialApp: App {
             return windowData
         }
         .windowStyle(.plain)
-//        .defaultSize(
-//            wgm.getValue().defaultSize!
-//        ).windowResizability(
-//            wgm.getValue().windowResizability!
-//        )
+        .defaultSize(
+            wgm.getValue().defaultSize!
+        ).windowResizability(
+            wgm.getValue().windowResizability!
+        )
 
         WindowGroup(id: "loading") {
             LoadingView()
