@@ -221,6 +221,9 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     private func onStateChangeInvoke(_ state: SpatialWebViewState) {
+        if state == .didMakeView && controller?.webview == nil {
+            load()
+        }
         for onStateChange in stateChangeListeners {
             onStateChange(state)
         }
