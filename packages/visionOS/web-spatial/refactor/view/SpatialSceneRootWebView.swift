@@ -45,7 +45,7 @@ struct PreviewSpatialScene: View {
     init() {
         let spatialScene = SpatialApp.Instance.createScene(
             "http://localhost:5173/",
-            "Plain",
+            .plain,
             .success
         )
         spatialScene.cornerRadius.bottomLeading = 130

@@ -71,10 +71,22 @@ struct SceneHandlerUI: View {
                     }
                 }
                 .onReceive(scene.openWindowData) { wd in
-                    let _ = openWindow(id: wd.windowStyle, value: wd)
+                    if let spatialScene = SpatialApp.Instance.getScene(wd.sceneID){
+                        let _ = openWindow(
+                            id: spatialScene.windowStyle.rawValue,
+                            value: wd
+                        )
+                    }
+                    
                 }
                 .onReceive(scene.closeWindowData) { wd in
-                    dismissWindow(id: wd.windowStyle, value: wd)
+                    if let spatialScene = SpatialApp.Instance.getScene(wd.sceneID){
+                        dismissWindow(
+                            id: spatialScene.windowStyle.rawValue,
+                            value: wd
+                        )
+                    }
+                    
                 }
                 .onReceive(scene.setLoadingWindowData) { wd in
                     if wd.method == .show {

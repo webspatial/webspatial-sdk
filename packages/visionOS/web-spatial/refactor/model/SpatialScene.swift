@@ -3,7 +3,6 @@ import Foundation
 import SwiftUI
 
 struct SceneData: Decodable, Hashable, Encodable {
-    let windowStyle: String
     let sceneID: String
 }
 
@@ -40,6 +39,14 @@ let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
+    // Enum
+    public enum WindowStyle: String, Codable, CaseIterable {
+        case plain    = "Plain"
+        case volume    = "Volume"
+        // Provide a default
+        public static let `default`: WindowStyle = .plain
+    }
+    
     // TOPIC begin
     var toggleImmersiveSpace = PassthroughSubject<Bool, Never>()
 
@@ -49,7 +56,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle = "Plain" // TODO: type
+    var windowStyle:WindowStyle = .default
 
     var spatialized2DElement = [String: Spatialized2DElement]() // id => ele
     var spatializedStatic3DElement = [String: SpatializedStatic3DElement]() // id => ele
@@ -59,7 +66,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     //    var wgd: SceneData // windowGroupData used to open/dismiss
 
     private func getSceneData() -> SceneData {
-        return SceneData(windowStyle: windowStyle, sceneID: id)
+        return SceneData(sceneID: id)
     }
 
     var plainDefaultValues: XPlainSceneOptions?
@@ -83,7 +90,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     var spatialWebViewModel: SpatialWebViewModel
 
-    init(_ url: String, _ windowStyle: String, _ state: SceneStateKind) {
+    init(_ url: String, _ windowStyle: WindowStyle, _ state: SceneStateKind) {
         self.windowStyle = windowStyle
         self.url = url
         self.state = state
@@ -125,7 +132,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             return nil
         }
 
-        let newScene = SpatialApp.Instance.createScene(decodedUrl, "Plain", .idle)
+        let newScene = SpatialApp.Instance.createScene(
+            decodedUrl,
+            .plain,
+            .idle
+        )
         print("newScene url:", newScene.url)
         newScene.parent = self
 
