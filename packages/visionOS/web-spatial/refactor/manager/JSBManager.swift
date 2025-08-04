@@ -4,10 +4,12 @@ protocol CommandDataProtocol: Codable {
     static var commandType: String { get }
 }
 
-struct JsbReplyData: Codable {
-    let success: Bool
+protocol ReplyDataProtocol: Codable {
+    static var dataType: String { get }
+}
+
+struct JsbErrorData: Codable {
     var code: ReplyCode?
-    var data: String?
     var message: String?
 }
 
@@ -58,7 +60,7 @@ class JSBManager {
         actionWithoutDataMap = [:]
     }
 
-    func handlerMessage(_ message: String, _ replyHandler: ((String?, String?) -> Void)? = nil) {
+    func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
         do {
             let jsbInfo = message.components(separatedBy: "::")
             let actionKey = jsbInfo[0]
@@ -70,31 +72,36 @@ class JSBManager {
                     handleAction(action: { callback in
                         action(data!, callback)
                     }, replyHandler: replyHandler)
+                } else {
+                    print("Invalid JSB!!!", message)
+                    replyHandler?(nil, "Invalid JSB!!! \(message)")
                 }
             } else {
                 if let action = actionWithoutDataMap[actionKey] {
                     handleAction(action: action, replyHandler: replyHandler)
+                } else {
+                    print("Invalid JSB!!!", message)
+                    replyHandler?(nil, "Invalid JSB!!! \(message)")
                 }
             }
         } catch {}
     }
 
     private func handleAction(action: @escaping (@escaping ResolveHandler<Codable>) -> Void,
-                              replyHandler: ((String?, String?) -> Void)?)
+                              replyHandler: ((Any?, String?) -> Void)?)
     {
         Task { @MainActor in
             action { result in
                 switch result {
                 case let .success(data):
-                    let resultData = data == nil ? "\"\"" : self.parseData(data!)
-                    let resultString = self.parseData(JsbReplyData(
-                        success: true,
-                        data: ""
-                    ))?.replacingOccurrences(of: "\"\"", with: resultData!)
-                    replyHandler?(resultString, nil)
+                    if data == nil {
+                        replyHandler?("", nil)
+                    } else {
+                        replyHandler?(try? data?.toDictionary() ?? "", nil)
+                    }
+
                 case let .failure(error):
-                    let resultString = self.parseData(JsbReplyData(
-                        success: false,
+                    let resultString = self.parseData(JsbErrorData(
                         code: error.code,
                         message: error.message
                     ))
@@ -128,5 +135,12 @@ class JSBManager {
             return jsonString!
         }
         return nil
+    }
+}
+
+extension Encodable {
+    func toDictionary() throws -> [String: Any] {
+        let data = try JSONEncoder().encode(self)
+        return try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String: Any]
     }
 }
