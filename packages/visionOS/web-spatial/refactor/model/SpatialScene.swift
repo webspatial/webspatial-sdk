@@ -101,16 +101,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupSpatialWebView() {
-        spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self) { command, resolve, _ in
-            let sceneConfig = command.config
-            print("Scene::handleJSB", sceneConfig)
-            // find scene
-            if let targetScene = SpatialApp.Instance.getScene(self.id) {
-                let cfg = XPlainSceneOptions(sceneConfig)
-                targetScene.open(cfg)
-            }
-            resolve()
-        }
+        
 
         setupJSBListeners()
         setupWebViewStateListner()
@@ -293,6 +284,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(InspectCommand.self, onInspect)
+        spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self, onUpdateSceneConfig)
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -390,6 +382,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatializedElement.modelURL = modelURL
         }
 
+        resolve(.success(baseReplyData))
+    }
+    
+    private func onUpdateSceneConfig(command: UpdateSceneConfigCommand, resolve: @escaping JSBManager.ResolveHandler<Codable>){
+        let sceneConfig = command.config
+        print("Scene::handleJSB", sceneConfig)
+        // find scene
+        if let targetScene = SpatialApp.Instance.getScene(self.id) {
+            let cfg = XPlainSceneOptions(sceneConfig)
+            targetScene.open(cfg)
+        }
         resolve(.success(baseReplyData))
     }
 
