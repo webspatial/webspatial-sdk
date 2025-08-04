@@ -86,10 +86,11 @@ class JSBManager {
             action { result in
                 switch result {
                 case let .success(data):
+                    let resultData = data == nil ? "" : self.parseData(data!)
                     let resultString = self.parseData(JsbReplyData(
                         success: true,
-                        data: (data as? String) ?? ""
-                    ))
+                        data: ""
+                    ))?.replacingOccurrences(of: "\"\"", with: resultData!)
                     replyHandler?(resultString, nil)
                 case let .failure(error):
                     let resultString = self.parseData(JsbReplyData(
