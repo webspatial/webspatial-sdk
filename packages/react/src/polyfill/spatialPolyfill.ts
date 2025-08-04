@@ -12,9 +12,10 @@ let htmlBackgroundMaterial = ''
 function setCurrentWindowStyle(backgroundMaterial: string) {
   if (backgroundMaterial !== htmlBackgroundMaterial) {
     const session = getSession()!
-    session.getCurrentWindowComponent().setStyle({
-      material: { type: backgroundMaterial as any },
-    })
+    // fixme:
+    // session.getCurrentWindowComponent().setStyle({
+    //   material: { type: backgroundMaterial as any },
+    // })
     htmlBackgroundMaterial = backgroundMaterial
   }
 }
@@ -51,9 +52,10 @@ function setCornerRadius(cornerRadius: any) {
   ) {
     const session = getSession()!
     if (!session) return
-    session.getCurrentWindowComponent().setStyle({
-      cornerRadius,
-    })
+    // fixme:
+    // session.getCurrentWindowComponent().setStyle({
+    //   cornerRadius,
+    // })
     htmlCornerRadius.topLeading = cornerRadius.topLeading
     htmlCornerRadius.bottomLeading = cornerRadius.bottomLeading
     htmlCornerRadius.topTrailing = cornerRadius.topTrailing
@@ -64,7 +66,8 @@ function setCornerRadius(cornerRadius: any) {
 function setOpacity(opacity: number) {
   const session = getSession()!
   if (!session) return
-  session.getCurrentWindowComponent().setOpacity(opacity)
+  // fixme:
+  // session.getCurrentWindowComponent().setOpacity(opacity)
 }
 
 function checkOpacity() {
@@ -76,9 +79,10 @@ function checkOpacity() {
 async function setHtmlVisible(visible: boolean) {
   const session = getSession()!
   if (!session) return
-  const wc = session.getCurrentWindowComponent()
-  const ent = await wc.getEntity()
-  ent?.setVisible(visible)
+  // fixme:
+  // const wc = session.getCurrentWindowComponent()
+  // const ent = await wc.getEntity()
+  // ent?.setVisible(visible)
 }
 
 function checkHtmlVisible() {

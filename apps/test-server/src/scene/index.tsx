@@ -9,11 +9,11 @@ const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
-  var session = new Spatial().requestSession()
-  session!.getCurrentWindowComponent().setStyle({
-    material: { type: 'translucent' },
-    cornerRadius: 50,
-  })
+  // var session = new Spatial().requestSession()
+  // session!.getCurrentWindowComponent().setStyle({
+  //   material: { type: 'translucent' },
+  //   cornerRadius: 50,
+  // })
 }
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
