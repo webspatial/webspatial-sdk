@@ -5,6 +5,14 @@ struct CustomReplyData: Codable {
     let name: String
 }
 
+struct AddSpatializedStatic3DElementReply: Codable {
+    let id: String
+}
+
+struct UpdateSpatializedStatic3DElementReply: Codable {
+    let id: String
+}
+
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
 @Observable
@@ -42,8 +50,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
+        spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
-            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
+            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(.Spatialized2DElement)
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
     }
@@ -66,6 +76,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+    }
+
+    private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+        let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
+        spatialObject.modelURL = command.modelURL
+
+        resolve(.success(AddSpatializedStatic3DElementReply(id: spatialObject.id)))
     }
 
     private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
@@ -226,6 +243,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         return typedChildren
     }
 
+    func getChildren() -> [String: SpatializedElement] {
+        return children
+    }
+
     /*
      * End Implement SpatializedElementContainer Protocol
      */
@@ -283,7 +304,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var spatialObjects = [String: SpatialObject]()
 
-    func createSpatializedElement<T: SpatializedElement>(type: SpatializedElementType) -> T {
+    func createSpatializedElement<T: SpatializedElement>(_ type: SpatializedElementType) -> T {
         let spatializedElement: T = switch type {
         case .Spatialized2DElement:
             Spatialized2DElement() as! T

@@ -21,6 +21,14 @@ struct SpatialSceneView: View {
                             }
                             .environment(child)
                         }
+
+                        let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
+                        ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
+                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                                SpatializedStatic3DView()
+                            }
+                            .environment(child)
+                        }
                     }
 
                     // Display the main webview
@@ -42,7 +50,7 @@ struct PreviewSpatialScene: View {
     init() {
         let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
         spatialScene.cornerRadius.bottomLeading = 130
-        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(.Spatialized2DElement)
         spatialized2DElement.transform.translation.x = 200
         spatialized2DElement.transform.translation.y = 200
         spatialized2DElement.transform.translation.z = 200

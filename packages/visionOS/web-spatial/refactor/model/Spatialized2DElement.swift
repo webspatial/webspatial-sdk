@@ -66,6 +66,10 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         children.removeValue(forKey: spatializedElement.id)
     }
 
+    func getChildren() -> [String: SpatializedElement] {
+        return children
+    }
+
     func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
         let typedChildren = children.filter {
             switch type {

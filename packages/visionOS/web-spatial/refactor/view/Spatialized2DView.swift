@@ -29,6 +29,14 @@ struct Spatialized2DView: View {
                         }
                         .environment(child)
                     }
+
+                    let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedStatic3DElement).values)
+                    ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
+                        SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
+                            SpatializedStatic3DView()
+                        }
+                        .environment(child)
+                    }
                 }
             }
 

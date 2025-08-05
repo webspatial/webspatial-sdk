@@ -19,14 +19,30 @@ struct SpatializedStatic3DView: View {
     @ViewBuilder
     var body: some View {
         if let url = URL(string: spatializedStatic3DElement.modelURL) {
-            Model3D(url: url) { phase in
-                switch phase {
-                case let .success(model):
-                    model.gesture(dragGesture)
-                case let .failure(error):
-                    Text("Failed to load: \(error.localizedDescription)")
-                default:
+            Model3D(url: url) { newPhase in
+                switch newPhase {
+                case .empty:
                     ProgressView()
+
+                case let .success(resolvedModel3D):
+                    resolvedModel3D
+                        .resizable(true)
+                        .aspectRatio(
+                            nil,
+                            contentMode: .fit
+                        )
+                        .onAppear {
+//                            self.onLoadSuccess()
+                        }
+
+                case .failure:
+                    //                            use UIView.onAppear to notify error phase.
+                    Text("").onAppear {
+//                        self.onLoadFailure(error.localizedDescription)
+                    }
+
+                @unknown default:
+                    EmptyView()
                 }
             }
         } else {

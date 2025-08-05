@@ -1,4 +1,8 @@
-import { Spatial, Spatialized2DElement } from '@webspatial/core-sdk'
+import {
+  Spatial,
+  Spatialized2DElement,
+  SpatializedStatic3DElement,
+} from '@webspatial/core-sdk'
 
 const spatial = new Spatial()
 const session = spatial.requestNewSession()
@@ -91,5 +95,42 @@ export async function testCreateSpatialized2DElement() {
     //   '#ffffff00'
 
     //  (window as any).spatialized2DElement = spatialized2DElement
+
+    return spatialized2DElement
+  }
+}
+
+export async function testCreateSpatializedStatic3DElement(
+  parent: Spatialized2DElement | null = null,
+) {
+  if (session) {
+    const spatialObject: SpatializedStatic3DElement =
+      await session.createSpatializedStatic3DElement()
+
+    await spatialObject.updateProperties({
+      width: 150,
+      height: 150,
+      rotationAnchor: {
+        x: 1,
+        y: 2,
+        z: 0.5,
+      },
+      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+    })
+
+    await spatialObject.updateTransform({
+      position: {
+        x: 150,
+        y: 150,
+        z: 10,
+      },
+    })
+
+    if (parent) {
+      parent.addSpatializedElement(spatialObject)
+    } else {
+      const spatialScene = session.getSpatialScene()
+      await spatialScene.addSpatializedElement(spatialObject)
+    }
   }
 }
