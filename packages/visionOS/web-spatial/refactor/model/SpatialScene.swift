@@ -20,7 +20,6 @@ struct ResizeRange: Codable {
     var maxWidth: Double?
     var maxHeight: Double?
 }
-}
 struct UpdateSpatializedStatic3DElementReply: Codable {
     let id: String
 }
@@ -231,7 +230,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         if host == "createSpatialScene" {
             return self.handleWindowOpenCustom(url)
         } else {
-            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(type: .Spatialized2DElement)
+            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(
+                .Spatialized2DElement
+            )
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
         
@@ -294,7 +295,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
     
-    private func onUpdateSceneConfig(command: UpdateSceneConfigCommand, resolve: @escaping JSBManager.ResolveHandler<Codable>){
+    private func onUpdateSceneConfig(command: UpdateSceneConfigCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         let sceneConfigJSBData = command.config
         print("onUpdateSceneConfig \(command.config)")
         

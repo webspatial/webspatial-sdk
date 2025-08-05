@@ -45,7 +45,9 @@ struct PreviewSpatialScene: View {
             .visible
         )
         spatialScene.cornerRadius.bottomLeading = 130
-        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(type: .Spatialized2DElement)
+        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(
+            .Spatialized2DElement
+        )
         spatialized2DElement.transform.translation.x = 200
         spatialized2DElement.transform.translation.y = 200
         spatialized2DElement.transform.translation.z = 200
