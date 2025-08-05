@@ -1,0 +1,207 @@
+import SwiftUI
+import WebKit
+
+struct SpatialNavView: View {
+    static let navHeight: CGFloat = 60
+    static let minWidth: CGFloat = 400
+    var spatialScene: SpatialScene
+    var model:SpatialWebViewModel? {
+        get {
+            return spatialScene.spatialWebViewModel
+        }
+    }
+    var url: String {
+        get {
+            return spatialScene.url
+        }
+    }
+    @State var navWidth: CGFloat = 0
+    @State private var showCopyTip = false
+    @State private var contentHeight: CGFloat = 60
+    @State private var texWidth: CGFloat = 0
+    @State private var firstGetSize: Bool = true
+    @State private var timer: Timer?
+    @State private var timeRemaining = 5
+    @State private var showEnter: Double = 1
+    @State private var showNav: Double = 0
+    @State private var showUrl: Double = 0
+    @Namespace var hoverNamespace
+    
+    func checkButtonState(){
+        canGoBack = model!.getController().webview!.canGoBack
+        canGoForward = model!.getController().webview!.canGoForward
+    }
+    
+    func goBack() {
+        model?.getController().webview?.goBack()
+    }
+    
+    func goForward() {
+        model?.getController().webview?.goForward()
+    }
+    
+    func reload() {
+        model?.getController().webview?.reload()
+    }
+    
+    func navigateToURL(url: URL) {
+        model?.load(url.absoluteString)
+    }
+    
+    func getURL() -> URL? {
+        return model?.getController().webview?.url
+    }
+    
+    @State var canGoBack: Bool = false
+    
+    @State var canGoForward: Bool = false
+    
+    var navHoverGroup: HoverEffectGroup {
+        HoverEffectGroup(hoverNamespace)
+    }
+
+    var body: some View {
+        ZStack {
+            ZStack {
+                HStack(spacing: 10) {
+                    Image("logo").resizable().frame(width: 32, height: 32)
+                        .cornerRadius(100)
+                    if pwaManager.display == .minimal {
+                        NavButton(
+                            action: { self.goBack()
+                            },
+                            children: Image("arrow_left"),
+                            clearBackGround: true)
+                        .disabled(!(self.canGoBack))
+                        NavButton(
+                            action: { self.goForward()
+                            },
+                            children: Image("arrow_right"),
+                            clearBackGround: true)
+                        .disabled(!(self.canGoBack))
+                        NavButton(action: { self.reload() }, children: Image("refresh"), clearBackGround: true)
+                        NavDivider()
+                    }
+                    NavButton(action: { print("click"); withAnimation(.easeInOut(duration: 0.5)) { showNav = 1.0; showEnter = 0 } }, children: Image("more"), clearBackGround: true)
+                }
+                .padding(12)
+                .background(Color(hex: "#161616E5"))
+                .hoverEffect(in: navHoverGroup) { effect, isActive, _ in
+                    effect.opacity((isActive && showNav == 0 && showUrl == 0) ? 1 : 0)
+                }
+                Image("nav").resizable().frame(width: 32, height: 32).hoverEffect(.highlight).hoverEffect(in: navHoverGroup) { effect, isActive, _ in
+                    effect.opacity((isActive && showNav == 0 && showUrl == 0) ? 0 : 1)
+                }
+            }
+            .frame(height: contentHeight)
+            .cornerRadius(100)
+            .opacity(showEnter)
+            HStack(spacing: 14) {
+                if pwaManager.display == .minimal {
+                    NavButton(
+                        action: { self.goBack()
+                        },
+                        children: Image("arrow_left"))
+                    .disabled(!(self.canGoBack))
+                    NavButton(
+                        action: { self.goForward()
+                        },
+                        children: Image("arrow_right"))
+                    .disabled(!(self.canGoBack))
+                    NavButton(action: { self.reload() }, children: Image("refresh"))
+                    NavDivider()
+                }
+                NavButton(action: { self.navigateToURL(url: URL(string: pwaManager.start_url)!) }, children: Image("home"))
+                NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = 1; showNav = 0 } }, children: Image("link"))
+                NavButton(action: { showNav = 0; showEnter = 1 }, children: Image("back"))
+            }
+            .padding(12)
+            .background(Color(hex: "#161616E5"))
+            .cornerRadius(100)
+            .opacity(showNav)
+            .onChange(of: showNav) { _, newValue in
+                if newValue == 1 {
+                    startTimer()
+                } else {
+                    stopTimer()
+                }
+            }
+            HStack(spacing: 6) {
+                Text(
+                    url.count > 0 ? url : (
+                        self.getURL()?.absoluteString ?? ""
+                    )
+                )
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .frame(minWidth: 200)
+                    .frame(maxWidth: 500)
+                    .frame(height: 44)
+                    .background(.black)
+                    .cornerRadius(100)
+                NavButton(action: {
+                    UIPasteboard.general.string = self.getURL()?.absoluteString ?? ""
+                    showCopyTip = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showCopyTip = false
+                    }
+                    withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
+                }, children: Image("copy"))
+                NavButton(
+action: {
+                    print("open browser")
+                    UIApplication.shared
+        .open(
+            URL(
+                string: url.count > 0 ? url : (
+                    self.getURL()?.absoluteString ?? ""
+                )
+            )!,
+            options: [:],
+            completionHandler: nil
+        )
+                    withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
+                },
+ children: Image("browser"))
+                NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 } }, children: Image("close"))
+            }
+            .popover(isPresented: $showCopyTip) {
+                Text("copied！")
+                    .padding()
+                    .background(Color(hex: "#161616E5"))
+                    .cornerRadius(10)
+            }
+            .padding(8)
+            .background(Color(hex: "#161616E5"))
+            .cornerRadius(100)
+            .opacity(showUrl)
+        }
+        .onAppear(){
+            model?.addStateListener(.didFinishLoad){
+                self.checkButtonState()
+            }
+        }
+    }
+
+    private func startTimer() {
+        timeRemaining = 5
+        timer = Timer.scheduledTimer(
+            withTimeInterval: 1,
+            repeats: true
+        ) { _ in
+            timeRemaining -= 1
+
+            if timeRemaining <= 0 {
+                showNav = 0
+                showEnter = 1
+                stopTimer()
+            }
+        }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+}
