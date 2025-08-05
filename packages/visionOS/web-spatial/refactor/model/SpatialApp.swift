@@ -52,11 +52,12 @@ func decodeWindowResizability(_ windowResizability: String?) -> WindowResizabili
 class SpatialApp {
     private var scenes = [String: SpatialScene]()
     
-    var name: String
-    var scope: String
-    var displayMode: PWADisplayMode
-    var version: String
-    var startURL: String
+    // delegate properties to pwaManager
+    var name: String { pwaManager.name }
+    var scope: String { pwaManager.scope }
+    var displayMode: PWADisplayMode { pwaManager.display }
+    var version: String { pwaManager.getVersion() }
+    var startURL: String { pwaManager.start_url }
     
     // used to cache scene config
     private var plainSceneOptions: XPlainSceneOptions
@@ -66,17 +67,12 @@ class SpatialApp {
     init() {
         // init pwa manager
         pwaManager._init()
-        name = pwaManager.name
-        scope = pwaManager.scope
-        displayMode = pwaManager.display
-        version = pwaManager.getVersion()
-        startURL = pwaManager.start_url
 
         Logger.initLogger()
 
-        logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
-        
         plainSceneOptions = XPlainSceneOptions(from: pwaManager.mainScene);
+        
+        logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
     }
 
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: XPlainSceneOptions? = nil) -> SpatialScene {
