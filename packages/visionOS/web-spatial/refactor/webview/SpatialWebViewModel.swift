@@ -48,8 +48,10 @@ class SpatialWebViewModel: SpatialObject {
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
-        controller?.webview!.load(URLRequest(url: URL(string: url)!))
-        controller?.startObserving()
+        if url.count > 0 {
+            controller?.webview!.load(URLRequest(url: URL(string: url)!))
+            controller?.startObserving()
+        }
     }
 
     func loadHTML(_ htmlText: String) {
@@ -221,7 +223,7 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     private func onStateChangeInvoke(_ state: SpatialWebViewState) {
-        if state == .didMakeView && controller?.webview == nil {
+        if state == .didMakeView, controller?.webview == nil {
             load()
         }
         for onStateChange in stateChangeListeners {
