@@ -246,9 +246,17 @@ class SpatialWebViewModel: SpatialObject {
         view = nil
     }
 
-    func evaluateJS(js: String) {
-        controller?.callJS(js)
+    func sendWebEvent<T: Codable>(id: String, data: T) {
+        let encoder = JSONEncoder()
+        if let jsonData = try? encoder.encode(data) {
+            let dataString = String(data: jsonData, encoding: .utf8)
+            controller?.callJS("window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
+        }
     }
+
+//    func evaluateJS(js: String) {
+//        controller?.callJS(js)
+//    }
 }
 
 enum SpatialWebViewState: String, CaseIterable {
