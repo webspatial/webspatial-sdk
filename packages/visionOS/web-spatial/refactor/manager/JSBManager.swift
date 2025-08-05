@@ -13,13 +13,13 @@ struct JsbErrorData: Encodable {
     var message: String?
 }
 
-enum ReplyCode: Codable {
+enum ReplyCode: Encodable {
     case TypeError
     case CommandError
     case InvalidSpatialObject
 }
 
-struct JsbError: Error, Codable {
+struct JsbError: Error, Encodable {
     let code: ReplyCode
     let message: String
 }
