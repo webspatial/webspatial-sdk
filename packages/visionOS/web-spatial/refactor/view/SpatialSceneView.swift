@@ -28,7 +28,7 @@ struct SpatialSceneView: View {
                 VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
                     .position(x: x, y: y)
             } else {
-                SpatialSceneRootWebView(sceneId: sceneId, width: width, height: height)
+                SpatialSceneContentView(sceneId: sceneId, width: width, height: height)
             }
         }
     }

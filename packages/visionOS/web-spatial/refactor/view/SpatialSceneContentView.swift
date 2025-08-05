@@ -1,7 +1,7 @@
 import RealityKit
 import SwiftUI
 
-struct SpatialSceneRootWebView: View {
+struct SpatialSceneContentView: View {
     @State var sceneId: String
     var width: Double
     var height: Double
@@ -89,7 +89,7 @@ struct SpatialSceneRootWebView: View {
         }
         
         var body: some View {
-            SpatialSceneRootWebView(sceneId: sceneId, width: 500, height: 500)
+            SpatialSceneContentView(sceneId: sceneId, width: 500, height: 500)
         }
     }
 }
