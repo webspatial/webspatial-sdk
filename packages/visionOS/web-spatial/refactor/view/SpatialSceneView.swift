@@ -1,79 +1,35 @@
-
-import RealityKit
 import SwiftUI
 
 struct SpatialSceneView: View {
-    @State var sceneId: String
+    var sceneId: String
+    @State private var windowResizeInProgress = false
+    @State private var timer: Timer?
 
     var body: some View {
         GeometryReader { proxy3D in
             let width = proxy3D.size.width
             let height = proxy3D.size.height
 
-            ZStack {
-                if let spatialScene = SpatialSceneManager.Instance.getScene(sceneId) {
-                    ZStack {
-                        let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
-
-                        ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                                Spatialized2DView()
-                            }
-                            .environment(child)
-                        }
-
-                        let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
-                        ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                            SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                                SpatializedStatic3DView()
-                            }
-                            .environment(child)
-                        }
-                    }
-
-                    // Display the main webview
-                    spatialScene.getView()
-                        .materialWithBorderCorner(
-                            spatialScene.backgroundMaterial,
-                            spatialScene.cornerRadius
-                        )
-                        .frame(width: width, height: height).padding3D(.front, -100_000)
+            SceneHandlerUIView(sceneId: sceneId).onChange(of: proxy3D.size) {
+                windowResizeInProgress = true
+                if timer != nil {
+                    timer!.invalidate()
                 }
+                // If we don't detect resolution change after x seconds we treat the resize as complete
+                timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
+                    windowResizeInProgress = false
+                    timer = nil
+                }
+            }
+
+            if windowResizeInProgress {
+                let x = width / 2
+                let y = height / 2
+                VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
+                    .position(x: x, y: y)
+            } else {
+                SpatialSceneRootWebView(sceneId: sceneId, width: width, height: height)
             }
         }
     }
 }
-
-struct PreviewSpatialScene: View {
-    var sceneId: String
-
-    init() {
-        let spatialScene = SpatialSceneManager.Instance.create("http://localhost:5173/")
-        spatialScene.cornerRadius.bottomLeading = 130
-        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(.Spatialized2DElement)
-        spatialized2DElement.transform.translation.x = 200
-        spatialized2DElement.transform.translation.y = 200
-        spatialized2DElement.transform.translation.z = 200
-        spatialized2DElement.width = 200
-        spatialized2DElement.height = 200
-        let htmlString = """
-        <!DOCTYPE html>
-        <html>
-            <body>
-                hello world
-            </body>
-        </html>
-        """
-        spatialized2DElement.loadHtml(htmlString)
-        spatialized2DElement.setParent(spatialScene)
-        sceneId = spatialScene.id
-    }
-
-    var body: some View {
-        SpatialSceneView(sceneId: sceneId)
-    }
-}
-
-// #Preview("Test SpatialScene", windowStyle: .automatic) {
-//    PreviewSpatialScene()
-// }

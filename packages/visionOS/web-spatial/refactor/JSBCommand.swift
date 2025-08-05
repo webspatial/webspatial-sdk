@@ -81,3 +81,22 @@ struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
     let id: String
     let spatializedElementId: String
 }
+
+// incomming JSB data
+struct XSceneOptionsJSB: Codable {
+    let defaultSize: Size?
+    struct Size: Codable {
+        var width: Double
+        var height: Double
+    }
+    
+    let resizability: ResizeRange?
+}
+
+struct UpdateSceneConfigCommand: CommandDataProtocol {
+    static let commandType = "UpdateSceneConfig"
+    let config: XSceneOptionsJSB
+    init(_ data: XSceneOptionsJSB) {
+        config = data
+    }
+}

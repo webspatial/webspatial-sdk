@@ -2,18 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
-window.xrCurrentSceneDefaults = async () => {
-  await new Promise<void>((resolve, _) => {
-    setTimeout(resolve, 2000)
-  })
-
-  return {
-    defaultSize: {
-      width: 900,
-      height: 900,
-    },
-  }
-}
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -21,7 +9,7 @@ const spatial = new Spatial()
 const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
-  var session = new Spatial().requestSession()
+  // var session = new Spatial().requestSession()
   // session!.getCurrentWindowComponent().setStyle({
   //   material: { type: 'translucent' },
   //   cornerRadius: 50,
@@ -68,7 +56,165 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
+      <h1 className="text-2xl text-black">basic open</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          window.open('http://localhost:5173/src/scene/index.html')
+        }}
+      >
+        open
+      </button>
+      <h1 className="text-2xl text-black">resize</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              minWidth: 700,
+              minHeight: 700,
+              // maxWidth: 900,
+              // maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable 700-
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              minWidth: 700,
+              minHeight: 700,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable 700-900
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              // minWidth: 700,
+              // minHeight: 700,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open resizable -900
+      </button>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              minWidth: 900,
+              minHeight: 900,
+              maxWidth: 900,
+              maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/xrapp.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open fixed size
+      </button>
+
+      <h1 className="text-2xl text-black">a tag</h1>
+      <a className={btnCls} href={`http://localhost:5173/src/scene/hook.html`}>
+        open in place
+      </a>
+      <a
+        className={btnCls}
+        href={`http://localhost:5173/src/scene/hook.html`}
+        target="_blank"
+      >
+        open _blank
+      </a>
+      <a
+        className={btnCls}
+        href={`http://localhost:5173/src/scene/hook.html`}
+        target="_blank"
+        onClick={e => {
+          console.log('click on', e)
+        }}
+      >
+        open _blank with onClick
+      </a>
       <h1 className="text-2xl text-black">openscene</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open no name')
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/loading.html',
+            // 'http://localhost:5173/src/scene/xrapp.html',
+          )
+        }}
+      >
+        open loading
+      </button>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open no name')
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/hook.html',
+            // 'http://localhost:5173/src/scene/xrapp.html',
+          )
+        }}
+      >
+        open hook
+      </button>
 
       <button
         className={btnCls}
@@ -89,7 +235,7 @@ function App() {
           initScene('sa', () => ({
             defaultSize: {
               width: 900,
-              height: 500,
+              height: 900,
             },
           }))
           winARef.current = window.open(
@@ -101,6 +247,7 @@ function App() {
       >
         window.open with initScene
       </button>
+
       <button
         className={btnCls}
         onClick={async () => {
@@ -188,6 +335,16 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
+          startlog('navigate to google')
+          location.href = extUrl
+        }}
+      >
+        navigate to google
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
           startlog('open')
           winARef.current = window.open(
             'http://localhost:5173/src/scene/xrapp.html',
@@ -203,6 +360,33 @@ function App() {
       </button>
 
       <h1 className="text-2xl text-black">close scene by local</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('close self')
+          try {
+            window.close()
+          } catch (error: any) {
+            log(error.message)
+          }
+        }}
+      >
+        close self
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('close parent')
+          try {
+            window.opener?.close()
+          } catch (error: any) {
+            log(error.message)
+          }
+        }}
+      >
+        close parent
+      </button>
 
       <button
         className={btnCls}

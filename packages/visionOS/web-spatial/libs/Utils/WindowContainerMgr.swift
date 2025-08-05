@@ -3,13 +3,6 @@ import SwiftUI
 import UIKit
 
 // TODO: maybe get input from pwa manifest
-let defaultWindowContainerConfig = WindowContainerOptions(
-    defaultSize: WindowContainerOptions.Size(
-        width: DefaultPlainWindowContainerSize.width,
-        height: DefaultPlainWindowContainerSize.height
-    ),
-    resizability: nil
-)
 
 struct WindowContainerData: Decodable, Hashable, Encodable {
     let windowStyle: String
@@ -48,13 +41,6 @@ extension WindowContainerPlainDefaultValues {
     }
 }
 
-struct ResizeRange: Codable {
-    var minWidth: Double?
-    var minHeight: Double?
-    var maxWidth: Double?
-    var maxHeight: Double?
-}
-
 // incomming JSB data
 struct WindowContainerOptions: Codable {
     // windowContainer
@@ -85,7 +71,7 @@ class WindowContainerMgr: ObservableObject {
     static let Instance = WindowContainerMgr()
 
     // cache for dynamic loading scene reopen
-    var memorizedMainSceneConfig: WindowContainerPlainDefaultValues? = nil
+    var memorizedMainSceneConfig: WindowContainerPlainDefaultValues?
 
     private init() {
         setToMainSceneCfg()
@@ -102,9 +88,9 @@ class WindowContainerMgr: ObservableObject {
     }
 
     func setToMainSceneCfg() {
-        if let cfg = memorizedMainSceneConfig != nil ? memorizedMainSceneConfig : WindowContainerPlainDefaultValues(pwaManager.mainScene) {
-            updateWindowContainerPlainDefaultValues(cfg)
-        }
+//        if let cfg = memorizedMainSceneConfig != nil ? memorizedMainSceneConfig : WindowContainerPlainDefaultValues(pwaManager.mainScene) {
+//            updateWindowContainerPlainDefaultValues(cfg)
+//        }
     }
 
     func updateWindowContainerPlainDefaultValues(_ data: WindowContainerPlainDefaultValues) {

@@ -5,7 +5,7 @@ import {
 } from '@webspatial/core-sdk'
 
 const spatial = new Spatial()
-const session = spatial.requestNewSession()
+const session = spatial.requestSession()
 console.log('session', session)
 
 export function testSpatialSceneCorner() {

@@ -79,3 +79,55 @@ export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
 }
+
+export interface SpatialSceneCreationOptions {
+  defaultSize?: {
+    width: number // Initial width of the window
+    height: number // Initial height of the window
+  }
+
+  resizability?: {
+    minWidth?: number
+    minHeight?: number
+    maxWidth?: number
+    maxHeight?: number
+  }
+}
+
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: SpatialSceneCreationOptions,
+    ) => Promise<SpatialSceneCreationOptions>
+
+    // Location for webspatial custom functions
+    __WebSpatialData: {
+      androidNativeMessage: Function
+      getNativeVersion: Function
+    }
+
+    // Location for webspatial internal callbacks (eg. completion events)
+    __SpatialWebEvent: Function
+
+    // Used to access webkit specific api
+    webkit: any
+
+    // Marks the page as unloaded so it doesn't send additional events
+    __WebSpatialUnloaded: boolean
+
+    // Internal id information mapping to internal state about the native window
+    _webSpatialID: string
+    _webSpatialGroupID: string
+    _webSpatialParentGroupID: string
+
+    // Will be removed in favor of __WebSpatialData
+    WebSpatailNativeVersion: string
+
+    __webspatialsdk__?: {
+      XR_ENV?: string
+      'natvie-version'?: string
+      'react-sdk-version'?: string
+      'core-sdk-version'?: string
+    }
+  }
+}

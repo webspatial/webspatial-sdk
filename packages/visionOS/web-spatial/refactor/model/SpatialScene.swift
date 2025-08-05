@@ -1,4 +1,10 @@
+import Combine
 import Foundation
+import SwiftUI
+
+struct SceneData: Decodable, Hashable, Encodable {
+    let sceneID: String
+}
 
 struct CustomReplyData: Codable {
     let type: String
@@ -7,33 +13,185 @@ struct CustomReplyData: Codable {
 
 struct AddSpatializedStatic3DElementReply: Codable {
     let id: String
+}  
+struct ResizeRange: Codable {
+    var minWidth: Double?
+    var minHeight: Double?
+    var maxWidth: Double?
+    var maxHeight: Double?
 }
-
 struct UpdateSpatializedStatic3DElementReply: Codable {
     let id: String
 }
 
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
-    override init(_ url: String) {
+    // Enum
+    public enum WindowStyle: String, Codable, CaseIterable {
+        case plain    = "Plain"
+        case volume    = "Volume"
+    }
+    
+    // TOPIC begin
+    var openWindowData = PassthroughSubject<SceneData, Never>()
+    var closeWindowData = PassthroughSubject<SceneData, Never>()
+
+    var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
+
+    var url: String = "" // start_url
+    var windowStyle:WindowStyle = .plain
+
+    
+    private func getSceneData() -> SceneData {
+        return SceneData(sceneID: id)
+    }
+
+    enum SceneStateKind: String {
+        // default value
+        case idle
+        // when SpatialScene is loading
+        case pending
+        // when SpatialScen will visible after some time
+        case willVisible
+        // when SpatialScen load Succesfully
+        case visible
+        // when SpatialScen Failed to load
+        case fail
+    }
+
+    var state: SceneStateKind = .idle
+
+    // TOPIC end
+
+    var spatialWebViewModel: SpatialWebViewModel
+
+    init(_ url: String, _ windowStyle: WindowStyle, _ state: SceneStateKind, _ sceneOptions: XPlainSceneOptions?) {
+        self.windowStyle = windowStyle
+        self.url = url
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
 
         setupSpatialWebView()
+        
+        self.moveToState(state, sceneOptions)
     }
 
     private func setupSpatialWebView() {
-        spatialWebViewModel.setBackgroundTransparent(true)
-        spatialWebViewModel.load()
-
         setupJSBListeners()
         setupWebViewStateListner()
     }
 
+    private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
+        // get config from url
+        guard let components = URLComponents(string: url.absoluteString),
+              let queryItems = components.queryItems
+        else {
+            print("❌ fail to parse URL")
+            return nil
+        }
+
+        guard let encodedUrl = queryItems.first(where: { $0.name == "url" })?.value,
+              let decodedUrl = encodedUrl.removingPercentEncoding
+        else {
+            print("❌ lack of required param url")
+            return nil
+        }
+        
+        if  let encodedConfig = queryItems.first(where: { $0.name == "config" })?.value,
+            let decodedConfig = encodedConfig.removingPercentEncoding {
+            // open new Scene with Config
+            let decoder = JSONDecoder()
+            guard let configData = decodedConfig.data(using: .utf8) else {
+                print("❌ no config key")
+                // should not go here
+                return nil
+            }
+
+            if decodedConfig == "undefined" || decodedConfig == "null" {
+                // no scene config, need to create pending SpatialScene
+                let newScene = SpatialApp.Instance.createScene(
+                    decodedUrl,
+                    .plain,
+                    .pending,
+                    nil
+                )
+                
+                return WebViewElementInfo(
+                    id: newScene.id,
+                    element: newScene.spatialWebViewModel
+                )
+            } else {
+                do {
+                    let config: XSceneOptionsJSB  = try decoder.decode(XSceneOptionsJSB.self, from: configData)
+                    
+                    let newScene = SpatialApp.Instance.createScene(
+                        decodedUrl,
+                        .plain,
+                        .willVisible,
+                        XPlainSceneOptions(config)
+                    )
+                    
+                    return WebViewElementInfo(
+                        id: newScene.id,
+                        element: newScene.spatialWebViewModel
+                    )
+
+                } catch {
+                    print("❌ config JSON decode fail: \(decodedConfig)")
+                    return nil
+                }
+
+            }
+            
+                         
+        } else {
+            return nil
+        }
+    }
+
+    private func handleWindowClose() {
+        print("window.close")
+        SpatialApp.Instance.closeWindowGroup(self)
+    }
+
+    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: XPlainSceneOptions?) {
+        print(" moveToState \(self.state) to \(newState) ")
+
+        
+        let oldState = self.state
+        state = newState
+
+        if oldState == .idle &&  newState == .pending {
+            SpatialApp.Instance.openLoadingUI(self,true)
+        }  else if oldState == .pending &&  newState == .willVisible {
+            SpatialApp.Instance.openLoadingUI(self,false)
+            // hack to fix windowGroup floating, we need it stay in place of loadingView
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                SpatialApp.Instance.openWindowGroup(self, sceneConfig!, {
+                    [weak self] in
+                    self?.moveToState(.visible, nil)
+                })
+            }
+            
+        } else if oldState == .idle &&  newState == .visible {
+            // SpatialApp opened SpatialScene
+            
+        } else if oldState == .idle &&  newState == .willVisible {
+            // window.open with scene config
+            SpatialApp.Instance.openWindowGroup(self, sceneConfig!,{
+                [weak self] in
+                self?.moveToState(.visible, nil)
+            })
+        }
+
+    }
+
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(InspectCommand.self, onInspect)
+        spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self, onUpdateSceneConfig)
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -48,11 +206,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
-
-        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial") { _ in
-            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(.Spatialized2DElement)
-            return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
-        }
+        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler) 
     }
 
     private func setupWebViewStateListner() {
@@ -65,6 +219,23 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             self._scrollOffset.x = point.x
             self._scrollOffset.y = point.y
         }
+
+        spatialWebViewModel.addStateListener(.didClose) {
+            self.handleWindowClose()
+        }
+    }
+    
+    private func onOpenWindowHandler(url: URL) -> WebViewElementInfo? {
+        let host = url.host ?? ""
+        if host == "createSpatialScene" {
+            return self.handleWindowOpenCustom(url)
+        } else {
+            let spatialized2DElement: Spatialized2DElement = self.createSpatializedElement(
+                .Spatialized2DElement
+            )
+            return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
+        }
+        
     }
 
     private func onLeavePageSession() {
@@ -121,6 +292,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             spatializedElement.modelURL = modelURL
         }
 
+        resolve(.success(baseReplyData))
+    }
+    
+    private func onUpdateSceneConfig(command: UpdateSceneConfigCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        let sceneConfigJSBData = command.config
+        print("onUpdateSceneConfig \(command.config)")
+        
+        // find scene
+        let sceneConfig = XPlainSceneOptions(sceneConfigJSBData)
+
+        
+        self.moveToState(.willVisible, sceneConfig)
+        
         resolve(.success(baseReplyData))
     }
 
@@ -263,8 +447,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     /*
      * End Implement SpatializedElementContainer Protocol
      */
-
-    private var spatialWebViewModel: SpatialWebViewModel
 
     /*
      * Begin Implement SpatialScrollAble Protocol

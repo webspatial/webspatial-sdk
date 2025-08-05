@@ -1,6 +1,7 @@
 import { getSession } from './getSession'
 
 async function getStat() {
+  //@ts-ignore
   const statsInfo = await getSession()!._getStats()
 
   return statsInfo
@@ -56,6 +57,7 @@ function simplifyEntityTree(rootTree: any) {
 
 async function inspectRootWindowContainer(simple?: boolean) {
   const rootWindowContainerInfo =
+  //@ts-ignore
     await getSession()!._inspectRootWindowContainer()
   console.log(rootWindowContainerInfo)
 

@@ -112,7 +112,7 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     // open window event
-    func addOpenWindowListener(protocal: String, event: @escaping (_ data: URL) -> WebViewElementInfo?) {
+    func addOpenWindowListener(protocal: String, _ event: @escaping (_ data: URL) -> WebViewElementInfo?) {
         openWindowList[protocal] = event
     }
 

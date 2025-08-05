@@ -2,12 +2,14 @@ import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
+
 import {
   Spatialized2DElementProperties,
   SpatializedElementProperties,
   SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
   SpatialTransform,
+  SpatialSceneCreationOptions,
 } from './types'
 
 const platform = createPlatform()
@@ -34,6 +36,20 @@ export class UpdateSpatialSceneProperties extends JSBCommand {
 
   protected getParams() {
     return this.properties
+  }
+}
+
+export class UpdateSceneConfig extends JSBCommand {
+  config: SpatialSceneCreationOptions
+  commandType = 'UpdateSceneConfig'
+
+  constructor(config: SpatialSceneCreationOptions) {
+    super()
+    this.config = config
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    return { config: this.config }
   }
 }
 
@@ -162,18 +178,36 @@ export class InspectCommand extends JSBCommand {
 /* WebSpatial Protocol Begin */
 abstract class WebSpatialProtocolCommand extends JSBCommand {
   async execute(): Promise<WebSpatialProtocolResult> {
+    const query = this.getQuery()
+    return platform.callWebSpatialProtocol(this.commandType, query)
+  }
+
+  executeSync(
+    resultCb: (result: WebSpatialProtocolResult) => void,
+  ): WindowProxy | null {
+    const query = this.getQuery()
+    return platform.callWebSpatialProtocolSync(
+      this.commandType,
+      query,
+      resultCb,
+    )
+  }
+
+  private getQuery() {
     let query = undefined
     const params = this.getParams()
     if (params) {
       query = Object.keys(params)
         .map(key => {
           const value = params[key]
-          return `${key}=${value}`
+          const finalValue =
+            typeof value === 'object' ? JSON.stringify(value) : value
+          return `${key}=${encodeURIComponent(finalValue)}`
         })
         .join('&')
     }
 
-    return platform.callWebSpatialProtocol(this.commandType, query)
+    return query
   }
 }
 
@@ -181,6 +215,23 @@ export class createSpatialized2DElementCommand extends WebSpatialProtocolCommand
   commandType = 'createSpatialized2DElement'
   protected getParams() {
     return undefined
+  }
+}
+
+export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
+  commandType = 'createSpatialScene'
+
+  constructor(
+    private url: string,
+    private config: SpatialSceneCreationOptions | undefined,
+  ) {
+    super()
+  }
+  protected getParams() {
+    return {
+      url: this.url,
+      config: this.config,
+    }
   }
 }
 

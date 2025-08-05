@@ -10,10 +10,10 @@ const spatialSupported = spatial.isSupported()
 
 if (spatialSupported) {
   var session = new Spatial().requestSession()
-  session!.getCurrentWindowComponent().setStyle({
-    material: { type: 'translucent' },
-    cornerRadius: 50,
-  })
+  // session!.getCurrentWindowComponent().setStyle({
+  //   material: { type: 'translucent' },
+  //   cornerRadius: 50,
+  // })
 }
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
@@ -55,7 +55,10 @@ function App() {
   const winCRef = useRef<any>(null)
 
   return (
-    <div enable-xr className="pl-5 pt-2">
+    <div
+      /* enable-xr */
+      className="pl-5 pt-2"
+    >
       <h1 className="text-2xl text-black">resize</h1>
       <button
         className={btnCls}

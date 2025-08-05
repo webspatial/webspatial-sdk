@@ -1,11 +1,13 @@
-import { SpatialSceneProperties } from './types'
+import { SpatialSceneCreationOptions, SpatialSceneProperties } from './types'
 import {
   AddSpatializedElementToSpatialScene,
+  UpdateSceneConfig,
   UpdateSpatialSceneProperties,
 } from './JSBCommand'
 
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
+
 
 let instance: SpatialScene
 
@@ -23,5 +25,9 @@ export class SpatialScene extends SpatialObject {
 
   async addSpatializedElement(element: SpatializedElement) {
     return new AddSpatializedElementToSpatialScene(element).execute()
+  }
+
+  async updateSceneCreationConfig(config: SpatialSceneCreationOptions) {
+    return new UpdateSceneConfig(config).execute()
   }
 }
