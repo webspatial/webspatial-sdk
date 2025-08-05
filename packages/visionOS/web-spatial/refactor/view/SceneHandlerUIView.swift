@@ -79,9 +79,9 @@ struct SceneHandlerUIView: View {
                 }
                 .onReceive(scene.setLoadingWindowData) { wd in
                     if wd.method == .show {
-                        openWindow(id: "loading")
+                        openWindow(id: "loading", value: wd.sceneID)
                     } else if wd.method == .hide {
-                        dismissWindow(id: "loading")
+                        dismissWindow(id: "loading",value: wd.sceneID)
                     }
                 }
 

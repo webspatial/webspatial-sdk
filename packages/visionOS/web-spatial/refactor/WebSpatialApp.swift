@@ -38,7 +38,7 @@ struct WebSpatialApp: App {
             app.getPlainSceneOptions().windowResizability!
         )
 
-        WindowGroup(id: "loading") {
+        WindowGroup(id: "loading", for: String.self) { $windowData in
             LoadingView()
         }
     }

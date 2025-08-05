@@ -7,6 +7,7 @@ enum XLoadingMethod: String, Decodable, Encodable, Hashable {
 }
 
 struct XLoadingViewData: Decodable, Hashable, Encodable {
+    let sceneID: String
     let method: XLoadingMethod
     let windowStyle: String?
 }
@@ -129,8 +130,9 @@ class SpatialApp {
     }
     
     // used form window.open logic with loading ui
-    public func openLoadingUI(_ open: Bool) {
+    public func openLoadingUI(_ targetSpatialScene: SpatialScene,_ open: Bool) {
         let lwgdata = XLoadingViewData(
+            sceneID: targetSpatialScene.id,
             method: open ? .show : .hide,
             windowStyle: nil
         )
