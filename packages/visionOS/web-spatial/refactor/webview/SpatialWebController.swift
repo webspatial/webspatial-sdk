@@ -27,11 +27,11 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         openWindowInvoke = invoke
     }
 
-    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
         jsbManager.register(type, event)
     }
 
-    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Codable>) -> Void) {
+    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
         print(event)
         jsbManager.register(type, event)
     }
@@ -92,6 +92,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             if modelInfo.element.getController().webview == nil {
                 _ = WKWebViewManager.Instance.create(controller: modelInfo.element.getController(), configuration: configuration, spatialId: modelInfo.id)
             }
+            modelInfo.element.load()
             return modelInfo.element.getController().webview
         }
         print("no webview")

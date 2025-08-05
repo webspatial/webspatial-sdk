@@ -4,11 +4,11 @@ protocol CommandDataProtocol: Codable {
     static var commandType: String { get }
 }
 
-protocol ReplyDataProtocol: Codable {
+protocol ReplyDataProtocol: Encodable {
     static var dataType: String { get }
 }
 
-struct JsbErrorData: Codable {
+struct JsbErrorData: Encodable {
     var code: ReplyCode?
     var message: String?
 }
@@ -28,22 +28,22 @@ class JSBManager {
     typealias ResolveHandler<T> = (Result<T?, JsbError>) -> Void
 
     private var typeMap = [String: CommandDataProtocol.Type]()
-    private var actionWithDataMap: [String: (_ data: CommandDataProtocol, _ event: @escaping ResolveHandler<Codable>) -> Void] = [:]
-    private var actionWithoutDataMap: [String: (@escaping ResolveHandler<Codable>) -> Void] = [:]
+    private var actionWithDataMap: [String: (_ data: CommandDataProtocol, _ event: @escaping ResolveHandler<Encodable>) -> Void] = [:]
+    private var actionWithoutDataMap: [String: (@escaping ResolveHandler<Encodable>) -> Void] = [:]
     private let encoder = JSONEncoder()
 
     func register<T: CommandDataProtocol>(_ type: T.Type) {
         typeMap[T.commandType] = type
     }
 
-    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping ResolveHandler<Codable>) -> Void) {
+    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping ResolveHandler<Encodable>) -> Void) {
         typeMap[T.commandType] = type
         actionWithDataMap[T.commandType] = { data, result in
             event(data as! T, result)
         }
     }
 
-    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping ResolveHandler<Codable>) -> Void) {
+    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping ResolveHandler<Encodable>) -> Void) {
         typeMap[T.commandType] = type
         actionWithoutDataMap[T.commandType] = event
     }
@@ -87,7 +87,7 @@ class JSBManager {
         } catch {}
     }
 
-    private func handleAction(action: @escaping (@escaping ResolveHandler<Codable>) -> Void,
+    private func handleAction(action: @escaping (@escaping ResolveHandler<Encodable>) -> Void,
                               replyHandler: ((Any?, String?) -> Void)?)
     {
         Task { @MainActor in
@@ -129,7 +129,7 @@ class JSBManager {
         return typeMap[key]
     }
 
-    private func parseData(_ data: Codable) -> String? {
+    private func parseData(_ data: Encodable) -> String? {
         if let jsonData = try? encoder.encode(data) {
             let jsonString = String(data: jsonData, encoding: .utf8)
             return jsonString!
