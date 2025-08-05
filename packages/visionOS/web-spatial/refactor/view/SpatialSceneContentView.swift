@@ -1,7 +1,7 @@
 import RealityKit
 import SwiftUI
 
-struct SpatialSceneRootWebView: View {
+struct SpatialSceneContentView: View {
     @State var sceneId: String
     var width: Double
     var height: Double
@@ -38,6 +38,17 @@ struct SpatialSceneRootWebView: View {
                         )
                         .frame(width: width, height: height)
                         .padding3D(.front, -100_000)
+                        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
+                            if pwaManager.display != .fullscreen {
+                                ZStack {
+                                    SpatialNavView(
+                                        spatialScene: spatialScene
+                                    )
+                                    .offset(y: -15)
+                                }.frame(height: 100)
+                            }
+                        }
+
                 }
             }
         }
@@ -78,7 +89,7 @@ struct SpatialSceneRootWebView: View {
         }
         
         var body: some View {
-            SpatialSceneRootWebView(sceneId: sceneId, width: 500, height: 500)
+            SpatialSceneContentView(sceneId: sceneId, width: 500, height: 500)
         }
     }
 }
