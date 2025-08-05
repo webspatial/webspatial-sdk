@@ -75,8 +75,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onInspect(command: InspectCommand?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        if let targetId = command?.id, !targetId.isEmpty {
+    private func onInspect(command: InspectCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if let targetId = command.id, !targetId.isEmpty {
             if let spatialObject: SpatialObject = findSpatialObject(targetId) {
                 resolve(.success(spatialObject))
                 return
@@ -91,47 +91,47 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+    private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
-        spatialObject.modelURL = command!.modelURL
+        spatialObject.modelURL = command.modelURL
 
         resolve(.success(AddSpatializedStatic3DElementReply(id: spatialObject.id)))
     }
 
-    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        if let material = command?.material {
+    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if let material = command.material {
             backgroundMaterial = material
         }
 
-        if let cornerRadius = command?.cornerRadius {
+        if let cornerRadius = command.cornerRadius {
             self.cornerRadius = cornerRadius
         }
         resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command!.id) else {
+    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedStatic3DElement spatial object id not exsit!")))
             return
         }
 
-        updateSpatializedElementProperties(spatializedElement, command!)
+        updateSpatializedElementProperties(spatializedElement, command)
 
-        if let modelURL = command?.modelURL {
+        if let modelURL = command.modelURL {
             spatializedElement.modelURL = modelURL
         }
 
         resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command!.id)
+    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id)
         else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!")))
             return
         }
 
-        guard let targetSpatializedElement: SpatializedElement = findSpatialObject(command!.spatializedElementId) else {
+        guard let targetSpatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddSpatializedElementToSpatialized2DElement target spatial object id not exsit!")))
             return
         }
@@ -140,20 +140,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command!.id) else {
+    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedElementProperties spatial object id not exsit!")))
             return
         }
-        updateSpatializedElementProperties(spatialized2DElement, command!)
-        if let scrollEnabled = command?.scrollEnabled {
+        updateSpatializedElementProperties(spatialized2DElement, command)
+        if let scrollEnabled = command.scrollEnabled {
             spatialized2DElement.scrollEnabled = scrollEnabled
         }
-        if let material = command?.material {
+        if let material = command.material {
             spatialized2DElement.backgroundMaterial = material
         }
 
-        if let cornerRadius = command?.cornerRadius {
+        if let cornerRadius = command.cornerRadius {
             spatialized2DElement.cornerRadius = cornerRadius
         }
 
@@ -194,29 +194,29 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let spatializedElement: SpatializedElement = findSpatialObject(command!.id) else {
+    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid UpdateSpatializedElementTransform spatial object id not exsit!")))
             return
         }
 
-        if let position = command?.position {
+        if let position = command.position {
             spatializedElement.transform.translation = SIMD3<Float>(Float(position.x), Float(position.y), Float(position.z))
         }
 
-        if let quaternion = command?.quaternion {
+        if let quaternion = command.quaternion {
             spatializedElement.transform.rotation.vector = SIMD4<Float>(Float(quaternion.x), Float(quaternion.y), Float(quaternion.z), Float(quaternion.w))
         }
 
-        if let scale = command?.scale {
+        if let scale = command.scale {
             spatializedElement.transform.scale = SIMD3<Float>(Float(scale.x), Float(scale.y), Float(scale.z))
         }
 
         resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene?, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let spatializedElement: SpatializedElement = findSpatialObject(command!.spatializedElementId) else {
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid addSpatializedElementCommand spatial object id not exsit!")))
             return
         }

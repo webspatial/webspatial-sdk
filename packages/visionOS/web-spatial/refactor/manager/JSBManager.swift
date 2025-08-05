@@ -28,49 +28,64 @@ class JSBManager {
     typealias ResolveHandler<T> = (Result<T?, JsbError>) -> Void
 
     private var typeMap = [String: CommandDataProtocol.Type]()
-    private var actionMap: [String: (_ data: CommandDataProtocol?, _ event: @escaping ResolveHandler<Encodable>) -> Void] = [:]
+    private var actionWithDataMap: [String: (_ data: CommandDataProtocol, _ event: @escaping ResolveHandler<Encodable>) -> Void] = [:]
+    private var actionWithoutDataMap: [String: (@escaping ResolveHandler<Encodable>) -> Void] = [:]
+
     private let encoder = JSONEncoder()
 
     func register<T: CommandDataProtocol>(_ type: T.Type) {
         typeMap[T.commandType] = type
     }
 
-    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T?, @escaping ResolveHandler<Encodable>) -> Void) {
+    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping ResolveHandler<Encodable>) -> Void) {
         typeMap[T.commandType] = type
-        actionMap[T.commandType] = { data, result in
-            event(data as? T, result)
+        actionWithDataMap[T.commandType] = { data, result in
+            event(data as! T, result)
         }
+    }
+
+    func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping ResolveHandler<Encodable>) -> Void) {
+        typeMap[T.commandType] = type
+        actionWithoutDataMap[T.commandType] = event
     }
 
     func remove<T: CommandDataProtocol>(_ type: T.Type) {
         typeMap.removeValue(forKey: T.commandType)
-        actionMap.removeValue(forKey: T.commandType)
+        actionWithDataMap.removeValue(forKey: T.commandType)
+        actionWithoutDataMap.removeValue(forKey: T.commandType)
     }
 
     func clear() {
         typeMap = [String: CommandDataProtocol.Type]()
-        actionMap = [:]
+        actionWithDataMap = [:]
+        actionWithoutDataMap = [:]
     }
 
     func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
-        let jsbInfo = message.components(separatedBy: "::")
-        let actionKey = jsbInfo[0]
-        let hasData = jsbInfo.count == 2 && jsbInfo[1] != ""
+        do {
+            let jsbInfo = message.components(separatedBy: "::")
+            let actionKey = jsbInfo[0]
+            let hasData = jsbInfo.count == 2 && jsbInfo[1] != ""
 
-        if let action = actionMap[actionKey] {
-            if let data = try? deserialize(cmdType: actionKey, cmdContent: jsbInfo[1]) {
-                handleAction(action: { callback in
-                    action(data, callback)
-                }, replyHandler: replyHandler)
+            if hasData {
+                let data = try deserialize(cmdType: actionKey, cmdContent: jsbInfo[1])
+                if let action = actionWithDataMap[actionKey] {
+                    handleAction(action: { callback in
+                        action(data!, callback)
+                    }, replyHandler: replyHandler)
+                } else {
+                    print("Invalid JSB!!!", message)
+                    replyHandler?(nil, "Invalid JSB!!! \(message)")
+                }
             } else {
-                handleAction(action: { callback in
-                    action(nil, callback)
-                }, replyHandler: replyHandler)
+                if let action = actionWithoutDataMap[actionKey] {
+                    handleAction(action: action, replyHandler: replyHandler)
+                } else {
+                    print("Invalid JSB!!!", message)
+                    replyHandler?(nil, "Invalid JSB!!! \(message)")
+                }
             }
-        } else {
-            print("Invalid JSB!!!", message)
-            replyHandler?(nil, "Invalid JSB!!! \(message)")
-        }
+        } catch {}
     }
 
     private func handleAction(action: @escaping (@escaping ResolveHandler<Encodable>) -> Void,

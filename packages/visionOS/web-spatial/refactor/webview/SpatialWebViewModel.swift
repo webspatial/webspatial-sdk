@@ -121,7 +121,11 @@ class SpatialWebViewModel: SpatialObject {
     }
 
     // jsb event
-    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (T?, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
+        controller?.registeJSBHandler(dataClass, event)
+    }
+
+    func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
         controller?.registeJSBHandler(dataClass, event)
     }
 
