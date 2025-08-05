@@ -169,32 +169,25 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
             SpatialApp.Instance.openLoadingUI(true)
         }  else if oldState == .pending &&  newState == .willVisible {
             SpatialApp.Instance.openLoadingUI(false)
-            
-            // set default values
-            // system may reject when open 2 windowGroup simutansly
+            // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                print(" asyncAfter.send asyncAfter ")
-
-                
-                // show SpatialScene WindowGroup
-                self.moveToState(.visible, sceneConfig!)
+                SpatialApp.Instance.openWindowGroup(self, sceneConfig!, {
+                    [weak self] in
+                    self?.moveToState(.visible, nil)
+                })
             }
+            
         } else if oldState == .idle &&  newState == .visible {
             // SpatialApp opened SpatialScene
             
         } else if oldState == .idle &&  newState == .willVisible {
             // window.open with scene config
-            moveToState(.visible, sceneConfig)
-        } else if oldState == .willVisible &&  newState == .visible {
-            SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
-           
+            SpatialApp.Instance.openWindowGroup(self, sceneConfig!,{
+                [weak self] in
+                self?.moveToState(.visible, nil)
+            })
         }
-        
-        else if oldState == .visible &&  newState == .willVisible {
-            print("Error when move from visible to willVisible")
-            return
-           
-        }
+
     }
 
     private func setupJSBListeners() {

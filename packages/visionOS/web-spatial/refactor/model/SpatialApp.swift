@@ -87,7 +87,7 @@ class SpatialApp {
         
         // hack code, need to resolve later by @fukang
         DispatchQueue.main.async() {
-            scene.spatialWebViewModel.load()
+//            scene.spatialWebViewModel.load()
         }
         
         return scene
@@ -111,7 +111,7 @@ class SpatialApp {
     }
     
     // used form window.open logic
-    public func openWindowGroup(_ targetSpatialScene: SpatialScene, _ sceneData: XPlainSceneOptions) {
+    public func openWindowGroup(_ targetSpatialScene: SpatialScene, _ sceneData: XPlainSceneOptions, _ onSuccess: (() -> Void)? = nil) {
         if let activeScene = firstActiveScene {
             // cache scene config
             plainSceneOptions = sceneData
@@ -119,8 +119,7 @@ class SpatialApp {
             DispatchQueue.main.async() {
                 print(" openWindowData.send \(targetSpatialScene.id)")
                 activeScene.openWindowData.send(SceneData(sceneID: targetSpatialScene.id))
-                
-                targetSpatialScene.spatialWebViewModel.load()
+                onSuccess?()
             }
 
         }
