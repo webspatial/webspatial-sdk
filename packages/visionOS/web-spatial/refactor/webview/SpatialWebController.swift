@@ -27,12 +27,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         openWindowInvoke = invoke
     }
 
-    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
-        jsbManager.register(type, event)
-    }
-
-    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
-        print(event)
+    func registeJSBHandler<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T?, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
         jsbManager.register(type, event)
     }
 
