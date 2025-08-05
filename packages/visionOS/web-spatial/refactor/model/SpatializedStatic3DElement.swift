@@ -4,6 +4,9 @@ import Foundation
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
+    
+    var enableTapEvent = true
+
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type

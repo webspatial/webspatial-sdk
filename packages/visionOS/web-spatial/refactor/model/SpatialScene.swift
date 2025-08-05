@@ -28,7 +28,8 @@ let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
 
 @Observable
-class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
+class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
+        
     // Enum
     public enum WindowStyle: String, Codable, CaseIterable {
         case plain    = "Plain"
@@ -77,6 +78,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         setupSpatialWebView()
         
         self.moveToState(state, sceneOptions)
+    }
+    
+    // used to send message to spatial root webview
+    func sendWebMsg(_ id: String, _ msg: Encodable) {
+        spatialWebViewModel.sendWebEvent(id, msg)
     }
 
     private func setupSpatialWebView() {

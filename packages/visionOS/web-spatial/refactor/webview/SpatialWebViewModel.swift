@@ -248,7 +248,7 @@ class SpatialWebViewModel: SpatialObject {
         view = nil
     }
 
-    func sendWebEvent<T: Encodable>(id: String, data: T) {
+    func sendWebEvent<T: Encodable>(_ id: String, _ data: T) {
         let encoder = JSONEncoder()
         if let jsonData = try? encoder.encode(data) {
             let dataString = String(data: jsonData, encoding: .utf8)

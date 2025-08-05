@@ -28,7 +28,7 @@ struct SpatialSceneContentView: View {
                             .environment(child)
                         }
                         
-                    }
+                    }.environment(spatialScene)
                     
                     // Display the main webview
                     spatialScene.getView()

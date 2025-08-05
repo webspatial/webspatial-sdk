@@ -4,6 +4,21 @@ import {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
+import { Quaternion, Euler } from 'three'
+const euler = new Euler(0, 0, Math.PI / 4)
+// const euler = new Euler(0, 0, 0)
+const quaternion = new Quaternion().setFromEuler(euler)
+const transform = {
+  position: { x: 0, y: 0, z: 0 },
+  quaternion: {
+    x: quaternion.x,
+    y: quaternion.y,
+    z: quaternion.z,
+    w: quaternion.w,
+  },
+  scale: { x: 1, y: 1, z: 1 },
+}
+
 const spatial = new Spatial()
 const session = spatial.requestSession()
 console.log('session', session)
@@ -121,8 +136,8 @@ export async function testCreateSpatializedStatic3DElement(
       width: 150,
       height: 150,
       rotationAnchor: {
-        x: 1,
-        y: 2,
+        x: 0.5,
+        y: 0.5,
         z: 0.5,
       },
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
@@ -134,7 +149,11 @@ export async function testCreateSpatializedStatic3DElement(
         y: 150,
         z: 10,
       },
+
+      quaternion: transform.quaternion,
     })
+
+    console.log('dbg quaternion', quaternion)
 
     if (parent) {
       parent.addSpatializedElement(spatialObject)

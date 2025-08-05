@@ -1,4 +1,5 @@
 import { SpatialSession } from './SpatialSession'
+import { SpatialWebEvent } from './SpatialWebEvent'
 
 /**
  * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr
@@ -14,6 +15,7 @@ export class Spatial {
       this.isSupported() &&
       this.getNativeVersion() === this.getClientVersion()
     ) {
+      SpatialWebEvent.init()
       return new SpatialSession()
     } else {
       return null
