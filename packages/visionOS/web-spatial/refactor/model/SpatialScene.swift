@@ -154,7 +154,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
 
     private func handleWindowClose() {
         print("window.close")
-        closeWindowData.send(getSceneData())
+        SpatialApp.Instance.closeWindowGroup(self)
     }
 
     public func moveToState(_ newState: SceneStateKind, _ sceneConfig: XPlainSceneOptions?) {

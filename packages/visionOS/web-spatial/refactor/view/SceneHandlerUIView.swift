@@ -56,6 +56,7 @@ struct SceneHandlerUIView: View {
                     }
                 }
                 .onDisappear {
+                    print("onScene Disappear")
                     scene.destroy()
                 }
                 .onReceive(scene.openWindowData) { wd in

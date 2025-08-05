@@ -121,6 +121,13 @@ class SpatialApp {
         }
     }
     
+    public func closeWindowGroup(_ targetSpatialScene: SpatialScene) {
+        if let activeScene = firstActiveScene {
+            activeScene.closeWindowData
+                .send(SceneData(sceneID: targetSpatialScene.id))
+        }
+    }
+    
     // used form window.open logic with loading ui
     public func openLoadingUI(_ open: Bool) {
         let lwgdata = XLoadingViewData(
