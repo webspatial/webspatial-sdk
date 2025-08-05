@@ -5,15 +5,14 @@ import Foundation
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
 
-    override func inspect() -> [String: Any] {
-        var inspectInfo: [String: Any] = [
-            "modelURL": modelURL,
-        ]
+    enum CodingKeys: String, CodingKey {
+        case modelURL, type
+    }
 
-        let baseInspectInfo = super.inspect()
-        for (key, value) in baseInspectInfo {
-            inspectInfo[key] = value
-        }
-        return inspectInfo
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(modelURL, forKey: .modelURL)
+        try container.encode(SpatializedElementType.SpatializedStatic3DElement, forKey: .type)
     }
 }

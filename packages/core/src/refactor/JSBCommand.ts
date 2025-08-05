@@ -147,11 +147,15 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   }
 }
 
-export class PingCommand extends JSBCommand {
-  commandType = 'Ping'
+export class InspectCommand extends JSBCommand {
+  commandType = 'Inspect'
+
+  constructor(readonly id: string = '') {
+    super()
+  }
 
   protected getParams() {
-    return undefined
+    return this.id ? { id: this.id } : { id: '' }
   }
 }
 

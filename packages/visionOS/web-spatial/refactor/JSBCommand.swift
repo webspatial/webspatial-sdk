@@ -16,8 +16,9 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     let modelURL: String
 }
 
-struct PingCommand: CommandDataProtocol {
-    static let commandType: String = "Ping"
+struct InspectCommand: CommandDataProtocol {
+    static let commandType: String = "Inspect"
+    var id: String?
 }
 
 protocol SpatialObjectCommand: CommandDataProtocol {

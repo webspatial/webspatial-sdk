@@ -3,7 +3,6 @@ import { Spatialized2DElement } from './Spatialized2DElement'
 import { createSpatialized2DElement } from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
-import { ping } from './internal-debug'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -21,9 +20,5 @@ export class SpatialSession {
     modelURL: string = '',
   ): Promise<SpatializedStatic3DElement> {
     return createSpatializedStatic3DElement(modelURL)
-  }
-
-  ping(): Promise<any> {
-    return ping()
   }
 }

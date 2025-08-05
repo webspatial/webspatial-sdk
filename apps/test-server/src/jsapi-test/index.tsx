@@ -8,13 +8,19 @@ import {
   testSpatialSceneCorner,
   testSpatialSceneMaterial,
   testCreateSpatializedStatic3DElement,
+  testSpatialInspect,
+  testSpatialSceneInspect,
 } from './jsapi'
 
-// testSpatialSceneMaterial()
-// testSpatialSceneCorner()
+testSpatialSceneMaterial()
+testSpatialSceneCorner()
 testCreateSpatialized2DElement().then(spatialized2DElement => {
-  testCreateSpatializedStatic3DElement(spatialized2DElement)
+  testCreateSpatializedStatic3DElement(spatialized2DElement).then(_ => {})
+
+  testSpatialInspect(spatialized2DElement)
+  testSpatialSceneInspect()
 })
+testSpatialSceneInspect()
 
 // function App() {
 //   const style = {

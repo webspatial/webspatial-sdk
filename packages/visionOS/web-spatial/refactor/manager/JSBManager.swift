@@ -1,6 +1,6 @@
 import Foundation
 
-protocol CommandDataProtocol: Codable {
+protocol CommandDataProtocol: Decodable {
     static var commandType: String { get }
 }
 

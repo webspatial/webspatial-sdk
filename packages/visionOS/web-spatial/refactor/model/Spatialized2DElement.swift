@@ -111,27 +111,18 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         super.onDestroy()
     }
 
-    override func inspect() -> [String: Any] {
-        let childrenInfo = children.mapValues { spatializedElement in
-            spatializedElement.inspect()
-        }
+    enum CodingKeys: String, CodingKey {
+        case cornerRadius, backgroundMaterial, children, type, scrollOffset, scrollEnabled
+    }
 
-        var inspectInfo: [String: Any] = [
-            "children": childrenInfo,
-            "backgroundMaterial": backgroundMaterial,
-            "cornerRadius": cornerRadius.toJson(),
-            "transform": transform,
-            "rotationAnchor": rotationAnchor,
-            "scrollEnabled": scrollEnabled,
-            "scrollOffset": scrollOffset,
-            "zIndex": zIndex,
-            "type": SpatializedElementType.Spatialized2DElement,
-        ]
-
-        let baseInspectInfo = super.inspect()
-        for (key, value) in baseInspectInfo {
-            inspectInfo[key] = value
-        }
-        return inspectInfo
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(cornerRadius, forKey: .cornerRadius)
+        try container.encode(backgroundMaterial, forKey: .backgroundMaterial)
+        try container.encode(children, forKey: .children)
+        try container.encode(SpatializedElementType.Spatialized2DElement, forKey: .type)
+        try container.encode(scrollOffset, forKey: .scrollOffset)
+        try container.encode(scrollEnabled, forKey: .scrollEnabled)
     }
 }

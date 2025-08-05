@@ -1,17 +1,18 @@
-import { BackgroundMaterialType, SpatialSceneProperties } from './types'
+import { SpatialSceneProperties } from './types'
 import {
   AddSpatializedElementToSpatialScene,
   UpdateSpatialSceneProperties,
 } from './JSBCommand'
-import { CornerRadius } from '../core'
+
 import { SpatializedElement } from './SpatializedElement'
+import { SpatialObject } from './SpatialObject'
 
 let instance: SpatialScene
 
-export class SpatialScene {
+export class SpatialScene extends SpatialObject {
   static getInstance(): SpatialScene {
     if (!instance) {
-      instance = new SpatialScene()
+      instance = new SpatialScene('')
     }
     return instance
   }

@@ -31,10 +31,20 @@ export function testSpatialSceneMaterial() {
   }
 }
 
-export async function testSpatialPing() {
+export async function testSpatialInspect(
+  spatialObject: Spatialized2DElement | SpatializedStatic3DElement,
+) {
   if (session) {
-    const ret = await session.ping()
+    const ret = await spatialObject.inspect()
     console.log('ret', ret)
+  }
+}
+
+export async function testSpatialSceneInspect() {
+  if (session) {
+    const spatialScene = session.getSpatialScene()
+    const ret = await spatialScene.inspect()
+    console.log('SpatialScene inspect', ret)
   }
 }
 

@@ -23,7 +23,7 @@ class WeakReference<T: AnyObject> {
     }
 }
 
-class SpatialObject: EventEmitter, Equatable {
+class SpatialObject: EventEmitter, Encodable, Equatable {
     static var objects = [String: SpatialObject]()
     static var weakRefObjects = [String: WeakReference<SpatialObject>]()
     static func get(_ id: String) -> SpatialObject? {
@@ -88,6 +88,17 @@ class SpatialObject: EventEmitter, Equatable {
 
     var isDestroyed: Bool {
         _isDestroyed
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, isDestroyed
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(isDestroyed, forKey: .isDestroyed)
     }
 
     static func == (lhs: SpatialObject, rhs: SpatialObject) -> Bool {

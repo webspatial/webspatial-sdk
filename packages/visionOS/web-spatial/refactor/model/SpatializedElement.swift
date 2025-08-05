@@ -20,6 +20,25 @@ class SpatializedElement: SpatialObject {
     var scrollWithParent = true
     var zIndex: Double = 0
 
+    enum CodingKeys: String, CodingKey {
+        case width, height, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent
+    }
+
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(width, forKey: .width)
+        try container.encode(height, forKey: .height)
+        try container.encode(backOffset, forKey: .backOffset)
+        try container.encode(transform, forKey: .transform)
+        try container.encode(rotationAnchor, forKey: .rotationAnchor)
+        try container.encode(opacity, forKey: .opacity)
+        try container.encode(visible, forKey: .visible)
+        try container.encode(scrollWithParent, forKey: .scrollWithParent)
+        try container.encode(zIndex, forKey: .zIndex)
+        try container.encode(parent?.id, forKey: .parent)
+    }
+
     private(set) var parent: ScrollAbleSpatialElementContainer?
 
     func setParent(_ parent: ScrollAbleSpatialElementContainer?) {
@@ -41,24 +60,5 @@ class SpatializedElement: SpatialObject {
 
     override func onDestroy() {
         setParent(nil)
-    }
-
-    override func inspect() -> [String: Any] {
-        var inspectInfo: [String: Any] = [
-            "width": width,
-            "height": height,
-            "backOffset": backOffset,
-            "transform": transform,
-            "rotationAnchor": rotationAnchor,
-            "opacity": opacity,
-            "visible": visible,
-            "parent": parent?.id ?? "",
-        ]
-
-        let baseInspectInfo = super.inspect()
-        for (key, value) in baseInspectInfo {
-            inspectInfo[key] = value
-        }
-        return inspectInfo
     }
 }

@@ -33,10 +33,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
     }
 
     private func setupJSBListeners() {
-        spatialWebViewModel.addJSBListener(PingCommand.self) { resolve in
-            let data = CustomReplyData(type: "custom", name: "test")
-            resolve(.success(data))
-        }
+        spatialWebViewModel.addJSBListener(InspectCommand.self, onInspect)
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -78,14 +75,30 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onInspect(command: InspectCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if let targetId = command.id, !targetId.isEmpty {
+            if let spatialObject: SpatialObject = findSpatialObject(targetId) {
+                resolve(.success(spatialObject))
+                return
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid inspect spatial object id not exsit!")))
+                return
+            }
+        } else {
+            // inspect current SpatialScene
+            resolve(.success(self))
+            return
+        }
+    }
+
+    private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
         spatialObject.modelURL = command.modelURL
 
         resolve(.success(AddSpatializedStatic3DElementReply(id: spatialObject.id)))
     }
 
-    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let material = command.material {
             backgroundMaterial = material
         }
@@ -96,7 +109,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onUpdateSpatializedStatic3DElementProperties(command: UpdateSpatializedStatic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedStatic3DElement spatial object id not exsit!")))
             return
@@ -111,7 +124,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onAddSpatializedElementToSpatialized2DElement(command: AddSpatializedElementToSpatialized2DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id)
         else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!")))
@@ -127,7 +140,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
 
-    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onUpdateSpatialized2DElementProperties(command: UpdateSpatialized2DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatialized2DElement: Spatialized2DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedElementProperties spatial object id not exsit!")))
             return
@@ -181,7 +194,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         }
     }
 
-    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatializedElement: SpatializedElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid UpdateSpatializedElementTransform spatial object id not exsit!")))
             return
@@ -202,7 +215,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         resolve(.success(baseReplyData))
     }
 
-    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping JSBManager.ResolveHandler<Codable>) {
+    private func onAddSpatializedElement(command: AddSpatializedElementToSpatialScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatializedElement: SpatializedElement = findSpatialObject(command.spatializedElementId) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid addSpatializedElementCommand spatial object id not exsit!")))
             return
@@ -362,23 +375,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer {
         spatialWebViewModel.destroy()
     }
 
-    override func inspect() -> [String: Any] {
-        let childrenInfo = children.mapValues { spatializedElement in
-            spatializedElement.inspect()
-        }
+    enum CodingKeys: String, CodingKey {
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset
+    }
 
-        var inspectInfo: [String: Any] = [
-            "children": childrenInfo,
-            "backgroundMaterial": backgroundMaterial,
-            "cornerRadius": cornerRadius.toJson(),
-            "scrollOffset": scrollOffset,
-            "url": spatialWebViewModel.url,
-        ]
-
-        let baseInspectInfo = super.inspect()
-        for (key, value) in baseInspectInfo {
-            inspectInfo[key] = value
-        }
-        return inspectInfo
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(spatialWebViewModel.url, forKey: .url)
+        try container.encode(backgroundMaterial, forKey: .backgroundMaterial)
+        try container.encode(cornerRadius, forKey: .cornerRadius)
+        try container.encode(scrollOffset, forKey: .scrollOffset)
+        try container.encode(children, forKey: .children)
     }
 }
