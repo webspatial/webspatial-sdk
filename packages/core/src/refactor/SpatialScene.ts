@@ -8,19 +8,6 @@ import {
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
 
-export interface SpatialSceneOptions {
-  defaultSize?: {
-    width: number // Initial width of the window
-    height: number // Initial height of the window
-  }
-
-  resizability?: {
-    minWidth?: number
-    minHeight?: number
-    maxWidth?: number
-    maxHeight?: number
-  }
-}
 
 let instance: SpatialScene
 
