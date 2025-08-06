@@ -19,6 +19,14 @@ struct Spatialized2DView: View {
     var body: some View {
         // Display child spatialized2DElements
         return ZStack {
+            // Display the main webview
+            spatialized2DElement.getView()
+                .materialWithBorderCorner(
+                    spatialized2DElement.backgroundMaterial,
+                    spatialized2DElement.cornerRadius
+                )
+                .gesture(dragGesture)
+            
             OptionalClip(clipEnabled: spatialized2DElement.scrollEnabled) {
                 ZStack {
                     let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
@@ -40,14 +48,7 @@ struct Spatialized2DView: View {
                 }
             }
 
-            // Display the main webview
-            spatialized2DElement.getView()
-                .materialWithBorderCorner(
-                    spatialized2DElement.backgroundMaterial,
-                    spatialized2DElement.cornerRadius
-                )
-                .gesture(dragGesture)
-//                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
         }
     }
 
