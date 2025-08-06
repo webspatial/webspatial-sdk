@@ -38,48 +38,49 @@ struct SpatialSceneContentView: View {
                         )
                         .frame(width: width, height: height)
                         .padding3D(.front, -100_000)
-
+                    
                 }
             }
         }
     }
+}
+
+struct PreviewSpatialSceneContent: View {
+    var sceneId: String
     
-    
-    
-    
-    struct PreviewSpatialScene: View {
-        var sceneId: String
-        
-        init() {
-            let spatialScene = SpatialApp.Instance.createScene(
-                "http://localhost:5173/",
-                .plain,
-                .visible
-            )
-            spatialScene.cornerRadius.bottomLeading = 130
-            let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(
-                .Spatialized2DElement
-            )
-            spatialized2DElement.transform.translation.x = 200
-            spatialized2DElement.transform.translation.y = 200
-            spatialized2DElement.transform.translation.z = 200
-            spatialized2DElement.width = 200
-            spatialized2DElement.height = 200
-            let htmlString = """
-        <!DOCTYPE html>
-        <html>
-            <body>
-                hello world
-            </body>
-        </html>
-        """
-            spatialized2DElement.loadHtml(htmlString)
-            spatialized2DElement.setParent(spatialScene)
-            sceneId = spatialScene.id
-        }
-        
-        var body: some View {
-            SpatialSceneContentView(sceneId: sceneId, width: 500, height: 500)
-        }
+    init() {
+        let spatialScene = SpatialApp.Instance.createScene(
+            "http://localhost:5173/",
+            .plain,
+            .visible
+        )
+        spatialScene.cornerRadius.bottomLeading = 130
+        let spatialized2DElement: Spatialized2DElement = spatialScene.createSpatializedElement(
+            .Spatialized2DElement
+        )
+        spatialized2DElement.transform.translation.x = 200
+        spatialized2DElement.transform.translation.y = 200
+        spatialized2DElement.transform.translation.z = 200
+        spatialized2DElement.width = 200
+        spatialized2DElement.height = 200
+        let htmlString = """
+    <!DOCTYPE html>
+    <html>
+        <body>
+            hello world
+        </body>
+    </html>
+    """
+        spatialized2DElement.loadHtml(htmlString)
+        spatialized2DElement.setParent(spatialScene)
+        sceneId = spatialScene.id
     }
+    
+    var body: some View {
+        SpatialSceneContentView(sceneId: sceneId, width: 500, height: 500)
+    }
+}
+
+#Preview("PreviewSpatialSceneContent") {
+    PreviewSpatialSceneContent()
 }
