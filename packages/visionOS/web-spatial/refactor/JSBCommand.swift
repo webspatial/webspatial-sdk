@@ -100,3 +100,11 @@ struct UpdateSceneConfigCommand: CommandDataProtocol {
         config = data
     }
 }
+
+struct FocusSceneCommand: CommandDataProtocol {
+    static let commandType = "FocusScene"
+    let id: String
+    init(_ id: String) {
+        self.id = id
+    }
+}

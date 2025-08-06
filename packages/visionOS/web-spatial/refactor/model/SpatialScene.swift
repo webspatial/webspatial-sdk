@@ -198,6 +198,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(InspectCommand.self, onInspect)
         spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self, onUpdateSceneConfig)
+        spatialWebViewModel
+            .addJSBListener(
+                FocusSceneCommand.self,
+                onFocusScene
+            )
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -298,6 +303,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.modelURL = modelURL
         }
 
+        resolve(.success(baseReplyData))
+    }
+    
+    private func onFocusScene(
+        command: FocusSceneCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ){
+        let sceneId = command.id
+        print("onFocusScene \(sceneId)")
+        
+        if let targetScene = SpatialApp.Instance.getScene(sceneId) {
+            SpatialApp.Instance.focusScene(targetScene)
+        }
+        
         resolve(.success(baseReplyData))
     }
     

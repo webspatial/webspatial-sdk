@@ -150,4 +150,16 @@ class SpatialApp {
             return (activeKV?.value)
         }
     }
+    
+    public func focusScene(_ targetSpatialScene: SpatialScene) {
+        guard targetSpatialScene.state != .pending else {
+            return
+        }
+
+        if let activeScene = firstActiveScene {
+            DispatchQueue.main.async() {
+                activeScene.openWindowData.send(SceneData(sceneID: targetSpatialScene.id))
+            }
+        }
+    }
 }

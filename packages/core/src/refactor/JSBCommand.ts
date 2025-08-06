@@ -53,6 +53,18 @@ export class UpdateSceneConfig extends JSBCommand {
   }
 }
 
+export class FocusScene extends JSBCommand {
+  commandType = 'FocusScene'
+
+  constructor(public id: string) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    return { id: this.id }
+  }
+}
+
 export abstract class SpatializedElementCommand extends JSBCommand {
   constructor(readonly spatialObject: SpatialObject) {
     super()

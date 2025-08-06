@@ -1,4 +1,4 @@
-import { createSpatialSceneCommand } from './JSBCommand'
+import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
 import { SpatialScene } from './SpatialScene'
 import { SpatialSceneCreationOptions } from './types'
 
@@ -49,6 +49,14 @@ class SceneManager {
 
     if (typeof target === 'string' && this.configMap[target]) {
       delete this.configMap[target]
+    }
+
+    const id = result.data?.id
+
+    if (id) {
+      // send JSB to focus
+      let focusCmd = new FocusScene(id)
+      focusCmd.execute()
     }
 
     return result.data?.windowProxy
