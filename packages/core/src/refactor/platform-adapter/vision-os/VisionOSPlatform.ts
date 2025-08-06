@@ -56,23 +56,15 @@ export class VisionOSPlatform implements PlatformAbility {
     query?: string,
     target?: string,
     features?: string,
-    resultCallback?: (result: CommandResult) => void,
-  ): WindowProxy | null {
-    const { spatialId: id, windowProxy } = this.openWindow(
+  ): CommandResult {
+    const { spatialId: id = '', windowProxy } = this.openWindow(
       command,
       query,
       target,
       features,
     )
 
-    if (resultCallback) {
-      setTimeout(() => {
-        const result = CommandResultSuccess({ windowProxy: windowProxy, id })
-        resultCallback(result)
-      }, 0)
-    }
-
-    return windowProxy
+    return CommandResultSuccess({ windowProxy, id })
   }
 
   private openWindow(

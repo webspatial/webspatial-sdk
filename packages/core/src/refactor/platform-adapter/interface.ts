@@ -32,5 +32,5 @@ export interface PlatformAbility {
     target?: string,
     features?: string,
     resultCallback?: (result: CommandResult) => void,
-  ): WindowProxy | null
+  ): WebSpatialProtocolResult
 }

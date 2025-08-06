@@ -190,16 +190,13 @@ abstract class WebSpatialProtocolCommand extends JSBCommand {
     )
   }
 
-  executeSync(
-    resultCb: (result: WebSpatialProtocolResult) => void,
-  ): WindowProxy | null {
+  executeSync(): WebSpatialProtocolResult {
     const query = this.getQuery()
     return platform.callWebSpatialProtocolSync(
       this.commandType,
       query,
       this.target,
       this.features,
-      resultCb,
     )
   }
 
