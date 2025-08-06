@@ -21,14 +21,26 @@ struct SpatialSceneView: View {
                     timer = nil
                 }
             }
-
-            if windowResizeInProgress {
-                let x = width / 2
-                let y = height / 2
-                VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
-                    .position(x: x, y: y)
-            } else {
-                SpatialSceneContentView(sceneId: sceneId, width: width, height: height)
+            
+            if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
+                if windowResizeInProgress {
+                    let x = width / 2
+                    let y = height / 2
+                    VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
+                        .position(x: x, y: y)
+                } else {
+                    SpatialSceneContentView(sceneId: sceneId, width: width, height: height)
+                        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
+                            if pwaManager.display != .fullscreen {
+                                ZStack {
+                                    SpatialNavView(
+                                        spatialScene: spatialScene
+                                    )
+                                    .offset(y: -15)
+                                }.frame(height: 100)
+                            }
+                        }
+                }
             }
         }
     }

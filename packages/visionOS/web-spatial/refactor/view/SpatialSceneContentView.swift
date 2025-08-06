@@ -38,16 +38,6 @@ struct SpatialSceneContentView: View {
                         )
                         .frame(width: width, height: height)
                         .padding3D(.front, -100_000)
-                        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
-                            if pwaManager.display != .fullscreen {
-                                ZStack {
-                                    SpatialNavView(
-                                        spatialScene: spatialScene
-                                    )
-                                    .offset(y: -15)
-                                }.frame(height: 100)
-                            }
-                        }
 
                 }
             }
