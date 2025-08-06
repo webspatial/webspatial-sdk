@@ -152,7 +152,8 @@ class SpatialApp {
     }
     
     public func focusScene(_ targetSpatialScene: SpatialScene) {
-        guard targetSpatialScene.state != .pending else {
+        // only work when fully visible
+        if targetSpatialScene.state != .visible {
             return
         }
 
