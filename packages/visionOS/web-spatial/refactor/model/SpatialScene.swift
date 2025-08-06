@@ -318,6 +318,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     private func onUpdateSceneConfig(command: UpdateSceneConfigCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        
+        if self.state == .visible || self.state == .willVisible {
+            print("forbidden to update scene config after visible")
+            // prevent re-enter
+            resolve(.success(baseReplyData))
+            return
+        }
+        
         let sceneConfigJSBData = command.config
         print("onUpdateSceneConfig \(command.config)")
         
