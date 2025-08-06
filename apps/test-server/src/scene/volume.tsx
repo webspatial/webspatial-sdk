@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
 
+
+
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 const spatial = new Spatial()
@@ -15,6 +17,7 @@ if (spatialSupported) {
   //   cornerRadius: 50,
   // })
 }
+
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
@@ -64,50 +67,6 @@ function App() {
         }}
       >
         open
-      </button>
-      <h1 className="text-2xl text-black">open volume</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          initScene('sa', () => ({
-            defaultSize: {
-              width: 1,
-              height: 1,
-              depth: 1,
-            },
-            resizability: {
-              minWidth: 0.5,
-              maxWidth: 1.5,
-              minHeight: 0.5,
-              maxHeight: 1.5,
-            },
-            worldScaling: 'automatic',
-            worldAlignment: 'automatic',
-            automatic: 'automatic',
-          }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        open volume
-      </button>
-
-       <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volumeHook.html',
-            'sa',
-          )
-          // winARef.current = window.open('', 'sa')
-        }}
-      >
-        open volumeHook
       </button>
       <h1 className="text-2xl text-black">resize</h1>
       <button
