@@ -59,20 +59,20 @@ struct SceneHandlerUIView: View {
                     print("onScene Disappear")
                     scene.destroy()
                 }
-                .onReceive(scene.openWindowData) { wd in
-                    if let spatialScene = SpatialApp.Instance.getScene(wd.sceneID){
+                .onReceive(scene.openWindowData) { sceneID in
+                    if let spatialScene = SpatialApp.Instance.getScene(sceneID){
                         let _ = openWindow(
                             id: spatialScene.windowStyle.rawValue,
-                            value: wd
+                            value: sceneID
                         )
                     }
                     
                 }
-                .onReceive(scene.closeWindowData) { wd in
-                    if let spatialScene = SpatialApp.Instance.getScene(wd.sceneID){
+                .onReceive(scene.closeWindowData) { sceneID in
+                    if let spatialScene = SpatialApp.Instance.getScene(sceneID){
                         dismissWindow(
                             id: spatialScene.windowStyle.rawValue,
-                            value: wd
+                            value: sceneID
                         )
                     }
                     

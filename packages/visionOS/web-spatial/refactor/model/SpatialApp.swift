@@ -115,7 +115,7 @@ class SpatialApp {
                         
             DispatchQueue.main.async() {
                 print(" openWindowData.send \(targetSpatialScene.id)")
-                activeScene.openWindowData.send(SceneData(sceneID: targetSpatialScene.id))
+                activeScene.openWindowData.send(targetSpatialScene.id)
                 onSuccess?()
             }
 
@@ -125,7 +125,7 @@ class SpatialApp {
     public func closeWindowGroup(_ targetSpatialScene: SpatialScene) {
         if let activeScene = firstActiveScene {
             activeScene.closeWindowData
-                .send(SceneData(sceneID: targetSpatialScene.id))
+                .send(targetSpatialScene.id)
         }
     }
     
@@ -158,7 +158,7 @@ class SpatialApp {
 
         if let activeScene = firstActiveScene {
             DispatchQueue.main.async() {
-                activeScene.openWindowData.send(SceneData(sceneID: targetSpatialScene.id))
+                activeScene.openWindowData.send(targetSpatialScene.id)
             }
         }
     }

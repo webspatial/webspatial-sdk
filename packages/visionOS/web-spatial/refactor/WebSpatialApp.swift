@@ -14,8 +14,8 @@ struct WebSpatialApp: App {
     @State var app = SpatialApp.Instance
 
     var body: some Scene {
-        WindowGroup(id: "Plain", for: SceneData.self) { $windowData in
-            SpatialSceneView(sceneId: windowData.sceneID)
+        WindowGroup(id: "Plain", for: String.self) { $windowData in
+            SpatialSceneView(sceneId: windowData)
         }
         defaultValue: {
             let scene = SpatialApp.Instance.createScene(
@@ -24,12 +24,8 @@ struct WebSpatialApp: App {
                 .visible,
                 app.getPlainSceneOptions()
             )
-            
-            let windowData = SceneData(
-                sceneID: scene.id
-            )
 
-            return windowData
+            return scene.id
         }
         .windowStyle(.plain)
         .defaultSize(

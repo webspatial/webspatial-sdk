@@ -37,8 +37,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     // TOPIC begin
-    var openWindowData = PassthroughSubject<SceneData, Never>()
-    var closeWindowData = PassthroughSubject<SceneData, Never>()
+    var openWindowData = PassthroughSubject<String, Never>()
+    var closeWindowData = PassthroughSubject<String, Never>()
 
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
@@ -46,9 +46,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var windowStyle:WindowStyle = .plain
 
     
-    private func getSceneData() -> SceneData {
-        return SceneData(sceneID: id)
-    }
 
     enum SceneStateKind: String {
         // default value
