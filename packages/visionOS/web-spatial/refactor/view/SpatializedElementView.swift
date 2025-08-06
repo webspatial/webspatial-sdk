@@ -54,3 +54,38 @@ struct SpatializedElementView<Content: View>: View {
             .hidden(!visible)
     }
 }
+
+
+struct PreviewSpatializedStatic3DElement: View {
+    var sceneId: String
+    
+    init() {
+        let spatialScene = SpatialApp.Instance.createScene(
+            "http://localhost:5173/",
+            .plain,
+            .visible
+        )
+        
+        let spatializedStatic3DElement: SpatializedStatic3DElement = spatialScene.createSpatializedElement(
+            .SpatializedStatic3DElement
+        )
+        spatializedStatic3DElement.transform.translation.x = 500
+        spatializedStatic3DElement.transform.translation.y = 100
+        spatializedStatic3DElement.transform.translation.z = 0
+        spatializedStatic3DElement.width = 200
+        spatializedStatic3DElement.height = 200
+        spatializedStatic3DElement.enableTapEvent = false
+         
+        spatializedStatic3DElement.modelURL = "http://localhost:5173/public/modelasset/cone.usdz"
+        spatializedStatic3DElement.setParent(spatialScene)
+        sceneId = spatialScene.id
+    }
+    
+    var body: some View {
+        SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 800)
+    }
+}
+
+#Preview("PreviewSpatializedStatic3DElement") {
+    PreviewSpatializedStatic3DElement()
+}
