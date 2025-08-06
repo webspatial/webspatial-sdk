@@ -10,6 +10,15 @@ struct SpatialSceneContentView: View {
         GeometryReader { proxy3D in
             ZStack {
                 if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
+                    
+                    // Display the main webview
+                    spatialScene.getView()
+                        .materialWithBorderCorner(
+                            spatialScene.backgroundMaterial,
+                            spatialScene.cornerRadius
+                        )
+                        .frame(width: width, height: height)
+                    
                     ZStack {
                         let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
                         
@@ -29,15 +38,6 @@ struct SpatialSceneContentView: View {
                         }
                         
                     }.environment(spatialScene)
-                    
-                    // Display the main webview
-                    spatialScene.getView()
-                        .materialWithBorderCorner(
-                            spatialScene.backgroundMaterial,
-                            spatialScene.cornerRadius
-                        )
-                        .frame(width: width, height: height)
-                        .padding3D(.front, -100_000)
                     
                 }
             }

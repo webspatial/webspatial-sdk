@@ -33,9 +33,10 @@ struct SpatializedElementView<Content: View>: View {
         // Matrix = MTranslate X MRotate X MScale
         content
             .frame(width: width, height: height)
-//            .background(Color(hex: "#161616E5"))
+            //.frame(depth: 800, alignment:  .front)
+            //.background(Color(hex: "#161616E5"))
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-            .offset(z: 0.0001)
+//            .offset(z: 0.0001)
             .scaleEffect(
                 x: CGFloat(scale.x),
                 y: CGFloat(scale.y),
@@ -48,8 +49,6 @@ struct SpatializedElementView<Content: View>: View {
             )
             .position(x: x, y: y)
             .offset(z: z)
-            .frame(maxDepth: 0, alignment: .back)
-            .offset(z: 0)
             .opacity(opacity)
             .hidden(!visible)
     }
