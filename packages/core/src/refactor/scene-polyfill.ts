@@ -44,7 +44,7 @@ class SceneManager {
     }
 
     const cfg = target ? this.getConfig(target) : undefined
-    const cmd = new createSpatialSceneCommand(url!, cfg)
+    const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
     const retWindowProxy = cmd.executeSync(() => {})
 
     if (typeof target === 'string' && this.configMap[target]) {

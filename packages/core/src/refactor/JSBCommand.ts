@@ -177,9 +177,17 @@ export class InspectCommand extends JSBCommand {
 
 /* WebSpatial Protocol Begin */
 abstract class WebSpatialProtocolCommand extends JSBCommand {
+  target?: string
+  features?: string
+
   async execute(): Promise<WebSpatialProtocolResult> {
     const query = this.getQuery()
-    return platform.callWebSpatialProtocol(this.commandType, query)
+    return platform.callWebSpatialProtocol(
+      this.commandType,
+      query,
+      this.target,
+      this.features,
+    )
   }
 
   executeSync(
@@ -189,6 +197,8 @@ abstract class WebSpatialProtocolCommand extends JSBCommand {
     return platform.callWebSpatialProtocolSync(
       this.commandType,
       query,
+      this.target,
+      this.features,
       resultCb,
     )
   }
@@ -224,6 +234,8 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
   constructor(
     private url: string,
     private config: SpatialSceneCreationOptions | undefined,
+    public target?: string,
+    public features?: string,
   ) {
     super()
   }

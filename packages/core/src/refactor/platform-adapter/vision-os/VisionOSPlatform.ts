@@ -37,8 +37,15 @@ export class VisionOSPlatform implements PlatformAbility {
   callWebSpatialProtocol(
     command: string,
     query?: string,
+    target?: string,
+    features?: string,
   ): Promise<CommandResult> {
-    const { spatialId: id, windowProxy } = this.openWindow(command, query)
+    const { spatialId: id, windowProxy } = this.openWindow(
+      command,
+      query,
+      target,
+      features,
+    )
     return Promise.resolve(
       CommandResultSuccess({ windowProxy: windowProxy, id }),
     )
@@ -47,9 +54,16 @@ export class VisionOSPlatform implements PlatformAbility {
   callWebSpatialProtocolSync(
     command: string,
     query?: string,
+    target?: string,
+    features?: string,
     resultCallback?: (result: CommandResult) => void,
   ): WindowProxy | null {
-    const { spatialId: id, windowProxy } = this.openWindow(command, query)
+    const { spatialId: id, windowProxy } = this.openWindow(
+      command,
+      query,
+      target,
+      features,
+    )
 
     if (resultCallback) {
       setTimeout(() => {
@@ -61,8 +75,18 @@ export class VisionOSPlatform implements PlatformAbility {
     return windowProxy
   }
 
-  private openWindow(command: string, query?: String) {
-    const windowProxy = window.open(`webspatial://${command}?${query || ''}`)
+  private openWindow(
+    command: string,
+    query?: string,
+    target?: string,
+    features?: string,
+  ) {
+    console.log('openWindow:', command, query, target, features)
+    const windowProxy = window.open(
+      `webspatial://${command}?${query || ''}`,
+      target,
+      features,
+    )
     const ua = windowProxy?.navigator.userAgent
     const spatialId = ua?.match(
       /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi,

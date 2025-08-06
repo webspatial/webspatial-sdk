@@ -22,11 +22,15 @@ export interface PlatformAbility {
   callWebSpatialProtocol(
     schema: string,
     query?: string,
+    target?: string,
+    features?: string,
   ): Promise<WebSpatialProtocolResult>
 
   callWebSpatialProtocolSync(
     schema: string,
     query?: string,
+    target?: string,
+    features?: string,
     resultCallback?: (result: CommandResult) => void,
   ): WindowProxy | null
 }
