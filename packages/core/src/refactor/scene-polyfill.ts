@@ -119,7 +119,7 @@ function handleATag(event: MouseEvent) {
   }
 }
 
-async function injectScenePollyfill() {
+async function injectScenePolyfill() {
   if (!window.opener) return
 
   const state = await SpatialScene.getInstance().getState()
@@ -161,5 +161,5 @@ async function injectScenePollyfill() {
 export function injectSceneHook() {
   hijackWindowOpen(window)
   hijackWindowATag(window)
-  injectScenePollyfill()
+  injectScenePolyfill()
 }
