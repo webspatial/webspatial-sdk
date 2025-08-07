@@ -193,6 +193,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func setupJSBListeners() {
+        spatialWebViewModel.addJSBListener(GetSpatialSceneStateCommand.self, onGetSpatialSceneState)
         spatialWebViewModel.addJSBListener(InspectCommand.self, onInspect)
         spatialWebViewModel.addJSBListener(UpdateSceneConfigCommand.self, onUpdateSceneConfig)
         spatialWebViewModel
@@ -252,6 +253,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+    }
+    
+    private func onGetSpatialSceneState(
+        command: GetSpatialSceneStateCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        resolve(.success(CustomReplyData(type: "state", name: state.rawValue)))
     }
 
     private func onInspect(command: InspectCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
