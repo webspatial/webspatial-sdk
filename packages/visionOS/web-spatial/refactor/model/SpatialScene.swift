@@ -383,6 +383,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func updateSpatializedElementProperties(_ spatializedElement: SpatializedElement, _ command: SpatializedElementProperties) {
+        if let name = command.name {
+            spatializedElement.name = name
+        }
+        
         if let width = command.width {
             spatializedElement.width = width
         }

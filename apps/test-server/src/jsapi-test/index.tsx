@@ -7,20 +7,20 @@ import {
   testCreateSpatialized2DElement,
   testSpatialSceneCorner,
   testSpatialSceneMaterial,
-  testCreateSpatializedStatic3DElement,
   testSpatialInspect,
   testSpatialSceneInspect,
+  testAddMultipleSpatialized2DElement,
+  testAddMultipleSpatializedStatic3DElement,
 } from './jsapi'
 
-testSpatialSceneMaterial()
-testSpatialSceneCorner()
+// testSpatialSceneMaterial()
+// testSpatialSceneCorner()
 testCreateSpatialized2DElement().then(spatialized2DElement => {
-  testCreateSpatializedStatic3DElement(spatialized2DElement).then(_ => {})
-
-  testSpatialInspect(spatialized2DElement)
-  testSpatialSceneInspect()
+  testAddMultipleSpatialized2DElement(spatialized2DElement)
+  testAddMultipleSpatializedStatic3DElement(spatialized2DElement).then(() =>
+    testSpatialSceneInspect(),
+  )
 })
-testSpatialSceneInspect()
 
 // function App() {
 //   const style = {
@@ -38,3 +38,4 @@ testSpatialSceneInspect()
 // var root = document.createElement('div')
 // document.body.appendChild(root)
 // ReactDOM.createRoot(root).render(<App />)
+

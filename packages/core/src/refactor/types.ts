@@ -58,6 +58,7 @@ export enum SpatializedElementType {
 }
 
 export interface SpatializedElementProperties {
+  name: string
   width: number
   height: number
   opacity: number

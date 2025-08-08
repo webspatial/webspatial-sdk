@@ -26,6 +26,7 @@ protocol SpatialObjectCommand: CommandDataProtocol {
 }
 
 protocol SpatializedElementProperties: SpatialObjectCommand {
+    var name: String? { get }
     var width: Double? { get }
     var height: Double? { get }
     var backOffset: Double? { get }
@@ -39,6 +40,7 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatialized2DElementProperties"
     let id: String
+    let name: String?
     let width: Double?
     let height: Double?
     let backOffset: Double?
@@ -56,6 +58,7 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
 struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
+    let name: String?
     let width: Double?
     let height: Double?
     let backOffset: Double?

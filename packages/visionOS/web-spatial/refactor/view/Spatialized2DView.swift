@@ -18,7 +18,7 @@ struct Spatialized2DView: View {
 
     var body: some View {
         // Display child spatialized2DElements
-        return ZStack {
+        return ZStack(alignment: Alignment.topLeading) {
             // Display the main webview
             spatialized2DElement.getView()
                 .materialWithBorderCorner(
@@ -27,28 +27,22 @@ struct Spatialized2DView: View {
                 )
                 .gesture(dragGesture)
             
-            OptionalClip(clipEnabled: spatialized2DElement.scrollEnabled) {
-                ZStack {
-                    let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
+            let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
-                    ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                        SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                            Spatialized2DView()
-                        }
-                        .environment(child)
-                    }
-
-                    let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedStatic3DElement).values)
-                    ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                        SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                            SpatializedStatic3DView()
-                        }
-                        .environment(child)
-                    }
+            ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
+                    Spatialized2DView()
                 }
+                .environment(child)
             }
 
-            
+            let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedStatic3DElement).values)
+            ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
+                    SpatializedStatic3DView()
+                }
+                .environment(child)
+            }
         }
     }
 

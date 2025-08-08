@@ -4,12 +4,13 @@ import {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
-import { Quaternion, Euler } from 'three'
-const euler = new Euler(0, 0, Math.PI / 4)
-// const euler = new Euler(0, 0, 0)
+import { Quaternion, Euler, Vec2 } from 'three'
+// const euler = new Euler(0, Math.PI / 3, 0)
+// const euler = new Euler(0, 0, Math.PI / 4)
+const euler = new Euler(0, 0, 0)
 const quaternion = new Quaternion().setFromEuler(euler)
 const transform = {
-  position: { x: 0, y: 0, z: 0 },
+  position: { x: 0, y: 0, z: 100 },
   quaternion: {
     x: quaternion.x,
     y: quaternion.y,
@@ -68,8 +69,8 @@ export async function testCreateSpatialized2DElement() {
     const spatialized2DElement: Spatialized2DElement =
       await session.createSpatialized2DElement()
     await spatialized2DElement.updateProperties({
-      width: 300,
-      height: 300,
+      width: 800,
+      height: 800,
       rotationAnchor: {
         x: 1,
         y: 2,
@@ -83,8 +84,8 @@ export async function testCreateSpatialized2DElement() {
 
     await spatialized2DElement.updateTransform({
       position: {
-        x: 450,
-        y: 450,
+        x: 100,
+        y: 10,
         z: 50,
       },
     })
@@ -100,66 +101,140 @@ export async function testCreateSpatialized2DElement() {
     })
     spatialized2DElement.windowProxy.document.body.style.background = 'green'
 
-    // Sub Spatialized2DElement
-    // const subSpatialized2DElement: Spatialized2DElement =
-    //   await session.createSpatialized2DElement()
-    // await subSpatialized2DElement.updateTransform({
-    //   position: {
-    //     x: 50,
-    //     y: 50,
-    //     z: 50,
-    //   },
-    // })
-    // await subSpatialized2DElement.updateProperties({
-    //   width: 50,
-    //   height: 50,
-    // })
-
-    // await spatialized2DElement.addSpatializedElement(subSpatialized2DElement)
-    // subSpatialized2DElement.windowProxy.document.body.style.background =
-    //   '#ffffff00'
-
-    //  (window as any).spatialized2DElement = spatialized2DElement
-
+    spatialized2DElement.windowProxy.document.title = 'spatialized2DElement'
     return spatialized2DElement
   }
 }
 
-export async function testCreateSpatializedStatic3DElement(
+export async function testAddMultipleSpatialized2DElement(
   parent: Spatialized2DElement | null = null,
 ) {
   if (session) {
-    const spatialObject: SpatializedStatic3DElement =
-      await session.createSpatializedStatic3DElement()
+    const spatialScene = session.getSpatialScene()
 
-    await spatialObject.updateProperties({
-      width: 150,
-      height: 150,
-      rotationAnchor: {
-        x: 0.5,
-        y: 0.5,
-        z: 0.5,
-      },
-      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+    const spatialized2DElementA: Spatialized2DElement =
+      await session.createSpatialized2DElement()
+    await spatialized2DElementA.updateProperties({
+      name: 'A',
+      width: 300,
+      height: 300,
+      scrollEnabled: false,
     })
 
-    await spatialObject.updateTransform({
+    await spatialized2DElementA.updateTransform({
       position: {
-        x: 150,
+        x: 320,
         y: 150,
         z: 10,
       },
-
-      quaternion: transform.quaternion,
     })
-
-    console.log('dbg quaternion', quaternion)
+    spatialized2DElementA.windowProxy.document.body.style.background =
+      'rgb(5, 0, 128)'
+    spatialized2DElementA.windowProxy.document.title = 'A'
+    spatialized2DElementA.windowProxy.document.documentElement.style.width =
+      '300px'
+    spatialized2DElementA.windowProxy.document.documentElement.style.height =
+      '300px'
+    spatialized2DElementA.windowProxy.document.body.style.position = 'absolute'
+    spatialized2DElementA.windowProxy.document.body.style.left = '0px'
+    spatialized2DElementA.windowProxy.document.body.style.top = '0px'
+    spatialized2DElementA.windowProxy.document.body.style.width = '300px'
+    spatialized2DElementA.windowProxy.document.body.style.height = '300px'
 
     if (parent) {
-      parent.addSpatializedElement(spatialObject)
+      parent.addSpatializedElement(spatialized2DElementA)
     } else {
-      const spatialScene = session.getSpatialScene()
-      await spatialScene.addSpatializedElement(spatialObject)
+      await spatialScene.addSpatializedElement(spatialized2DElementA)
+    }
+
+    // create spatialized2DElementB
+    const spatialized2DElementB: Spatialized2DElement =
+      await session.createSpatialized2DElement()
+    await spatialized2DElementB.updateProperties({
+      name: 'B',
+      width: 200,
+      height: 100,
+      scrollEnabled: false,
+    })
+    await spatialized2DElementB.updateTransform({
+      position: {
+        x: 100,
+        y: 50,
+        z: 20,
+      },
+    })
+    spatialized2DElementB.windowProxy.document.title = 'B'
+    spatialized2DElementB.windowProxy.document.body.style.background = 'red'
+    spatialized2DElementB.windowProxy.document.documentElement.style.width =
+      '300px'
+    spatialized2DElementB.windowProxy.document.documentElement.style.height =
+      '300px'
+
+    spatialized2DElementB.windowProxy.document.body.style.position = 'absolute'
+    spatialized2DElementB.windowProxy.document.body.style.left = '0px'
+    spatialized2DElementB.windowProxy.document.body.style.top = '0px'
+    spatialized2DElementB.windowProxy.document.body.style.width = '300px'
+    spatialized2DElementB.windowProxy.document.body.style.height = '300px'
+
+    if (parent) {
+      parent.addSpatializedElement(spatialized2DElementB)
+    } else {
+      await spatialScene.addSpatializedElement(spatialized2DElementB)
+    }
+  }
+}
+
+export async function testAddMultipleSpatializedStatic3DElement(
+  parent: Spatialized2DElement | null = null,
+) {
+  if (session) {
+    const spatialScene = session.getSpatialScene()
+
+    const spatializedStatic3DElementA: SpatializedStatic3DElement =
+      await session.createSpatializedStatic3DElement()
+    await spatializedStatic3DElementA.updateProperties({
+      name: 'A',
+      width: 200,
+      height: 200,
+      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+    })
+
+    await spatializedStatic3DElementA.updateTransform({
+      position: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+    })
+
+    if (parent) {
+      parent.addSpatializedElement(spatializedStatic3DElementA)
+    } else {
+      await spatialScene.addSpatializedElement(spatializedStatic3DElementA)
+    }
+
+    // create
+    const spatializedStatic3DElementB: SpatializedStatic3DElement =
+      await session.createSpatializedStatic3DElement()
+    await spatializedStatic3DElementB.updateProperties({
+      name: 'B',
+      width: 200,
+      height: 200,
+      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+    })
+
+    await spatializedStatic3DElementB.updateTransform({
+      position: {
+        x: 300,
+        y: 0,
+        z: 0,
+      },
+    })
+
+    if (parent) {
+      parent.addSpatializedElement(spatializedStatic3DElementB)
+    } else {
+      await spatialScene.addSpatializedElement(spatializedStatic3DElementB)
     }
   }
 }
