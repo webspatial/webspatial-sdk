@@ -1,13 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Model, SpatialDiv } from '@webspatial/react-sdk'
-import {
-  Spatial,
-  SpatialEntity,
-  SpatialHelper,
-  SpatialViewComponent,
-  Vec3,
-} from '@webspatial/core-sdk'
+import { Spatial } from '@webspatial/core-sdk'
 
 function App() {
   let [_supported, setSupported] = useState(false)

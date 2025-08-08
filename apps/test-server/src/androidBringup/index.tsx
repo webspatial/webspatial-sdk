@@ -1,4 +1,4 @@
-import { Spatial, SpatialHelper } from '@webspatial/core-sdk'
+import { Spatial } from '@webspatial/core-sdk'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
@@ -25,28 +25,28 @@ function App() {
   }, [])
 
   const handleToggle = () => {
-    setState(current => {
-      switch (current) {
-        case 'Transparent':
-          SpatialHelper.instance?.setBackgroundStyle(
-            { material: { type: 'translucent' }, cornerRadius: 15 },
-            '#00000000',
-          )
-          return 'Translucent'
-        case 'Translucent':
-          SpatialHelper.instance?.setBackgroundStyle(
-            { material: { type: 'none' }, cornerRadius: 15 },
-            '#000000',
-          )
-          return 'None'
-        case 'None':
-          SpatialHelper.instance?.setBackgroundStyle(
-            { material: { type: 'transparent' }, cornerRadius: 15 },
-            '#00000000',
-          )
-          return 'Transparent'
-      }
-    })
+    // setState(current => {
+    //   switch (current) {
+    //     case 'Transparent':
+    //       SpatialHelper.instance?.setBackgroundStyle(
+    //         { material: { type: 'translucent' }, cornerRadius: 15 },
+    //         '#00000000',
+    //       )
+    //       return 'Translucent'
+    //     case 'Translucent':
+    //       SpatialHelper.instance?.setBackgroundStyle(
+    //         { material: { type: 'none' }, cornerRadius: 15 },
+    //         '#000000',
+    //       )
+    //       return 'None'
+    //     case 'None':
+    //       SpatialHelper.instance?.setBackgroundStyle(
+    //         { material: { type: 'transparent' }, cornerRadius: 15 },
+    //         '#00000000',
+    //       )
+    //       return 'Transparent'
+    //   }
+    // })
   }
 
   return (
@@ -95,10 +95,10 @@ function App() {
   )
 }
 
-SpatialHelper.instance?.setBackgroundStyle(
-  { material: { type: 'transparent' }, cornerRadius: 15 },
-  '#00000000',
-)
+// SpatialHelper.instance?.setBackgroundStyle(
+//   { material: { type: 'transparent' }, cornerRadius: 15 },
+//   '#00000000',
+// )
 
 // Initialize react
 var root = document.createElement('div')
