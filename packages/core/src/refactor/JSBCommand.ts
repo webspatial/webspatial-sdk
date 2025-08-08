@@ -65,6 +65,18 @@ export class FocusScene extends JSBCommand {
   }
 }
 
+export class GetSpatialSceneState extends JSBCommand {
+  commandType = 'GetSpatialSceneState'
+
+  constructor() {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    return {}
+  }
+}
+
 export abstract class SpatializedElementCommand extends JSBCommand {
   constructor(readonly spatialObject: SpatialObject) {
     super()

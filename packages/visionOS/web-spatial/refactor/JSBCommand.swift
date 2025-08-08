@@ -108,3 +108,7 @@ struct FocusSceneCommand: CommandDataProtocol {
         self.id = id
     }
 }
+
+struct GetSpatialSceneStateCommand: CommandDataProtocol {
+    static let commandType = "GetSpatialSceneState"
+}

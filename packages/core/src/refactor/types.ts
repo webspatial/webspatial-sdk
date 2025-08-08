@@ -94,6 +94,14 @@ export interface SpatialSceneCreationOptions {
   }
 }
 
+export enum SpatialSceneStateKind {
+  idle = 'idle',
+  pending = 'pending',
+  willVisible = 'willVisible',
+  visible = 'visible',
+  fail = 'fail',
+}
+
 declare global {
   interface Window {
     xrCurrentSceneDefaults: (

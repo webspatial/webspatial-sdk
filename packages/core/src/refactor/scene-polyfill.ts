@@ -1,6 +1,6 @@
 import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
 import { SpatialScene } from './SpatialScene'
-import { SpatialSceneCreationOptions } from './types'
+import { SpatialSceneCreationOptions, SpatialSceneStateKind } from './types'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -119,11 +119,14 @@ function handleATag(event: MouseEvent) {
   }
 }
 
-async function injectScenePollyfill() {
+async function injectScenePolyfill() {
   if (!window.opener) return
-  if ((window as any)._SceneHookOff) return
 
-  // see this flag, we have done create the root scene
+  const state = await SpatialScene.getInstance().getState()
+
+  // only run this in pending state
+  if (state !== SpatialSceneStateKind.pending) return
+
 
   function onContentLoaded(callback: any) {
     if (
@@ -158,5 +161,5 @@ async function injectScenePollyfill() {
 export function injectSceneHook() {
   hijackWindowOpen(window)
   hijackWindowATag(window)
-  injectScenePollyfill()
+  injectScenePolyfill()
 }
