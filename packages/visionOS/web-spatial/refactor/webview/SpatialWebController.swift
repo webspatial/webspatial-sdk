@@ -88,10 +88,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         if let modelInfo = openWindowInvoke?(navigationAction.request.url!) {
-            if modelInfo.element.getController().webview == nil {
-                _ = WKWebViewManager.Instance.create(controller: modelInfo.element.getController(), configuration: configuration, spatialId: modelInfo.id)
-            }
-            modelInfo.element.load()
+            modelInfo.element.load(configuration, modelInfo.id)
             return modelInfo.element.getController().webview
         }
         print("no webview")
