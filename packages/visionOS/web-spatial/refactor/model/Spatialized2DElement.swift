@@ -116,7 +116,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     enum CodingKeys: String, CodingKey {
-        case cornerRadius, backgroundMaterial, children, type, scrollOffset, scrollEnabled
+        case cornerRadius, backgroundMaterial, children, type, scrollOffset, scrollEnabled, webviewIsOpaque, webviewId
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -128,5 +128,10 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         try container.encode(SpatializedElementType.Spatialized2DElement, forKey: .type)
         try container.encode(scrollOffset, forKey: .scrollOffset)
         try container.encode(scrollEnabled, forKey: .scrollEnabled)
+
+        // for debug only
+        try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
+        try container.encode(spatialWebViewModel.id, forKey: .webviewId)
+
     }
 }

@@ -22,6 +22,8 @@ testCreateSpatialized2DElement().then(spatialized2DElement => {
   // )
 })
 
+window.testSpatialSceneInspect = testSpatialSceneInspect
+
 // function App() {
 //   const style = {
 //     width: '100vw',

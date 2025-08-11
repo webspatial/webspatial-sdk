@@ -51,6 +51,9 @@ class SpatialWebViewModel: SpatialObject {
         if url.count > 0 {
             controller?.webview!.load(URLRequest(url: URL(string: url)!))
             controller?.startObserving()
+        } else {
+            controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
+            controller!.webview?.isOpaque = backgroundTransparent
         }
     }
 
