@@ -199,6 +199,18 @@ export class InspectCommand extends JSBCommand {
   }
 }
 
+export class DestroyCommand extends JSBCommand {
+  commandType = 'Destroy'
+
+  constructor(readonly id: string) {
+    super()
+  }
+
+  protected getParams() {
+    return { id: this.id }
+  }
+}
+
 /* WebSpatial Protocol Begin */
 abstract class WebSpatialProtocolCommand extends JSBCommand {
   target?: string

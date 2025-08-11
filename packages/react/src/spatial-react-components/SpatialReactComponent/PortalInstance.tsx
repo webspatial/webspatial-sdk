@@ -231,18 +231,17 @@ function useSyncSpatialProps(
 
   const isFixedPosition = stylePosition == 'fixed'
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
+    if (spatialWindowManager) {
       spatialWindowManager.updateCSSPosition(isFixedPosition)
     }
   }, [spatialWindowManager, isFixedPosition])
 
   // Sync prop updates
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
+    if (spatialWindowManager) {
       ;(async function () {
-        webview.setStyle({
-          material: { type: material.type },
+        spatialWindowManager.updateProperties({
+          material: material.type,
           cornerRadius: cornerRadiusObject,
         })
       })()
@@ -257,14 +256,11 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      ;(async function () {
-        webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
-
-        const isFixed = scrollWithParent == false || isFixedPosition
-        webview.setScrollWithParent(!isFixed)
-      })()
+    if (spatialWindowManager) {
+      spatialWindowManager.updateProperties({
+        scrollEnabled: allowScroll || styleOverflow == 'scroll',
+        scrollWithParent: !(scrollWithParent == false || isFixedPosition),
+      })
     }
   }, [
     spatialWindowManager,
@@ -273,18 +269,6 @@ function useSyncSpatialProps(
     isFixedPosition,
     styleOverflow,
   ])
-
-  useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      ;(async function () {
-        webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
-
-        const isFixed = scrollWithParent == false || stylePosition == 'fixed'
-        webview.setScrollWithParent(!isFixed)
-      })()
-    }
-  }, [spatialWindowManager, allowScroll, scrollWithParent, stylePosition])
 
   useEffect(() => {
     if (spatialWindowManager) {
@@ -315,21 +299,20 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      webview.setOpacity(opacity)
-    }
+    spatialWindowManager?.updateProperties({
+      opacity,
+    })
   }, [spatialWindowManager, opacity])
 
   useEffect(() => {
-    if (spatialWindowManager) {
-      spatialWindowManager.entity?.setVisible(visible)
-    }
+    spatialWindowManager?.updateProperties({
+      visible,
+    })
   }, [spatialWindowManager, visible])
 
   useEffect(() => {
     // sync viewport
-    if (spatialWindowManager?.window && spatialWindowManager.webview) {
+    if (spatialWindowManager?.window) {
       ;(async function () {
         const bodyWidth = document.body.getBoundingClientRect().width
         const viewport = spatialWindowManager.window?.document.querySelector(
@@ -339,11 +322,9 @@ function useSyncSpatialProps(
           'content',
           `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`,
         )
-        await spatialWindowManager.webview?.setScrollEdgeInsets({
-          top: 0,
-          left: 0,
-          bottom: 0,
-          right: domRect.width - bodyWidth,
+
+        await spatialWindowManager.updateProperties({
+          scrollEdgeInsetsMarginRight: domRect.width - bodyWidth,
         })
       })()
     }

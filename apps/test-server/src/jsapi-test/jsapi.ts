@@ -99,7 +99,9 @@ export async function testCreateSpatialized2DElement() {
         bottomTrailing: 10,
       },
     })
-    spatialized2DElement.windowProxy.document.body.style.background = 'green'
+    spatialized2DElement.windowProxy.document.body.style.background =
+      'transparent'
+    spatialized2DElement.windowProxy.document.body.textContent = 'hello world'
 
     spatialized2DElement.windowProxy.document.title = 'spatialized2DElement'
     return spatialized2DElement
@@ -164,11 +166,13 @@ export async function testAddMultipleSpatialized2DElement(
       },
     })
     spatialized2DElementB.windowProxy.document.title = 'B'
-    spatialized2DElementB.windowProxy.document.body.style.background = 'red'
+    spatialized2DElementB.windowProxy.document.body.style.background =
+      'transparent'
     spatialized2DElementB.windowProxy.document.documentElement.style.width =
       '300px'
     spatialized2DElementB.windowProxy.document.documentElement.style.height =
       '300px'
+    spatialized2DElementB.windowProxy.document.body.textContent = 'hello world'
 
     spatialized2DElementB.windowProxy.document.body.style.position = 'absolute'
     spatialized2DElementB.windowProxy.document.body.style.left = '0px'

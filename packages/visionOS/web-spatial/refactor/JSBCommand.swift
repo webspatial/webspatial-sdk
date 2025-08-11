@@ -25,6 +25,11 @@ protocol SpatialObjectCommand: CommandDataProtocol {
     var id: String { get }
 }
 
+struct DestroyCommand: CommandDataProtocol {
+    static let commandType: String = "Destroy"
+    var id: String
+}
+
 protocol SpatializedElementProperties: SpatialObjectCommand {
     var name: String? { get }
     var width: Double? { get }
@@ -53,6 +58,10 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let scrollEnabled: Bool?
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
+    
+    // this value is used by previous WebSpatial code, keep it here only for Compatibility consideration
+    // may delete it when we think it's not needed
+    let scrollEdgeInsetsMarginRight: Double?
 }
 
 struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties {

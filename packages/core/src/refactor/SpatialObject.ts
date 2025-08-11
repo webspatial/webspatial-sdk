@@ -1,4 +1,4 @@
-import { InspectCommand } from './JSBCommand'
+import { DestroyCommand, InspectCommand } from './JSBCommand'
 
 /**
  * @hidden
@@ -19,5 +19,11 @@ export class SpatialObject {
     throw new Error(ret.errorMessage)
   }
 
-  async destroy() {}
+  async destroy() {
+    const ret = await new DestroyCommand(this.id).execute()
+    if (ret.success) {
+      return ret.data
+    }
+    throw new Error(ret.errorMessage)
+  }
 }

@@ -1,13 +1,18 @@
-import { SpatialEntity, SpatialWindowComponent } from '@webspatial/core-sdk'
+import {
+  Spatialized2DElement,
+  Spatialized2DElementProperties,
+} from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { vecType, quatType, RectType } from '../types'
 
 // Manager classes to handle resource creation/deletion
 export class SpatialWindowManager {
   initPromise?: Promise<any>
-  entity?: SpatialEntity
-  webview?: SpatialWindowComponent
-  window: WindowProxy | null = null
+  get window() {
+    return this.spatialized2DElement?.windowProxy
+  }
+
+  spatialized2DElement: Spatialized2DElement | null = null
 
   private parentSpatialWindowManager?: SpatialWindowManager
   private isFixedPosition: boolean
@@ -21,34 +26,29 @@ export class SpatialWindowManager {
   }
 
   setDebugName(debugName: string) {
-    this.entity?._setName(debugName)
+    // this.entity?._setName(debugName)
+    this.spatialized2DElement?.updateProperties({
+      name: debugName,
+    })
   }
 
-  private async initInternal(url: string) {
-    this.entity = await getSession()!.createEntity()
-    this.webview = await getSession()!.createWindowComponent()
-    await this.webview.loadURL(url)
-    await this.entity.setCoordinateSpace('Dom')
-    await this.webview.setScrollWithParent(true)
-    await this.webview.setScrollEnabled(false)
-    await this.entity.setComponent(this.webview)
+  // private async initInternal(url: string) {
+  //   console.log('dbg initInternal', url)
+  //   // this.entity = await getSession()!.createEntity()
+  //   // this.webview = await getSession()!.createWindowComponent()
+  //   // await this.webview.loadURL(url)
+  //   // await this.entity.setCoordinateSpace('Dom')
+  //   // await this.webview.setScrollWithParent(true)
+  //   // await this.webview.setScrollEnabled(false)
+  //   // await this.entity.setComponent(this.webview)
 
-    var wc = await getSession()!.getCurrentWindowComponent()
-    var ent = await wc.getEntity()
-    await this.entity.setParent(ent!)
-  }
+  //   // var wc = await getSession()!.getCurrentWindowComponent()
+  //   // var ent = await wc.getEntity()
+  //   // await this.entity.setParent(ent!)
+  // }
 
   private async initInternalFromWindow() {
-    var w = await getSession()!.createWindowContext()
-    this.window = w
-    this.entity = await getSession()!.createEntity()
-    this.webview = await getSession()!.createWindowComponent()
-    await this.webview.setFromWindow(w)
-    await this.entity.setCoordinateSpace('Dom')
-    await this.webview.setScrollWithParent(true)
-    await this.webview.setScrollEnabled(false)
-    await this.entity.setComponent(this.webview)
-
+    this.spatialized2DElement = await getSession()!.createSpatialized2DElement()
     this.setEntityParentByCSSPosition(this.isFixedPosition)
   }
 
@@ -61,80 +61,87 @@ export class SpatialWindowManager {
     return this.setEntityParentByCSSPosition(isFixedPosition)
   }
 
+  async updateProperties(properties: Partial<Spatialized2DElementProperties>) {
+    this.spatialized2DElement?.updateProperties(properties)
+  }
+
   private async setEntityParentByCSSPosition(isFixedPosition: boolean) {
     if (this.initPromise) {
       await this.initPromise
       if (isFixedPosition || !this.parentSpatialWindowManager) {
         // Add as a child of the current page
-        var wc = await getSession()!.getCurrentWindowComponent()
-        var ent = await wc.getEntity()
-        await this.entity!.setParent(ent!)
+        var spatialScene = await getSession()!.getSpatialScene()
+        await spatialScene.addSpatializedElement(this.spatialized2DElement!)
       } else {
         const parentSpatialWindowManager = this.parentSpatialWindowManager!
         // Add as a child of the parent
         await parentSpatialWindowManager.initPromise
-        this.entity!.setParent(parentSpatialWindowManager.entity!)
+        parentSpatialWindowManager.spatialized2DElement?.addSpatializedElement(
+          this.spatialized2DElement!,
+        )
       }
     }
   }
 
-  async init(url: string) {
-    this.initPromise = this.initInternal(url)
-    await this.initPromise
-  }
   async initFromWidow() {
     this.initPromise = this.initInternalFromWindow()
     await this.initPromise
   }
   async resize(
     rect: RectType,
-    offset: vecType,
+    position: vecType,
     rotation: quatType = { x: 0, y: 0, z: 0, w: 1 },
     scale: vecType = { x: 1, y: 1, z: 1 },
     rotationOrigin: vecType = { x: 0, y: 0, z: 0 },
     parrentOffset: number = 0,
   ) {
-    let targetPosX = rect.x + rect.width / 2
-    // Adjust to get the page relative to document instead of viewport
-    // This is needed as when you scroll down the page the rect.top moves but we dont want it to so we can offset that by adding scroll
-    let targetPosY = rect.y + rect.height / 2 + parrentOffset
-
-    if (!this.webview) {
+    if (!this.spatialized2DElement) {
       return
     }
-    var entity = this.entity!
-    entity.transform.position.x = targetPosX + (offset ? offset.x : 0)
-    entity.transform.position.y = targetPosY + (offset ? offset.y : 0)
-    entity.transform.position.z = offset ? offset.z : 0
 
-    entity.transform.orientation.x = rotation.x
-    entity.transform.orientation.y = rotation.y
-    entity.transform.orientation.z = rotation.z
-    entity.transform.orientation.w = rotation.w
+    const spatialized2DElement = this.spatialized2DElement!
+    await spatialized2DElement.updateTransform({
+      position: {
+        x: rect.x + position.x,
+        y: rect.y + position.y + parrentOffset,
+        z: position.z,
+      },
+      quaternion: {
+        x: rotation.x,
+        y: rotation.y,
+        z: rotation.z,
+        w: rotation.w,
+      },
+      scale: {
+        x: scale.x,
+        y: scale.y,
+        z: scale.z,
+      },
+    })
 
-    entity.transform.scale.x = scale.x
-    entity.transform.scale.y = scale.y
-    entity.transform.scale.z = scale.z
-
-    await entity.updateTransform()
-
-    var webview = this.webview!
-    await webview.setResolution(rect.width, rect.height)
-
-    await webview.setRotationAnchor(rotationOrigin)
+    await spatialized2DElement.updateProperties({
+      width: rect.width,
+      height: rect.height,
+      rotationAnchor: rotationOrigin,
+    })
   }
 
   async setZIndex(zIndex: number) {
-    let entity = this.entity!
-    entity.updateZIndex(zIndex)
+    if (!this.spatialized2DElement) {
+      return
+    }
+
+    const spatialized2DElement = this.spatialized2DElement!
+    await spatialized2DElement.updateProperties({
+      zIndex,
+    })
   }
 
   async destroy() {
     if (this.initPromise) {
       await this.initPromise
-      this.entity?.destroy()
-      this.webview?.destroy()
-      this.window = null
+      this.spatialized2DElement?.destroy()
+      this.spatialized2DElement = null
     }
   }
 }

@@ -45,8 +45,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var url: String = "" // start_url
     var windowStyle:WindowStyle = .plain
 
-    
-
     enum SceneStateKind: String {
         // default value
         case idle
@@ -201,6 +199,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 FocusSceneCommand.self,
                 onFocusScene
             )
+        
+        spatialWebViewModel.addJSBListener(DestroyCommand.self, onDestroySpatialObjectCommand)
+
+        
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -274,6 +276,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         } else {
             // inspect current SpatialScene
             resolve(.success(self))
+            return
+        }
+    }
+
+    private func onDestroySpatialObjectCommand(command: DestroyCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if let spatialObject: SpatialObject = findSpatialObject(command.id) {
+            spatialObject.destroy()
+            resolve(.success(nil))
+            return
+        } else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to destroy SpatialObject: invalid inspect spatial object id \(command.id) not exsit!")))
             return
         }
     }
