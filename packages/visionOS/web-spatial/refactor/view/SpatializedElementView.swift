@@ -36,7 +36,7 @@ struct SpatializedElementView<Content: View>: View {
             .frame(depth: 0, alignment:  .back)
 //            .background(Color(hex: "#161616E5"))
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-//            .offset(z: 0.0001)
+            .offset(z: 0.0001)
             .scaleEffect(
                 x: CGFloat(scale.x),
                 y: CGFloat(scale.y),
