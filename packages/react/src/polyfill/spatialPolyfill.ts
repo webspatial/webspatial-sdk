@@ -13,9 +13,9 @@ function setCurrentWindowStyle(backgroundMaterial: string) {
   if (backgroundMaterial !== htmlBackgroundMaterial) {
     const session = getSession()!
     // fixme:
-    // session.getCurrentWindowComponent().setStyle({
-    //   material: { type: backgroundMaterial as any },
-    // })
+    session.getSpatialScene().updateSpatialProperties({
+      material: backgroundMaterial as any,
+    })
     htmlBackgroundMaterial = backgroundMaterial
   }
 }
@@ -52,10 +52,9 @@ function setCornerRadius(cornerRadius: any) {
   ) {
     const session = getSession()!
     if (!session) return
-    // fixme:
-    // session.getCurrentWindowComponent().setStyle({
-    //   cornerRadius,
-    // })
+    session.getSpatialScene().updateSpatialProperties({
+      cornerRadius,
+    })
     htmlCornerRadius.topLeading = cornerRadius.topLeading
     htmlCornerRadius.bottomLeading = cornerRadius.bottomLeading
     htmlCornerRadius.topTrailing = cornerRadius.topTrailing
@@ -67,6 +66,7 @@ function setOpacity(opacity: number) {
   const session = getSession()!
   if (!session) return
   // fixme:
+  // ses
   // session.getCurrentWindowComponent().setOpacity(opacity)
 }
 
