@@ -93,7 +93,7 @@ function asyncLoadStyleToChildWindow(
     // the second load request never is fired resulting in css not to be applied.
     // Workaround this by making the css stylesheet request unique
     n.href += '?uniqueURL=' + Math.random()
-    n.onerror = function () {
+    n.onerror = function (error) {
       console.error(
         'Failed to load style link',
         debugName,
@@ -105,7 +105,11 @@ function asyncLoadStyleToChildWindow(
       resolve(true)
     }
 
-    childWindow.document.head.appendChild(n)
+    // need to wait for some time to make sure the style is loaded
+    // otherwise, the style may not be applied
+    setTimeout(() => {
+      childWindow.document.head.appendChild(n)
+    }, 20)
   })
 }
 
