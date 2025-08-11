@@ -225,6 +225,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             print("---------------onLeavePageSession---------------")
             self.onLeavePageSession()
         }
+        
+        spatialWebViewModel.addStateListener(.didStartLoad) {
+            self.backgroundMaterial = .None
+        }
 
         spatialWebViewModel.addScrollUpdateListener { _, point in
             self._scrollOffset.x = point.x
