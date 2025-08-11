@@ -38,13 +38,13 @@ class SpatialWebViewModel: SpatialObject {
         controller?.registerScrollUpdateInvoke(invoke: onScrollUpdateInvoke)
     }
 
-    func load() {
-        load(url)
+    func load(_ configuration: WKWebViewConfiguration? = nil, _ spatialId: String? = "") {
+        load(url, configuration, spatialId)
     }
 
-    func load(_ url: String) {
+    func load(_ url: String, _ configuration: WKWebViewConfiguration? = nil, _ spatialId: String? = "") {
         if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!)
+            _ = WKWebViewManager.Instance.create(controller: controller!, configuration: configuration, spatialId: spatialId)
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
