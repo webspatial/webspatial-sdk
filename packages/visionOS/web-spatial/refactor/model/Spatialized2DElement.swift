@@ -17,6 +17,17 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             spatialWebViewModel.scrollEnabled = newValue
         }
     }
+    
+    var scrollEdgeInsetsMarginRight: CGFloat? {
+        get {
+            return spatialWebViewModel.getController().webview?.scrollView.contentInset.right
+        }
+        set(newValue) {
+            spatialWebViewModel.getController().webview?.scrollView.contentInset.right = newValue ?? 0
+        }
+    }
+    
+    
 
     var _scrollOffset: Vec2 = .init(x: 0, y: 0)
     var scrollOffset: Vec2 {

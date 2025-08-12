@@ -396,6 +396,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let cornerRadius = command.cornerRadius {
             spatialized2DElement.cornerRadius = cornerRadius
         }
+        
+        if let scrollEdgeInsetsMarginRight = command.scrollEdgeInsetsMarginRight {
+            spatialized2DElement.cornerRadius = cornerRadius
+        }
+        
+        
 
         resolve(.success(baseReplyData))
     }

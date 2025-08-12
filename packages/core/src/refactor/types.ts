@@ -69,11 +69,11 @@ export interface SpatializedElementProperties {
   rotationAnchor: Vec3
 }
 
-export interface Spatialized2DElementProperties
-  extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties extends SpatializedElementProperties {
   scrollEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
+  scrollEdgeInsetsMarginRight: number
 }
 
 export interface SpatializedStatic3DElementProperties
