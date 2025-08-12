@@ -1,8 +1,5 @@
 import React, { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@webspatial/core-sdk'
-
-//(window as any).wx = WebSpatial
 
 var _panelContentUpdate = ''
 ;(window as any).updatePanelContent = (str: string) => {
