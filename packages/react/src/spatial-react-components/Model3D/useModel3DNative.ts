@@ -1,10 +1,14 @@
 import { useRef, useEffect, useState } from 'react'
 import { Model3DNative } from './Model3DNative'
-import { SpatialModelDragEvent, SpatialEntity } from '@webspatial/core-sdk'
+import {
+  Spatialized2DElement,
+  SpatialModelDragEvent,
+} from '@webspatial/core-sdk'
+import { useForceUpdate } from '../hooks/useForceUpdate'
 
 export function useModel3DNative(
   modelUrl: string,
-  parentEntity: SpatialEntity | undefined,
+  parentEntity?: Spatialized2DElement,
   eventHandlers: {
     onDragStart?: (dragEvent: SpatialModelDragEvent) => void
     onDrag?: (dragEvent: SpatialModelDragEvent) => void
@@ -22,6 +26,7 @@ export function useModel3DNative(
   )
   const [failureReason, setFailureReason] = useState('')
 
+  const forceUpdate = useForceUpdate()
   useEffect(() => {
     let isDestroyed = false
 
@@ -44,6 +49,7 @@ export function useModel3DNative(
           if (onModel3DNativeReadyCb) {
             onModel3DNativeReadyCb(model3DContainer)
           }
+          forceUpdate()
         }
       })
 
@@ -60,17 +66,17 @@ export function useModel3DNative(
 
   useEffect(() => {
     if (model3DNativeRef.current) {
-      model3DNativeRef.current.onDragStart = eventHandlers.onDragStart
+      // model3DNativeRef.current.onDragStart = eventHandlers.onDragStart
     }
   }, [model3DNativeRef.current, eventHandlers.onDragStart])
   useEffect(() => {
     if (model3DNativeRef.current) {
-      model3DNativeRef.current.onDrag = eventHandlers.onDrag
+      // model3DNativeRef.current.onDrag = eventHandlers.onDrag
     }
   }, [model3DNativeRef.current, eventHandlers.onDrag])
   useEffect(() => {
     if (model3DNativeRef.current) {
-      model3DNativeRef.current.onDragEnd = eventHandlers.onDragEnd
+      // model3DNativeRef.current.onDragEnd = eventHandlers.onDragEnd
     }
   })
   useEffect(() => {

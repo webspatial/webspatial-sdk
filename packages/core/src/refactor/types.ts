@@ -95,12 +95,21 @@ export interface SpatialSceneCreationOptions {
   }
 }
 
-export enum SpatialSceneStateKind {
+export enum SpatialSceneState {
   idle = 'idle',
   pending = 'pending',
   willVisible = 'willVisible',
   visible = 'visible',
   fail = 'fail',
+}
+
+/**
+ * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
+ */
+export type SpatialModelDragEvent = {
+  eventType: 'dragstart' | 'dragend' | 'drag'
+  translation3D: Vec3
+  startLocation3D: Vec3
 }
 
 declare global {
@@ -140,3 +149,4 @@ declare global {
     }
   }
 }
+

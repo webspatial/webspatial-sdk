@@ -1,7 +1,7 @@
 import {
-  SpatialModelDragEvent,
-  SpatialEntity,
-  SpatialModel3DComponent,
+  // SpatialModelDragEvent,
+  Spatialized2DElement,
+  SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 import { getSession } from '../../utils'
 import { SpatialTransformType } from './types'
@@ -9,23 +9,24 @@ import { getAbsoluteURL } from './utils'
 import { parseTransformOrigin } from '../SpatialReactComponent/utils'
 import { RectType } from '../types'
 
+class SpatialModelDragEvent {}
+
 export class Model3DNative {
-  constructor(parentEntity?: SpatialEntity) {
+  constructor(parentEntity?: Spatialized2DElement) {
     this.parentEntity = parentEntity
   }
 
-  private parentEntity?: SpatialEntity
+  private parentEntity?: Spatialized2DElement
   private initPromise?: Promise<any>
-  private entity?: SpatialEntity
-  private spatialModel3DComponent?: SpatialModel3DComponent
+  private spatialObject?: SpatializedStatic3DElement
 
   // private modelUrl: string
 
   private isDestroyed = false
 
-  private _onDragStart?: (dragEvent: SpatialModelDragEvent) => void
-  private _onDrag?: (dragEvent: SpatialModelDragEvent) => void
-  private _onDragEnd?: (dragEvent: SpatialModelDragEvent) => void
+  // private _onDragStart?: (dragEvent: SpatialModelDragEvent) => void
+  // private _onDrag?: (dragEvent: SpatialModelDragEvent) => void
+  // private _onDragEnd?: (dragEvent: SpatialModelDragEvent) => void
 
   private _onTap?: () => void
   private _onDoubleTap?: () => void
@@ -57,68 +58,53 @@ export class Model3DNative {
     }
 
     // Create entity with view component to display the model inside
-    const entity = await session.createEntity()
-    await entity.setCoordinateSpace('Dom')
-
-    const spatialModel3DComponent = await session.createModel3DComponent({
-      url: getAbsoluteURL(modelUrl),
-    })
-
-    await entity.setComponent(spatialModel3DComponent)
+    const spatialObject = await session.createSpatializedStatic3DElement(
+      getAbsoluteURL(modelUrl),
+    )
     if (this.isDestroyed) {
       return
     }
     if (this.parentEntity) {
-      await entity.setParent(this.parentEntity)
+      await this.parentEntity.addSpatializedElement(spatialObject)
     } else {
-      // Add entity to the window
-      var wc = session.getCurrentWindowComponent()
-      var ent = await wc.getEntity()
-      await entity.setParent(ent!)
+      // Add spatialObject to the spatialObject
+      var spatialScene = session.getSpatialScene()
+      await spatialScene.addSpatializedElement(spatialObject)
     }
 
-    this.entity = entity
-    this.spatialModel3DComponent = spatialModel3DComponent
+    this.spatialObject = spatialObject
 
-    this.spatialModel3DComponent.onSuccess = onSuccess
-    this.spatialModel3DComponent.onFailure = onFailure
-    this.spatialModel3DComponent.onDragStart = this._onDragStart
-    this.spatialModel3DComponent.onDrag = this._onDrag
-    this.spatialModel3DComponent.onDragEnd = this._onDragEnd
-    this.spatialModel3DComponent.onTap = this._onTap
-    this.spatialModel3DComponent.onDoubleTap = this._onDoubleTap
-    this.spatialModel3DComponent.onLongPress = this._onLongPress
+    // this.spatialModel3DComponent.onSuccess = onSuccess
+    // this.spatialModel3DComponent.onFailure = onFailure
+    // this.spatialModel3DComponent.onDragStart = this._onDragStart
+    // this.spatialModel3DComponent.onDrag = this._onDrag
+    // this.spatialModel3DComponent.onDragEnd = this._onDragEnd
+    // this.spatialModel3DComponent.onTap = this._onTap
+    // this.spatialModel3DComponent.onDoubleTap = this._onDoubleTap
+    // this.spatialModel3DComponent.onLongPress = this._onLongPress
   }
 
   async setVisible(visible: boolean) {
-    if (this.entity) {
-      await this.entity.setVisible(visible)
-    }
+    this.spatialObject?.updateProperties({ visible })
   }
 
   async setContentMode(contentMode: 'fill' | 'fit') {
-    if (this.spatialModel3DComponent) {
-      await this.spatialModel3DComponent.setContentMode(contentMode)
-    }
+    // will delete
   }
 
   async setResizable(resizable: boolean) {
-    if (this.spatialModel3DComponent) {
-      await this.spatialModel3DComponent.setResizable(resizable)
-    }
+    // will delete
   }
 
   async setAspectRatio(aspectRatio: number) {
-    if (this.spatialModel3DComponent) {
-      await this.spatialModel3DComponent.setAspectRatio(aspectRatio)
-    }
+    // will delete
   }
 
   async updateByDom(
     dom: HTMLDivElement,
     options: { spatialTransform: SpatialTransformType },
   ) {
-    if (!this.entity || !this.spatialModel3DComponent) {
+    if (!this.spatialObject) {
       return
     }
 
@@ -128,35 +114,38 @@ export class Model3DNative {
     const scrollY = isFixed ? 0 : window.scrollY
 
     const rect = dom.getBoundingClientRect()
-    const targetPosX = rect.left + (rect.right - rect.left) / 2
-    const targetPosY = rect.bottom + (rect.top - rect.bottom) / 2 + scrollY
+
     const { spatialTransform } = options
     const { position, rotation, scale } = spatialTransform
 
-    const entity = this.entity
-    entity.transform.position.x = targetPosX + position.x
-    entity.transform.position.y = targetPosY + position.y
-    entity.transform.position.z = position.z
+    const spatialObject = this.spatialObject
+    await spatialObject.updateTransform({
+      position: {
+        x: rect.left + position.x,
+        y: rect.top + position.y + scrollY,
+        z: position.z,
+      },
+      quaternion: {
+        x: rotation.x,
+        y: rotation.y,
+        z: rotation.z,
+        w: rotation.w,
+      },
+      scale: {
+        x: scale.x,
+        y: scale.y,
+        z: scale.z,
+      },
+    })
 
-    entity.transform.orientation.x = rotation.x
-    entity.transform.orientation.y = rotation.y
-    entity.transform.orientation.z = rotation.z
-    entity.transform.orientation.w = rotation.w
+    const rotationAnchor = parseTransformOrigin(computedStyle)
 
-    entity.transform.scale.x = scale.x
-    entity.transform.scale.y = scale.y
-    entity.transform.scale.z = scale.z
-
-    await entity.updateTransform()
-
-    const spatialModel3DComponent = this.spatialModel3DComponent
-    await spatialModel3DComponent.setResolution(rect.width, rect.height)
-
-    const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
-    await spatialModel3DComponent.setOpacity(opacity)
-
-    const anchor = parseTransformOrigin(computedStyle)
-    await spatialModel3DComponent.setRotationAnchor(anchor)
+    await spatialObject.updateProperties({
+      width: rect.width,
+      height: rect.height,
+      opacity: parseFloat(computedStyle.getPropertyValue('opacity')),
+      rotationAnchor,
+    })
 
     await this.setScrollWithParent(!isFixed)
   }
@@ -165,101 +154,116 @@ export class Model3DNative {
     rect: RectType,
     spatialTransform: SpatialTransformType,
   ) {
-    if (!this.entity || !this.spatialModel3DComponent) {
+    console.log('updateRectAndTransform', rect, spatialTransform, this.spatialObject)
+    if (!this.spatialObject) {
       return
     }
 
-    const targetPosX = rect.x + rect.width / 2
-    const targetPosY = rect.y + rect.height / 2
-
     const { position, rotation, scale } = spatialTransform
-    const entity = this.entity
-    entity.transform.position.x = targetPosX + position.x
-    entity.transform.position.y = targetPosY + position.y
-    entity.transform.position.z = position.z
-    entity.transform.orientation.x = rotation.x
-    entity.transform.orientation.y = rotation.y
-    entity.transform.orientation.z = rotation.z
-    entity.transform.orientation.w = rotation.w
-    entity.transform.scale.x = scale.x
-    entity.transform.scale.y = scale.y
-    entity.transform.scale.z = scale.z
-    await entity.updateTransform()
-    const spatialModel3DComponent = this.spatialModel3DComponent
-    await spatialModel3DComponent.setResolution(rect.width, rect.height)
+    const spatialObject = this.spatialObject
+    await spatialObject.updateTransform({
+      position: {
+        x: rect.x + position.x,
+        y: rect.y + position.y + scrollY,
+        z: position.z,
+      },
+      quaternion: {
+        x: rotation.x,
+        y: rotation.y,
+        z: rotation.z,
+        w: rotation.w,
+      },
+      scale: {
+        x: scale.x,
+        y: scale.y,
+        z: scale.z,
+      },
+    })
+
+    await spatialObject.updateProperties({
+      width: rect.width,
+      height: rect.height,
+    })
   }
 
   async setRotationAnchor(anchor: { x: number; y: number; z: number }) {
-    if (this.spatialModel3DComponent) {
-      await this.spatialModel3DComponent.setRotationAnchor(anchor)
-    }
+    this.spatialObject?.updateProperties({ rotationAnchor: anchor })
   }
 
   async setOpacity(opacity: number) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.setOpacity(opacity)
-    }
+    this.spatialObject?.updateProperties({ opacity })
   }
 
   async setScrollWithParent(scrollWithParent: boolean) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.setScrollWithParent(scrollWithParent)
-    }
+    this.spatialObject?.updateProperties({ scrollWithParent })
   }
 
-  async changeParentEntity(parentEntity: SpatialEntity) {
+  async changeParentEntity(parentEntity?: Spatialized2DElement) {
+    var session = getSession()
+
+    if (!session) {
+      return
+    }
+
     if (this.parentEntity !== parentEntity) {
-      if (this.entity) {
-        await this.entity.setParent(parentEntity)
-      }
       this.parentEntity = parentEntity
+
+      if (this.spatialObject) {
+        if (this.parentEntity) {
+          await this.parentEntity.addSpatializedElement(this.spatialObject)
+        } else {
+          // Add spatialObject to the spatialObject
+          var spatialScene = session.getSpatialScene()
+          await spatialScene.addSpatializedElement(this.spatialObject)
+        }
+      }
     }
   }
 
   public set onDragStart(
     callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
   ) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onDragStart = callback
-    }
-    this._onDragStart = callback
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onDragStart = callback
+    // }
+    // this._onDragStart = callback
   }
 
   public set onDrag(
     callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
   ) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onDrag = callback
-    }
-    this._onDrag = callback
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onDrag = callback
+    // }
+    // this._onDrag = callback
   }
 
   public set onDragEnd(
     callback: ((dragEvent: SpatialModelDragEvent) => void) | undefined,
   ) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onDragEnd = callback
-    }
-    this._onDragEnd = callback
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onDragEnd = callback
+    // }
+    // this._onDragEnd = callback
   }
 
   public set onTap(callback: (() => void) | undefined) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onTap = callback
-    }
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onTap = callback
+    // }
     this._onTap = callback
   }
 
   public set onDoubleTap(callback: (() => void) | undefined) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onDoubleTap = callback
-    }
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onDoubleTap = callback
+    // }
     this._onDoubleTap = callback
   }
   public set onLongPress(callback: (() => void) | undefined) {
-    if (this.spatialModel3DComponent) {
-      this.spatialModel3DComponent.onLongPress = callback
-    }
+    // if (this.spatialModel3DComponent) {
+    //   this.spatialModel3DComponent.onLongPress = callback
+    // }
     this._onLongPress = callback
   }
 
@@ -275,9 +279,8 @@ export class Model3DNative {
     if (this.initPromise) {
       await this.initPromise
     }
-    this.entity?.destroy()
-    this.entity = undefined
-    this.spatialModel3DComponent = undefined
+    this.spatialObject?.destroy()
+    this.spatialObject = undefined
     this.initPromise = undefined
   }
 }

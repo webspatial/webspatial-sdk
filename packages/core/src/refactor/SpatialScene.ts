@@ -1,7 +1,7 @@
 import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
-  SpatialSceneStateKind,
+  SpatialSceneState,
 } from './types'
 import {
   AddSpatializedElementToSpatialScene,
@@ -35,7 +35,7 @@ export class SpatialScene extends SpatialObject {
     return new UpdateSceneConfig(config).execute()
   }
 
-  async getState(): Promise<SpatialSceneStateKind> {
+  async getState(): Promise<SpatialSceneState> {
     return (await new GetSpatialSceneState().execute()).data.name
   }
 }

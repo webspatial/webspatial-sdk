@@ -1,6 +1,6 @@
 import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
 import { SpatialScene } from './SpatialScene'
-import { SpatialSceneCreationOptions, SpatialSceneStateKind } from './types'
+import { SpatialSceneCreationOptions, SpatialSceneState } from './types'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -125,8 +125,7 @@ async function injectScenePolyfill() {
   const state = await SpatialScene.getInstance().getState()
 
   // only run this in pending state
-  if (state !== SpatialSceneStateKind.pending) return
-
+  if (state !== SpatialSceneState.pending) return
 
   function onContentLoaded(callback: any) {
     if (

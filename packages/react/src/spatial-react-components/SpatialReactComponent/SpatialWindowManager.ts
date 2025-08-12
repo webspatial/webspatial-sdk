@@ -12,7 +12,7 @@ export class SpatialWindowManager {
     return this.spatialized2DElement?.windowProxy
   }
 
-  spatialized2DElement: Spatialized2DElement | null = null
+  spatialized2DElement?: Spatialized2DElement = undefined
 
   private parentSpatialWindowManager?: SpatialWindowManager
   private isFixedPosition: boolean
@@ -141,7 +141,7 @@ export class SpatialWindowManager {
     if (this.initPromise) {
       await this.initPromise
       this.spatialized2DElement?.destroy()
-      this.spatialized2DElement = null
+      this.spatialized2DElement = undefined
     }
   }
 }

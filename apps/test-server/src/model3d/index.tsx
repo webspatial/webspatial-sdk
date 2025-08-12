@@ -74,15 +74,14 @@ function App() {
 
   // test toggle model url
   const [modelUrl, setModelUrl] = useState(
-    'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
+    'http://localhost:5173/public/modelasset/cone.usdz',
   )
   const handleToggleModel = () => {
     if (ref.current) {
       setModelUrl(v =>
-        v ===
-        'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz'
-          ? 'https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz'
-          : 'https://raw.githubusercontent.com/immersive-web/model-element/main/examples/assets/FlightHelmet.usdz',
+        v === 'http://localhost:5173/public/modelasset/cone.usdz'
+          ? 'http://localhost:5173/public/modelasset/vehicle-speedster.usdz'
+          : 'http://localhost:5173/public/modelasset/cone.usdz',
       )
     }
   }
@@ -97,7 +96,7 @@ function App() {
 
       <div
         className="w-[100%] h-[400px] flex justify-center  items-center bg-base-100	 "
-        style={{ position: 'relative', '--xr-back': 300 }}
+        style={{ position: 'relative', '--xr-back': 30 }}
         enable-xr
       >
         <Model
