@@ -56,7 +56,7 @@ struct Spatialized2DView: View {
                 if needBubbleUp {
                     // Check if there is a nearest scroll-enabled Spatialized2DElement
                     // and scroll it if it exists
-                    if let targetElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
+                    if let targetElement = spatialized2DElement.findNearestScrollAbleSpatialElementContainer() {
                         if !gestureData.dragStarted {
                             gestureData.dragStarted = true
                             gestureData.dragStart = (gesture.translation.height)
@@ -71,7 +71,7 @@ struct Spatialized2DView: View {
             }
             .onEnded { _ in
                 if needBubbleUp {
-                    if let targetElement = spatialized2DElement.findNearestScrollEnabledSpatialized2DElement() {
+                    if let targetElement = spatialized2DElement.findNearestScrollAbleSpatialElementContainer() {
                         gestureData.dragStarted = false
                         gestureData.dragStart = 0
                         targetElement.stopScrolling()

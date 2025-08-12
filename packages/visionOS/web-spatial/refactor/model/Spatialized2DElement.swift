@@ -84,13 +84,15 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         return typedChildren
     }
 
-    func findNearestScrollEnabledSpatialized2DElement() -> SpatialScrollAble? {
-        while let current = parent {
-            if current.scrollEnabled {
-                return current
+    final func findNearestScrollAbleSpatialElementContainer() -> SpatialScrollAble? {
+        var current: ScrollAbleSpatialElementContainer? = self
+            while let currentNode = current {
+                if currentNode.scrollEnabled {
+                    return currentNode
+                }
+                current = currentNode.parent
             }
-        }
-        return nil
+            return nil
     }
 
     func loadHtml(_ html: String) {

@@ -29,7 +29,8 @@ let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
-        
+    var parent: (any ScrollAbleSpatialElementContainer)? = nil
+    
     // Enum
     public enum WindowStyle: String, Codable, CaseIterable {
         case plain    = "Plain"
