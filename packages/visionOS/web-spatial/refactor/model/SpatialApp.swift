@@ -1,6 +1,16 @@
 import Foundation
 import SwiftUI
 
+let logger = Logger()
+
+// To load a local path, remove http:// eg.  "static-web/"
+let nativeAPIVersion = pwaManager.getVersion()
+
+// start URL
+let startURL = pwaManager.start_url
+
+let DefaultPlainWindowContainerSize = CGSize(width: 1280, height: 720)
+
 enum XLoadingMethod: String, Decodable, Encodable, Hashable {
     case show
     case hide
@@ -17,6 +27,19 @@ struct XPlainSceneOptions {
     var windowResizability: WindowResizability?
     var resizeRange: ResizeRange?
 }
+
+// incomming JSB data
+struct WindowContainerOptions: Codable {
+    // windowContainer
+    let defaultSize: Size?
+    struct Size: Codable {
+        var width: Double
+        var height: Double
+    }
+
+    let resizability: ResizeRange?
+}
+
 
 extension XPlainSceneOptions {
     init(_ options: XSceneOptionsJSB) {

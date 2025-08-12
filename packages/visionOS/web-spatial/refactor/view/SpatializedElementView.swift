@@ -2,6 +2,9 @@
 import RealityKit
 import SwiftUI
 
+// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
+let zOrderBias = 0.001
+
 struct SpatializedElementView<Content: View>: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
     var parentScrollOffset: Vec2

@@ -246,33 +246,33 @@ enum ScrollState {
     case end
 }
 
-//// extend webview to support file://
-// @available(iOS 11.0, *)
-// extension WKWebView {
-//    /// WKWebView,  Support setting file scheme in configuration
-//    public private(set) static var isEnableFileSupport = false
-//    public static func enableFileScheme() {
-//        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
-//        if !isEnableFileSupport {
-//            switchHandlesURLScheme()
-//        }
-//    }
-//
-//    private static func switchHandlesURLScheme() {
-//        if
-//            case let cls = WKWebView.self,
-//            let m1 = class_getClassMethod(cls, NSSelectorFromString("handlesURLScheme:")),
-//            let m2 = class_getClassMethod(cls, #selector(WKWebView.wrapHandles(urlScheme:)))
-//        {
-//            method_exchangeImplementations(m1, m2)
-//            isEnableFileSupport = !isEnableFileSupport
-//        }
-//    }
-//
-//    /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
-//    @objc private dynamic
-//    static func wrapHandles(urlScheme: String) -> Bool {
-//        if urlScheme == "file" { return false }
-//        return wrapHandles(urlScheme: urlScheme)
-//    }
-// }
+// extend webview to support file://
+ @available(iOS 11.0, *)
+ extension WKWebView {
+    /// WKWebView,  Support setting file scheme in configuration
+    public private(set) static var isEnableFileSupport = false
+    public static func enableFileScheme() {
+        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
+        if !isEnableFileSupport {
+            switchHandlesURLScheme()
+        }
+    }
+
+    private static func switchHandlesURLScheme() {
+        if
+            case let cls = WKWebView.self,
+            let m1 = class_getClassMethod(cls, NSSelectorFromString("handlesURLScheme:")),
+            let m2 = class_getClassMethod(cls, #selector(WKWebView.wrapHandles(urlScheme:)))
+        {
+            method_exchangeImplementations(m1, m2)
+            isEnableFileSupport = !isEnableFileSupport
+        }
+    }
+
+    /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
+    @objc private dynamic
+    static func wrapHandles(urlScheme: String) -> Bool {
+        if urlScheme == "file" { return false }
+        return wrapHandles(urlScheme: urlScheme)
+    }
+ }

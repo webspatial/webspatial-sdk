@@ -1,15 +1,5 @@
 import Foundation
 
-struct SpatialObjectInfo: Codable {
-    var count: Int
-}
-
-// Stats from native code. Objects tracks number of native objects that were created but not yet explicitly destroyed. RefObjects tracks bjects that still have references. After an object is destroyed, we should be cleaning up all of the native references. Expect objects.count == refObjects.count , if not, there is likely a leak.
-struct SpatialObjectStatsInfo: Codable {
-    var backend = "AVP"
-    var objects: SpatialObjectInfo
-}
-
 class WeakReference<T: AnyObject> {
     weak var value: T?
 
@@ -96,8 +86,4 @@ class SpatialObject: EventEmitter, Encodable, Equatable {
     }
 
     func onDestroy() {}
-
-    func inspect() -> [String: Any] {
-        return ["id": id, "isDestroyed": isDestroyed, "name": name]
-    }
 }

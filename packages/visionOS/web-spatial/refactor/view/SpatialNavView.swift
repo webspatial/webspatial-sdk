@@ -1,5 +1,60 @@
 import SwiftUI
-import WebKit
+
+struct NavButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Color.clear)
+    }
+}
+
+struct NavDivider: View {
+    var width: CGFloat = 1
+    var height: CGFloat = 16
+    var paddingLR: CGFloat = 4
+    var paddingTB: CGFloat = 12
+    var body: some View {
+        VStack {
+            Rectangle().fill(Color(hex: "#FFFFFF3D")).frame(width: width, height: height)
+        }
+        .padding([.top, .bottom], paddingTB)
+        .padding([.leading, .trailing], paddingLR)
+    }
+}
+
+
+struct NavButton: View {
+    var action: () -> Void
+    var children: Image
+    var size: CGFloat = 44
+    var padding: CGFloat = 10
+    var clearBackGround: Bool = true
+    var body: some View {
+        if clearBackGround {
+            Button(action: action, label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0))
+                        .frame(width: size, height: size)
+                        .overlay(
+                            children.resizable().frame(width: size - padding * 2, height: size - padding * 2)
+                        )
+                        .contentShape(Circle())
+                }
+            }).buttonStyle(NavButtonStyle()).frame(width: size, height: size).hoverEffect(.highlight)
+        } else {
+            Button(action: action, label: {
+                Circle()
+                    .fill(Color.white.opacity(0))
+                    .frame(width: size, height: size)
+                    .overlay(
+                        children.resizable().frame(width: size - padding * 2, height: size - padding * 2)
+                    )
+                    .contentShape(Circle())
+            }).hoverEffect(.highlight)
+        }
+    }
+}
+
 
 struct SpatialNavView: View {
     static let navHeight: CGFloat = 60
