@@ -1,4 +1,3 @@
-// export * from './core/index'
 export { Spatial } from './refactor/Spatial'
 export { SpatialSession } from './refactor/SpatialSession'
 export { SpatialScene } from './refactor/SpatialScene'
