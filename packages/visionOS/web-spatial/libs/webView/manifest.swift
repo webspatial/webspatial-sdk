@@ -6,7 +6,7 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var isLocal: Bool = false
 //    var start_url: String = "http://localhost:5173/src/jsapi-test/"
-    var start_url: String = "http://localhost:5173/src/animate/"
+    var start_url: String = "http://localhost:5173/"
     
     var scope: String = ""
     var id: String = "com.webspatial.pico"
