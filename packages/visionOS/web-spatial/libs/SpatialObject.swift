@@ -2,17 +2,12 @@ import Foundation
 
 struct SpatialObjectInfo: Codable {
     var count: Int
-    var windowArray: [String]
-    var windowContainerArray: [String]
-    var entityArray: [String]
 }
 
 // Stats from native code. Objects tracks number of native objects that were created but not yet explicitly destroyed. RefObjects tracks bjects that still have references. After an object is destroyed, we should be cleaning up all of the native references. Expect objects.count == refObjects.count , if not, there is likely a leak.
 struct SpatialObjectStatsInfo: Codable {
     var backend = "AVP"
     var objects: SpatialObjectInfo
-    var refObjects: SpatialObjectInfo
-    var perfStats: PerfStats
 }
 
 class WeakReference<T: AnyObject> {
@@ -32,49 +27,6 @@ class SpatialObject: EventEmitter, Encodable, Equatable {
 
     static func getRefObject(_ id: String) -> SpatialObject? {
         return weakRefObjects[id]?.value
-    }
-
-    // for debug
-    static func stats() -> SpatialObjectStatsInfo {
-        let webviews = objects.filter {
-            $0.value is SpatialWindowComponent
-        }
-
-        let entities = objects.filter {
-            $0.value is SpatialEntity
-        }
-
-        let windowContainers = objects.filter {
-            $0.value is SpatialWindowContainer
-        }
-
-        let weakRefWebviews = weakRefObjects.filter {
-            $0.value.value is SpatialWindowComponent
-        }
-
-        let weakRefWindowContainers = weakRefObjects.filter {
-            $0.value.value is SpatialWindowContainer
-        }
-
-        let weakRefEntities = weakRefObjects.filter {
-            $0.value.value is SpatialEntity
-        }
-
-        return SpatialObjectStatsInfo(
-            objects: SpatialObjectInfo(
-                count: objects.count,
-                windowArray: Array(webviews.keys),
-                windowContainerArray: Array(windowContainers.keys),
-                entityArray: Array(entities.keys)
-            ),
-            refObjects: SpatialObjectInfo(
-                count: weakRefObjects.count,
-                windowArray: Array(weakRefWebviews.keys),
-                windowContainerArray: Array(weakRefWindowContainers.keys),
-                entityArray: Array(weakRefEntities.keys)
-            ),
-            perfStats: clock.perfStats
-        )
     }
 
     static func getWeakRef(_ id: String) -> SpatialObject? {

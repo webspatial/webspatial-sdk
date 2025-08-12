@@ -19,7 +19,7 @@ class CommandManager {
         _ = registerCommand(name: "multiCommand", action: multiCommand)
         _ = registerCommand(name: "ping", action: ping)
         _ = registerCommand(name: "inspect", action: inspect)
-        _ = registerCommand(name: "getStats", action: getStats)
+//        _ = registerCommand(name: "getStats", action: getStats)
         _ = registerCommand(name: "setComponent", action: setComponent)
         _ = registerCommand(name: "removeComponent", action: removeComponent)
         _ = registerCommand(name: "createResource", action: createResource)
@@ -112,21 +112,7 @@ class CommandManager {
             return
         }
     }
-
-    private func getStats(target: SpatialWindowComponent, info: CommandInfo) {
-        let statsInfo = SpatialObject.stats()
-        do {
-            let jsonData = try JSONEncoder().encode(statsInfo)
-            let jsonString = String(data: jsonData, encoding: .utf8)
-            target.completeEvent(requestID: info.requestID, data: jsonString ?? "Conver failed")
-        } catch {
-            logger.error("Error: \(error.localizedDescription)")
-            target.completeEvent(requestID: info.requestID, data: """
-            error: \(error.localizedDescription)
-            """)
-        }
-    }
-
+ 
     private func setComponent(target: SpatialWindowComponent, info: CommandInfo) {
         if let component = SpatialObject.get(info.resourceID) as? SpatialComponent,
            let entity = SpatialObject.get(info.entityID) as? SpatialEntity
