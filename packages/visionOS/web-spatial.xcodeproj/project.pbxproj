@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B06AEDB2E4C1AE8000327E9 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC42E4C1AE8000327E9 /* Window.swift */; };
+		2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */; };
+		2B06AEE12E4C1AE8000327E9 /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */; };
+		2B06AEE42E4C1AE8000327E9 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC12E4C1AE8000327E9 /* manifest.swift */; };
+		2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */; };
+		2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
@@ -24,6 +30,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEmitter.swift; sourceTree = "<group>"; };
+		2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSBCommand.swift; sourceTree = "<group>"; };
+		2B06AEC12E4C1AE8000327E9 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
+		2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
+		2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSpatialApp.swift; sourceTree = "<group>"; };
+		2B06AEC42E4C1AE8000327E9 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -33,8 +45,82 @@
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2B06AF302E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				JSBManager.swift,
+				WKWebViewManager.swift,
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SpatialApp.swift,
+				Spatialized2DElement.swift,
+				SpatializedDynamic3DElement.swift,
+				SpatializedElement.swift,
+				SpatializedStatic3DElement.swift,
+				SpatialScene.swift,
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+		2B06AF322E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ScrollAbleSpatialElementContainer.swift,
+				SpatializedElementContainer.swift,
+				SpatialScrollAble.swift,
+				WebMsgSender.swift,
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+		2B06AF332E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Vec2.swift,
+				Vec3.swift,
+				Vec4.swift,
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+		2B06AF342E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LoadingView.swift,
+				SceneHandlerUIView.swift,
+				Spatialized2DView.swift,
+				SpatializedDynamic3DView.swift,
+				SpatializedElementView.swift,
+				SpatializedStatic3DView.swift,
+				SpatialNavView.swift,
+				SpatialSceneContentView.swift,
+				SpatialSceneView.swift,
+				"view-modifier/HideViewModifier.swift",
+				"view-modifier/MaterialWithBorderCornerModifier.swift",
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+		2B06AF352E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SpatialWebController.swift,
+				SpatialWebView.swift,
+				SpatialWebViewModel.swift,
+			);
+			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2B5311B42E2E3ECB00A658AC /* refactor */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = refactor; sourceTree = "<group>"; };
+		2B06AEEC2E4C1AF8000327E9 /* manager */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF302E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = manager; sourceTree = "<group>"; };
+		2B06AEF32E4C1AF8000327E9 /* model */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = model; sourceTree = "<group>"; };
+		2B06AEF82E4C1AF8000327E9 /* protocol */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF322E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = protocol; sourceTree = "<group>"; };
+		2B06AEFC2E4C1AF8000327E9 /* types */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF332E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = types; sourceTree = "<group>"; };
+		2B06AEFF2E4C1AF8000327E9 /* Utils */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Utils; sourceTree = "<group>"; };
+		2B06AF0C2E4C1AF8000327E9 /* view */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF342E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = view; sourceTree = "<group>"; };
+		2B06AF102E4C1AF8000327E9 /* webview */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2B06AF352E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = webview; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,11 +163,23 @@
 		2B2F1D652BEBFAAA006897EE /* web-spatial */ = {
 			isa = PBXGroup;
 			children = (
-				2B5311B42E2E3ECB00A658AC /* refactor */,
 				2BDBF9B52C4ED9F600D269D7 /* static-web */,
 				2B2F1D702BEBFAAC006897EE /* Assets.xcassets */,
 				2B2F1D752BEBFAAC006897EE /* Info.plist */,
 				2B2F1D722BEBFAAC006897EE /* Preview Content */,
+				2B06AEEC2E4C1AF8000327E9 /* manager */,
+				2B06AEF32E4C1AF8000327E9 /* model */,
+				2B06AEF82E4C1AF8000327E9 /* protocol */,
+				2B06AEFC2E4C1AF8000327E9 /* types */,
+				2B06AEFF2E4C1AF8000327E9 /* Utils */,
+				2B06AF0C2E4C1AF8000327E9 /* view */,
+				2B06AF102E4C1AF8000327E9 /* webview */,
+				2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */,
+				2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */,
+				2B06AEC12E4C1AE8000327E9 /* manifest.swift */,
+				2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */,
+				2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */,
+				2B06AEC42E4C1AE8000327E9 /* Window.swift */,
 			);
 			path = "web-spatial";
 			sourceTree = "<group>";
@@ -118,7 +216,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				2B5311B42E2E3ECB00A658AC /* refactor */,
+				2B06AEFF2E4C1AF8000327E9 /* Utils */,
 			);
 			name = "web-spatial";
 			packageProductDependencies = (
@@ -211,6 +309,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B06AEDB2E4C1AE8000327E9 /* Window.swift in Sources */,
+				2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */,
+				2B06AEE12E4C1AE8000327E9 /* SpatialObject.swift in Sources */,
+				2B06AEE42E4C1AE8000327E9 /* manifest.swift in Sources */,
+				2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */,
+				2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
