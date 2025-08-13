@@ -7,7 +7,7 @@ class Spatialized2DViewGestureData {
     var dragVelocity: CGFloat = 0.0
 }
 
-struct Spatialized2DView: View {
+struct Spatialized2DElementView: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
 
     private var spatialized2DElement: Spatialized2DElement {
@@ -31,7 +31,7 @@ struct Spatialized2DView: View {
 
             ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
                 SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                    Spatialized2DView()
+                    Spatialized2DElementView()
                 }
                 .environment(child)
             }

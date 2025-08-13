@@ -90,7 +90,7 @@
 			membershipExceptions = (
 				LoadingView.swift,
 				SceneHandlerUIView.swift,
-				Spatialized2DView.swift,
+				Spatialized2DElementView.swift,
 				SpatializedDynamic3DView.swift,
 				SpatializedElementView.swift,
 				SpatializedStatic3DView.swift,

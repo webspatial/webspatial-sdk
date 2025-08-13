@@ -21,7 +21,7 @@ struct SpatialSceneContentView: View {
                     
                 ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
                     SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        Spatialized2DView()
+                        Spatialized2DElementView()
                     }
                     .environment(child)
                 }
