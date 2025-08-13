@@ -1,10 +1,10 @@
-export { Spatial } from './refactor/Spatial'
-export { SpatialSession } from './refactor/SpatialSession'
-export { SpatialScene } from './refactor/SpatialScene'
-export { Spatialized2DElement } from './refactor/Spatialized2DElement'
-export { SpatializedStatic3DElement } from './refactor/SpatializedStatic3DElement'
-export * from './refactor/types'
+export { Spatial } from './Spatial'
+export { SpatialSession } from './SpatialSession'
+export { SpatialScene } from './SpatialScene'
+export { Spatialized2DElement } from './Spatialized2DElement'
+export { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
+export * from './types/types'
 
 // side effects
-import { injectSceneHook } from './refactor/scene-polyfill'
+import { injectSceneHook } from './scene-polyfill'
 injectSceneHook()

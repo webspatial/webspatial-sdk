@@ -1,7 +1,7 @@
 import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
-import { SpatializedElementProperties, SpatialTransform } from './types'
+import { SpatializedElementProperties, SpatialTransform } from './types/types'
 
 export abstract class SpatializedElement extends SpatialObject {
   abstract updateProperties(

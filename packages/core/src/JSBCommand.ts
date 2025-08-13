@@ -10,7 +10,7 @@ import {
   SpatialSceneProperties,
   SpatialTransform,
   SpatialSceneCreationOptions,
-} from './types'
+} from './types/types'
 
 const platform = createPlatform()
 

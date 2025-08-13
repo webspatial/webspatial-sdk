@@ -2,7 +2,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
   SpatialSceneState,
-} from './types'
+} from './types/types'
 import {
   AddSpatializedElementToSpatialScene,
   GetSpatialSceneState,

@@ -4,7 +4,7 @@ import {
 } from './JSBCommand'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
-import { Spatialized2DElementProperties } from './types'
+import { Spatialized2DElementProperties } from './types/types'
 
 export class Spatialized2DElement extends SpatializedElement {
   constructor(

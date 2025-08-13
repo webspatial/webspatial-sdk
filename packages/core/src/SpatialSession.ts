@@ -4,7 +4,7 @@ import { Spatialized2DElement } from './Spatialized2DElement'
 import { createSpatialized2DElement } from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
-import { SpatialSceneCreationOptions } from './types'
+import { SpatialSceneCreationOptions } from './types/types'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
