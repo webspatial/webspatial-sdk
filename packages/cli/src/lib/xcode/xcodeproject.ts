@@ -275,7 +275,7 @@ export default class XcodeProject {
   private static async modifySwift(manifest: any) {
     const manifestSwiftPath = join(
       PROJECT_DIRECTORY,
-      './web-spatial/libs/webView/manifest.swift',
+      './web-spatial/manifest.swift',
     )
     const xcodePackageJsonPath = join(PROJECT_DIRECTORY, 'package.json')
     const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
