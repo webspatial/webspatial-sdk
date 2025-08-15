@@ -19,6 +19,8 @@ class SpatializedElement: SpatialObject {
     var visible = true
     var scrollWithParent = true
     var zIndex: Double = 0
+    
+    var enalbeGesture: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case width, height, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent

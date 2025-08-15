@@ -96,9 +96,14 @@ function App() {
 
       <div
         className="w-[100%] h-[400px] flex justify-center  items-center bg-base-100	 "
-        style={{ position: 'relative', '--xr-back': 30 }}
+        style={{
+          position: 'relative',
+          '--xr-back': 10,
+          background: 'transparent',
+        }}
         enable-xr
       >
+        hello world
         <Model
           ref={ref}
           style={styleOuter}
@@ -139,7 +144,6 @@ function App() {
 
           <div> this is place holder when failure </div>
         </Model>
-
         <Model
           style={styleOuter}
           contentMode={contentMode}

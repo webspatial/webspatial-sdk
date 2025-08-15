@@ -8,7 +8,7 @@ struct SpatialSceneContentView: View {
     
     var body: some View {
         if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
-            ZStack(alignment: Alignment.topLeading) {
+            ZStack(alignment: Alignment.topLeading) {                
                 // Display the main webview
                 spatialScene.getView()
                     .materialWithBorderCorner(
@@ -35,6 +35,7 @@ struct SpatialSceneContentView: View {
                     .environment(child)
                 }
             }.environment(spatialScene)
+                .coordinateSpace(name: "SpatialScene")
         }
     }
 }

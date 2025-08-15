@@ -17,16 +17,24 @@ struct Spatialized2DElementView: View {
     @State private var gestureData = Spatialized2DViewGestureData()
 
     var body: some View {
+        let enalbeGesture = spatializedElement.enalbeGesture
         // Display child spatialized2DElements
-        return ZStack(alignment: Alignment.topLeading) {
+        ZStack(alignment: Alignment.topLeading) {
+            if enalbeGesture {
+                Rectangle().fill(.white)
+                    .opacity(0.002)
+                    .hoverEffect()
+            }
+
             // Display the main webview
             spatialized2DElement.getView()
                 .materialWithBorderCorner(
                     spatialized2DElement.backgroundMaterial,
                     spatialized2DElement.cornerRadius
                 )
-                .gesture(dragGesture)
-            
+                .if(enalbeGesture) { view in view.gesture(dragWebGesture) }
+                .allowsHitTesting(!enalbeGesture)
+
             let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
             ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
@@ -50,7 +58,7 @@ struct Spatialized2DElementView: View {
         return !spatialized2DElement.scrollEnabled && spatialized2DElement.scrollWithParent
     }
 
-    private var dragGesture: some Gesture {
+    private var dragWebGesture: some Gesture {
         DragGesture()
             .onChanged { gesture in
                 if needBubbleUp {
