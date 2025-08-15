@@ -16,7 +16,7 @@ describe('SpatialDiv', function () {
     unmount()
   })
 
-  it.only('should become a spatialdiv when enable-xr is present in div properties', async function () {
+  it('should become a spatialdiv when enable-xr is present in div properties', async function () {
     const promise = new AsyncPromise<boolean>()
 
     function TestComponent() {

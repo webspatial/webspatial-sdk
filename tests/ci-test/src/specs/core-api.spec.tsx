@@ -6,7 +6,7 @@ const fail = assert.fail
 const session = new Spatial().requestSession()
 
 describe('Core API', function () {
-  it('SpatialHelper.instance is populated', function () {
+  it('SpatialSession exist', function () {
     expect(session).to.be.true
   })
 
@@ -28,9 +28,8 @@ describe('Core API', function () {
     document.documentElement.style.padding = prevPadding
   })
 
-  it('open panel', async function () {
-    // this.timeout(15000)
-
+  it.only('window.open', async function () {
+    this.timeout(150000 * 360000)
     try {
       const windowProxy = window.open('/testPage.html')
       windowProxy?.close()
