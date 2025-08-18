@@ -206,10 +206,11 @@ export async function testAddMultipleSpatializedStatic3DElement(
     const spatializedStatic3DElementA: SpatializedStatic3DElement =
       await session.createSpatializedStatic3DElement()
     await spatializedStatic3DElementA.updateProperties({
-      name: 'A',
+      name: 'ModelA',
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+      enableGesture: true,
     })
 
     await spatializedStatic3DElementA.updateTransform({
@@ -230,10 +231,11 @@ export async function testAddMultipleSpatializedStatic3DElement(
     const spatializedStatic3DElementB: SpatializedStatic3DElement =
       await session.createSpatializedStatic3DElement()
     await spatializedStatic3DElementB.updateProperties({
-      name: 'B',
+      name: 'ModelB',
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+      enableGesture: false,
     })
 
     await spatializedStatic3DElementB.updateTransform({
