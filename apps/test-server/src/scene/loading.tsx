@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
 window.xrCurrentSceneDefaults = async () => {
   await new Promise<void>((resolve, _) => {
@@ -17,16 +16,6 @@ window.xrCurrentSceneDefaults = async () => {
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
-const spatial = new Spatial()
-const spatialSupported = spatial.isSupported()
-
-if (spatialSupported) {
-  var session = new Spatial().requestSession()
-  // session!.getCurrentWindowComponent().setStyle({
-  //   material: { type: 'translucent' },
-  //   cornerRadius: 50,
-  // })
-}
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {

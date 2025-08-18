@@ -4,21 +4,21 @@ import {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
-import { Quaternion, Euler, Vec2 } from 'three'
+import { Quaternion, Euler } from 'three'
 // const euler = new Euler(0, Math.PI / 3, 0)
 // const euler = new Euler(0, 0, Math.PI / 4)
-const euler = new Euler(0, 0, 0)
-const quaternion = new Quaternion().setFromEuler(euler)
-const transform = {
-  position: { x: 0, y: 0, z: 100 },
-  quaternion: {
-    x: quaternion.x,
-    y: quaternion.y,
-    z: quaternion.z,
-    w: quaternion.w,
-  },
-  scale: { x: 1, y: 1, z: 1 },
-}
+// const euler = new Euler(0, 0, 0)
+// const quaternion = new Quaternion().setFromEuler(euler)
+// const transform = {
+//   position: { x: 0, y: 0, z: 100 },
+//   quaternion: {
+//     x: quaternion.x,
+//     y: quaternion.y,
+//     z: quaternion.z,
+//     w: quaternion.w,
+//   },
+//   scale: { x: 1, y: 1, z: 1 },
+// }
 
 const spatial = new Spatial()
 const session = spatial.requestSession()
@@ -69,6 +69,7 @@ export async function testCreateSpatialized2DElement() {
     const spatialized2DElement: Spatialized2DElement =
       await session.createSpatialized2DElement()
     await spatialized2DElement.updateProperties({
+      name: 'ABParent',
       width: 800,
       height: 800,
       rotationAnchor: {
@@ -77,6 +78,7 @@ export async function testCreateSpatialized2DElement() {
         z: 0.5,
       },
       scrollEnabled: false,
+      enableGesture: true,
     })
 
     const spatialScene = session.getSpatialScene()
@@ -157,6 +159,7 @@ export async function testAddMultipleSpatialized2DElement(
       width: 200,
       height: 100,
       scrollEnabled: false,
+      enableGesture: true,
     })
     await spatialized2DElementB.updateTransform({
       position: {
@@ -166,8 +169,7 @@ export async function testAddMultipleSpatialized2DElement(
       },
     })
     spatialized2DElementB.windowProxy.document.title = 'B'
-    spatialized2DElementB.windowProxy.document.body.style.background =
-      'transparent'
+    spatialized2DElementB.windowProxy.document.body.style.background = 'green'
     spatialized2DElementB.windowProxy.document.documentElement.style.width =
       '300px'
     spatialized2DElementB.windowProxy.document.documentElement.style.height =
