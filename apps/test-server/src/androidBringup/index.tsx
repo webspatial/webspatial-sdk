@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
 function App() {
-  const [state, setState] = useState<'Transparent' | 'Translucent' | 'None'>(
+  const [state] = useState<'Transparent' | 'Translucent' | 'None'>(
     'Transparent',
   )
   var [supported, setSupported] = useState(false)
