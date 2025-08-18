@@ -40,6 +40,7 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var visible: Bool? { get }
     var scrollWithParent: Bool? { get }
     var zIndex: Double? { get }
+    var enableGesture: Bool? { get }
 }
 
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
@@ -54,6 +55,7 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
+    let enableGesture: Bool?
 
     let scrollEnabled: Bool?
     let material: BackgroundMaterial?
@@ -76,6 +78,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
+    let enableGesture: Bool?
 
     let modelURL: String?
 }

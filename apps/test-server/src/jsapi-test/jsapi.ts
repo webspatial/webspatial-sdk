@@ -103,7 +103,8 @@ export async function testCreateSpatialized2DElement() {
     })
     spatialized2DElement.windowProxy.document.body.style.background =
       'transparent'
-    spatialized2DElement.windowProxy.document.body.textContent = 'hello world'
+    spatialized2DElement.windowProxy.document.body.textContent =
+      'webview without gesture enabled'
 
     spatialized2DElement.windowProxy.document.title = 'spatialized2DElement'
     return spatialized2DElement
@@ -123,6 +124,7 @@ export async function testAddMultipleSpatialized2DElement(
       width: 300,
       height: 300,
       scrollEnabled: false,
+      enableGesture: false,
     })
 
     await spatialized2DElementA.updateTransform({
@@ -144,6 +146,9 @@ export async function testAddMultipleSpatialized2DElement(
     spatialized2DElementA.windowProxy.document.body.style.top = '0px'
     spatialized2DElementA.windowProxy.document.body.style.width = '300px'
     spatialized2DElementA.windowProxy.document.body.style.height = '300px'
+    spatialized2DElementA.windowProxy.document.body.style.color = 'white'
+    spatialized2DElementA.windowProxy.document.body.textContent =
+      'A: webview without gesture enabled '
 
     if (parent) {
       parent.addSpatializedElement(spatialized2DElementA)
@@ -174,8 +179,10 @@ export async function testAddMultipleSpatialized2DElement(
       '300px'
     spatialized2DElementB.windowProxy.document.documentElement.style.height =
       '300px'
-    spatialized2DElementB.windowProxy.document.body.textContent = 'hello world'
 
+    spatialized2DElementB.windowProxy.document.body.textContent =
+      'B: webview with gesture enabled '
+    //
     spatialized2DElementB.windowProxy.document.body.style.position = 'absolute'
     spatialized2DElementB.windowProxy.document.body.style.left = '0px'
     spatialized2DElementB.windowProxy.document.body.style.top = '0px'

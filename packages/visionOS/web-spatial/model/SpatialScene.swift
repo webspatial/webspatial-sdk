@@ -442,6 +442,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let rotationAnchor = command.rotationAnchor {
             spatializedElement.rotationAnchor = .init(x: CGFloat(rotationAnchor.x), y: CGFloat(rotationAnchor.y), z: CGFloat(rotationAnchor.z))
         }
+        
+        if let enableGesture = command.enableGesture {
+            spatializedElement.enableGesture = enableGesture
+        }
     }
 
     private func onUpdateSpatializedElementTransform(command: UpdateSpatializedElementTransform, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {

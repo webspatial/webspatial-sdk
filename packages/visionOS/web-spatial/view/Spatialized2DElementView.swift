@@ -17,10 +17,10 @@ struct Spatialized2DElementView: View {
     @State private var gestureData = Spatialized2DViewGestureData()
 
     var body: some View {
-        let enalbeGesture = spatializedElement.enalbeGesture
+        let enableGesture = spatializedElement.enableGesture
         // Display child spatialized2DElements
         ZStack(alignment: Alignment.topLeading) {
-            if enalbeGesture {
+            if enableGesture {
                 Rectangle().fill(.white)
                     .opacity(0.002)
                     .hoverEffect()
@@ -32,8 +32,8 @@ struct Spatialized2DElementView: View {
                     spatialized2DElement.backgroundMaterial,
                     spatialized2DElement.cornerRadius
                 )
-                .if(enalbeGesture) { view in view.gesture(dragWebGesture) }
-                .allowsHitTesting(!enalbeGesture)
+                .if(!enableGesture) { view in view.gesture(dragWebGesture) }
+                .allowsHitTesting(!enableGesture)
 
             let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
@@ -61,6 +61,7 @@ struct Spatialized2DElementView: View {
     private var dragWebGesture: some Gesture {
         DragGesture()
             .onChanged { gesture in
+                print("\(spatialized2DElement.name) dragWebGesture")
                 if needBubbleUp {
                     // Check if there is a nearest scroll-enabled Spatialized2DElement
                     // and scroll it if it exists
@@ -78,6 +79,7 @@ struct Spatialized2DElementView: View {
                 }
             }
             .onEnded { _ in
+                print("\(spatialized2DElement.name) dragWebGestureEnd")
                 if needBubbleUp {
                     if let targetElement = spatialized2DElement.findNearestScrollAbleSpatialElementContainer() {
                         gestureData.dragStarted = false

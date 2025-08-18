@@ -20,10 +20,10 @@ class SpatializedElement: SpatialObject {
     var scrollWithParent = true
     var zIndex: Double = 0
     
-    var enalbeGesture: Bool = false
+    var enableGesture: Bool = false
 
     enum CodingKeys: String, CodingKey {
-        case width, height, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent
+        case width, height, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -39,6 +39,7 @@ class SpatializedElement: SpatialObject {
         try container.encode(scrollWithParent, forKey: .scrollWithParent)
         try container.encode(zIndex, forKey: .zIndex)
         try container.encode(parent?.id, forKey: .parent)
+        try container.encode(enableGesture, forKey: .enableGesture)
     }
 
     private(set) var parent: ScrollAbleSpatialElementContainer?

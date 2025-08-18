@@ -67,6 +67,7 @@ export interface SpatializedElementProperties {
   zIndex: number
   backOffset: number
   rotationAnchor: Vec3
+  enableGesture: boolean
 }
 
 export interface Spatialized2DElementProperties extends SpatializedElementProperties {

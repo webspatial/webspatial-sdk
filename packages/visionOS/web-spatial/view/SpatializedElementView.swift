@@ -46,9 +46,9 @@ struct SpatializedElementView<Content: View>: View {
                 .simultaneously(with:
                             SpatialEventGesture()
                         .onChanged { events in
-                            for event in events {
-                                print("SpatialEventGesture \(event)")
-                            }
+//                            for event in events {
+//                                print("SpatialEventGesture \(event)")
+//                            }
                         }
                         .onEnded { events in
                         }
@@ -72,7 +72,7 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
-        print("\(spatializedElement.name)  onTapEnded \(event)")
+        print("\(spatializedElement.name)  onTapEnded \(event.location3D)")
     }
     
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
@@ -98,11 +98,11 @@ struct SpatializedElementView<Content: View>: View {
 
         let opacity = spatializedElement.opacity
         let visible = spatializedElement.visible
-        let enalbeGesture = spatializedElement.enalbeGesture
+        let enableGesture = spatializedElement.enableGesture
 
         // Matrix = MTranslate X MRotate X MScale
-        content.if(enalbeGesture) { view in
-            view.gesture(gesture)
+        content.if(enableGesture) { view in
+            view.simultaneousGesture(gesture)
         }.frame(width: width, height: height)
             .frame(depth: 10, alignment:  .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in

@@ -11,7 +11,7 @@ struct SpatializedStatic3DView: View {
 
     @ViewBuilder
     var body: some View {
-        let enableGuesture = spatializedElement.enalbeGesture
+        let enableGesture = spatializedElement.enableGesture
         if let url = URL(string: spatializedStatic3DElement.modelURL) {
             Model3D(url: url) { newPhase in
                 switch newPhase {
@@ -28,7 +28,7 @@ struct SpatializedStatic3DView: View {
                         .onAppear {
 //                            self.onLoadSuccess()
                         }
-                        .if(enableGuesture) { view in view.hoverEffect()}
+                        .if(enableGesture) { view in view.hoverEffect()}
                 case .failure:
                     //                            use UIView.onAppear to notify error phase.
                     Text("").onAppear {
