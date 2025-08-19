@@ -1,5 +1,5 @@
 <div align="left">
-  <img src="../../docs/assets/logo.png" alt="WebSpatial Logo" width="400"/>
+  <img src="../../assets/logo.png" alt="WebSpatial Logo" width="400"/>
 </div>
 <br/>
 

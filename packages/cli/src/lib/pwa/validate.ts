@@ -10,7 +10,11 @@ export function checkManifestJson(
   isDev: boolean = false,
 ) {
   const errors = []
-  if (!manifestJson.name && !manifestJson['short_name'] && !isDev) {
+  if (
+    (!manifestJson.name || manifestJson.name.length === 0) &&
+    !manifestJson['short_name'] &&
+    !isDev
+  ) {
     errors.push({
       code: 3006,
       message:

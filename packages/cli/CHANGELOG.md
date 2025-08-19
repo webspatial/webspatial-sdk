@@ -1,5 +1,22 @@
 # @webspatial/builder
 
+## 1.0.1
+
+### Patch Changes
+
+- b882515: fix resizability config
+  - @webspatial/platform-visionos@1.0.1
+
+## 1.0.0
+
+### Patch Changes
+
+- 6b84f95: config default manifest params
+- 524870a: App names that support uploading contain spaces
+- Updated dependencies [251e31f]
+- Updated dependencies [fa91d08]
+  - @webspatial/platform-visionos@1.0.0
+
 ## 0.1.23
 
 ### Patch Changes

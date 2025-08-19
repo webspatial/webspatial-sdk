@@ -617,6 +617,7 @@ class CommandManager {
             // Update scene state
             var cfg = WindowContainerPlainDefaultValues()
             cfg.defaultSize = CGSize(width: resolution.width, height: resolution.height)
+            // TODO: need set resizeRange?
             WindowContainerMgr.Instance.updateWindowContainerPlainDefaultValues(cfg)
             return
         }

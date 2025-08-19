@@ -1,0 +1,18 @@
+Index: package.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\n  \"name\": \"webspatial-sdk\",\n  \"private\": true,\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"preinstall\": \"npx only-allow pnpm\",\n    \"postinstall\": \"simple-git-hooks\",\n    \"buildPackages\": \"pnpm -r --filter \\\"@webspatial/*\\\" run build\",\n    \"setup\": \"pnpm install && npm run buildPackages\",\n    \"watchNPM\": \"concurrently \\\"cd packages/core/ && npm run start\\\" \\\"cd packages/react/ && npm run start\\\"\",\n    \"testServer\": \"cd apps/test-server/ && npm run dev -- --host\",\n    \"dev\": \"npm run testServer\",\n    \"xcode\": \"open packages/visionOS/web-spatial.xcodeproj\",\n    \"androidStudio\": \"open -a /Applications/Android\\\\ Studio.app packages/androidXR\",\n    \"adbDevPorts\": \"adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173\",\n    \"test\": \"concurrently \\\"pnpm -r --filter '@webspatial/*' run test\\\" \\\"tsc -p apps/test-server/tsconfig.json\\\"\",\n    \"ciTest\": \"cd tests/ci-test/ && pnpm run test\",\n    \"format\": \"pnpm -r run format\",\n    \"ci:publish\": \"changeset publish\",\n    \"changeset\": \"changeset\",\n    \"changeset:pre-enter\": \"changeset pre enter alpha\",\n    \"changeset:pre-exit\": \"changeset pre exit alpha\",\n    \"generateStaticSite\": \"./tools/scripts/generateWebsite.sh\"\n  },\n  \"simple-git-hooks\": {\n    \"pre-commit\": \"pnpm lint-staged && pnpm test\"\n  },\n  \"lint-staged\": {\n    \"*.{js,json}\": [\n      \"prettier --write\"\n    ],\n    \"*.ts?(x)\": [\n      \"prettier --write\"\n    ],\n    \"*.swift\": [\n      \"swiftformat\"\n    ],\n    \"*\": [\n      \"node ./tools/scripts/check-filesize.js\",\n      \"node ./tools/scripts/check-valid-characters.js\"\n    ]\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/webspatial/webspatial-sdk.git\"\n  },\n  \"author\": \"\",\n  \"license\": \"ISC\",\n  \"bugs\": {\n    \"url\": \"https://github.com/webspatial/webspatial-sdk/issues\"\n  },\n  \"homepage\": \"https://github.com/webspatial/webspatial-sdk#readme\",\n  \"devDependencies\": {\n    \"@changesets/cli\": \"^2.29.2\",\n    \"@vitest/coverage-v8\": \"^3.0.9\",\n    \"concurrently\": \"^8.2.2\",\n    \"lint-staged\": \"^15.2.10\",\n    \"prettier\": \"^3.3.3\",\n    \"simple-git-hooks\": \"^2.11.1\",\n    \"typescript\": \"^5.7.3\",\n    \"vitest\": \"^3.0.9\"\n  },\n  \"packageManager\": \"pnpm@9.0.0\",\n  \"pnpm\": {\n    \"overrides\": {\n      \"react@>=0.0.1 <0.14.0\": \">=0.14.0\",\n      \"cli@<1.0.0\": \">=1.0.0\",\n      \"esbuild@<=0.24.2\": \">=0.25.0\",\n      \"prismjs@<1.30.0\": \">=1.30.0\",\n      \"@babel/runtime@<7.26.10\": \">=7.26.10\",\n      \"@babel/helpers@<7.26.10\": \">=7.26.10\",\n      \"vite@>=6.2.0 <6.2.3\": \">=6.2.3\",\n      \"vite@>=6.2.0 <6.2.4\": \">=6.2.4\"\n    }\n  }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/package.json b/package.json
+--- a/package.json	(revision e54b4dfa8c30629b73df71e96815d5893c0b0acb)
++++ b/package.json	(date 1750150802344)
+@@ -17,6 +17,7 @@
+     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
+     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\"",
+     "ciTest": "cd tests/ci-test/ && pnpm run test",
++    "qaCiTest": "cd tests/ci-test/ && pnpm run qatest",
+     "format": "pnpm -r run format",
+     "ci:publish": "changeset publish",
+     "changeset": "changeset",

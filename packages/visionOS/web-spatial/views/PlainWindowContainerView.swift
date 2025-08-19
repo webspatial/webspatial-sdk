@@ -9,7 +9,42 @@ struct PlainWindowContainerView: View {
     @State private var timer: Timer?
 
     private func setSize(size: CGSize) {
-        sceneDelegate.window?.windowScene?.requestGeometryUpdate(.Vision(size: size))
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    size: size
+                )
+            )
+    }
+
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
+
+    private func setResizeRange(resizeRange: ResizeRange) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
+                    )
+                ) { error in
+                    print("error:", error)
+                }
+        }
     }
 
     var body: some View {
@@ -58,6 +93,20 @@ struct PlainWindowContainerView: View {
             }
             .onReceive(windowContainerContent.setSize) { newSize in
                 setSize(size: newSize)
+            }
+            .onReceive(windowContainerContent.setResizeRange) { resizeRange in
+                self.setResizeRange(resizeRange: resizeRange)
+            }
+            .onAppear {
+                let wd = WindowContainerMgr.Instance.getValue()
+                if let range = wd.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
+                }
             }
             .onChange(of: proxy3D.size) {
                 // WkWebview has an issue where it doesn't resize while the swift window is resized
