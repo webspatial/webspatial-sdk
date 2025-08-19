@@ -103,8 +103,7 @@ export async function testCreateSpatialized2DElement() {
     })
     spatialized2DElement.windowProxy.document.body.style.background =
       'transparent'
-    spatialized2DElement.windowProxy.document.body.textContent =
-      'webview without gesture enabled'
+    spatialized2DElement.windowProxy.document.body.textContent = 'ABParent'
 
     spatialized2DElement.windowProxy.document.title = 'spatialized2DElement'
     return spatialized2DElement
@@ -251,5 +250,13 @@ export async function testAddMultipleSpatializedStatic3DElement(
     } else {
       await spatialScene.addSpatializedElement(spatializedStatic3DElementB)
     }
+  }
+}
+
+export async function testAddMultipleSpatializedDynamic3DElement(
+  parent: Spatialized2DElement | null = null,
+) {
+  if (session) {
+    const spatialScene = session.getSpatialScene()
   }
 }

@@ -24,13 +24,19 @@ function parseProps(inProps: SpatialReactComponentWithUniqueIDProps) {
     allowScroll,
     spatialStyle,
     scrollWithParent,
+    enablegesture,
     ...props
   } = inProps
 
   const El = component ? component : 'div'
 
   const componentDesc = { El }
-  const spatialDesc = { spatialStyle, allowScroll, scrollWithParent }
+  const spatialDesc = {
+    spatialStyle,
+    allowScroll,
+    scrollWithParent,
+    enablegesture,
+  }
   const debugDesc = { debugName, debugShowStandardInstance }
   return { componentDesc, spatialDesc, debugDesc, props }
 }

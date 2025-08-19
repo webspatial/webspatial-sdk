@@ -31,6 +31,8 @@ interface PortalInstanceProps {
   scrollWithParent?: boolean
   spatialStyle?: Partial<spatialStyleDef>
 
+  enablegesture?: boolean
+
   El: React.ElementType
   children?: ReactNode
   style?: CSSProperties | undefined
@@ -109,7 +111,7 @@ function asyncLoadStyleToChildWindow(
     // otherwise, the style may not be applied
     setTimeout(() => {
       childWindow.document.head.appendChild(n)
-    }, 20)
+    }, 50)
   })
 }
 
@@ -180,7 +182,11 @@ function useSyncSpatialProps(
   spatialWindowManager: SpatialWindowManager | undefined,
   props: Pick<
     PortalInstanceProps,
-    'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'
+    | 'style'
+    | 'allowScroll'
+    | 'scrollWithParent'
+    | 'spatialStyle'
+    | 'enablegesture'
   >,
   domRect: RectType,
   anchor: vecType,
@@ -189,7 +195,14 @@ function useSyncSpatialProps(
   stylePosition: string | undefined,
   isSubPortal: boolean,
 ) {
-  let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
+  let {
+    enablegesture = false,
+    allowScroll,
+    scrollWithParent,
+    style,
+    spatialStyle = {},
+  } = props
+
   let {
     position = { x: 0, y: 0, z: 0 },
     rotation = { x: 0, y: 0, z: 0, w: 1 },
@@ -264,6 +277,7 @@ function useSyncSpatialProps(
       spatialWindowManager.updateProperties({
         scrollEnabled: allowScroll || styleOverflow == 'scroll',
         scrollWithParent: !(scrollWithParent == false || isFixedPosition),
+        enableGesture: enablegesture,
       })
     }
   }, [
@@ -272,6 +286,7 @@ function useSyncSpatialProps(
     scrollWithParent,
     isFixedPosition,
     styleOverflow,
+    enablegesture,
   ])
 
   useEffect(() => {
@@ -424,8 +439,14 @@ function useSyncDomRect(spatialId: string) {
 }
 
 export function PortalInstance(inProps: PortalInstanceProps) {
-  const { allowScroll, scrollWithParent, spatialStyle, isSubPortal, ...props } =
-    inProps
+  const {
+    allowScroll,
+    scrollWithParent,
+    spatialStyle,
+    enablegesture,
+    isSubPortal,
+    ...props
+  } = inProps
 
   const debugName = useContext(SpatialDebugNameContext)
 
@@ -479,6 +500,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       allowScroll,
       scrollWithParent,
       spatialStyle,
+      enablegesture,
     },
     domRect,
     anchor,

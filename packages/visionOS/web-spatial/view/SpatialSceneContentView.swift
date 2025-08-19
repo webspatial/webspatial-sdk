@@ -34,6 +34,15 @@ struct SpatialSceneContentView: View {
                     }
                     .environment(child)
                 }
+                
+                let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
+                
+                ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
+                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                        SpatializedDynamic3DView()
+                    }
+                    .environment(child)
+                }
             }.environment(spatialScene)
                 .coordinateSpace(name: "SpatialScene")
         }
@@ -60,7 +69,7 @@ struct PreviewSpatializedStatic3DElement: View {
         
         spatializedStatic3DElement.width = 200
         spatializedStatic3DElement.height = 100
-        spatializedStatic3DElement.enableTapEvent = false
+        spatializedStatic3DElement.enableGesture = true
          
         spatializedStatic3DElement.modelURL = "http://localhost:5173/public/modelasset/cone.usdz"
         spatializedStatic3DElement.setParent(spatialScene)
@@ -73,7 +82,7 @@ struct PreviewSpatializedStatic3DElement: View {
         spatializedStatic3DElementB.transform.translation.z = 0
         spatializedStatic3DElementB.width = 200
         spatializedStatic3DElementB.height = 200
-        spatializedStatic3DElementB.enableTapEvent = false
+        spatializedStatic3DElementB.enableGesture = false
         spatializedStatic3DElementB.name = "tom"
 
         spatializedStatic3DElementB.modelURL = "http://localhost:5173/public/modelasset/vehicle-speedster.usdz"
@@ -82,6 +91,21 @@ struct PreviewSpatializedStatic3DElement: View {
         sceneId = spatialScene.id
         
         print("spatialScene \(spatialScene)")
+        
+        
+        let spatializedElement: SpatializedDynamic3DElement = spatialScene.createSpatializedElement(
+            .SpatializedDynamic3DElement
+        )
+        
+        spatializedElement.name = "dynamicCubes"
+        spatializedElement.transform.translation.x = 400
+        spatializedElement.transform.translation.y = 400
+        spatializedElement.transform.translation.z = 0
+        spatializedElement.width = 200
+        spatializedElement.height = 200
+        spatializedElement.setParent(spatialScene)
+        spatializedElement.enableGesture = true
+
     }
     
     var body: some View {
@@ -136,10 +160,48 @@ struct PreviewSpatialized2DElement: View {
     }
 }
 
-#Preview("PreviewSpatialized2DElement") {
-    PreviewSpatialized2DElement()
+
+struct PreviewSpatializedDynamic3DElement: View {
+    var sceneId: String
+    
+    init() {
+        let spatialScene = SpatialApp.Instance.createScene(
+            "http://localhost:5173/",
+            .plain,
+            .visible
+        )
+        
+        let spatializedElement: SpatializedDynamic3DElement = spatialScene.createSpatializedElement(
+            .SpatializedDynamic3DElement
+        )
+        
+        spatializedElement.name = "dynamicCubes"
+        spatializedElement.transform.translation.x = 100
+        spatializedElement.transform.translation.y = 100
+        spatializedElement.transform.translation.z = 0
+        spatializedElement.width = 200
+        spatializedElement.height = 200
+        spatializedElement.setParent(spatialScene)
+
+        sceneId = spatialScene.id
+        
+        print("spatialScene \(spatialScene)")
+    }
+    
+    var body: some View {
+        SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 1000)
+    }
+}
+
+
+#Preview("PreviewSpatializedDynamic3DElement") {
+    PreviewSpatializedDynamic3DElement()
 }
 
 #Preview("PreviewSpatializedStatic3DElementWithRotation") {
     PreviewSpatializedStatic3DElement()
+}
+
+#Preview("PreviewSpatialized2DElement") {
+    PreviewSpatialized2DElement()
 }

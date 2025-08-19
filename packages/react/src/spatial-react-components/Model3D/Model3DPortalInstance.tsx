@@ -112,6 +112,7 @@ export function renderModel3DPortalInstance(
     visible,
     spatialTransform,
     contentMode = 'fit',
+    enablegesture = false,
     resizable = true,
     aspectRatio = 0,
     onLoad,
@@ -181,6 +182,12 @@ export function renderModel3DPortalInstance(
       model3DNativeRef.current.setContentMode(contentMode)
     }
   }, [model3DNativeRef.current, contentMode])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setEnableGesture(enablegesture)
+    }
+  }, [model3DNativeRef.current, enablegesture])
 
   // handle resizable
   useEffect(() => {

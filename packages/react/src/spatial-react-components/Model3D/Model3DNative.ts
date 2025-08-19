@@ -154,7 +154,6 @@ export class Model3DNative {
     rect: RectType,
     spatialTransform: SpatialTransformType,
   ) {
-    console.log('updateRectAndTransform', rect, spatialTransform, this.spatialObject)
     if (!this.spatialObject) {
       return
     }
@@ -192,6 +191,10 @@ export class Model3DNative {
 
   async setOpacity(opacity: number) {
     this.spatialObject?.updateProperties({ opacity })
+  }
+
+  async setEnableGesture(enableGesture: boolean) {
+    this.spatialObject?.updateProperties({ enableGesture })
   }
 
   async setScrollWithParent(scrollWithParent: boolean) {

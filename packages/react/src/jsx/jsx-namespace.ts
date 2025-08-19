@@ -98,6 +98,7 @@ export namespace WebSpatialJSX {
     [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
       style?: React.CSSProperties
       'enable-xr'?: boolean
+      enablegesture?: boolean
     }
   }
 }
@@ -108,5 +109,6 @@ declare module 'react' {
     '--xr-back'?: number | string
     '--xr-z-index'?: number | string
     enableXr?: boolean
+    enablegesture?: boolean
   }
 }

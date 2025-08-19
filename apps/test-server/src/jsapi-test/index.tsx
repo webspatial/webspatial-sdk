@@ -17,7 +17,7 @@ import {
 // testSpatialSceneCorner()
 testCreateSpatialized2DElement().then(spatialized2DElement => {
   testAddMultipleSpatialized2DElement(spatialized2DElement)
-  testAddMultipleSpatializedStatic3DElement(spatialized2DElement)
+  // testAddMultipleSpatializedStatic3DElement(spatialized2DElement)
   // .then(() =>
   //   testSpatialSceneInspect(),
   // )

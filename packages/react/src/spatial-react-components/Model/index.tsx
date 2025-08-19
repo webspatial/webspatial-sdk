@@ -69,6 +69,8 @@ export interface ModelProps {
 
   // for config ModelViewer only
   poster?: string
+
+  enableGesture?: boolean
 }
 
 function renderInModel3D(

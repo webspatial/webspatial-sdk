@@ -1,6 +1,17 @@
 import RealityKit
 import SwiftUI
 
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
 class Spatialized2DViewGestureData {
     var dragStarted = false
     var dragStart: CGFloat = 0.0
@@ -20,21 +31,14 @@ struct Spatialized2DElementView: View {
         let enableGesture = spatializedElement.enableGesture
         // Display child spatialized2DElements
         ZStack(alignment: Alignment.topLeading) {
-            if enableGesture {
-                Rectangle().fill(.white)
-                    .opacity(0.002)
-                    .hoverEffect()
-            }
-
             // Display the main webview
             spatialized2DElement.getView()
                 .materialWithBorderCorner(
                     spatialized2DElement.backgroundMaterial,
                     spatialized2DElement.cornerRadius
                 )
-                .if(!enableGesture) { view in view.gesture(dragWebGesture) }
-                .allowsHitTesting(!enableGesture)
-
+                .simultaneousGesture(needBubbleUp ? dragWebGesture: nil)
+            
             let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
             ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
