@@ -92,9 +92,12 @@ export function hijackWindowATag(openedWindow: WindowProxy) {
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
         // we handle all the scenarios
-        handleATag(e)
 
-        return false // prevent default action and stop event propagation
+        if (handleATag(e)) {
+          return false // prevent default action and stop event propagation
+        }
+
+        return true
       }
       if (element && element.parentElement) {
         element = element.parentElement
@@ -115,6 +118,7 @@ function handleATag(event: MouseEvent) {
     if (target && target !== '_self') {
       event.preventDefault()
       window.open(url, target)
+      return true
     }
   }
 }
