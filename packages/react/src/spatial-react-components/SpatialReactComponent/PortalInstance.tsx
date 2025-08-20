@@ -96,8 +96,10 @@ function handleOpenWindowDocumentClick(openedWindow: Window) {
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
         // we handle all the scenarios
-        XRApp.getInstance().handleATag(e)
-        return false // prevent default action and stop event propagation
+        if (XRApp.getInstance().handleATag(e)) {
+          return false // prevent default action and stop event propagation
+        }
+        return true
       }
       if (element && element.parentElement) {
         element = element.parentElement
