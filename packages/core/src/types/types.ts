@@ -70,7 +70,8 @@ export interface SpatializedElementProperties {
   enableGesture: boolean
 }
 
-export interface Spatialized2DElementProperties extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties
+  extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -83,16 +84,18 @@ export interface SpatializedStatic3DElementProperties
 }
 
 export interface SpatialSceneCreationOptions {
+  type?: 'window' | 'volume' // scene type
   defaultSize?: {
-    width: number // Initial width of the window
-    height: number // Initial height of the window
+    width: number | string // Initial width of the window
+    height: number | string // Initial height of the window
+    depth?: number | string // Initial depth of the window, only for volume
   }
 
   resizability?: {
-    minWidth?: number
-    minHeight?: number
-    maxWidth?: number
-    maxHeight?: number
+    minWidth?: number | string // Minimum width of the window
+    minHeight?: number | string // Minimum height of the window
+    maxWidth?: number | string // Maximum width of the window
+    maxHeight?: number | string // Maximum height of the window
   }
 }
 
@@ -150,4 +153,3 @@ declare global {
     }
   }
 }
-

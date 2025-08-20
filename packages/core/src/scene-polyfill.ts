@@ -65,8 +65,131 @@ class SceneManager {
     name: string,
     callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
   ) {
-    this.configMap[name] = callback({ ...defaultSceneConfig })
+    let rawReturnVal = callback({ ...defaultSceneConfig })
+    this.configMap[name] = formatSceneConfig(rawReturnVal)
   }
+}
+
+function pxToMeter(px: number): number {
+  return px / 1360
+}
+
+function meterToPx(meter: number): number {
+  return meter * 1360
+}
+
+function formatToNumber(
+  str: string | number,
+  targetUnit: 'px' | 'm',
+  defaultUnit: 'px' | 'm',
+): number {
+  if (typeof str === 'number') {
+    if (
+      (defaultUnit === 'px' && targetUnit === 'px') ||
+      (defaultUnit === 'm' && targetUnit === 'm')
+    ) {
+      return str
+    }
+    // unit not match target
+    if (defaultUnit === 'px' && targetUnit === 'm') {
+      return pxToMeter(str)
+    } else if (defaultUnit === 'm' && targetUnit === 'px') {
+      return meterToPx(str)
+    }
+    // fallback
+    return str
+  }
+  if (targetUnit === 'm') {
+    if (str.endsWith('m')) {
+      // 1m
+      return Number(str.slice(0, -1))
+    } else if (str.endsWith('px')) {
+      // 100px
+      return pxToMeter(Number(str.slice(0, -2)))
+    } else {
+      throw new Error('formatToNumber: invalid str')
+    }
+  } else if (targetUnit === 'px') {
+    if (str.endsWith('px')) {
+      // 100px
+      return Number(str.slice(0, -2))
+    } else if (str.endsWith('m')) {
+      // 1m
+      return meterToPx(Number(str.slice(0, -1)))
+    } else {
+      throw new Error('formatToNumber: invalid str')
+    }
+  } else {
+    throw new Error('formatToNumber: invalid targetUnit')
+  }
+}
+
+export function formatSceneConfig(config: SpatialSceneCreationOptions) {
+  // defaultSize and resizability's width/height/depth can be 100 or "100px" or "1m"
+  // expect:
+  // resizability should format into px
+  // defaultSize should format into px if window
+  // defaultSize should format into m if volume
+
+  const isWindow = config.type === 'window' || config.type === undefined
+
+  // format resizability
+  if (config.resizability) {
+    const iterKeys = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+
+    for (let k of iterKeys) {
+      if ((config.resizability as any)[k]) {
+        ;(config.resizability as any)[k] = formatToNumber(
+          (config.resizability as any)[k],
+          'px',
+          isWindow ? 'px' : 'm',
+        )
+      }
+    }
+  }
+
+  // format defaultSize
+  if (config.defaultSize) {
+    if (config.type === 'window' || config.type === undefined) {
+      if (config.defaultSize.width) {
+        config.defaultSize.width = formatToNumber(
+          config.defaultSize.width,
+          'px',
+          'px',
+        )
+      }
+      if (config.defaultSize.height) {
+        config.defaultSize.height = formatToNumber(
+          config.defaultSize.height,
+          'px',
+          'px',
+        )
+      }
+    } else if (config.type === 'volume') {
+      if (config.defaultSize.width) {
+        config.defaultSize.width = formatToNumber(
+          config.defaultSize.width,
+          'm',
+          'm',
+        )
+      }
+      if (config.defaultSize.height) {
+        config.defaultSize.height = formatToNumber(
+          config.defaultSize.height,
+          'm',
+          'm',
+        )
+      }
+      if (config.defaultSize.depth) {
+        config.defaultSize.depth = formatToNumber(
+          config.defaultSize.depth,
+          'm',
+          'm',
+        )
+      }
+    }
+  }
+  return config
 }
 
 export function initScene(
