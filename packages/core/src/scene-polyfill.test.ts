@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach, afterEach, it } from 'vitest'
-import { formatSceneConfig, injectSceneHook } from './scene-polyfill'
+import { formatSceneConfig, initScene, injectSceneHook } from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
 
 describe('test formatSceneConfig in window', () => {
@@ -255,5 +255,45 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
     // verify UpdateSceneConfig.execute
     const { UpdateSceneConfig } = await import('./JSBCommand')
     expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+  })
+})
+
+describe('initScene should receive defaultScene config by type', () => {
+  it('with no type', async () => {
+    const mockFn = vi
+      .fn()
+      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
+
+    initScene('sa', mockFn)
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+  })
+
+  it('with window type', async () => {
+    const mockFn = vi
+      .fn()
+      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
+
+    initScene('sa', mockFn, { type: 'window' })
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+  })
+
+  it('with volume type', async () => {
+    const mockFn = vi
+      .fn()
+      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
+
+    initScene('sa', mockFn, { type: 'volume' })
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+      }),
+    )
   })
 })

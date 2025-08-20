@@ -78,11 +78,10 @@ class SceneManager {
     callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
     options?: { type: SpatialSceneType },
   ) {
-    let rawReturnVal = callback({ ...defaultSceneConfig })
-    this.configMap[name] = formatSceneConfig(
-      rawReturnVal,
-      options?.type ?? 'window',
-    )
+    const sceneType = options?.type ?? 'window'
+    const defaultConfig = getSceneDefaultConfig(sceneType)
+    const rawReturnVal = callback({ ...defaultConfig })
+    this.configMap[name] = formatSceneConfig(rawReturnVal, sceneType)
   }
 }
 
@@ -215,8 +214,9 @@ export function formatSceneConfig(
 export function initScene(
   name: string,
   callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
+  options?: { type: SpatialSceneType },
 ) {
-  return SceneManager.getInstance().initScene(name, callback)
+  return SceneManager.getInstance().initScene(name, callback, options)
 }
 
 export function hijackWindowOpen(window: WindowProxy) {

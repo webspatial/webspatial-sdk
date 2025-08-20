@@ -24,10 +24,5 @@ export class SpatialSession {
     return createSpatializedStatic3DElement(modelURL)
   }
 
-  initScene(
-    name: string,
-    callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
-  ) {
-    return initScene(name, callback)
-  }
+  initScene = initScene
 }
