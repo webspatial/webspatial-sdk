@@ -25,10 +25,12 @@ struct SpatializedElementView<Content: View>: View {
             .simultaneously(with:
                 RotateGesture3D()
                     .onChanged(onRotateGesture3D)
+                    .onEnded(onRotateGesture3DEnd)
             )
             .simultaneously(with:
                 MagnifyGesture()
                     .onChanged(onMagnifyGesture)
+                    .onChanged(onMagnifyGestureEnd)
             )
             .simultaneously(with:
                 SpatialTapGesture(count: 1)
@@ -38,6 +40,10 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
         print("\(spatializedElement.name) onRotateGesture3D \(event.rotation) ")
+    }
+    
+    private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
+        print("\(spatializedElement.name) onRotateGesture3DEnd \(event.rotation) ")
     }
 
     private func onDragging(_ event: DragGesture.Value) {
@@ -54,6 +60,10 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
         print("\(spatializedElement.name)  onMagnifyGesture \(event.magnification)")
+    }
+    
+    private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
+        print("\(spatializedElement.name)  onMagnifyGestureEnd \(event.magnification)")
     }
 
     // End Interaction
@@ -77,7 +87,6 @@ struct SpatializedElementView<Content: View>: View {
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
 
-//        if (enableGesture) {
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
             .frame(depth: 10, alignment: .back)
@@ -85,11 +94,11 @@ struct SpatializedElementView<Content: View>: View {
                 print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
 
-                print(" \(spatializedElement.name) rect3d   \(rect3d)  \(rect3d.min.x) \(rect3d.max.x)")
+                print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
 
                 return proxy.transform(in: .named("SpatialScene"))!
-            } action: { _, _ in
-                //                print(" \(spatializedElement.name) \(new.translation)  ")
+            } action: { _, new in
+                print(" \(spatializedElement.name) transform \(new)  ")
             }
             .clipped()
             .frame(depth: 0, alignment: .back)
