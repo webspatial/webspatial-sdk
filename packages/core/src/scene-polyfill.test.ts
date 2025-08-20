@@ -15,9 +15,8 @@ describe('test formatSceneConfig in window', () => {
         maxWidth: 100,
         maxHeight: 100,
       },
-      type: 'window',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 100,
       height: 100,
@@ -42,9 +41,8 @@ describe('test formatSceneConfig in window', () => {
         maxWidth: '100px',
         maxHeight: '100px',
       },
-      type: 'window',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 100,
       height: 100,
@@ -69,9 +67,8 @@ describe('test formatSceneConfig in window', () => {
         maxWidth: '1m',
         maxHeight: '1m',
       },
-      type: 'window',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1360,
       height: 1360,
@@ -99,9 +96,8 @@ describe('test formatSceneConfig in volume', () => {
         maxWidth: 1,
         maxHeight: 1,
       },
-      type: 'volume',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -128,9 +124,8 @@ describe('test formatSceneConfig in volume', () => {
         maxWidth: '1360px',
         maxHeight: '1360px',
       },
-      type: 'volume',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -157,9 +152,8 @@ describe('test formatSceneConfig in volume', () => {
         maxWidth: '1m',
         maxHeight: '1m',
       },
-      type: 'volume',
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config)
+    const formattedConfig = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -191,16 +185,16 @@ vi.mock('./JSBCommand', () => {
   }
 })
 
-describe('injectScenePolyfill', () => {
+describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scene config', () => {
   beforeEach(() => {
     ;(window as any).opener = {}
   })
 
-  it('should call xrCurrentSceneDefaults and update scene config', async () => {
+  it('with no type', async () => {
     vi.useFakeTimers()
 
     const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
-    ;(window as any).xrCurrentSceneDefaults = mockFn
+    window.xrCurrentSceneDefaults = mockFn
 
     injectSceneHook()
 
@@ -210,6 +204,52 @@ describe('injectScenePolyfill', () => {
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+
+    // verify UpdateSceneConfig.execute
+    const { UpdateSceneConfig } = await import('./JSBCommand')
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+  })
+
+  it('with window type', async () => {
+    vi.useFakeTimers()
+
+    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    window.xrCurrentSceneDefaults = mockFn
+    window.xrCurrentSceneType = 'window'
+
+    injectSceneHook()
+
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+
+    await vi.runAllTimersAsync()
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+
+    // verify UpdateSceneConfig.execute
+    const { UpdateSceneConfig } = await import('./JSBCommand')
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+  })
+
+  it('with volume type', async () => {
+    vi.useFakeTimers()
+
+    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    window.xrCurrentSceneDefaults = mockFn
+    window.xrCurrentSceneType = 'volume'
+
+    injectSceneHook()
+
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+
+    await vi.runAllTimersAsync()
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+      }),
     )
 
     // verify UpdateSceneConfig.execute

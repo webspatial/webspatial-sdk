@@ -84,7 +84,6 @@ export interface SpatializedStatic3DElementProperties
 }
 
 export interface SpatialSceneCreationOptions {
-  type?: 'window' | 'volume' // scene type
   defaultSize?: {
     width: number | string // Initial width of the window
     height: number | string // Initial height of the window
@@ -98,6 +97,9 @@ export interface SpatialSceneCreationOptions {
     maxHeight?: number | string // Maximum height of the window
   }
 }
+
+export type SpatialSceneType = 'window' | 'volume'
+
 
 export enum SpatialSceneState {
   idle = 'idle',
@@ -118,6 +120,7 @@ export type SpatialModelDragEvent = {
 
 declare global {
   interface Window {
+    xrCurrentSceneType: SpatialSceneType
     xrCurrentSceneDefaults: (
       defaultConfig: SpatialSceneCreationOptions,
     ) => Promise<SpatialSceneCreationOptions>

@@ -1,6 +1,10 @@
 import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
 import { SpatialScene } from './SpatialScene'
-import { SpatialSceneCreationOptions, SpatialSceneState } from './types/types'
+import {
+  SpatialSceneCreationOptions,
+  SpatialSceneType,
+  SpatialSceneState,
+} from './types/types'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -72,9 +76,13 @@ class SceneManager {
   initScene(
     name: string,
     callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
+    options?: { type: SpatialSceneType },
   ) {
     let rawReturnVal = callback({ ...defaultSceneConfig })
-    this.configMap[name] = formatSceneConfig(rawReturnVal)
+    this.configMap[name] = formatSceneConfig(
+      rawReturnVal,
+      options?.type ?? 'window',
+    )
   }
 }
 
@@ -132,14 +140,18 @@ function formatToNumber(
   }
 }
 
-export function formatSceneConfig(config: SpatialSceneCreationOptions) {
+export function formatSceneConfig(
+  config: SpatialSceneCreationOptions,
+  sceneType: SpatialSceneType,
+) {
   // defaultSize and resizability's width/height/depth can be 100 or "100px" or "1m"
   // expect:
   // resizability should format into px
   // defaultSize should format into px if window
   // defaultSize should format into m if volume
 
-  const isWindow = config.type === 'window' || config.type === undefined
+  const isWindow = sceneType === 'window'
+  const isVolume = sceneType === 'volume'
 
   // format resizability
   if (config.resizability) {
@@ -158,7 +170,7 @@ export function formatSceneConfig(config: SpatialSceneCreationOptions) {
 
   // format defaultSize
   if (config.defaultSize) {
-    if (config.type === 'window' || config.type === undefined) {
+    if (isWindow) {
       if (config.defaultSize.width) {
         config.defaultSize.width = formatToNumber(
           config.defaultSize.width,
@@ -173,7 +185,7 @@ export function formatSceneConfig(config: SpatialSceneCreationOptions) {
           'px',
         )
       }
-    } else if (config.type === 'volume') {
+    } else if (isVolume) {
       if (config.defaultSize.width) {
         config.defaultSize.width = formatToNumber(
           config.defaultSize.width,
@@ -254,6 +266,10 @@ function handleATag(event: MouseEvent) {
   }
 }
 
+function getSceneDefaultConfig(sceneType: SpatialSceneType) {
+  return sceneType === 'window' ? defaultSceneConfig : defaultSceneConfigVolume
+}
+
 async function injectScenePolyfill() {
   if (!window.opener) return
 
@@ -274,10 +290,13 @@ async function injectScenePolyfill() {
   }
 
   onContentLoaded(async () => {
-    let cfg = defaultSceneConfig
-    if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
+    let provideDefaultSceneConfig = getSceneDefaultConfig(
+      window.xrCurrentSceneType ?? 'window',
+    )
+    let cfg = provideDefaultSceneConfig
+    if (typeof window.xrCurrentSceneDefaults === 'function') {
       try {
-        cfg = await (window as any).xrCurrentSceneDefaults?.(defaultSceneConfig)
+        cfg = await window.xrCurrentSceneDefaults?.(provideDefaultSceneConfig)
       } catch (error) {
         console.error(error)
       }
