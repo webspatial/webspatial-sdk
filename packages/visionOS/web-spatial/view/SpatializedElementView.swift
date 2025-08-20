@@ -30,7 +30,7 @@ struct SpatializedElementView<Content: View>: View {
             .simultaneously(with:
                 MagnifyGesture()
                     .onChanged(onMagnifyGesture)
-                    .onChanged(onMagnifyGestureEnd)
+                    .onEnded(onMagnifyGestureEnd)
             )
             .simultaneously(with:
                 SpatialTapGesture(count: 1)
