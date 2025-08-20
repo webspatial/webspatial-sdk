@@ -4,8 +4,16 @@ import { SpatialSceneCreationOptions, SpatialSceneState } from './types/types'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
-    width: 900,
-    height: 700,
+    width: 1280,
+    height: 720,
+  },
+}
+
+const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
+  defaultSize: {
+    width: 0.94,
+    height: 0.94,
+    depth: 0.94,
   },
 }
 
@@ -269,7 +277,7 @@ async function injectScenePolyfill() {
     let cfg = defaultSceneConfig
     if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
       try {
-        cfg = await (window as any).xrCurrentSceneDefaults?.()
+        cfg = await (window as any).xrCurrentSceneDefaults?.(defaultSceneConfig)
       } catch (error) {
         console.error(error)
       }

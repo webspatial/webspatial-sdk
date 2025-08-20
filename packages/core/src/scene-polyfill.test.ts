@@ -1,5 +1,5 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
-import { formatSceneConfig } from './scene-polyfill'
+import { describe, expect, test, vi, beforeEach, afterEach, it } from 'vitest'
+import { formatSceneConfig, injectSceneHook } from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
 
 describe('test formatSceneConfig in window', () => {
@@ -171,5 +171,49 @@ describe('test formatSceneConfig in volume', () => {
       maxWidth: 1360,
       maxHeight: 1360,
     })
+  })
+})
+
+vi.mock('./JSBCommand', () => {
+  return {
+    GetSpatialSceneState: vi.fn().mockImplementation(() => ({
+      execute: vi.fn().mockResolvedValue({ data: { name: 'pending' } }),
+    })),
+    UpdateSceneConfig: vi.fn().mockImplementation(() => ({
+      execute: vi.fn().mockResolvedValue(undefined),
+    })),
+    UpdateSpatialSceneProperties: vi.fn().mockImplementation(() => ({
+      execute: vi.fn().mockResolvedValue(undefined),
+    })),
+    AddSpatializedElementToSpatialScene: vi.fn().mockImplementation(() => ({
+      execute: vi.fn().mockResolvedValue(undefined),
+    })),
+  }
+})
+
+describe('injectScenePolyfill', () => {
+  beforeEach(() => {
+    ;(window as any).opener = {}
+  })
+
+  it('should call xrCurrentSceneDefaults and update scene config', async () => {
+    vi.useFakeTimers()
+
+    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    ;(window as any).xrCurrentSceneDefaults = mockFn
+
+    injectSceneHook()
+
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+
+    await vi.runAllTimersAsync()
+
+    expect(mockFn).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+
+    // verify UpdateSceneConfig.execute
+    const { UpdateSceneConfig } = await import('./JSBCommand')
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
   })
 })
