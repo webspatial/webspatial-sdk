@@ -85,6 +85,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         setupJSBListeners()
         setupWebViewStateListner()
     }
+    
+    private func handleNavigationCheck(_ url:URL) -> Bool {
+        // url in scope should open in place
+        return true
+    }
 
     private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
         // get config from url
@@ -218,7 +223,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
-        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler) 
+        spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
+        
+        spatialWebViewModel
+            .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
     }
 
     private func setupWebViewStateListner() {
