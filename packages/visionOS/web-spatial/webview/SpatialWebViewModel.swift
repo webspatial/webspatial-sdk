@@ -202,15 +202,15 @@ class SpatialWebViewModel: SpatialObject {
 
     // invokes
     private func onNavigationInvoke(_ url: URL) -> Bool {
-        var protocolRes = true
+        var matchProtocol = false
         for key in navigationList.keys {
             if url.absoluteString.starts(with: key),
                let res = navigationList[key]?(url)
             {
-                protocolRes = res
+                matchProtocol = res
             }
         }
-        return protocolRes
+        return matchProtocol
     }
 
     private func onOpenWindowInvoke(_ url: URL) -> WebViewElementInfo? {

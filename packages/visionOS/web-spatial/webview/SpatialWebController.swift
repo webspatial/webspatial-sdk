@@ -65,19 +65,19 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     // navigation request
     // SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
-        if let deciside = navigationInvoke?(navigationAction.request.url!) {
-            if deciside == true && !firstLoad {
+        let deciside = navigationInvoke?(navigationAction.request.url!)
+        if deciside == true {
+            if !firstLoad{
                 webviewStateChangeInvoke?(.didUnload)
             }
             firstLoad = false
-            decisionHandler(deciside ? .allow : .cancel)
-            return
         }
-        if !firstLoad {
-            webviewStateChangeInvoke?(.didUnload)
+        var needAllow = deciside ?? false
+        
+        if !needAllow{
+            UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
         }
-        firstLoad = false
-        decisionHandler(.allow)
+        decisionHandler(needAllow ? .allow : .cancel)
     }
 
     // open window request
