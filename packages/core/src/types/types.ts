@@ -100,6 +100,9 @@ export interface SpatialSceneCreationOptions {
 
 export type SpatialSceneType = 'window' | 'volume'
 
+export type SpatialSceneCreationOptionsJSB = SpatialSceneCreationOptions & {
+  type: SpatialSceneType
+}
 
 export enum SpatialSceneState {
   idle = 'idle',

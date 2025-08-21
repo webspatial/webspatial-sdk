@@ -4,6 +4,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneType,
   SpatialSceneState,
+  SpatialSceneCreationOptionsJSB,
 } from './types/types'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
@@ -37,7 +38,7 @@ class SceneManager {
     ;(window as any).open = this.open
   }
 
-  private configMap: Record<string, SpatialSceneCreationOptions> = {} // name=>config
+  private configMap: Record<string, SpatialSceneCreationOptionsJSB> = {} // name=>config
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
@@ -81,7 +82,10 @@ class SceneManager {
     const sceneType = options?.type ?? 'window'
     const defaultConfig = getSceneDefaultConfig(sceneType)
     const rawReturnVal = callback({ ...defaultConfig })
-    this.configMap[name] = formatSceneConfig(rawReturnVal, sceneType)
+    this.configMap[name] = {
+      ...formatSceneConfig(rawReturnVal, sceneType),
+      type: sceneType,
+    }
   }
 }
 
