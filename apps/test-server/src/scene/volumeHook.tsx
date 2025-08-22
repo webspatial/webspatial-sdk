@@ -33,6 +33,8 @@ function App() {
   function logDepth() {
     //@ts-ignore
     log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+    //@ts-ignore
+    log('outerHeight:' + window.outerHeight)
   }
 
   useEffect(() => {

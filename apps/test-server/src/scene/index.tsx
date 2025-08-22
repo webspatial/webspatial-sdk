@@ -20,12 +20,21 @@ const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
   const [logs, setLogs] = useState('')
 
-  useEffect(() => {
+  function logDepth() {
     //@ts-ignore
-    log('windowID:', window._webSpatialID)
+    log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+    //@ts-ignore
+    log('outerHeight:' + window.outerHeight)
+  }
+
+  useEffect(() => {
+    logDepth()
+
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
+
+    window.onresize = logDepth
 
     return () => {
       window.onerror = null
@@ -56,36 +65,40 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">basic open</h1>
+      <h1 className="text-2xl text-black">no sdk</h1>
       <button
         className={btnCls}
         onClick={async () => {
-          window.open('http://localhost:5173/src/scene/index.html')
+          window.open('http://localhost:5173/src/scene/nosdk.html')
         }}
       >
-        open
+        open nosdk
       </button>
-      <h1 className="text-2xl text-black">open volume</h1>
+      <h1 className="text-2xl text-black">volume</h1>
       <button
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          initScene('sa', () => ({
-            defaultSize: {
-              width: 1,
-              height: 1,
-              depth: 1,
-            },
-            resizability: {
-              minWidth: 0.5,
-              maxWidth: 1.5,
-              minHeight: 0.5,
-              maxHeight: 1.5,
-            },
-            worldScaling: 'automatic',
-            worldAlignment: 'automatic',
-            automatic: 'automatic',
-          }))
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              // resizability: {
+              //   minWidth: 0.5,
+              //   maxWidth: 1.5,
+              //   minHeight: 0.5,
+              //   maxHeight: 1.5,
+              // },
+              // worldScaling: 'automatic',
+              // worldAlignment: 'automatic',
+              // automatic: 'automatic',
+            }),
+            { type: 'volume' },
+          )
           winARef.current = window.open(
             'http://localhost:5173/src/scene/volume.html',
             'sa',
@@ -96,7 +109,41 @@ function App() {
         open volume
       </button>
 
-       <button
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              resizability: {
+                minWidth: 0.5,
+                maxWidth: 2,
+                minHeight: 0.5,
+                maxHeight: 1,
+              },
+              // worldScaling: 'automatic',
+              // worldAlignment: 'automatic',
+              // automatic: 'automatic',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open volume resizable
+      </button>
+
+      <button
         className={btnCls}
         onClick={async () => {
           startlog('open')
@@ -217,6 +264,10 @@ function App() {
       <a className={btnCls} href={`http://localhost:5173/src/scene/hook.html`}>
         open in place
       </a>
+      <a className={btnCls} href={`https://www.google.com`}>
+        open in place google
+      </a>
+
       <a
         className={btnCls}
         href={`http://localhost:5173/src/scene/hook.html`}

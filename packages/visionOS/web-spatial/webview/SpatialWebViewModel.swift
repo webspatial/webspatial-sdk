@@ -262,6 +262,10 @@ class SpatialWebViewModel: SpatialObject {
     func updateInnerDepthAndOuterDepth(_ val:Double) {
         controller?.callJS("window.innerDepth=window.outerDepth=" + String(val)+";")
     }
+    
+    func updateOuterHeight(_ val:Double) {
+        controller?.callJS("window.outerHeight" + String(val)+";")
+    }
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)

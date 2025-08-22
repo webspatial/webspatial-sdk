@@ -23,11 +23,11 @@ struct SpatialSceneView: View {
                         windowResizeInProgress = false
                         timer = nil
                     }
-                    spatialScene.handleDepthChange(depth)
+                    spatialScene.handleSizeChange(proxy3D.size)
                    
                 }
                 .onAppear(){
-                    spatialScene.handleDepthChange(depth)
+                    spatialScene.handleSizeChange(proxy3D.size)
                 }
 
                 if windowResizeInProgress {
