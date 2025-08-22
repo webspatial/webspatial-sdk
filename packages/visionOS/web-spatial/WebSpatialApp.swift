@@ -7,32 +7,110 @@ import typealias RealityKit.RealityView
 import typealias RealityKit.SimpleMaterial
 import SwiftUI
 
+func getCGFloat(_ val:Double?) -> CGFloat? {
+    if let v = val {
+        return CGFloat(v)
+    }else {
+        return nil
+    }
+}
+
 @main
 struct WebSpatialApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @State var app = SpatialApp.Instance
+    
+    func getDefaultSize() -> CGSize {
+        let ans =  CGSize(
+            width:app
+                .getSceneOptions().defaultSize!.width,
+            height: app
+                .getSceneOptions().defaultSize!.height)
+        print("getDefaultSize:",ans)
+        return ans
+    }
+    
+    func getDefaultSize3D() -> Size3D {
+        let ans =  Size3D(
+            width:app
+                .getSceneOptions().defaultSize!.width,
+            height: app
+                .getSceneOptions().defaultSize!.height,
+            depth: app.getSceneOptions().defaultSize!.depth ?? 0)
+        print("getDefaultSize3D:",ans)
+        return ans
+    }
 
     var body: some Scene {
-        WindowGroup(id: "Plain", for: String.self) { $windowData in
+        WindowGroup(
+            id: SpatialScene.WindowStyle.plain.rawValue,
+            for: String.self
+        ) { $windowData in
             SpatialSceneView(sceneId: windowData)
+                .frame(
+                    minWidth: getCGFloat(
+                        app.getSceneOptions().resizeRange?.minWidth),
+                    maxWidth: getCGFloat(
+                        app.getSceneOptions().resizeRange?.maxWidth),
+                    minHeight: getCGFloat(
+                        app.getSceneOptions().resizeRange?.minHeight),
+                    maxHeight: getCGFloat(
+                        app.getSceneOptions().resizeRange?.maxHeight)
+                )
         }
         defaultValue: {
             let scene = SpatialApp.Instance.createScene(
                 startURL,
                 .plain,
                 .visible,
-                app.getPlainSceneOptions()
+                app.getSceneOptions()
             )
-
+            
             return scene.id
         }
         .windowStyle(.plain)
         .defaultSize(
-            app.getPlainSceneOptions().defaultSize!
+            getDefaultSize()
         ).windowResizability(
-            app.getPlainSceneOptions().windowResizability!
+            app.getSceneOptions().windowResizability!
         )
+        
+        
+        WindowGroup(id: SpatialScene.WindowStyle.volume.rawValue, for: String.self) { $windowData in
+            SpatialSceneView(sceneId: windowData)
+//                .volumeBaseplateVisibility(.visible)
+                .frame(
+                    minWidth: getCGFloat(
+                        app.getSceneOptions().resizeRange?.minWidth),
+                    maxWidth: getCGFloat(
+                        app.getSceneOptions().resizeRange?.maxWidth),
+                    minHeight: getCGFloat(
+                        app.getSceneOptions().resizeRange?.minHeight),
+                    maxHeight: getCGFloat(
+                        app.getSceneOptions().resizeRange?.maxHeight)
+                )
+        }
+        defaultValue: {
+            let scene = SpatialApp.Instance.createScene(
+                startURL,
+                .volume,
+                .visible,
+                app.getSceneOptions()
+            )
+            
+            return scene.id
+        }
+        .windowStyle(.volumetric)
+        .defaultSize(
+            getDefaultSize3D(),
+            in: .meters
+        ).windowResizability(
+            app.getSceneOptions().windowResizability!
+        )
+//        .defaultWorldScaling(.automatic)
+//        .volumeWorldAlignment(.automatic)
+       
 
         WindowGroup(id: "loading", for: String.self) { $windowData in
             LoadingView()

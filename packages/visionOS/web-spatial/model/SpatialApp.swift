@@ -22,38 +22,28 @@ struct XLoadingViewData: Decodable, Hashable, Encodable {
     let windowStyle: String?
 }
 
-struct XPlainSceneOptions {
-    var defaultSize: CGSize?
+struct SceneOptions {
+    var defaultSize: Size?
     var windowResizability: WindowResizability?
     var resizeRange: ResizeRange?
+    var worldScaling: WorldScalingBehavior?
+    var worldAlignment: WorldAlignmentBehavior?
+    var baseplateVisiblility: Visibility?
 }
 
-// incomming JSB data
-struct WindowContainerOptions: Codable {
-    // windowContainer
-    let defaultSize: Size?
-    struct Size: Codable {
-        var width: Double
-        var height: Double
-    }
-
-    let resizability: ResizeRange?
+struct Size: Codable {
+    var width: Double
+    var height: Double
+    var depth: Double?
 }
 
 
-extension XPlainSceneOptions {
+extension SceneOptions {
     init(_ options: XSceneOptionsJSB) {
-        defaultSize = CGSize(
+        defaultSize = Size(
             width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
-            height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
-        )
-        windowResizability = decodeWindowResizability(nil)
-        resizeRange = options.resizability
-    }
-    init(from options: WindowContainerOptions) {
-        defaultSize = CGSize(
-            width: options.defaultSize?.width ?? DefaultPlainWindowContainerSize.width,
-            height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height
+            height: options.defaultSize?.height ?? DefaultPlainWindowContainerSize.height,
+            depth: options.defaultSize?.depth ?? 0
         )
         windowResizability = decodeWindowResizability(nil)
         resizeRange = options.resizability
@@ -73,6 +63,7 @@ func decodeWindowResizability(_ windowResizability: String?) -> WindowResizabili
     }
 }
 
+@Observable
 class SpatialApp {
     private var scenes = [String: SpatialScene]()
     
@@ -84,7 +75,8 @@ class SpatialApp {
     var startURL: String { pwaManager.start_url }
     
     // used to cache scene config
-    private var plainSceneOptions: XPlainSceneOptions
+    private var sceneOptions: SceneOptions
+
 
     static let Instance: SpatialApp = .init()
 
@@ -94,13 +86,29 @@ class SpatialApp {
 
         Logger.initLogger()
 
-        plainSceneOptions = XPlainSceneOptions(from: pwaManager.mainScene);
+        sceneOptions = SceneOptions(pwaManager.mainScene);
+        
+        print("plainSceneOptions",sceneOptions)
         
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
     }
+    
 
-    func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: XPlainSceneOptions? = nil) -> SpatialScene {
-        let scene = SpatialScene(url, style, state, sceneOptions)
+
+    func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {
+        let scene: SpatialScene
+        switch style {
+            case .plain:
+                scene = PlainSpatialScene(url, style, state, sceneOptions)
+            case .volume:
+                scene = VolumeSpatialScene(
+                    url,
+                    style,
+                    state,
+                    sceneOptions
+                )
+        }
+//        let scene = SpatialScene(url, style, state, sceneOptions)
         scenes[scene.id] = scene
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
@@ -126,15 +134,21 @@ class SpatialApp {
     }
 
     
-    func getPlainSceneOptions() -> XPlainSceneOptions {
-        return plainSceneOptions
+    func getSceneOptions() -> SceneOptions {
+        print("getSceneOptions⚠️",sceneOptions.defaultSize)
+        return sceneOptions
     }
     
+    
     // used form window.open logic
-    public func openWindowGroup(_ targetSpatialScene: SpatialScene, _ sceneData: XPlainSceneOptions, _ onSuccess: (() -> Void)? = nil) {
+    public func openWindowGroup(
+        _ targetSpatialScene: SpatialScene,
+        _ sceneData: SceneOptions,
+        _ onSuccess: (() -> Void)? = nil
+    ) {
         if let activeScene = firstActiveScene {
             // cache scene config
-            plainSceneOptions = sceneData
+            sceneOptions = sceneData
                         
             DispatchQueue.main.async() {
                 print(" openWindowData.send \(targetSpatialScene.id)")

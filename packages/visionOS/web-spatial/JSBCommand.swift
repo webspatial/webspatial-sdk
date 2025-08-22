@@ -100,11 +100,7 @@ struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
 // incomming JSB data
 struct XSceneOptionsJSB: Codable {
     let defaultSize: Size?
-    struct Size: Codable {
-        var width: Double
-        var height: Double
-    }
-    
+    let type: SpatialScene.WindowStyle?
     let resizability: ResizeRange?
 }
 

@@ -33,8 +33,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
     // Enum
     public enum WindowStyle: String, Codable, CaseIterable {
-        case plain    = "Plain"
-        case volume    = "Volume"
+        case plain    = "window"
+        case volume    = "volume"
     }
     
     // TOPIC begin
@@ -65,7 +65,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var spatialWebViewModel: SpatialWebViewModel
 
-    init(_ url: String, _ windowStyle: WindowStyle, _ state: SceneStateKind, _ sceneOptions: XPlainSceneOptions?) {
+    init(
+        _ url: String,
+        _ windowStyle: WindowStyle,
+        _ state: SceneStateKind,
+        _ sceneOptions: SceneOptions?
+    ) {
         self.windowStyle = windowStyle
         self.url = url
         spatialWebViewModel = SpatialWebViewModel(url: url)
@@ -134,12 +139,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 do {
                     let config: XSceneOptionsJSB  = try decoder.decode(XSceneOptionsJSB.self, from: configData)
                     
+                    let sceneType = config.type ?? .plain
+                    
                     let newScene = SpatialApp.Instance.createScene(
                         decodedUrl,
-                        .plain,
+                        sceneType,
                         .willVisible,
-                        XPlainSceneOptions(config)
+                        SceneOptions(config)
                     )
+                    
+                    print("config:",config)
                     
                     return WebViewElementInfo(
                         id: newScene.id,
@@ -164,7 +173,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: XPlainSceneOptions?) {
+    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(self.state) to \(newState) ")
 
         
@@ -177,7 +186,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             SpatialApp.Instance.openLoadingUI(self,false)
             // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                SpatialApp.Instance.openWindowGroup(self, sceneConfig!, {
+                SpatialApp.Instance
+                    .openWindowGroup(self, sceneConfig!, {
                     [weak self] in
                     self?.moveToState(.visible, nil)
                 })
@@ -364,8 +374,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         print("onUpdateSceneConfig \(command.config)")
         
         // find scene
-        let sceneConfig = XPlainSceneOptions(sceneConfigJSBData)
+        let sceneConfig = SceneOptions(sceneConfigJSBData)
 
+        // update sceneType
+        self.windowStyle = sceneConfigJSBData.type!
         
         self.moveToState(.willVisible, sceneConfig)
         

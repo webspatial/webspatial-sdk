@@ -1,4 +1,5 @@
 import SwiftUI
+import _RealityKit_SwiftUI
 
 struct SpatialSceneView: View {
     var sceneId: String
@@ -6,7 +7,7 @@ struct SpatialSceneView: View {
     @State private var timer: Timer?
 
     var body: some View {
-        GeometryReader { proxy3D in
+        GeometryReader3D { proxy3D in
             let width = proxy3D.size.width
             let height = proxy3D.size.height
 
