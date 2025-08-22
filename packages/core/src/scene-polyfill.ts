@@ -311,7 +311,13 @@ async function injectScenePolyfill() {
         resolve(null)
       }, 1000)
     })
-    await SpatialScene.getInstance().updateSceneCreationConfig(cfg)
+
+    const sceneType = window.xrCurrentSceneType ?? 'window'
+    await SpatialScene.getInstance().updateSceneCreationConfig({
+      // ...cfg, // error here
+      ...formatSceneConfig(cfg, sceneType),
+      type: sceneType,
+    })
   })
 }
 

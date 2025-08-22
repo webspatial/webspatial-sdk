@@ -193,7 +193,9 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
   it('with no type', async () => {
     vi.useFakeTimers()
 
-    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    const mockFn = vi
+      .fn()
+      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
     window.xrCurrentSceneDefaults = mockFn
 
     injectSceneHook()
@@ -208,13 +210,18 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     // verify UpdateSceneConfig.execute
     const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({
+      type: 'window',
+      defaultSize: { width: 800, height: 600 },
+    })
   })
 
   it('with window type', async () => {
     vi.useFakeTimers()
 
-    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    const mockFn = vi
+      .fn()
+      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
     window.xrCurrentSceneDefaults = mockFn
     window.xrCurrentSceneType = 'window'
 
@@ -230,13 +237,24 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     // verify UpdateSceneConfig.execute
     const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({
+      type: 'window',
+      defaultSize: { width: 800, height: 600 },
+    })
   })
 
   it('with volume type', async () => {
     vi.useFakeTimers()
 
-    const mockFn = vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    const mockFn = vi.fn().mockResolvedValue({
+      defaultSize: { width: 1, height: 1, depth: 1 },
+      resizability: {
+        minWidth: 0.5,
+        minHeight: 1,
+        maxWidth: 0.5,
+        maxHeight: 1,
+      },
+    })
     window.xrCurrentSceneDefaults = mockFn
     window.xrCurrentSceneType = 'volume'
 
@@ -254,7 +272,16 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     // verify UpdateSceneConfig.execute
     const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({ width: 800, height: 600 })
+    expect(UpdateSceneConfig).toHaveBeenCalledWith({
+      type: 'volume',
+      defaultSize: { width: 1, height: 1, depth: 1 },
+      resizability: {
+        minWidth: 0.5 * 1360,
+        minHeight: 1 * 1360,
+        maxWidth: 0.5 * 1360,
+        maxHeight: 1 * 1360,
+      },
+    })
   })
 })
 
