@@ -6,7 +6,7 @@ const spatialSupported = !!getSession()
 
 if (spatialSupported) {
   const session = getSession()!
-  session.getCurrentWindowComponent()
+  session.getSpatialScene()
 }
 console.log('testServer XR_ENV:', process.env.XR_ENV)
 function App() {

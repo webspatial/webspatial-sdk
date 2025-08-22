@@ -1,8 +1,8 @@
-import type { WindowContainerOptions } from '@webspatial/core-sdk'
+import type { SpatialSceneCreationOptions } from '@webspatial/core-sdk'
 
 export function initScene(
   name: string,
-  callback: (pre: WindowContainerOptions) => WindowContainerOptions,
+  callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
 ) {
   return
 }

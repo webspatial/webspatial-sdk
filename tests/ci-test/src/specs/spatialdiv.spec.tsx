@@ -2,11 +2,6 @@ import React, { CSSProperties, useCallback } from 'react'
 import { expect } from 'chai'
 import { render, unmount } from './render'
 import { AsyncPromise } from '../../utils/AsyncPromise'
-import {
-  getRootSpatialEntityInfo,
-  getEntitySpatialWindowComponentInfo,
-  parseSIMD3,
-} from './runtime-info'
 
 async function waitMS(ms: number) {
   return new Promise(resolve => {
@@ -51,26 +46,15 @@ describe('SpatialDiv', function () {
     // need to fix it later
     await waitMS(500)
 
-    const rootSpatialEntityInfo = await getRootSpatialEntityInfo()
-    console.log('rootSpatialEntityInfo', rootSpatialEntityInfo)
+    const spatialSceneInfo = await window.inspectCurrentSpatialScene()
+    console.log('dbg spatialSceneInfo', spatialSceneInfo)
+    const children = Object.values(spatialSceneInfo.children)
 
-    expect(rootSpatialEntityInfo).to.be.an('object')
-    expect(rootSpatialEntityInfo).to.have.property('childEntities')
-    expect(rootSpatialEntityInfo.childEntities).to.be.an('object')
-    expect(Object.keys(rootSpatialEntityInfo.childEntities).length).to.equal(1)
+    expect(children.length).to.be.equal(1)
+    const firstChild: any = children[0]
 
-    const spatialDivEntity = Object.values(
-      rootSpatialEntityInfo.childEntities,
-    )[0]
+    console.log('dbg firstChild', firstChild)
 
-    console.log('spatialDivEntity', spatialDivEntity)
-
-    const spatialWindowComponent =
-      getEntitySpatialWindowComponentInfo(spatialDivEntity)
-    expect(spatialWindowComponent).to.be.an('object')
-
-    // position.z should be 100
-    const position = parseSIMD3(spatialDivEntity.position)
-    expect(position.z).to.equal(100)
+    expect(firstChild.transform.translation[2]).to.equal(100)
   })
 })

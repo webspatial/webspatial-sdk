@@ -6,7 +6,7 @@ export async function runWebSpatialBuilder(
 ) {
   return new Promise((resolve, reject) => {
     exec(
-      `npx @webspatial/builder run --base=${base}`,
+      `node ../../packages/cli/bin/bundlepwa.js run --base=${base}`,
       (error: any, stdout: any, stderr: any) => {
         if (logBuilder) {
           if (stdout) {

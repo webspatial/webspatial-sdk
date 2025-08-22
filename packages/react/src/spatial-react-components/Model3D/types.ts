@@ -33,6 +33,7 @@ export interface Model3DProps {
   aspectRatio?: number
   className?: string
   style?: CSSProperties | undefined
+  enablegesture?: boolean
 
   // children will be rendered when failure
   children?: React.ReactNode

@@ -25,6 +25,7 @@ export function renderModel3DNotInSpatialDiv(
     contentMode = 'fit',
     resizable = true,
     aspectRatio = 0,
+    enablegesture = false,
     onLoad,
 
     children,
@@ -233,6 +234,12 @@ export function renderModel3DNotInSpatialDiv(
       model3DNativeRef.current.setAspectRatio(aspectRatio)
     }
   }, [model3DNativeRef.current, aspectRatio])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setEnableGesture(enablegesture)
+    }
+  }, [model3DNativeRef.current, enablegesture])
 
   const layoutDomStyle: CSSProperties = {
     ...style,

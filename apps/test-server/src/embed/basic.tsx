@@ -1,8 +1,5 @@
 import React, { useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Spatial } from '@webspatial/core-sdk'
-
-//(window as any).wx = WebSpatial
 
 var _panelContentUpdate = ''
 ;(window as any).updatePanelContent = (str: string) => {
@@ -29,14 +26,7 @@ function App() {
     </div>
   )
 }
-
-if (new Spatial().isSupported()) {
-  var session = new Spatial().requestSession()
-  session!
-    .getCurrentWindowComponent()
-    .setStyle({ material: { type: 'translucent' }, cornerRadius: 50 })
-}
-
+ 
 // await WebSpatial.setWebPanelStyle(WebSpatial.getCurrentWindowContainer(), WebSpatial.getCurrentWebPanel())
 document.documentElement.style.backgroundColor = 'transparent'
 document.body.style.backgroundColor = 'transparent'

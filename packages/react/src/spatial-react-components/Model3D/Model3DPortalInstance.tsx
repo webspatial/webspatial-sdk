@@ -11,7 +11,6 @@ import { useModel3DNative } from './useModel3DNative'
 import { PopulatePartialSpatialTransformType } from './utils'
 import { SpatialWindowManagerContext } from '../SpatialReactComponent/SpatialWindowManagerContext'
 import { type SpatialModelDragEvent } from '@webspatial/core-sdk'
-import { getSession } from '../../utils'
 
 function useModelEvents(
   props: Model3DProps,
@@ -113,6 +112,7 @@ export function renderModel3DPortalInstance(
     visible,
     spatialTransform,
     contentMode = 'fit',
+    enablegesture = false,
     resizable = true,
     aspectRatio = 0,
     onLoad,
@@ -142,12 +142,18 @@ export function renderModel3DPortalInstance(
 
   const { model3DNativeRef, phase, failureReason } = useModel3DNative(
     modelUrl,
-    parentSpatialWindowManager!.entity!,
+    parentSpatialWindowManager!.spatialized2DElement,
     eventHandlers,
   )
 
   // handle rect and transform
   useEffect(() => {
+    console.log(
+      'useEffect',
+      domRect,
+      theSpatialTransform,
+      model3DNativeRef.current,
+    )
     if (model3DNativeRef.current) {
       model3DNativeRef.current.updateRectAndTransform(
         domRect,
@@ -176,6 +182,12 @@ export function renderModel3DPortalInstance(
       model3DNativeRef.current.setContentMode(contentMode)
     }
   }, [model3DNativeRef.current, contentMode])
+
+  useEffect(() => {
+    if (model3DNativeRef.current) {
+      model3DNativeRef.current.setEnableGesture(enablegesture)
+    }
+  }, [model3DNativeRef.current, enablegesture])
 
   // handle resizable
   useEffect(() => {
@@ -209,9 +221,7 @@ export function renderModel3DPortalInstance(
 
       if (isFixedPosition) {
         ;(async function () {
-          var wc = await getSession()!.getCurrentWindowComponent()
-          var ent = await wc.getEntity()
-          model3DNativeRef.current?.changeParentEntity(ent!)
+          model3DNativeRef.current?.changeParentEntity()
         })()
       }
     }

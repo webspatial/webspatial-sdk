@@ -25,12 +25,13 @@ import { SpatialDebugNameContext } from './SpatialDebugNameContext'
 import { CornerRadius } from '@webspatial/core-sdk'
 import { RectType, vecType } from '../types'
 import { spatialStyleDef } from './types'
-import { XRApp } from '../../XRApp'
 
 interface PortalInstanceProps {
   allowScroll?: boolean
   scrollWithParent?: boolean
   spatialStyle?: Partial<spatialStyleDef>
+
+  enablegesture?: boolean
 
   El: React.ElementType
   children?: ReactNode
@@ -83,31 +84,6 @@ function setOpenWindowStyle(openedWindow: Window) {
   openedWindow!.document.body.style.margin = '0px'
 }
 
-function handleOpenWindowDocumentClick(openedWindow: Window) {
-  // Overwrite link href to navigate the parents page
-  openedWindow!.document.onclick = function (e) {
-    let element = e.target as HTMLElement | null
-    let found = false
-
-    // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
-    while (!found) {
-      if (element && element.tagName == 'A') {
-        // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
-
-        // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
-        // we handle all the scenarios
-        XRApp.getInstance().handleATag(e)
-        return false // prevent default action and stop event propagation
-      }
-      if (element && element.parentElement) {
-        element = element.parentElement
-      } else {
-        break
-      }
-    }
-  }
-}
-
 function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
   n: HTMLLinkElement,
@@ -119,7 +95,7 @@ function asyncLoadStyleToChildWindow(
     // the second load request never is fired resulting in css not to be applied.
     // Workaround this by making the css stylesheet request unique
     n.href += '?uniqueURL=' + Math.random()
-    n.onerror = function () {
+    n.onerror = function (error) {
       console.error(
         'Failed to load style link',
         debugName,
@@ -131,7 +107,11 @@ function asyncLoadStyleToChildWindow(
       resolve(true)
     }
 
-    childWindow.document.head.appendChild(n)
+    // need to wait for some time to make sure the style is loaded
+    // otherwise, the style may not be applied
+    setTimeout(() => {
+      childWindow.document.head.appendChild(n)
+    }, 50)
   })
 }
 
@@ -202,7 +182,11 @@ function useSyncSpatialProps(
   spatialWindowManager: SpatialWindowManager | undefined,
   props: Pick<
     PortalInstanceProps,
-    'style' | 'allowScroll' | 'scrollWithParent' | 'spatialStyle'
+    | 'style'
+    | 'allowScroll'
+    | 'scrollWithParent'
+    | 'spatialStyle'
+    | 'enablegesture'
   >,
   domRect: RectType,
   anchor: vecType,
@@ -211,7 +195,14 @@ function useSyncSpatialProps(
   stylePosition: string | undefined,
   isSubPortal: boolean,
 ) {
-  let { allowScroll, scrollWithParent, style, spatialStyle = {} } = props
+  let {
+    enablegesture = false,
+    allowScroll,
+    scrollWithParent,
+    style,
+    spatialStyle = {},
+  } = props
+
   let {
     position = { x: 0, y: 0, z: 0 },
     rotation = { x: 0, y: 0, z: 0, w: 1 },
@@ -257,18 +248,17 @@ function useSyncSpatialProps(
 
   const isFixedPosition = stylePosition == 'fixed'
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
+    if (spatialWindowManager) {
       spatialWindowManager.updateCSSPosition(isFixedPosition)
     }
   }, [spatialWindowManager, isFixedPosition])
 
   // Sync prop updates
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
+    if (spatialWindowManager) {
       ;(async function () {
-        webview.setStyle({
-          material: { type: material.type },
+        spatialWindowManager.updateProperties({
+          material: material.type,
           cornerRadius: cornerRadiusObject,
         })
       })()
@@ -283,14 +273,12 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      ;(async function () {
-        webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
-
-        const isFixed = scrollWithParent == false || isFixedPosition
-        webview.setScrollWithParent(!isFixed)
-      })()
+    if (spatialWindowManager) {
+      spatialWindowManager.updateProperties({
+        scrollEnabled: allowScroll || styleOverflow == 'scroll',
+        scrollWithParent: !(scrollWithParent == false || isFixedPosition),
+        enableGesture: enablegesture,
+      })
     }
   }, [
     spatialWindowManager,
@@ -298,19 +286,8 @@ function useSyncSpatialProps(
     scrollWithParent,
     isFixedPosition,
     styleOverflow,
+    enablegesture,
   ])
-
-  useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      ;(async function () {
-        webview.setScrollEnabled(allowScroll || styleOverflow == 'scroll')
-
-        const isFixed = scrollWithParent == false || stylePosition == 'fixed'
-        webview.setScrollWithParent(!isFixed)
-      })()
-    }
-  }, [spatialWindowManager, allowScroll, scrollWithParent, stylePosition])
 
   useEffect(() => {
     if (spatialWindowManager) {
@@ -341,21 +318,20 @@ function useSyncSpatialProps(
   ])
 
   useEffect(() => {
-    if (spatialWindowManager && spatialWindowManager.webview) {
-      const webview = spatialWindowManager.webview
-      webview.setOpacity(opacity)
-    }
+    spatialWindowManager?.updateProperties({
+      opacity,
+    })
   }, [spatialWindowManager, opacity])
 
   useEffect(() => {
-    if (spatialWindowManager) {
-      spatialWindowManager.entity?.setVisible(visible)
-    }
+    spatialWindowManager?.updateProperties({
+      visible,
+    })
   }, [spatialWindowManager, visible])
 
   useEffect(() => {
     // sync viewport
-    if (spatialWindowManager?.window && spatialWindowManager.webview) {
+    if (spatialWindowManager?.window) {
       ;(async function () {
         const bodyWidth = document.body.getBoundingClientRect().width
         const viewport = spatialWindowManager.window?.document.querySelector(
@@ -365,11 +341,9 @@ function useSyncSpatialProps(
           'content',
           `width=${bodyWidth}, initial-scale=1.0 user-scalable=no`,
         )
-        await spatialWindowManager.webview?.setScrollEdgeInsets({
-          top: 0,
-          left: 0,
-          bottom: 0,
-          right: domRect.width - bodyWidth,
+
+        await spatialWindowManager.updateProperties({
+          scrollEdgeInsetsMarginRight: domRect.width - bodyWidth,
         })
       })()
     }
@@ -465,8 +439,14 @@ function useSyncDomRect(spatialId: string) {
 }
 
 export function PortalInstance(inProps: PortalInstanceProps) {
-  const { allowScroll, scrollWithParent, spatialStyle, isSubPortal, ...props } =
-    inProps
+  const {
+    allowScroll,
+    scrollWithParent,
+    spatialStyle,
+    enablegesture,
+    isSubPortal,
+    ...props
+  } = inProps
 
   const debugName = useContext(SpatialDebugNameContext)
 
@@ -474,7 +454,6 @@ export function PortalInstance(inProps: PortalInstanceProps) {
     async (spatialWindowManager: SpatialWindowManager) => {
       const openWindow = spatialWindowManager.window!
       setOpenWindowStyle(openWindow)
-      handleOpenWindowDocumentClick(openWindow)
 
       syncDefaultSpatialStyle(openWindow, debugName)
 
@@ -521,6 +500,7 @@ export function PortalInstance(inProps: PortalInstanceProps) {
       allowScroll,
       scrollWithParent,
       spatialStyle,
+      enablegesture,
     },
     domRect,
     anchor,

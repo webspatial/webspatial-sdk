@@ -20,6 +20,7 @@ export interface SpatialReactComponentProps {
   children?: ReactNode
   className?: string
   style?: CSSProperties | undefined
+  enablegesture?: boolean
 
   component?: ElementType
 

@@ -16,5 +16,4 @@ export {
 } from './SpatialReactComponent'
 export * from './CSSSpatialDiv'
 
-export * from './SpatialView'
 export * from './Model/index'
