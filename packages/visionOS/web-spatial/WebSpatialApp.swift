@@ -115,5 +115,6 @@ struct WebSpatialApp: App {
         WindowGroup(id: "loading", for: String.self) { $windowData in
             LoadingView()
         }
+        .defaultSize(CGSize(width: 400, height: 400))
     }
 }
