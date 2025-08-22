@@ -258,6 +258,10 @@ class SpatialWebViewModel: SpatialObject {
             controller?.callJS("window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
+    
+    func updateInnerDepthAndOuterDepth(_ val:Double) {
+        controller?.callJS("window.innerDepth=window.outerDepth=" + String(val)+";")
+    }
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)

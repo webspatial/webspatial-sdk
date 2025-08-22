@@ -238,15 +238,49 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
     }
+    
+    private var pendingDepth:Double?
+    
+    func flushPendingCommand(){
+        guard isJSReady else {return}
+        
+        if let depth = pendingDepth {
+            handleDepthChange(depth)
+            pendingDepth = nil
+        }
+        
+    }
+    
+    func handleDepthChange(_ depth:Double) {
+        guard windowStyle == .volume else {return}
+        
+        if !isJSReady {
+            pendingDepth = depth
+            return
+        }
+        // write through
+        spatialWebViewModel.updateInnerDepthAndOuterDepth(depth)
+        
+        
+    }
+    
+    // flag of js evaluate safety
+    private var isJSReady = false
 
     private func setupWebViewStateListner() {
         spatialWebViewModel.addStateListener(.didUnload) {
             print("---------------onLeavePageSession---------------")
             self.onLeavePageSession()
+            self.isJSReady = false
         }
         
         spatialWebViewModel.addStateListener(.didStartLoad) {
             self.backgroundMaterial = .None
+        }
+        
+        spatialWebViewModel.addStateListener(.didReceive) {
+            self.isJSReady = true
+            self.flushPendingCommand()
         }
 
         spatialWebViewModel.addScrollUpdateListener { _, point in

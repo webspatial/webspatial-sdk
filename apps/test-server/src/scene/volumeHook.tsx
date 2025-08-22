@@ -30,12 +30,18 @@ const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
   const [logs, setLogs] = useState('')
 
-  useEffect(() => {
+  function logDepth() {
     //@ts-ignore
-    log('windowID:', window._webSpatialID)
+    log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+  }
+
+  useEffect(() => {
+    logDepth()
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
+
+    window.onresize = logDepth
 
     return () => {
       window.onerror = null
