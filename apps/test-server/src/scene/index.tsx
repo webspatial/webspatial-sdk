@@ -156,6 +156,114 @@ function App() {
       >
         open volumeHook
       </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              worldScaling: 'dynamic',
+              // worldAlignment: 'automatic',
+              // automatic: 'automatic',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open volume dynamic
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              // worldScaling: 'automatic',
+              worldAlignment: 'gravityAligned',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open volume gravityAligned
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              baseplateVisibility: 'hidden',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open volume baseplateVisibility hidden
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sb',
+            () => ({
+              defaultSize: {
+                width: 2,
+                height: 1,
+                depth: 1,
+              },
+              baseplateVisibility: 'visible',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sb',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        open volume baseplateVisibility visible
+      </button>
+
       <h1 className="text-2xl text-black">resize</h1>
       <button
         className={btnCls}

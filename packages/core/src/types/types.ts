@@ -96,7 +96,16 @@ export interface SpatialSceneCreationOptions {
     maxWidth?: number | string // Maximum width of the window
     maxHeight?: number | string // Maximum height of the window
   }
+  worldScaling?: worldScalingType
+  worldAlignment?: worldAlignmentType
+
+  baseplateVisibility?: baseplateVisibilityType
 }
+
+export type baseplateVisibilityType = 'visible' | 'hidden'
+
+export type worldScalingType = 'automatic' | 'dynamic'
+export type worldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
 
 export type SpatialSceneType = 'window' | 'volume'
 

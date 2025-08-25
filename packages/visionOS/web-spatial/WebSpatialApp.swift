@@ -79,7 +79,6 @@ struct WebSpatialApp: App {
         
         WindowGroup(id: SpatialScene.WindowStyle.volume.rawValue, for: String.self) { $windowData in
             SpatialSceneView(sceneId: windowData)
-//                .volumeBaseplateVisibility(.visible)
                 .frame(
                     minWidth: getCGFloat(
                         app.getSceneOptions().resizeRange?.minWidth),
@@ -108,8 +107,8 @@ struct WebSpatialApp: App {
         ).windowResizability(
             app.getSceneOptions().windowResizability!
         )
-//        .defaultWorldScaling(.automatic)
-//        .volumeWorldAlignment(.automatic)
+        .defaultWorldScaling(app.getSceneOptions().worldScaling)
+        .volumeWorldAlignment(app.getSceneOptions().worldAlignment)
        
 
         WindowGroup(id: "loading", for: String.self) { $windowData in

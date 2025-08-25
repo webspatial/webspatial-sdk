@@ -172,6 +172,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         print("window.close")
         SpatialApp.Instance.closeWindowGroup(self)
     }
+    
+    public var sceneConfig: SceneOptions?
 
     public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(self.state) to \(newState) ")
@@ -183,6 +185,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if oldState == .idle &&  newState == .pending {
             SpatialApp.Instance.openLoadingUI(self,true)
         }  else if oldState == .pending &&  newState == .willVisible {
+            self.sceneConfig = sceneConfig
             SpatialApp.Instance.openLoadingUI(self,false)
             // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -195,6 +198,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             
         } else if oldState == .idle &&  newState == .willVisible {
             // window.open with scene config
+            self.sceneConfig = sceneConfig
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
 

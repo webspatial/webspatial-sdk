@@ -102,6 +102,49 @@ struct XSceneOptionsJSB: Codable {
     let defaultSize: Size?
     let type: SpatialScene.WindowStyle?
     let resizability: ResizeRange?
+    let worldScaling: WorldScalingJSB?
+    let worldAlignment: WorldAlignmentJSB?
+    let baseplateVisibility: BaseplateVisibilityJSB?
+}
+
+enum BaseplateVisibilityJSB: String, Codable {
+    case automatic
+    case visible
+    case hidden
+    
+    var toSDK: Visibility {
+        switch self {
+            case .automatic: return .automatic
+            case .visible: return .visible
+            case .hidden: return .hidden
+        }
+    }
+}
+
+enum WorldScalingJSB: String, Codable {
+    case automatic
+    case dynamic
+    
+    var toSDK: WorldScalingBehavior {
+        switch self {
+            case .automatic: return .automatic
+            case .dynamic: return .dynamic
+        }
+    }
+}
+
+enum WorldAlignmentJSB: String, Codable {
+    case adaptive
+    case automatic
+    case gravityAligned
+    
+    var toSDK: WorldAlignmentBehavior {
+        switch self {
+            case .adaptive: return .adaptive
+            case .automatic: return .automatic
+            case .gravityAligned: return .gravityAligned
+        }
+    }
 }
 
 struct UpdateSceneConfigCommand: CommandDataProtocol {

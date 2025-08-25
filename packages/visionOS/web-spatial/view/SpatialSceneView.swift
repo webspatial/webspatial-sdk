@@ -10,7 +10,6 @@ struct SpatialSceneView: View {
         GeometryReader3D { proxy3D in
                 let width = proxy3D.size.width
                 let height = proxy3D.size.height
-                let depth = proxy3D.size.depth
 
             if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
                 SceneHandlerUIView(sceneId: sceneId).onChange(of: proxy3D.size) {
@@ -47,7 +46,9 @@ struct SpatialSceneView: View {
                                     .offset(y: -15)
                                 }.frame(height: 100)
                             }
-                        }
+                        }.volumeBaseplateVisibility(
+                            spatialScene.sceneConfig?.baseplateVisibility ?? .automatic
+                        )
                 }
             }
         }

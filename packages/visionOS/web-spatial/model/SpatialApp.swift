@@ -26,9 +26,9 @@ struct SceneOptions {
     var defaultSize: Size?
     var windowResizability: WindowResizability?
     var resizeRange: ResizeRange?
-    var worldScaling: WorldScalingBehavior?
-    var worldAlignment: WorldAlignmentBehavior?
-    var baseplateVisiblility: Visibility?
+    var worldScaling: WorldScalingBehavior
+    var worldAlignment: WorldAlignmentBehavior
+    var baseplateVisibility: Visibility
 }
 
 struct Size: Codable {
@@ -47,6 +47,10 @@ extension SceneOptions {
         )
         windowResizability = decodeWindowResizability(nil)
         resizeRange = options.resizability
+        /// volume only
+        worldScaling = options.worldScaling?.toSDK ?? .automatic
+        worldAlignment = options.worldAlignment?.toSDK ?? .automatic
+        baseplateVisibility = options.baseplateVisibility?.toSDK ?? .automatic
     }
 }
 

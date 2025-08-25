@@ -24,7 +24,15 @@ struct PWAManager: Codable {
             depth: 0.1
         ),
         type: nil,
-        resizability: nil
+        resizability: ResizeRange(
+            minWidth: 0.5*1360,
+            minHeight: 0.5*1360,
+            maxWidth: 2*1360,
+            maxHeight: 2*1360
+        ),
+        worldScaling: nil,
+        worldAlignment: nil,
+        baseplateVisibility: nil
     )
     var useMainScene: Bool = true
     private var version: String = "PACKAGE_VERSION"
