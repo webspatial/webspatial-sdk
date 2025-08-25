@@ -174,41 +174,26 @@ export function formatSceneConfig(
   // format defaultSize
   if (config.defaultSize) {
     if (isWindow) {
-      if (config.defaultSize.width) {
-        config.defaultSize.width = formatToNumber(
-          config.defaultSize.width,
-          'px',
-          'px',
-        )
-      }
-      if (config.defaultSize.height) {
-        config.defaultSize.height = formatToNumber(
-          config.defaultSize.height,
-          'px',
-          'px',
-        )
+      const iterKeys = ['width', 'height']
+      for (let k of iterKeys) {
+        if ((config.defaultSize as any)[k]) {
+          ;(config.defaultSize as any)[k] = formatToNumber(
+            (config.defaultSize as any)[k],
+            'px',
+            'px',
+          )
+        }
       }
     } else if (isVolume) {
-      if (config.defaultSize.width) {
-        config.defaultSize.width = formatToNumber(
-          config.defaultSize.width,
-          'm',
-          'm',
-        )
-      }
-      if (config.defaultSize.height) {
-        config.defaultSize.height = formatToNumber(
-          config.defaultSize.height,
-          'm',
-          'm',
-        )
-      }
-      if (config.defaultSize.depth) {
-        config.defaultSize.depth = formatToNumber(
-          config.defaultSize.depth,
-          'm',
-          'm',
-        )
+      const iterKeys = ['width', 'height', 'depth']
+      for (let k of iterKeys) {
+        if ((config.defaultSize as any)[k]) {
+          ;(config.defaultSize as any)[k] = formatToNumber(
+            (config.defaultSize as any)[k],
+            'm',
+            'm',
+          )
+        }
       }
     }
   }
