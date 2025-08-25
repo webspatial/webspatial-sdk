@@ -264,7 +264,7 @@ class SpatialWebViewModel: SpatialObject {
     }
     
     func updateOuterHeight(_ val:Double) {
-        controller?.callJS("window.outerHeight" + String(val)+";")
+        controller?.callJS("window.outerHeight=" + String(val)+";")
     }
 
 //    func evaluateJS(js: String) {
