@@ -187,10 +187,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 SpatialApp.Instance
-                    .openWindowGroup(self, sceneConfig!, {
-                    [weak self] in
-                    self?.moveToState(.visible, nil)
-                })
+                    .openWindowGroup(self, sceneConfig!)
             }
             
         } else if oldState == .idle &&  newState == .visible {
@@ -198,12 +195,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             
         } else if oldState == .idle &&  newState == .willVisible {
             // window.open with scene config
-            SpatialApp.Instance.openWindowGroup(self, sceneConfig!,{
-                [weak self] in
-                self?.moveToState(.visible, nil)
-            })
+            SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
 
+    }
+    
+    public func onAppear(){
+        self.moveToState(.visible, nil)
     }
 
     private func setupJSBListeners() {

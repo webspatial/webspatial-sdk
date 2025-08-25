@@ -143,8 +143,7 @@ class SpatialApp {
     // used form window.open logic
     public func openWindowGroup(
         _ targetSpatialScene: SpatialScene,
-        _ sceneData: SceneOptions,
-        _ onSuccess: (() -> Void)? = nil
+        _ sceneData: SceneOptions
     ) {
         if let activeScene = firstActiveScene {
             // cache scene config
@@ -153,7 +152,6 @@ class SpatialApp {
             DispatchQueue.main.async() {
                 print(" openWindowData.send \(targetSpatialScene.id)")
                 activeScene.openWindowData.send(targetSpatialScene.id)
-                onSuccess?()
             }
 
         }

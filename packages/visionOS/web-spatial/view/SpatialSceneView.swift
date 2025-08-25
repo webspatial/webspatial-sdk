@@ -27,6 +27,7 @@ struct SpatialSceneView: View {
                    
                 }
                 .onAppear(){
+                    spatialScene.onAppear()
                     spatialScene.handleSizeChange(proxy3D.size)
                 }
 
