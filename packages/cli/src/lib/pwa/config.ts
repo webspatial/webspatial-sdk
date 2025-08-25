@@ -1,3 +1,4 @@
+import { formatToNumber } from '../utils/sceneUtils'
 import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join, normalize, relative, resolve } from 'path'
@@ -139,9 +140,14 @@ export function configMainScene(manifestJson: Record<string, any>) {
   let mainScene = {
     defaultSize: {
       width: 1280,
-      height: 1280,
+      height: 720,
+      depth:0
     },
     resizability: {} as any,
+    type: 'window',
+    worldScaling: 'automatic',
+    worldAlignment: 'automatic',
+    baseplateVisibility: 'automatic',
   }
   let hasResizability = false
   if (
@@ -156,6 +162,9 @@ export function configMainScene(manifestJson: Record<string, any>) {
       Number(manifestJson.xr_main_scene.default_size?.height) > 0
         ? manifestJson.xr_main_scene.default_size.height
         : 1280
+    if (manifestJson.xr_main_scene.default_size?.depth) {
+      mainScene.defaultSize.depth = manifestJson.xr_main_scene.default_size.depth
+    }
     if (typeof manifestJson.xr_main_scene.resizability === 'object') {
       for (var i = 0; i < resizabilities.length; i++) {
         if (manifestJson.xr_main_scene.resizability[resizabilities[i]] >= 0) {
@@ -169,6 +178,51 @@ export function configMainScene(manifestJson: Record<string, any>) {
   if (!hasResizability) {
     mainScene.resizability = null
   }
+
+  if (manifestJson.xr_main_scene?.type) {
+    mainScene.type = manifestJson.xr_main_scene.type
+  }
+
+  if (manifestJson.xr_main_scene?.worldScaling) {
+    mainScene.worldScaling = manifestJson.xr_main_scene.worldScaling
+  }
+
+  if (manifestJson.xr_main_scene?.worldAlignment) {
+    mainScene.worldAlignment = manifestJson.xr_main_scene.worldAlignment
+  }
+
+  if (manifestJson.xr_main_scene?.baseplateVisibility) {
+    mainScene.baseplateVisibility =
+      manifestJson.xr_main_scene.baseplateVisibility
+  }
+
+  // update defaultSize and resizability according to type
+  if (mainScene.resizability) {
+    for (let k of resizabilities) {
+      if (mainScene.resizability[k]) {
+        mainScene.resizability[k] = formatToNumber(
+          mainScene.resizability[k],
+          'px',
+          mainScene.type === 'window' ? 'px' : 'm',
+        )
+      }
+    }
+  }
+
+  // format defaultSize
+  if (mainScene.defaultSize) {
+    const iterKeys = Object.keys(mainScene.defaultSize)
+    for (let k of iterKeys) {
+      if ((mainScene.defaultSize as any)[k]) {
+        ;(mainScene.defaultSize as any)[k] = formatToNumber(
+          (mainScene.defaultSize as any)[k],
+          mainScene.type === 'window' ? 'px' : 'm',
+          mainScene.type === 'window' ? 'px' : 'm',
+        )
+      }
+    }
+  }
+
   manifestJson.xr_main_scene = mainScene
 }
 
