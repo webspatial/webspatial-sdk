@@ -154,12 +154,10 @@ export function formatSceneConfig(
   // defaultSize should format into m if volume
 
   const isWindow = sceneType === 'window'
-  const isVolume = sceneType === 'volume'
 
   // format resizability
   if (config.resizability) {
-    const iterKeys = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
-
+    const iterKeys = Object.keys(config.resizability)
     for (let k of iterKeys) {
       if ((config.resizability as any)[k]) {
         ;(config.resizability as any)[k] = formatToNumber(
@@ -173,27 +171,14 @@ export function formatSceneConfig(
 
   // format defaultSize
   if (config.defaultSize) {
-    if (isWindow) {
-      const iterKeys = ['width', 'height']
-      for (let k of iterKeys) {
-        if ((config.defaultSize as any)[k]) {
-          ;(config.defaultSize as any)[k] = formatToNumber(
-            (config.defaultSize as any)[k],
-            'px',
-            'px',
-          )
-        }
-      }
-    } else if (isVolume) {
-      const iterKeys = ['width', 'height', 'depth']
-      for (let k of iterKeys) {
-        if ((config.defaultSize as any)[k]) {
-          ;(config.defaultSize as any)[k] = formatToNumber(
-            (config.defaultSize as any)[k],
-            'm',
-            'm',
-          )
-        }
+    const iterKeys = Object.keys(config.defaultSize)
+    for (let k of iterKeys) {
+      if ((config.defaultSize as any)[k]) {
+        ;(config.defaultSize as any)[k] = formatToNumber(
+          (config.defaultSize as any)[k],
+          isWindow ? 'px' : 'm',
+          isWindow ? 'px' : 'm',
+        )
       }
     }
   }
