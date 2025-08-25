@@ -193,9 +193,7 @@ class SpatialApp {
         }
 
         if let activeScene = firstActiveScene {
-            DispatchQueue.main.async() {
-                activeScene.openWindowData.send(targetSpatialScene.id)
-            }
+            activeScene.openWindowData.send(targetSpatialScene.id)
         }
     }
 }
