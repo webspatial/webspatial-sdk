@@ -44,7 +44,7 @@ struct WebSpatialApp: App {
 
     var body: some Scene {
         WindowGroup(
-            id: SpatialScene.WindowStyle.plain.rawValue,
+            id: SpatialScene.WindowStyle.window.rawValue,
             for: String.self
         ) { $windowData in
             SpatialSceneView(sceneId: windowData)
@@ -62,7 +62,7 @@ struct WebSpatialApp: App {
         defaultValue: {
             let scene = SpatialApp.Instance.createScene(
                 startURL,
-                .plain,
+                .window,
                 .visible,
                 app.getSceneOptions()
             )
