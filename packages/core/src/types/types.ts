@@ -102,7 +102,7 @@ export interface SpatialSceneCreationOptions {
   baseplateVisibility?: baseplateVisibilityType
 }
 
-export type baseplateVisibilityType = 'visible' | 'hidden'
+export type baseplateVisibilityType = 'automatic' | 'visible' | 'hidden'
 
 export type worldScalingType = 'automatic' | 'dynamic'
 export type worldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
