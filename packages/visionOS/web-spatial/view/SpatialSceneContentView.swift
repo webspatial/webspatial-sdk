@@ -55,7 +55,7 @@ struct PreviewSpatializedStatic3DElement: View {
     init() {
         let spatialScene = SpatialApp.Instance.createScene(
             "http://localhost:5173/",
-            .plain,
+            .window,
             .visible
         )
         
@@ -119,7 +119,7 @@ struct PreviewSpatialized2DElement: View {
     init() {
         let spatialScene = SpatialApp.Instance.createScene(
             "http://localhost:5173/",
-            .plain,
+            .window,
             .visible
         )
         

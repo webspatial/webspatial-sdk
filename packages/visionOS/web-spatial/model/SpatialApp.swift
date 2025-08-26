@@ -102,7 +102,7 @@ class SpatialApp {
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {
         let scene: SpatialScene
         switch style {
-            case .plain:
+            case .window:
                 scene = PlainSpatialScene(url, style, state, sceneOptions)
             case .volume:
                 scene = VolumeSpatialScene(

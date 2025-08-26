@@ -33,7 +33,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
     // Enum
     public enum WindowStyle: String, Codable, CaseIterable {
-        case plain    = "window"
+        case window    = "window"
         case volume    = "volume"
     }
     
@@ -44,7 +44,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle:WindowStyle = .plain
+    var windowStyle:WindowStyle = .window
 
     enum SceneStateKind: String {
         // default value
@@ -126,7 +126,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 // no scene config, need to create pending SpatialScene
                 let newScene = SpatialApp.Instance.createScene(
                     decodedUrl,
-                    .plain,
+                    .window,
                     .pending,
                     nil
                 )
@@ -139,7 +139,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 do {
                     let config: XSceneOptionsJSB  = try decoder.decode(XSceneOptionsJSB.self, from: configData)
                     
-                    let sceneType = config.type ?? .plain
+                    let sceneType = config.type ?? .window
                     
                     let newScene = SpatialApp.Instance.createScene(
                         decodedUrl,
