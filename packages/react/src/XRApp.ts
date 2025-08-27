@@ -29,6 +29,7 @@ export class XRApp {
       if (target && target !== '_self') {
         event.preventDefault()
         window.open(url, target)
+        return true
       }
     }
   }
