@@ -97,7 +97,8 @@ function handleOpenWindowDocumentClick(openedWindow: Window) {
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
         // we handle all the scenarios
-        if (!XRApp.getInstance().handleATag(e)) {
+        const isOpenWindow = XRApp.getInstance().handleATag(e)
+        if (!isOpenWindow) {
           // navigate the main url
           // whether this a tag is created by react-router or not, it can be safely navigated
           openedWindow.opener.location.href = (
