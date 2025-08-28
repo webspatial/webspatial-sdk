@@ -255,7 +255,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     
-    private func handleSizeChange(_ size:Size3D) {
+    func handleSizeChange(_ size:Size3D) {
         guard windowStyle == .volume else {return}
         
         let width = size.width
