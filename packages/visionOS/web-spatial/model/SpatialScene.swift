@@ -246,6 +246,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
     var depth: Double = 0
     
+    var navHeight = SpatialNavView.navHeight
+    
     
     func handleSizeChange(_ size:Size3D) {
         self.width = size.width
@@ -256,7 +258,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.updateWindowKV([
             "innerDepth":depth,
             "outerDepth":depth,
-            "outerHeight":height + SpatialNavView.navHeight
+            "outerHeight":height + navHeight
         ])
     }
     
