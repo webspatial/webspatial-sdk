@@ -1,5 +1,14 @@
 # @webspatial/react-sdk
 
+## 1.0.2
+
+### Patch Changes
+
+- a45aabd: fix spatialDiv a link should change the main window url and support nested
+  - @webspatial/core-sdk@1.0.2
+
+- 94e2e0d0: fix: scene hook param
+
 ## 1.0.1
 
 ### Patch Changes
