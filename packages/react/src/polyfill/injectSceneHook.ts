@@ -25,7 +25,7 @@ export async function injectSceneHook() {
     let cfg = defaultSceneConfig
     if (typeof (window as any).xrCurrentSceneDefaults === 'function') {
       try {
-        cfg = await (window as any).xrCurrentSceneDefaults?.()
+        cfg = await (window as any).xrCurrentSceneDefaults?.(defaultSceneConfig)
       } catch (error) {
         console.error(error)
       }

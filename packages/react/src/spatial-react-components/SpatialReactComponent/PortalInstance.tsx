@@ -92,11 +92,19 @@ function handleOpenWindowDocumentClick(openedWindow: Window) {
     // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
     while (!found) {
       if (element && element.tagName == 'A') {
+        found = true
         // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
         // we handle all the scenarios
-        XRApp.getInstance().handleATag(e)
+        const isOpenWindow = XRApp.getInstance().handleATag(e)
+        if (!isOpenWindow) {
+          // navigate the main url
+          // whether this a tag is created by react-router or not, it can be safely navigated
+          openedWindow.opener.location.href = (
+            element as HTMLAnchorElement
+          ).href
+        }
         return false // prevent default action and stop event propagation
       }
       if (element && element.parentElement) {
