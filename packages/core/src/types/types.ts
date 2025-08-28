@@ -96,22 +96,18 @@ export interface SpatialSceneCreationOptions {
     maxWidth?: number | string // Maximum width of the window
     maxHeight?: number | string // Maximum height of the window
   }
-  worldScaling?: worldScalingType
-  worldAlignment?: worldAlignmentType
+  worldScaling?: WorldScalingType
+  worldAlignment?: WorldAlignmentType
 
-  baseplateVisibility?: baseplateVisibilityType
+  baseplateVisibility?: BaseplateVisibilityType
 }
 
-export type baseplateVisibilityType = 'automatic' | 'visible' | 'hidden'
+export type BaseplateVisibilityType = 'automatic' | 'visible' | 'hidden'
 
-export type worldScalingType = 'automatic' | 'dynamic'
-export type worldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
+export type WorldScalingType = 'automatic' | 'dynamic'
+export type WorldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
 
 export type SpatialSceneType = 'window' | 'volume'
-
-export type SpatialSceneCreationOptionsJSB = SpatialSceneCreationOptions & {
-  type: SpatialSceneType
-}
 
 export enum SpatialSceneState {
   idle = 'idle',

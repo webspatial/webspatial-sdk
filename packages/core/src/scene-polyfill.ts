@@ -4,8 +4,8 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneType,
   SpatialSceneState,
-  SpatialSceneCreationOptionsJSB,
 } from './types/types'
+import { SpatialSceneCreationOptionsJSB } from "./types/internal"
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {

@@ -10,8 +10,8 @@ import {
   SpatialSceneProperties,
   SpatialTransform,
   SpatialSceneCreationOptions,
-  SpatialSceneCreationOptionsJSB,
 } from './types/types'
+import { SpatialSceneCreationOptionsJSB } from "./types/internal"
 
 const platform = createPlatform()
 

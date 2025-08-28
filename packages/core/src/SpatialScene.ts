@@ -1,9 +1,9 @@
 import {
   SpatialSceneCreationOptions,
-  SpatialSceneCreationOptionsJSB,
   SpatialSceneProperties,
   SpatialSceneState,
 } from './types/types'
+import { SpatialSceneCreationOptionsJSB } from "./types/internal"
 import {
   AddSpatializedElementToSpatialScene,
   GetSpatialSceneState,
