@@ -259,13 +259,20 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
     
-    func updateInnerDepthAndOuterDepth(_ val:Double) {
-        controller?.callJS("window.innerDepth=window.outerDepth=" + String(val)+";")
+    func updateWindowKV(_ dict: [String: Any]) {
+        var js = ""
+        for (key, value) in dict {
+            if let num = value as? Double {
+                js += "window.\(key)=\(num);"
+            } else if let str = value as? String {
+                js += "window.\(key)='\(str)';"
+            } else if let bool = value as? Bool {
+                js += "window.\(key)=\(bool ? "true" : "false");"
+            }
+        }
+        controller?.callJS(js)
     }
-    
-    func updateOuterHeight(_ val:Double) {
-        controller?.callJS("window.outerHeight=" + String(val)+";")
-    }
+
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)
