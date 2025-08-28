@@ -5,7 +5,7 @@ import {
   SpatialSceneType,
   SpatialSceneState,
 } from './types/types'
-import { SpatialSceneCreationOptionsJSB } from "./types/internal"
+import { SpatialSceneCreationOptionsInternal } from "./types/internal"
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -38,7 +38,7 @@ class SceneManager {
     ;(window as any).open = this.open
   }
 
-  private configMap: Record<string, SpatialSceneCreationOptionsJSB> = {} // name=>config
+  private configMap: Record<string, SpatialSceneCreationOptionsInternal> = {} // name=>config
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]

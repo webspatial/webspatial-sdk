@@ -1,6 +1,6 @@
 import { SpatialSceneCreationOptions, SpatialSceneType } from "./types";
 
 
-export type SpatialSceneCreationOptionsJSB = SpatialSceneCreationOptions & {
+export type SpatialSceneCreationOptionsInternal = SpatialSceneCreationOptions & {
   type: SpatialSceneType;
 };
