@@ -27,7 +27,7 @@ struct WebSpatialApp: App {
                 .getSceneOptions().defaultSize!.width,
             height: app
                 .getSceneOptions().defaultSize!.height)
-        print("getDefaultSize:",ans)
+
         return ans
     }
     
@@ -38,7 +38,7 @@ struct WebSpatialApp: App {
             height: app
                 .getSceneOptions().defaultSize!.height,
             depth: app.getSceneOptions().defaultSize!.depth ?? 0)
-        print("getDefaultSize3D:",ans)
+
         return ans
     }
 
