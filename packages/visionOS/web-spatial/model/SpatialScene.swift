@@ -44,7 +44,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle:WindowStyle = .window
+    var windowStyle:WindowStyle
 
     enum SceneStateKind: String {
         // default value
