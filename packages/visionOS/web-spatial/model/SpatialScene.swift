@@ -204,10 +204,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
     }
-    
-    public func onAppear(){
-        self.moveToState(.visible, nil)
-    }
+
 
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(GetSpatialSceneStateCommand.self, onGetSpatialSceneState)
