@@ -244,7 +244,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
     private var pendingSize:Size3D?
     
-    func flushPendingCommand(){
+    private func flushPendingCommand(){
         guard isJSReady else {return}
         
         if let depth = pendingSize {
@@ -255,7 +255,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     
-    func handleSizeChange(_ size:Size3D) {
+    private func handleSizeChange(_ size:Size3D) {
         guard windowStyle == .volume else {return}
         
         let width = size.width

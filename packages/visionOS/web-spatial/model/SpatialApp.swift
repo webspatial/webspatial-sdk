@@ -112,15 +112,10 @@ class SpatialApp {
                     sceneOptions
                 )
         }
-//        let scene = SpatialScene(url, style, state, sceneOptions)
         scenes[scene.id] = scene
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
-        
-        // hack code, need to resolve later by @fukang
-        DispatchQueue.main.async() {
-//            scene.spatialWebViewModel.load()
-        }
+
         
         return scene
     }
@@ -139,7 +134,6 @@ class SpatialApp {
 
     
     func getSceneOptions() -> SceneOptions {
-        print("getSceneOptions⚠️",sceneOptions.defaultSize)
         return sceneOptions
     }
     
@@ -154,7 +148,6 @@ class SpatialApp {
             sceneOptions = sceneData
                         
             DispatchQueue.main.async() {
-                print(" openWindowData.send \(targetSpatialScene.id)")
                 activeScene.openWindowData.send(targetSpatialScene.id)
             }
 
