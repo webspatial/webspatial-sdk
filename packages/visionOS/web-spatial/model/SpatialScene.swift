@@ -240,16 +240,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     
-    var width: Double?
+    var width: Double = 0
     
-    var height: Double?
+    var height: Double = 0
     
-    var depth: Double?
+    var depth: Double = 0
     
     
     func handleSizeChange(_ size:Size3D) {
-        let height = size.height
-        let depth = size.depth
+        self.width = size.width
+        self.height = size.height
+        self.depth = size.depth
         
         // write through
         spatialWebViewModel.updateWindowKV([
