@@ -100,18 +100,7 @@ class SpatialApp {
 
 
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {
-        let scene: SpatialScene
-        switch style {
-            case .window:
-                scene = PlainSpatialScene(url, style, state, sceneOptions)
-            case .volume:
-                scene = VolumeSpatialScene(
-                    url,
-                    style,
-                    state,
-                    sceneOptions
-                )
-        }
+        let scene = SpatialScene(url, style, state, sceneOptions)
         scenes[scene.id] = scene
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)

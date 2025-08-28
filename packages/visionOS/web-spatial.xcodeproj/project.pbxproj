@@ -57,14 +57,12 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				PlainSpatialScene.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
 				SpatializedElement.swift,
 				SpatializedStatic3DElement.swift,
 				SpatialScene.swift,
-				VolumeSpatialScene.swift,
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
 		};

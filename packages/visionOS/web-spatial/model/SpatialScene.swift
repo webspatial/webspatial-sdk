@@ -609,6 +609,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private var _backgroundMaterial = BackgroundMaterial.None
     var backgroundMaterial: BackgroundMaterial {
         get {
+            if self.windowStyle == .volume && _backgroundMaterial == .None {
+                return .Transparent
+            }
             return _backgroundMaterial
         }
         set(newValue) {
