@@ -11,20 +11,51 @@ export interface SpatialSceneCreationOptions {
     maxWidth?: number | string // Maximum width of the window
     maxHeight?: number | string // Maximum height of the window
   }
-  worldScaling?: worldScalingType
-  worldAlignment?: worldAlignmentType
+  worldScaling?: WorldScalingType
+  worldAlignment?: WorldAlignmentType
 
-  baseplateVisibility?: baseplateVisibilityType
+  baseplateVisibility?: BaseplateVisibilityType
 }
 
-export type baseplateVisibilityType = 'automatic' | 'visible' | 'hidden'
+export enum BaseplateVisibilityType {
+  automatic = 'automatic',
+  visible = 'visible',
+  hidden = 'hidden',
+}
+export function isValidBaseplateVisibilityType(type: string): Boolean {
+  return Object.values(BaseplateVisibilityType).includes(
+    type as BaseplateVisibilityType,
+  )
+}
 
-export type worldScalingType = 'automatic' | 'dynamic'
-export type worldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
+export enum WorldScalingType {
+  automatic = 'automatic',
+  dynamic = 'dynamic',
+}
+export function isValidWorldScalingType(type: string): Boolean {
+  return Object.values(WorldScalingType).includes(type as WorldScalingType)
+}
 
-export type SpatialSceneType = 'window' | 'volume'
+export enum WorldAlignmentType {
+  adaptive = 'adaptive',
+  automatic = 'automatic',
+  gravityAligned = 'gravityAligned',
+}
 
-export type SpatialSceneCreationOptionsJSB = SpatialSceneCreationOptions & {
+export function isValidWorldAlignmentType(type: string): Boolean {
+  return Object.values(WorldAlignmentType).includes(type as WorldAlignmentType)
+}
+
+export enum SpatialSceneType {
+  window = 'window',
+  volume = 'volume',
+}
+
+export function isValidSpatialSceneType(type: string): Boolean {
+  return Object.values(SpatialSceneType).includes(type as SpatialSceneType)
+}
+
+export type SpatialSceneCreationOptionsInternal = SpatialSceneCreationOptions & {
   type: SpatialSceneType
 }
 
@@ -124,4 +155,49 @@ export function formatSceneConfig(
     }
   }
   return config
+}
+
+/**
+ * check px,m and number, number must be >= 0
+ *
+ * */
+export function isValidSceneUnit(val: string | number): boolean {
+  // only support number or string with unit px or m
+  // rpx cm mm not allowed
+  if (typeof val === 'number') {
+    return val >= 0
+  }
+  if (typeof val === 'string') {
+    if (val.endsWith('px')) {
+      // check if number
+      if (isNaN(Number(val.slice(0, -2)))) {
+        return false
+      }
+      return Number(val.slice(0, -2)) >= 0
+    }
+    if (val.endsWith('m')) {
+      // check if number
+      if (isNaN(Number(val.slice(0, -1)))) {
+        return false
+      }
+      return Number(val.slice(0, -1)) >= 0
+    }
+  }
+  return false
+}
+
+export const defaultSceneConfig: SpatialSceneCreationOptions = {
+  defaultSize: {
+    width: 1280,
+    height: 720,
+    depth: 0,
+  },
+}
+
+export const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
+  defaultSize: {
+    width: 0.94,
+    height: 0.94,
+    depth: 0.94,
+  },
 }

@@ -1,4 +1,18 @@
-import { formatToNumber } from '../utils/sceneUtils'
+import {
+  BaseplateVisibilityType,
+  defaultSceneConfig,
+  defaultSceneConfigVolume,
+  formatToNumber,
+  isValidBaseplateVisibilityType,
+  isValidSceneUnit,
+  isValidWorldAlignmentType,
+  isValidWorldScalingType,
+  SpatialSceneCreationOptions,
+  SpatialSceneCreationOptionsInternal,
+  SpatialSceneType,
+  WorldAlignmentType,
+  WorldScalingType,
+} from '../utils/sceneUtils'
 import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
 import { join, normalize, relative, resolve } from 'path'
@@ -136,91 +150,93 @@ export function configDisplay(manifestJson: Record<string, any>) {
 }
 
 export function configMainScene(manifestJson: Record<string, any>) {
-  const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
-  let mainScene = {
-    defaultSize: {
-      width: 1280,
-      height: 720,
-      depth:0
-    },
+  let mainScene: SpatialSceneCreationOptionsInternal = {
+    ...defaultSceneConfig,
     resizability: {} as any,
-    type: 'window',
-    worldScaling: 'automatic',
-    worldAlignment: 'automatic',
-    baseplateVisibility: 'automatic',
+    type: 'window' as SpatialSceneType,
+    worldScaling: 'automatic' as WorldScalingType,
+    worldAlignment: 'automatic' as WorldAlignmentType,
+    baseplateVisibility: 'automatic' as BaseplateVisibilityType,
   }
+
+  // set type
+  if (manifestJson.xr_main_scene?.type == 'volume') {
+    mainScene.type = 'volume' as SpatialSceneType
+  }
+
+  // set default value by type
+  if (mainScene.type == 'volume') {
+    mainScene = {
+      ...mainScene,
+      ...defaultSceneConfigVolume,
+    }
+  }
+
   let hasResizability = false
   if (
     manifestJson.xr_main_scene &&
     typeof manifestJson.xr_main_scene === 'object'
   ) {
-    mainScene.defaultSize.width =
-      Number(manifestJson.xr_main_scene.default_size?.width) > 0
-        ? manifestJson.xr_main_scene.default_size.width
-        : 1280
-    mainScene.defaultSize.height =
-      Number(manifestJson.xr_main_scene.default_size?.height) > 0
-        ? manifestJson.xr_main_scene.default_size.height
-        : 1280
-    if (manifestJson.xr_main_scene.default_size?.depth) {
-      mainScene.defaultSize.depth = manifestJson.xr_main_scene.default_size.depth
+    let defaultSizeKeys = ['width', 'height', 'depth']
+
+    for (let k of defaultSizeKeys) {
+      if (isValidSceneUnit(manifestJson.xr_main_scene.default_size?.[k])) {
+        ;(mainScene.defaultSize as any)[k] = formatToNumber(
+          manifestJson.xr_main_scene.default_size?.[k],
+          mainScene.type === 'window' ? 'px' : 'm',
+          mainScene.type === 'window' ? 'px' : 'm',
+        )
+      } else {
+        console.warn('invalid defaultSize type')
+      }
     }
+
     if (typeof manifestJson.xr_main_scene.resizability === 'object') {
+      const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
       for (var i = 0; i < resizabilities.length; i++) {
-        if (manifestJson.xr_main_scene.resizability[resizabilities[i]] >= 0) {
+        if (
+          isValidSceneUnit(
+            manifestJson.xr_main_scene.resizability[resizabilities[i]],
+          )
+        ) {
           hasResizability = true
-          mainScene.resizability[resizabilities[i]] =
-            manifestJson.xr_main_scene.resizability[resizabilities[i]]
+          //@ts-ignore
+          mainScene.resizability[resizabilities[i]] = formatToNumber(
+            manifestJson.xr_main_scene.resizability[resizabilities[i]],
+            'px',
+            mainScene.type === 'window' ? 'px' : 'm',
+          )
+        } else {
+          console.warn('invalid resizability type')
         }
       }
     }
   }
   if (!hasResizability) {
-    mainScene.resizability = null
+    mainScene.resizability = undefined
   }
 
-  if (manifestJson.xr_main_scene?.type) {
-    mainScene.type = manifestJson.xr_main_scene.type
-  }
-
-  if (manifestJson.xr_main_scene?.worldScaling) {
+  if (isValidWorldScalingType(manifestJson.xr_main_scene?.worldScaling)) {
     mainScene.worldScaling = manifestJson.xr_main_scene.worldScaling
+  } else {
+    console.warn('invalid worldScaling type')
   }
 
-  if (manifestJson.xr_main_scene?.worldAlignment) {
+  if (isValidWorldAlignmentType(manifestJson.xr_main_scene?.worldAlignment)) {
     mainScene.worldAlignment = manifestJson.xr_main_scene.worldAlignment
+  } else {
+    console.warn('invalid worldAlignment type')
   }
 
-  if (manifestJson.xr_main_scene?.baseplateVisibility) {
+  if (
+    isValidBaseplateVisibilityType(
+      manifestJson.xr_main_scene?.baseplateVisibility,
+    )
+  ) {
     mainScene.baseplateVisibility =
       manifestJson.xr_main_scene.baseplateVisibility
-  }
-
-  // update defaultSize and resizability according to type
-  if (mainScene.resizability) {
-    for (let k of resizabilities) {
-      if (mainScene.resizability[k]) {
-        mainScene.resizability[k] = formatToNumber(
-          mainScene.resizability[k],
-          'px',
-          mainScene.type === 'window' ? 'px' : 'm',
-        )
-      }
-    }
-  }
-
-  // format defaultSize
-  if (mainScene.defaultSize) {
-    const iterKeys = Object.keys(mainScene.defaultSize)
-    for (let k of iterKeys) {
-      if ((mainScene.defaultSize as any)[k]) {
-        ;(mainScene.defaultSize as any)[k] = formatToNumber(
-          (mainScene.defaultSize as any)[k],
-          mainScene.type === 'window' ? 'px' : 'm',
-          mainScene.type === 'window' ? 'px' : 'm',
-        )
-      }
-    }
+  } else {
+    console.warn('invalid baseplateVisibility type')
   }
 
   manifestJson.xr_main_scene = mainScene
