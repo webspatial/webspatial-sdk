@@ -16,12 +16,17 @@ struct PWAManager: Codable {
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "", url: "")]
-    var mainScene: WindowContainerOptions = .init(
+    var mainScene: XSceneOptionsJSB = .init(
         defaultSize: .init(
             width: SceneWidth,
-            height: SceneHeight
+            height: SceneHeight,
+            depth: SceneDepth
         ),
-        resizability: SceneResizability
+        type: .SceneType,
+        resizability: SceneResizability,
+        worldScaling: .WorldScaling,
+        worldAlignment: .WorldAlignment,
+        baseplateVisibility: .BaseplateVisibility
     )
     private var version: String = "PACKAGE_VERSION"
 
