@@ -57,7 +57,7 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let zIndex: Double?
     let enableGesture: Bool?
 
-    let scrollEnabled: Bool?
+    let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
     

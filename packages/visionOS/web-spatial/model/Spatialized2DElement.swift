@@ -8,15 +8,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
 
     var backgroundMaterial = BackgroundMaterial.None
 
-    private var _scrollEnabled = false
-    var scrollEnabled: Bool {
-        get {
-            return spatialWebViewModel.scrollEnabled
-        }
-        set(newValue) {
-            spatialWebViewModel.scrollEnabled = newValue
-        }
-    }
+    var scrollPageEnabled = false
     
     var scrollEdgeInsetsMarginRight: CGFloat? {
         get {
@@ -26,8 +18,6 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             spatialWebViewModel.getController().webview?.scrollView.contentInset.right = newValue ?? 0
         }
     }
-    
-    
 
     var _scrollOffset: Vec2 = .init(x: 0, y: 0)
     var scrollOffset: Vec2 {
@@ -95,17 +85,6 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         return typedChildren
     }
 
-    final func findNearestScrollAbleSpatialElementContainer() -> SpatialScrollAble? {
-        var current: ScrollAbleSpatialElementContainer? = self
-            while let currentNode = current {
-                if currentNode.scrollEnabled {
-                    return currentNode
-                }
-                current = currentNode.parent
-            }
-            return nil
-    }
-
     func loadHtml(_ html: String) {
         spatialWebViewModel.loadHTML(html)
     }
@@ -129,7 +108,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     enum CodingKeys: String, CodingKey {
-        case cornerRadius, backgroundMaterial, children, type, scrollOffset, scrollEnabled, webviewIsOpaque, webviewId
+        case cornerRadius, backgroundMaterial, children, type, scrollOffset, scrollPageEnabled, webviewIsOpaque, webviewId
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -140,7 +119,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         try container.encode(children, forKey: .children)
         try container.encode(SpatializedElementType.Spatialized2DElement, forKey: .type)
         try container.encode(scrollOffset, forKey: .scrollOffset)
-        try container.encode(scrollEnabled, forKey: .scrollEnabled)
+        try container.encode(scrollPageEnabled, forKey: .scrollPageEnabled)
 
         // for debug only
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
