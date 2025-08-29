@@ -394,8 +394,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         updateSpatializedElementProperties(spatialized2DElement, command)
-        if let scrollEnabled = command.scrollEnabled {
-            spatialized2DElement.scrollEnabled = scrollEnabled
+        if let scrollPageEnabled = command.scrollPageEnabled {
+            spatialized2DElement.scrollPageEnabled = scrollPageEnabled
         }
         if let material = command.material {
             spatialized2DElement.backgroundMaterial = material
@@ -529,7 +529,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     /*
      * Begin Implement SpatialScrollAble Protocol
      */
-    let scrollEnabled: Bool = true
+    let scrollPageEnabled: Bool = true
 
     var _scrollOffset: Vec2 = .init(x: 0, y: 0)
     var scrollOffset: Vec2 {

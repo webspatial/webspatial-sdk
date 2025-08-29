@@ -275,14 +275,17 @@ function useSyncSpatialProps(
   useEffect(() => {
     if (spatialWindowManager) {
       spatialWindowManager.updateProperties({
-        scrollEnabled: allowScroll || styleOverflow == 'scroll',
+        scrollPageEnabled:
+          styleOverflow == 'visible' ||
+          styleOverflow == 'hidden' ||
+          styleOverflow == 'clip',
         scrollWithParent: !(scrollWithParent == false || isFixedPosition),
         enableGesture: enablegesture,
       })
     }
   }, [
     spatialWindowManager,
-    allowScroll,
+    // allowScroll,
     scrollWithParent,
     isFixedPosition,
     styleOverflow,
