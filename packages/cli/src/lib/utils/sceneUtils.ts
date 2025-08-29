@@ -16,48 +16,46 @@ export interface SpatialSceneCreationOptions {
 
   baseplateVisibility?: BaseplateVisibilityType
 }
+export const BaseplateVisibilityValues = [
+  'automatic',
+  'visible',
+  'hidden',
+] as const
+export type BaseplateVisibilityType = (typeof BaseplateVisibilityValues)[number]
 
-export enum BaseplateVisibilityType {
-  automatic = 'automatic',
-  visible = 'visible',
-  hidden = 'hidden',
-}
 export function isValidBaseplateVisibilityType(type: string): Boolean {
-  return Object.values(BaseplateVisibilityType).includes(
-    type as BaseplateVisibilityType,
-  )
+  return BaseplateVisibilityValues.includes(type as BaseplateVisibilityType)
 }
 
-export enum WorldScalingType {
-  automatic = 'automatic',
-  dynamic = 'dynamic',
-}
+export const WorldScalingValues = ['automatic', 'dynamic'] as const
+export type WorldScalingType = (typeof WorldScalingValues)[number]
+
 export function isValidWorldScalingType(type: string): Boolean {
-  return Object.values(WorldScalingType).includes(type as WorldScalingType)
+  return WorldScalingValues.includes(type as WorldScalingType)
 }
 
-export enum WorldAlignmentType {
-  adaptive = 'adaptive',
-  automatic = 'automatic',
-  gravityAligned = 'gravityAligned',
-}
+export const WorldAlignmentValues = [
+  'adaptive',
+  'automatic',
+  'gravityAligned',
+] as const
+export type WorldAlignmentType = (typeof WorldAlignmentValues)[number]
 
 export function isValidWorldAlignmentType(type: string): Boolean {
-  return Object.values(WorldAlignmentType).includes(type as WorldAlignmentType)
+  return WorldAlignmentValues.includes(type as WorldAlignmentType)
 }
 
-export enum SpatialSceneType {
-  window = 'window',
-  volume = 'volume',
-}
+export const SpatialSceneValues = ['window', 'volume'] as const
+export type SpatialSceneType = (typeof SpatialSceneValues)[number]
 
 export function isValidSpatialSceneType(type: string): Boolean {
-  return Object.values(SpatialSceneType).includes(type as SpatialSceneType)
+  return SpatialSceneValues.includes(type as SpatialSceneType)
 }
 
-export type SpatialSceneCreationOptionsInternal = SpatialSceneCreationOptions & {
-  type: SpatialSceneType
-}
+export type SpatialSceneCreationOptionsInternal =
+  SpatialSceneCreationOptions & {
+    type: SpatialSceneType
+  }
 
 function pxToMeter(px: number): number {
   return px / 1360

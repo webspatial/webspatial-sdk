@@ -1,5 +1,4 @@
 import {
-  BaseplateVisibilityType,
   defaultSceneConfig,
   defaultSceneConfigVolume,
   formatToNumber,
@@ -7,11 +6,7 @@ import {
   isValidSceneUnit,
   isValidWorldAlignmentType,
   isValidWorldScalingType,
-  SpatialSceneCreationOptions,
   SpatialSceneCreationOptionsInternal,
-  SpatialSceneType,
-  WorldAlignmentType,
-  WorldScalingType,
 } from '../utils/sceneUtils'
 import { parseRouter } from '../utils/utils'
 import { validateURL } from './validate'
@@ -153,15 +148,15 @@ export function configMainScene(manifestJson: Record<string, any>) {
   let mainScene: SpatialSceneCreationOptionsInternal = {
     ...defaultSceneConfig,
     resizability: {} as any,
-    type: 'window' as SpatialSceneType,
-    worldScaling: 'automatic' as WorldScalingType,
-    worldAlignment: 'automatic' as WorldAlignmentType,
-    baseplateVisibility: 'automatic' as BaseplateVisibilityType,
+    type: 'window',
+    worldScaling: 'automatic',
+    worldAlignment: 'automatic',
+    baseplateVisibility: 'automatic',
   }
 
   // set type
   if (manifestJson.xr_main_scene?.type == 'volume') {
-    mainScene.type = 'volume' as SpatialSceneType
+    mainScene.type = 'volume'
   }
 
   // set default value by type
