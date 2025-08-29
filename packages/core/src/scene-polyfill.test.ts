@@ -16,7 +16,7 @@ describe('test formatSceneConfig in window', () => {
         maxHeight: 100,
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'window')
+    const [formattedConfig] = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 100,
       height: 100,
@@ -42,7 +42,7 @@ describe('test formatSceneConfig in window', () => {
         maxHeight: '100px',
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'window')
+    const [formattedConfig] = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 100,
       height: 100,
@@ -53,6 +53,30 @@ describe('test formatSceneConfig in window', () => {
       maxWidth: 100,
       maxHeight: 100,
     })
+  })
+
+  test('should format window with invalid unit', () => {
+    const config = {
+      defaultSize: {
+        width: '100cm',
+        height: '100cm',
+      },
+      resizability: {
+        minWidth: '100cm',
+        minHeight: '100cm',
+        maxWidth: '100cm',
+        maxHeight: '100cm',
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [, errors] = formatSceneConfig(config, 'window')
+    expect(errors).toEqual([
+      'defaultSize.width',
+      'defaultSize.height',
+      'resizability.minWidth',
+      'resizability.minHeight',
+      'resizability.maxWidth',
+      'resizability.maxHeight',
+    ])
   })
 
   test('should format window with meter', () => {
@@ -68,7 +92,7 @@ describe('test formatSceneConfig in window', () => {
         maxHeight: '1m',
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'window')
+    const [formattedConfig] = formatSceneConfig(config, 'window')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1360,
       height: 1360,
@@ -97,7 +121,7 @@ describe('test formatSceneConfig in volume', () => {
         maxHeight: 1,
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'volume')
+    const [formattedConfig] = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -125,7 +149,7 @@ describe('test formatSceneConfig in volume', () => {
         maxHeight: '1360px',
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'volume')
+    const [formattedConfig] = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -153,7 +177,7 @@ describe('test formatSceneConfig in volume', () => {
         maxHeight: '1m',
       },
     } satisfies SpatialSceneCreationOptions
-    const formattedConfig = formatSceneConfig(config, 'volume')
+    const [formattedConfig] = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
       width: 1,
       height: 1,
@@ -165,6 +189,32 @@ describe('test formatSceneConfig in volume', () => {
       maxWidth: 1360,
       maxHeight: 1360,
     })
+  })
+
+  test('should format volume with invalid unit', () => {
+    const config = {
+      defaultSize: {
+        width: '100cm',
+        height: '100cm',
+        depth: '100cm',
+      },
+      resizability: {
+        minWidth: '100cm',
+        minHeight: '100cm',
+        maxWidth: '100cm',
+        maxHeight: '100cm',
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [, errors] = formatSceneConfig(config, 'volume')
+    expect(errors).toEqual([
+      'defaultSize.width',
+      'defaultSize.height',
+      'defaultSize.depth',
+      'resizability.minWidth',
+      'resizability.minHeight',
+      'resizability.maxWidth',
+      'resizability.maxHeight',
+    ])
   })
 })
 

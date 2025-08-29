@@ -102,12 +102,70 @@ export interface SpatialSceneCreationOptions {
   baseplateVisibility?: BaseplateVisibilityType
 }
 
-export type BaseplateVisibilityType = 'automatic' | 'visible' | 'hidden'
+export const BaseplateVisibilityValues = [
+  'automatic',
+  'visible',
+  'hidden',
+] as const
+export type BaseplateVisibilityType = (typeof BaseplateVisibilityValues)[number]
 
-export type WorldScalingType = 'automatic' | 'dynamic'
-export type WorldAlignmentType = 'adaptive' | 'automatic' | 'gravityAligned'
+export function isValidBaseplateVisibilityType(type: string): Boolean {
+  return BaseplateVisibilityValues.includes(type as BaseplateVisibilityType)
+}
 
-export type SpatialSceneType = 'window' | 'volume'
+export const WorldScalingValues = ['automatic', 'dynamic'] as const
+export type WorldScalingType = (typeof WorldScalingValues)[number]
+
+export function isValidWorldScalingType(type: string): Boolean {
+  return WorldScalingValues.includes(type as WorldScalingType)
+}
+
+export const WorldAlignmentValues = [
+  'adaptive',
+  'automatic',
+  'gravityAligned',
+] as const
+export type WorldAlignmentType = (typeof WorldAlignmentValues)[number]
+
+export function isValidWorldAlignmentType(type: string): Boolean {
+  return WorldAlignmentValues.includes(type as WorldAlignmentType)
+}
+
+export const SpatialSceneValues = ['window', 'volume'] as const
+export type SpatialSceneType = (typeof SpatialSceneValues)[number]
+
+export function isValidSpatialSceneType(type: string): Boolean {
+  return SpatialSceneValues.includes(type as SpatialSceneType)
+}
+
+/**
+ * check px,m and number, number must be >= 0
+ *
+ * */
+export function isValidSceneUnit(val: string | number): boolean {
+  // only support number or string with unit px or m
+  // rpx cm mm not allowed
+  if (typeof val === 'number') {
+    return val >= 0
+  }
+  if (typeof val === 'string') {
+    if (val.endsWith('px')) {
+      // check if number
+      if (isNaN(Number(val.slice(0, -2)))) {
+        return false
+      }
+      return Number(val.slice(0, -2)) >= 0
+    }
+    if (val.endsWith('m')) {
+      // check if number
+      if (isNaN(Number(val.slice(0, -1)))) {
+        return false
+      }
+      return Number(val.slice(0, -1)) >= 0
+    }
+  }
+  return false
+}
 
 export enum SpatialSceneState {
   idle = 'idle',

@@ -65,6 +65,40 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
+      <h1 className="text-2xl text-black">error handling</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene(
+            'sa',
+            () => ({
+              defaultSize: {
+                width: "10cm",
+                height: 1,
+                depth: 1,
+              },
+              // resizability: {
+              //   minWidth: 0.5,
+              //   maxWidth: 1.5,
+              //   minHeight: 0.5,  
+              //   maxHeight: 1.5,
+              // },
+              // worldScaling: 'automatic',
+              // worldAlignment: 'automatic',
+              // automatic: 'automatic',
+            }),
+            { type: 'volume' },
+          )
+          winARef.current = window.open(
+            'http://localhost:5173/src/scene/volume.html',
+            'sa',
+          )
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        invalid unit
+      </button>
       <h1 className="text-2xl text-black">no sdk</h1>
       <button
         className={btnCls}

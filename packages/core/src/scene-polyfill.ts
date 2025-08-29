@@ -4,8 +4,13 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneType,
   SpatialSceneState,
+  isValidSceneUnit,
+  isValidSpatialSceneType,
+  isValidWorldScalingType,
+  isValidWorldAlignmentType,
+  isValidBaseplateVisibilityType,
 } from './types/types'
-import { SpatialSceneCreationOptionsInternal } from "./types/internal"
+import { SpatialSceneCreationOptionsInternal } from './types/internal'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -82,8 +87,12 @@ class SceneManager {
     const sceneType = options?.type ?? 'window'
     const defaultConfig = getSceneDefaultConfig(sceneType)
     const rawReturnVal = callback({ ...defaultConfig })
+    const [formattedConfig, errors] = formatSceneConfig(rawReturnVal, sceneType)
+    if (errors.length > 0) {
+      console.warn(`initScene ${name} with errors: ${errors.join(', ')}`)
+    }
     this.configMap[name] = {
-      ...formatSceneConfig(rawReturnVal, sceneType),
+      ...formattedConfig,
       type: sceneType,
     }
   }
@@ -146,43 +155,83 @@ function formatToNumber(
 export function formatSceneConfig(
   config: SpatialSceneCreationOptions,
   sceneType: SpatialSceneType,
-) {
+): [SpatialSceneCreationOptions, string[]] {
   // defaultSize and resizability's width/height/depth can be 100 or "100px" or "1m"
   // expect:
   // resizability should format into px
   // defaultSize should format into px if window
   // defaultSize should format into m if volume
 
-  const isWindow = sceneType === 'window'
+  const defaultSceneConfig = getSceneDefaultConfig(sceneType)
 
-  // format resizability
-  if (config.resizability) {
-    const iterKeys = Object.keys(config.resizability)
-    for (let k of iterKeys) {
-      if ((config.resizability as any)[k]) {
-        ;(config.resizability as any)[k] = formatToNumber(
-          (config.resizability as any)[k],
-          'px',
-          isWindow ? 'px' : 'm',
-        )
-      }
-    }
+  const errors: string[] = []
+
+  const isWindow = sceneType === 'window'
+  if (!isValidSpatialSceneType(sceneType)) {
+    errors.push(`sceneType`)
   }
 
   // format defaultSize
   if (config.defaultSize) {
-    const iterKeys = Object.keys(config.defaultSize)
+    const iterKeys = ['width', 'height', 'depth']
     for (let k of iterKeys) {
-      if ((config.defaultSize as any)[k]) {
+      if (!(k in config.defaultSize)) continue
+      if (isValidSceneUnit((config.defaultSize as any)[k])) {
         ;(config.defaultSize as any)[k] = formatToNumber(
           (config.defaultSize as any)[k],
           isWindow ? 'px' : 'm',
           isWindow ? 'px' : 'm',
         )
+      } else {
+        ;(config.defaultSize as any)[k] = (
+          defaultSceneConfig.defaultSize as any
+        )[k]
+        errors.push(`defaultSize.${k}`)
       }
     }
   }
-  return config
+
+  // format resizability
+  if (config.resizability) {
+    const iterKeys = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+    for (let k of iterKeys) {
+      if (!(k in config.resizability)) continue
+      if (isValidSceneUnit((config.resizability as any)[k])) {
+        ;(config.resizability as any)[k] = formatToNumber(
+          (config.resizability as any)[k],
+          'px',
+          isWindow ? 'px' : 'm',
+        )
+      } else {
+        ;(config.resizability as any)[k] = undefined
+        errors.push(`resizability.${k}`)
+      }
+    }
+  }
+
+  // check value
+  if (config.worldScaling) {
+    if (!isValidWorldScalingType(config.worldScaling)) {
+      config.worldScaling = 'automatic'
+      errors.push('worldScaling')
+    }
+  }
+
+  if (config.worldAlignment) {
+    if (!isValidWorldAlignmentType(config.worldAlignment)) {
+      config.worldAlignment = 'automatic'
+      errors.push('worldAlignment')
+    }
+  }
+
+  if (config.baseplateVisibility) {
+    if (!isValidBaseplateVisibilityType(config.baseplateVisibility)) {
+      config.baseplateVisibility = 'automatic'
+      errors.push('baseplateVisibility')
+    }
+  }
+
+  return [config, errors]
 }
 
 export function initScene(
@@ -283,9 +332,14 @@ async function injectScenePolyfill() {
     })
 
     const sceneType = window.xrCurrentSceneType ?? 'window'
+    const [formattedConfig, errors] = formatSceneConfig(cfg, sceneType)
+    if (errors.length > 0) {
+      console.warn(
+        `window.xrCurrentSceneDefaults with errors: ${errors.join(', ')}`,
+      )
+    }
     await SpatialScene.getInstance().updateSceneCreationConfig({
-      // ...cfg, // error here
-      ...formatSceneConfig(cfg, sceneType),
+      ...formattedConfig,
       type: sceneType,
     })
   })
