@@ -11,6 +11,7 @@ import {
   SpatialTransform,
   SpatialSceneCreationOptions,
 } from './types/types'
+import { SpatialSceneCreationOptionsInternal } from "./types/internal"
 
 const platform = createPlatform()
 
@@ -266,7 +267,7 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
 
   constructor(
     private url: string,
-    private config: SpatialSceneCreationOptions | undefined,
+    private config: SpatialSceneCreationOptionsInternal | undefined,
     public target?: string,
     public features?: string,
   ) {

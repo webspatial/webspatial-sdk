@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
 
-
-
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 const spatial = new Spatial()
@@ -23,12 +21,20 @@ const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
   const [logs, setLogs] = useState('')
 
-  useEffect(() => {
+  function logDepth() {
     //@ts-ignore
-    log('windowID:', window._webSpatialID)
+    log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+    //@ts-ignore
+    log('outerHeight:' + window.outerHeight)
+  }
+
+  useEffect(() => {
+    logDepth()
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
+
+    window.onresize = logDepth
 
     return () => {
       window.onerror = null

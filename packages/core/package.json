@@ -14,7 +14,10 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "test": "tsc -p ./tsconfig.json",
+    "test": "npm run coverage",
+    "lint": "tsc -p ./tsconfig.json",
+    "coverage": "vitest run --coverage",
+    "test:w": "vitest",
     "build": "tsup",
     "start": "tsup --watch",
     "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialCore",
@@ -33,10 +36,10 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
+    "jsdom": "^26.1.0",
     "tsup": "^8.4.0",
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
     "typescript": "^5.6.3"
-  },
-  "dependencies": {}
+  }
 }

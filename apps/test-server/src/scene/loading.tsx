@@ -8,7 +8,7 @@ window.xrCurrentSceneDefaults = async () => {
 
   return {
     defaultSize: {
-      width: 900,
+      width: 1200,
       height: 900,
     },
   }

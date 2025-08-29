@@ -137,6 +137,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         if webviewTitle != nil {
             callJS("document.title='\(webviewTitle!)'")
         }
+        // flush pending calljs comand
+        isPageLoaded = true
+        flushJSQueue()
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Swift.Void) {
@@ -218,6 +221,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         scorllUpdateInvoke = nil
         model = nil
     }
+    
+    private var state:SpatialWebViewState?
 
     func destroyView() {
         stopObserving()
@@ -231,10 +236,27 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             webviewStateChangeInvoke?(.didDestroyView)
         }
     }
+    
+    private var isPageLoaded = false
+    
+    private var jsQueue: [String] = []
+    
+    private func enqueueJS(_ js: String) {
+        jsQueue.append(js)
+    }
+    
+    private func flushJSQueue() {
+        guard !jsQueue.isEmpty else { return }
+        let combined = jsQueue.joined(separator: ";")
+        callJS(combined)
+        jsQueue.removeAll()
+    }
 
     func callJS(_ js: String) {
-        if webview != nil {
+        if webview != nil && isPageLoaded {
             webview!.evaluateJavaScript(js)
+        } else {
+            enqueueJS(js)
         }
     }
 }
