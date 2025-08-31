@@ -4,12 +4,13 @@ import {
   enableDebugTool,
   Spatialized2DElementContainer,
 } from '@webspatial/react-sdk'
+import { CSSProperties } from 'react'
 
 enableDebugTool()
 
 function App() {
   // const placeHolderContent = <div>this is spatialdiv</div>
-  const style = {
+  const style: CSSProperties = {
     width: '100px',
     height: '200px',
     // background: 'blue',
@@ -17,6 +18,8 @@ function App() {
     '--xr-background-material': 'transparent',
     '--xr-back': '200px',
     transform: 'translateX(100px) rotateY(30deg)',
+    // display: 'none',
+    contentVisibility: 'hidden',
   }
 
   return (

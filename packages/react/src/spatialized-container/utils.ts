@@ -55,6 +55,9 @@ export function getInheritedStyleProps(
     'height',
 
     'display',
+
+    // content-visibility also need to be synced
+    'contentVisibility',
   ]
   var props: CSSProperties = {}
   for (var cssName of propNames) {
