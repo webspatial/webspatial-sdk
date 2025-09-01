@@ -10,6 +10,7 @@ import { join } from 'path'
 import { loadJsonFromDisk } from '../resource/load'
 import { ImageHelper } from '../resource/imageHelper'
 import { manifestSwiftTemplate } from './manifestSwiftTemplate'
+import { SpatialSceneType } from '../utils/sceneUtils'
 const xcode = require('xcode')
 const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -55,7 +56,7 @@ const infoPlistXML = `<?xml version="1.0" encoding="UTF-8"?>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationPreferredDefaultSceneSessionRole</key>
-		<string>UIWindowSceneSessionRoleApplication</string>
+		<string>SCENE_SESSION_ROLE</string>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<true/>
 		<key>UISceneConfigurations</key>
@@ -254,7 +255,16 @@ export default class XcodeProject {
         `"${manifest.id}"`,
       )
     }
-    this.updateDeeplink(manifest.protocol_handlers ?? [])
+    let tempInfoPlistXML = infoPlistXML.slice() // clone
+    tempInfoPlistXML = this.updateDeeplink(
+      manifest.protocol_handlers ?? [],
+      tempInfoPlistXML,
+    )
+    tempInfoPlistXML = this.updateSceneType(
+      manifest.xr_main_scene?.type,
+      tempInfoPlistXML,
+    )
+    this.writeInfoPlist(tempInfoPlistXML)
     await this.modifySwift(manifest)
   }
 
@@ -262,14 +272,33 @@ export default class XcodeProject {
     xcodeProject.updateBuildProperty('CURRENT_PROJECT_VERSION', version)
   }
 
-  private static updateDeeplink(deeplinks: Array<any>) {
-    let infoPlistPath = join(PROJECT_DIRECTORY, './web-spatial/Info.plist')
+  private static writeInfoPlist(infoPlistXML: string) {
+    const infoPlistPath = join(PROJECT_DIRECTORY, './web-spatial/Info.plist')
+    fs.writeFileSync(infoPlistPath, infoPlistXML)
+  }
+
+  private static updateSceneType(
+    sceneType: SpatialSceneType,
+    infoPlistXML: string,
+  ): string {
+    let sceneSessionRole = 'UIWindowSceneSessionRoleApplication'
+    if (sceneType === 'volume') {
+      sceneSessionRole = 'UIWindowSceneSessionRoleVolumetricApplication'
+    }
+    infoPlistXML = infoPlistXML.replace('SCENE_SESSION_ROLE', sceneSessionRole)
+    return infoPlistXML
+  }
+
+  private static updateDeeplink(
+    deeplinks: Array<any>,
+    infoPlistXML: string,
+  ): string {
     let deeplinkString = ''
     for (let i = 0; i < deeplinks.length; i++) {
       deeplinkString += `<string>${deeplinks[i].protocol}</string>`
     }
     const newInfoPlist = infoPlistXML.replace('DEEPLINK', deeplinkString)
-    fs.writeFileSync(infoPlistPath, newInfoPlist)
+    return newInfoPlist
   }
 
   private static async modifySwift(manifest: any) {
@@ -312,6 +341,11 @@ export default class XcodeProject {
       'SceneHeight',
       manifest.xr_main_scene.defaultSize.height,
     )
+    manifestSwift = manifestSwift.replace(
+      'SceneDepth',
+      manifest.xr_main_scene.defaultSize.depth,
+    )
+
     let res = 'nil'
     const resizabilities = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
     if (manifest.xr_main_scene.resizability) {
@@ -325,6 +359,23 @@ export default class XcodeProject {
       res += ')'
     }
     manifestSwift = manifestSwift.replace('SceneResizability', res)
+
+    manifestSwift = manifestSwift.replace(
+      'SceneType',
+      manifest.xr_main_scene.type,
+    )
+    manifestSwift = manifestSwift.replace(
+      'WorldScaling',
+      manifest.xr_main_scene.worldScaling,
+    )
+    manifestSwift = manifestSwift.replace(
+      'WorldAlignment',
+      manifest.xr_main_scene.worldAlignment,
+    )
+    manifestSwift = manifestSwift.replace(
+      'BaseplateVisibility',
+      manifest.xr_main_scene.baseplateVisibility,
+    )
 
     fs.writeFileSync(manifestSwiftPath, manifestSwift, 'utf-8')
   }

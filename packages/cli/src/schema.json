@@ -1,0 +1,95 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "title": "Schema for PWA Manifest",
+    "description": "Schema for PWA Manifest",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "start_url": {
+            "type": "string"
+        },
+        "display": {
+            "type": "string"
+        },
+        "xr_main_scene": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["window", "volume"]
+                },
+                "default_size": {
+                    "type": "object",
+                    "properties": {
+                        "width": {
+                            "type": ["number", "string"]
+                        },
+                        "height": {
+                            "type": ["number", "string"]
+                        },
+                        "depth": {
+                            "type": ["number", "string"]
+                        }
+                    },
+                    "required": ["height", "width"]
+                },
+                "resizability": {
+                    "type": "object",
+                    "properties": {
+                        "minWidth": {
+                            "type": ["number", "string"]
+                        },
+                        "maxWidth": {
+                            "type": ["number", "string"]
+                        },
+                        "minHeight": {
+                            "type": ["number", "string"]
+                        },
+                        "maxHeight": {
+                            "type": ["number", "string"]
+                        }
+                    },
+                    "required": []
+                },
+                "worldScaling": {
+                    "enum": ["automatic", "dynamic"],
+                    "type": "string"
+                },
+                "worldAlignment": {
+                    "enum": ["adaptive", "automatic", "gravityAligned"],
+                    "type": "string"
+                },
+                "baseplateVisibility": {
+                    "enum": ["visible", "hidden", "automatic"],
+                    "type": "string"
+                }
+            },
+            "required": []
+        },
+        "icons": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "src": {
+                        "type": "string"
+                    },
+                    "sizes": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "purpose": {
+                        "type": "string"
+                    }
+                },
+                "required": ["purpose", "sizes", "src", "type"]
+            },
+            "minItems": 0
+        }
+    },
+    "required": ["display", "icons", "name", "start_url"]
+}
