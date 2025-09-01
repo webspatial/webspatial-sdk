@@ -44,7 +44,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle:WindowStyle
+    var windowStyle: WindowStyle {
+        didSet {
+            resetBackgroundMaterialOnWindowStyleChange(windowStyle)
+        }
+    }
+    
+    private func resetBackgroundMaterialOnWindowStyleChange(_ windowStyle:WindowStyle) {
+        if windowStyle == .volume {
+            self.backgroundMaterial = .Transparent
+        } else {
+            self.backgroundMaterial = .None
+        }
+    }
+    
 
     enum SceneStateKind: String {
         // default value
@@ -75,6 +88,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         self.url = url
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
+        resetBackgroundMaterialOnWindowStyleChange(windowStyle)
 
         setupSpatialWebView()
         
@@ -598,7 +612,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         set(newValue) {
             _backgroundMaterial = newValue
-            spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
+            if windowStyle == .volume {
+                // default background for volume scene is transparent
+                spatialWebViewModel
+                    .setBackgroundTransparent(
+                        _backgroundMaterial == .None || _backgroundMaterial
+                        == .Transparent)
+            } else {
+                spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
+            }
         }
     }
 

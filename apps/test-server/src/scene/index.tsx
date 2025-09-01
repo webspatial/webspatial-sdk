@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
+import { enableDebugTool } from '@webspatial/react-sdk'
+
+enableDebugTool()
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
