@@ -46,6 +46,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         spatialWebViewModel = SpatialWebViewModel(url: nil)
 
         super.init()
+        
+        clip = false
 
         spatialWebViewModel.setBackgroundTransparent(true)
         spatialWebViewModel.addScrollUpdateListener { _, point in

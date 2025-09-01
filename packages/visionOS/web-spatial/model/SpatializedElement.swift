@@ -20,6 +20,9 @@ class SpatializedElement: SpatialObject {
     var scrollWithParent = true
     var zIndex: Double = 0
     
+    // whether require clip action
+    var clip = true
+    
     var enableGesture: Bool = false
 
     enum CodingKeys: String, CodingKey {

@@ -14,14 +14,14 @@ function Model() {
     width: '300px',
     height: '300px',
     position: 'relative',
-    left: '200px',
-    top: '100px',
+    left: '50px',
+    top: '10px',
     opacity: 0.81,
     display: 'block',
     visibility: 'visible',
     // background: 'blue',
-    '--xr-back': '400px',
-    transform: 'translateX(100px) rotateY(30deg)',
+    // '--xr-back': '400px',
+    // transform: 'translateX(100px) rotateY(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
   }
@@ -38,10 +38,10 @@ function App() {
   // const placeHolderContent = <div>this is spatialdiv</div>
   const style: CSSProperties = {
     width: '800px',
-    height: '400px',
+    height: '200px',
     position: 'relative',
-    left: '300px',
-    top: '100px',
+    left: '0px',
+    top: '0px',
     opacity: 0.81,
     display: 'block',
     visibility: 'visible',
@@ -77,15 +77,15 @@ function App() {
       >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        <Spatialized2DElementContainer
+        {/* <Spatialized2DElementContainer
           style={childStyle}
           data-name="child"
           component="div"
         >
           this is child spatialdiv
-        </Spatialized2DElementContainer>
-        <button>this is a button</button>
+        </Spatialized2DElementContainer> */}
         <Model />
+        <button>this is a button</button>
       </Spatialized2DElementContainer>
       <div> End of SpatializedContainer </div>
 
