@@ -37,29 +37,30 @@ function Model() {
 function App() {
   // const placeHolderContent = <div>this is spatialdiv</div>
   const style: CSSProperties = {
-    width: '200px',
-    height: '300px',
+    width: '800px',
+    height: '400px',
     position: 'relative',
     left: '300px',
     top: '100px',
     opacity: 0.81,
     display: 'block',
     visibility: 'visible',
-    // background: 'blue',
+    background: 'green',
     borderRadius: '10px',
     '--xr-background-material': 'translucent',
     '--xr-back': '200px',
     // transform: 'translateX(100px) rotateY(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
+    overflow: 'scroll',
   }
 
   const childStyle: CSSProperties = {
     position: 'relative',
-    top: '-10px',
-    left: '-40px',
-    width: '100px',
-    height: '200px',
+    // top: '-10px',
+    // left: '-40px',
+    width: '400px',
+    height: '600px',
     '--xr-back': '200px',
     background: 'blue',
   }
@@ -69,16 +70,25 @@ function App() {
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      <Spatialized2DElementContainer style={style} component="div">
+      <Spatialized2DElementContainer
+        data-name="parent"
+        style={style}
+        component="div"
+      >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        <Spatialized2DElementContainer style={childStyle} component="div">
+        <Spatialized2DElementContainer
+          style={childStyle}
+          data-name="child"
+          component="div"
+        >
           this is child spatialdiv
         </Spatialized2DElementContainer>
         <button>this is a button</button>
+        <Model />
       </Spatialized2DElementContainer>
       <div> End of SpatializedContainer </div>
-      <Model />
+
       <div> End of Model SpatializedContainer </div>
     </>
   )

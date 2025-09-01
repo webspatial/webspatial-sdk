@@ -17,7 +17,6 @@ import { getInheritedStyleProps, parseCornerRadius } from './utils'
 function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
   n: HTMLLinkElement,
-  debugName: string,
 ) {
   return new Promise(resolve => {
     // Safari seems to have a bug where
@@ -26,11 +25,7 @@ function asyncLoadStyleToChildWindow(
     // Workaround this by making the css stylesheet request unique
     n.href += '?uniqueURL=' + Math.random()
     n.onerror = function (error) {
-      console.error(
-        'Failed to load style link',
-        debugName,
-        (n as HTMLLinkElement).href,
-      )
+      console.error('Failed to load style link', (n as HTMLLinkElement).href)
       resolve(false)
     }
     n.onload = function () {
@@ -66,10 +61,7 @@ function setOpenWindowStyle(openedWindow: WindowProxy) {
   openedWindow.document.body.style.background = 'transparent'
 }
 
-async function syncParentHeadToChild(
-  childWindow: WindowProxy,
-  debugName: string = '',
-) {
+async function syncParentHeadToChild(childWindow: WindowProxy) {
   const styleLoadedPromises = []
 
   for (let i = 0; i < document.head.children.length; i++) {
@@ -82,16 +74,11 @@ async function syncParentHeadToChild(
       const promise = asyncLoadStyleToChildWindow(
         childWindow,
         n as HTMLLinkElement,
-        debugName,
       )
       styleLoadedPromises.push(promise)
     } else {
       childWindow.document.head.appendChild(n)
     }
-  }
-
-  if (debugName) {
-    childWindow.document.title = debugName
   }
 
   // sync className
@@ -138,7 +125,7 @@ function useSyncHeaderStyle(windowProxy: WindowProxy) {
   useEffect(() => {
     // sync parent head to child when document header style changed
     const headObserver = new MutationObserver(_ => {
-      syncParentHeadToChild(windowProxy, '')
+      syncParentHeadToChild(windowProxy)
     })
 
     headObserver.observe(document.head, { childList: true, subtree: true })
@@ -148,11 +135,29 @@ function useSyncHeaderStyle(windowProxy: WindowProxy) {
   }, [])
 }
 
+function useSyncDocumentTitle(
+  windowProxy: WindowProxy,
+  spatializedElement: Spatialized2DElement,
+  name: string,
+) {
+  useEffect(() => {
+    windowProxy.document.title = name
+    spatializedElement.updateProperties({
+      name,
+    })
+  }, [name])
+}
+
 function SpatializedContent(props: SpatializedContentProps) {
   const { spatializedElement, ...restProps } = props
-  const windowProxy = (spatializedElement as Spatialized2DElement).windowProxy
+  const spatialized2DElement = spatializedElement as Spatialized2DElement
+  const windowProxy = spatialized2DElement.windowProxy
 
+  const name: string = (restProps as any)['data-name'] || ''
+  console.log('dbg name:', name, restProps)
   useSyncHeaderStyle(windowProxy)
+
+  useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
   const portalInstanceObject: PortalInstanceObject = useContext(
     PortalInstanceContext,
