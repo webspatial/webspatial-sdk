@@ -26,6 +26,12 @@ export type SpatializedContainerProps = Omit<
   typeof SpatialID
 >
 
+
+export interface SpatializedContentProps
+  extends Omit<PortalSpatializedContainerProps, 'spatializedContent'> {
+  spatializedElement: SpatializedElement
+}
+
 export type Spatialized2DElementContainerProps = Omit<
   SpatializedContainerProps,
   | 'spatializedContent'
@@ -33,9 +39,15 @@ export type Spatialized2DElementContainerProps = Omit<
   | 'getExtraSpatializedElementProperties'
 >
 
-export interface SpatializedContentProps
-  extends Omit<PortalSpatializedContainerProps, 'spatializedContent'> {
+export interface SpatializedStatic3DContainerProps
+  extends Omit<Spatialized2DElementContainerProps, 'component'> {
+  src?: string
+}
+
+export interface SpatializedStatic3DContentProps
+  extends React.ComponentPropsWithoutRef<'div'> {
   spatializedElement: SpatializedElement
+  src?: string
 }
 
 export const SpatialCustomStyleVars = {
@@ -49,3 +61,4 @@ export interface SpatialTransformVisibility {
   transformExist: boolean
   visibility: string
 }
+
