@@ -1,11 +1,4 @@
-import React, {
-  ElementType,
-  CSSProperties,
-  useContext,
-  ReactElement,
-  useMemo,
-  ReactNode,
-} from 'react'
+import { useContext, useMemo } from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -14,7 +7,6 @@ import { getSession } from '../utils/getSession'
 import { SpatialLayerContext } from './context/SpatialLayerContext'
 import { SpatializedContainerProps } from './types'
 import { StandardSpatializedContainer } from './StandardSpatializedContainer'
-import { SubPortalSpatializedContainer } from './SubPortalSpatializedContainer'
 import { PortalSpatializedContainer } from './PortalSpatializedContainer'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
@@ -47,6 +39,9 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
       ? `root_container`
       : rootSpatializedContainerObject.getSpatialId(layer, isInStandardInstance)
   }, [])
+  const spatialIdProps = {
+    [SpatialID]: spatialId,
+  }
 
   console.log(
     'inSpatializedContainer',
@@ -57,28 +52,38 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
   )
 
   if (inSpatializedContainer) {
-    // nested in another SpatializedContainer
-    //   if (inPortalInstanceEnv) {
-    //     // nested in another PortalSpatializedContainer
-    //     return (
-    //       <SubPortalSpatializedContainer
-    //         spatializedContent={spatializedContent}
-    //       />
-    //     )
-    //   } else {
-    //     // in standard instance env
-    //     const { spatializedContent: _, ...restProps } = props
-    //     return <StandardSpatializedContainer {...restProps} />
-    //   }
+    if (inPortalInstanceEnv) {
+      // nested in another PortalSpatializedContainer
+      return (
+        <SpatialLayerContext.Provider value={layer}>
+          <PortalSpatializedContainer {...spatialIdProps} {...props} />
+        </SpatialLayerContext.Provider>
+      )
+    } else {
+      // in standard instance env
+      const {
+        spatializedContent,
+        createSpatializedElement,
+        getExtraSpatializedElementProperties,
+        ...restProps
+      } = props
+      return (
+        <SpatialLayerContext.Provider value={layer}>
+          <StandardSpatializedContainer {...spatialIdProps} {...restProps} />
+          <TransformVisibilityTaskContainer
+            {...spatialIdProps}
+            className={props.className}
+            style={props.style}
+          />
+        </SpatialLayerContext.Provider>
+      )
+    }
   } else {
     // This is the root spatialized container
     const spatializedContainerObject = useMemo(
       () => new SpatializedContainerObject(),
       [],
     )
-    const spatialIdProps = {
-      [SpatialID]: spatialId,
-    }
     const {
       spatializedContent,
       createSpatializedElement,

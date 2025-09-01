@@ -6,6 +6,13 @@ import { SpatialCustomStyleVars } from '../types'
 import { getSession } from '../../utils'
 import { Matrix4, Quaternion, Vector3 } from '../../utils/math'
 
+type DomRect = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 type CachedDomInfo = {
   // point to 2DFrame dom in StandardInstanceContainer
   dom: HTMLElement
@@ -38,6 +45,12 @@ export class PortalInstanceObject {
 
   get isFixedPosition(): boolean | undefined {
     return this.cachedDomInfo?.isFixedPosition
+  }
+
+  // cachedDomRect used for cache dom rect
+  private cachedDomRect?: DomRect
+  get domRect(): DomRect | undefined {
+    return this.cachedDomRect
   }
 
   // cachedTransformVisibilityInfo used for cache transform visibility info
@@ -177,6 +190,16 @@ export class PortalInstanceObject {
         y -= parentDomRect.y
       }
     }
+
+    // update cachedDomRect
+    this.cachedDomRect = {
+      x: domRect.x,
+      y: domRect.y,
+      width: domRect.width,
+      height: domRect.height,
+    }
+
+    console.log('updateSpatializedElementProperties', domRect)
 
     const width = domRect.width
     const height = domRect.height
