@@ -22,12 +22,12 @@ struct SpatialSceneView: View {
                         windowResizeInProgress = false
                         timer = nil
                     }
-                    spatialScene.handleSizeChange(proxy3D.size)
+                    spatialScene.updateSize3D(proxy3D.size)
                    
                 }
                 .onAppear(){
                     spatialScene.moveToState(.visible, nil)
-                    spatialScene.handleSizeChange(proxy3D.size)
+                    spatialScene.updateSize3D(proxy3D.size)
                 }
 
                 if windowResizeInProgress {

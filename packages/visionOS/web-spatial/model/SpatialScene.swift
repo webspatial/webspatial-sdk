@@ -148,7 +148,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                         SceneOptions(config)
                     )
                     
-                    print("config:",config)
                     
                     return WebViewElementInfo(
                         id: newScene.id,
@@ -246,10 +245,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
     var depth: Double = 0
     
-    var navHeight = SpatialNavView.navHeight
+    static let navHeight = 60.0
     
     
-    func handleSizeChange(_ size:Size3D) {
+    func updateSize3D(_ size:Size3D) {
         self.width = size.width
         self.height = size.height
         self.depth = size.depth
@@ -258,7 +257,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.updateWindowKV([
             "innerDepth":depth,
             "outerDepth":depth,
-            "outerHeight":height + navHeight
+            "outerHeight":height + SpatialScene.navHeight
         ])
     }
     
@@ -595,9 +594,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private var _backgroundMaterial = BackgroundMaterial.None
     var backgroundMaterial: BackgroundMaterial {
         get {
-            if self.windowStyle == .volume && _backgroundMaterial == .None {
-                return .Transparent
-            }
             return _backgroundMaterial
         }
         set(newValue) {

@@ -57,7 +57,7 @@ struct NavButton: View {
 
 
 struct SpatialNavView: View {
-    static let navHeight: CGFloat = 60
+    static let navHeight: CGFloat = SpatialScene.navHeight
     static let minWidth: CGFloat = 400
     var spatialScene: SpatialScene
     var model:SpatialWebViewModel? {
