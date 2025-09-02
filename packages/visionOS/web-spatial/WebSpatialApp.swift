@@ -48,16 +48,6 @@ struct WebSpatialApp: App {
             for: String.self
         ) { $windowData in
             SpatialSceneView(sceneId: windowData)
-                .frame(
-                    minWidth: getCGFloat(
-                        app.getSceneOptions().resizeRange?.minWidth),
-                    maxWidth: getCGFloat(
-                        app.getSceneOptions().resizeRange?.maxWidth),
-                    minHeight: getCGFloat(
-                        app.getSceneOptions().resizeRange?.minHeight),
-                    maxHeight: getCGFloat(
-                        app.getSceneOptions().resizeRange?.maxHeight)
-                )
         }
         defaultValue: {
             let scene = SpatialApp.Instance.createScene(
@@ -81,13 +71,13 @@ struct WebSpatialApp: App {
             SpatialSceneView(sceneId: windowData)
                 .frame(
                     minWidth: getCGFloat(
-                        app.getSceneOptions().resizeRange?.minWidth),
+                        app.getSceneOptions(windowData)?.resizeRange?.minWidth),
                     maxWidth: getCGFloat(
-                        app.getSceneOptions().resizeRange?.maxWidth),
+                        app.getSceneOptions(windowData)?.resizeRange?.maxWidth),
                     minHeight: getCGFloat(
-                        app.getSceneOptions().resizeRange?.minHeight),
+                        app.getSceneOptions(windowData)?.resizeRange?.minHeight),
                     maxHeight: getCGFloat(
-                        app.getSceneOptions().resizeRange?.maxHeight)
+                        app.getSceneOptions(windowData)?.resizeRange?.maxHeight)
                 )
         }
         defaultValue: {

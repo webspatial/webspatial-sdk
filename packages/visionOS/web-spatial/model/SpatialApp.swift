@@ -126,6 +126,11 @@ class SpatialApp {
         return sceneOptions
     }
     
+    func getSceneOptions(_ sceneId:String) -> SceneOptions? {
+        let spatialScene = getScene(sceneId)
+        return spatialScene?.sceneConfig
+    }
+    
     
     // used form window.open logic
     public func openWindowGroup(

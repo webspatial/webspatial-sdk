@@ -10,10 +10,54 @@ struct SceneHandlerUIView: View {
     @State var sceneId: String
 
     @Environment(\.scenePhase) private var scenePhase
+    
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
+    
+    private func setResizeRange(resizeRange: ResizeRange) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
+                    )
+                ) { error in
+                    print("error:", error)
+                }
+        }
+    }
 
     var body: some View {
         if let scene = SpatialApp.Instance.getScene(sceneId) {
             VStack {}
+                .onAppear {
+                    // window scene only resize logic
+                    guard scene.windowStyle == .window else {
+                        return
+                    }
+                    if let range = scene.sceneConfig?.resizeRange {
+                        self.setResizeRange(resizeRange: range)
+                        if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                            self.setResizibility(resizingRestrictions: .none)
+                        } else {
+                            self.setResizibility(resizingRestrictions: .freeform)
+                        }
+                    }
+                }
                 .onDisappear {
                     print("onScene Disappear")
                     scene.destroy()
