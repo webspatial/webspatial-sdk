@@ -1,7 +1,3 @@
-import { spatialPolyfill } from '../polyfill'
-
-spatialPolyfill()
-
 export { Fragment } from 'react/jsx-runtime'
 export { jsx, jsxs } from './jsx-shared'
 

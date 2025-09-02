@@ -9,3 +9,6 @@ export * from './types/types'
 // side effects
 import { injectSceneHook } from './scene-polyfill'
 injectSceneHook()
+
+import { spatialWindowPolyfill } from './spatial-window-polyfill'
+spatialWindowPolyfill()

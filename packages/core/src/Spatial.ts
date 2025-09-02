@@ -22,6 +22,14 @@ export class Spatial {
     }
   }
 
+  // check if current page is running in spatial web
+  runInSpatialWeb() {
+    if (navigator.userAgent.indexOf('WebSpatial/') > 0) {
+      return true
+    }
+    return false
+  }
+
   /**
    * @returns true if web spatial is supported by this webpage
    */

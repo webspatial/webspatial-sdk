@@ -131,14 +131,6 @@ declare global {
     // Used to access webkit specific api
     webkit: any
 
-    // Marks the page as unloaded so it doesn't send additional events
-    __WebSpatialUnloaded: boolean
-
-    // Internal id information mapping to internal state about the native window
-    _webSpatialID: string
-    _webSpatialGroupID: string
-    _webSpatialParentGroupID: string
-
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
 

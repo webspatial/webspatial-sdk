@@ -123,6 +123,19 @@ class SpatialContainerRefProxy {
   }
 }
 
+//  hijack getComputedStyle to get raw dom
+function hijackGetComputedStyle() {
+  const rawFn = window.getComputedStyle.bind(window)
+  window.getComputedStyle = (element, pseudoElt) => {
+    const dom = (element as any).__raw
+    if (dom) {
+      return rawFn(dom, pseudoElt)
+    }
+    return rawFn(element, pseudoElt)
+  }
+}
+hijackGetComputedStyle()
+
 export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
   const spatialContainerRefProxy = useRef<SpatialContainerRefProxy>(
     new SpatialContainerRefProxy(ref),
