@@ -4,6 +4,7 @@ struct UpdateSpatialSceneProperties: CommandDataProtocol {
     static let commandType: String = "UpdateSpatialSceneProperties"
     let cornerRadius: CornerRadius?
     let material: BackgroundMaterial?
+    let opacity: Double?
 }
 
 struct AddSpatializedElementToSpatialScene: CommandDataProtocol {

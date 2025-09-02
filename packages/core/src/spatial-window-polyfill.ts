@@ -1,6 +1,7 @@
 import { parseCornerRadius } from './utils'
 import { Spatial } from './Spatial'
 import { SpatialSession } from './SpatialSession'
+import { BackgroundMaterialType } from './types/types'
 
 const spatial = new Spatial()
 let session: SpatialSession | undefined = undefined
@@ -13,9 +14,8 @@ const SpatialGlobalCustomVars = {
 let htmlBackgroundMaterial = ''
 function setCurrentWindowStyle(backgroundMaterial: string) {
   if (backgroundMaterial !== htmlBackgroundMaterial) {
-    // fixme:
     session?.getSpatialScene()?.updateSpatialProperties({
-      material: backgroundMaterial as any,
+      material: backgroundMaterial as BackgroundMaterialType,
     })
     htmlBackgroundMaterial = backgroundMaterial
   }
@@ -62,6 +62,18 @@ function setCornerRadius(cornerRadius: any) {
   }
 }
 
+function setOpacity(opacity: number) {
+  session?.getSpatialScene().updateSpatialProperties({
+    opacity,
+  })
+}
+
+function checkOpacity() {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
+  setOpacity(opacity)
+}
+
 function hijackDocumentElementStyle() {
   const rawDocumentStyle = document.documentElement.style
   const styleProxy = new Proxy(rawDocumentStyle, {
@@ -86,6 +98,11 @@ function hijackDocumentElementStyle() {
       ) {
         checkCornerRadius()
       }
+
+      if (key === 'opacity') {
+        checkOpacity()
+      }
+
       return ret
     },
     get: function (target, prop: string) {
@@ -118,9 +135,7 @@ function hijackDocumentElementStyle() {
 }
 
 function monitorExternalStyleChange() {
-  const headObserver = new MutationObserver(function (mutationsList) {
-    checkCSSProperties()
-  })
+  const headObserver = new MutationObserver(checkCSSProperties)
 
   headObserver.observe(document.head, { childList: true, subtree: true })
 }
@@ -128,6 +143,7 @@ function monitorExternalStyleChange() {
 function checkCSSProperties() {
   checkHtmlBackgroundMaterial()
   checkCornerRadius()
+  checkOpacity()
 }
 
 function monitorHTMLAttributeChange() {

@@ -49,6 +49,7 @@ export type CornerRadius = {
 export interface SpatialSceneProperties {
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
+  opacity: number
 }
 
 export enum SpatializedElementType {
