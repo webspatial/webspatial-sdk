@@ -46,7 +46,12 @@ class SpatialContainerRefProxy {
                         'transform',
                       )
                     }
-                    return Reflect.get(target, prop)
+                    const value = Reflect.get(target, prop)
+                    if (typeof value === 'function') {
+                      return value.bind(target)
+                    } else {
+                      return value
+                    }
                   },
                   set(target, prop, value) {
                     if (prop === 'visibility') {
