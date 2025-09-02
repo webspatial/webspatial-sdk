@@ -53,12 +53,6 @@ function setOpenWindowStyle(openedWindow: WindowProxy) {
   openedWindow!.document.documentElement.style.backgroundColor = 'transparent'
   openedWindow!.document.body.style.margin = '0px'
 
-  // syncDefaultSpatialStyle
-  const styleElement = document.createElement('style')
-  styleElement.type = 'text/css'
-  styleElement.innerHTML =
-    ' .xr-spatial-default {  --xr-back: 0.001; --xr-background-material: none  } '
-  openedWindow.document.head.appendChild(styleElement)
   // openedWindow body's width and height should be set to inline-block to make sure the width and height are correct
   openedWindow.document.body.style.display = 'inline-block'
   openedWindow.document.body.style.minWidth = 'auto'
