@@ -57,7 +57,7 @@ function App() {
     borderRadius: '10px',
     '--xr-background-material': 'translucent',
     '--xr-back': '200px',
-    // transform: 'translateX(100px) rotateY(30deg)',
+    transform: 'translateX(100px) rotateY(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
     overflow: 'scroll',
@@ -87,6 +87,7 @@ function App() {
         style={style}
         component="div"
         ref={ref}
+        id="parent"
       >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>

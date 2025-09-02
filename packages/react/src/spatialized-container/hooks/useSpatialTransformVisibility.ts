@@ -111,6 +111,7 @@ export function useSpatialTransformVisibility(
     const spatialTransformVisibility = parseTransformAndVisibilityProperties(
       ref.current!,
     )
+
     // notify SpatializedContainerContext
     spatializedContainerObject.updateSpatialTransformVisibility(
       spatialId,
@@ -169,6 +170,4 @@ export function useSpatialTransformVisibility(
       )
     }
   }, [])
-
-  return ref
 }

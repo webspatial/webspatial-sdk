@@ -5,12 +5,15 @@ class SpatialContainerRefProxy {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   private ref: ForwardedRef<SpatializedElementRef>
   private domProxy?: SpatializedElementRef | null
+  private styleProxy?: CSSStyleDeclaration
 
   constructor(ref: ForwardedRef<SpatializedElementRef>) {
     this.ref = ref
   }
 
   updateStandardSpatializedContainerDom(dom: HTMLElement | null) {
+    const self = this
+
     if (dom) {
       const domProxy = new Proxy<SpatializedElementRef>(
         dom as SpatializedElementRef,
@@ -29,6 +32,43 @@ class SpatialContainerRefProxy {
               // todo:
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
             }
+            if (prop === 'style') {
+              if (!self.styleProxy) {
+                self.styleProxy = new Proxy<CSSStyleDeclaration>(target.style, {
+                  get(target, prop) {
+                    if (prop === 'visibility') {
+                      return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
+                        'visibility',
+                      )
+                    }
+                    if (prop === 'transform') {
+                      return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
+                        'transform',
+                      )
+                    }
+                    return Reflect.get(target, prop)
+                  },
+                  set(target, prop, value) {
+                    if (prop === 'visibility') {
+                      self.transformVisibilityTaskContainerDom?.style.setProperty(
+                        'visibility',
+                        value,
+                      )
+                      return true
+                    }
+                    if (prop === 'transform') {
+                      self.transformVisibilityTaskContainerDom?.style.setProperty(
+                        'transform',
+                        value,
+                      )
+                      return true
+                    }
+                    return Reflect.set(target, prop, value)
+                  },
+                })
+              }
+              return self.styleProxy
+            }
             const value = Reflect.get(target, prop)
             if (typeof value === 'function') {
               return value.bind(target)
@@ -42,6 +82,8 @@ class SpatialContainerRefProxy {
         },
       )
       this.domProxy = domProxy
+      // clear styleProxy
+      this.styleProxy = undefined
       this.updateDomProxyToRef()
     }
   }
