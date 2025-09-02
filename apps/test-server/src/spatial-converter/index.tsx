@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import {
   enableDebugTool,
-  Spatialized2DElementContainer,
+  // Spatialized2DElementContainer,
   SpatializedStatic3DElementContainer,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
@@ -82,25 +82,15 @@ function App() {
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      <Spatialized2DElementContainer
-        data-name="parent"
-        style={style}
-        component="div"
-        ref={ref}
-        id="parent"
-      >
+      <div enable-xr data-name="parent" style={style} ref={ref} id="parent">
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        {/* <Spatialized2DElementContainer
-          style={childStyle}
-          data-name="child"
-          component="div"
-        >
+        <div enable-xr style={childStyle} data-name="child">
           this is child spatialdiv
-        </Spatialized2DElementContainer> */}
+        </div>
         <Model />
         <button>this is a button</button>
-      </Spatialized2DElementContainer>
+      </div>
       <div> End of SpatializedContainer </div>
 
       <div> End of Model SpatializedContainer </div>
