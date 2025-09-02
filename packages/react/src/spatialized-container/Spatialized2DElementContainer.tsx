@@ -1,9 +1,16 @@
-import React, { CSSProperties, useContext, useEffect } from 'react'
+import React, {
+  CSSProperties,
+  ForwardedRef,
+  forwardRef,
+  useContext,
+  useEffect,
+} from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
   SpatialCustomStyleVars,
   Spatialized2DElementContainerProps,
+  SpatializedElementRef,
   SpatializedContentProps,
 } from './types'
 import {
@@ -200,11 +207,13 @@ async function createSpatializedElement() {
   return spatializedElement
 }
 
-export function Spatialized2DElementContainer(
+function Spatialized2DElementContainerBase(
   props: Spatialized2DElementContainerProps,
+  ref: ForwardedRef<SpatializedElementRef>,
 ) {
   return (
     <SpatializedContainer
+      ref={ref}
       createSpatializedElement={createSpatializedElement}
       getExtraSpatializedElementProperties={
         getExtraSpatializedElementProperties
@@ -214,3 +223,7 @@ export function Spatialized2DElementContainer(
     />
   )
 }
+
+export const Spatialized2DElementContainer = forwardRef(
+  Spatialized2DElementContainerBase,
+)

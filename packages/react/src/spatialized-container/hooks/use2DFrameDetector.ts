@@ -1,9 +1,9 @@
 import {
   useContext,
-  useRef,
   useLayoutEffect,
   useEffect,
   useCallback,
+  MutableRefObject,
 } from 'react'
 
 import {
@@ -11,9 +11,7 @@ import {
   SpatializedContainerObject,
 } from '../context/SpatializedContainerContext'
 
-export function use2DFrameDetector() {
-  const ref = useRef<HTMLElement>(null)
-
+export function use2DFrameDetector(ref: MutableRefObject<HTMLElement | null>) {
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
   )!
@@ -74,6 +72,4 @@ export function use2DFrameDetector() {
       ro.disconnect()
     }
   }, [])
-
-  return ref
 }

@@ -52,6 +52,7 @@ export interface SpatializedStatic3DContentProps
 
 export const SpatialCustomStyleVars = {
   back: '--xr-back',
+  depth: '--xr-depth',
   backgroundMaterial: '--xr-background-material',
   xrZIndex: '--xr-z-index',
 }
@@ -62,3 +63,7 @@ export interface SpatialTransformVisibility {
   visibility: string
 }
 
+export interface SpatializedElementRef extends HTMLElement {
+  clientDepth: number
+  offsetBack: number
+}

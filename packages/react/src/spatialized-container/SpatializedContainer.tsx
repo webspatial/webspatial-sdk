@@ -1,18 +1,22 @@
-import { useContext, useMemo } from 'react'
+import { ForwardedRef, forwardRef, useContext, useMemo } from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
 } from './context/SpatializedContainerContext'
 import { getSession } from '../utils/getSession'
 import { SpatialLayerContext } from './context/SpatialLayerContext'
-import { SpatializedContainerProps } from './types'
+import { SpatializedElementRef, SpatializedContainerProps } from './types'
 import { StandardSpatializedContainer } from './StandardSpatializedContainer'
 import { PortalSpatializedContainer } from './PortalSpatializedContainer'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
+import { useDomProxy } from './hooks/useDomProxy'
 
-export function SpatializedContainer(props: SpatializedContainerProps) {
+export function SpatializedContainerBase(
+  props: SpatializedContainerProps,
+  ref: ForwardedRef<SpatializedElementRef>,
+) {
   const isWebSpatialEnv = getSession() !== null
   if (!isWebSpatialEnv) {
     const {
@@ -24,7 +28,7 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
     } = props
     props.component
     // make sure SpatializedContainer can work on web env
-    return <Component {...restProps} />
+    return <Component ref={ref} {...restProps} />
   }
 
   const layer = useContext(SpatialLayerContext) + 1
@@ -43,13 +47,10 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
     [SpatialID]: spatialId,
   }
 
-  console.log(
-    'inSpatializedContainer',
-    rootSpatializedContainerObject,
-    inSpatializedContainer,
-    'spatialId:',
-    spatialId,
-  )
+  const {
+    transformVisibilityTaskContainerCallback,
+    standardSpatializedContainerCallback,
+  } = useDomProxy(ref)
 
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
@@ -69,8 +70,13 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
       } = props
       return (
         <SpatialLayerContext.Provider value={layer}>
-          <StandardSpatializedContainer {...spatialIdProps} {...restProps} />
+          <StandardSpatializedContainer
+            ref={standardSpatializedContainerCallback}
+            {...spatialIdProps}
+            {...restProps}
+          />
           <TransformVisibilityTaskContainer
+            ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
             className={props.className}
             style={props.style}
@@ -95,9 +101,14 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
         <SpatializedContainerContext.Provider
           value={spatializedContainerObject}
         >
-          <StandardSpatializedContainer {...spatialIdProps} {...restProps} />
+          <StandardSpatializedContainer
+            ref={standardSpatializedContainerCallback}
+            {...spatialIdProps}
+            {...restProps}
+          />
           <PortalSpatializedContainer {...spatialIdProps} {...props} />
           <TransformVisibilityTaskContainer
+            ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
             className={props.className}
             style={props.style}
@@ -107,3 +118,5 @@ export function SpatializedContainer(props: SpatializedContainerProps) {
     )
   }
 }
+
+export const SpatializedContainer = forwardRef(SpatializedContainerBase)

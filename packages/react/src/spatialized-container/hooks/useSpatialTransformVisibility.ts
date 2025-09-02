@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef } from 'react'
+import { RefObject, useCallback, useContext, useEffect, useRef } from 'react'
 import { SpatialStyleInfoUpdateEvent } from '../../spatial-react-components/notifyUpdateStandInstanceLayout'
 import { Matrix4, Vector3, Quaternion } from '../../utils/math'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
@@ -101,8 +101,10 @@ function parseTransformAndVisibilityProperties(
   }
 }
 
-export function useSpatialTransformVisibility(spatialId: string) {
-  const ref = useRef<HTMLDivElement | null>(null)
+export function useSpatialTransformVisibility(
+  spatialId: string,
+  ref: RefObject<HTMLElement | null>,
+) {
   const spatializedContainerObject = useContext(SpatializedContainerContext)!
 
   const checkSpatialStyleUpdate = useCallback(() => {

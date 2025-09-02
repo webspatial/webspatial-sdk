@@ -1,4 +1,10 @@
-import React, { CSSProperties } from 'react'
+import React, {
+  CSSProperties,
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useRef,
+} from 'react'
 import { SpatialID } from './SpatialID'
 import { createPortal } from 'react-dom'
 import { useSpatialTransformVisibility } from './hooks/useSpatialTransformVisibility'
@@ -12,6 +18,24 @@ window.addEventListener('load', () => {
   document.body.appendChild(cssParserDivContainer)
 })
 
+function useInternalRef(ref: ForwardedRef<HTMLElement | null>) {
+  const refInternal = useRef<HTMLElement | null>(null)
+  const refInternalCallback = useCallback(
+    (node: HTMLElement | null) => {
+      refInternal.current = node
+
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref) {
+        ref.current = node
+      }
+    },
+    [ref],
+  )
+
+  return { refInternal, refInternalCallback }
+}
+
 interface TransformVisibilityTaskContainerProps {
   className?: string
   style?: CSSProperties
@@ -19,8 +43,9 @@ interface TransformVisibilityTaskContainerProps {
 }
 
 // using css layout engine to calculate SpatializedContainer transform and visibility
-export function TransformVisibilityTaskContainer(
+export function TransformVisibilityTaskContainerBase(
   props: TransformVisibilityTaskContainerProps,
+  ref: ForwardedRef<HTMLElement | null>,
 ) {
   const { style: inStyle, ...restProps } = props
   const extraStyle: CSSProperties = {
@@ -31,11 +56,17 @@ export function TransformVisibilityTaskContainer(
     position: 'absolute',
   }
 
+  const { refInternal, refInternalCallback } = useInternalRef(ref)
+
   const style: CSSProperties = { ...inStyle, ...extraStyle }
-  const ref = useSpatialTransformVisibility(props[SpatialID])
+  useSpatialTransformVisibility(props[SpatialID], refInternal)
 
   return createPortal(
-    <div ref={ref} style={style} {...restProps} />,
+    <div ref={refInternalCallback} style={style} {...restProps} />,
     cssParserDivContainer,
   )
 }
+
+export const TransformVisibilityTaskContainer = forwardRef(
+  TransformVisibilityTaskContainerBase,
+)

@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { ForwardedRef, forwardRef, useEffect, useMemo } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
+  SpatializedElementRef,
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DContentProps,
 } from './types'
@@ -37,11 +38,13 @@ async function createSpatializedElement() {
   return getSession()!.createSpatializedStatic3DElement()
 }
 
-export function SpatializedStatic3DElementContainer(
+function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
+  ref: ForwardedRef<SpatializedElementRef>,
 ) {
   return (
     <SpatializedContainer
+      ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
       spatializedContent={SpatializedContent}
@@ -49,3 +52,7 @@ export function SpatializedStatic3DElementContainer(
     />
   )
 }
+
+export const SpatializedStatic3DElementContainer = forwardRef(
+  SpatializedStatic3DElementContainerBase,
+)

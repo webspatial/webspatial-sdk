@@ -5,7 +5,7 @@ import {
   Spatialized2DElementContainer,
   SpatializedStatic3DElementContainer,
 } from '@webspatial/react-sdk'
-import { CSSProperties } from 'react'
+import { CSSProperties, useRef } from 'react'
 
 enableDebugTool()
 
@@ -27,9 +27,17 @@ function Model() {
   }
 
   const src = 'http://localhost:5173/public/modelasset/cone.usdz'
+
+  const refModel = useRef<HTMLElement>(null)
+
+  ;(window as any).refModel = refModel
   return (
     <div>
-      <SpatializedStatic3DElementContainer style={style} src={src} />
+      <SpatializedStatic3DElementContainer
+        ref={refModel}
+        style={style}
+        src={src}
+      />
     </div>
   )
 }
@@ -65,6 +73,10 @@ function App() {
     background: 'blue',
   }
 
+  const ref = useRef<HTMLElement>(null)
+
+  ;(window as any).ref = ref
+
   return (
     <>
       <div style={{ width: '100px', height: '100px' }}>
@@ -74,6 +86,7 @@ function App() {
         data-name="parent"
         style={style}
         component="div"
+        ref={ref}
       >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
