@@ -1,5 +1,5 @@
 import { RefObject, useCallback, useContext, useEffect, useRef } from 'react'
-import { SpatialStyleInfoUpdateEvent } from '../../spatial-react-components/notifyUpdateStandInstanceLayout'
+import { SpatialStyleInfoUpdateEvent } from '../../notifyUpdateStandInstanceLayout'
 import { Matrix4, Vector3, Quaternion } from '../../utils/math'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { SpatializedContainerContext } from '../context/SpatializedContainerContext'
