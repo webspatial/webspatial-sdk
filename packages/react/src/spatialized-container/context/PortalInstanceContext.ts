@@ -209,12 +209,13 @@ export class PortalInstanceObject {
       computedStyle.getPropertyValue('content-visibility')
     const visible = visibility === 'visible' && contentVisibility !== 'hidden'
 
-    const zIndex = parseFloat(
-      computedStyle.getPropertyValue(SpatialCustomStyleVars.xrZIndex),
-    )
-    const backOffset = parseFloat(
-      computedStyle.getPropertyValue(SpatialCustomStyleVars.back),
-    )
+    const zIndex =
+      parseFloat(
+        computedStyle.getPropertyValue(SpatialCustomStyleVars.xrZIndex),
+      ) || 0
+    const backOffset =
+      parseFloat(computedStyle.getPropertyValue(SpatialCustomStyleVars.back)) ||
+      0
     const rotationAnchor = parseTransformOrigin(computedStyle)
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
@@ -250,7 +251,7 @@ export class PortalInstanceObject {
       position: {
         x: x + position.x + parrentOffsetX,
         y: y + position.y + parrentOffsetY,
-        z: position.z,
+        z: position.z + backOffset,
       },
       quaternion: {
         x: quaternion.x,

@@ -1,5 +1,7 @@
 import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
+import { BackgroundMaterialType } from '@webspatial/core-sdk'
+import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
 class SpatialContainerRefProxy {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
@@ -68,6 +70,60 @@ class SpatialContainerRefProxy {
                       )
                       return true
                     }
+
+                    if (prop === SpatialCustomStyleVars.backgroundMaterial) {
+                      target.setProperty(
+                        SpatialCustomStyleVars.backgroundMaterial,
+                        value as BackgroundMaterialType,
+                      )
+                    } else if (prop === SpatialCustomStyleVars.back) {
+                      target.setProperty(
+                        SpatialCustomStyleVars.back,
+                        value as string,
+                      )
+                      console.log('set back', value)
+                    } else if (prop === SpatialCustomStyleVars.xrZIndex) {
+                      target.setProperty(
+                        SpatialCustomStyleVars.xrZIndex,
+                        value as string,
+                      )
+                    } else if (prop === 'cssText') {
+                      // parse cssText, filter out spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
+                      const toFilteredCSSProperties = [
+                        'transform',
+                        'visibility',
+                      ]
+                      const { extractedValues, filteredCssText } =
+                        extractAndRemoveCustomProperties(
+                          value as string,
+                          toFilteredCSSProperties,
+                        )
+
+                      // update cssText for transformVisibilityTaskContainerDom
+                      toFilteredCSSProperties.forEach(key => {
+                        // update cssText for transformVisibilityTaskContainerDom according to extractedValues
+                        if (extractedValues[key]) {
+                          self.transformVisibilityTaskContainerDom?.style.setProperty(
+                            key,
+                            extractedValues[key],
+                          )
+                        } else {
+                          target.removeProperty(key)
+                        }
+                      })
+
+                      const appendedCSSText = joinToCSSText({
+                        transform: 'none',
+                        visibility: 'hidden',
+                      })
+
+                      // set cssText for spatialDiv
+                      return Reflect.set(
+                        target,
+                        prop,
+                        [appendedCSSText, filteredCssText].join(';'),
+                      )
+                    }
                     return Reflect.set(target, prop, value)
                   },
                 })
@@ -81,8 +137,7 @@ class SpatialContainerRefProxy {
             return value
           },
           set(target, prop, value) {
-            console.warn(`can't set property!`)
-            return false
+            return Reflect.set(target, prop, value)
           },
         },
       )
@@ -128,6 +183,7 @@ function hijackGetComputedStyle() {
   const rawFn = window.getComputedStyle.bind(window)
   window.getComputedStyle = (element, pseudoElt) => {
     const dom = (element as any).__raw
+
     if (dom) {
       return rawFn(dom, pseudoElt)
     }
