@@ -16,6 +16,7 @@
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
+		2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89E38B2E699104004079AA /* WebMsgCommand.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WebSpatial.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B89E38B2E699104004079AA /* WebMsgCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMsgCommand.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -176,6 +178,7 @@
 				2B06AF102E4C1AF8000327E9 /* webview */,
 				2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */,
 				2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */,
+				2B89E38B2E699104004079AA /* WebMsgCommand.swift */,
 				2B06AEC12E4C1AE8000327E9 /* manifest.swift */,
 				2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */,
 				2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */,
@@ -313,6 +316,7 @@
 				2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */,
 				2B06AEE12E4C1AE8000327E9 /* SpatialObject.swift in Sources */,
 				2B06AEE42E4C1AE8000327E9 /* manifest.swift in Sources */,
+				2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */,
 				2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */,
 				2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */,
 			);

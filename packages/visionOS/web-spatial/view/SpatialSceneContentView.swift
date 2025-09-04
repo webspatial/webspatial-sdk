@@ -8,7 +8,7 @@ struct SpatialSceneContentView: View {
     
     var body: some View {
         if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
-            ZStack(alignment: Alignment.topLeading) {                
+            ZStack(alignment: Alignment.topLeading) {
                 // Display the main webview
                 spatialScene.getView()
                     .materialWithBorderCorner(
@@ -43,8 +43,10 @@ struct SpatialSceneContentView: View {
                     }
                     .environment(child)
                 }
-            }.environment(spatialScene)
-                .coordinateSpace(name: "SpatialScene")
+            }
+            .opacity(spatialScene.opacity)
+            .environment(spatialScene)
+            .coordinateSpace(name: "SpatialScene")
         }
     }
 }
@@ -92,7 +94,6 @@ struct PreviewSpatializedStatic3DElement: View {
         
         print("spatialScene \(spatialScene)")
         
-        
         let spatializedElement: SpatializedDynamic3DElement = spatialScene.createSpatializedElement(
             .SpatializedDynamic3DElement
         )
@@ -105,7 +106,6 @@ struct PreviewSpatializedStatic3DElement: View {
         spatializedElement.height = 200
         spatializedElement.setParent(spatialScene)
         spatializedElement.enableGesture = true
-
     }
     
     var body: some View {
@@ -160,7 +160,6 @@ struct PreviewSpatialized2DElement: View {
     }
 }
 
-
 struct PreviewSpatializedDynamic3DElement: View {
     var sceneId: String
     
@@ -192,7 +191,6 @@ struct PreviewSpatializedDynamic3DElement: View {
         SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 1000)
     }
 }
-
 
 #Preview("PreviewSpatializedDynamic3DElement") {
     PreviewSpatializedDynamic3DElement()

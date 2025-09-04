@@ -65,6 +65,7 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
                     in: .rect(cornerRadii: radii),
                     displayMode: .always
                 )
+                .frame(depth: 0)
 
         case .RegularMaterial:
             content

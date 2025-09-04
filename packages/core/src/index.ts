@@ -1,6 +1,7 @@
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
 export { SpatialScene } from './SpatialScene'
+export { SpatializedElement } from './SpatializedElement'
 export { Spatialized2DElement } from './Spatialized2DElement'
 export { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 export * from './types/types'
@@ -8,3 +9,6 @@ export * from './types/types'
 // side effects
 import { injectSceneHook } from './scene-polyfill'
 injectSceneHook()
+
+import { spatialWindowPolyfill } from './spatial-window-polyfill'
+spatialWindowPolyfill()

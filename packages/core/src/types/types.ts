@@ -49,6 +49,7 @@ export type CornerRadius = {
 export interface SpatialSceneProperties {
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
+  opacity: number
 }
 
 export enum SpatializedElementType {
@@ -61,6 +62,7 @@ export interface SpatializedElementProperties {
   name: string
   width: number
   height: number
+  depth: number
   opacity: number
   visible: boolean
   scrollWithParent: boolean
@@ -203,14 +205,6 @@ declare global {
     // Used to access webkit specific api
     webkit: any
 
-    // Marks the page as unloaded so it doesn't send additional events
-    __WebSpatialUnloaded: boolean
-
-    // Internal id information mapping to internal state about the native window
-    _webSpatialID: string
-    _webSpatialGroupID: string
-    _webSpatialParentGroupID: string
-
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
 
@@ -220,5 +214,69 @@ declare global {
       'react-sdk-version'?: string
       'core-sdk-version'?: string
     }
+  }
+}
+
+export interface Size {
+  width: number
+  height: number
+  depth: number
+}
+
+export class CubeInfo {
+  constructor(
+    public size: Size,
+    public origin: Vec3,
+  ) {
+    this.size = size
+    this.origin = origin
+  }
+
+  get x() {
+    return this.origin.x
+  }
+
+  get y() {
+    return this.origin.y
+  }
+
+  get z() {
+    return this.origin.z
+  }
+
+  get width() {
+    return this.size.width
+  }
+
+  get height() {
+    return this.size.height
+  }
+
+  get depth() {
+    return this.size.depth
+  }
+
+  get left() {
+    return this.x
+  }
+
+  get top() {
+    return this.y
+  }
+
+  get right() {
+    return this.x + this.width
+  }
+
+  get bottom() {
+    return this.y + this.height
+  }
+
+  get back() {
+    return this.z
+  }
+
+  get front() {
+    return this.z + this.depth
   }
 }

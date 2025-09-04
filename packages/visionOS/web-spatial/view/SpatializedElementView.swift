@@ -9,6 +9,8 @@ let zOrderBias = 0.001
 
 struct SpatializedElementView<Content: View>: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+    @Environment(SpatialScene.self) var spatialScene: SpatialScene
+
     var parentScrollOffset: Vec2
     var content: Content
 
@@ -81,30 +83,37 @@ struct SpatializedElementView<Content: View>: View {
         let z = CGFloat(translation.z) + (spatializedElement.zIndex * zOrderBias)
         let width = CGFloat(spatializedElement.width)
         let height = CGFloat(spatializedElement.height)
+        let depth = CGFloat(spatializedElement.depth)
         let anchor = spatializedElement.rotationAnchor
 
         let opacity = spatializedElement.opacity
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
+        let clip = spatializedElement.clip
+        
+ 
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
-            .frame(depth: 10, alignment: .back)
+            .frame(depth: depth, alignment: .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
-
                 print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
+                spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
 
                 return proxy.transform(in: .named("SpatialScene"))!
             } action: { _, new in
+//                spatialScene.sendWebMsg(spatializedElement.id, rect3d)
                 print(" \(spatializedElement.name) transform \(new)  ")
-            }
-            .clipped()
+            }.if(clip, transform: { view in
+                    view.clipped()
+            })
+            
             .frame(depth: 0, alignment: .back)
             //            .background(Color(hex: "#161616E5"))
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-            .offset(z: 0.0001)
+//            .offset(z: 0.0001)
             .scaleEffect(
                 x: CGFloat(scale.x),
                 y: CGFloat(scale.y),

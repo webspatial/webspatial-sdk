@@ -1,7 +1,10 @@
-//@ts-ignore
-import { parseCornerRadius, getSession } from '@webspatial/react-sdk'
+import { parseCornerRadius } from './utils'
+import { Spatial } from './Spatial'
+import { SpatialSession } from './SpatialSession'
+import { BackgroundMaterialType } from './types/types'
 
-const isWebSpatialEnv = getSession() !== null
+const spatial = new Spatial()
+let session: SpatialSession | undefined = undefined
 
 const SpatialGlobalCustomVars = {
   backgroundMaterial: '--xr-background-material',
@@ -11,10 +14,8 @@ const SpatialGlobalCustomVars = {
 let htmlBackgroundMaterial = ''
 function setCurrentWindowStyle(backgroundMaterial: string) {
   if (backgroundMaterial !== htmlBackgroundMaterial) {
-    const session = getSession()!
-    // fixme:
-    session.getSpatialScene().updateSpatialProperties({
-      material: backgroundMaterial as any,
+    session?.getSpatialScene()?.updateSpatialProperties({
+      material: backgroundMaterial as BackgroundMaterialType,
     })
     htmlBackgroundMaterial = backgroundMaterial
   }
@@ -37,6 +38,7 @@ let htmlCornerRadius = {
   topTrailing: 0,
   bottomTrailing: 0,
 }
+
 function checkCornerRadius() {
   const computedStyle = getComputedStyle(document.documentElement)
   const cornerRadius = parseCornerRadius(computedStyle)
@@ -50,9 +52,7 @@ function setCornerRadius(cornerRadius: any) {
     htmlCornerRadius.topTrailing !== cornerRadius.topTrailing ||
     htmlCornerRadius.bottomTrailing !== cornerRadius.bottomTrailing
   ) {
-    const session = getSession()!
-    if (!session) return
-    session.getSpatialScene().updateSpatialProperties({
+    session?.getSpatialScene()?.updateSpatialProperties({
       cornerRadius,
     })
     htmlCornerRadius.topLeading = cornerRadius.topLeading
@@ -63,32 +63,15 @@ function setCornerRadius(cornerRadius: any) {
 }
 
 function setOpacity(opacity: number) {
-  const session = getSession()!
-  if (!session) return
-  // fixme:
-  // ses
-  // session.getCurrentWindowComponent().setOpacity(opacity)
+  session?.getSpatialScene().updateSpatialProperties({
+    opacity,
+  })
 }
 
 function checkOpacity() {
   const computedStyle = getComputedStyle(document.documentElement)
   const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
   setOpacity(opacity)
-}
-
-async function setHtmlVisible(visible: boolean) {
-  const session = getSession()!
-  if (!session) return
-  // fixme:
-  // const wc = session.getCurrentWindowComponent()
-  // const ent = await wc.getEntity()
-  // ent?.setVisible(visible)
-}
-
-function checkHtmlVisible() {
-  const computedStyle = getComputedStyle(document.documentElement)
-  const visibility = computedStyle.getPropertyValue('visibility') !== 'hidden'
-  setHtmlVisible(visibility)
 }
 
 function hijackDocumentElementStyle() {
@@ -118,10 +101,6 @@ function hijackDocumentElementStyle() {
 
       if (key === 'opacity') {
         checkOpacity()
-      }
-
-      if (key === 'visibility' || key === 'display') {
-        checkHtmlVisible()
       }
 
       return ret
@@ -156,9 +135,7 @@ function hijackDocumentElementStyle() {
 }
 
 function monitorExternalStyleChange() {
-  const headObserver = new MutationObserver(function (mutationsList) {
-    checkCSSProperties()
-  })
+  const headObserver = new MutationObserver(checkCSSProperties)
 
   headObserver.observe(document.head, { childList: true, subtree: true })
 }
@@ -167,18 +144,6 @@ function checkCSSProperties() {
   checkHtmlBackgroundMaterial()
   checkCornerRadius()
   checkOpacity()
-  checkHtmlVisible()
-  window.addEventListener('resize', checkHtmlVisible)
-}
-
-function hijackGetComputedStyle() {
-  const rawFn = window.getComputedStyle.bind(window)
-  window.getComputedStyle = (element, pseudoElt) => {
-    if ((element as any).__isSpatialDiv) {
-      return (element as any).__getComputedStyle(rawFn, pseudoElt)
-    }
-    return rawFn(element, pseudoElt)
-  }
 }
 
 function monitorHTMLAttributeChange() {
@@ -194,20 +159,23 @@ function monitorHTMLAttributeChange() {
     attributes: true,
     attributeFilter: ['style', 'class'],
   })
-
-  // some css may still loading, need to checkCSSProperties after all window document loaded
-  window.addEventListener('load', () => {
-    checkCSSProperties()
-  })
 }
 
-export function spatialPolyfill() {
-  if (!isWebSpatialEnv) {
+export async function spatialWindowPolyfill() {
+  if (!spatial.runInSpatialWeb()) {
     return
   }
 
-  checkCSSProperties()
-  hijackGetComputedStyle()
+  session = await spatial.requestSession()!
+
+  if (document.readyState === 'complete') {
+    checkCSSProperties()
+  } else {
+    window.addEventListener('load', () => {
+      checkCSSProperties()
+    })
+  }
+
   hijackDocumentElementStyle()
   monitorExternalStyleChange()
   monitorHTMLAttributeChange()
