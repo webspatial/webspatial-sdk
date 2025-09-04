@@ -1,0 +1,182 @@
+import { parseCornerRadius } from './utils'
+import { Spatial } from './Spatial'
+import { SpatialSession } from './SpatialSession'
+import { BackgroundMaterialType } from './types/types'
+
+const spatial = new Spatial()
+let session: SpatialSession | undefined = undefined
+
+const SpatialGlobalCustomVars = {
+  backgroundMaterial: '--xr-background-material',
+}
+
+// keep track of current html background material
+let htmlBackgroundMaterial = ''
+function setCurrentWindowStyle(backgroundMaterial: string) {
+  if (backgroundMaterial !== htmlBackgroundMaterial) {
+    session?.getSpatialScene()?.updateSpatialProperties({
+      material: backgroundMaterial as BackgroundMaterialType,
+    })
+    htmlBackgroundMaterial = backgroundMaterial
+  }
+}
+
+function checkHtmlBackgroundMaterial() {
+  const computedStyle = getComputedStyle(document.documentElement)
+
+  const backgroundMaterial = computedStyle.getPropertyValue(
+    SpatialGlobalCustomVars.backgroundMaterial,
+  )
+
+  setCurrentWindowStyle(backgroundMaterial || 'none')
+}
+
+// keep track of current corner radius
+let htmlCornerRadius = {
+  topLeading: 0,
+  bottomLeading: 0,
+  topTrailing: 0,
+  bottomTrailing: 0,
+}
+
+function checkCornerRadius() {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const cornerRadius = parseCornerRadius(computedStyle)
+  setCornerRadius(cornerRadius)
+}
+
+function setCornerRadius(cornerRadius: any) {
+  if (
+    htmlCornerRadius.topLeading !== cornerRadius.topLeading ||
+    htmlCornerRadius.bottomLeading !== cornerRadius.bottomLeading ||
+    htmlCornerRadius.topTrailing !== cornerRadius.topTrailing ||
+    htmlCornerRadius.bottomTrailing !== cornerRadius.bottomTrailing
+  ) {
+    session?.getSpatialScene()?.updateSpatialProperties({
+      cornerRadius,
+    })
+    htmlCornerRadius.topLeading = cornerRadius.topLeading
+    htmlCornerRadius.bottomLeading = cornerRadius.bottomLeading
+    htmlCornerRadius.topTrailing = cornerRadius.topTrailing
+    htmlCornerRadius.bottomTrailing = cornerRadius.bottomTrailing
+  }
+}
+
+function setOpacity(opacity: number) {
+  session?.getSpatialScene().updateSpatialProperties({
+    opacity,
+  })
+}
+
+function checkOpacity() {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
+  setOpacity(opacity)
+}
+
+function hijackDocumentElementStyle() {
+  const rawDocumentStyle = document.documentElement.style
+  const styleProxy = new Proxy(rawDocumentStyle, {
+    set: function (target, key, value) {
+      const ret = Reflect.set(target, key, value)
+
+      if (key === SpatialGlobalCustomVars.backgroundMaterial) {
+        setCurrentWindowStyle(value)
+      }
+
+      if (
+        key === 'border-radius' ||
+        key === 'borderRadius' ||
+        key === 'border-top-left-radius' ||
+        key === 'borderTopLeftRadius' ||
+        key === 'border-top-right-radius' ||
+        key === 'borderTopRightRadius' ||
+        key === 'border-bottom-left-radius' ||
+        key === 'borderBottomLeftRadius' ||
+        key === 'border-bottom-right-radius' ||
+        key === 'borderBottomRightRadius'
+      ) {
+        checkCornerRadius()
+      }
+
+      if (key === 'opacity') {
+        checkOpacity()
+      }
+
+      return ret
+    },
+    get: function (target, prop: string) {
+      if (typeof target[prop as keyof CSSStyleDeclaration] === 'function') {
+        return function (this: any, ...args: any[]) {
+          if (prop === 'setProperty') {
+            const [property, value] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle(value)
+            }
+          } else if (prop === 'removeProperty') {
+            const [property] = args
+            if (property === SpatialGlobalCustomVars.backgroundMaterial) {
+              setCurrentWindowStyle('none')
+            }
+          }
+          return (target[prop as keyof CSSStyleDeclaration] as Function)(
+            ...args,
+          )
+        }
+      }
+      return Reflect.get(target, prop)
+    },
+  })
+  Object.defineProperty(document.documentElement, 'style', {
+    get: function () {
+      return styleProxy
+    },
+  })
+}
+
+function monitorExternalStyleChange() {
+  const headObserver = new MutationObserver(checkCSSProperties)
+
+  headObserver.observe(document.head, { childList: true, subtree: true })
+}
+
+function checkCSSProperties() {
+  checkHtmlBackgroundMaterial()
+  checkCornerRadius()
+  checkOpacity()
+}
+
+function monitorHTMLAttributeChange() {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'attributes' && mutation.attributeName) {
+        checkCSSProperties()
+      }
+    })
+  })
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  })
+}
+
+export async function spatialWindowPolyfill() {
+  if (!spatial.runInSpatialWeb()) {
+    return
+  }
+
+  session = await spatial.requestSession()!
+
+  if (document.readyState === 'complete') {
+    checkCSSProperties()
+  } else {
+    window.addEventListener('load', () => {
+      checkCSSProperties()
+    })
+  }
+
+  hijackDocumentElementStyle()
+  monitorExternalStyleChange()
+  monitorHTMLAttributeChange()
+}

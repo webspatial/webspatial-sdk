@@ -1,4 +1,4 @@
-import { SpatialSceneCreationOptions } from '@webspatial/core-sdk'
+import type { SpatialSceneCreationOptions } from '@webspatial/core-sdk'
 import { getSession } from './utils'
 
 export function initScene(

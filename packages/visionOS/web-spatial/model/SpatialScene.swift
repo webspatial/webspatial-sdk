@@ -319,6 +319,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let cornerRadius = command.cornerRadius {
             self.cornerRadius = cornerRadius
         }
+        
+        if let opacity = command.opacity {
+            self.opacity = opacity
+        }
         resolve(.success(baseReplyData))
     }
 
@@ -425,6 +429,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let height = command.height {
             spatializedElement.height = height
+        }
+        
+        if let depth = command.depth {
+            spatializedElement.depth = depth
         }
 
         if let backOffset = command.backOffset {
@@ -565,7 +573,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     var cornerRadius: CornerRadius = .init()
-
+    
+    var opacity: Double = 1.0
+    
     func getView() -> SpatialWebView {
         return spatialWebViewModel.getView()
     }

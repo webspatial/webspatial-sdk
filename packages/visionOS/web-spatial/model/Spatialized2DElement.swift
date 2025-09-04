@@ -46,12 +46,16 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         spatialWebViewModel = SpatialWebViewModel(url: nil)
 
         super.init()
+        
+        clip = false
 
         spatialWebViewModel.setBackgroundTransparent(true)
         spatialWebViewModel.addScrollUpdateListener { _, point in
             self._scrollOffset.x = point.x
             self._scrollOffset.y = point.y
         }
+        spatialWebViewModel.scrollEnabled = false
+
     }
 
     // Spatialized2DElement can hold a collection of SpatializedElement children

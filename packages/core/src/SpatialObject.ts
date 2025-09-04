@@ -22,8 +22,12 @@ export class SpatialObject {
   async destroy() {
     const ret = await new DestroyCommand(this.id).execute()
     if (ret.success) {
+      this.onDestroy()
       return ret.data
     }
     throw new Error(ret.errorMessage)
   }
+
+  // override this method to do some cleanup
+  protected onDestroy() {}
 }
