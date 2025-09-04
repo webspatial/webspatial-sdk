@@ -430,6 +430,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let height = command.height {
             spatializedElement.height = height
         }
+        
+        if let depth = command.depth {
+            spatializedElement.depth = depth
+        }
 
         if let backOffset = command.backOffset {
             spatializedElement.backOffset = backOffset

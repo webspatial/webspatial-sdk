@@ -81,6 +81,7 @@ struct SpatializedElementView<Content: View>: View {
         let z = CGFloat(translation.z) + (spatializedElement.zIndex * zOrderBias)
         let width = CGFloat(spatializedElement.width)
         let height = CGFloat(spatializedElement.height)
+        let depth = CGFloat(spatializedElement.depth)
         let anchor = spatializedElement.rotationAnchor
 
         let opacity = spatializedElement.opacity
@@ -91,7 +92,7 @@ struct SpatializedElementView<Content: View>: View {
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
-            .frame(depth: 10, alignment: .back)
+            .frame(depth: depth, alignment: .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))

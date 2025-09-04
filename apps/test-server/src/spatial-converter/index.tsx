@@ -57,6 +57,7 @@ function App() {
     borderRadius: '10px',
     '--xr-background-material': 'translucent',
     '--xr-back': '200px',
+    '--xr-depth': '100px',
     transform: 'translateX(100px) rotateY(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
@@ -85,10 +86,10 @@ function App() {
       <div enable-xr data-name="parent" style={style} ref={ref} id="parent">
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        <div enable-xr style={childStyle} data-name="child">
+        {/* <div enable-xr style={childStyle} data-name="child">
           this is child spatialdiv
         </div>
-        <Model />
+        <Model /> */}
         <button>this is a button</button>
       </div>
       <div> End of SpatializedContainer </div>

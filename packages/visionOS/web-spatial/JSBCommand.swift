@@ -35,6 +35,7 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var name: String? { get }
     var width: Double? { get }
     var height: Double? { get }
+    var depth: Double? { get }
     var backOffset: Double? { get }
     var rotationAnchor: Vec3? { get }
     var opacity: Double? { get }
@@ -50,6 +51,7 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let name: String?
     let width: Double?
     let height: Double?
+    let depth: Double?
     let backOffset: Double?
     let rotationAnchor: Vec3?
     let opacity: Double?
@@ -73,6 +75,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let name: String?
     let width: Double?
     let height: Double?
+    let depth: Double?
     let backOffset: Double?
     let rotationAnchor: Vec3?
     let opacity: Double?

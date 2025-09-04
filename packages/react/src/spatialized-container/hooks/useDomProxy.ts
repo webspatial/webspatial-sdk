@@ -81,10 +81,14 @@ class SpatialContainerRefProxy {
                         SpatialCustomStyleVars.back,
                         value as string,
                       )
-                      console.log('set back', value)
                     } else if (prop === SpatialCustomStyleVars.xrZIndex) {
                       target.setProperty(
                         SpatialCustomStyleVars.xrZIndex,
+                        value as string,
+                      )
+                    }  else if (prop === SpatialCustomStyleVars.depth) {
+                      target.setProperty(
+                        SpatialCustomStyleVars.depth,
                         value as string,
                       )
                     } else if (prop === 'cssText') {

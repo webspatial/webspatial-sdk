@@ -12,6 +12,7 @@ enum SpatializedElementType: String, Codable {
 class SpatializedElement: SpatialObject {
     var width: Double = 0.0
     var height: Double = 0.0
+    var depth: Double = 0.0
     var backOffset: Double = 0.0
     var transform: Transform = .init()
     var rotationAnchor: UnitPoint3D = .center
@@ -26,7 +27,7 @@ class SpatializedElement: SpatialObject {
     var enableGesture: Bool = false
 
     enum CodingKeys: String, CodingKey {
-        case width, height, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture
+        case width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -34,6 +35,7 @@ class SpatializedElement: SpatialObject {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(width, forKey: .width)
         try container.encode(height, forKey: .height)
+        try container.encode(depth, forKey: .depth)
         try container.encode(backOffset, forKey: .backOffset)
         try container.encode(transform, forKey: .transform)
         try container.encode(rotationAnchor, forKey: .rotationAnchor)

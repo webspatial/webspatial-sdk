@@ -220,6 +220,12 @@ export class PortalInstanceObject {
     const backOffset =
       parseFloat(computedStyle.getPropertyValue(SpatialCustomStyleVars.back)) ||
       0
+
+    const depth =
+      parseFloat(
+        computedStyle.getPropertyValue(SpatialCustomStyleVars.depth),
+      ) || 0
+
     const rotationAnchor = parseTransformOrigin(computedStyle)
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
@@ -227,6 +233,7 @@ export class PortalInstanceObject {
     spatializedElement.updateProperties({
       width,
       height,
+      depth,
       opacity,
       scrollWithParent,
       zIndex,

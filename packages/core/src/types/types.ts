@@ -62,6 +62,7 @@ export interface SpatializedElementProperties {
   name: string
   width: number
   height: number
+  depth: number
   opacity: number
   visible: boolean
   scrollWithParent: boolean
