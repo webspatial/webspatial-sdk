@@ -12,7 +12,7 @@ function CaseA() {
     <div
       enable-xr
       enablegesture={true}
-      debugName="parent spatial div"
+      data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
       }}
@@ -210,7 +210,7 @@ function CaseD() {
     <div
       enable-xr
       enablegesture={true}
-      debugName="parent spatial div"
+      data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
       }}
