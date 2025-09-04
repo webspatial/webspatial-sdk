@@ -50,6 +50,7 @@ export function SpatializedContainerBase(
   const {
     transformVisibilityTaskContainerCallback,
     standardSpatializedContainerCallback,
+    portalSpatializedContainerRef,
   } = useDomProxy(ref)
 
   if (inSpatializedContainer) {
@@ -106,7 +107,11 @@ export function SpatializedContainerBase(
             {...spatialIdProps}
             {...restProps}
           />
-          <PortalSpatializedContainer {...spatialIdProps} {...props} />
+          <PortalSpatializedContainer
+            ref={portalSpatializedContainerRef}
+            {...spatialIdProps}
+            {...props}
+          />
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}

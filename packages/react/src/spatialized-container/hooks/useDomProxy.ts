@@ -1,16 +1,22 @@
-import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
+import { ForwardedRef, RefObject, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
+import { PortalSpatializedContainerRef } from '../PortalSpatializedContainer'
 
 class SpatialContainerRefProxy {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   private ref: ForwardedRef<SpatializedElementRef>
   private domProxy?: SpatializedElementRef | null
   private styleProxy?: CSSStyleDeclaration
+  private portalSpatializedContainerRef: RefObject<PortalSpatializedContainerRef>
 
-  constructor(ref: ForwardedRef<SpatializedElementRef>) {
+  constructor(
+    ref: ForwardedRef<SpatializedElementRef>,
+    portalSpatializedContainerRef: RefObject<PortalSpatializedContainerRef>,
+  ) {
     this.ref = ref
+    this.portalSpatializedContainerRef = portalSpatializedContainerRef
   }
 
   updateStandardSpatializedContainerDom(dom: HTMLElement | null) {
@@ -33,6 +39,11 @@ class SpatialContainerRefProxy {
             if (prop === 'getBoundingClientRect') {
               // todo:
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
+            }
+            if (prop === 'getBoundingClientCube') {
+              return self.portalSpatializedContainerRef.current?.getBoundingClientRectCube.bind(
+                self.portalSpatializedContainerRef.current,
+              )
             }
             if (prop === 'style') {
               if (!self.styleProxy) {
@@ -86,7 +97,7 @@ class SpatialContainerRefProxy {
                         SpatialCustomStyleVars.xrZIndex,
                         value as string,
                       )
-                    }  else if (prop === SpatialCustomStyleVars.depth) {
+                    } else if (prop === SpatialCustomStyleVars.depth) {
                       target.setProperty(
                         SpatialCustomStyleVars.depth,
                         value as string,
@@ -197,8 +208,11 @@ function hijackGetComputedStyle() {
 hijackGetComputedStyle()
 
 export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
+  const portalSpatializedContainerRef =
+    useRef<PortalSpatializedContainerRef>(null)
+
   const spatialContainerRefProxy = useRef<SpatialContainerRefProxy>(
-    new SpatialContainerRefProxy(ref),
+    new SpatialContainerRefProxy(ref, portalSpatializedContainerRef),
   )
 
   useEffect(() => {
@@ -224,5 +238,6 @@ export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
   return {
     transformVisibilityTaskContainerCallback,
     standardSpatializedContainerCallback,
+    portalSpatializedContainerRef,
   }
 }

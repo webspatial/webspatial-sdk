@@ -1,9 +1,11 @@
-import { useMemo, useContext } from 'react'
+import { useMemo, useContext, forwardRef, useImperativeHandle } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
 import { PortalSpatializedContainerProps } from './types'
+import { CubeInfo } from '@webspatial/core-sdk'
+
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
@@ -51,9 +53,20 @@ function renderPlaceholderInSubPortal(
   )
 }
 
-export function PortalSpatializedContainer(
+export interface PortalSpatializedContainerRef {
+  getBoundingClientRectCube(): CubeInfo | undefined
+}
+
+function PortalSpatializedContainerBase(
   props: PortalSpatializedContainerProps,
+  ref: React.Ref<PortalSpatializedContainerRef>,
 ) {
+  useImperativeHandle(ref, () => ({
+    getBoundingClientRectCube(): CubeInfo | undefined {
+      return spatializedElement?.cubeInfo
+    },
+  }))
+
   const {
     spatializedContent: Content,
     createSpatializedElement,
@@ -99,3 +112,7 @@ export function PortalSpatializedContainer(
     </PortalInstanceContext.Provider>
   )
 }
+
+export const PortalSpatializedContainer = forwardRef(
+  PortalSpatializedContainerBase,
+)

@@ -56,12 +56,17 @@ function App() {
     background: 'green',
     borderRadius: '10px',
     '--xr-background-material': 'translucent',
-    '--xr-back': '200px',
-    '--xr-depth': '100px',
-    transform: 'translateX(100px) rotateY(30deg)',
+    '--xr-back': '10px',
+    '--xr-depth': '150px',
+    // transform: 'rotateX(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
     overflow: 'scroll',
+  }
+
+  const style2: CSSProperties = {
+    ...style,
+    transform: 'rotateZ(0deg)',
   }
 
   const childStyle: CSSProperties = {

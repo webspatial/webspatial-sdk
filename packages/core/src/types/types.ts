@@ -145,3 +145,66 @@ declare global {
   }
 }
 
+export interface Size {
+  width: number
+  height: number
+  depth: number
+}
+
+export class CubeInfo {
+  constructor(
+    public size: Size,
+    public origin: Vec3,
+  ) {
+    this.size = size
+    this.origin = origin
+  }
+
+  get x() {
+    return this.origin.x
+  }
+
+  get y() {
+    return this.origin.y
+  }
+
+  get z() {
+    return this.origin.z
+  }
+
+  get width() {
+    return this.size.width
+  }
+
+  get height() {
+    return this.size.height
+  }
+
+  get depth() {
+    return this.size.depth
+  }
+
+  get left() {
+    return this.x
+  }
+
+  get top() {
+    return this.y
+  }
+
+  get right() {
+    return this.x + this.width
+  }
+
+  get bottom() {
+    return this.y + this.height
+  }
+
+  get back() {
+    return this.z
+  }
+
+  get front() {
+    return this.z + this.depth
+  }
+}
