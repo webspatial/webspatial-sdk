@@ -5,7 +5,7 @@ import {
   // Spatialized2DElementContainer,
   SpatializedStatic3DElementContainer,
 } from '@webspatial/react-sdk'
-import { CSSProperties, useRef } from 'react'
+import { CSSProperties, SpatialTapEvent, useRef } from 'react'
 
 enableDebugTool()
 
@@ -30,6 +30,11 @@ function Model() {
 
   const refModel = useRef<HTMLElement>(null)
 
+  const onSpatialTap = (e: SpatialTapEvent) => {
+    console.log(e.isTrusted, e.currentTarget.getBoundingClientCube())
+    debugger
+  }
+
   ;(window as any).refModel = refModel
   return (
     <div>
@@ -37,7 +42,7 @@ function Model() {
         ref={refModel}
         style={style}
         src={src}
-        onSpatialTap={e => console.log(e)}
+        onSpatialTap={onSpatialTap}
       />
     </div>
   )
@@ -87,6 +92,11 @@ function App() {
   const refChild = useRef<HTMLElement>(null)
   ;(window as any).refChild = refChild
 
+  const onSpatialTap = (e: SpatialTapEvent) => {
+    console.log('child:', e.isTrusted, e.currentTarget.getBoundingClientCube())
+    debugger
+  }
+
   return (
     <>
       <div style={{ width: '100px', height: '100px' }}>
@@ -102,7 +112,13 @@ function App() {
       >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        <div style={childStyle} ref={refChild} data-name="child">
+        <div
+          enable-xr
+          onSpatialTap={onSpatialTap}
+          style={childStyle}
+          ref={refChild}
+          data-name="child"
+        >
           this is child spatialdiv
         </div>
         <button>this is a button</button>

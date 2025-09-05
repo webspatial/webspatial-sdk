@@ -3,10 +3,10 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
-class SpatialContainerRefProxy {
+export class SpatialContainerRefProxy {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   private ref: ForwardedRef<SpatializedElementRef>
-  private domProxy?: SpatializedElementRef | null
+  public domProxy?: SpatializedElementRef | null
   private styleProxy?: CSSStyleDeclaration
 
   constructor(ref: ForwardedRef<SpatializedElementRef>) {
@@ -227,5 +227,6 @@ export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
   return {
     transformVisibilityTaskContainerCallback,
     standardSpatializedContainerCallback,
+    spatialContainerRefProxy,
   }
 }

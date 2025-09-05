@@ -94,6 +94,7 @@ export function PortalSpatializedContainer(
 
   useEffect(() => {
     if (spatializedElement) {
+      // @ts-ignore
       spatializedElement.onSpatialTap = onSpatialTap
     }
   }, [spatializedElement, onSpatialTap])

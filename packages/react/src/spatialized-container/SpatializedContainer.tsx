@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, useContext, useMemo } from 'react'
+import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -12,9 +12,13 @@ import { PortalInstanceContext } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
 import { useDomProxy } from './hooks/useDomProxy'
+import {
+  useSpatialEvents,
+  useSpatialEventsWhenSpatializedContainerExist,
+} from './hooks/useSpatialEvents'
 
 export function SpatializedContainerBase(
-  props: SpatializedContainerProps,
+  inprops: SpatializedContainerProps,
   ref: ForwardedRef<SpatializedElementRef>,
 ) {
   const isWebSpatialEnv = getSession() !== null
@@ -26,8 +30,7 @@ export function SpatializedContainerBase(
       getExtraSpatializedElementProperties,
       onSpatialTap,
       ...restProps
-    } = props
-    props.component
+    } = inprops
     // make sure SpatializedContainer can work on web env
     return <Component ref={ref} {...restProps} />
   }
@@ -47,27 +50,47 @@ export function SpatializedContainerBase(
   const spatialIdProps = {
     [SpatialID]: spatialId,
   }
-
-  const {
-    transformVisibilityTaskContainerCallback,
-    standardSpatializedContainerCallback,
-  } = useDomProxy(ref)
+  const { onSpatialTap, ...props } = inprops
 
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
+      const spatialEvents = useSpatialEventsWhenSpatializedContainerExist(
+        {
+          onSpatialTap,
+        },
+        spatialId,
+        rootSpatializedContainerObject,
+      )
+
       // nested in another PortalSpatializedContainer
       return (
         <SpatialLayerContext.Provider value={layer}>
-          <PortalSpatializedContainer {...spatialIdProps} {...props} />
+          <PortalSpatializedContainer
+            {...spatialIdProps}
+            {...props}
+            {...spatialEvents}
+          />
         </SpatialLayerContext.Provider>
       )
     } else {
       // in standard instance env
       const {
+        transformVisibilityTaskContainerCallback,
+        standardSpatializedContainerCallback,
+        spatialContainerRefProxy,
+      } = useDomProxy(ref)
+
+      useEffect(() => {
+        rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
+          spatialId,
+          spatialContainerRefProxy.current,
+        )
+      }, [spatialContainerRefProxy.current])
+
+      const {
         spatializedContent,
         createSpatializedElement,
         getExtraSpatializedElementProperties,
-        onSpatialTap,
         ...restProps
       } = props
       return (
@@ -87,6 +110,19 @@ export function SpatializedContainerBase(
       )
     }
   } else {
+    const {
+      transformVisibilityTaskContainerCallback,
+      standardSpatializedContainerCallback,
+      spatialContainerRefProxy,
+    } = useDomProxy(ref)
+
+    const spatialEvents = useSpatialEvents(
+      {
+        onSpatialTap,
+      },
+      spatialContainerRefProxy,
+    )
+
     // This is the root spatialized container
     const spatializedContainerObject = useMemo(
       () => new SpatializedContainerObject(),
@@ -96,9 +132,9 @@ export function SpatializedContainerBase(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
-      onSpatialTap,
       ...restProps
     } = props
+
     return (
       <SpatialLayerContext.Provider value={layer}>
         <SpatializedContainerContext.Provider
@@ -109,7 +145,11 @@ export function SpatializedContainerBase(
             {...spatialIdProps}
             {...restProps}
           />
-          <PortalSpatializedContainer {...spatialIdProps} {...props} />
+          <PortalSpatializedContainer
+            {...spatialIdProps}
+            {...props}
+            {...spatialEvents}
+          />
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}

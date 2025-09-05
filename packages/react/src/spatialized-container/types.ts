@@ -1,6 +1,10 @@
 import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
-import { CubeInfo, SpatializedElement, Vec3 } from '@webspatial/core-sdk'
+import {
+  CubeInfo,
+  SpatializedElement,
+  SpatialTapEvent as CoreSpatialTapEvent,
+} from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
 export interface StandardSpatializedContainerProps
@@ -65,18 +69,14 @@ export interface SpatialTransformVisibility {
   visibility: string
 }
 
-export interface SpatialTapEvent extends CustomEvent {
-  type: 'spatialtap'
-  isTrusted: true
-  detail: {
-    location3D: Vec3
-  }
-}
-
 export interface SpatializedElementRef extends HTMLElement {
   clientDepth: number
   offsetBack: number
   getBoundingClientRectCube: () => CubeInfo | undefined
 
   onSpatialTap?: (event: SpatialTapEvent) => void
+}
+
+export type SpatialTapEvent = CoreSpatialTapEvent & {
+  currentTarget: SpatializedElementRef
 }

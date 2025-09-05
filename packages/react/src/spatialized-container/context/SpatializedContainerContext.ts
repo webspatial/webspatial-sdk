@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 import { SpatialID } from '../SpatialID'
 import { SpatialTransformVisibility } from '../types'
+import { SpatialContainerRefProxy } from '../hooks/useDomProxy'
 
 export class SpatializedContainerObject {
   dom: HTMLElement | null = null
@@ -33,6 +34,24 @@ export class SpatializedContainerObject {
     this.fnsForSpatialTransformVisibility[spatialId]?.forEach(fn =>
       fn(spatialTransformVisibility),
     )
+  }
+
+  // this is used by onSpatialEvent.currentTarget property
+  private spatialId2ContainerRefProxy: Record<
+    string,
+    SpatialContainerRefProxy
+  > = {}
+
+  // this is called in sub standardInstance env
+  public updateSpatialContainerRefProxyInfo(
+    spatialId: string,
+    spatialContainerRefProxy: SpatialContainerRefProxy,
+  ) {
+    this.spatialId2ContainerRefProxy[spatialId] = spatialContainerRefProxy
+  }
+
+  public getSpatialContainerRefProxyBySpatialId(spatialId: string) {
+    return this.spatialId2ContainerRefProxy[spatialId]
   }
 
   // notify when TransformVisibilityTaskContainer data change
