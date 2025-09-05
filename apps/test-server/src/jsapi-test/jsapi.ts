@@ -4,7 +4,7 @@ import {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
-import { Quaternion, Euler } from 'three'
+// import { Quaternion, Euler } from 'three'
 // const euler = new Euler(0, Math.PI / 3, 0)
 // const euler = new Euler(0, 0, Math.PI / 4)
 // const euler = new Euler(0, 0, 0)
@@ -77,7 +77,6 @@ export async function testCreateSpatialized2DElement() {
         y: 2,
         z: 0.5,
       },
-      scrollEnabled: false,
       enableGesture: true,
     })
 
@@ -122,7 +121,6 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'A',
       width: 300,
       height: 300,
-      scrollEnabled: false,
       enableGesture: false,
     })
 
@@ -162,7 +160,6 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'B',
       width: 200,
       height: 100,
-      scrollEnabled: false,
       enableGesture: true,
     })
     await spatialized2DElementB.updateTransform({
@@ -253,10 +250,10 @@ export async function testAddMultipleSpatializedStatic3DElement(
   }
 }
 
-export async function testAddMultipleSpatializedDynamic3DElement(
-  parent: Spatialized2DElement | null = null,
-) {
-  if (session) {
-    const spatialScene = session.getSpatialScene()
-  }
-}
+// export async function testAddMultipleSpatializedDynamic3DElement(
+//   parent: Spatialized2DElement | null = null,
+// ) {
+//   if (session) {
+//     const spatialScene = session.getSpatialScene()
+//   }
+// }

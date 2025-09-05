@@ -4,6 +4,7 @@ import {
   enableDebugTool,
   SpatialTapEvent,
   SpatializedStatic3DElementContainer,
+  SpatializedElementRef,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
@@ -28,7 +29,7 @@ function Model() {
 
   const src = 'http://localhost:5173/public/modelasset/cone.usdz'
 
-  const refModel = useRef<HTMLElement>(null)
+  const refModel = useRef<SpatializedElementRef>(null)
 
   const onSpatialTap = (e: SpatialTapEvent) => {
     console.log(e.isTrusted, e.currentTarget.getBoundingClientCube())
@@ -70,10 +71,10 @@ function App() {
     overflow: 'scroll',
   }
 
-  const style2: CSSProperties = {
-    ...style,
-    transform: 'rotateZ(0deg)',
-  }
+  // const style2: CSSProperties = {
+  //   ...style,
+  //   transform: 'rotateZ(0deg)',
+  // }
 
   const childStyle: CSSProperties = {
     position: 'relative',
@@ -85,11 +86,11 @@ function App() {
     background: 'blue',
   }
 
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   ;(window as any).ref = ref
 
-  const refChild = useRef<HTMLElement>(null)
+  const refChild = useRef<HTMLDivElement>(null)
   ;(window as any).refChild = refChild
 
   const onSpatialTap = (e: SpatialTapEvent) => {

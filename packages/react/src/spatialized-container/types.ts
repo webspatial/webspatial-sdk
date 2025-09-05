@@ -72,7 +72,7 @@ export interface SpatialTransformVisibility {
 export interface SpatializedElementRef extends HTMLElement {
   clientDepth: number
   offsetBack: number
-  getBoundingClientRectCube: () => CubeInfo | undefined
+  getBoundingClientCube: () => CubeInfo | undefined
 
   onSpatialTap?: (event: SpatialTapEvent) => void
 }

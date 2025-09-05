@@ -1,4 +1,8 @@
 // This file is from emotion-js, credit.
+import {
+  SpatialTapEvent,
+  //@ts-ignore bypass ts check for external
+} from '@webspatial/react-sdk'
 
 import 'react'
 
@@ -98,7 +102,7 @@ export namespace WebSpatialJSX {
     [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
       style?: React.CSSProperties
       'enable-xr'?: boolean
-      enablegesture?: boolean
+      onSpatialTap?: (e: SpatialTapEvent) => void
     }
   }
 }
@@ -110,6 +114,5 @@ declare module 'react' {
     '--xr-depth'?: number | string
     '--xr-z-index'?: number | string
     enableXr?: boolean
-    enablegesture?: boolean
   }
 }
