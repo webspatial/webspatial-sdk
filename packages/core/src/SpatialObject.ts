@@ -25,7 +25,7 @@ export class SpatialObject {
       this.onDestroy()
       return ret.data
     }
-    throw new Error(ret.errorMessage)
+    // throw new Error(ret.errorMessage)
   }
 
   // override this method to do some cleanup
