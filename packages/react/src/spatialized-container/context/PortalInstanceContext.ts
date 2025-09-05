@@ -105,13 +105,13 @@ export class PortalInstanceObject {
 
   // called when 2D frame change
   notify2DFrameChange() {
-    console.log('notify2DFrameChange')
+    // console.log('notify2DFrameChange')
 
     const dom = this.spatializedContainerObject.querySpatialDomBySpatialId(
       this.spatialId,
     )
     if (!dom) {
-      console.log('dom not exist!')
+      // console.log('dom not exist!')
       return
     }
     const computedStyle = getComputedStyle(dom)
@@ -168,15 +168,15 @@ export class PortalInstanceObject {
   }
 
   private updateSpatializedElementProperties() {
-    console.log('updateSpatializedElement', this.spatializedElement)
+    // console.log('updateSpatializedElement', this.spatializedElement)
     // read from spatializedContainerContext
     const dom = this.dom
     const spatializedElement = this.spatializedElement
     const visibility = this.visibility
     if (!dom || !spatializedElement || !visibility || !this.transformMatrix) {
-      console.log(
-        `not ready to  updateSpatializedElementProperties! dom is ${!!dom} spatializedElement is ${spatializedElement} visibility is ${visibility}`,
-      )
+      // console.log(
+      //   `not ready to  updateSpatializedElementProperties! dom is ${!!dom} spatializedElement is ${spatializedElement} visibility is ${visibility}`,
+      // )
       return
     }
 

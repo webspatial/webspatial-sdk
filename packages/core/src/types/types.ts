@@ -72,7 +72,8 @@ export interface SpatializedElementProperties {
   enableGesture: boolean
 }
 
-export interface Spatialized2DElementProperties extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties
+  extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -207,4 +208,12 @@ export class CubeInfo {
   get front() {
     return this.z + this.depth
   }
+}
+
+export interface SpatialTapEventDetail {
+  location3D: Vec3
+}
+
+export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail> & {
+  type: 'spatialtap'
 }

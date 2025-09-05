@@ -3,6 +3,7 @@ import { Vec3, Size, SpatialTransform } from './types/types'
 export enum SpatialWebMsgType {
   CubeInfo = 'cubeInfo',
   Transform = 'transform',
+  spatialtap = 'spatialtap',
 }
 
 export interface CubeInfoMsg {
@@ -14,4 +15,9 @@ export interface CubeInfoMsg {
 export interface TransformMsg {
   type: SpatialWebMsgType.Transform
   transform: SpatialTransform
+}
+
+export interface SpatialTapMsg {
+  type: SpatialWebMsgType.spatialtap
+  location3D: Vec3
 }

@@ -2,12 +2,19 @@ import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
+import { createSpatialTapEvent } from './SpatialWebEventCreator'
 import {
   CubeInfo,
   SpatializedElementProperties,
+  SpatialTapEvent,
   SpatialTransform,
 } from './types/types'
-import { CubeInfoMsg, SpatialWebMsgType, TransformMsg } from './WebMsgCommand'
+import {
+  CubeInfoMsg,
+  SpatialTapMsg,
+  SpatialWebMsgType,
+  TransformMsg,
+} from './WebMsgCommand'
 
 export abstract class SpatializedElement extends SpatialObject {
   constructor(public readonly id: string) {
@@ -27,15 +34,23 @@ export abstract class SpatializedElement extends SpatialObject {
   get cubeInfo() {
     return this._cubeInfo
   }
-  private onReceiveEvent = (data: CubeInfoMsg | TransformMsg) => {
+  private onReceiveEvent = (
+    data: CubeInfoMsg | TransformMsg | SpatialTapMsg,
+  ) => {
     console.log('SpatialWebEvent', this.id, data)
     if (data.type === SpatialWebMsgType.CubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
     } else if (data.type === SpatialWebMsgType.Transform) {
       // this.transform = data.transform
+    } else if (data.type === SpatialWebMsgType.spatialtap) {
+      const spatialTapMsg = data as SpatialTapMsg
+      const event = createSpatialTapEvent(spatialTapMsg.location3D)
+      this.onSpatialTap?.(event)
     }
   }
+
+  public onSpatialTap?: (event: SpatialTapEvent) => void
 
   override onDestroy() {
     SpatialWebEvent.removeEventReceiver(this.id)

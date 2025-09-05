@@ -13,3 +13,9 @@ struct SpatiaizedContainerClientCube: Encodable {
 struct SpatiaizedContainerTransform: Encodable {
     let type: String = "transform"
 }
+
+// notify SpatializedElement/SpatialEntity tapped
+struct WebSpatialTapGuestureEvent: Encodable {
+    let type: String = "spatialtap"
+    let location3D: Point3D
+}

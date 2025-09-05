@@ -1,8 +1,5 @@
-
 import RealityKit
 import SwiftUI
-
-
 
 // zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
@@ -50,6 +47,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onDragging(_ event: DragGesture.Value) {
         print("\(spatializedElement.name)  onDragging \(event.location3D)")
+
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
@@ -57,7 +55,7 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
-        print("\(spatializedElement.name)  onTapEnded \(event.location3D)")
+        spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(location3D: event.location3D))
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
@@ -97,9 +95,9 @@ struct SpatializedElementView<Content: View>: View {
             .frame(width: width, height: height)
             .frame(depth: depth, alignment: .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
-                print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
+//                print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
-                print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
+//                print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
 
                 return proxy.transform(in: .named("SpatialScene"))!

@@ -37,6 +37,7 @@ function Model() {
         ref={refModel}
         style={style}
         src={src}
+        onSpatialTap={e => console.log(e)}
       />
     </div>
   )
@@ -91,10 +92,17 @@ function App() {
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      <div enable-xr data-name="parent" style={style} ref={ref} id="parent">
+      <div
+        enable-xr
+        onSpatialTap={e => console.log(e)}
+        data-name="parent"
+        style={style}
+        ref={ref}
+        id="parent"
+      >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        <div enable-xr style={childStyle} ref={refChild} data-name="child">
+        <div style={childStyle} ref={refChild} data-name="child">
           this is child spatialdiv
         </div>
         <button>this is a button</button>

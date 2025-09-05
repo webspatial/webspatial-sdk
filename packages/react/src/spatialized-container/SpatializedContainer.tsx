@@ -24,6 +24,7 @@ export function SpatializedContainerBase(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      onSpatialTap,
       ...restProps
     } = props
     props.component
@@ -66,6 +67,7 @@ export function SpatializedContainerBase(
         spatializedContent,
         createSpatializedElement,
         getExtraSpatializedElementProperties,
+        onSpatialTap,
         ...restProps
       } = props
       return (
@@ -94,6 +96,7 @@ export function SpatializedContainerBase(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      onSpatialTap,
       ...restProps
     } = props
     return (

@@ -24,7 +24,7 @@ class SpatializedElement: SpatialObject {
     // whether require clip action
     var clip = true
     
-    var enableGesture: Bool = false
+    var enableGesture: Bool = true
 
     enum CodingKeys: String, CodingKey {
         case width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture

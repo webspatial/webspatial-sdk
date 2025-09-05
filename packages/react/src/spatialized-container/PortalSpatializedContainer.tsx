@@ -1,4 +1,4 @@
-import { useMemo, useContext } from 'react'
+import { useMemo, useContext, useEffect } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -52,11 +52,14 @@ function renderPlaceholderInSubPortal(
   )
 }
 
-export function PortalSpatializedContainer(props: PortalSpatializedContainerProps) {
+export function PortalSpatializedContainer(
+  props: PortalSpatializedContainerProps,
+) {
   const {
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
+    onSpatialTap,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -88,6 +91,12 @@ export function PortalSpatializedContainer(props: PortalSpatializedContainerProp
     portalInstanceObject,
     props.component,
   )
+
+  useEffect(() => {
+    if (spatializedElement) {
+      spatializedElement.onSpatialTap = onSpatialTap
+    }
+  }, [spatializedElement, onSpatialTap])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
