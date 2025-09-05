@@ -2,10 +2,10 @@ import ReactDOM from 'react-dom/client'
 
 import {
   enableDebugTool,
-  // Spatialized2DElementContainer,
+  SpatialTapEvent,
   SpatializedStatic3DElementContainer,
 } from '@webspatial/react-sdk'
-import { CSSProperties, SpatialTapEvent, useRef } from 'react'
+import { CSSProperties, useRef } from 'react'
 
 enableDebugTool()
 
@@ -104,7 +104,7 @@ function App() {
       </div>
       <div
         enable-xr
-        onSpatialTap={e => console.log(e)}
+        // onSpatialTap={e => console.log(e)}
         data-name="parent"
         style={style}
         ref={ref}

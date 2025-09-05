@@ -46,11 +46,18 @@ export abstract class SpatializedElement extends SpatialObject {
     } else if (data.type === SpatialWebMsgType.spatialtap) {
       const spatialTapMsg = data as SpatialTapMsg
       const event = createSpatialTapEvent(spatialTapMsg.location3D)
-      this.onSpatialTap?.(event)
+      this._onSpatialTap?.(event)
     }
   }
 
-  public onSpatialTap?: (event: SpatialTapEvent) => void
+  private _onSpatialTap?: (event: SpatialTapEvent) => void
+
+  set onSpatialTap(value: (event: SpatialTapEvent) => void | undefined) {
+    this._onSpatialTap = value
+    this.updateProperties({
+      enableGesture: value !== undefined,
+    })
+  }
 
   override onDestroy() {
     SpatialWebEvent.removeEventReceiver(this.id)
