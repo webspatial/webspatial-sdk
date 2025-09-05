@@ -1,9 +1,9 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
-//@ts-ignore bypass ts check for external
 import {
   withSpatialMonitor,
   withSpatialized2DElementContainer,
+  //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
