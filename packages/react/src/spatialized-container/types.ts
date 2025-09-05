@@ -1,7 +1,6 @@
-// 首先确保导入所需的类型
 import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
-import { SpatializedElement } from '@webspatial/core-sdk'
+import { CubeInfo, SpatializedElement } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
 export interface StandardSpatializedContainerProps
@@ -25,7 +24,6 @@ export type SpatializedContainerProps = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps,
   typeof SpatialID
 >
-
 
 export interface SpatializedContentProps
   extends Omit<PortalSpatializedContainerProps, 'spatializedContent'> {
@@ -66,4 +64,5 @@ export interface SpatialTransformVisibility {
 export interface SpatializedElementRef extends HTMLElement {
   clientDepth: number
   offsetBack: number
+  getBoundingClientRectCube: () => CubeInfo | undefined
 }

@@ -122,6 +122,13 @@ export class PortalInstanceObject {
     }
 
     this.updateSpatializedElementProperties()
+
+    // attach __getBoundingClientCube to dom
+    Object.assign(dom, {
+      __getBoundingClientCube: () => {
+        return this.spatializedElement?.cubeInfo
+      },
+    })
   }
 
   private async getSpatializedElement() {

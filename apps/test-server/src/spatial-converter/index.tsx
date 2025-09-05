@@ -83,6 +83,9 @@ function App() {
 
   ;(window as any).ref = ref
 
+  const refChild = useRef<HTMLElement>(null)
+  ;(window as any).refChild = refChild
+
   return (
     <>
       <div style={{ width: '100px', height: '100px' }}>
@@ -91,14 +94,13 @@ function App() {
       <div enable-xr data-name="parent" style={style} ref={ref} id="parent">
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        {/* <div enable-xr style={childStyle} data-name="child">
+        <div enable-xr style={childStyle} ref={refChild} data-name="child">
           this is child spatialdiv
         </div>
-        <Model /> */}
         <button>this is a button</button>
       </div>
       <div> End of SpatializedContainer </div>
-
+      <Model />
       <div> End of Model SpatializedContainer </div>
     </>
   )
