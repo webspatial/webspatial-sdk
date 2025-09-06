@@ -412,9 +412,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let scrollEdgeInsetsMarginRight = command.scrollEdgeInsetsMarginRight {
             spatialized2DElement.cornerRadius = cornerRadius
         }
-        
-        
-
+    
         resolve(.success(baseReplyData))
     }
 
@@ -459,8 +457,26 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.rotationAnchor = .init(x: CGFloat(rotationAnchor.x), y: CGFloat(rotationAnchor.y), z: CGFloat(rotationAnchor.z))
         }
         
-        if let enableGesture = command.enableGesture {
-            spatializedElement.enableGesture = enableGesture
+        if let enableTapGesture = command.enableTapGesture {
+            spatializedElement.enableTapGesture = enableTapGesture
+        }
+        if let enableDragGesture = command.enableDragGesture {
+            spatializedElement.enableDragGesture = enableDragGesture
+        }
+        if let enableDragEndGesture = command.enableDragEndGesture {
+            spatializedElement.enableDragEndGesture = enableDragEndGesture
+        }
+        if let enableRotateGesture = command.enableRotateGesture {
+            spatializedElement.enableRotateGesture = enableRotateGesture
+        }
+        if let enableRotateEndGesture = command.enableRotateEndGesture {
+            spatializedElement.enableRotateEndGesture = enableRotateEndGesture
+        }
+        if let enableMagnifyGesture = command.enableMagnifyGesture {
+            spatializedElement.enableMagnifyGesture = enableMagnifyGesture
+        }
+        if let enableMagnifyEndGesture = command.enableMagnifyEndGesture {
+            spatializedElement.enableMagnifyEndGesture = enableMagnifyEndGesture
         }
     }
 

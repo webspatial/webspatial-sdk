@@ -69,7 +69,13 @@ export interface SpatializedElementProperties {
   zIndex: number
   backOffset: number
   rotationAnchor: Vec3
-  enableGesture: boolean
+  enableTapGesture: boolean
+  enableDragGesture: boolean
+  enableDragEndGesture: boolean
+  enableRotationGesture: boolean
+  enableRotateEndGesture: boolean
+  enableMagnifyGesture: boolean
+  enableMagnifyEndGesture: boolean
 }
 
 export interface Spatialized2DElementProperties

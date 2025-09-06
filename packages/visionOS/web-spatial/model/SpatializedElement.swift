@@ -24,7 +24,20 @@ class SpatializedElement: SpatialObject {
     // whether require clip action
     var clip = true
     
-    var enableGesture: Bool = true
+    var enableDragGesture: Bool = false
+    var enableDragEndGesture: Bool = false
+    var enableRotateGesture: Bool = false
+    var enableRotateEndGesture: Bool = false
+    var enableMagnifyGesture: Bool = false
+    var enableMagnifyEndGesture: Bool = false
+    var enableTapGesture: Bool = false
+    
+    var enableGesture: Bool {
+        get {
+            return enableDragGesture || enableDragEndGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
+        }
+    }
+
 
     enum CodingKeys: String, CodingKey {
         case width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture

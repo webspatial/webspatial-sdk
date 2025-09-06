@@ -55,7 +55,7 @@ export abstract class SpatializedElement extends SpatialObject {
   set onSpatialTap(value: (event: SpatialTapEvent) => void | undefined) {
     this._onSpatialTap = value
     this.updateProperties({
-      enableGesture: value !== undefined,
+      enableTapGesture: value !== undefined,
     })
   }
 

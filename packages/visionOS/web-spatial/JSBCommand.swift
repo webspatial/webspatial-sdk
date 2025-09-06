@@ -42,7 +42,14 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var visible: Bool? { get }
     var scrollWithParent: Bool? { get }
     var zIndex: Double? { get }
-    var enableGesture: Bool? { get }
+    
+    var enableDragGesture: Bool? { get }
+    var enableDragEndGesture: Bool? { get }
+    var enableRotateGesture: Bool? { get }
+    var enableRotateEndGesture: Bool? { get }
+    var enableMagnifyGesture: Bool? { get }
+    var enableMagnifyEndGesture: Bool? { get }
+    var enableTapGesture: Bool? { get }
 }
 
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
@@ -58,8 +65,15 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    let enableGesture: Bool?
-
+    
+    var enableDragGesture: Bool?
+    var enableDragEndGesture: Bool?
+    var enableRotateGesture: Bool?
+    var enableRotateEndGesture: Bool?
+    var enableMagnifyGesture: Bool?
+    var enableMagnifyEndGesture: Bool?
+    var enableTapGesture: Bool?  
+    
     let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
@@ -82,7 +96,14 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    let enableGesture: Bool?
+    
+    let enableDragGesture: Bool?
+    let enableDragEndGesture: Bool?
+    let enableRotateGesture: Bool?
+    let enableRotateEndGesture: Bool?
+    let enableMagnifyGesture: Bool?
+    let enableMagnifyEndGesture: Bool?
+    let enableTapGesture: Bool?
 
     let modelURL: String?
 }

@@ -55,7 +55,9 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
-        spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(location3D: event.location3D))
+        if (spatializedElement.enableTapGesture) {
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(location3D: event.location3D))
+        }
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
