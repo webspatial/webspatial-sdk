@@ -1,8 +1,9 @@
 // This file is from emotion-js, credit.
-import {
-  SpatialTapEvent,
-  //@ts-ignore bypass ts check for external
-} from '@webspatial/react-sdk'
+ import {
+   SpatialTapEvent,
+   SpatialDragEvent,
+   //@ts-ignore bypass ts check for external
+ } from '@webspatial/react-sdk'
 
 import 'react'
 
@@ -103,6 +104,7 @@ export namespace WebSpatialJSX {
       style?: React.CSSProperties
       'enable-xr'?: boolean
       onSpatialTap?: (e: SpatialTapEvent) => void
+      onSpatialDrag?: (e: SpatialDragEvent) => void
     }
   }
 }

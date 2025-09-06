@@ -47,11 +47,19 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onDragging(_ event: DragGesture.Value) {
         print("\(spatializedElement.name)  onDragging \(event.location3D)")
-
+        if (spatializedElement.enableDragGesture) {
+            let gestureEvent = WebSpatialDragGuestureEvent(location3D: event.location3D,
+                                                           startLocation3D:  event.startLocation3D,
+                                                           translation3D: event.translation3D,
+                                                           predictedEndTranslation3D: event.predictedEndTranslation3D,
+                                                           predictedEndLocation3D: event.predictedEndLocation3D,
+                                                           velocity: event.velocity)
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
-        print("\(spatializedElement.name)  onDraggingEnded \(event.location3D)")
+         print("\(spatializedElement.name)  onDraggingEnded \(event.location3D)")
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {

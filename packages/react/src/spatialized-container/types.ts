@@ -4,6 +4,7 @@ import {
   CubeInfo,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
+  SpatialDragEvent as CoreSpatialDragEvent,
 } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
@@ -24,6 +25,7 @@ export interface PortalSpatializedContainerProps
 
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
 
   [SpatialID]: string
 }
@@ -75,8 +77,13 @@ export interface SpatializedElementRef extends HTMLElement {
   getBoundingClientCube: () => CubeInfo | undefined
 
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
 }
 
 export type SpatialTapEvent = CoreSpatialTapEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragEvent = CoreSpatialDragEvent & {
   currentTarget: SpatializedElementRef
 }

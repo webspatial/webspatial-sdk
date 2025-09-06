@@ -1,15 +1,22 @@
-import { Vec3, Size, SpatialTransform } from './types/types'
+import {
+  Vec3,
+  Size3D,
+  SpatialTransform,
+  SpatialDragEventDetail,
+  SpatialTapEventDetail,
+} from './types/types'
 
 export enum SpatialWebMsgType {
   CubeInfo = 'cubeInfo',
   Transform = 'transform',
   spatialtap = 'spatialtap',
+  spatialdrag = 'spatialdrag',
 }
 
 export interface CubeInfoMsg {
   type: SpatialWebMsgType.CubeInfo
   origin: Vec3
-  size: Size
+  size: Size3D
 }
 
 export interface TransformMsg {
@@ -17,7 +24,10 @@ export interface TransformMsg {
   transform: SpatialTransform
 }
 
-export interface SpatialTapMsg {
+export interface SpatialTapMsg extends SpatialTapEventDetail {
   type: SpatialWebMsgType.spatialtap
-  location3D: Vec3
+}
+
+export interface SpatialDragMsg extends SpatialDragEventDetail {
+  type: SpatialWebMsgType.spatialdrag
 }

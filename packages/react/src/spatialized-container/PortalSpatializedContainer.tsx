@@ -60,6 +60,7 @@ export function PortalSpatializedContainer(
     createSpatializedElement,
     getExtraSpatializedElementProperties,
     onSpatialTap,
+    onSpatialDrag,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -98,6 +99,13 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialTap = onSpatialTap
     }
   }, [spatializedElement, onSpatialTap])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDrag = onSpatialDrag
+    }
+  }, [spatializedElement, onSpatialDrag])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

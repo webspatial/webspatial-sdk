@@ -19,3 +19,15 @@ struct WebSpatialTapGuestureEvent: Encodable {
     let type: String = "spatialtap"
     let location3D: Point3D
 }
+
+// notify SpatializedElement/SpatialEntity dragging
+struct WebSpatialDragGuestureEvent: Encodable {
+    let type: String = "spatialdrag"
+    let location3D: Point3D
+    let startLocation3D: Point3D
+    let translation3D: Vector3D
+    let predictedEndTranslation3D: Vector3D
+    let predictedEndLocation3D: Point3D
+    let velocity: CGSize
+}
+

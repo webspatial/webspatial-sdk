@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {
   enableDebugTool,
   SpatialTapEvent,
+  SpatialDragEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
 } from '@webspatial/react-sdk'
@@ -36,6 +37,15 @@ function Model() {
     debugger
   }
 
+  const onSpatialDrag = (e: SpatialDragEvent) => {
+    console.log(
+      'model onSpatialDrag',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+    debugger
+  }
+
   ;(window as any).refModel = refModel
   return (
     <div>
@@ -44,6 +54,7 @@ function Model() {
         style={style}
         src={src}
         onSpatialTap={onSpatialTap}
+        onSpatialDrag={onSpatialDrag}
       />
     </div>
   )
@@ -95,7 +106,14 @@ function App() {
 
   const onSpatialTap = (e: SpatialTapEvent) => {
     console.log('child:', e.isTrusted, e.currentTarget.getBoundingClientCube())
-    debugger
+  }
+
+  const onSpatialDrag = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
   }
 
   return (
@@ -105,6 +123,7 @@ function App() {
       </div>
       <div
         enable-xr
+        onSpatialDrag={onSpatialDrag}
         // onSpatialTap={e => console.log(e)}
         data-name="parent"
         style={style}

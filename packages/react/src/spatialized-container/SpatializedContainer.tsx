@@ -29,6 +29,7 @@ export function SpatializedContainerBase(
       createSpatializedElement,
       getExtraSpatializedElementProperties,
       onSpatialTap,
+      onSpatialDrag,
       ...restProps
     } = inprops
     // make sure SpatializedContainer can work on web env
@@ -50,13 +51,14 @@ export function SpatializedContainerBase(
   const spatialIdProps = {
     [SpatialID]: spatialId,
   }
-  const { onSpatialTap, ...props } = inprops
+  const { onSpatialTap, onSpatialDrag, ...props } = inprops
 
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
       const spatialEvents = useSpatialEventsWhenSpatializedContainerExist(
         {
           onSpatialTap,
+          onSpatialDrag,
         },
         spatialId,
         rootSpatializedContainerObject,
@@ -119,6 +121,7 @@ export function SpatializedContainerBase(
     const spatialEvents = useSpatialEvents(
       {
         onSpatialTap,
+        onSpatialDrag,
       },
       spatialContainerRefProxy,
     )

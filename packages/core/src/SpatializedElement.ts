@@ -2,15 +2,19 @@ import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
-import { createSpatialTapEvent } from './SpatialWebEventCreator'
+import { createSpatialEvent } from './SpatialWebEventCreator'
 import {
   CubeInfo,
+  SpatialDragEvent,
+  SpatialDragEventDetail,
   SpatializedElementProperties,
   SpatialTapEvent,
+  SpatialTapEventDetail,
   SpatialTransform,
 } from './types/types'
 import {
   CubeInfoMsg,
+  SpatialDragMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
   TransformMsg,
@@ -35,27 +39,43 @@ export abstract class SpatializedElement extends SpatialObject {
     return this._cubeInfo
   }
   private onReceiveEvent = (
-    data: CubeInfoMsg | TransformMsg | SpatialTapMsg,
+    data: CubeInfoMsg | TransformMsg | SpatialTapMsg | SpatialDragMsg,
   ) => {
     console.log('SpatialWebEvent', this.id, data)
-    if (data.type === SpatialWebMsgType.CubeInfo) {
+    const { type, ...detail } = data
+    if (type === SpatialWebMsgType.CubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
-    } else if (data.type === SpatialWebMsgType.Transform) {
+    } else if (type === SpatialWebMsgType.Transform) {
       // this.transform = data.transform
-    } else if (data.type === SpatialWebMsgType.spatialtap) {
-      const spatialTapMsg = data as SpatialTapMsg
-      const event = createSpatialTapEvent(spatialTapMsg.location3D)
+    } else if (type === SpatialWebMsgType.spatialtap) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialtap,
+        detail as SpatialTapEventDetail,
+      )
       this._onSpatialTap?.(event)
+    } else if (type === SpatialWebMsgType.spatialdrag) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialdrag,
+        detail as SpatialDragEventDetail,
+      )
+      this._onSpatialDrag?.(event)
     }
   }
 
   private _onSpatialTap?: (event: SpatialTapEvent) => void
-
   set onSpatialTap(value: (event: SpatialTapEvent) => void | undefined) {
     this._onSpatialTap = value
     this.updateProperties({
       enableTapGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialDrag?: (event: SpatialDragEvent) => void
+  set onSpatialDrag(value: (event: SpatialDragEvent) => void | undefined) {
+    this._onSpatialDrag = value
+    this.updateProperties({
+      enableDragGesture: value !== undefined,
     })
   }
 
