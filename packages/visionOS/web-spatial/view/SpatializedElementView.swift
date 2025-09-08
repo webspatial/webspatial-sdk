@@ -39,6 +39,18 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
         print("\(spatializedElement.name) onRotateGesture3D \(event.rotation) ")
+         
+        
+        if spatializedElement.enableRotateGesture {
+            let gestureEvent = WebSpatialRotationGuestureEvent(
+                detail: .init(
+                    rotation: event.rotation,
+                    startAnchor3D: event.startAnchor3D,
+                    startLocation3D: event.startLocation3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
+
     }
 
     private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
@@ -59,7 +71,7 @@ struct SpatializedElementView<Content: View>: View {
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
-
+ 
     private func onDraggingEnded(_ event: DragGesture.Value) {
         if spatializedElement.enableDragEndGesture {
             let gestureEvent = WebSpatialDragEndGuestureEvent(

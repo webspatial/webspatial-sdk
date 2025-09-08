@@ -239,3 +239,11 @@ export interface SpatialDragEventDetail {
 export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = SpatialDragEvent
+
+export interface SpatialRotationEventDetail {
+  rotation: { vector: [number, number, number, number] }
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialRotationEvent = CustomEvent<SpatialRotationEventDetail>

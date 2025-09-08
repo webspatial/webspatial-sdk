@@ -46,3 +46,14 @@ struct WebSpatialDragEndGuestureEvent: Encodable {
     
 }
 
+struct WebSpatialRotationGuestureEventDetail: Encodable {
+    let rotation: Rotation3D
+    let startAnchor3D: UnitPoint3D
+    let startLocation3D: Point3D
+    
+}
+struct WebSpatialRotationGuestureEvent: Encodable {
+    let type: String = "spatialrotation"
+    let detail: WebSpatialRotationGuestureEventDetail
+    
+}

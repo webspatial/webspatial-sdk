@@ -46,6 +46,15 @@ function Model() {
     debugger
   }
 
+  const onSpatialRotation = (e: SpatialTapEvent) => {
+    console.log(
+      'model onSpatialRotation:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
   ;(window as any).refModel = refModel
   return (
     <div>
@@ -55,6 +64,7 @@ function Model() {
         src={src}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
+        onSpatialRotation={onSpatialRotation}
       />
     </div>
   )

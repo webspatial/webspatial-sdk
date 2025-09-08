@@ -7,6 +7,7 @@ export {
   type SpatialTapEvent,
   type SpatialDragEvent,
   type SpatialDragEndEvent,
+  type SpatialRotationEvent,
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
 } from './types'

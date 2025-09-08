@@ -4,6 +4,7 @@ import {
   SpatialTransform,
   SpatialDragEventDetail,
   SpatialTapEventDetail,
+  SpatialRotationEventDetail,
 } from './types/types'
 
 export enum SpatialWebMsgType {
@@ -12,6 +13,7 @@ export enum SpatialWebMsgType {
   spatialtap = 'spatialtap',
   spatialdrag = 'spatialdrag',
   spatialdragend = 'spatialdragend',
+  spatialrotation = 'spatialrotation',
 }
 
 export interface CubeInfoMsg {
@@ -38,4 +40,9 @@ export interface SpatialDragMsg {
 export interface SpatialDragEndMsg {
   type: SpatialWebMsgType.spatialdragend
   detail: SpatialDragEventDetail
+}
+
+export interface SpatialRotationMsg {
+  type: SpatialWebMsgType.spatialrotation
+  detail: SpatialRotationEventDetail
 }

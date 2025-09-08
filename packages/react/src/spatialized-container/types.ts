@@ -5,6 +5,7 @@ import {
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
+  SpatialRotationEvent as CoreSpatialRotationEvent,
 } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
@@ -27,6 +28,7 @@ export interface PortalSpatializedContainerProps
   onSpatialTap?: (event: SpatialTapEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
+  onSpatialRotation?: (event: SpatialRotationEvent) => void
 
   [SpatialID]: string
 }
@@ -90,3 +92,7 @@ export type SpatialDragEvent = CoreSpatialDragEvent & {
 }
 
 export type SpatialDragEndEvent = SpatialDragEvent
+
+export type SpatialRotationEvent = CoreSpatialRotationEvent & {
+  currentTarget: SpatializedElementRef
+}

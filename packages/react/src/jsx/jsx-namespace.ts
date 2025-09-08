@@ -3,6 +3,7 @@
    SpatialTapEvent,
    SpatialDragEvent,
    SpatialDragEndEvent,
+   SpatialRotationEvent,
    //@ts-ignore bypass ts check for external
  } from '@webspatial/react-sdk'
 
@@ -105,6 +106,7 @@
        onSpatialTap?: (e: SpatialTapEvent) => void
        onSpatialDrag?: (e: SpatialDragEvent) => void
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
+       onSpatialRotation?: (e: SpatialRotationEvent) => void
      }
    }
  }
