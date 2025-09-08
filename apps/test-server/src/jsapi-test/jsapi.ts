@@ -77,7 +77,6 @@ export async function testCreateSpatialized2DElement() {
         y: 2,
         z: 0.5,
       },
-      enableGesture: true,
     })
 
     const spatialScene = session.getSpatialScene()
@@ -121,7 +120,6 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'A',
       width: 300,
       height: 300,
-      enableGesture: false,
     })
 
     await spatialized2DElementA.updateTransform({
@@ -160,7 +158,6 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'B',
       width: 200,
       height: 100,
-      enableGesture: true,
     })
     await spatialized2DElementB.updateTransform({
       position: {
@@ -206,7 +203,6 @@ export async function testAddMultipleSpatializedStatic3DElement(
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
-      enableGesture: true,
     })
 
     await spatializedStatic3DElementA.updateTransform({
@@ -231,7 +227,6 @@ export async function testAddMultipleSpatializedStatic3DElement(
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
-      enableGesture: false,
     })
 
     await spatializedStatic3DElementB.updateTransform({
