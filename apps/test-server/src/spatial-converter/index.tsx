@@ -75,7 +75,7 @@ function Model() {
         src={src}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
-        // onSpatialRotationEnd={onSpatialRotationEnd}
+        onSpatialRotationEnd={onSpatialRotationEnd}
         onSpatialMagnify={onSpatialMagnify}
       />
     </div>

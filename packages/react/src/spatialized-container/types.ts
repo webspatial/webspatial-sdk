@@ -97,13 +97,17 @@ export type SpatialDragEvent = CoreSpatialDragEvent & {
   currentTarget: SpatializedElementRef
 }
 
-export type SpatialDragEndEvent = SpatialDragEvent
+export type SpatialDragEndEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
 
 export type SpatialRotationEvent = CoreSpatialRotationEvent & {
   currentTarget: SpatializedElementRef
 }
 
-export type SpatialRotationEndEvent = SpatialRotationEvent
+export type SpatialRotationEndEvent = CoreSpatialRotationEvent & {
+  currentTarget: SpatializedElementRef
+}
 
 export type SpatialMagnifyEventDetail = {
   magnification: number
@@ -116,4 +120,6 @@ export type SpatialMagnifyEvent = CoreSpatialMagnifyEvent & {
   currentTarget: SpatializedElementRef
 }
 
-export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
+export type SpatialMagnifyEndEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
+}
