@@ -5,6 +5,8 @@
    SpatialDragEndEvent,
    SpatialRotationEvent,
    SpatialRotationEndEvent,
+   SpatialMagnifyEvent,
+   SpatialMagnifyEndEvent,
    //@ts-ignore bypass ts check for external
  } from '@webspatial/react-sdk'
 
@@ -109,6 +111,8 @@
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
        onSpatialRotation?: (e: SpatialRotationEvent) => void
        onSpatialRotationEnd?: (e: SpatialRotationEndEvent) => void
+       onSpatialMagnify?: (e: SpatialMagnifyEvent) => void
+       onSpatialMagnifyEnd?: (e: SpatialMagnifyEndEvent) => void
      }
    }
  }

@@ -33,6 +33,8 @@ export function SpatializedContainerBase(
       onSpatialDragEnd,
       onSpatialRotation,
       onSpatialRotationEnd,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
       ...restProps
     } = inprops
     // make sure SpatializedContainer can work on web env
@@ -60,6 +62,8 @@ export function SpatializedContainerBase(
     onSpatialDragEnd,
     onSpatialRotation,
     onSpatialRotationEnd,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
     ...props
   } = inprops
 
@@ -72,6 +76,8 @@ export function SpatializedContainerBase(
           onSpatialDragEnd,
           onSpatialRotation,
           onSpatialRotationEnd,
+          onSpatialMagnify,
+          onSpatialMagnifyEnd,
         },
         spatialId,
         rootSpatializedContainerObject,
@@ -138,6 +144,8 @@ export function SpatializedContainerBase(
         onSpatialDragEnd,
         onSpatialRotation,
         onSpatialRotationEnd,
+        onSpatialMagnify,
+        onSpatialMagnifyEnd,
       },
       spatialContainerRefProxy,
     )

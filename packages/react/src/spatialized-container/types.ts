@@ -6,6 +6,9 @@ import {
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
   SpatialRotationEvent as CoreSpatialRotationEvent,
+  SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
+  Point3D,
+  Vec3,
 } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
@@ -30,6 +33,8 @@ export interface PortalSpatializedContainerProps
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
   onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 
   [SpatialID]: string
 }
@@ -99,3 +104,16 @@ export type SpatialRotationEvent = CoreSpatialRotationEvent & {
 }
 
 export type SpatialRotationEndEvent = SpatialRotationEvent
+
+export type SpatialMagnifyEventDetail = {
+  magnification: number
+  velocity: number
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialMagnifyEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEndEvent = SpatialMagnifyEvent

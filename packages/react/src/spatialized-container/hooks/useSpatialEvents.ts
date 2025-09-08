@@ -7,6 +7,8 @@ import {
   SpatialTapEvent,
   SpatializedElementRef,
   SpatialRotationEndEvent,
+  SpatialMagnifyEndEvent,
+  SpatialMagnifyEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -16,6 +18,8 @@ export interface SpatialEvents {
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
   onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 }
 
 // Create a generic event proxy factory function
@@ -78,12 +82,24 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
+  const onSpatialMagnify = createEventHandler<SpatialMagnifyEvent>(
+    spatialEvents.onSpatialMagnify,
+    currentTargetGetter,
+  )
+
+  const onSpatialMagnifyEnd = createEventHandler<SpatialMagnifyEndEvent>(
+    spatialEvents.onSpatialMagnifyEnd,
+    currentTargetGetter,
+  )
+
   return {
     onSpatialTap,
     onSpatialDrag,
     onSpatialDragEnd,
     onSpatialRotation,
     onSpatialRotationEnd,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
   }
 }
 

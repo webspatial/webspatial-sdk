@@ -6,6 +6,7 @@ import {
   SpatialDragEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
+  SpatialMagnifyEvent,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 import { SpatialRotationEndEvent } from '@webspatial/core-sdk'
@@ -56,6 +57,15 @@ function Model() {
     )
   }
 
+  const onSpatialMagnify = (e: SpatialMagnifyEvent) => {
+    console.log(
+      'model onSpatialMagnify:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
   ;(window as any).refModel = refModel
   return (
     <div>
@@ -65,7 +75,8 @@ function Model() {
         src={src}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
-        onSpatialRotationEnd={onSpatialRotationEnd}
+        // onSpatialRotationEnd={onSpatialRotationEnd}
+        onSpatialMagnify={onSpatialMagnify}
       />
     </div>
   )

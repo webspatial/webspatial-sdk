@@ -33,17 +33,14 @@ struct WebSpatialDragGuestureEventDetail: Encodable {
     let velocity: CGSize
 }
 
-// notify SpatializedElement/SpatialEntity dragging
 struct WebSpatialDragGuestureEvent: Encodable {
     let type: String = "spatialdrag"
     let detail: WebSpatialDragGuestureEventDetail
 }
 
-// notify SpatializedElement/SpatialEntity dragging end
 struct WebSpatialDragEndGuestureEvent: Encodable {
     let type: String = "spatialdragend"
     let detail: WebSpatialDragGuestureEventDetail
-    
 }
 
 struct WebSpatialRotationGuestureEventDetail: Encodable {
@@ -60,4 +57,21 @@ struct WebSpatialRotationGuestureEvent: Encodable {
 struct WebSpatialRotationEndGuestureEvent: Encodable {
     let type: String = "spatialrotationend"
     let detail: WebSpatialRotationGuestureEventDetail
+}
+
+struct WebSpatialMagnifyGuestureEventDetail: Encodable {
+    let magnification: CGFloat
+    let velocity: CGFloat
+    let startLocation3D: Point3D
+    let startAnchor3D: UnitPoint3D
+}
+
+struct WebSpatialMagnifyGuestureEvent: Encodable {
+    let type: String = "spatialmagnify"
+    let detail: WebSpatialMagnifyGuestureEventDetail
+}
+
+struct WebSpatialMagnifyEndGuestureEvent: Encodable {
+    let type: String = "spatialmagnifyend"
+    let detail: WebSpatialMagnifyGuestureEventDetail
 }

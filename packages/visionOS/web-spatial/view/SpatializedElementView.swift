@@ -59,7 +59,6 @@ struct SpatializedElementView<Content: View>: View {
                 ))
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
-
     }
 
     private func onDragging(_ event: DragGesture.Value) {
@@ -76,7 +75,7 @@ struct SpatializedElementView<Content: View>: View {
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
- 
+
     private func onDraggingEnded(_ event: DragGesture.Value) {
         if spatializedElement.enableDragEndGesture {
             let gestureEvent = WebSpatialDragEndGuestureEvent(
@@ -99,11 +98,29 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGesture \(event.magnification)")
+        if spatializedElement.enableMagnifyGesture {
+            let gestureEvent = WebSpatialMagnifyGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGestureEnd \(event.magnification)")
+        if spatializedElement.enableMagnifyEndGesture {
+            let gestureEvent = WebSpatialMagnifyEndGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     // End Interaction
