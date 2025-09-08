@@ -14,31 +14,35 @@ struct SpatiaizedContainerTransform: Encodable {
     let type: String = "transform"
 }
 
+struct WebSpatialTapGuestureEventDetail: Encodable {
+    let location3D: Point3D
+}
+
 // notify SpatializedElement/SpatialEntity tapped
 struct WebSpatialTapGuestureEvent: Encodable {
     let type: String = "spatialtap"
+    let detail: WebSpatialTapGuestureEventDetail
+}
+
+struct WebSpatialDragGuestureEventDetail: Encodable {
     let location3D: Point3D
+    let startLocation3D: Point3D
+    let translation3D: Vector3D
+    let predictedEndTranslation3D: Vector3D
+    let predictedEndLocation3D: Point3D
+    let velocity: CGSize
 }
 
 // notify SpatializedElement/SpatialEntity dragging
 struct WebSpatialDragGuestureEvent: Encodable {
     let type: String = "spatialdrag"
-    let location3D: Point3D
-    let startLocation3D: Point3D
-    let translation3D: Vector3D
-    let predictedEndTranslation3D: Vector3D
-    let predictedEndLocation3D: Point3D
-    let velocity: CGSize
+    let detail: WebSpatialDragGuestureEventDetail
 }
 
 // notify SpatializedElement/SpatialEntity dragging end
 struct WebSpatialDragEndGuestureEvent: Encodable {
     let type: String = "spatialdragend"
-    let location3D: Point3D
-    let startLocation3D: Point3D
-    let translation3D: Vector3D
-    let predictedEndTranslation3D: Vector3D
-    let predictedEndLocation3D: Point3D
-    let velocity: CGSize
+    let detail: WebSpatialDragGuestureEventDetail
+    
 }
 

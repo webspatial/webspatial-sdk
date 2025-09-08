@@ -25,14 +25,17 @@ export interface TransformMsg {
   transform: SpatialTransform
 }
 
-export interface SpatialTapMsg extends SpatialTapEventDetail {
+export interface SpatialTapMsg {
   type: SpatialWebMsgType.spatialtap
+  detail: SpatialTapEventDetail
 }
 
-export interface SpatialDragMsg extends SpatialDragEventDetail {
+export interface SpatialDragMsg {
   type: SpatialWebMsgType.spatialdrag
+  detail: SpatialDragEventDetail
 }
 
-export interface SpatialDragEndMsg extends SpatialDragEventDetail {
+export interface SpatialDragEndMsg {
   type: SpatialWebMsgType.spatialdragend
+  detail: SpatialDragEventDetail
 }

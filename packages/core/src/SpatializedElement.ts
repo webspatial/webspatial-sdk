@@ -7,14 +7,13 @@ import {
   CubeInfo,
   SpatialDragEndEvent,
   SpatialDragEvent,
-  SpatialDragEventDetail,
   SpatializedElementProperties,
   SpatialTapEvent,
-  SpatialTapEventDetail,
   SpatialTransform,
 } from './types/types'
 import {
   CubeInfoMsg,
+  SpatialDragEndMsg,
   SpatialDragMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
@@ -40,9 +39,14 @@ export abstract class SpatializedElement extends SpatialObject {
     return this._cubeInfo
   }
   private onReceiveEvent = (
-    data: CubeInfoMsg | TransformMsg | SpatialTapMsg | SpatialDragMsg,
+    data:
+      | CubeInfoMsg
+      | TransformMsg
+      | SpatialTapMsg
+      | SpatialDragMsg
+      | SpatialDragEndMsg,
   ) => {
-    const { type, ...detail } = data
+    const { type } = data
     if (type === SpatialWebMsgType.CubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
@@ -52,19 +56,19 @@ export abstract class SpatializedElement extends SpatialObject {
     } else if (type === SpatialWebMsgType.spatialtap) {
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialtap,
-        detail as SpatialTapEventDetail,
+        (data as SpatialTapMsg).detail,
       )
       this._onSpatialTap?.(event)
     } else if (type === SpatialWebMsgType.spatialdrag) {
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdrag,
-        detail as SpatialDragEventDetail,
+        (data as SpatialDragMsg).detail,
       )
       this._onSpatialDrag?.(event)
     } else if (type === SpatialWebMsgType.spatialdragend) {
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdragend,
-        detail as SpatialDragEventDetail,
+        (data as SpatialDragEndMsg).detail,
       )
       this._onSpatialDragEnd?.(event)
     }
