@@ -1,6 +1,10 @@
 import { RefObject } from 'react'
 import { SpatialContainerRefProxy } from './useDomProxy'
-import { SpatialDragEvent, SpatialTapEvent } from '../types'
+import {
+  SpatialDragEvent,
+  SpatialTapEvent,
+  SpatializedElementRef,
+} from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
 interface SpatialEvents {
@@ -8,47 +12,59 @@ interface SpatialEvents {
   onSpatialDrag?: (event: SpatialDragEvent) => void
 }
 
+// Create a generic event proxy factory function
+function createEventProxy<T extends { currentTarget?: any }>(event: T, currentTargetGetter: () => SpatializedElementRef): T {
+  return new Proxy(event, {
+    get(target, prop) {
+      if (prop === 'currentTarget') {
+        return currentTargetGetter()
+      }
+      if (prop === 'isTrusted') {
+        return true
+      }
+      return Reflect.get(target, prop)
+    },
+  })
+}
+
+// Create an event handler factory function
+function createEventHandler<T extends { currentTarget?: any }>(
+  handler: ((event: T) => void) | undefined,
+  currentTargetGetter: () => SpatializedElementRef
+): ((event: T) => void) | undefined {
+  return handler
+    ? (event: T) => {
+        const proxyEvent = createEventProxy(event, currentTargetGetter)
+        handler(proxyEvent)
+      }
+    : undefined
+}
+
+export function useSpatialEventsBase(
+  spatialEvents: SpatialEvents,
+  currentTargetGetter: () => SpatializedElementRef,
+) {
+  const onSpatialTap = createEventHandler<SpatialTapEvent>(
+    spatialEvents.onSpatialTap,
+    currentTargetGetter,
+  )
+
+  const onSpatialDrag = createEventHandler<SpatialDragEvent>(
+    spatialEvents.onSpatialDrag,
+    currentTargetGetter,
+  )
+
+  return { onSpatialTap, onSpatialDrag }
+}
+
 export function useSpatialEvents(
   spatialEvents: SpatialEvents,
   spatialContainerRefProxy: RefObject<SpatialContainerRefProxy>,
 ) {
-  const onSpatialTap = spatialEvents.onSpatialTap
-    ? (event: SpatialTapEvent) => {
-        const proxyEvent = new Proxy(event, {
-          get(target, prop) {
-            if (prop === 'currentTarget') {
-              return spatialContainerRefProxy.current?.domProxy!
-            }
-            if (prop === 'isTrusted') {
-              return true
-            }
-            return Reflect.get(target, prop)
-          },
-        })
-
-        spatialEvents.onSpatialTap?.(proxyEvent)
-      }
-    : undefined
-
-  const onSpatialDrag = spatialEvents.onSpatialDrag
-    ? (event: SpatialDragEvent) => {
-        const proxyEvent = new Proxy(event, {
-          get(target, prop) {
-            if (prop === 'currentTarget') {
-              return spatialContainerRefProxy.current?.domProxy!
-            }
-            if (prop === 'isTrusted') {
-              return true
-            }
-            return Reflect.get(target, prop)
-          },
-        })
-
-        spatialEvents.onSpatialDrag?.(proxyEvent)
-      }
-    : undefined
-
-  return { onSpatialTap, onSpatialDrag }
+  return useSpatialEventsBase(
+    spatialEvents,
+    () => spatialContainerRefProxy.current?.domProxy!,
+  )
 }
 
 export function useSpatialEventsWhenSpatializedContainerExist(
@@ -56,51 +72,11 @@ export function useSpatialEventsWhenSpatializedContainerExist(
   spatialId: string,
   spatializedContainerObject: SpatializedContainerObject,
 ) {
-  const onSpatialTap = spatialEvents.onSpatialTap
-    ? (event: SpatialTapEvent) => {
-        console.log('onSpatialTap', event)
-        const proxyEvent = new Proxy(event, {
-          get(target, prop) {
-            if (prop === 'currentTarget') {
-              const spatialContainerRefProxy =
-                spatializedContainerObject.getSpatialContainerRefProxyBySpatialId(
-                  spatialId,
-                )
-              return spatialContainerRefProxy?.domProxy!
-            }
-            if (prop === 'isTrusted') {
-              return true
-            }
-            return Reflect.get(target, prop)
-          },
-        })
-
-        spatialEvents.onSpatialTap?.(proxyEvent)
-      }
-    : undefined
-
-  const onSpatialDrag = spatialEvents.onSpatialDrag
-    ? (event: SpatialDragEvent) => {
-        console.log('onSpatialDrag', event)
-        const proxyEvent = new Proxy(event, {
-          get(target, prop) {
-            if (prop === 'currentTarget') {
-              const spatialContainerRefProxy =
-                spatializedContainerObject.getSpatialContainerRefProxyBySpatialId(
-                  spatialId,
-                )
-              return spatialContainerRefProxy?.domProxy!
-            }
-            if (prop === 'isTrusted') {
-              return true
-            }
-            return Reflect.get(target, prop)
-          },
-        })
-
-        spatialEvents.onSpatialDrag?.(proxyEvent)
-      }
-    : undefined
-
-  return { onSpatialTap, onSpatialDrag }
+  return useSpatialEventsBase(spatialEvents, () => {
+    const spatialContainerRefProxy =
+      spatializedContainerObject.getSpatialContainerRefProxyBySpatialId(
+        spatialId,
+      )
+    return spatialContainerRefProxy?.domProxy!
+  })
 }
