@@ -236,4 +236,6 @@ export interface SpatialDragEventDetail {
   velocity: Size
 }
 
-export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail> 
+export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
+
+export type SpatialDragEndEvent = SpatialDragEvent

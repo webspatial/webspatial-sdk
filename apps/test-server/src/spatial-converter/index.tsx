@@ -116,6 +116,14 @@ function App() {
     )
   }
 
+  const onSpatialDragEnd = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag End:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
   return (
     <>
       <div style={{ width: '100px', height: '100px' }}>
@@ -123,8 +131,9 @@ function App() {
       </div>
       <div
         enable-xr
-        onSpatialDrag={onSpatialDrag}
-        // onSpatialTap={e => console.log(e)}
+        // onSpatialDrag={onSpatialDrag}
+        // onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialTap={onSpatialTap}
         data-name="parent"
         style={style}
         ref={ref}
@@ -134,7 +143,8 @@ function App() {
         <a href="https://www.baidu.com">this is a link</a>
         <div
           enable-xr
-          onSpatialTap={onSpatialTap}
+          onSpatialDrag={onSpatialDrag}
+          onSpatialDragEnd={onSpatialDragEnd}
           style={childStyle}
           ref={refChild}
           data-name="child"

@@ -126,6 +126,7 @@ export class PortalInstanceObject {
     // attach __getBoundingClientCube to dom
     Object.assign(dom, {
       __getBoundingClientCube: () => {
+        console.log('__getBoundingClientCube', this.spatializedElement)
         return this.spatializedElement?.cubeInfo
       },
     })

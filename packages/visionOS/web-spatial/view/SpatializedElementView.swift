@@ -59,7 +59,15 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
-         print("\(spatializedElement.name)  onDraggingEnded \(event.location3D)")
+        if (spatializedElement.enableDragEndGesture) {
+            let gestureEvent = WebSpatialDragEndGuestureEvent(location3D: event.location3D,
+                                                           startLocation3D:  event.startLocation3D,
+                                                           translation3D: event.translation3D,
+                                                           predictedEndTranslation3D: event.predictedEndTranslation3D,
+                                                           predictedEndLocation3D: event.predictedEndLocation3D,
+                                                           velocity: event.velocity)
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {

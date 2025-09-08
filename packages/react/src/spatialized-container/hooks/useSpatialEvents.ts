@@ -1,19 +1,24 @@
 import { RefObject } from 'react'
 import { SpatialContainerRefProxy } from './useDomProxy'
 import {
+  SpatialDragEndEvent,
   SpatialDragEvent,
   SpatialTapEvent,
   SpatializedElementRef,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
-interface SpatialEvents {
+export interface SpatialEvents {
   onSpatialTap?: (event: SpatialTapEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
 }
 
 // Create a generic event proxy factory function
-function createEventProxy<T extends { currentTarget?: any }>(event: T, currentTargetGetter: () => SpatializedElementRef): T {
+function createEventProxy<T extends { currentTarget?: any }>(
+  event: T,
+  currentTargetGetter: () => SpatializedElementRef,
+): T {
   return new Proxy(event, {
     get(target, prop) {
       if (prop === 'currentTarget') {
@@ -30,7 +35,7 @@ function createEventProxy<T extends { currentTarget?: any }>(event: T, currentTa
 // Create an event handler factory function
 function createEventHandler<T extends { currentTarget?: any }>(
   handler: ((event: T) => void) | undefined,
-  currentTargetGetter: () => SpatializedElementRef
+  currentTargetGetter: () => SpatializedElementRef,
 ): ((event: T) => void) | undefined {
   return handler
     ? (event: T) => {
@@ -54,7 +59,12 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
-  return { onSpatialTap, onSpatialDrag }
+  const onSpatialDragEnd = createEventHandler<SpatialDragEndEvent>(
+    spatialEvents.onSpatialDragEnd,
+    currentTargetGetter,
+  )
+
+  return { onSpatialTap, onSpatialDrag, onSpatialDragEnd }
 }
 
 export function useSpatialEvents(

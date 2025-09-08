@@ -6,6 +6,7 @@ export {
   type SpatializedElementRef,
   type SpatialTapEvent,
   type SpatialDragEvent,
+  type SpatialDragEndEvent,
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
 } from './types'

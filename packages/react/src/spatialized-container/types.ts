@@ -26,6 +26,7 @@ export interface PortalSpatializedContainerProps
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
 
   [SpatialID]: string
 }
@@ -87,3 +88,5 @@ export type SpatialTapEvent = CoreSpatialTapEvent & {
 export type SpatialDragEvent = CoreSpatialDragEvent & {
   currentTarget: SpatializedElementRef
 }
+
+export type SpatialDragEndEvent = SpatialDragEvent

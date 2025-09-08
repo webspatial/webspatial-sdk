@@ -11,6 +11,7 @@ export enum SpatialWebMsgType {
   Transform = 'transform',
   spatialtap = 'spatialtap',
   spatialdrag = 'spatialdrag',
+  spatialdragend = 'spatialdragend',
 }
 
 export interface CubeInfoMsg {
@@ -30,4 +31,8 @@ export interface SpatialTapMsg extends SpatialTapEventDetail {
 
 export interface SpatialDragMsg extends SpatialDragEventDetail {
   type: SpatialWebMsgType.spatialdrag
+}
+
+export interface SpatialDragEndMsg extends SpatialDragEventDetail {
+  type: SpatialWebMsgType.spatialdragend
 }

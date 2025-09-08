@@ -31,3 +31,14 @@ struct WebSpatialDragGuestureEvent: Encodable {
     let velocity: CGSize
 }
 
+// notify SpatializedElement/SpatialEntity dragging end
+struct WebSpatialDragEndGuestureEvent: Encodable {
+    let type: String = "spatialdragend"
+    let location3D: Point3D
+    let startLocation3D: Point3D
+    let translation3D: Vector3D
+    let predictedEndTranslation3D: Vector3D
+    let predictedEndLocation3D: Point3D
+    let velocity: CGSize
+}
+
