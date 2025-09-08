@@ -4,13 +4,14 @@ import {
   enableDebugTool,
   SpatialTapEvent,
   SpatialDragEvent,
+  SpatialRotationEndEvent,
+  // SpatialMagnifyEndEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
   SpatialMagnifyEvent,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
-import { SpatialRotationEndEvent } from '@webspatial/core-sdk'
-
+ 
 enableDebugTool()
 
 function Model() {
