@@ -662,6 +662,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(spatialWebViewModel.id, forKey: .webviewId)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
-        try container.encode(SpatialObject.weakRefObjects.count, forKey: .spatialObjectRefCount)
+        try container.encode(SpatialObjectWeakRefManager.weakRefObjects.count, forKey: .spatialObjectRefCount)
     }
 }
