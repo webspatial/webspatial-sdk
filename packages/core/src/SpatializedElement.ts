@@ -8,6 +8,8 @@ import {
   SpatialDragEndEvent,
   SpatialDragEvent,
   SpatializedElementProperties,
+  SpatialMagnifyEndEvent,
+  SpatialMagnifyEvent,
   SpatialRotationEndEvent,
   SpatialRotationEvent,
   SpatialTapEvent,
@@ -17,6 +19,8 @@ import {
   CubeInfoMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialMagnifyEndMsg,
+  SpatialMagnifyMsg,
   SpatialRotationEndMsg,
   SpatialRotationMsg,
   SpatialTapMsg,
@@ -89,6 +93,18 @@ export abstract class SpatializedElement extends SpatialObject {
         (data as SpatialRotationEndMsg).detail,
       )
       this._onSpatialRotationEnd?.(event)
+    } else if (type === SpatialWebMsgType.spatialmagnify) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnify,
+        (data as SpatialMagnifyMsg).detail,
+      )
+      this._onSpatialMagnify?.(event)
+    } else if (type === SpatialWebMsgType.spatialmagnifyend) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnifyend,
+        (data as SpatialMagnifyEndMsg).detail,
+      )
+      this._onSpatialMagnifyEnd?.(event)
     }
   }
 
@@ -135,6 +151,26 @@ export abstract class SpatializedElement extends SpatialObject {
     this._onSpatialRotationEnd = value
     this.updateProperties({
       enableRotateEndGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  set onSpatialMagnify(
+    value: ((event: SpatialMagnifyEvent) => void) | undefined,
+  ) {
+    this._onSpatialMagnify = value
+    this.updateProperties({
+      enableMagnifyGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
+  set onSpatialMagnifyEnd(
+    value: ((event: SpatialMagnifyEndEvent) => void) | undefined,
+  ) {
+    this._onSpatialMagnifyEnd = value
+    this.updateProperties({
+      enableMagnifyEndGesture: value !== undefined,
     })
   }
 

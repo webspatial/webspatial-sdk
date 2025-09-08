@@ -64,6 +64,8 @@ export function PortalSpatializedContainer(
     onSpatialDragEnd,
     onSpatialRotation,
     onSpatialRotationEnd,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -130,6 +132,20 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialRotationEnd = onSpatialRotationEnd
     }
   }, [spatializedElement, onSpatialRotationEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnify = onSpatialMagnify
+    }
+  }, [spatializedElement, onSpatialMagnify])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyEnd = onSpatialMagnifyEnd
+    }
+  }, [spatializedElement, onSpatialMagnifyEnd])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

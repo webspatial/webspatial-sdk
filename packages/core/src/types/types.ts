@@ -249,3 +249,14 @@ export interface SpatialRotationEventDetail {
 export type SpatialRotationEvent = CustomEvent<SpatialRotationEventDetail>
 
 export type SpatialRotationEndEvent = SpatialRotationEvent
+
+export interface SpatialMagnifyEventDetail {
+  magnification: number
+  velocity: number
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
+
+export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
