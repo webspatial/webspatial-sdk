@@ -2,16 +2,28 @@
 
 import SwiftUI
 
+enum SpatialWebMsgType: String, Encodable {
+    case cubeInfo = "cubeInfo"
+    case transform = "transform"
+    case spatialtap = "spatialtap"
+    case spatialdrag = "spatialdrag"
+    case spatialdragend = "spatialdragend"
+    case spatialrotation = "spatialrotation"
+    case spatialrotationend = "spatialrotationend"
+    case spatialmagnify = "spatialmagnify"
+    case spatialmagnifyend = "spatialmagnifyend"
+}
+
 // notify Spatialized3DElement Container Cube, used for ref.current.getBoundingClientCube()
 struct SpatiaizedContainerClientCube: Encodable {
-    let type: String = "cubeInfo"
+    let type: SpatialWebMsgType = SpatialWebMsgType.cubeInfo
     let origin: Point3D
     let size: Size3D
 }
 
 // notify Spatialized3DElement Container Transform to SpatialScene, used for ref.current.convertToSpatialScene()
 struct SpatiaizedContainerTransform: Encodable {
-    let type: String = "transform"
+    let type: SpatialWebMsgType = SpatialWebMsgType.transform
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {
@@ -20,7 +32,7 @@ struct WebSpatialTapGuestureEventDetail: Encodable {
 
 // notify SpatializedElement/SpatialEntity tapped
 struct WebSpatialTapGuestureEvent: Encodable {
-    let type: String = "spatialtap"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialtap
     let detail: WebSpatialTapGuestureEventDetail
 }
 
@@ -34,12 +46,12 @@ struct WebSpatialDragGuestureEventDetail: Encodable {
 }
 
 struct WebSpatialDragGuestureEvent: Encodable {
-    let type: String = "spatialdrag"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialdrag
     let detail: WebSpatialDragGuestureEventDetail
 }
 
 struct WebSpatialDragEndGuestureEvent: Encodable {
-    let type: String = "spatialdragend"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialdragend
     let detail: WebSpatialDragGuestureEventDetail
 }
 
@@ -50,12 +62,12 @@ struct WebSpatialRotationGuestureEventDetail: Encodable {
     
 }
 struct WebSpatialRotationGuestureEvent: Encodable {
-    let type: String = "spatialrotation"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotation
     let detail: WebSpatialRotationGuestureEventDetail
 }
 
 struct WebSpatialRotationEndGuestureEvent: Encodable {
-    let type: String = "spatialrotationend"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotationend
     let detail: WebSpatialRotationGuestureEventDetail
 }
 
@@ -67,11 +79,11 @@ struct WebSpatialMagnifyGuestureEventDetail: Encodable {
 }
 
 struct WebSpatialMagnifyGuestureEvent: Encodable {
-    let type: String = "spatialmagnify"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialmagnify
     let detail: WebSpatialMagnifyGuestureEventDetail
 }
 
 struct WebSpatialMagnifyEndGuestureEvent: Encodable {
-    let type: String = "spatialmagnifyend"
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialmagnifyend
     let detail: WebSpatialMagnifyGuestureEventDetail
 }
