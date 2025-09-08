@@ -34,6 +34,7 @@
     "dist/assets",
     "dist/index.d.ts",
     "dist/index.js",
+    "dist/schema.json",
     "bin",
     "package.json",
     "README.md"
