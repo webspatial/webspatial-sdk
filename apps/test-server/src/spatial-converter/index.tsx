@@ -8,6 +8,7 @@ import {
   SpatializedElementRef,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
+import { SpatialRotationEndEvent } from '@webspatial/core-sdk'
 
 enableDebugTool()
 
@@ -46,9 +47,9 @@ function Model() {
     debugger
   }
 
-  const onSpatialRotation = (e: SpatialTapEvent) => {
+  const onSpatialRotationEnd = (e: SpatialRotationEndEvent) => {
     console.log(
-      'model onSpatialRotation:',
+      'model onSpatialRotationEnd:',
       e.detail,
       e.isTrusted,
       e.currentTarget.getBoundingClientCube(),
@@ -64,7 +65,7 @@ function Model() {
         src={src}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
-        onSpatialRotation={onSpatialRotation}
+        onSpatialRotationEnd={onSpatialRotationEnd}
       />
     </div>
   )

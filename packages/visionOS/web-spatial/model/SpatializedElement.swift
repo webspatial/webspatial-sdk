@@ -26,7 +26,7 @@ class SpatializedElement: SpatialObject {
     
     var enableDragGesture: Bool = false
     var enableDragEndGesture: Bool = false
-    var enableRotateGesture: Bool = true
+    var enableRotateGesture: Bool = false
     var enableRotateEndGesture: Bool = false
     var enableMagnifyGesture: Bool = false
     var enableMagnifyEndGesture: Bool = false

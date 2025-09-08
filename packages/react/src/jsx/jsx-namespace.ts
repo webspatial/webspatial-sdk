@@ -4,6 +4,7 @@
    SpatialDragEvent,
    SpatialDragEndEvent,
    SpatialRotationEvent,
+   SpatialRotationEndEvent,
    //@ts-ignore bypass ts check for external
  } from '@webspatial/react-sdk'
 
@@ -107,6 +108,7 @@
        onSpatialDrag?: (e: SpatialDragEvent) => void
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
        onSpatialRotation?: (e: SpatialRotationEvent) => void
+       onSpatialRotationEnd?: (e: SpatialRotationEndEvent) => void
      }
    }
  }

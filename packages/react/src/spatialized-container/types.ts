@@ -29,6 +29,7 @@ export interface PortalSpatializedContainerProps
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
+  onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
 
   [SpatialID]: string
 }
@@ -96,3 +97,5 @@ export type SpatialDragEndEvent = SpatialDragEvent
 export type SpatialRotationEvent = CoreSpatialRotationEvent & {
   currentTarget: SpatializedElementRef
 }
+
+export type SpatialRotationEndEvent = SpatialRotationEvent

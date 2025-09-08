@@ -55,5 +55,9 @@ struct WebSpatialRotationGuestureEventDetail: Encodable {
 struct WebSpatialRotationGuestureEvent: Encodable {
     let type: String = "spatialrotation"
     let detail: WebSpatialRotationGuestureEventDetail
-    
+}
+
+struct WebSpatialRotationEndGuestureEvent: Encodable {
+    let type: String = "spatialrotationend"
+    let detail: WebSpatialRotationGuestureEventDetail
 }

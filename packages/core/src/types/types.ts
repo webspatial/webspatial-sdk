@@ -247,3 +247,5 @@ export interface SpatialRotationEventDetail {
 }
 
 export type SpatialRotationEvent = CustomEvent<SpatialRotationEventDetail>
+
+export type SpatialRotationEndEvent = SpatialRotationEvent

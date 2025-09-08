@@ -8,6 +8,7 @@ import {
   SpatialDragEndEvent,
   SpatialDragEvent,
   SpatializedElementProperties,
+  SpatialRotationEndEvent,
   SpatialRotationEvent,
   SpatialTapEvent,
   SpatialTransform,
@@ -16,6 +17,7 @@ import {
   CubeInfoMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialRotationEndMsg,
   SpatialRotationMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
@@ -47,7 +49,8 @@ export abstract class SpatializedElement extends SpatialObject {
       | SpatialTapMsg
       | SpatialDragMsg
       | SpatialDragEndMsg
-      | SpatialRotationMsg,
+      | SpatialRotationMsg
+      | SpatialRotationEndMsg,
   ) => {
     const { type } = data
     if (type === SpatialWebMsgType.CubeInfo) {
@@ -80,6 +83,12 @@ export abstract class SpatializedElement extends SpatialObject {
         (data as SpatialRotationMsg).detail,
       )
       this._onSpatialRotation?.(event)
+    } else if (type === SpatialWebMsgType.spatialrotationend) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialrotationend,
+        (data as SpatialRotationEndMsg).detail,
+      )
+      this._onSpatialRotationEnd?.(event)
     }
   }
 
@@ -116,6 +125,16 @@ export abstract class SpatializedElement extends SpatialObject {
     this._onSpatialRotation = value
     this.updateProperties({
       enableRotationGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  set onSpatialRotationEnd(
+    value: ((event: SpatialRotationEndEvent) => void) | undefined,
+  ) {
+    this._onSpatialRotationEnd = value
+    this.updateProperties({
+      enableRotateEndGesture: value !== undefined,
     })
   }
 

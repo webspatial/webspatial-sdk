@@ -6,6 +6,7 @@ import {
   SpatialRotationEvent,
   SpatialTapEvent,
   SpatializedElementRef,
+  SpatialRotationEndEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -14,6 +15,7 @@ export interface SpatialEvents {
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
+  onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
 }
 
 // Create a generic event proxy factory function
@@ -71,7 +73,18 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
-  return { onSpatialTap, onSpatialDrag, onSpatialDragEnd, onSpatialRotation }
+  const onSpatialRotationEnd = createEventHandler<SpatialRotationEndEvent>(
+    spatialEvents.onSpatialRotationEnd,
+    currentTargetGetter,
+  )
+
+  return {
+    onSpatialTap,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotation,
+    onSpatialRotationEnd,
+  }
 }
 
 export function useSpatialEvents(
