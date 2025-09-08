@@ -60,6 +60,8 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				dynamic3d/Geometry.swift,
+				dynamic3d/SpatialEntity.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
