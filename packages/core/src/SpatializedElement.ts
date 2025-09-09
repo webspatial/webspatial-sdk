@@ -13,7 +13,6 @@ import {
   SpatialRotationEndEvent,
   SpatialRotationEvent,
   SpatialTapEvent,
-  SpatialTransform,
 } from './types/types'
 import {
   CubeInfoMsg,

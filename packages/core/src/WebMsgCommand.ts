@@ -1,7 +1,6 @@
 import {
   Vec3,
   Size3D,
-  SpatialTransform,
   SpatialDragEventDetail,
   SpatialTapEventDetail,
   SpatialRotationEventDetail,
