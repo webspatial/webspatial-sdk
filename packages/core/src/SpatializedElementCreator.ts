@@ -1,9 +1,11 @@
 import {
   createSpatialized2DElementCommand,
+  CreateSpatializedDynamic3DElementCommand,
   CreateSpatializedStatic3DElementCommand,
 } from './JSBCommand'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
+import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 
 export async function createSpatialized2DElement(): Promise<Spatialized2DElement> {
   const result = await new createSpatialized2DElementCommand().execute()
@@ -26,5 +28,17 @@ export async function createSpatializedStatic3DElement(
   } else {
     const { id } = result.data
     return new SpatializedStatic3DElement(id)
+  }
+}
+
+export async function createSpatializedDynamic3DElement(
+): Promise<SpatializedDynamic3DElement> {
+  const result = await new CreateSpatializedDynamic3DElementCommand(
+  ).execute()
+  if (!result.success) {
+    throw new Error('createSpatializedDynamic3DElement failed')
+  } else {
+    const { id } = result.data
+    return new SpatializedDynamic3DElement(id)
   }
 }

@@ -187,6 +187,13 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   }
 }
 
+export class CreateSpatializedDynamic3DElementCommand extends JSBCommand {
+  protected getParams(): Record<string, any> | undefined {
+    return {}
+  }
+  commandType = 'CreateSpatializedDynamic3DElement'
+}
+
 export class InspectCommand extends JSBCommand {
   commandType = 'Inspect'
 
