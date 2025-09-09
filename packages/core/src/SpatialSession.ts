@@ -50,6 +50,51 @@ export class SpatialSession {
     return createSpatialGeometry(options)
   }
 
+  createBoxGeometry(
+    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
+  ) {
+    return createSpatialGeometry({
+      ...options,
+      type: 'box',
+    })
+  }
+
+  createPlaneGeometry(
+    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
+  ) {
+    return createSpatialGeometry({
+      ...options,
+      type: 'plane',
+    })
+  }
+
+  createSphereGeometry(
+    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
+  ) {
+    return createSpatialGeometry({
+      ...options,
+      type: 'sphere',
+    })
+  }
+
+  createCylinderGeometry(
+    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
+  ) {
+    return createSpatialGeometry({
+      ...options,
+      type: 'cylinder',
+    })
+  }
+
+  createConeGeometry(
+    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
+  ) {
+    return createSpatialGeometry({
+      ...options,
+      type: 'cone',
+    })
+  }
+
   initScene(
     name: string,
     callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,

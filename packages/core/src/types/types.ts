@@ -72,7 +72,8 @@ export interface SpatializedElementProperties {
   enableGesture: boolean
 }
 
-export interface Spatialized2DElementProperties extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties
+  extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -97,9 +98,9 @@ export interface SpatialSceneCreationOptions {
     maxHeight?: number
   }
 }
-
+type SpatialGeometryType = 'box' | 'plane' | 'sphere' | 'cylinder' | 'cone'
 export interface SpatialGeometryCreationOptions {
-  type?: string
+  type?: SpatialGeometryType
   width?: number
   height?: number
   depth?: number
