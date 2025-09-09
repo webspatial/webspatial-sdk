@@ -8,16 +8,26 @@ import {
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import {
-  SpatialGeometryCreationOptions,
+  SpatialBoxGeometryOptions,
+  SpatialConeGeometryOptions,
+  SpatialCylinderGeometryOptions,
+  SpatialGeometryOptions,
+  SpatialPlaneGeometryOptions,
   SpatialSceneCreationOptions,
+  SpatialSphereGeometryOptions,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/SpatialEntity'
-import { SpatialGeometry } from './reality/SpatialGeometry'
+import { SpatialGeometry } from './reality/geometry/SpatialGeometry'
 import {
   createSpatialEntity,
   createSpatialGeometry,
 } from './reality/realityCreator'
+import { SpatialBoxGeometry } from './reality/geometry/SpatialBoxGeometry'
+import { SpatialPlaneGeometry } from './reality/geometry/SpatialPlainGeometry'
+import { SpatialSphereGeometry } from './reality/geometry/SpatialSphereGeometry'
+import { SpatialConeGeometry } from './reality/geometry/SpatialConeGeometry'
+import { SpatialCylinderGeometry } from './reality/geometry/SpatialCylinderGeometry'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -44,55 +54,25 @@ export class SpatialSession {
   createSpatialEntity(name?: string): Promise<SpatialEntity> {
     return createSpatialEntity(name)
   }
-  createSpatialGeometry(
-    options: SpatialGeometryCreationOptions = {},
-  ): Promise<SpatialGeometry> {
-    return createSpatialGeometry(options)
+
+  createBoxGeometry(options: SpatialBoxGeometryOptions = {}) {
+    return createSpatialGeometry(SpatialBoxGeometry, options)
   }
 
-  createBoxGeometry(
-    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
-  ) {
-    return createSpatialGeometry({
-      ...options,
-      type: 'box',
-    })
+  createPlaneGeometry(options: SpatialPlaneGeometryOptions = {}) {
+    return createSpatialGeometry(SpatialPlaneGeometry, options)
   }
 
-  createPlaneGeometry(
-    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
-  ) {
-    return createSpatialGeometry({
-      ...options,
-      type: 'plane',
-    })
+  createSphereGeometry(options: SpatialSphereGeometryOptions = {}) {
+    return createSpatialGeometry(SpatialSphereGeometry, options)
   }
 
-  createSphereGeometry(
-    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
-  ) {
-    return createSpatialGeometry({
-      ...options,
-      type: 'sphere',
-    })
+  createConeGeometry(options: SpatialConeGeometryOptions) {
+    return createSpatialGeometry(SpatialConeGeometry, options)
   }
 
-  createCylinderGeometry(
-    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
-  ) {
-    return createSpatialGeometry({
-      ...options,
-      type: 'cylinder',
-    })
-  }
-
-  createConeGeometry(
-    options: Omit<SpatialGeometryCreationOptions, 'type'> = {},
-  ) {
-    return createSpatialGeometry({
-      ...options,
-      type: 'cone',
-    })
+  createCylinderGeometry(options: SpatialCylinderGeometryOptions) {
+    return createSpatialGeometry(SpatialCylinderGeometry, options)
   }
 
   initScene(

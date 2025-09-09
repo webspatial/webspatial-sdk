@@ -2,9 +2,9 @@ import {
   CreateSpatialEntityCommand,
   CreateSpatialGeometryCommand,
 } from '../JSBCommand'
-import { SpatialGeometryCreationOptions } from '../types/types'
+import { SpatialGeometryOptions } from '../types/types'
 import { SpatialEntity } from './SpatialEntity'
-import { SpatialGeometry } from './SpatialGeometry'
+import { SpatialGeometry } from './geometry/SpatialGeometry'
 
 export async function createSpatialEntity(
   name?: string,
@@ -18,14 +18,18 @@ export async function createSpatialEntity(
   }
 }
 
-export async function createSpatialGeometry(
-  options: SpatialGeometryCreationOptions,
+export async function createSpatialGeometry<T extends SpatialGeometry>(
+  ctor: new (...args: any[]) => T,
+  options: SpatialGeometryOptions,
 ) {
-  const result = await new CreateSpatialGeometryCommand(options).execute()
+  const result = await new CreateSpatialGeometryCommand(
+    (ctor as any).type,
+    options,
+  ).execute()
   if (!result.success) {
     throw new Error('createSpatialGeometry failed')
   } else {
     const { id } = result.data
-    return new SpatialGeometry(id, options)
+    return new ctor(id, options) as T
   }
 }

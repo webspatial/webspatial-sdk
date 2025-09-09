@@ -10,8 +10,9 @@ import {
   SpatialSceneProperties,
   SpatialTransform,
   SpatialSceneCreationOptions,
-  SpatialGeometryCreationOptions,
   SpatialUnlitMaterialCreationOptions,
+  SpatialGeometryOptions,
+  SpatialGeometryType,
 } from './types/types'
 
 const platform = createPlatform()
@@ -143,7 +144,6 @@ export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
   }
 }
 
-
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
   spatialTransform: Partial<SpatialTransform>
   commandType = 'UpdateSpatializedElementTransform'
@@ -242,11 +242,14 @@ export class CreateSpatialEntityCommand extends JSBCommand {
 }
 
 export class CreateSpatialGeometryCommand extends JSBCommand {
-  constructor(private options: SpatialGeometryCreationOptions = {}) {
+  constructor(
+    private type: SpatialGeometryType,
+    private options: SpatialGeometryOptions = {},
+  ) {
     super()
   }
   protected getParams(): Record<string, any> | undefined {
-    return { ...this.options }
+    return { type: this.type, ...this.options }
   }
   commandType = 'CreateGeometry'
 }

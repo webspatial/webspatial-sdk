@@ -98,16 +98,42 @@ export interface SpatialSceneCreationOptions {
     maxHeight?: number
   }
 }
-type SpatialGeometryType = 'box' | 'plane' | 'sphere' | 'cylinder' | 'cone'
-export interface SpatialGeometryCreationOptions {
-  type?: SpatialGeometryType
+export type SpatialGeometryType = 'box' | 'plane' | 'sphere' | 'cylinder' | 'cone'
+
+export interface SpatialBoxGeometryOptions {
   width?: number
   height?: number
   depth?: number
   cornerRadius?: number
   splitFaces?: boolean
+}
+
+export interface SpatialPlaneGeometryOptions {
+  width?: number
+  height?: number
+  cornerRadius?: number
+}
+
+export interface SpatialSphereGeometryOptions {
   radius?: number
 }
+
+export interface SpatialConeGeometryOptions {
+  radius?: number
+  height?: number
+}
+
+export interface SpatialCylinderGeometryOptions {
+  radius?: number
+  height?: number
+}
+
+export type SpatialGeometryOptions =
+  | SpatialBoxGeometryOptions
+  | SpatialPlaneGeometryOptions
+  | SpatialSphereGeometryOptions
+  | SpatialCylinderGeometryOptions
+  | SpatialConeGeometryOptions
 
 export type SpatialMaterialType = 'unlit'
 
