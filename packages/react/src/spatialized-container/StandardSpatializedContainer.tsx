@@ -20,7 +20,7 @@ function useSpatialTransformVisibilityWatcher(spatialId: string) {
     spatializedContainerObject.onSpatialTransformVisibilityChange(
       spatialId,
       spatialTransform => {
-        setTransformExist(spatialTransform.transformExist)
+        setTransformExist(spatialTransform.transform !== 'none')
       },
     )
     return () => {

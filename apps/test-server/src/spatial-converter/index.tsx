@@ -10,7 +10,6 @@ import {
   SpatializedElementRef,
   SpatialMagnifyEvent,
   toSceneSpatial,
-  toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
@@ -27,8 +26,8 @@ function Model() {
     display: 'block',
     visibility: 'visible',
     // background: 'blue',
-    // '--xr-back': '400px',
-    transform: 'translateX(100px) rotateZ(30deg)',
+    '--xr-back': '140px',
+    // transform: 'translateX(100px) rotateX(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
   }
@@ -105,7 +104,7 @@ function App() {
     '--xr-background-material': 'translucent',
     '--xr-back': '10px',
     '--xr-depth': '150px',
-    // transform: 'rotateX(30deg)',
+    // transform: 'rotate3d(0, 1, 1, 45deg)',
     // display: 'none',
     contentVisibility: 'visible',
     overflow: 'scroll',

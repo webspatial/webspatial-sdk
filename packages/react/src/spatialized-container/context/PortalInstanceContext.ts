@@ -4,7 +4,6 @@ import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, Point3D } from '../types'
 import { getSession } from '../../utils'
-import { Matrix4, Quaternion, Vector3 } from '../../utils/math'
 import { convertDOMRectToSceneSpace } from '../transform-utils'
 
 type DomRect = {
@@ -23,7 +22,7 @@ type CachedDomInfo = {
 
 type CachedTransformVisibilityInfo = {
   visibility: string
-  transformMatrix: Matrix4
+  transformMatrix: DOMMatrix
 }
 
 export class PortalInstanceObject {
@@ -98,7 +97,10 @@ export class PortalInstanceObject {
     spatializedContainerObject.onSpatialTransformVisibilityChange(
       spatialId,
       spatialTransform => {
-        this.cachedTransformVisibilityInfo = spatialTransform
+        this.cachedTransformVisibilityInfo = {
+          transformMatrix: new DOMMatrix(spatialTransform.transform),
+          visibility: spatialTransform.visibility,
+        }
         this.updateSpatializedElementProperties()
       },
     )
@@ -265,6 +267,8 @@ export class PortalInstanceObject {
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
 
     spatializedElement.updateProperties({
+      clientX: x,
+      clientY: y,
       width,
       height,
       depth,
@@ -279,37 +283,7 @@ export class PortalInstanceObject {
 
     // update transform
     const transform = this.transformMatrix!
-    const position = new Vector3()
-    const quaternion = new Quaternion()
-    const scale = new Vector3()
-    transform.decompose(position, quaternion, scale)
-
-    const parentWindow = this.parentPortalInstanceObject
-      ? (
-          this.parentPortalInstanceObject
-            .spatializedElement! as Spatialized2DElement
-        ).windowProxy
-      : window
-    const parrentOffsetX: number = parentWindow.scrollX
-    const parrentOffsetY: number = parentWindow.scrollY
-    spatializedElement.updateTransform({
-      position: {
-        x: x + position.x + parrentOffsetX,
-        y: y + position.y + parrentOffsetY,
-        z: position.z + backOffset,
-      },
-      quaternion: {
-        x: quaternion.x,
-        y: quaternion.y,
-        z: quaternion.z,
-        w: quaternion.w,
-      },
-      scale: {
-        x: scale.x,
-        y: scale.y,
-        z: scale.z,
-      },
-    })
+    spatializedElement.updateTransform(transform.toFloat64Array())
   }
 }
 

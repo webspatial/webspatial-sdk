@@ -8,7 +8,6 @@ import {
   SpatializedElementProperties,
   SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
-  SpatialTransform,
   SpatialSceneCreationOptions,
 } from './types/types'
 
@@ -108,19 +107,16 @@ export class UpdateSpatialized2DElementProperties extends SpatializedElementComm
 }
 
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
-  spatialTransform: Partial<SpatialTransform>
+  matrix: Float64Array
   commandType = 'UpdateSpatializedElementTransform'
 
-  constructor(
-    spatialObject: SpatialObject,
-    spatialTransform: Partial<SpatialTransform>,
-  ) {
+  constructor(spatialObject: SpatialObject, matrix: Float64Array) {
     super(spatialObject)
-    this.spatialTransform = spatialTransform
+    this.matrix = matrix
   }
 
   protected getExtraParams() {
-    return this.spatialTransform
+    return { matrix: Array.from(this.matrix) }
   }
 }
 

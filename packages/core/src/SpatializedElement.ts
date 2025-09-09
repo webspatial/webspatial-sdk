@@ -38,8 +38,8 @@ export abstract class SpatializedElement extends SpatialObject {
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
 
-  async updateTransform(transform: Partial<SpatialTransform>) {
-    return new UpdateSpatializedElementTransform(this, transform).execute()
+  async updateTransform(matrix: Float64Array) {
+    return new UpdateSpatializedElementTransform(this, matrix).execute()
   }
 
   private _cubeInfo?: CubeInfo
