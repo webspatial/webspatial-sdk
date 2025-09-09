@@ -51,35 +51,15 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
-          getSession()
-            ?.createSpatializedDynamic3DElement()
-            .then(ele => {
-              console.log('🚀 ~ App ~ ele:', ele)
-            })
+          const session = getSession()!
+          const reality = await session.createSpatializedDynamic3DElement()
+          const spatialScene = session.getSpatialScene()
+          await spatialScene.addSpatializedElement(reality)
         }}
       >
         create reality
       </button>
 
-       <button
-        className={btnCls}
-        onClick={async () => {
-          getSession()
-            ?.createSpatialized2DElement()
-        }}
-      >
-        create spatialdiv
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          //@ts-ignore
-          log('windowID:', window._webSpatialID)
-        }}
-      >
-        get window._webSpatialID
-      </button>
       <div>
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
