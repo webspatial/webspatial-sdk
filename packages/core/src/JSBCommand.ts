@@ -194,6 +194,15 @@ export class CreateSpatializedDynamic3DElementCommand extends JSBCommand {
   commandType = 'CreateSpatializedDynamic3DElement'
 }
 
+export class CreateSpatialEntityCommand extends JSBCommand {
+  constructor(private name?: string) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return { name: this.name }
+  }
+  commandType = 'CreateSpatialEntity'
+}
 export class InspectCommand extends JSBCommand {
   commandType = 'Inspect'
 

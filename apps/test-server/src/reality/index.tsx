@@ -60,6 +60,16 @@ function App() {
         create reality
       </button>
 
+        <button
+        className={btnCls}
+        onClick={async () => {
+          const session = getSession()!
+          const entity = await session.createSpatialEntity()
+        }}
+      >
+        create entity
+      </button>
+
       <div>
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
