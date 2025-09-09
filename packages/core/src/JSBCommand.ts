@@ -11,6 +11,7 @@ import {
   SpatialTransform,
   SpatialSceneCreationOptions,
   SpatialGeometryCreationOptions,
+  SpatialUnlitMaterialCreationOptions,
 } from './types/types'
 
 const platform = createPlatform()
@@ -124,6 +125,24 @@ export class UpdateSpatializedDynamic3DElementProperties extends SpatializedElem
     return this.properties
   }
 }
+
+export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
+  properties: Partial<SpatialUnlitMaterialCreationOptions>
+  commandType = 'UpdateUnlitMaterialProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatialUnlitMaterialCreationOptions>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
 
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
   spatialTransform: Partial<SpatialTransform>

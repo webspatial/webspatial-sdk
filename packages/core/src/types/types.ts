@@ -109,6 +109,18 @@ export interface SpatialGeometryCreationOptions {
   radius?: number
 }
 
+export type SpatialMaterialType = 'unlit'
+
+type BlendingType = 'opaque' | 'transparent'
+
+export interface SpatialUnlitMaterialCreationOptions {
+  color?: string
+  textureId?: string
+  blending?: BlendingType
+
+  opacity?: number
+}
+
 export enum SpatialSceneState {
   idle = 'idle',
   pending = 'pending',
