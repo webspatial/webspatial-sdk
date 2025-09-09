@@ -4,19 +4,6 @@ export interface Vec3 {
   z: number
 }
 
-export interface Vec4 {
-  x: number
-  y: number
-  z: number
-  w: number
-}
-
-// export interface SpatialTransform {
-//   position: Vec3
-//   quaternion: Vec4
-//   scale: Vec3
-// }
-
 /**
  * Material type for SpatialDiv or HTML document.
  *
