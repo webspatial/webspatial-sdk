@@ -17,6 +17,10 @@ class EventEmitter {
     public func off(event: String, listener: @escaping (_ object: Any, _ data: Any) -> Void) {
         listeners[event]?.removeAll(where: { $0 as AnyObject === listener as AnyObject })
     }
+    
+    public func reset(){
+        listeners = [:]
+    }
 }
 
 protocol EventEmitterProtocol{

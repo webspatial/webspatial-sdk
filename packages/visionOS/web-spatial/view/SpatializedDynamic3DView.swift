@@ -69,6 +69,9 @@ struct SpatializedDynamic3DView: View {
     
     var body: some View {
         RealityView(make: { content in
+            let rootEntity = spatializedDynamic3DElement.getRoot()
+            content.add(rootEntity)
+            // for test
             let mesh = MeshResource.generateBox(size: 0.1)
             let mat = SimpleMaterial(color: .blue, isMetallic: false)
             let entity = Entity()

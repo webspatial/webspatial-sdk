@@ -21,6 +21,17 @@ struct CreateSpatializedDynamic3DElement: CommandDataProtocol{
     static let commandType: String = "CreateSpatializedDynamic3DElement"
 }
 
+struct CreateGeometryProperties: CommandDataProtocol{
+    static let commandType: String = "CreateGeometry"
+    let type: String
+    let width: Float?
+    let height: Float?
+    let depth: Float?
+    let cornerRadius: Float?
+    let splitFaces: Bool?
+    let radius: Float?
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?

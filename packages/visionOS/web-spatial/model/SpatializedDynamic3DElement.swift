@@ -4,6 +4,10 @@ import Foundation
 class SpatializedDynamic3DElement: SpatializedElement {
     private var rootEntity = SpatialEntity()
     
+    func getRoot() -> SpatialEntity{
+        return rootEntity
+    }
+    
     func addEntity(_ entity:SpatialEntity){
         rootEntity.addChild(entity)
     }

@@ -69,6 +69,7 @@ class Geometry: SpatialObjectProtocol, EventEmitterProtocol {
     }
 }
 
+@Observable
 class BoxGeometry:Geometry{
     let width:Float
     let height:Float

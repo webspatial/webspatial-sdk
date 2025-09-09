@@ -224,6 +224,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
+        spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
+        
+        
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
         
         spatialWebViewModel
@@ -607,6 +610,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         addSpatialObject(spatializedElement)
 
         return spatializedElement
+    }
+    
+    private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let geometry = switch GeometryType(rawValue: command.type) {
+        case .BoxGeometry:
+            BoxGeometry(width: command.width!, height: command.height!, depth: command.depth!, cornerRadius: command.cornerRadius ?? 0, splitFaces: command.splitFaces ?? false)
+        default:
+            nil
+        } else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
+            return
+        }
+        resolve(.success(AddSpatializedElementReply(id: geometry.id)))
     }
 
     func createEntity() {
