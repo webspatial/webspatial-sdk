@@ -108,6 +108,23 @@ export class UpdateSpatialized2DElementProperties extends SpatializedElementComm
   }
 }
 
+export class UpdateSpatializedDynamic3DElementProperties extends SpatializedElementCommand {
+  properties: Partial<Spatialized2DElementProperties>
+  commandType = 'UpdateSpatializedDynamic3DElementProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatializedElementProperties>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
   spatialTransform: Partial<SpatialTransform>
   commandType = 'UpdateSpatializedElementTransform'

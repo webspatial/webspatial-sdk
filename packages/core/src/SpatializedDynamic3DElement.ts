@@ -1,10 +1,11 @@
-import { WebSpatialProtocolResult } from './platform-adapter/interface'
+import { UpdateSpatializedDynamic3DElementProperties } from './JSBCommand'
 import { SpatializedElement } from './SpatializedElement'
-import { SpatializedElementProperties } from './types/types'
+import { Spatialized2DElementProperties } from './types/types'
 export class SpatializedDynamic3DElement extends SpatializedElement {
-  updateProperties(
-    properties: Partial<SpatializedElementProperties>,
-  ): Promise<WebSpatialProtocolResult> {
-    throw new Error('Method not implemented.')
+  async updateProperties(properties: Partial<Spatialized2DElementProperties>) {
+    return new UpdateSpatializedDynamic3DElementProperties(
+      this,
+      properties,
+    ).execute()
   }
 }
