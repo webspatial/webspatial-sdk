@@ -38,10 +38,11 @@ struct SpatialSceneContentView: View {
                 let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
                 
                 ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedDynamic3DView()
-                    }
-                    .environment(child)
+//                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+//                        SpatializedDynamic3DView()
+//                    }
+//                    .environment(child)
+                    SpatializedDynamic3DView().environment(child)
                 }
             }
             .opacity(spatialScene.opacity)
