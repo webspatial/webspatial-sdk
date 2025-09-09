@@ -19,6 +19,12 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
 
 struct CreateSpatializedDynamic3DElement: CommandDataProtocol{
     static let commandType: String = "CreateSpatializedDynamic3DElement"
+    let test: Bool
+}
+
+struct CreateSpatialEntity: CommandDataProtocol{
+    static let commandType: String = "CreateSpatialEntity"
+    let name: String?
 }
 
 struct CreateGeometryProperties: CommandDataProtocol{
@@ -30,6 +36,19 @@ struct CreateGeometryProperties: CommandDataProtocol{
     let cornerRadius: Float?
     let splitFaces: Bool?
     let radius: Float?
+}
+
+struct CreateUnlitMaterial: CommandDataProtocol{
+    static let commandType: String = "CreateUnlitMaterial"
+    let color: String?
+    let textureId: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct CreateTexture: CommandDataProtocol{
+    static let commandType: String = "CreateTexture"
+    let url: String
 }
 
 struct InspectCommand: CommandDataProtocol {
@@ -100,6 +119,22 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let enableGesture: Bool?
 
     let modelURL: String?
+}
+
+struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
+    static let commandType: String = "UpdateSpatializedDynamic3DElementProperties"
+    let id: String
+    let name: String?
+    let width: Double?
+    let height: Double?
+    let depth: Double?
+    let backOffset: Double?
+    let rotationAnchor: Vec3?
+    let opacity: Double?
+    let visible: Bool?
+    let scrollWithParent: Bool?
+    let zIndex: Double?
+    let enableGesture: Bool?
 }
 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {

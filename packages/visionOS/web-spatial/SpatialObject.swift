@@ -1,6 +1,6 @@
 import Foundation
 
-protocol SpatialObjectProtocol: Encodable, Equatable {
+protocol SpatialObjectProtocol: Encodable, Equatable, EventEmitterProtocol {
     var spatialId: String { get }
     var name: String { get set }
     var isDestroyed: Bool { get }
@@ -33,7 +33,9 @@ class SpatialObjectWeakRefManager {
     }
 }
 
-class SpatialObject: EventEmitter, Encodable, Equatable, SpatialObjectProtocol {
+class SpatialObject: Encodable, Equatable, SpatialObjectProtocol {
+    internal var listeners: [String : [(Any, Any) -> Void]] = [:]
+    
     static var objects = [String: (any SpatialObjectProtocol)]()
     
     static func get(_ id: String) -> (any SpatialObjectProtocol)? {
@@ -69,10 +71,9 @@ class SpatialObject: EventEmitter, Encodable, Equatable, SpatialObjectProtocol {
         return lhs.spatialId == rhs.spatialId
     }
 
-    override init() {
+    init() {
         spatialId = UUID().uuidString
         id = spatialId
-        super.init()
         SpatialObject.objects[spatialId] = self
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
@@ -80,7 +81,6 @@ class SpatialObject: EventEmitter, Encodable, Equatable, SpatialObjectProtocol {
     init(_ _id: String) {
         spatialId = _id
         id = spatialId
-        super.init()
         SpatialObject.objects[spatialId] = self
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
@@ -106,7 +106,7 @@ class SpatialObject: EventEmitter, Encodable, Equatable, SpatialObjectProtocol {
         emit(event: Events.Destroyed.rawValue, data: ["object": self])
         SpatialObject.objects.removeValue(forKey: spatialId)
 
-        reset()
+        listeners = [:]
     }
 
     func onDestroy() {}

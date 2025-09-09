@@ -2,30 +2,30 @@ import RealityKit
 import Foundation
 
 class Dynamic3DManager{
-    private var entities:[String:SpatialEntity] = [:]
-    private var components:[String:Component] = [:]
-    private var materials:[String:Material] = [:]
-    private var geometries:[String:MeshResource] = [:]
-    private var textures:[String:TextureResource] = [:]
-    private var modelAssets:[String:Entity] = [:]
-    
-    func createEntity(_ id:String, _ name:String = "") -> String{
+    static func createEntity(_ props: CreateSpatialEntity) -> SpatialEntity{
         let entity = SpatialEntity()
-        entity.name = name
-        entities[entity.spatialId] = entity
-        return entity.spatialId
+        entity.name = props.name ?? ""
+        return entity
     }
     
     func createComponent(){
         
     }
     
-    func createGeometry(){
-        
+    static func createGeometry(_ props: CreateGeometryProperties) -> Geometry?{
+        guard let geometry = switch GeometryType(rawValue: props.type) {
+        case .BoxGeometry:
+            BoxGeometry(width: props.width!, height: props.height!, depth: props.depth!, cornerRadius: props.cornerRadius ?? 0, splitFaces: props.splitFaces ?? false)
+        default:
+            nil
+        } else {
+            return nil
+        }
+        return geometry
     }
     
-    func createMaterial(){
-        
+    static func createUnlitMaterial(_ props: CreateUnlitMaterial, _ tex:TextureResource? = nil) -> SpatialUnlitMaterial{
+        return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)
     }
     
     func createTexture(){

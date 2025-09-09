@@ -2,7 +2,8 @@ import SwiftUI
 import RealityKit
 
 @Observable
-class SpatialEntity: Entity, SpatialObjectProtocol, EventEmitterProtocol {
+class SpatialEntity: Entity, SpatialObjectProtocol {
+    
     let spatialId: String
     
     private var _isDestroyed: Bool = false

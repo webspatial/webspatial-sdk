@@ -224,7 +224,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
+        spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
+        spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
         
         
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -595,7 +597,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      */
 
     // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
-    private var spatialObjects = [String: SpatialObject]()
+    private var spatialObjects = [String: any SpatialObjectProtocol]()
 
     func createSpatializedElement<T: SpatializedElement>(_ type: SpatializedElementType) -> T {
         let spatializedElement: T = switch type {
@@ -613,28 +615,33 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let geometry = switch GeometryType(rawValue: command.type) {
-        case .BoxGeometry:
-            BoxGeometry(width: command.width!, height: command.height!, depth: command.depth!, cornerRadius: command.cornerRadius ?? 0, splitFaces: command.splitFaces ?? false)
-        default:
-            nil
-        } else {
+        guard let geometry = Dynamic3DManager.createGeometry(command) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
             return
         }
+        addSpatialObject(geometry)
         resolve(.success(AddSpatializedElementReply(id: geometry.id)))
     }
 
-    func createEntity() {
-        //      @fukang: add Entity here
+    private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let entity = Dynamic3DManager.createEntity(command)
+        addSpatialObject(entity)
+        resolve(.success(AddSpatializedElementReply(id: entity.spatialId)))
     }
 
-    func createComponent() {
+    private func onCreateComponent() {
         //      @fukang: add Component here
     }
+    
+    private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        let material = Dynamic3DManager.createUnlitMaterial(command, nil)
+        addSpatialObject(material)
+        resolve(.success(AddSpatializedElementReply(id: material.id)))
+    }
 
-    private func addSpatialObject(_ spatialObject: SpatialObject) {
-        spatialObjects[spatialObject.id] = spatialObject
+    private func addSpatialObject(_ object: any SpatialObjectProtocol) {
+        var spatialObject = object
+        spatialObjects[spatialObject.spatialId] = spatialObject
         spatialObject
             .on(
                 event: SpatialObject.Events.BeforeDestroyed.rawValue,
@@ -643,7 +650,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onSptatialObjectDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialObject
+        var spatialObject = object as! SpatialObject
         spatialObject
             .off(
                 event: SpatialObject.Events.BeforeDestroyed.rawValue,
