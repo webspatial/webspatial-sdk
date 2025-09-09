@@ -38,7 +38,7 @@ export abstract class SpatializedElement extends SpatialObject {
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
 
-  async updateTransform(matrix: Float64Array) {
+  async updateTransform(matrix: DOMMatrix) {
     return new UpdateSpatializedElementTransform(this, matrix).execute()
   }
 

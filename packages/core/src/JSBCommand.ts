@@ -107,16 +107,16 @@ export class UpdateSpatialized2DElementProperties extends SpatializedElementComm
 }
 
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
-  matrix: Float64Array
+  matrix: DOMMatrix
   commandType = 'UpdateSpatializedElementTransform'
 
-  constructor(spatialObject: SpatialObject, matrix: Float64Array) {
+  constructor(spatialObject: SpatialObject, matrix: DOMMatrix) {
     super(spatialObject)
     this.matrix = matrix
   }
 
   protected getExtraParams() {
-    return { matrix: Array.from(this.matrix) }
+    return { matrix: Array.from(this.matrix.toFloat64Array()) }
   }
 }
 

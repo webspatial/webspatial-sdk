@@ -282,8 +282,7 @@ export class PortalInstanceObject {
     })
 
     // update transform
-    const transform = this.transformMatrix!
-    spatializedElement.updateTransform(transform.toFloat64Array())
+    spatializedElement.updateTransform(this.transformMatrix!)
   }
 }
 
