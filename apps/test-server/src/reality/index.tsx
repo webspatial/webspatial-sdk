@@ -60,7 +60,7 @@ function App() {
         create reality
       </button>
 
-        <button
+      <button
         className={btnCls}
         onClick={async () => {
           const session = getSession()!
@@ -68,6 +68,21 @@ function App() {
         }}
       >
         create entity
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          const session = getSession()!
+          const geometry = await session.createSpatialGeometry({
+            type: 'box',
+            width: 1,
+            height: 1,
+            depth: 1,
+          })
+        }}
+      >
+        create geometry
       </button>
 
       <div>

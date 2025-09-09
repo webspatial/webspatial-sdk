@@ -98,6 +98,16 @@ export interface SpatialSceneCreationOptions {
   }
 }
 
+export interface SpatialGeometryCreationOptions {
+  type?: string
+  width?: number
+  height?: number
+  depth?: number
+  cornerRadius?: number
+  splitFaces?: boolean
+  radius?: number
+}
+
 export enum SpatialSceneState {
   idle = 'idle',
   pending = 'pending',

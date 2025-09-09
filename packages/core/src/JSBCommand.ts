@@ -10,6 +10,7 @@ import {
   SpatialSceneProperties,
   SpatialTransform,
   SpatialSceneCreationOptions,
+  SpatialGeometryCreationOptions,
 } from './types/types'
 
 const platform = createPlatform()
@@ -203,6 +204,17 @@ export class CreateSpatialEntityCommand extends JSBCommand {
   }
   commandType = 'CreateSpatialEntity'
 }
+
+export class CreateSpatialGeometryCommand extends JSBCommand {
+  constructor(private options: SpatialGeometryCreationOptions = {}) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return { ...this.options }
+  }
+  commandType = 'CreateGeometry'
+}
+
 export class InspectCommand extends JSBCommand {
   commandType = 'Inspect'
 

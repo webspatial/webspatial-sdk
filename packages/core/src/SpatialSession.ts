@@ -1,12 +1,23 @@
 import { initScene } from './scene-polyfill'
 import { SpatialScene } from './SpatialScene'
 import { Spatialized2DElement } from './Spatialized2DElement'
-import { createSpatialEntity, createSpatialized2DElement, createSpatializedDynamic3DElement } from './SpatializedElementCreator'
+import {
+  createSpatialized2DElement,
+  createSpatializedDynamic3DElement,
+} from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
-import { SpatialSceneCreationOptions } from './types/types'
+import {
+  SpatialGeometryCreationOptions,
+  SpatialSceneCreationOptions,
+} from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
-import { SpatialEntity } from './SpatialEntity'
+import { SpatialEntity } from './reality/SpatialEntity'
+import { SpatialGeometry } from './reality/SpatialGeometry'
+import {
+  createSpatialEntity,
+  createSpatialGeometry,
+} from './reality/realityCreator'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session
@@ -30,8 +41,13 @@ export class SpatialSession {
     return createSpatializedDynamic3DElement()
   }
 
-  createSpatialEntity(name?: string):Promise<SpatialEntity>{
+  createSpatialEntity(name?: string): Promise<SpatialEntity> {
     return createSpatialEntity(name)
+  }
+  createSpatialGeometry(
+    options: SpatialGeometryCreationOptions = {},
+  ): Promise<SpatialGeometry> {
+    return createSpatialGeometry(options)
   }
 
   initScene(

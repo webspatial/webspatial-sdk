@@ -1,4 +1,4 @@
-import { SpatialObject } from './SpatialObject'
+import { SpatialObject } from '../SpatialObject'
 
 export class SpatialEntity extends SpatialObject {
   constructor(
