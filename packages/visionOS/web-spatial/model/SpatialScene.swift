@@ -11,9 +11,9 @@ struct CustomReplyData: Codable {
     let name: String
 }
 
-struct AddSpatializedStatic3DElementReply: Codable {
+struct AddSpatializedElementReply: Codable {
     let id: String
-}  
+}
 struct ResizeRange: Codable {
     var minWidth: Double?
     var minHeight: Double?
@@ -223,6 +223,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
+        spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
         
         spatialWebViewModel
@@ -308,7 +309,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
         spatialObject.modelURL = command.modelURL
 
-        resolve(.success(AddSpatializedStatic3DElementReply(id: spatialObject.id)))
+        resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
+    }
+    
+    private func onCreateSpatializedDynamic3DElement(command: CreateSpatializedDynamic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let spatialObject: SpatializedDynamic3DElement = createSpatializedElement(.SpatializedDynamic3DElement)
+        
+        resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
 
     private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {

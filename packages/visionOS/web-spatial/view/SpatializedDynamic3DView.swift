@@ -69,7 +69,11 @@ struct SpatializedDynamic3DView: View {
     
     var body: some View {
         RealityView(make: { content in
-            
+            let mesh = MeshResource.generateBox(size: 0.1)
+            let mat = SimpleMaterial(color: .blue, isMetallic: false)
+            let entity = Entity()
+            entity.components.set(ModelComponent(mesh: mesh, materials: [mat]))
+            content.add(entity)
         })
         .simultaneousGesture(spatialTapEvent)
         .simultaneousGesture(rotate3dEvent)

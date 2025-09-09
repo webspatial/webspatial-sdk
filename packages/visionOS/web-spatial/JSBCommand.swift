@@ -17,6 +17,10 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     let modelURL: String
 }
 
+struct CreateSpatializedDynamic3DElement: CommandDataProtocol{
+    static let commandType: String = "CreateSpatializedDynamic3DElement"
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
