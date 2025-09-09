@@ -38,32 +38,89 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
-        print("\(spatializedElement.name) onRotateGesture3D \(event.rotation) ")
+        if spatializedElement.enableRotateGesture {
+            let gestureEvent = WebSpatialRotationGuestureEvent(
+                detail: .init(
+                    rotation: event.rotation,
+                    startAnchor3D: event.startAnchor3D,
+                    startLocation3D: event.startLocation3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
-    
+
     private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
-        print("\(spatializedElement.name) onRotateGesture3DEnd \(event.rotation) ")
+        if spatializedElement.enableRotateEndGesture {
+            let gestureEvent = WebSpatialRotationEndGuestureEvent(
+                detail: .init(
+                    rotation: event.rotation,
+                    startAnchor3D: event.startAnchor3D,
+                    startLocation3D: event.startLocation3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onDragging(_ event: DragGesture.Value) {
         print("\(spatializedElement.name)  onDragging \(event.location3D)")
-
+        if spatializedElement.enableDragGesture {
+            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
+                location3D: event.location3D,
+                startLocation3D: event.startLocation3D,
+                translation3D: event.translation3D,
+                predictedEndTranslation3D: event.predictedEndTranslation3D,
+                predictedEndLocation3D: event.predictedEndLocation3D,
+                velocity: event.velocity
+            ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
-        print("\(spatializedElement.name)  onDraggingEnded \(event.location3D)")
+        if spatializedElement.enableDragEndGesture {
+            let gestureEvent = WebSpatialDragEndGuestureEvent(
+                detail: .init(
+                    location3D: event.location3D,
+                    startLocation3D: event.startLocation3D,
+                    translation3D: event.translation3D,
+                    predictedEndTranslation3D: event.predictedEndTranslation3D,
+                    predictedEndLocation3D: event.predictedEndLocation3D,
+                    velocity: event.velocity
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
-        spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(location3D: event.location3D))
+        if spatializedElement.enableTapGesture {
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: event.location3D)))
+        }
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGesture \(event.magnification)")
+        if spatializedElement.enableMagnifyGesture {
+            let gestureEvent = WebSpatialMagnifyGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
-    
+
     private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGestureEnd \(event.magnification)")
+        if spatializedElement.enableMagnifyEndGesture {
+            let gestureEvent = WebSpatialMagnifyEndGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     // End Interaction
@@ -88,8 +145,6 @@ struct SpatializedElementView<Content: View>: View {
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
         let clip = spatializedElement.clip
-        
- 
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
@@ -105,9 +160,9 @@ struct SpatializedElementView<Content: View>: View {
 //                spatialScene.sendWebMsg(spatializedElement.id, rect3d)
                 print(" \(spatializedElement.name) transform \(new)  ")
             }.if(clip, transform: { view in
-                    view.clipped()
+                view.clipped()
             })
-            
+
             .frame(depth: 0, alignment: .back)
             //            .background(Color(hex: "#161616E5"))
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working

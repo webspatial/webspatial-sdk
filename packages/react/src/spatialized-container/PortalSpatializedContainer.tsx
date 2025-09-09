@@ -60,6 +60,12 @@ export function PortalSpatializedContainer(
     createSpatializedElement,
     getExtraSpatializedElementProperties,
     onSpatialTap,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotation,
+    onSpatialRotationEnd,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -98,6 +104,48 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialTap = onSpatialTap
     }
   }, [spatializedElement, onSpatialTap])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDrag = onSpatialDrag
+    }
+  }, [spatializedElement, onSpatialDrag])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragEnd = onSpatialDragEnd
+    }
+  }, [spatializedElement, onSpatialDragEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotation = onSpatialRotation
+    }
+  }, [spatializedElement, onSpatialRotation])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotationEnd = onSpatialRotationEnd
+    }
+  }, [spatializedElement, onSpatialRotationEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnify = onSpatialMagnify
+    }
+  }, [spatializedElement, onSpatialMagnify])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyEnd = onSpatialMagnifyEnd
+    }
+  }, [spatializedElement, onSpatialMagnifyEnd])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

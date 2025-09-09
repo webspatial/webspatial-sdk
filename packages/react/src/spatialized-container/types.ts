@@ -4,6 +4,11 @@ import {
   CubeInfo,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
+  SpatialDragEvent as CoreSpatialDragEvent,
+  SpatialRotationEvent as CoreSpatialRotationEvent,
+  SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
+  Point3D,
+  Vec3,
 } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
@@ -24,6 +29,12 @@ export interface PortalSpatializedContainerProps
 
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
+  onSpatialRotation?: (event: SpatialRotationEvent) => void
+  onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 
   [SpatialID]: string
 }
@@ -75,8 +86,40 @@ export interface SpatializedElementRef extends HTMLElement {
   getBoundingClientCube: () => CubeInfo | undefined
 
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
 }
 
 export type SpatialTapEvent = CoreSpatialTapEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragEndEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotationEvent = CoreSpatialRotationEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotationEndEvent = CoreSpatialRotationEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEventDetail = {
+  magnification: number
+  velocity: number
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialMagnifyEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEndEvent = CoreSpatialMagnifyEvent & {
   currentTarget: SpatializedElementRef
 }

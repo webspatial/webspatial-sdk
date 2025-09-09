@@ -3,11 +3,15 @@ import ReactDOM from 'react-dom/client'
 import {
   enableDebugTool,
   SpatialTapEvent,
+  SpatialDragEvent,
+  SpatialRotationEndEvent,
+  // SpatialMagnifyEndEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
+  SpatialMagnifyEvent,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
-
+ 
 enableDebugTool()
 
 function Model() {
@@ -36,6 +40,33 @@ function Model() {
     debugger
   }
 
+  const onSpatialDrag = (e: SpatialDragEvent) => {
+    console.log(
+      'model onSpatialDrag',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+    debugger
+  }
+
+  const onSpatialRotationEnd = (e: SpatialRotationEndEvent) => {
+    console.log(
+      'model onSpatialRotationEnd:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialMagnify = (e: SpatialMagnifyEvent) => {
+    console.log(
+      'model onSpatialMagnify:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
   ;(window as any).refModel = refModel
   return (
     <div>
@@ -44,6 +75,9 @@ function Model() {
         style={style}
         src={src}
         onSpatialTap={onSpatialTap}
+        onSpatialDrag={onSpatialDrag}
+        onSpatialRotationEnd={onSpatialRotationEnd}
+        onSpatialMagnify={onSpatialMagnify}
       />
     </div>
   )
@@ -95,7 +129,22 @@ function App() {
 
   const onSpatialTap = (e: SpatialTapEvent) => {
     console.log('child:', e.isTrusted, e.currentTarget.getBoundingClientCube())
-    debugger
+  }
+
+  const onSpatialDrag = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialDragEnd = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag End:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
   }
 
   return (
@@ -105,7 +154,9 @@ function App() {
       </div>
       <div
         enable-xr
-        // onSpatialTap={e => console.log(e)}
+        // onSpatialDrag={onSpatialDrag}
+        // onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialTap={onSpatialTap}
         data-name="parent"
         style={style}
         ref={ref}
@@ -115,7 +166,8 @@ function App() {
         <a href="https://www.baidu.com">this is a link</a>
         <div
           enable-xr
-          onSpatialTap={onSpatialTap}
+          onSpatialDrag={onSpatialDrag}
+          onSpatialDragEnd={onSpatialDragEnd}
           style={childStyle}
           ref={refChild}
           data-name="child"

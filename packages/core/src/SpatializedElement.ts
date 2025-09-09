@@ -2,15 +2,27 @@ import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
-import { createSpatialTapEvent } from './SpatialWebEventCreator'
+import { createSpatialEvent } from './SpatialWebEventCreator'
 import {
   CubeInfo,
+  SpatialDragEndEvent,
+  SpatialDragEvent,
   SpatializedElementProperties,
+  SpatialMagnifyEndEvent,
+  SpatialMagnifyEvent,
+  SpatialRotationEndEvent,
+  SpatialRotationEvent,
   SpatialTapEvent,
   SpatialTransform,
 } from './types/types'
 import {
   CubeInfoMsg,
+  SpatialDragEndMsg,
+  SpatialDragMsg,
+  SpatialMagnifyEndMsg,
+  SpatialMagnifyMsg,
+  SpatialRotationEndMsg,
+  SpatialRotationMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
   TransformMsg,
@@ -35,27 +47,130 @@ export abstract class SpatializedElement extends SpatialObject {
     return this._cubeInfo
   }
   private onReceiveEvent = (
-    data: CubeInfoMsg | TransformMsg | SpatialTapMsg,
+    data:
+      | CubeInfoMsg
+      | TransformMsg
+      | SpatialTapMsg
+      | SpatialDragMsg
+      | SpatialDragEndMsg
+      | SpatialRotationMsg
+      | SpatialRotationEndMsg,
   ) => {
-    console.log('SpatialWebEvent', this.id, data)
-    if (data.type === SpatialWebMsgType.CubeInfo) {
+    const { type } = data
+    if (type === SpatialWebMsgType.CubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
-    } else if (data.type === SpatialWebMsgType.Transform) {
+      console.log('SpatialWebEvent', this.id, data)
+    } else if (type === SpatialWebMsgType.Transform) {
       // this.transform = data.transform
-    } else if (data.type === SpatialWebMsgType.spatialtap) {
-      const spatialTapMsg = data as SpatialTapMsg
-      const event = createSpatialTapEvent(spatialTapMsg.location3D)
+    } else if (type === SpatialWebMsgType.spatialtap) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialtap,
+        (data as SpatialTapMsg).detail,
+      )
       this._onSpatialTap?.(event)
+    } else if (type === SpatialWebMsgType.spatialdrag) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialdrag,
+        (data as SpatialDragMsg).detail,
+      )
+      this._onSpatialDrag?.(event)
+    } else if (type === SpatialWebMsgType.spatialdragend) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialdragend,
+        (data as SpatialDragEndMsg).detail,
+      )
+      this._onSpatialDragEnd?.(event)
+    } else if (type === SpatialWebMsgType.spatialrotation) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialrotation,
+        (data as SpatialRotationMsg).detail,
+      )
+      this._onSpatialRotation?.(event)
+    } else if (type === SpatialWebMsgType.spatialrotationend) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialrotationend,
+        (data as SpatialRotationEndMsg).detail,
+      )
+      this._onSpatialRotationEnd?.(event)
+    } else if (type === SpatialWebMsgType.spatialmagnify) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnify,
+        (data as SpatialMagnifyMsg).detail,
+      )
+      this._onSpatialMagnify?.(event)
+    } else if (type === SpatialWebMsgType.spatialmagnifyend) {
+      const event = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnifyend,
+        (data as SpatialMagnifyEndMsg).detail,
+      )
+      this._onSpatialMagnifyEnd?.(event)
     }
   }
 
   private _onSpatialTap?: (event: SpatialTapEvent) => void
-
   set onSpatialTap(value: (event: SpatialTapEvent) => void | undefined) {
     this._onSpatialTap = value
     this.updateProperties({
-      enableGesture: value !== undefined,
+      enableTapGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialDrag?: (event: SpatialDragEvent) => void
+  set onSpatialDrag(value: (event: SpatialDragEvent) => void | undefined) {
+    this._onSpatialDrag = value
+    this.updateProperties({
+      enableDragGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
+  set onSpatialDragEnd(
+    value: ((event: SpatialDragEndEvent) => void) | undefined,
+  ) {
+    this._onSpatialDragEnd = value
+    this.updateProperties({
+      enableDragEndGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialRotation?: (event: SpatialRotationEvent) => void
+  set onSpatialRotation(
+    value: ((event: SpatialRotationEvent) => void) | undefined,
+  ) {
+    this._onSpatialRotation = value
+    this.updateProperties({
+      enableRotationGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  set onSpatialRotationEnd(
+    value: ((event: SpatialRotationEndEvent) => void) | undefined,
+  ) {
+    this._onSpatialRotationEnd = value
+    this.updateProperties({
+      enableRotateEndGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  set onSpatialMagnify(
+    value: ((event: SpatialMagnifyEvent) => void) | undefined,
+  ) {
+    this._onSpatialMagnify = value
+    this.updateProperties({
+      enableMagnifyGesture: value !== undefined,
+    })
+  }
+
+  private _onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
+  set onSpatialMagnifyEnd(
+    value: ((event: SpatialMagnifyEndEvent) => void) | undefined,
+  ) {
+    this._onSpatialMagnifyEnd = value
+    this.updateProperties({
+      enableMagnifyEndGesture: value !== undefined,
     })
   }
 

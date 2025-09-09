@@ -5,6 +5,12 @@ export { withSpatialized2DElementContainer } from './Spatialized2DElementContain
 export {
   type SpatializedElementRef,
   type SpatialTapEvent,
+  type SpatialDragEvent,
+  type SpatialDragEndEvent,
+  type SpatialRotationEvent,
+  type SpatialRotationEndEvent,
+  type SpatialMagnifyEvent,
+  type SpatialMagnifyEndEvent,
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
 } from './types'
