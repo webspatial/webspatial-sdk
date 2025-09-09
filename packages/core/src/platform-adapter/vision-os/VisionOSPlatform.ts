@@ -4,23 +4,6 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 
-// declare global {
-//   interface Window {
-//     webkit: {
-//       messageHandlers: Record<
-//         string,
-//         {
-//           postMessage(
-//             message: string,
-//             reply?: (reply: any) => any,
-//             error?: (error: string) => void,
-//           ): any
-//         }
-//       >
-//     }
-//   }
-// }
-
 export class VisionOSPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     try {
@@ -73,7 +56,6 @@ export class VisionOSPlatform implements PlatformAbility {
     target?: string,
     features?: string,
   ) {
-    console.log('openWindow:', command, query, target, features)
     const windowProxy = window.open(
       `webspatial://${command}?${query || ''}`,
       target,

@@ -24,6 +24,7 @@ struct SpatiaizedContainerClientCube: Encodable {
 // notify Spatialized3DElement Container Transform to SpatialScene, used for ref.current.convertToSpatialScene()
 struct SpatiaizedContainerTransform: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.transform
+    let detail: AffineTransform3D
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {

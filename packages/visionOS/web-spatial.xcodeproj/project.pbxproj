@@ -83,7 +83,6 @@
 			membershipExceptions = (
 				Vec2.swift,
 				Vec3.swift,
-				Vec4.swift,
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
 		};

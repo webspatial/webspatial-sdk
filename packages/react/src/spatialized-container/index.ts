@@ -14,3 +14,4 @@ export {
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
 } from './types'
+export { toSceneSpatial, toLocalSpace } from './transform-utils'

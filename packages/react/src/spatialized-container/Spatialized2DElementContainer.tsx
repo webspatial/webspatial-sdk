@@ -154,10 +154,9 @@ function SpatializedContent(props: SpatializedContentProps) {
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
 
-  const name: string = (restProps as any)['data-name'] || ''
-  console.log('dbg name:', name, restProps)
   useSyncHeaderStyle(windowProxy)
 
+  const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
   const portalInstanceObject: PortalInstanceObject = useContext(

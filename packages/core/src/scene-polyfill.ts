@@ -1,6 +1,7 @@
 import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
 import { SpatialScene } from './SpatialScene'
-import { SpatialSceneCreationOptions, SpatialSceneState } from './types/types'
+import { SpatialSceneCreationOptions } from './types/types'
+import { SpatialSceneState } from './types/internal'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {

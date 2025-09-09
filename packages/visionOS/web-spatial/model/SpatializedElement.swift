@@ -10,11 +10,13 @@ enum SpatializedElementType: String, Codable {
 
 @Observable
 class SpatializedElement: SpatialObject {
+    var clientX: Double = 0.0
+    var clientY: Double = 0.0
     var width: Double = 0.0
     var height: Double = 0.0
     var depth: Double = 0.0
     var backOffset: Double = 0.0
-    var transform: Transform = .init()
+    var transform: AffineTransform3D = AffineTransform3D.identity
     var rotationAnchor: UnitPoint3D = .center
     var opacity: Double = 1.0
     var visible = true
@@ -40,12 +42,14 @@ class SpatializedElement: SpatialObject {
 
 
     enum CodingKeys: String, CodingKey {
-        case width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateGesture,enableRotateEndGesture,enableMagnifyGesture, enableMagnifyEndGesture
+        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateGesture,enableRotateEndGesture,enableMagnifyGesture, enableMagnifyEndGesture
     }
 
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(clientX, forKey: .clientX)
+        try container.encode(clientY, forKey: .clientY)
         try container.encode(width, forKey: .width)
         try container.encode(height, forKey: .height)
         try container.encode(depth, forKey: .depth)

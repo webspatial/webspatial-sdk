@@ -8,7 +8,7 @@ export class SpatialWebEvent {
   static init() {
     // inject __SpatialWebEvent
     window.__SpatialWebEvent = ({ id, data }: SpatialWebEventData) => {
-      console.log('__SpatialWebEvent', id, data)
+      // console.log('__SpatialWebEvent', id, data)
       SpatialWebEvent.eventReceiver[id]?.(data)
     }
   }

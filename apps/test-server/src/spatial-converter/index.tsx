@@ -9,9 +9,10 @@ import {
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
   SpatialMagnifyEvent,
+  toSceneSpatial,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
- 
+
 enableDebugTool()
 
 function Model() {
@@ -25,8 +26,8 @@ function Model() {
     display: 'block',
     visibility: 'visible',
     // background: 'blue',
-    // '--xr-back': '400px',
-    // transform: 'translateX(100px) rotateY(30deg)',
+    '--xr-back': '140px',
+    // transform: 'translateX(100px) rotateX(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
   }
@@ -36,8 +37,12 @@ function Model() {
   const refModel = useRef<SpatializedElementRef>(null)
 
   const onSpatialTap = (e: SpatialTapEvent) => {
-    console.log(e.isTrusted, e.currentTarget.getBoundingClientCube())
-    debugger
+    console.log(
+      'model onSpatialTap',
+      e.currentTarget.getBoundingClientCube(),
+      e.currentTarget.getBoundingClientRect(),
+      toSceneSpatial(e.detail.location3D, e.currentTarget),
+    )
   }
 
   const onSpatialDrag = (e: SpatialDragEvent) => {
@@ -99,7 +104,7 @@ function App() {
     '--xr-background-material': 'translucent',
     '--xr-back': '10px',
     '--xr-depth': '150px',
-    // transform: 'rotateX(30deg)',
+    // transform: 'rotate3d(0, 1, 1, 45deg)',
     // display: 'none',
     contentVisibility: 'visible',
     overflow: 'scroll',

@@ -33,6 +33,8 @@ struct DestroyCommand: CommandDataProtocol {
 
 protocol SpatializedElementProperties: SpatialObjectCommand {
     var name: String? { get }
+    var clientX: Double? { get }
+    var clientY: Double? { get }
     var width: Double? { get }
     var height: Double? { get }
     var depth: Double? { get }
@@ -56,6 +58,8 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatialized2DElementProperties"
     let id: String
     let name: String?
+    var clientX: Double?
+    var clientY: Double?
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -87,6 +91,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
     let name: String?
+    var clientX: Double?
+    var clientY: Double?  
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -111,9 +117,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {
     static let commandType: String = "UpdateSpatializedElementTransform"
     let id: String
-    let position: Vec3?
-    let quaternion: Vec4?
-    let scale: Vec3?
+    let matrix: [Double]
 }
 
 struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {

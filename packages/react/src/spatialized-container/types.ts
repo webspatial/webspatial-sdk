@@ -10,7 +10,8 @@ import {
   Point3D,
   Vec3,
 } from '@webspatial/core-sdk'
-import { Matrix4 } from '../utils/math'
+
+export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 
 export interface StandardSpatializedContainerProps
   extends React.ComponentPropsWithoutRef<'div'> {
@@ -75,8 +76,7 @@ export const SpatialCustomStyleVars = {
 }
 
 export interface SpatialTransformVisibility {
-  transformMatrix: Matrix4
-  transformExist: boolean
+  transform: string
   visibility: string
 }
 

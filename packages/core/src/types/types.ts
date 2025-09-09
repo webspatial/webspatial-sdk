@@ -4,18 +4,7 @@ export interface Vec3 {
   z: number
 }
 
-export interface Vec4 {
-  x: number
-  y: number
-  z: number
-  w: number
-}
-
-export interface SpatialTransform {
-  position: Vec3
-  quaternion: Vec4
-  scale: Vec3
-}
+export type Point3D = Vec3
 
 /**
  * Material type for SpatialDiv or HTML document.
@@ -60,6 +49,8 @@ export enum SpatializedElementType {
 
 export interface SpatializedElementProperties {
   name: string
+  clientX: number
+  clientY: number
   width: number
   height: number
   depth: number
@@ -68,7 +59,7 @@ export interface SpatializedElementProperties {
   scrollWithParent: boolean
   zIndex: number
   backOffset: number
-  rotationAnchor: Vec3
+  rotationAnchor: Point3D
   enableTapGesture: boolean
   enableDragGesture: boolean
   enableDragEndGesture: boolean
@@ -100,23 +91,6 @@ export interface SpatialSceneCreationOptions {
     maxWidth?: number
     maxHeight?: number
   }
-}
-
-export enum SpatialSceneState {
-  idle = 'idle',
-  pending = 'pending',
-  willVisible = 'willVisible',
-  visible = 'visible',
-  fail = 'fail',
-}
-
-/**
- * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
- */
-export type SpatialModelDragEvent = {
-  eventType: 'dragstart' | 'dragend' | 'drag'
-  translation3D: Vec3
-  startLocation3D: Vec3
 }
 
 declare global {
@@ -221,11 +195,7 @@ export interface SpatialTapEventDetail {
 }
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
-// & {
-//   type: 'spatialtap'
-// }
 
-export type Point3D = Vec3
 
 export interface SpatialDragEventDetail {
   location3D: Point3D
