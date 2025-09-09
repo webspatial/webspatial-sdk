@@ -62,7 +62,6 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDragging(_ event: DragGesture.Value) {
-        print("\(spatializedElement.name)  onDragging \(event.location3D)")
         if spatializedElement.enableDragGesture {
             let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
                 location3D: event.location3D,
@@ -150,15 +149,12 @@ struct SpatializedElementView<Content: View>: View {
             .frame(width: width, height: height)
             .frame(depth: depth, alignment: .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
-//                print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
-//                print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
 
                 return proxy.transform(in: .named("SpatialScene"))!
             } action: { _, new in
-//                spatialScene.sendWebMsg(spatializedElement.id, rect3d)
-                print(" \(spatializedElement.name) transform \(new)  ")
+                spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
             }.if(clip, transform: { view in
                 view.clipped()
             })

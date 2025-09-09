@@ -9,8 +9,8 @@ import {
 } from './types/types'
 
 export enum SpatialWebMsgType {
-  CubeInfo = 'cubeInfo',
-  Transform = 'transform',
+  cubeInfo = 'cubeInfo',
+  transform = 'transform',
   spatialtap = 'spatialtap',
   spatialdrag = 'spatialdrag',
   spatialdragend = 'spatialdragend',
@@ -21,14 +21,19 @@ export enum SpatialWebMsgType {
 }
 
 export interface CubeInfoMsg {
-  type: SpatialWebMsgType.CubeInfo
+  type: SpatialWebMsgType.cubeInfo
   origin: Vec3
   size: Size3D
 }
 
 export interface TransformMsg {
-  type: SpatialWebMsgType.Transform
-  transform: SpatialTransform
+  type: SpatialWebMsgType.transform
+  detail: {
+    column0: [number, number, number]
+    column1: [number, number, number]
+    column2: [number, number, number]
+    column3: [number, number, number]
+  }
 }
 
 export interface SpatialTapMsg {

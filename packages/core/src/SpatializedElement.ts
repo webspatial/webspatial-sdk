@@ -46,6 +46,16 @@ export abstract class SpatializedElement extends SpatialObject {
   get cubeInfo() {
     return this._cubeInfo
   }
+
+  private _transform?: DOMMatrix
+  private _transformInv?: DOMMatrix
+  get transform() {
+    return this._transform
+  }
+  get transformInv() {
+    return this._transformInv
+  }
+
   private onReceiveEvent = (
     data:
       | CubeInfoMsg
@@ -57,12 +67,29 @@ export abstract class SpatializedElement extends SpatialObject {
       | SpatialRotationEndMsg,
   ) => {
     const { type } = data
-    if (type === SpatialWebMsgType.CubeInfo) {
+    if (type === SpatialWebMsgType.cubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
-      console.log('SpatialWebEvent', this.id, data)
-    } else if (type === SpatialWebMsgType.Transform) {
-      // this.transform = data.transform
+    } else if (type === SpatialWebMsgType.transform) {
+      this._transform = new DOMMatrix([
+        data.detail.column0[0],
+        data.detail.column0[1],
+        data.detail.column0[2],
+        0,
+        data.detail.column1[0],
+        data.detail.column1[1],
+        data.detail.column1[2],
+        0,
+        data.detail.column2[0],
+        data.detail.column2[1],
+        data.detail.column2[2],
+        0,
+        data.detail.column3[0],
+        data.detail.column3[1],
+        data.detail.column3[2],
+        1,
+      ])
+      this._transformInv = this._transform.inverse()
     } else if (type === SpatialWebMsgType.spatialtap) {
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialtap,
@@ -177,6 +204,4 @@ export abstract class SpatializedElement extends SpatialObject {
   override onDestroy() {
     SpatialWebEvent.removeEventReceiver(this.id)
   }
-
-  private transform?: SpatialTransform
 }

@@ -9,9 +9,11 @@ import {
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
   SpatialMagnifyEvent,
+  toSceneSpatial,
+  toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
- 
+
 enableDebugTool()
 
 function Model() {
@@ -26,7 +28,7 @@ function Model() {
     visibility: 'visible',
     // background: 'blue',
     // '--xr-back': '400px',
-    // transform: 'translateX(100px) rotateY(30deg)',
+    transform: 'translateX(100px) rotateZ(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
   }
@@ -36,8 +38,12 @@ function Model() {
   const refModel = useRef<SpatializedElementRef>(null)
 
   const onSpatialTap = (e: SpatialTapEvent) => {
-    console.log(e.isTrusted, e.currentTarget.getBoundingClientCube())
-    debugger
+    console.log(
+      'model onSpatialTap',
+      e.currentTarget.getBoundingClientCube(),
+      e.currentTarget.getBoundingClientRect(),
+      toSceneSpatial(e.detail.location3D, e.currentTarget),
+    )
   }
 
   const onSpatialDrag = (e: SpatialDragEvent) => {

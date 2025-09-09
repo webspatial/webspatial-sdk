@@ -12,6 +12,8 @@ import {
 } from '@webspatial/core-sdk'
 import { Matrix4 } from '../utils/math'
 
+export type { Point3D, Vec3 } from '@webspatial/core-sdk'
+
 export interface StandardSpatializedContainerProps
   extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType

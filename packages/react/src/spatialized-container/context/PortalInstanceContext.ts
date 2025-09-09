@@ -2,9 +2,10 @@ import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
-import { SpatialCustomStyleVars } from '../types'
+import { SpatialCustomStyleVars, Point3D } from '../types'
 import { getSession } from '../../utils'
 import { Matrix4, Quaternion, Vector3 } from '../../utils/math'
+import { convertDOMRectToSceneSpace } from '../transform-utils'
 
 type DomRect = {
   x: number
@@ -124,11 +125,37 @@ export class PortalInstanceObject {
     this.updateSpatializedElementProperties()
 
     // attach __getBoundingClientCube to dom
+    const __getBoundingClientCube = () => {
+      return this.spatializedElement?.cubeInfo
+    }
+    const __getBoundingClientRect = () => {
+      const domRect = new DOMRect(
+        this.domRect?.x,
+        this.domRect?.y,
+        this.domRect?.width,
+        this.domRect?.height,
+      )
+      return convertDOMRectToSceneSpace(
+        domRect,
+        this.spatializedElement?.transform as DOMMatrix,
+      )
+    }
+    const __toSceneSpace = (point: Point3D): DOMPoint => {
+      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
+        this.spatializedElement?.transform,
+      )
+    }
+    const __toLocalSpace = (point: Point3D): DOMPoint => {
+      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
+        this.spatializedElement?.transformInv,
+      )
+    }
+
     Object.assign(dom, {
-      __getBoundingClientCube: () => {
-        console.log('__getBoundingClientCube', this.spatializedElement)
-        return this.spatializedElement?.cubeInfo
-      },
+      __getBoundingClientCube,
+      __getBoundingClientRect,
+      __toSceneSpace,
+      __toLocalSpace,
     })
   }
 
@@ -138,7 +165,6 @@ export class PortalInstanceObject {
 
   // called when SpatializedElement is created
   attachSpatializedElement(spatializedElement: SpatializedElement) {
-    console.log('attachSpatializedElement', spatializedElement)
     this.spatializedElement = spatializedElement
     // attach to spatializedContainerObject
     this.addToParent(spatializedElement)
@@ -207,7 +233,7 @@ export class PortalInstanceObject {
       height: domRect.height,
     }
 
-    console.log('updateSpatializedElementProperties', domRect)
+    // console.log('updateSpatializedElementProperties', domRect)
 
     const width = domRect.width
     const height = domRect.height
