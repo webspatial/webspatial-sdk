@@ -2,7 +2,7 @@ import SwiftUI
 import RealityKit
 
 @Observable
-class SpatialMaterial: Resource3D {
+class SpatialMaterial: SpatialObject {
     let type: SpatialMaterialType
     
     internal var _resource:RealityKit.Material? = nil

@@ -2,7 +2,7 @@ import SwiftUI
 import RealityKit
 
 @Observable
-class Geometry: Resource3D {
+class Geometry: SpatialObject {
     let type:GeometryType
     
     internal var _resource:MeshResource? = nil

@@ -33,7 +33,7 @@ class SpatialObjectWeakRefManager {
     }
 }
 
-class SpatialObject: Encodable, Equatable, SpatialObjectProtocol {
+class SpatialObject: SpatialObjectProtocol {
     internal var listeners: [String : [(Any, Any) -> Void]] = [:]
     
     static var objects = [String: (any SpatialObjectProtocol)]()

@@ -18,6 +18,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     private var isEnableScale: Bool = false
     private var rotation: simd_quatd = simd_quatd()
     private var childList: [String:SpatialEntity] = [:]
+    private var spatialComponents: [SpatialComponentType: SpatialComponent] = [:]
     
     required init() {
         self.spatialId = UUID().uuidString
@@ -50,15 +51,16 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
     
-    public func addComponent<T: Component>(_ comp: T) {
-        if(self.components.has(T.self)){
-            return
-        }
-        self.components.set(comp)
+    public func addComponent(_ comp: SpatialComponent) {
+        spatialComponents[comp.type] = comp
+        components.set(comp.resource!)
     }
     
-    public func removeComponent<T: Component>(type: T.Type) {
-        self.components.remove(type)
+    public func removeComponent(_ comp: SpatialComponent) {
+        if spatialComponents[comp.type] != nil {
+            spatialComponents.removeValue(forKey: comp.type)
+            components.remove(type(of: comp.resource!))
+        }
     }
     
     public func setRotation(_ rotation: simd_quatd) {
