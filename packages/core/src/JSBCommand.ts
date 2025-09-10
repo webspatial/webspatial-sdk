@@ -297,8 +297,8 @@ export class AddComponentToEntityCommand extends JSBCommand {
 
 export class AddEntityToDynamic3DCommand extends JSBCommand {
   constructor(
-    public entity: SpatialEntity,
     public d3dEle: SpatializedDynamic3DElement,
+    public entity: SpatialEntity,
   ) {
     super()
   }

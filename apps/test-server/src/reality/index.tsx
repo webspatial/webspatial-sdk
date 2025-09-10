@@ -75,6 +75,12 @@ function App() {
         onClick={async () => {
           const session = getSession()!
 
+          const spatialScene = session.getSpatialScene()
+
+          const reality = await session.createSpatializedDynamic3DElement()
+
+          await spatialScene.addSpatializedElement(reality)
+
           const entity = await session.createEntity()
 
           const geometry = await session.createBoxGeometry({
@@ -90,6 +96,8 @@ function App() {
             materials: [material],
           })
           await entity.addComponent(modelComponent)
+
+          await reality.addEntity(entity)
         }}
       >
         create modelComponent
