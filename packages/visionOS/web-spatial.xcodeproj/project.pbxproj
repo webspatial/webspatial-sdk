@@ -64,6 +64,7 @@
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
 				dynamic3d/SpatialMaterial.swift,
+				dynamic3d/SpatialModelEntity.swift,
 				dynamic3d/SpatialModelResource.swift,
 				dynamic3d/SpatialTextureResource.swift,
 				SpatialApp.swift,

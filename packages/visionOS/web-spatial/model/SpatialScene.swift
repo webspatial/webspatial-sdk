@@ -232,6 +232,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AddEntityToDynamic3D.self, onAddEntityToDynamic3D)
         spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
+        spatialWebViewModel.addJSBListener(CreateModelResource.self, onCreateModelResource)
+        spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
         
         
         
@@ -704,6 +706,28 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
+    }
+    
+    private func onCreateModelResource(command: CreateModelResource, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        _ = SpatialModelResource(command.url, { onload in
+            switch onload {
+            case .success(let modelResource):
+                self.addSpatialObject(modelResource)
+                resolve(.success(AddSpatializedElementReply(id: modelResource.id)))
+            case .failure(let error):
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to download model: \(error)")))
+            }
+        })
+    }
+    
+    private func onCreateSpatialModelEntity(command: CreateSpatialModelEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let modelAsset = spatialObjects[command.modelResourceId] as? SpatialModelResource {
+            let spatialModelEntity = SpatialModelEntity(modelAsset, command.name ?? "")
+            addSpatialObject(spatialModelEntity)
+            resolve(.success(AddSpatializedElementReply(id: spatialModelEntity.spatialId)))
+            return
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelAsset not found")))
     }
 
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {

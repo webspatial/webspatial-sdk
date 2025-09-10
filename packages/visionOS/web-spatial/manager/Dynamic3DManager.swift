@@ -32,7 +32,7 @@ class Dynamic3DManager{
         
     }
     
-    func createModelAsset(){
+    static func createModelAsset(_ url:String){
         
     }
     
