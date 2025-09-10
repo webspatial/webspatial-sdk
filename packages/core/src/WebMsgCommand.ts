@@ -3,7 +3,7 @@ import {
   Size3D,
   SpatialDragEventDetail,
   SpatialTapEventDetail,
-  SpatialRotationEventDetail,
+  SpatialRotateEventDetail,
   SpatialMagnifyEventDetail,
 } from './types/types'
 
@@ -14,8 +14,9 @@ export enum SpatialWebMsgType {
   spatialdragstart = 'spatialdragstart',
   spatialdrag = 'spatialdrag',
   spatialdragend = 'spatialdragend',
-  spatialrotation = 'spatialrotation',
-  spatialrotationend = 'spatialrotationend',
+  spatialrotatestart = 'spatialrotatestart',
+  spatialrotate = 'spatialrotate',
+  spatialrotateend = 'spatialrotateend',
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 }
@@ -51,14 +52,14 @@ export interface SpatialDragEndMsg {
   detail: SpatialDragEventDetail
 }
 
-export interface SpatialRotationMsg {
-  type: SpatialWebMsgType.spatialrotation
-  detail: SpatialRotationEventDetail
+export interface SpatialRotateMsg {
+  type: SpatialWebMsgType.spatialrotate
+  detail: SpatialRotateEventDetail
 }
 
-export interface SpatialRotationEndMsg {
-  type: SpatialWebMsgType.spatialrotationend
-  detail: SpatialRotationEventDetail
+export interface SpatialRotateEndMsg {
+  type: SpatialWebMsgType.spatialrotateend
+  detail: SpatialRotateEventDetail
 }
 
 export interface SpatialMagnifyMsg {

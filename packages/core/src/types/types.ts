@@ -61,9 +61,11 @@ export interface SpatializedElementProperties {
   backOffset: number
   rotationAnchor: Point3D
   enableTapGesture: boolean
+  enableDragStartGesture: boolean
   enableDragGesture: boolean
   enableDragEndGesture: boolean
-  enableRotationGesture: boolean
+  enableRotateStartGesture: boolean
+  enableRotateGesture: boolean
   enableRotateEndGesture: boolean
   enableMagnifyGesture: boolean
   enableMagnifyEndGesture: boolean
@@ -179,15 +181,15 @@ export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = SpatialDragEvent
 
-export interface SpatialRotationEventDetail {
+export interface SpatialRotateEventDetail {
   rotation: { vector: [number, number, number, number] }
   startAnchor3D: Vec3
   startLocation3D: Point3D
 }
 
-export type SpatialRotationEvent = CustomEvent<SpatialRotationEventDetail>
+export type SpatialRotateEvent = CustomEvent<SpatialRotateEventDetail>
 
-export type SpatialRotationEndEvent = SpatialRotationEvent
+export type SpatialRotateEndEvent = SpatialRotateEvent
 
 export interface SpatialMagnifyEventDetail {
   magnification: number

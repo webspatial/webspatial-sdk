@@ -4,7 +4,8 @@ import {
   enableDebugTool,
   SpatialTapEvent,
   SpatialDragEvent,
-  SpatialRotationEndEvent,
+  SpatialRotateEndEvent,
+  SpatialRotateStartEvent,
   // SpatialMagnifyEndEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
@@ -72,9 +73,18 @@ function Model() {
     )
   }
 
-  const onSpatialRotationEnd = (e: SpatialRotationEndEvent) => {
+  const onSpatialRotateEnd = (e: SpatialRotateEndEvent) => {
     console.log(
-      'model onSpatialRotationEnd:',
+      'model onSpatialRotateEnd:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialRotateStart = (e: SpatialRotateStartEvent) => {
+    console.log(
+      'model onSpatialRotateStart:',
       e.detail,
       e.isTrusted,
       e.currentTarget.getBoundingClientCube(),
@@ -99,10 +109,11 @@ function Model() {
         src={src}
         onSpatialDragEnd={onSpatialDragEnd}
         onSpatialDragStart={onSpatialDragStart}
-        onSpatialTap={onSpatialTap}
-        onSpatialDrag={onSpatialDrag}
-        onSpatialRotationEnd={onSpatialRotationEnd}
-        onSpatialMagnify={onSpatialMagnify}
+        // onSpatialTap={onSpatialTap}
+        // onSpatialDrag={onSpatialDrag}
+        onSpatialRotateStart={onSpatialRotateStart}
+        onSpatialRotateEnd={onSpatialRotateEnd}
+        // onSpatialMagnify={onSpatialMagnify}
       />
     </div>
   )
@@ -177,7 +188,7 @@ function App() {
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      <div
+      {/* <div
         enable-xr
         // onSpatialDrag={onSpatialDrag}
         // onSpatialDragEnd={onSpatialDragEnd}
@@ -200,7 +211,7 @@ function App() {
           this is child spatialdiv
         </div>
         <button>this is a button</button>
-      </div>
+      </div> */}
       <div> End of SpatializedContainer </div>
       <Model />
       <div> End of Model SpatializedContainer </div>

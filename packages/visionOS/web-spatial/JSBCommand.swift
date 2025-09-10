@@ -45,8 +45,11 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var scrollWithParent: Bool? { get }
     var zIndex: Double? { get }
     
+    var enableDragStartGesture: Bool? { get }
     var enableDragGesture: Bool? { get }
     var enableDragEndGesture: Bool? { get }
+    
+    var enableRotateStartGesture: Bool? { get }
     var enableRotateGesture: Bool? { get }
     var enableRotateEndGesture: Bool? { get }
     var enableMagnifyGesture: Bool? { get }
@@ -70,8 +73,10 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let scrollWithParent: Bool?
     let zIndex: Double?
     
+    var enableDragStartGesture: Bool?
     var enableDragGesture: Bool?
     var enableDragEndGesture: Bool?
+    var enableRotateStartGesture: Bool?
     var enableRotateGesture: Bool?
     var enableRotateEndGesture: Bool?
     var enableMagnifyGesture: Bool?
@@ -103,8 +108,10 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let scrollWithParent: Bool?
     let zIndex: Double?
     
+    var enableDragStartGesture: Bool?
     let enableDragGesture: Bool?
     let enableDragEndGesture: Bool?
+    var enableRotateStartGesture: Bool?
     let enableRotateGesture: Bool?
     let enableRotateEndGesture: Bool?
     let enableMagnifyGesture: Bool?

@@ -63,8 +63,9 @@ export function PortalSpatializedContainer(
     onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
-    onSpatialRotation,
-    onSpatialRotationEnd,
+    onSpatialRotateStart,
+    onSpatialRotate,
+    onSpatialRotateEnd,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
@@ -123,16 +124,16 @@ export function PortalSpatializedContainer(
   useEffect(() => {
     if (spatializedElement) {
       // @ts-ignore
-      spatializedElement.onSpatialRotation = onSpatialRotation
+      spatializedElement.onSpatialRotate = onSpatialRotate
     }
-  }, [spatializedElement, onSpatialRotation])
+  }, [spatializedElement, onSpatialRotate])
 
   useEffect(() => {
     if (spatializedElement) {
       // @ts-ignore
-      spatializedElement.onSpatialRotationEnd = onSpatialRotationEnd
+      spatializedElement.onSpatialRotateEnd = onSpatialRotateEnd
     }
-  }, [spatializedElement, onSpatialRotationEnd])
+  }, [spatializedElement, onSpatialRotateEnd])
 
   useEffect(() => {
     if (spatializedElement) {
@@ -154,6 +155,14 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialDragStart = onSpatialDragStart
     }
   }, [spatializedElement, onSpatialDragStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      console.log('dbg onSpatialRotateStart')
+      // @ts-ignore
+      spatializedElement.onSpatialRotateStart = onSpatialRotateStart
+    }
+  }, [spatializedElement, onSpatialRotateStart])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

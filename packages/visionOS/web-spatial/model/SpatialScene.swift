@@ -462,11 +462,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableTapGesture = command.enableTapGesture {
             spatializedElement.enableTapGesture = enableTapGesture
         }
+        
+        if let enableDragStartGesture = command.enableDragStartGesture {
+            spatializedElement.enableDragStartGesture = enableDragStartGesture
+        }
+        
         if let enableDragGesture = command.enableDragGesture {
             spatializedElement.enableDragGesture = enableDragGesture
         }
         if let enableDragEndGesture = command.enableDragEndGesture {
             spatializedElement.enableDragEndGesture = enableDragEndGesture
+        }
+        if let enableRotateStartGesture = command.enableRotateStartGesture {
+            spatializedElement.enableRotateStartGesture = enableRotateStartGesture
         }
         if let enableRotateGesture = command.enableRotateGesture {
             spatializedElement.enableRotateGesture = enableRotateGesture

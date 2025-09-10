@@ -3,12 +3,13 @@ import { SpatialContainerRefProxy } from './useDomProxy'
 import {
   SpatialDragEndEvent,
   SpatialDragEvent,
-  SpatialRotationEvent,
+  SpatialRotateEvent,
   SpatialTapEvent,
   SpatializedElementRef,
-  SpatialRotationEndEvent,
+  SpatialRotateEndEvent,
   SpatialMagnifyEndEvent,
   SpatialMagnifyEvent,
+  SpatialRotateStartEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -17,8 +18,9 @@ export interface SpatialEvents {
   onSpatialDragStart?: (event: SpatialDragEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
-  onSpatialRotation?: (event: SpatialRotationEvent) => void
-  onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  onSpatialRotateStart?: (event: SpatialRotateStartEvent) => void
+  onSpatialRotate?: (event: SpatialRotateEvent) => void
+  onSpatialRotateEnd?: (event: SpatialRotateEndEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 }
@@ -73,13 +75,13 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
-  const onSpatialRotation = createEventHandler<SpatialRotationEvent>(
-    spatialEvents.onSpatialRotation,
+  const onSpatialRotate = createEventHandler<SpatialRotateEvent>(
+    spatialEvents.onSpatialRotate,
     currentTargetGetter,
   )
 
-  const onSpatialRotationEnd = createEventHandler<SpatialRotationEndEvent>(
-    spatialEvents.onSpatialRotationEnd,
+  const onSpatialRotateEnd = createEventHandler<SpatialRotateEndEvent>(
+    spatialEvents.onSpatialRotateEnd,
     currentTargetGetter,
   )
 
@@ -98,13 +100,19 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
+  const onSpatialRotateStart = createEventHandler<SpatialRotateStartEvent>(
+    spatialEvents.onSpatialRotateStart,
+    currentTargetGetter,
+  )
+
   return {
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
-    onSpatialRotation,
-    onSpatialRotationEnd,
+    onSpatialRotateStart,
+    onSpatialRotate,
+    onSpatialRotateEnd,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
   }

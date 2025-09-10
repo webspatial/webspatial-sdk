@@ -5,7 +5,7 @@ import {
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
-  SpatialRotationEvent as CoreSpatialRotationEvent,
+  SpatialRotateEvent as CoreSpatialRotateEvent,
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   Point3D,
   Vec3,
@@ -30,11 +30,12 @@ export interface PortalSpatializedContainerProps
 
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
-  onSpatialDragStart?: (event: SpatialDragEvent) => void
+  onSpatialDragStart?: (event: SpatialDragStartEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
-  onSpatialRotation?: (event: SpatialRotationEvent) => void
-  onSpatialRotationEnd?: (event: SpatialRotationEndEvent) => void
+  onSpatialRotateStart?: (event: SpatialRotateStartEvent) => void
+  onSpatialRotate?: (event: SpatialRotateEvent) => void
+  onSpatialRotateEnd?: (event: SpatialRotateEndEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 
@@ -106,11 +107,15 @@ export type SpatialDragEndEvent = CoreSpatialDragEvent & {
   currentTarget: SpatializedElementRef
 }
 
-export type SpatialRotationEvent = CoreSpatialRotationEvent & {
+export type SpatialRotateStartEvent = CoreSpatialRotateEvent & {
   currentTarget: SpatializedElementRef
 }
 
-export type SpatialRotationEndEvent = CoreSpatialRotationEvent & {
+export type SpatialRotateEvent = CoreSpatialRotateEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotateEndEvent = CoreSpatialRotateEvent & {
   currentTarget: SpatializedElementRef
 }
 

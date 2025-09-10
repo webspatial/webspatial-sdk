@@ -8,8 +8,8 @@ enum SpatialWebMsgType: String, Encodable {
     case spatialtap = "spatialtap"
     case spatialdrag = "spatialdrag"
     case spatialdragend = "spatialdragend"
-    case spatialrotation = "spatialrotation"
-    case spatialrotationend = "spatialrotationend"
+    case spatialrotate = "spatialrotate"
+    case spatialrotateend = "spatialrotateend"
     case spatialmagnify = "spatialmagnify"
     case spatialmagnifyend = "spatialmagnifyend"
 }
@@ -56,20 +56,20 @@ struct WebSpatialDragEndGuestureEvent: Encodable {
     let detail: WebSpatialDragGuestureEventDetail
 }
 
-struct WebSpatialRotationGuestureEventDetail: Encodable {
+struct WebSpatialRotateGuestureEventDetail: Encodable {
     let rotation: Rotation3D
     let startAnchor3D: UnitPoint3D
     let startLocation3D: Point3D
     
 }
-struct WebSpatialRotationGuestureEvent: Encodable {
-    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotation
-    let detail: WebSpatialRotationGuestureEventDetail
+struct WebSpatialRotateGuestureEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotate
+    let detail: WebSpatialRotateGuestureEventDetail
 }
 
-struct WebSpatialRotationEndGuestureEvent: Encodable {
-    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotationend
-    let detail: WebSpatialRotationGuestureEventDetail
+struct WebSpatialRotateEndGuestureEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotateend
+    let detail: WebSpatialRotateGuestureEventDetail
 }
 
 struct WebSpatialMagnifyGuestureEventDetail: Encodable {
