@@ -700,6 +700,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let entity = spatialObjects[command.entityId] as? SpatialEntity,
            command.transform.count == 16 {
             entity.updateTransform(command.transform)
+            resolve(.success(baseReplyData))
+            return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
     }

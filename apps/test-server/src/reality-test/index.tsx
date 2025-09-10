@@ -3,11 +3,15 @@ import ReactDOM from 'react-dom/client'
 import {
   enableDebugTool
 } from '@webspatial/react-sdk'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 enableDebugTool()
 
 function App() {
+  const entityRef = useRef<any>(null)
+  const angleRef = useRef<number>(45)
+  const matrixRef = useRef<any>(new DOMMatrix())
+
   const initDynamic3D = async () => {
     let container = await callNative('CreateSpatializedDynamic3DElement', JSON.stringify({test:true}))
     if(container.id){
@@ -23,12 +27,26 @@ function App() {
       if(entity2.id){
         await callNative('AddEntityToEntity', JSON.stringify({parentId:entity.id, childId:entity2.id}))
 
-        let matrix = new DOMMatrix()
-        matrix.translateSelf(0, 0.1, 0)
-        matrix.rotateAxisAngleSelf(0,0,1,45)
-        await callNative('UpdateEntityProperties', JSON.stringify({entityId:entity2.id, transform:matrix.toFloat64Array()}))
+        matrixRef.current.translateSelf(0, 0.1, 0)
+        matrixRef.current.rotateAxisAngleSelf(0,0,1,angleRef.current)
+        entityRef.current = entity2
+        console.log(entity2)
+        await callNative('UpdateEntityProperties', JSON.stringify({entityId:entity2.id, transform:matrixRef.current.toFloat64Array()}))
+        updateEntity()
       }
     }
+
+
+  }
+
+  const updateEntity = async () => {
+    if(entityRef.current){
+      matrixRef.current.rotateAxisAngleSelf(0,0,1,1)
+      console.log(entityRef.current, matrixRef.current)
+      await callNative('UpdateEntityProperties', JSON.stringify({entityId:entityRef.current.id, transform:matrixRef.current.toFloat64Array()}))
+
+    }
+    requestAnimationFrame(updateEntity)
   }
 
   const createBoxEntity = async (width:number, height:number, depth:number, cornerRadius:number, color:string) => {
