@@ -4,6 +4,8 @@ export { SpatialScene } from './SpatialScene'
 export { SpatializedElement } from './SpatializedElement'
 export { Spatialized2DElement } from './Spatialized2DElement'
 export { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
+export { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+export * from './reality'
 export * from './types/types'
 
 // side effects

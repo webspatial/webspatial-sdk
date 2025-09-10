@@ -1,7 +1,7 @@
 import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialComponent } from './reality/component/SpatialComponent'
-import { SpatialEntity } from './reality/SpatialEntity'
+import { SpatialEntity } from './reality/entity/SpatialEntity'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
@@ -17,7 +17,9 @@ import {
   SpatialGeometryOptions,
   SpatialGeometryType,
   ModelComponentOptions,
+  SpatialEntityProperties,
 } from './types/types'
+import { composeSRT } from './utils'
 
 const platform = createPlatform()
 
@@ -29,6 +31,29 @@ abstract class JSBCommand {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
     return platform.callJSB(this.commandType, msg)
+  }
+}
+
+export class UpdateEntityPropertiesCommand extends JSBCommand {
+  commandType = 'UpdateEntityProperties'
+
+  constructor(
+    public entity: SpatialEntity,
+    public properties: Partial<SpatialEntityProperties>,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    const transform = composeSRT(
+      this.properties.position ?? this.entity.position,
+      this.properties.rotation ?? this.entity.rotation,
+      this.properties.scale ?? this.entity.scale,
+    ).toFloat64Array()
+    return {
+      entityId: this.entity.id,
+      transform,
+    }
   }
 }
 

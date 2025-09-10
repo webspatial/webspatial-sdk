@@ -4,12 +4,15 @@ import {
   CreateSpatialGeometryCommand,
   CreateSpatialUnlitMaterialCommand,
 } from '../JSBCommand'
-import { ModelComponentOptions, SpatialGeometryOptions, SpatialUnlitMaterialOptions } from '../types/types'
-import { SpatialEntity } from './SpatialEntity'
-import { ModelComponent } from './component/ModelComponent'
-import { SpatialComponent } from './component/SpatialComponent'
-import { SpatialGeometry } from './geometry/SpatialGeometry'
-import { SpatialUnlitMaterial } from './material/SpatialUnlitMaterial'
+import {
+  ModelComponentOptions,
+  SpatialGeometryOptions,
+  SpatialUnlitMaterialOptions,
+} from '../types/types'
+import { SpatialEntity } from './entity'
+import { ModelComponent } from './component'
+import { SpatialGeometry } from './geometry'
+import { SpatialUnlitMaterial } from './material'
 
 export async function createSpatialEntity(
   name?: string,
@@ -42,9 +45,7 @@ export async function createSpatialGeometry<T extends SpatialGeometry>(
 export async function createSpatialUnlitMaterial(
   options: SpatialUnlitMaterialOptions,
 ) {
-  const result = await new CreateSpatialUnlitMaterialCommand(
-    options,
-  ).execute()
+  const result = await new CreateSpatialUnlitMaterialCommand(options).execute()
   if (!result.success) {
     throw new Error('createSpatialUnlitMaterial failed')
   } else {
@@ -53,12 +54,8 @@ export async function createSpatialUnlitMaterial(
   }
 }
 
-export async function createModelComponent(
-  options: ModelComponentOptions,
-) {
-  const result = await new CreateModelComponentCommand(
-    options,
-  ).execute()
+export async function createModelComponent(options: ModelComponentOptions) {
+  const result = await new CreateModelComponentCommand(options).execute()
   if (!result.success) {
     throw new Error('createSpatialGeometry failed')
   } else {

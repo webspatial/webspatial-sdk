@@ -101,6 +101,13 @@ export interface SpatialSceneCreationOptions {
     maxHeight?: number
   }
 }
+
+export interface SpatialEntityProperties {
+  position: Vec3
+  rotation: Vec3
+  scale: Vec3
+}
+
 export type SpatialGeometryType =
   | 'BoxGeometry'
   | 'PlaneGeometry'

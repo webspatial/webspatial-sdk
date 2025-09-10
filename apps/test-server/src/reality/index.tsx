@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { getSession, initScene } from '@webspatial/react-sdk'
+import { SpatialEntity } from '@webspatial/core-sdk'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -11,8 +12,6 @@ function App() {
   const [logs, setLogs] = useState('')
 
   useEffect(() => {
-    //@ts-ignore
-    log('windowID:', window._webSpatialID)
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
@@ -40,9 +39,34 @@ function App() {
     })
   }
 
-  const winARef = useRef<any>(null)
-  const winBRef = useRef<any>(null)
-  const winCRef = useRef<any>(null)
+  const entityRef = useRef<SpatialEntity>()
+  const animationRef = useRef<any>()
+  const rotationRef = useRef<number>(0)
+
+  const [isAnimationOn, setIsAnimationOn] = useState(false)
+
+  function startAnimation() {
+    if (!entityRef.current) return
+    if (animationRef.current) return
+    function doRotate(delta: number) {
+      entityRef.current?.setRotation({
+        x: 0,
+        y: 0,
+        z: rotationRef.current + 0.1 * delta,
+      })
+      animationRef.current = requestAnimationFrame(doRotate)
+    }
+    doRotate(0)
+    setIsAnimationOn(true)
+  }
+
+  function cancelAnimation() {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+      animationRef.current = null
+      setIsAnimationOn(false)
+    }
+  }
 
   return (
     <div className="pl-5 pt-2">
@@ -63,44 +87,56 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
-          const session = getSession()!
-          const entity = await session.createEntity()
+          try {
+            const session = getSession()!
+
+            const spatialScene = session.getSpatialScene()
+
+            const reality = await session.createSpatializedDynamic3DElement()
+
+            await spatialScene.addSpatializedElement(reality)
+
+            const entity = await session.createEntity()
+
+            const geometry = await session.createBoxGeometry({
+              width: 0.2,
+              height: 0.2,
+              depth: 0.1,
+            })
+            const material = await session.createUnlitMaterial({
+              color: '#ff0000',
+            })
+            const modelComponent = await session.createModelComponent({
+              mesh: geometry,
+              materials: [material],
+            })
+            await entity.addComponent(modelComponent)
+
+            await reality.addEntity(entity)
+            await new Promise(resolve => {
+              setTimeout(resolve, 2000)
+            })
+
+            entityRef.current = entity
+          } catch (error) {
+            console.log('🚀 ~ error:', error)
+          }
         }}
       >
-        create entity
+        create modelComponent
       </button>
 
       <button
         className={btnCls}
         onClick={async () => {
-          const session = getSession()!
-
-          const spatialScene = session.getSpatialScene()
-
-          const reality = await session.createSpatializedDynamic3DElement()
-
-          await spatialScene.addSpatializedElement(reality)
-
-          const entity = await session.createEntity()
-
-          const geometry = await session.createBoxGeometry({
-            width: 1,
-            height: 1,
-            depth: 1,
-          })
-          const material = await session.createUnlitMaterial({
-            color: '#ff0000',
-          })
-          const modelComponent = await session.createModelComponent({
-            mesh: geometry,
-            materials: [material],
-          })
-          await entity.addComponent(modelComponent)
-
-          await reality.addEntity(entity)
+          if (isAnimationOn) {
+            cancelAnimation()
+          } else {
+            startAnimation()
+          }
         }}
       >
-        create modelComponent
+        rotation animation {isAnimationOn ? 'stop' : 'start'}
       </button>
 
       <div>

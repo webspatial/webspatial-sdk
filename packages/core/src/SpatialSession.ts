@@ -19,19 +19,20 @@ import {
   SpatialUnlitMaterialOptions,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
-import { SpatialEntity } from './reality/SpatialEntity'
-import { SpatialGeometry } from './reality/geometry/SpatialGeometry'
+import { SpatialEntity } from './reality/entity/SpatialEntity'
 import {
   createModelComponent,
   createSpatialEntity,
   createSpatialGeometry,
   createSpatialUnlitMaterial,
 } from './reality/realityCreator'
-import { SpatialBoxGeometry } from './reality/geometry/SpatialBoxGeometry'
-import { SpatialPlaneGeometry } from './reality/geometry/SpatialPlainGeometry'
-import { SpatialSphereGeometry } from './reality/geometry/SpatialSphereGeometry'
-import { SpatialConeGeometry } from './reality/geometry/SpatialConeGeometry'
-import { SpatialCylinderGeometry } from './reality/geometry/SpatialCylinderGeometry'
+import {
+  SpatialBoxGeometry,
+  SpatialPlaneGeometry,
+  SpatialSphereGeometry,
+  SpatialConeGeometry,
+  SpatialCylinderGeometry,
+} from './reality'
 
 /**
  * Session use to establish a connection to the spatial renderer of the system. All resources must be created by the session

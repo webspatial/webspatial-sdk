@@ -1,5 +1,5 @@
 import { AddEntityToDynamic3DCommand, UpdateSpatializedDynamic3DElementProperties } from './JSBCommand'
-import { SpatialEntity } from './reality/SpatialEntity'
+import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
 export class SpatializedDynamic3DElement extends SpatializedElement {
