@@ -197,6 +197,19 @@ async function createSpatializedElement() {
   setOpenWindowStyle(windowProxy)
   await syncParentHeadToChild(windowProxy)
 
+  const viewport = windowProxy.document.querySelector('meta[name="viewport"]')
+  if (viewport) {
+    viewport?.setAttribute(
+      'content',
+      ` initial-scale=1.0, maximum-scale=1.0, user-scalable=no`,
+    )
+  } else {
+    const meta = windowProxy.document.createElement('meta')
+    meta.name = 'viewport'
+    meta.content = 'initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+    windowProxy.document.head.appendChild(meta)
+  }
+
   return spatializedElement
 }
 
