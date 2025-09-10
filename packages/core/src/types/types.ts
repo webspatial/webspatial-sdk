@@ -214,6 +214,9 @@ declare global {
       'react-sdk-version'?: string
       'core-sdk-version'?: string
     }
+
+    innerDepth: number
+    outerDepth: number
   }
 }
 
