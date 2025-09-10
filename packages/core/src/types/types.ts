@@ -1,3 +1,6 @@
+import { SpatialGeometry } from '../reality/geometry/SpatialGeometry'
+import { SpatialMaterial } from '../reality/material/SpatialMaterial'
+
 export interface Vec3 {
   x: number
   y: number
@@ -98,7 +101,12 @@ export interface SpatialSceneCreationOptions {
     maxHeight?: number
   }
 }
-export type SpatialGeometryType = 'box' | 'plane' | 'sphere' | 'cylinder' | 'cone'
+export type SpatialGeometryType =
+  | 'box'
+  | 'plane'
+  | 'sphere'
+  | 'cylinder'
+  | 'cone'
 
 export interface SpatialBoxGeometryOptions {
   width?: number
@@ -139,12 +147,17 @@ export type SpatialMaterialType = 'unlit'
 
 type BlendingType = 'opaque' | 'transparent'
 
-export interface SpatialUnlitMaterialCreationOptions {
+export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
   blending?: BlendingType
 
   opacity?: number
+}
+
+export interface ModelComponentOptions {
+  mesh: SpatialGeometry
+  materials: SpatialMaterial[]
 }
 
 export enum SpatialSceneState {

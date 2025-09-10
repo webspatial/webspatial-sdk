@@ -8,6 +8,7 @@ import {
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import {
+  ModelComponentOptions,
   SpatialBoxGeometryOptions,
   SpatialConeGeometryOptions,
   SpatialCylinderGeometryOptions,
@@ -15,13 +16,16 @@ import {
   SpatialPlaneGeometryOptions,
   SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
+  SpatialUnlitMaterialOptions,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/SpatialEntity'
 import { SpatialGeometry } from './reality/geometry/SpatialGeometry'
 import {
+  createModelComponent,
   createSpatialEntity,
   createSpatialGeometry,
+  createSpatialUnlitMaterial,
 } from './reality/realityCreator'
 import { SpatialBoxGeometry } from './reality/geometry/SpatialBoxGeometry'
 import { SpatialPlaneGeometry } from './reality/geometry/SpatialPlainGeometry'
@@ -51,7 +55,7 @@ export class SpatialSession {
     return createSpatializedDynamic3DElement()
   }
 
-  createSpatialEntity(name?: string): Promise<SpatialEntity> {
+  createEntity(name?: string): Promise<SpatialEntity> {
     return createSpatialEntity(name)
   }
 
@@ -73,6 +77,14 @@ export class SpatialSession {
 
   createCylinderGeometry(options: SpatialCylinderGeometryOptions) {
     return createSpatialGeometry(SpatialCylinderGeometry, options)
+  }
+
+  createModelComponent(options: ModelComponentOptions) {
+    return createModelComponent(options)
+  }
+
+  createUnlitMaterial(options: SpatialUnlitMaterialOptions) {
+    return createSpatialUnlitMaterial(options)
   }
 
   initScene(

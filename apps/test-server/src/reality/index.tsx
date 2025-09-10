@@ -64,7 +64,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           const session = getSession()!
-          const entity = await session.createSpatialEntity()
+          const entity = await session.createEntity()
         }}
       >
         create entity
@@ -74,15 +74,25 @@ function App() {
         className={btnCls}
         onClick={async () => {
           const session = getSession()!
-          const geometry = await session.createSpatialGeometry({
-            type: 'box',
+
+          const entity = await session.createEntity()
+
+          const geometry = await session.createBoxGeometry({
             width: 1,
             height: 1,
             depth: 1,
           })
+          const material = await session.createUnlitMaterial({
+            color: '#ff0000',
+          })
+          const modelComponent = await session.createModelComponent({
+            mesh: geometry,
+            materials: [material],
+          })
+          await entity.addComponent(modelComponent)
         }}
       >
-        create geometry
+        create modelComponent
       </button>
 
       <div>
