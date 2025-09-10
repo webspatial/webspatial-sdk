@@ -9,6 +9,7 @@ import {
   // SpatialMagnifyEndEvent,
   SpatializedStatic3DElementContainer,
   SpatializedElementRef,
+  SpatializedStatic3DElementRef,
   SpatialMagnifyEvent,
   toSceneSpatial,
   SpatialDragEndEvent,
@@ -37,7 +38,7 @@ function Model() {
 
   const src = 'http://localhost:5173/public/modelasset/cone.usdz'
 
-  const refModel = useRef<SpatializedElementRef>(null)
+  const refModel = useRef<SpatializedStatic3DElementRef>(null)
 
   const onSpatialTap = (e: SpatialTapEvent) => {
     console.log(
@@ -46,6 +47,7 @@ function Model() {
       e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
       toSceneSpatial(e.detail.location3D, e.currentTarget),
+      (e.currentTarget as SpatializedStatic3DElementRef).src,
     )
   }
 

@@ -46,7 +46,9 @@ export interface PortalSpatializedContainerProps
 export type SpatializedContainerProps = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps,
   typeof SpatialID
->
+> & {
+  extraRefProps?: Record<string, () => any>
+}
 
 export interface SpatializedContentProps
   extends Omit<PortalSpatializedContainerProps, 'spatializedContent'> {
@@ -58,11 +60,14 @@ export type Spatialized2DElementContainerProps = Omit<
   | 'spatializedContent'
   | 'createSpatializedElement'
   | 'getExtraSpatializedElementProperties'
+  | 'extraRefProps'
 >
 
 export interface SpatializedStatic3DContainerProps
   extends Omit<Spatialized2DElementContainerProps, 'component'> {
   src?: string
+  // onLoad?: (element: SpatializedStatic3DElementRef) => void
+  // onError?: (element: SpatializedStatic3DElementRef) => void
 }
 
 export interface SpatializedStatic3DContentProps
@@ -90,6 +95,11 @@ export interface SpatializedElementRef extends HTMLElement {
 
   onSpatialTap?: (event: SpatialTapEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
+}
+
+export interface SpatializedStatic3DElementRef extends SpatializedElementRef {
+  src: string
+  ready: Promise<SpatializedStatic3DElementRef>
 }
 
 export type SpatialTapEvent = CoreSpatialTapEvent & {

@@ -2,9 +2,9 @@ import React, { ForwardedRef, forwardRef, useEffect, useMemo } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
-  SpatializedElementRef,
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DContentProps,
+  SpatializedStatic3DElementRef,
 } from './types'
 import { SpatializedStatic3DElement } from '@webspatial/core-sdk'
 
@@ -40,14 +40,22 @@ async function createSpatializedElement() {
 
 function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
-  ref: ForwardedRef<SpatializedElementRef>,
+  ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
+  const extraRefProps = useMemo(
+    () => ({
+      src: () => getAbsoluteURL(props.src),
+    }),
+    [],
+  )
+
   return (
     <SpatializedContainer
       ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
       spatializedContent={SpatializedContent}
+      extraRefProps={extraRefProps}
       {...props}
     />
   )

@@ -38,6 +38,7 @@ export function SpatializedContainerBase(
       onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      extraRefProps,
       ...restProps
     } = inprops
     // make sure SpatializedContainer can work on web env
@@ -70,6 +71,7 @@ export function SpatializedContainerBase(
     onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
+    extraRefProps,
     ...props
   } = inprops
 
@@ -108,7 +110,7 @@ export function SpatializedContainerBase(
         transformVisibilityTaskContainerCallback,
         standardSpatializedContainerCallback,
         spatialContainerRefProxy,
-      } = useDomProxy(ref)
+      } = useDomProxy(ref, extraRefProps)
 
       useEffect(() => {
         rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
@@ -144,7 +146,7 @@ export function SpatializedContainerBase(
       transformVisibilityTaskContainerCallback,
       standardSpatializedContainerCallback,
       spatialContainerRefProxy,
-    } = useDomProxy(ref)
+    } = useDomProxy(ref, extraRefProps)
 
     const spatialEvents = useSpatialEvents(
       {
