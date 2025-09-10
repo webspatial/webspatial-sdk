@@ -1,5 +1,5 @@
-import { SpatialObject } from '../SpatialObject'
-import { SpatialMaterialType } from '../types/types'
+import { SpatialObject } from '../../SpatialObject'
+import { SpatialMaterialType } from '../../types/types'
 
 export abstract class SpatialMaterial extends SpatialObject {
   constructor(

@@ -1,5 +1,5 @@
-import { UpdateUnlitMaterialProperties } from '../JSBCommand'
-import { SpatialUnlitMaterialCreationOptions } from '../types/types'
+import { UpdateUnlitMaterialProperties } from '../../JSBCommand'
+import { SpatialUnlitMaterialCreationOptions } from '../../types/types'
 import { SpatialMaterial } from './SpatialMaterial'
 
 export class SpatialUnlitMaterial extends SpatialMaterial {
