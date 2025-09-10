@@ -11,6 +11,7 @@ export enum SpatialWebMsgType {
   cubeInfo = 'cubeInfo',
   transform = 'transform',
   spatialtap = 'spatialtap',
+  spatialdragstart = 'spatialdragstart',
   spatialdrag = 'spatialdrag',
   spatialdragend = 'spatialdragend',
   spatialrotation = 'spatialrotation',

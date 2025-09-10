@@ -60,6 +60,7 @@ export function PortalSpatializedContainer(
     createSpatializedElement,
     getExtraSpatializedElementProperties,
     onSpatialTap,
+    onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
     onSpatialRotation,
@@ -146,6 +147,13 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialMagnifyEnd = onSpatialMagnifyEnd
     }
   }, [spatializedElement, onSpatialMagnifyEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragStart = onSpatialDragStart
+    }
+  }, [spatializedElement, onSpatialDragStart])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

@@ -28,6 +28,7 @@ export function SpatializedContainerBase(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      onSpatialDragStart,
       onSpatialTap,
       onSpatialDrag,
       onSpatialDragEnd,
@@ -58,6 +59,7 @@ export function SpatializedContainerBase(
   }
   const {
     onSpatialTap,
+    onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
     onSpatialRotation,
@@ -72,6 +74,7 @@ export function SpatializedContainerBase(
       const spatialEvents = useSpatialEventsWhenSpatializedContainerExist(
         {
           onSpatialTap,
+          onSpatialDragStart,
           onSpatialDrag,
           onSpatialDragEnd,
           onSpatialRotation,
@@ -140,6 +143,7 @@ export function SpatializedContainerBase(
     const spatialEvents = useSpatialEvents(
       {
         onSpatialTap,
+        onSpatialDragStart,
         onSpatialDrag,
         onSpatialDragEnd,
         onSpatialRotation,

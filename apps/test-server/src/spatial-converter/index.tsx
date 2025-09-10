@@ -10,6 +10,8 @@ import {
   SpatializedElementRef,
   SpatialMagnifyEvent,
   toSceneSpatial,
+  SpatialDragEndEvent,
+  // toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
@@ -41,7 +43,16 @@ function Model() {
       'model onSpatialTap',
       e.currentTarget.getBoundingClientCube(),
       e.currentTarget.getBoundingClientRect(),
+      e.detail.location3D,
       toSceneSpatial(e.detail.location3D, e.currentTarget),
+    )
+  }
+
+  const onSpatialDragStart = (e: SpatialDragEvent) => {
+    console.log(
+      'model onSpatialDragStart',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
     )
   }
 
@@ -51,7 +62,14 @@ function Model() {
       e.isTrusted,
       e.currentTarget.getBoundingClientCube(),
     )
-    debugger
+  }
+
+  const onSpatialDragEnd = (e: SpatialDragEndEvent) => {
+    console.log(
+      'model onSpatialDragEnd',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
   }
 
   const onSpatialRotationEnd = (e: SpatialRotationEndEvent) => {
@@ -79,6 +97,8 @@ function Model() {
         ref={refModel}
         style={style}
         src={src}
+        onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialDragStart={onSpatialDragStart}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
         onSpatialRotationEnd={onSpatialRotationEnd}

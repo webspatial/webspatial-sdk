@@ -1,6 +1,7 @@
 // This file is from emotion-js, credit.
  import {
    SpatialTapEvent,
+   SpatialDragStartEvent,
    SpatialDragEvent,
    SpatialDragEndEvent,
    SpatialRotationEvent,
@@ -107,6 +108,7 @@
        style?: React.CSSProperties
        'enable-xr'?: boolean
        onSpatialTap?: (e: SpatialTapEvent) => void
+       onSpatialDragStart?: (e: SpatialDragStartEvent) => void
        onSpatialDrag?: (e: SpatialDragEvent) => void
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
        onSpatialRotation?: (e: SpatialRotationEvent) => void

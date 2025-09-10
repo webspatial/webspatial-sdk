@@ -5,6 +5,7 @@ export { withSpatialized2DElementContainer } from './Spatialized2DElementContain
 export {
   type SpatializedElementRef,
   type SpatialTapEvent,
+  type SpatialDragStartEvent,
   type SpatialDragEvent,
   type SpatialDragEndEvent,
   type SpatialRotationEvent,

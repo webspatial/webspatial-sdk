@@ -14,6 +14,7 @@ import { SpatializedContainerObject } from '../context/SpatializedContainerConte
 
 export interface SpatialEvents {
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDragStart?: (event: SpatialDragEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
@@ -92,8 +93,14 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
+  const onSpatialDragStart = createEventHandler<SpatialDragEvent>(
+    spatialEvents.onSpatialDragStart,
+    currentTargetGetter,
+  )
+
   return {
     onSpatialTap,
+    onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
     onSpatialRotation,

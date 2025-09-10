@@ -30,6 +30,7 @@ export interface PortalSpatializedContainerProps
 
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDragStart?: (event: SpatialDragEvent) => void
   onSpatialDrag?: (event: SpatialDragEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
   onSpatialRotation?: (event: SpatialRotationEvent) => void
@@ -90,6 +91,10 @@ export interface SpatializedElementRef extends HTMLElement {
 }
 
 export type SpatialTapEvent = CoreSpatialTapEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragStartEvent = CoreSpatialDragEvent & {
   currentTarget: SpatializedElementRef
 }
 

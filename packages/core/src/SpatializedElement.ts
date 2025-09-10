@@ -96,12 +96,21 @@ export abstract class SpatializedElement extends SpatialObject {
       )
       this._onSpatialTap?.(event)
     } else if (type === SpatialWebMsgType.spatialdrag) {
+      if (!this._isDragging) {
+        const dragStartEvent = createSpatialEvent(
+          SpatialWebMsgType.spatialdragstart,
+          (data as SpatialDragMsg).detail,
+        )
+        this._onSpatialDragStart?.(dragStartEvent)
+      }
+      this._isDragging = true
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdrag,
         (data as SpatialDragMsg).detail,
       )
       this._onSpatialDrag?.(event)
     } else if (type === SpatialWebMsgType.spatialdragend) {
+      this._isDragging = false
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdragend,
         (data as SpatialDragEndMsg).detail,
@@ -140,6 +149,12 @@ export abstract class SpatializedElement extends SpatialObject {
     this.updateProperties({
       enableTapGesture: value !== undefined,
     })
+  }
+
+  private _isDragging = false
+  private _onSpatialDragStart?: (event: SpatialDragEvent) => void
+  set onSpatialDragStart(value: (event: SpatialDragEvent) => void | undefined) {
+    this._onSpatialDragStart = value
   }
 
   private _onSpatialDrag?: (event: SpatialDragEvent) => void
