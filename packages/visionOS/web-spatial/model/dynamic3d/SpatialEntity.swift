@@ -63,6 +63,10 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
     
+    public func updateTransform(_ matrix:[String:Float]){
+        transform.matrix = float4x4([matrix["0"]!, matrix["1"]!, matrix["2"]!, matrix["3"]!], [matrix["4"]!, matrix["5"]!, matrix["6"]!, matrix["7"]!], [matrix["8"]!, matrix["9"]!, matrix["10"]!, matrix["11"]!], [matrix["12"]!, matrix["13"]!, matrix["14"]!, matrix["15"]!])
+    }
+    
     public func setRotation(_ rotation: simd_quatd) {
         self.rotation = rotation
         self.transform.rotation = simd_quatf(ix: Float(rotation.imag.x), iy: Float(rotation.imag.y), iz: Float(rotation.imag.z), r: Float(rotation.real))

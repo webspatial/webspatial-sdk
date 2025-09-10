@@ -8,8 +8,8 @@ class Dynamic3DManager{
         return entity
     }
     
-    func createComponent(){
-        
+    static func createModelComponent(mesh:Geometry, mats:[SpatialMaterial]) -> SpatialModelComponent{
+        return SpatialModelComponent(mesh: mesh, mats: mats)
     }
     
     static func createGeometry(_ props: CreateGeometryProperties) -> Geometry?{

@@ -51,6 +51,36 @@ struct CreateTexture: CommandDataProtocol{
     let url: String
 }
 
+struct CreateModelComponent: CommandDataProtocol{
+    static let commandType: String = "CreateModelComponent"
+    let geometryId: String
+    let materialIds: [String]
+}
+
+struct AddComponentToEntity: CommandDataProtocol{
+    static let commandType: String = "AddComponentToEntity"
+    let entityId: String
+    let componentId: String
+}
+
+struct AddEntityToDynamic3D: CommandDataProtocol{
+    static let commandType: String = "AddEntityToDynamic3D"
+    let dynamic3dId: String
+    let entityId: String
+}
+
+struct AddEntityToEntity: CommandDataProtocol{
+    static let commandType: String = "AddEntityToEntity"
+    let childId: String
+    let parentId: String
+}
+
+struct UpdateEntityProperties: CommandDataProtocol{
+    static let commandType: String = "UpdateEntityProperties"
+    let entityId: String
+    let transform: [String:Float]
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?

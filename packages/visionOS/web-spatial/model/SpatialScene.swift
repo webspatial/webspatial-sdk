@@ -227,6 +227,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
         spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
+        spatialWebViewModel.addJSBListener(CreateModelComponent.self, onCreateModelComponent)
+        spatialWebViewModel.addJSBListener(AddComponentToEntity.self, onAddComponentToEntity)
+        spatialWebViewModel.addJSBListener(AddEntityToDynamic3D.self, onAddEntityToDynamic3D)
+        spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
+        spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
+        
         
         
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -637,6 +643,65 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let material = Dynamic3DManager.createUnlitMaterial(command, nil)
         addSpatialObject(material)
         resolve(.success(AddSpatializedElementReply(id: material.id)))
+    }
+    
+    private func onCreateModelComponent(command: CreateModelComponent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let geometry = spatialObjects[command.geometryId] as? Geometry {
+            var materials:[SpatialMaterial] = []
+            command.materialIds.forEach{ mid in
+                if let material = spatialObjects[mid] as? SpatialMaterial {
+                    materials.append(material)
+                }
+                else {
+                    print("material \(mid) not found ")
+                }
+            }
+            let component = Dynamic3DManager.createModelComponent(mesh: geometry, mats: materials)
+            addSpatialObject(component)
+            resolve(.success(AddSpatializedElementReply(id: component.id)))
+        }
+        else{
+            print("geometry \(command.geometryId) not found")
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "geometry \(command.geometryId) not found")))
+        }
+    }
+    
+    private func onAddComponentToEntity(command: AddComponentToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entity = spatialObjects[command.entityId] as? SpatialEntity,
+           let component = spatialObjects[command.componentId] as? SpatialComponent{
+            entity.addComponent(component)
+            resolve(.success(baseReplyData))
+            return
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add component failed")))
+    }
+    
+    private func onAddEntityToDynamic3D(command: AddEntityToDynamic3D, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entity = spatialObjects[command.entityId] as? SpatialEntity,
+           let dynamic3dElement = spatialObjects[command.dynamic3dId] as? SpatializedDynamic3DElement {
+            dynamic3dElement.addEntity(entity)
+            resolve(.success(baseReplyData))
+            return
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
+    }
+    
+    private func onAddEntityToEntity(command: AddEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entityChild = spatialObjects[command.childId] as? SpatialEntity,
+           let entityParent = spatialObjects[command.parentId] as? SpatialEntity {
+            entityParent.addChild(entity: entityChild)
+            resolve(.success(baseReplyData))
+            return
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
+    }
+    
+    private func onUpdateEntityProperties(command: UpdateEntityProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entity = spatialObjects[command.entityId] as? SpatialEntity,
+           command.transform.count == 16 {
+            entity.updateTransform(command.transform)
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
     }
 
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {
