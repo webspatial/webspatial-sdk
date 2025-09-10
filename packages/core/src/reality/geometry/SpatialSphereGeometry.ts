@@ -5,7 +5,7 @@ import {
 import { SpatialGeometry } from './SpatialGeometry'
 
 export class SpatialSphereGeometry extends SpatialGeometry {
-  static type: SpatialGeometryType = 'plane'
+  static type: SpatialGeometryType = 'SphereGeometry'
   constructor(
     public id: string,
     public options: SpatialSphereGeometryOptions,

@@ -230,7 +230,7 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
 
 export class CreateSpatializedDynamic3DElementCommand extends JSBCommand {
   protected getParams(): Record<string, any> | undefined {
-    return {}
+    return { test: true }
   }
   commandType = 'CreateSpatializedDynamic3DElement'
 }
@@ -254,7 +254,7 @@ export class CreateModelComponentCommand extends JSBCommand {
     let materialIds = this.options.materials.map(material => material.id)
     return { geometryId, materialIds }
   }
-  commandType = 'CreateGeometry'
+  commandType = 'CreateModelComponent'
 }
 export class CreateSpatialGeometryCommand extends JSBCommand {
   constructor(

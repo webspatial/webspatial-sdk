@@ -2,7 +2,7 @@ import { SpatialBoxGeometryOptions, SpatialGeometryType } from '../../types/type
 import { SpatialGeometry } from './SpatialGeometry'
 
 export class SpatialBoxGeometry extends SpatialGeometry {
-  static type: SpatialGeometryType = 'box'
+  static type: SpatialGeometryType = 'BoxGeometry'
   constructor(
     public id: string,
     public options: SpatialBoxGeometryOptions,

@@ -102,11 +102,11 @@ export interface SpatialSceneCreationOptions {
   }
 }
 export type SpatialGeometryType =
-  | 'box'
-  | 'plane'
-  | 'sphere'
-  | 'cylinder'
-  | 'cone'
+  | 'BoxGeometry'
+  | 'PlaneGeometry'
+  | 'SphereGeometry'
+  | 'CylinderGeometry'
+  | 'ConeGeometry'
 
 export interface SpatialBoxGeometryOptions {
   width?: number
