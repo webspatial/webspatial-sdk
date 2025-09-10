@@ -1,7 +1,6 @@
 import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
-  SpatialSceneState,
 } from './types/types'
 import {
   AddSpatializedElementToSpatialScene,
@@ -12,6 +11,7 @@ import {
 
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
+import { SpatialSceneState } from './types/internal'
 
 let instance: SpatialScene
 

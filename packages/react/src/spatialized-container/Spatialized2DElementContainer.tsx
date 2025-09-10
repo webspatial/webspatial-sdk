@@ -154,10 +154,9 @@ function SpatializedContent(props: SpatializedContentProps) {
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
 
-  const name: string = (restProps as any)['data-name'] || ''
-  console.log('dbg name:', name, restProps)
   useSyncHeaderStyle(windowProxy)
 
+  const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
   const portalInstanceObject: PortalInstanceObject = useContext(
@@ -197,6 +196,19 @@ async function createSpatializedElement() {
   const windowProxy = spatializedElement.windowProxy
   setOpenWindowStyle(windowProxy)
   await syncParentHeadToChild(windowProxy)
+
+  const viewport = windowProxy.document.querySelector('meta[name="viewport"]')
+  if (viewport) {
+    viewport?.setAttribute(
+      'content',
+      ` initial-scale=1.0, maximum-scale=1.0, user-scalable=no`,
+    )
+  } else {
+    const meta = windowProxy.document.createElement('meta')
+    meta.name = 'viewport'
+    meta.content = 'initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+    windowProxy.document.head.appendChild(meta)
+  }
 
   return spatializedElement
 }

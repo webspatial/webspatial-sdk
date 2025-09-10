@@ -31,8 +31,7 @@ export class SpatialContainerRefProxy {
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
             }
             if (prop === 'getBoundingClientRect') {
-              // todo:
-              return target.style.getPropertyValue(SpatialCustomStyleVars.back)
+              return (dom as any).__getBoundingClientRect
             }
             if (prop === 'getBoundingClientCube') {
               return (dom as any).__getBoundingClientCube

@@ -17,6 +17,7 @@ enum ReplyCode: Encodable {
     case TypeError
     case CommandError
     case InvalidSpatialObject
+    case InvalidMatrix
 }
 
 struct JsbError: Error, Encodable {

@@ -1,5 +1,14 @@
 import Foundation
 
+protocol SpatialObjectProtocol: Encodable, Equatable {
+    var spatialId: String { get }
+    var name: String { get set }
+    var isDestroyed: Bool { get }
+    
+    func destroy()
+    func onDestroy()
+}
+
 class WeakReference<T: AnyObject> {
     weak var value: T?
 
@@ -8,23 +17,36 @@ class WeakReference<T: AnyObject> {
     }
 }
 
-class SpatialObject: EventEmitter, Encodable, Equatable {
-    static var objects = [String: SpatialObject]()
-    static var weakRefObjects = [String: WeakReference<SpatialObject>]()
-    static func get(_ id: String) -> SpatialObject? {
+class SpatialObjectWeakRefManager {
+    static var weakRefObjects = [String: WeakReference<AnyObject>]()
+    
+    static func setWeakRef<T: AnyObject>(_ id: String, _ object: T) {
+        weakRefObjects[id] = WeakReference(object as AnyObject)
+    }
+    
+    static func getWeakRef(_ id: String) -> AnyObject? {
+        return weakRefObjects[id]?.value
+    }
+    
+    static func removeWeakRef(_ id: String) {
+        weakRefObjects.removeValue(forKey: id)
+    }
+}
+
+class SpatialObject: EventEmitter, Encodable, Equatable, SpatialObjectProtocol {
+    static var objects = [String: (any SpatialObjectProtocol)]()
+    
+    static func get(_ id: String) -> (any SpatialObjectProtocol)? {
         return objects[id]
     }
 
     static func getRefObject(_ id: String) -> SpatialObject? {
-        return weakRefObjects[id]?.value
+        return SpatialObjectWeakRefManager.getWeakRef(id) as? SpatialObject
     }
 
-    static func getWeakRef(_ id: String) -> SpatialObject? {
-        return weakRefObjects[id]?.value
-    }
-
-    let id: String
+    let spatialId: String
     var name: String = ""
+    let id: String
 
     private var _isDestroyed = false
 
@@ -38,31 +60,33 @@ class SpatialObject: EventEmitter, Encodable, Equatable {
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
+        try container.encode(spatialId, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(isDestroyed, forKey: .isDestroyed)
     }
 
     static func == (lhs: SpatialObject, rhs: SpatialObject) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.spatialId == rhs.spatialId
     }
 
     override init() {
-        id = UUID().uuidString
+        spatialId = UUID().uuidString
+        id = spatialId
         super.init()
-        SpatialObject.objects[id] = self
-        SpatialObject.weakRefObjects[id] = WeakReference(self)
+        SpatialObject.objects[spatialId] = self
+        SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
 
     init(_ _id: String) {
-        id = _id
+        spatialId = _id
+        id = spatialId
         super.init()
-        SpatialObject.objects[id] = self
-        SpatialObject.weakRefObjects[id] = WeakReference(self)
+        SpatialObject.objects[spatialId] = self
+        SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
 
     deinit {
-        SpatialObject.weakRefObjects.removeValue(forKey: id)
+        SpatialObjectWeakRefManager.removeWeakRef(spatialId)
     }
 
     enum Events: String {
@@ -80,7 +104,7 @@ class SpatialObject: EventEmitter, Encodable, Equatable {
         _isDestroyed = true
 
         emit(event: Events.Destroyed.rawValue, data: ["object": self])
-        SpatialObject.objects.removeValue(forKey: id)
+        SpatialObject.objects.removeValue(forKey: spatialId)
 
         reset()
     }

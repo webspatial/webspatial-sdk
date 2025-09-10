@@ -1,4 +1,3 @@
-import RealityKit
 import SwiftUI
 
 // zIndex() have some bug, so use zOrderBias to simulate zIndex effect
@@ -38,32 +37,88 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
-        print("\(spatializedElement.name) onRotateGesture3D \(event.rotation) ")
+        if spatializedElement.enableRotateGesture || spatializedElement.enableRotateStartGesture {
+            let gestureEvent = WebSpatialRotateGuestureEvent(
+                detail: .init(
+                    rotation: event.rotation,
+                    startAnchor3D: event.startAnchor3D,
+                    startLocation3D: event.startLocation3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
-    
+
     private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
-        print("\(spatializedElement.name) onRotateGesture3DEnd \(event.rotation) ")
+        if spatializedElement.enableRotateEndGesture {
+            let gestureEvent = WebSpatialRotateEndGuestureEvent(
+                detail: .init(
+                    rotation: event.rotation,
+                    startAnchor3D: event.startAnchor3D,
+                    startLocation3D: event.startLocation3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onDragging(_ event: DragGesture.Value) {
-        print("\(spatializedElement.name)  onDragging \(event.location3D)")
-
+        if spatializedElement.enableDragStartGesture || spatializedElement.enableDragGesture {
+            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
+                location3D: event.location3D,
+                startLocation3D: event.startLocation3D,
+                translation3D: event.translation3D,
+                predictedEndTranslation3D: event.predictedEndTranslation3D,
+                predictedEndLocation3D: event.predictedEndLocation3D,
+                velocity: event.velocity
+            ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
-        print("\(spatializedElement.name)  onDraggingEnded \(event.location3D)")
+        if spatializedElement.enableDragEndGesture {
+            let gestureEvent = WebSpatialDragEndGuestureEvent(
+                detail: .init(
+                    location3D: event.location3D,
+                    startLocation3D: event.startLocation3D,
+                    translation3D: event.translation3D,
+                    predictedEndTranslation3D: event.predictedEndTranslation3D,
+                    predictedEndLocation3D: event.predictedEndLocation3D,
+                    velocity: event.velocity
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
-        spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(location3D: event.location3D))
+        if spatializedElement.enableTapGesture {
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: event.location3D)))
+        }
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGesture \(event.magnification)")
+        if spatializedElement.enableMagnifyGesture || spatializedElement.enableMagnifyStartGesture {
+            let gestureEvent = WebSpatialMagnifyGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
-    
+
     private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
-        print("\(spatializedElement.name)  onMagnifyGestureEnd \(event.magnification)")
+        if spatializedElement.enableMagnifyEndGesture {
+            let gestureEvent = WebSpatialMagnifyEndGuestureEvent(
+                detail: .init(
+                    magnification: event.magnification,
+                    velocity: event.velocity,
+                    startLocation3D: event.startLocation3D,
+                    startAnchor3D: event.startAnchor3D
+                ))
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
     }
 
     // End Interaction
@@ -71,55 +126,48 @@ struct SpatializedElementView<Content: View>: View {
     @ViewBuilder
     var body: some View {
         let transform = spatializedElement.transform
-        let parentYOffset = parentScrollOffset.y
         let translation = transform.translation
         let scale = transform.scale
-        let rotation = transform.rotation
-        let x = CGFloat(translation.x)
-        let y = spatializedElement.scrollWithParent ? (CGFloat(translation.y) - parentYOffset) : 0
-
-        let z = CGFloat(translation.z) + (spatializedElement.zIndex * zOrderBias)
-        let width = CGFloat(spatializedElement.width)
-        let height = CGFloat(spatializedElement.height)
-        let depth = CGFloat(spatializedElement.depth)
+        let rotation = transform.rotation!
+        let x = spatializedElement.clientX + (spatializedElement.scrollWithParent ? ( translation.x - parentScrollOffset.x) : translation.x)
+        let y = spatializedElement.clientY + (spatializedElement.scrollWithParent ? ( translation.y - parentScrollOffset.y) : translation.y)
+        let z =  translation.z + spatializedElement.backOffset + (spatializedElement.zIndex * zOrderBias)
+        let width = spatializedElement.width
+        let height = spatializedElement.height
+        let depth = spatializedElement.depth
         let anchor = spatializedElement.rotationAnchor
 
         let opacity = spatializedElement.opacity
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
         let clip = spatializedElement.clip
-        
- 
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
             .frame(depth: depth, alignment: .back)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
-//                print(" width \(proxy.size.width)  height \(proxy.size.height)  depth \(proxy.size.depth) ")
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
-//                print(" \(spatializedElement.name) rect3d max \(rect3d.max)  min \(rect3d.min) ")
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
 
                 return proxy.transform(in: .named("SpatialScene"))!
             } action: { _, new in
-//                spatialScene.sendWebMsg(spatializedElement.id, rect3d)
-                print(" \(spatializedElement.name) transform \(new)  ")
+                spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
             }.if(clip, transform: { view in
-                    view.clipped()
+                view.clipped()
             })
-            
+
             .frame(depth: 0, alignment: .back)
             //            .background(Color(hex: "#161616E5"))
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
 //            .offset(z: 0.0001)
             .scaleEffect(
-                x: CGFloat(scale.x),
-                y: CGFloat(scale.y),
-                z: CGFloat(scale.z),
+                x: scale.width,
+                y: scale.height,
+                z: scale.depth,
                 anchor: anchor
             )
             .rotation3DEffect(
-                Rotation3D(rotation),
+                rotation,
                 anchor: anchor
             )
             .offset(x: x, y: y)

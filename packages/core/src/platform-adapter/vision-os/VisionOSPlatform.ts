@@ -56,7 +56,6 @@ export class VisionOSPlatform implements PlatformAbility {
     target?: string,
     features?: string,
   ) {
-    // console.log('openWindow:', command, query, target, features)
     const windowProxy = window.open(
       `webspatial://${command}?${query || ''}`,
       target,

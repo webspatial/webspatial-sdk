@@ -60,6 +60,15 @@ export function PortalSpatializedContainer(
     createSpatializedElement,
     getExtraSpatializedElementProperties,
     onSpatialTap,
+    onSpatialDragStart,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotateStart,
+    onSpatialRotate,
+    onSpatialRotateEnd,
+    onSpatialMagnifyStart,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -98,6 +107,69 @@ export function PortalSpatializedContainer(
       spatializedElement.onSpatialTap = onSpatialTap
     }
   }, [spatializedElement, onSpatialTap])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDrag = onSpatialDrag
+    }
+  }, [spatializedElement, onSpatialDrag])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragEnd = onSpatialDragEnd
+    }
+  }, [spatializedElement, onSpatialDragEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotate = onSpatialRotate
+    }
+  }, [spatializedElement, onSpatialRotate])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotateEnd = onSpatialRotateEnd
+    }
+  }, [spatializedElement, onSpatialRotateEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnify = onSpatialMagnify
+    }
+  }, [spatializedElement, onSpatialMagnify])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyEnd = onSpatialMagnifyEnd
+    }
+  }, [spatializedElement, onSpatialMagnifyEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragStart = onSpatialDragStart
+    }
+  }, [spatializedElement, onSpatialDragStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotateStart = onSpatialRotateStart
+    }
+  }, [spatializedElement, onSpatialRotateStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyStart = onSpatialMagnifyStart
+    }
+  }, [spatializedElement, onSpatialMagnifyStart])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

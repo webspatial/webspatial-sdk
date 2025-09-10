@@ -1,11 +1,12 @@
-import { SpatialTapEvent, SpatialTapEventDetail, Vec3 } from './types/types'
+import { SpatialWebMsgType } from './WebMsgCommand'
 
-export function createSpatialTapEvent(location3D: Vec3): SpatialTapEvent {
-  return new CustomEvent<SpatialTapEventDetail>('spatialtap', {
+export function createSpatialEvent<T>(
+  type: SpatialWebMsgType,
+  detail: T,
+): CustomEvent<T> {
+  return new CustomEvent<T>(type, {
     bubbles: false,
     cancelable: false,
-    detail: {
-      location3D,
-    },
-  }) as SpatialTapEvent
+    detail,
+  })
 }

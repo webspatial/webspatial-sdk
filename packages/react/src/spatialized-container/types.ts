@@ -4,8 +4,14 @@ import {
   CubeInfo,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
+  SpatialDragEvent as CoreSpatialDragEvent,
+  SpatialRotateEvent as CoreSpatialRotateEvent,
+  SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
+  Point3D,
+  Vec3,
 } from '@webspatial/core-sdk'
-import { Matrix4 } from '../utils/math'
+
+export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 
 export interface StandardSpatializedContainerProps
   extends React.ComponentPropsWithoutRef<'div'> {
@@ -24,6 +30,15 @@ export interface PortalSpatializedContainerProps
 
   // SpatialEvents
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDragStart?: (event: SpatialDragStartEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEvent) => void
+  onSpatialRotateStart?: (event: SpatialRotateStartEvent) => void
+  onSpatialRotate?: (event: SpatialRotateEvent) => void
+  onSpatialRotateEnd?: (event: SpatialRotateEndEvent) => void
+  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent) => void
+  onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
+  onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 
   [SpatialID]: string
 }
@@ -64,8 +79,7 @@ export const SpatialCustomStyleVars = {
 }
 
 export interface SpatialTransformVisibility {
-  transformMatrix: Matrix4
-  transformExist: boolean
+  transform: string
   visibility: string
 }
 
@@ -75,8 +89,52 @@ export interface SpatializedElementRef extends HTMLElement {
   getBoundingClientCube: () => CubeInfo | undefined
 
   onSpatialTap?: (event: SpatialTapEvent) => void
+  onSpatialDrag?: (event: SpatialDragEvent) => void
 }
 
 export type SpatialTapEvent = CoreSpatialTapEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragStartEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialDragEndEvent = CoreSpatialDragEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotateStartEvent = CoreSpatialRotateEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotateEvent = CoreSpatialRotateEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialRotateEndEvent = CoreSpatialRotateEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEventDetail = {
+  magnification: number
+  velocity: number
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialMagnifyStartEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
+}
+
+export type SpatialMagnifyEndEvent = CoreSpatialMagnifyEvent & {
   currentTarget: SpatializedElementRef
 }

@@ -10,11 +10,13 @@ enum SpatializedElementType: String, Codable {
 
 @Observable
 class SpatializedElement: SpatialObject {
+    var clientX: Double = 0.0
+    var clientY: Double = 0.0
     var width: Double = 0.0
     var height: Double = 0.0
     var depth: Double = 0.0
     var backOffset: Double = 0.0
-    var transform: Transform = .init()
+    var transform: AffineTransform3D = AffineTransform3D.identity
     var rotationAnchor: UnitPoint3D = .center
     var opacity: Double = 1.0
     var visible = true
@@ -24,15 +26,33 @@ class SpatializedElement: SpatialObject {
     // whether require clip action
     var clip = true
     
-    var enableGesture: Bool = true
+    var enableDragStartGesture: Bool = false
+    var enableDragGesture: Bool = false
+    var enableDragEndGesture: Bool = false
+    var enableRotateStartGesture: Bool = false
+    var enableRotateGesture: Bool = false
+    var enableRotateEndGesture: Bool = false
+    var enableMagnifyStartGesture: Bool = false
+    var enableMagnifyGesture: Bool = false
+    var enableMagnifyEndGesture: Bool = false
+    var enableTapGesture: Bool = false
+    
+    var enableGesture: Bool {
+        get {
+            return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateStartGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyStartGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
+        }
+    }
+
 
     enum CodingKeys: String, CodingKey {
-        case width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture
+        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateStartGesture, enableRotateGesture,enableRotateEndGesture,enableMagnifyStartGesture, enableMagnifyGesture, enableMagnifyEndGesture
     }
 
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(clientX, forKey: .clientX)
+        try container.encode(clientY, forKey: .clientY)
         try container.encode(width, forKey: .width)
         try container.encode(height, forKey: .height)
         try container.encode(depth, forKey: .depth)
@@ -45,6 +65,15 @@ class SpatializedElement: SpatialObject {
         try container.encode(zIndex, forKey: .zIndex)
         try container.encode(parent?.id, forKey: .parent)
         try container.encode(enableGesture, forKey: .enableGesture)
+        try container.encode(enableTapGesture, forKey: .enableTapGesture)
+        try container.encode(enableDragGesture, forKey: .enableDragGesture)
+        try container.encode(enableDragEndGesture, forKey: .enableDragEndGesture)
+        try container.encode(enableRotateStartGesture, forKey: .enableRotateStartGesture)
+        try container.encode(enableRotateGesture, forKey: .enableRotateGesture)
+        try container.encode(enableRotateEndGesture, forKey: .enableRotateEndGesture)
+        try container.encode(enableMagnifyStartGesture, forKey: .enableMagnifyStartGesture)
+        try container.encode(enableMagnifyGesture, forKey: .enableMagnifyGesture)
+        try container.encode(enableMagnifyEndGesture, forKey: .enableMagnifyEndGesture)
     }
 
     private(set) var parent: ScrollAbleSpatialElementContainer?
