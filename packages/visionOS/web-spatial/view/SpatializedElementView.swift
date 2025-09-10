@@ -96,7 +96,7 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        if spatializedElement.enableMagnifyGesture {
+        if spatializedElement.enableMagnifyGesture || spatializedElement.enableMagnifyStartGesture {
             let gestureEvent = WebSpatialMagnifyGuestureEvent(
                 detail: .init(
                     magnification: event.magnification,

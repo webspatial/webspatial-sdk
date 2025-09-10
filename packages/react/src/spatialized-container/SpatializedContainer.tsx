@@ -35,6 +35,7 @@ export function SpatializedContainerBase(
       onSpatialRotateStart,
       onSpatialRotate,
       onSpatialRotateEnd,
+      onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       ...restProps
@@ -66,6 +67,7 @@ export function SpatializedContainerBase(
     onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
+    onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
     ...props
@@ -82,6 +84,7 @@ export function SpatializedContainerBase(
           onSpatialRotateStart,
           onSpatialRotate,
           onSpatialRotateEnd,
+          onSpatialMagnifyStart,
           onSpatialMagnify,
           onSpatialMagnifyEnd,
         },
@@ -152,6 +155,7 @@ export function SpatializedContainerBase(
         onSpatialRotateStart,
         onSpatialRotate,
         onSpatialRotateEnd,
+        onSpatialMagnifyStart,
         onSpatialMagnify,
         onSpatialMagnifyEnd,
       },

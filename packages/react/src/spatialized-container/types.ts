@@ -36,6 +36,7 @@ export interface PortalSpatializedContainerProps
   onSpatialRotateStart?: (event: SpatialRotateStartEvent) => void
   onSpatialRotate?: (event: SpatialRotateEvent) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEvent) => void
+  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 
@@ -124,6 +125,10 @@ export type SpatialMagnifyEventDetail = {
   velocity: number
   startAnchor3D: Vec3
   startLocation3D: Point3D
+}
+
+export type SpatialMagnifyStartEvent = CoreSpatialMagnifyEvent & {
+  currentTarget: SpatializedElementRef
 }
 
 export type SpatialMagnifyEvent = CoreSpatialMagnifyEvent & {

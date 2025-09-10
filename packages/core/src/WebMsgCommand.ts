@@ -17,6 +17,7 @@ export enum SpatialWebMsgType {
   spatialrotatestart = 'spatialrotatestart',
   spatialrotate = 'spatialrotate',
   spatialrotateend = 'spatialrotateend',
+  spatialmagnifystart = 'spatialmagnifystart',
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 }

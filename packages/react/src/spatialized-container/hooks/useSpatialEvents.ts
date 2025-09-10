@@ -10,6 +10,7 @@ import {
   SpatialMagnifyEndEvent,
   SpatialMagnifyEvent,
   SpatialRotateStartEvent,
+  SpatialMagnifyStartEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -21,6 +22,7 @@ export interface SpatialEvents {
   onSpatialRotateStart?: (event: SpatialRotateStartEvent) => void
   onSpatialRotate?: (event: SpatialRotateEvent) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEvent) => void
+  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent) => void
 }
@@ -105,6 +107,11 @@ export function useSpatialEventsBase(
     currentTargetGetter,
   )
 
+  const onSpatialMagnifyStart = createEventHandler<SpatialMagnifyStartEvent>(
+    spatialEvents.onSpatialMagnifyStart,
+    currentTargetGetter,
+  )
+
   return {
     onSpatialTap,
     onSpatialDragStart,
@@ -113,6 +120,7 @@ export function useSpatialEventsBase(
     onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
+    onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
   }

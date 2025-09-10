@@ -66,6 +66,7 @@ export function PortalSpatializedContainer(
     onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
+    onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
@@ -158,11 +159,17 @@ export function PortalSpatializedContainer(
 
   useEffect(() => {
     if (spatializedElement) {
-      console.log('dbg onSpatialRotateStart')
       // @ts-ignore
       spatializedElement.onSpatialRotateStart = onSpatialRotateStart
     }
   }, [spatializedElement, onSpatialRotateStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyStart = onSpatialMagnifyStart
+    }
+  }, [spatializedElement, onSpatialMagnifyStart])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

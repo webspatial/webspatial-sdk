@@ -91,9 +91,9 @@ function Model() {
     )
   }
 
-  const onSpatialMagnify = (e: SpatialMagnifyEvent) => {
+  const onSpatialMagnifyStart = (e: SpatialMagnifyEvent) => {
     console.log(
-      'model onSpatialMagnify:',
+      'model onSpatialMagnifyStart:',
       e.detail,
       e.isTrusted,
       e.currentTarget.getBoundingClientCube(),
@@ -109,11 +109,11 @@ function Model() {
         src={src}
         onSpatialDragEnd={onSpatialDragEnd}
         onSpatialDragStart={onSpatialDragStart}
-        // onSpatialTap={onSpatialTap}
-        // onSpatialDrag={onSpatialDrag}
+        onSpatialTap={onSpatialTap}
+        onSpatialDrag={onSpatialDrag}
         onSpatialRotateStart={onSpatialRotateStart}
         onSpatialRotateEnd={onSpatialRotateEnd}
-        // onSpatialMagnify={onSpatialMagnify}
+        onSpatialMagnifyStart={onSpatialMagnifyStart}
       />
     </div>
   )
@@ -188,7 +188,7 @@ function App() {
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      {/* <div
+      <div
         enable-xr
         // onSpatialDrag={onSpatialDrag}
         // onSpatialDragEnd={onSpatialDragEnd}
@@ -211,7 +211,7 @@ function App() {
           this is child spatialdiv
         </div>
         <button>this is a button</button>
-      </div> */}
+      </div>
       <div> End of SpatializedContainer </div>
       <Model />
       <div> End of Model SpatializedContainer </div>

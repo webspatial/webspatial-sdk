@@ -138,12 +138,21 @@ export abstract class SpatializedElement extends SpatialObject {
       )
       this._onSpatialRotateEnd?.(event)
     } else if (type === SpatialWebMsgType.spatialmagnify) {
+      if (!this._isMagnify) {
+        const magnifyStartEvent = createSpatialEvent(
+          SpatialWebMsgType.spatialmagnifystart,
+          (data as SpatialMagnifyMsg).detail,
+        )
+        this._onSpatialMagnifyStart?.(magnifyStartEvent)
+      }
+      this._isMagnify = true
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialmagnify,
         (data as SpatialMagnifyMsg).detail,
       )
       this._onSpatialMagnify?.(event)
     } else if (type === SpatialWebMsgType.spatialmagnifyend) {
+      this._isMagnify = false
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialmagnifyend,
         (data as SpatialMagnifyEndMsg).detail,
@@ -215,6 +224,17 @@ export abstract class SpatializedElement extends SpatialObject {
     this._onSpatialRotateEnd = value
     this.updateProperties({
       enableRotateEndGesture: value !== undefined,
+    })
+  }
+
+  private _isMagnify = false
+  private _onSpatialMagnifyStart?: (event: SpatialMagnifyEvent) => void
+  set onSpatialMagnifyStart(
+    value: ((event: SpatialMagnifyEvent) => void) | undefined,
+  ) {
+    this._onSpatialMagnifyStart = value
+    this.updateProperties({
+      enableMagnifyStartGesture: value !== undefined,
     })
   }
 

@@ -482,6 +482,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableRotateEndGesture = command.enableRotateEndGesture {
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
         }
+        
+        if let enableMagnifyStartGesture = command.enableMagnifyStartGesture {
+            spatializedElement.enableMagnifyStartGesture = enableMagnifyStartGesture
+        }
+        
         if let enableMagnifyGesture = command.enableMagnifyGesture {
             spatializedElement.enableMagnifyGesture = enableMagnifyGesture
         }

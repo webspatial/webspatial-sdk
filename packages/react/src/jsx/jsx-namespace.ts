@@ -6,6 +6,7 @@
    SpatialDragEndEvent,
    SpatialRotateEvent,
    SpatialRotateEndEvent,
+   SpatialMagnifyStartEvent,
    SpatialMagnifyEvent,
    SpatialMagnifyEndEvent,
    //@ts-ignore bypass ts check for external
@@ -113,6 +114,7 @@
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
        onSpatialRotate?: (e: SpatialRotateEvent) => void
        onSpatialRotateEnd?: (e: SpatialRotateEndEvent) => void
+       onSpatialMagnifyStart?: (e: SpatialMagnifyStartEvent) => void
        onSpatialMagnify?: (e: SpatialMagnifyEvent) => void
        onSpatialMagnifyEnd?: (e: SpatialMagnifyEndEvent) => void
      }
