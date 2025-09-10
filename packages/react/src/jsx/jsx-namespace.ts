@@ -4,6 +4,7 @@
    SpatialDragStartEvent,
    SpatialDragEvent,
    SpatialDragEndEvent,
+   SpatialRotateStartEvent,
    SpatialRotateEvent,
    SpatialRotateEndEvent,
    SpatialMagnifyStartEvent,
@@ -112,6 +113,7 @@
        onSpatialDragStart?: (e: SpatialDragStartEvent) => void
        onSpatialDrag?: (e: SpatialDragEvent) => void
        onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
+       onSpatialRotateStart?: (e: SpatialRotateStartEvent) => void
        onSpatialRotate?: (e: SpatialRotateEvent) => void
        onSpatialRotateEnd?: (e: SpatialRotateEndEvent) => void
        onSpatialMagnifyStart?: (e: SpatialMagnifyStartEvent) => void
