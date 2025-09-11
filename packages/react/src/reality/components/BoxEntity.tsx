@@ -50,10 +50,11 @@ export const BoxEntity: React.FC<Props> = ({
         cornerRadius,
       })
 
-      const materialList =
+      const materialList = await Promise.all(
         materials
           ?.map(id => ctx.resourceRegistry.get<SpatialMaterial>(id))
           .filter(Boolean) ?? []
+      )
       const modelComponent = await ctx.session.createModelComponent({
         mesh: boxGeometry,
         materials: materialList,

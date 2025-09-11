@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react'
 import {
-  SpatialUnlitMaterial,
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
@@ -15,7 +14,7 @@ export const UnlitMaterial: React.FC<Props> = ({ children, ...options }) => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
-      const material = await session.createUnlitMaterial(options)
+      const material = session.createUnlitMaterial(options)
       resourceRegistry.add(options.id, material)
       // todo: racing condition??
     }
