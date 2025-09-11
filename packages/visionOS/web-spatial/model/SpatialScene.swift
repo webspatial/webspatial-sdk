@@ -233,7 +233,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
         spatialWebViewModel.addJSBListener(RemoveEntityFromParent.self, onRemoveEntityFromParent)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
-        spatialWebViewModel.addJSBListener(CreateModelResource.self, onCreateModelResource)
+        spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelResource)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
         
         
@@ -723,7 +723,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
     }
     
-    private func onCreateModelResource(command: CreateModelResource, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+    private func onCreateModelResource(command: CreateModelAsset, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         _ = SpatialModelResource(command.url, { onload in
             switch onload {
             case .success(let modelResource):
@@ -736,7 +736,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
     
     private func onCreateSpatialModelEntity(command: CreateSpatialModelEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
-        if let modelAsset = spatialObjects[command.modelResourceId] as? SpatialModelResource {
+        if let modelAsset = spatialObjects[command.modelAssetId] as? SpatialModelResource {
             let spatialModelEntity = SpatialModelEntity(modelAsset, command.name ?? "")
             addSpatialObject(spatialModelEntity)
             resolve(.success(AddSpatializedElementReply(id: spatialModelEntity.spatialId)))

@@ -1,1 +1,1 @@
-export * from './ModelResource';
+export * from './ModelAsset';

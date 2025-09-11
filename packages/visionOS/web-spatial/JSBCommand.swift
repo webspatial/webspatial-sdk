@@ -51,14 +51,14 @@ struct CreateTexture: CommandDataProtocol{
     let url: String
 }
 
-struct CreateModelResource: CommandDataProtocol{
-    static let commandType: String = "CreateModelResource"
+struct CreateModelAsset: CommandDataProtocol{
+    static let commandType: String = "CreateModelAsset"
     let url: String
 }
 
 struct CreateSpatialModelEntity: CommandDataProtocol{
     static let commandType: String = "CreateSpatialModelEntity"
-    let modelResourceId:String
+    let modelAssetId:String
     let name:String?
 }
 

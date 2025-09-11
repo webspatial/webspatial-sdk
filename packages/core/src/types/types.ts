@@ -168,11 +168,11 @@ export interface ModelComponentOptions {
 }
 
 export interface SpatialModelEntityCreationOptions {
-  modelResourceId: string
+  modelAssetId: string
   name?: string
 }
 
-export interface ModelResourceOptions {
+export interface ModelAssetOptions {
   url:string
 }
 
