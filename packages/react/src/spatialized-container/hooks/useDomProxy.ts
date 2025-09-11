@@ -165,6 +165,11 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       // clear styleProxy
       this.styleProxy = undefined
       this.updateDomProxyToRef()
+
+      // assign domProxy to dom
+      Object.assign(dom, {
+        __targetProxy: domProxy,
+      })
     }
   }
 
@@ -246,3 +251,4 @@ export function useDomProxy<T extends SpatializedElementRef>(
     spatialContainerRefProxy,
   }
 }
+

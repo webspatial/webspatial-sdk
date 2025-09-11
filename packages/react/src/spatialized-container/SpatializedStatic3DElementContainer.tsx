@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, useEffect, useMemo } from 'react'
+import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
@@ -9,6 +9,10 @@ import {
   SpatializedStatic3DElementRef,
 } from './types'
 import { SpatializedStatic3DElement } from '@webspatial/core-sdk'
+import {
+  PortalInstanceObject,
+  PortalInstanceContext,
+} from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url?: string) {
   if (!url) {
@@ -25,6 +29,10 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   const spatializedStatic3DElement =
     spatializedElement as SpatializedStatic3DElement
 
+  const portalInstanceObject: PortalInstanceObject = useContext(
+    PortalInstanceContext,
+  )!
+
   const currentSrc: string = useMemo(() => getAbsoluteURL(src), [src])
 
   useEffect(() => {
@@ -40,7 +48,16 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
           bubbles: false,
           cancelable: false,
         }) as ModelOnLoadEvent
-        onLoad(event)
+
+        const proxyEvent = new Proxy(event, {
+          get(target, prop) {
+            if (prop === 'target') {
+              return (portalInstanceObject.dom as any).__targetProxy
+            }
+            return Reflect.get(target, prop)
+          },
+        })
+        onLoad(proxyEvent)
       }
     } else {
       spatializedStatic3DElement.onLoadCallback = undefined

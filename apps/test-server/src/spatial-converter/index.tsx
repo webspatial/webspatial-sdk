@@ -115,7 +115,7 @@ function ModelTest() {
   ;(window as any).refModel = refModel
 
   const onLoad = (event: ModelOnLoadEvent) => {
-    console.log('model onLoad', event)
+    console.log('model onLoad', event, event.target.getBoundingClientCube())
   }
   return (
     <div>
