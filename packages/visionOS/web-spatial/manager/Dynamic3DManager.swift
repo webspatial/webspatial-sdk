@@ -28,63 +28,45 @@ class Dynamic3DManager{
         return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)
     }
     
-    func createTexture(){
-        
-    }
-    
-    static func createModelAsset(_ url:String){
-        
-    }
-    
-    func getEntity(){
-        
-    }
-    
-    func getComponent(){
-        
-    }
-    
-    func getGeometry(){
-        
-    }
-    
-    func getMaterial(){
-        
-    }
-    
-    func getTexture(){
-        
-    }
-    
-    func getModelAsset(){
-        
-    }
-    
-    func destroy(){
-        
-    }
-    
-    private func destroyEntity(){
-        
-    }
-    
-    private func destroyComponent(){
-        
-    }
-    
-    private func destroyGeometry(){
-        
-    }
-    
-    private func destroyMaterial(){
-        
-    }
-    
-    private func destroyTexture(){
-        
-    }
-    
-    private func destroysModelAsset(){
-        
+    static func loadResourceToLocal(_ urlString:String, loadComplete:@escaping (Result<URL, Error>) -> Void){
+        guard let url = URL(string: urlString) else {
+            loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
+            return
+        }
+        var documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        documentsUrl.appendPathComponent(url.lastPathComponent)
+        let session = URLSession(configuration: URLSessionConfiguration.default)
+        var request = URLRequest(url:url)
+        request.httpMethod = "GET"
+        print("start load")
+        let task = session.downloadTask(with: request, completionHandler: { location, response, error in
+            if let error = error {
+                loadComplete(.failure(error))
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                let error = NSError(domain: "HTTP Error", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"])
+                loadComplete(.failure(error))
+                return
+            }
+            guard let location = location else {
+                loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download location is nil"])))
+                return
+            }
+            let fileManager = FileManager.default
+            do {
+                if fileManager.fileExists(atPath: documentsUrl.path) {
+                    try fileManager.removeItem(atPath: documentsUrl.path)
+                }
+                try fileManager.moveItem(at: location, to: documentsUrl)
+                print("load complete")
+                loadComplete(.success(documentsUrl))
+            } catch {
+                print("File operation error: \(error)")
+                loadComplete(.failure(error))
+            }
+            
+        })
+        task.resume()
     }
 }
