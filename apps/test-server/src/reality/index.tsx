@@ -1,6 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { getSession, initScene } from '@webspatial/react-sdk'
+import {
+  BoxEntity,
+  Entity,
+  getSession,
+  initScene,
+  Reality,
+  SceneGraph,
+  UnlitMaterial,
+} from '@webspatial/react-sdk'
 import { SpatialEntity } from '@webspatial/core-sdk'
 
 const btnCls =
@@ -67,6 +75,32 @@ function App() {
       setIsAnimationOn(false)
     }
   }
+
+  // const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [boxRotationOn, setBoxRotationOn] = useState(false)
+  const boxAnimationRef = useRef<any>()
+  useEffect(() => {
+    if (boxRotationOn) {
+      function doRotate(delta: number) {
+        setBoxRotation({
+          x: 0,
+          y: 0,
+          z: boxRotation.z + 0.1 * delta,
+        })
+        boxAnimationRef.current = requestAnimationFrame(doRotate)
+      }
+      doRotate(0)
+    } else {
+      if (boxAnimationRef.current) {
+        cancelAnimationFrame(boxAnimationRef.current)
+        boxAnimationRef.current = null
+      }
+    }
+
+    return () => {}
+  }, [boxRotationOn])
 
   return (
     <div className="pl-5 pt-2">
@@ -139,9 +173,74 @@ function App() {
         rotation animation {isAnimationOn ? 'stop' : 'start'}
       </button>
 
+      <h1 className="text-2xl text-black">openscene</h1>
+
+      {/* <button
+        className={btnCls}
+        onClick={async () => {
+          setPosition(prePos => ({ ...prePos, x: prePos.x + 0.1 }))
+        }}
+      >
+        change position right
+      </button> */}
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          setBoxPosition(prePos => ({ ...prePos, x: prePos.x === 0 ? 0.1 : 0 }))
+        }}
+      >
+        toggle red box position
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          setBoxRotationOn(prev => !prev)
+        }}
+      >
+        toggle box rotation
+      </button>
+
       <div>
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
+        <Reality>
+          <UnlitMaterial id="matRed" color="#ff0000" />
+          <UnlitMaterial id="matGreen" color="#00ff00" />
+          <SceneGraph>
+            <Entity
+              position={{ x: -0.2, y: 0, z: 0 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 1, y: 1, z: 1 }}
+            >
+              <BoxEntity
+                width={0.2}
+                height={0.2}
+                depth={0.1}
+                cornerRadius={1}
+                materials={['matRed']}
+                position={boxPosition}
+                rotation={boxRotation}
+              ></BoxEntity>
+            </Entity>
+            <Entity
+              position={{ x: 0.2, y: 0, z: 0 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 1, y: 1, z: 1 }}
+            >
+              <BoxEntity
+                width={0.2}
+                height={0.2}
+                depth={0.1}
+                cornerRadius={0.5}
+                materials={['matGreen']}
+                position={{ x: 0, y: 0, z: 0 }}
+                rotation={boxRotation}
+              ></BoxEntity>
+            </Entity>
+          </SceneGraph>
+        </Reality>
       </div>
     </div>
   )
@@ -151,9 +250,10 @@ function App() {
 var root = document.createElement('div')
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // todo: add strict mode to check destroy
+  // <React.StrictMode>
+  <App />,
+  // </React.StrictMode>,
 )
 document.documentElement.style.backgroundColor = 'transparent'
 document.body.style.backgroundColor = 'transparent'

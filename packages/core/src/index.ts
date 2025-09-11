@@ -1,3 +1,4 @@
+export { SpatialObject } from './SpatialObject'
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
 export { SpatialScene } from './SpatialScene'
