@@ -17,7 +17,7 @@ import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
 import { SpatialUnlitMaterial } from './material'
-import { ModelAsset } from './resource'
+import { SpatialModelAsset } from './resource'
 
 export async function createSpatialEntity(
   name?: string,
@@ -87,6 +87,6 @@ export async function createModelAsset(options: ModelAssetOptions) {
     throw new Error('createModelAsset failed')
   } else {
     const { id } = result.data
-    return new ModelAsset(id, options)
+    return new SpatialModelAsset(id, options)
   }
 }

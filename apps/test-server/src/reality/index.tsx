@@ -286,9 +286,9 @@ var root = document.createElement('div')
 document.body.appendChild(root)
 ReactDOM.createRoot(root).render(
   // todo: add strict mode to check destroy
-  // <React.StrictMode>
-  <App />,
-  // </React.StrictMode>,
+  <React.StrictMode>
+    <App />,
+  </React.StrictMode>,
 )
 document.documentElement.style.backgroundColor = 'transparent'
 document.body.style.backgroundColor = 'transparent'

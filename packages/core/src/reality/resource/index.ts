@@ -1,1 +1,1 @@
-export * from './ModelAsset';
+export * from './SpatialModelAsset';

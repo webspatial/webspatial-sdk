@@ -33,7 +33,7 @@ export const Entity: React.FC<Props> = ({
     init()
 
     return () => {
-      // todo: destroy entity and remove from parent
+      entity?.destroy()
     }
   }, [ctx, parent])
 

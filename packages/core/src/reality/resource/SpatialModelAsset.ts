@@ -1,7 +1,7 @@
 import { SpatialObject } from '../../SpatialObject'
 import { ModelAssetOptions } from '../../types/types'
 
-export class ModelAsset extends SpatialObject {
+export class SpatialModelAsset extends SpatialObject {
   constructor(
     public id: string,
     public options: ModelAssetOptions,

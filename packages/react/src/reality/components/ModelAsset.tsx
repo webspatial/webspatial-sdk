@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { useRealityContext } from '../context'
+import { SpatialModelAsset } from '@webspatial/core-sdk'
 type Props = {
   children?: React.ReactNode
   id: string // user id
@@ -9,7 +10,7 @@ type Props = {
 }
 export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
-  // const materialRef = useRef<SpatialUnlitMaterial>()
+  const materialRef = useRef<SpatialModelAsset>()
   useEffect(() => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
@@ -18,7 +19,8 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
       resourceRegistry.add(options.id, modelAssetPromise)
 
       try {
-        await modelAssetPromise
+        const mat = await modelAssetPromise
+        materialRef.current = mat
         options.onLoad?.()
       } catch (error: any) {
         options.onError?.(error)
@@ -26,7 +28,9 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
     }
     init()
 
-    return () => {}
+    return () => {
+      materialRef.current?.destroy()
+    }
   }, [ctx])
 
   return null

@@ -53,7 +53,7 @@ export const BoxEntity: React.FC<Props> = ({
       const materialList = await Promise.all(
         materials
           ?.map(id => ctx.resourceRegistry.get<SpatialMaterial>(id))
-          .filter(Boolean) ?? []
+          .filter(Boolean) ?? [],
       )
       const modelComponent = await ctx.session.createModelComponent({
         mesh: boxGeometry,
@@ -74,7 +74,7 @@ export const BoxEntity: React.FC<Props> = ({
     init()
 
     return () => {
-      // todo: destroy entity and remove from parent
+      entity?.destroy()
     }
   }, [ctx, parent])
 

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  ModelAsset,
   SpatialEntity,
   SpatialMaterial,
+  SpatialModelAsset,
   SpatialObject,
 } from '@webspatial/core-sdk'
 import { ParentContext, useParentContext, useRealityContext } from '../context'
@@ -30,7 +30,7 @@ export const ModelEntity: React.FC<Props> = ({
     const init = async () => {
       // work start
 
-      const modelAsset = await ctx.resourceRegistry.get<ModelAsset>(model)
+      const modelAsset = await ctx.resourceRegistry.get<SpatialModelAsset>(model)
       if (!modelAsset) {
         console.error('ModelEntity: model not found', model)
         return
@@ -51,7 +51,7 @@ export const ModelEntity: React.FC<Props> = ({
     init()
 
     return () => {
-      // todo: destroy entity and remove from parent
+      entity?.destroy()
     }
   }, [ctx, parent])
 
