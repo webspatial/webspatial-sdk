@@ -50,7 +50,7 @@ function SpatializedStatic3DElementContainerBase(
   )
 
   return (
-    <SpatializedContainer
+    <SpatializedContainer<SpatializedStatic3DElementRef>
       ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}

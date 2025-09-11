@@ -15,5 +15,6 @@ export {
   type SpatialMagnifyEndEvent,
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
+  type SpatializedStatic3DElementRef,
 } from './types'
 export { toSceneSpatial, toLocalSpace } from './transform-utils'

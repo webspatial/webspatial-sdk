@@ -3,17 +3,17 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
-export class SpatialContainerRefProxy {
+export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
-  private ref: ForwardedRef<SpatializedElementRef>
-  public domProxy?: SpatializedElementRef | null
+  private ref: ForwardedRef<SpatializedElementRef<T>>
+  public domProxy?: T | null
   private styleProxy?: CSSStyleDeclaration
 
   // extre ref props, used to add extra props to ref
   private extraRefProps?: Record<string, () => any>
 
   constructor(
-    ref: ForwardedRef<SpatializedElementRef>,
+    ref: ForwardedRef<SpatializedElementRef<T>>,
     extraRefProps?: Record<string, () => any>,
   ) {
     this.ref = ref
@@ -24,8 +24,8 @@ export class SpatialContainerRefProxy {
     const self = this
 
     if (dom) {
-      const domProxy = new Proxy<SpatializedElementRef>(
-        dom as SpatializedElementRef,
+      const domProxy = new Proxy<SpatializedElementRef<T>>(
+        dom as SpatializedElementRef<T>,
         {
           get(target, prop) {
             if (prop === '__raw') {
@@ -193,7 +193,7 @@ export class SpatialContainerRefProxy {
     }
   }
 
-  updateRef(ref: ForwardedRef<SpatializedElementRef>) {
+  updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
     this.ref = ref
   }
 }
@@ -212,12 +212,12 @@ function hijackGetComputedStyle() {
 }
 hijackGetComputedStyle()
 
-export function useDomProxy(
-  ref: ForwardedRef<SpatializedElementRef>,
+export function useDomProxy<T extends SpatializedElementRef>(
+  ref: ForwardedRef<T>,
   extraRefProps?: Record<string, () => any>,
 ) {
-  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy>(
-    new SpatialContainerRefProxy(ref, extraRefProps),
+  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy<T>>(
+    new SpatialContainerRefProxy<T>(ref, extraRefProps),
   )
 
   useEffect(() => {

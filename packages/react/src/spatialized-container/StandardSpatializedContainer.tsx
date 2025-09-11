@@ -1,4 +1,7 @@
-import { StandardSpatializedContainerProps } from './types'
+import {
+  SpatializedElementRef,
+  StandardSpatializedContainerProps,
+} from './types'
 import { use2DFrameDetector } from './hooks/use2DFrameDetector'
 import {
   ForwardedRef,
@@ -71,4 +74,8 @@ export function StandardSpatializedContainerBase(
 
 export const StandardSpatializedContainer = forwardRef(
   StandardSpatializedContainerBase,
-)
+) as <T extends SpatializedElementRef>(
+  props: StandardSpatializedContainerProps & {
+    ref?: ForwardedRef<SpatializedElementRef<T>>
+  },
+) => React.ReactElement | null

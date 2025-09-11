@@ -158,11 +158,11 @@ function App() {
     background: 'blue',
   }
 
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
   ;(window as any).ref = ref
 
-  const refChild = useRef<HTMLDivElement>(null)
+  const refChild = useRef<SpatializedElementRef<HTMLDivElement>>(null)
   ;(window as any).refChild = refChild
 
   const onSpatialTap = (e: SpatialTapEvent) => {

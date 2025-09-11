@@ -1,9 +1,9 @@
-import { useMemo, useContext, useEffect } from 'react'
+import { useMemo, useContext, useEffect, ElementType } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import { PortalSpatializedContainerProps } from './types'
+import { PortalSpatializedContainerProps, SpatializedElementRef } from './types'
 
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
@@ -52,8 +52,8 @@ function renderPlaceholderInSubPortal(
   )
 }
 
-export function PortalSpatializedContainer(
-  props: PortalSpatializedContainerProps,
+export function PortalSpatializedContainer<T extends SpatializedElementRef>(
+  props: PortalSpatializedContainerProps<T>,
 ) {
   const {
     spatializedContent: Content,
