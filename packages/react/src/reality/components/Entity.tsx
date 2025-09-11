@@ -18,10 +18,15 @@ export const Entity: React.FC<Props> = ({
   const parent = useParentContext()
   const [entity, setEntity] = useState<SpatialEntity | null>(null)
   useEffect(() => {
+    let cancelled = false
     if (!ctx) return
     const { reality } = ctx
     const init = async () => {
       const ent = await ctx.session.createEntity()
+      if (cancelled) {
+        ent.destroy()
+        return
+      }
       if (parent) {
         await parent.addEntity(ent)
       } else {
@@ -33,6 +38,7 @@ export const Entity: React.FC<Props> = ({
     init()
 
     return () => {
+      cancelled = true
       entity?.destroy()
     }
   }, [ctx, parent])

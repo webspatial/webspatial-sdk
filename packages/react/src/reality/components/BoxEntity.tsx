@@ -35,6 +35,7 @@ export const BoxEntity: React.FC<Props> = ({
   const parent = useParentContext()
   const [entity, setEntity] = useState<SpatialEntity | null>(null)
   useEffect(() => {
+    let cancelled = false
     if (!ctx) return
     const { reality } = ctx
     const init = async () => {
@@ -60,7 +61,10 @@ export const BoxEntity: React.FC<Props> = ({
         materials: materialList,
       })
       await ent.addComponent(modelComponent)
-
+      if (cancelled) {
+        ent.destroy()
+        return
+      }
       // work end
 
       if (parent) {
@@ -74,6 +78,7 @@ export const BoxEntity: React.FC<Props> = ({
     init()
 
     return () => {
+      cancelled = true
       entity?.destroy()
     }
   }, [ctx, parent])

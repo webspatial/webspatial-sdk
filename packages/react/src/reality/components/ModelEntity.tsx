@@ -25,12 +25,14 @@ export const ModelEntity: React.FC<Props> = ({
   const parent = useParentContext()
   const [entity, setEntity] = useState<SpatialEntity | null>(null)
   useEffect(() => {
+    let cancelled = false
     if (!ctx) return
     const { reality } = ctx
     const init = async () => {
       // work start
 
-      const modelAsset = await ctx.resourceRegistry.get<SpatialModelAsset>(model)
+      const modelAsset =
+        await ctx.resourceRegistry.get<SpatialModelAsset>(model)
       if (!modelAsset) {
         console.error('ModelEntity: model not found', model)
         return
@@ -38,6 +40,10 @@ export const ModelEntity: React.FC<Props> = ({
       const ent = await ctx.session.createSpatialModelEntity({
         modelAssetId: modelAsset.id,
       })
+      if (cancelled) {
+        ent.destroy()
+        return
+      }
       // work end
 
       if (parent) {
@@ -51,6 +57,7 @@ export const ModelEntity: React.FC<Props> = ({
     init()
 
     return () => {
+      cancelled = true
       entity?.destroy()
     }
   }, [ctx, parent])

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { RealityContext, RealityContextValue } from '../context'
 
 import { getSession } from '../../utils/getSession'
@@ -8,9 +8,11 @@ type Props = {
 }
 
 export const Reality: React.FC<Props> = ({ children }) => {
-  const [state, setState] = React.useState<RealityContextValue>(null)
-
+  const ctxRef = useRef<RealityContextValue>(null)
+  const [isReady, setIsReady] = useState(false)
   useEffect(() => {
+    let cancelled = false
+
     const init = async () => {
       const resourceRegistry = new ResourceRegistry()
       const session = await getSession()
@@ -19,19 +21,27 @@ export const Reality: React.FC<Props> = ({ children }) => {
         return
       }
       const reality = await session.createSpatializedDynamic3DElement()
+      if (cancelled) {
+        reality.destroy()
+        return
+      }
       await session.getSpatialScene().addSpatializedElement(reality)
-
-      setState({ session, reality, resourceRegistry })
+      ctxRef.current = { session, reality, resourceRegistry }
+      setIsReady(true)
     }
     init()
     return () => {
-      state?.resourceRegistry.destroy()
+      cancelled = true
+      ctxRef.current?.resourceRegistry.destroy()
+      ctxRef.current?.reality.destroy()
     }
   }, [])
 
-  if (!state) return null
+  if (!isReady) return null
 
   return (
-    <RealityContext.Provider value={state}>{children}</RealityContext.Provider>
+    <RealityContext.Provider value={ctxRef.current}>
+      {children}
+    </RealityContext.Provider>
   )
 }
