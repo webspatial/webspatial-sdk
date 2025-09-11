@@ -102,7 +102,7 @@ export type SpatializedElementRef<T extends HTMLElement = HTMLElement> = T & {
 export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
-  src: string
+  currentSrc: string
   ready: Promise<SpatializedStatic3DElementRef>
 }
 

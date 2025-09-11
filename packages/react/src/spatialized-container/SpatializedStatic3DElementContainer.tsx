@@ -74,7 +74,7 @@ function SpatializedStatic3DElementContainerBase(
 ) {
   const extraRefProps = useMemo(
     () => ({
-      src: () => getAbsoluteURL(props.src),
+      currentSrc: () => getAbsoluteURL(props.src),
     }),
     [],
   )
