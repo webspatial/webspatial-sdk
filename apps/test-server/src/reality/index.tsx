@@ -5,6 +5,8 @@ import {
   Entity,
   getSession,
   initScene,
+  ModelAsset,
+  ModelEntity,
   Reality,
   SceneGraph,
   UnlitMaterial,
@@ -130,11 +132,11 @@ function App() {
 
             await spatialScene.addSpatializedElement(reality)
 
-            const modelResource = await session.createModelResource({
+            const modelAsset = await session.createModelAsset({
               url: 'http://localhost:5173/public/assets/RocketToy1.usdz',
             })
             const ent = await session.createSpatialModelEntity({
-              modelResourceId: modelResource.id,
+              modelAssetId: modelAsset.id,
             })
 
             await reality.addEntity(ent)
@@ -236,6 +238,10 @@ function App() {
         <Reality>
           <UnlitMaterial id="matRed" color="#ff0000" />
           <UnlitMaterial id="matGreen" color="#00ff00" />
+          <ModelAsset
+            id="model"
+            src="http://localhost:5173/public/assets/RocketToy1.usdz"
+          />
           <SceneGraph>
             <Entity
               position={{ x: -0.2, y: 0, z: 0 }}
@@ -267,6 +273,7 @@ function App() {
                 rotation={boxRotation}
               ></BoxEntity>
             </Entity>
+            <ModelEntity model="model" rotation={boxRotation} />
           </SceneGraph>
         </Reality>
       </div>

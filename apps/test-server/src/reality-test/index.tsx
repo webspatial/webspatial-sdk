@@ -88,9 +88,9 @@ function App() {
   }
 
   const createModelEntity = async () => {
-    let modelResource = await callNative("CreateModelResource", JSON.stringify({url:"http://localhost:5173/public/assets/RocketToy1.usdz"}))
-    if(modelResource.id){
-      let entity = await callNative("CreateSpatialModelEntity", JSON.stringify({modelResourceId:modelResource.id}))
+    let modelAsset = await callNative("CreateModelAsset", JSON.stringify({url:"http://localhost:5173/public/assets/RocketToy1.usdz"}))
+    if(modelAsset.id){
+      let entity = await callNative("CreateSpatialModelEntity", JSON.stringify({modelAssetId:modelAsset.id}))
       if(entity.id){
         await callNative('AddEntityToDynamic3D', JSON.stringify({dynamic3dId:containerRef.current, entityId:entity.id}))
         let matrix = new DOMMatrix()
