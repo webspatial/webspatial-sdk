@@ -4,21 +4,32 @@ import {
   enableDebugTool,
   SpatialTapEvent,
   SpatialDragEvent,
-  SpatialRotateEndEvent,
-  SpatialRotateStartEvent,
+  // SpatialRotateEndEvent,
+  // SpatialRotateStartEvent,
   // SpatialMagnifyEndEvent,
-  SpatializedStatic3DElementContainer,
   SpatializedElementRef,
-  SpatialMagnifyEvent,
+  // SpatialMagnifyEvent,
   toSceneSpatial,
-  SpatialDragEndEvent,
+  // SpatialDragEndEvent,
+  Model,
+  ModelRef,
+  ModelSpatialTapEvent,
+  // ModelSpatialDragStartEvent,
+  ModelSpatialDragEvent,
+  ModelSpatialDragEndEvent,
+  ModelSpatialRotateStartEvent,
+  // ModelSpatialRotateEvent,
+  ModelSpatialRotateEndEvent,
+  ModelSpatialMagnifyEvent,
+  ModelOnLoadEvent,
+  // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
 enableDebugTool()
 
-function Model() {
+function ModelTest() {
   const style: CSSProperties = {
     width: '300px',
     height: '300px',
@@ -37,19 +48,20 @@ function Model() {
 
   const src = 'http://localhost:5173/public/modelasset/cone.usdz'
 
-  const refModel = useRef<SpatializedElementRef>(null)
+  const refModel = useRef<ModelRef>(null)
 
-  const onSpatialTap = (e: SpatialTapEvent) => {
+  const onSpatialTap = (e: ModelSpatialTapEvent) => {
     console.log(
       'model onSpatialTap',
       e.currentTarget.getBoundingClientCube(),
       e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
       toSceneSpatial(e.detail.location3D, e.currentTarget),
+      e.currentTarget.src,
     )
   }
 
-  const onSpatialDragStart = (e: SpatialDragEvent) => {
+  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
     console.log(
       'model onSpatialDragStart',
       e.isTrusted,
@@ -57,7 +69,7 @@ function Model() {
     )
   }
 
-  const onSpatialDrag = (e: SpatialDragEvent) => {
+  const onSpatialDrag = (e: ModelSpatialDragEvent) => {
     console.log(
       'model onSpatialDrag',
       e.isTrusted,
@@ -65,7 +77,7 @@ function Model() {
     )
   }
 
-  const onSpatialDragEnd = (e: SpatialDragEndEvent) => {
+  const onSpatialDragEnd = (e: ModelSpatialDragEndEvent) => {
     console.log(
       'model onSpatialDragEnd',
       e.isTrusted,
@@ -73,7 +85,7 @@ function Model() {
     )
   }
 
-  const onSpatialRotateEnd = (e: SpatialRotateEndEvent) => {
+  const onSpatialRotateEnd = (e: ModelSpatialRotateEndEvent) => {
     console.log(
       'model onSpatialRotateEnd:',
       e.detail,
@@ -82,7 +94,7 @@ function Model() {
     )
   }
 
-  const onSpatialRotateStart = (e: SpatialRotateStartEvent) => {
+  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
     console.log(
       'model onSpatialRotateStart:',
       e.detail,
@@ -91,7 +103,7 @@ function Model() {
     )
   }
 
-  const onSpatialMagnifyStart = (e: SpatialMagnifyEvent) => {
+  const onSpatialMagnifyStart = (e: ModelSpatialMagnifyEvent) => {
     console.log(
       'model onSpatialMagnifyStart:',
       e.detail,
@@ -101,9 +113,13 @@ function Model() {
   }
 
   ;(window as any).refModel = refModel
+
+  const onLoad = (event: ModelOnLoadEvent) => {
+    console.log('model onLoad', event)
+  }
   return (
     <div>
-      <SpatializedStatic3DElementContainer
+      <Model
         ref={refModel}
         style={style}
         src={src}
@@ -114,6 +130,7 @@ function Model() {
         onSpatialRotateStart={onSpatialRotateStart}
         onSpatialRotateEnd={onSpatialRotateEnd}
         onSpatialMagnifyStart={onSpatialMagnifyStart}
+        onLoad={onLoad}
       />
     </div>
   )
@@ -156,11 +173,11 @@ function App() {
     background: 'blue',
   }
 
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
   ;(window as any).ref = ref
 
-  const refChild = useRef<HTMLDivElement>(null)
+  const refChild = useRef<SpatializedElementRef<HTMLDivElement>>(null)
   ;(window as any).refChild = refChild
 
   const onSpatialTap = (e: SpatialTapEvent) => {
@@ -213,7 +230,7 @@ function App() {
         <button>this is a button</button>
       </div>
       <div> End of SpatializedContainer </div>
-      <Model />
+      <ModelTest />
       <div> End of Model SpatializedContainer </div>
     </>
   )

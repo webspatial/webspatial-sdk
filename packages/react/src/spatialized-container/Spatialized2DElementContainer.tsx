@@ -1,5 +1,6 @@
 import React, {
   CSSProperties,
+  ElementType,
   ForwardedRef,
   forwardRef,
   useContext,
@@ -12,6 +13,7 @@ import {
   Spatialized2DElementContainerProps,
   SpatializedElementRef,
   SpatializedContentProps,
+  SpatializedDivElementRef,
 } from './types'
 import {
   PortalInstanceContext,
@@ -89,8 +91,11 @@ async function syncParentHeadToChild(childWindow: WindowProxy) {
   return Promise.all(styleLoadedPromises)
 }
 
-function getJSXPortalInstance(
-  inProps: Omit<SpatializedContentProps, 'spatializedElement'>,
+function getJSXPortalInstance<P extends ElementType>(
+  inProps: Omit<
+    SpatializedContentProps<SpatializedElementRef, P>,
+    'spatializedElement'
+  >,
   portalInstanceObject: PortalInstanceObject,
 ) {
   const { component: El, style: inStyle = {}, ...props } = inProps
@@ -149,7 +154,9 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
-function SpatializedContent(props: SpatializedContentProps) {
+function SpatializedContent<P extends ElementType>(
+  props: SpatializedContentProps<SpatializedElementRef, P>,
+) {
   const { spatializedElement, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
@@ -213,13 +220,13 @@ async function createSpatializedElement() {
   return spatializedElement
 }
 
-function Spatialized2DElementContainerBase(
-  props: Spatialized2DElementContainerProps,
-  ref: ForwardedRef<SpatializedElementRef>,
+function Spatialized2DElementContainerBase<P extends ElementType>(
+  props: Spatialized2DElementContainerProps<P>,
+  ref: ForwardedRef<SpatializedDivElementRef>,
 ) {
   return (
-    <SpatializedContainer
-      ref={ref}
+    <SpatializedContainer<SpatializedElementRef>
+      ref={ref as any}
       createSpatializedElement={createSpatializedElement}
       getExtraSpatializedElementProperties={
         getExtraSpatializedElementProperties
@@ -232,4 +239,8 @@ function Spatialized2DElementContainerBase(
 
 export const Spatialized2DElementContainer = forwardRef(
   Spatialized2DElementContainerBase,
-)
+) as <P extends ElementType>(
+  props: Spatialized2DElementContainerProps<P> & {
+    ref: ForwardedRef<SpatializedElementRef>
+  },
+) => React.ReactElement | null

@@ -1,4 +1,11 @@
-import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
+import {
+  ElementType,
+  ForwardedRef,
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -17,9 +24,9 @@ import {
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 
-export function SpatializedContainerBase(
-  inprops: SpatializedContainerProps,
-  ref: ForwardedRef<SpatializedElementRef>,
+export function SpatializedContainerBase<T extends SpatializedElementRef>(
+  inprops: SpatializedContainerProps<T>,
+  ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
   const isWebSpatialEnv = getSession() !== null
   if (!isWebSpatialEnv) {
@@ -28,8 +35,8 @@ export function SpatializedContainerBase(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
-      onSpatialDragStart,
       onSpatialTap,
+      onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
       onSpatialRotateStart,
@@ -38,6 +45,7 @@ export function SpatializedContainerBase(
       onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      extraRefProps,
       ...restProps
     } = inprops
     // make sure SpatializedContainer can work on web env
@@ -45,7 +53,9 @@ export function SpatializedContainerBase(
   }
 
   const layer = useContext(SpatialLayerContext) + 1
-  const rootSpatializedContainerObject = useContext(SpatializedContainerContext)
+  const rootSpatializedContainerObject = useContext(
+    SpatializedContainerContext,
+  ) as unknown as SpatializedContainerObject<T>
   const inSpatializedContainer = !!rootSpatializedContainerObject
   const portalInstanceObject = useContext(PortalInstanceContext)
   const inPortalInstanceEnv = !!portalInstanceObject
@@ -70,12 +80,13 @@ export function SpatializedContainerBase(
     onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
+    extraRefProps,
     ...props
   } = inprops
 
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
-      const spatialEvents = useSpatialEventsWhenSpatializedContainerExist(
+      const spatialEvents = useSpatialEventsWhenSpatializedContainerExist<T>(
         {
           onSpatialTap,
           onSpatialDragStart,
@@ -95,7 +106,7 @@ export function SpatializedContainerBase(
       // nested in another PortalSpatializedContainer
       return (
         <SpatialLayerContext.Provider value={layer}>
-          <PortalSpatializedContainer
+          <PortalSpatializedContainer<T>
             {...spatialIdProps}
             {...props}
             {...spatialEvents}
@@ -108,7 +119,7 @@ export function SpatializedContainerBase(
         transformVisibilityTaskContainerCallback,
         standardSpatializedContainerCallback,
         spatialContainerRefProxy,
-      } = useDomProxy(ref)
+      } = useDomProxy(ref, extraRefProps)
 
       useEffect(() => {
         rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
@@ -125,7 +136,7 @@ export function SpatializedContainerBase(
       } = props
       return (
         <SpatialLayerContext.Provider value={layer}>
-          <StandardSpatializedContainer
+          <StandardSpatializedContainer<T>
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
             {...restProps}
@@ -144,9 +155,9 @@ export function SpatializedContainerBase(
       transformVisibilityTaskContainerCallback,
       standardSpatializedContainerCallback,
       spatialContainerRefProxy,
-    } = useDomProxy(ref)
+    } = useDomProxy<T>(ref, extraRefProps)
 
-    const spatialEvents = useSpatialEvents(
+    const spatialEvents = useSpatialEvents<T>(
       {
         onSpatialTap,
         onSpatialDragStart,
@@ -179,12 +190,12 @@ export function SpatializedContainerBase(
         <SpatializedContainerContext.Provider
           value={spatializedContainerObject}
         >
-          <StandardSpatializedContainer
+          <StandardSpatializedContainer<T>
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
             {...restProps}
           />
-          <PortalSpatializedContainer
+          <PortalSpatializedContainer<T>
             {...spatialIdProps}
             {...props}
             {...spatialEvents}
@@ -201,4 +212,10 @@ export function SpatializedContainerBase(
   }
 }
 
-export const SpatializedContainer = forwardRef(SpatializedContainerBase)
+export const SpatializedContainer = forwardRef(SpatializedContainerBase) as <
+  T extends SpatializedElementRef,
+>(
+  props: SpatializedContainerProps<T> & {
+    ref?: ForwardedRef<SpatializedElementRef<T>>
+  },
+) => React.ReactElement | null

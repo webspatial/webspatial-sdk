@@ -5,6 +5,8 @@ import SwiftUI
 enum SpatialWebMsgType: String, Encodable {
     case cubeInfo = "cubeInfo"
     case transform = "transform"
+    case modelloaded = "modelloaded"
+    case modelloadfailed = "modelloadfailed"
     case spatialtap = "spatialtap"
     case spatialdrag = "spatialdrag"
     case spatialdragend = "spatialdragend"
@@ -87,4 +89,12 @@ struct WebSpatialMagnifyGuestureEvent: Encodable {
 struct WebSpatialMagnifyEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.spatialmagnifyend
     let detail: WebSpatialMagnifyGuestureEventDetail
+}
+
+struct ModelLoadSuccess: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.modelloaded
+}
+
+struct ModelLoadFailure: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.modelloadfailed
 }
