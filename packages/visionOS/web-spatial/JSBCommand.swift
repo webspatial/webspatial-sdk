@@ -86,6 +86,11 @@ struct AddEntityToEntity: CommandDataProtocol{
     let parentId: String
 }
 
+struct RemoveEntityFromParent: CommandDataProtocol{
+    static let commandType: String = "RemoveEntityFromParent"
+    let entityId: String
+}
+
 struct UpdateEntityProperties: CommandDataProtocol{
     static let commandType: String = "UpdateEntityProperties"
     let entityId: String

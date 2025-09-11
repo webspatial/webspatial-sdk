@@ -231,6 +231,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AddComponentToEntity.self, onAddComponentToEntity)
         spatialWebViewModel.addJSBListener(AddEntityToDynamic3D.self, onAddEntityToDynamic3D)
         spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
+        spatialWebViewModel.addJSBListener(RemoveEntityFromParent.self, onRemoveEntityFromParent)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
         spatialWebViewModel.addJSBListener(CreateModelResource.self, onCreateModelResource)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
@@ -696,6 +697,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
+    }
+    
+    private func onRemoveEntityFromParent(command: RemoveEntityFromParent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entity = spatialObjects[command.entityId] as? SpatialEntity {
+            if entity.parent != nil,
+               let parentEntity = entity.parent as? SpatialEntity{
+                parentEntity.removeChild(id: entity.spatialId)
+                resolve(.success(baseReplyData))
+                return
+            }
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Parent not found")))
+            return
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity not found")))
     }
     
     private func onUpdateEntityProperties(command: UpdateEntityProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>){

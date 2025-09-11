@@ -33,7 +33,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         self.name = _name
         SpatialObject.objects[spatialId] = self
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
-        
     }
     
     func addChild(entity:SpatialEntity){
