@@ -14,6 +14,11 @@ class SpatialMaterial: SpatialObject {
         type = _type
         super.init()
     }
+    
+    override func destroy() {
+        _resource = nil
+        super.destroy()
+    }
 }
 
 @Observable

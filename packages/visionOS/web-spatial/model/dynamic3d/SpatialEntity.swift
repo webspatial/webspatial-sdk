@@ -17,7 +17,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     private var isEnableDrag: Bool = false
     private var isEnableScale: Bool = false
     private var rotation: simd_quatd = simd_quatd()
-    private var childList: [String:SpatialEntity] = [:]
+    private var spatialChildren: [String:SpatialEntity] = [:]
     private var spatialComponents: [SpatialComponentType: SpatialComponent] = [:]
     
     required init() {
@@ -37,14 +37,14 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
     
     func addChild(entity:SpatialEntity){
-        childList[entity.spatialId] = entity
+        spatialChildren[entity.spatialId] = entity
         super.addChild(entity)
     }
     
     func removeChild(id:String){
-        if let entity = childList[id]{
+        if let entity = spatialChildren[id]{
             super.removeChild(entity)
-            childList.removeValue(forKey: id)
+            spatialChildren.removeValue(forKey: id)
         }
         else {
             print("no child found")
@@ -106,10 +106,21 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
 
         emit(event: Events.Destroyed.rawValue, data: ["object": self])
         listeners = [:]
-        
+        SpatialObject.objects.removeValue(forKey: spatialId)
     }
     
     func onDestroy() {
-        
+        if(parent != nil){
+            removeFromParent()
+        }
+        components.removeAll()
+        spatialChildren.forEach { id, child in
+            child.destroy()
+        }
+        spatialChildren = [:]
+        spatialComponents.forEach { id, components in
+            components.destroy()
+        }
+        spatialChildren = [:]
     }
 }

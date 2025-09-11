@@ -71,4 +71,9 @@ class SpatialModelResource:SpatialObject {
         })
         task.resume()
     }
+    
+    override func destroy() {
+        _resource = nil
+        super.destroy()
+    }
 }

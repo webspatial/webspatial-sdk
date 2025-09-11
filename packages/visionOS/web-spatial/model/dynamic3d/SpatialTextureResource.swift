@@ -11,4 +11,9 @@ class SpatialTextureResource:SpatialObject {
     override init(_ url:String){
         super.init()
     }
+    
+    override func destroy() {
+        _resource = nil
+        super.destroy()
+    }
 }

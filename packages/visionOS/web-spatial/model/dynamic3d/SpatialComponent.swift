@@ -26,6 +26,11 @@ class SpatialModelComponent: SpatialComponent {
         }
         _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
     }
+    
+    override func destroy() {
+        _resource = nil
+        super.destroy()
+    }
 }
 
 enum SpatialComponentType:String {
