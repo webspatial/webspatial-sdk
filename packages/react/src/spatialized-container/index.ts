@@ -16,5 +16,14 @@ export {
   type SpatializedStatic3DContainerProps,
   type Spatialized2DElementContainerProps,
   type SpatializedStatic3DElementRef,
+  type ModelSpatialTapEvent,
+  type ModelSpatialDragStartEvent,
+  type ModelSpatialDragEvent,
+  type ModelSpatialDragEndEvent,
+  type ModelSpatialRotateStartEvent,
+  type ModelSpatialRotateEvent,
+  type ModelSpatialRotateEndEvent,
+  type ModelSpatialMagnifyEvent,
+  type ModelSpatialMagnifyEndEvent,
 } from './types'
 export { toSceneSpatial, toLocalSpace } from './transform-utils'

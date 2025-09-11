@@ -146,3 +146,17 @@ export type SpatialMagnifyEvent<
 export type SpatialMagnifyEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialMagnifyEvent & CurrentTarget<T>
+
+
+// Model Spatial Event
+export type ModelSpatialTapEvent = SpatialTapEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragStartEvent = SpatialDragStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEvent = SpatialDragEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEndEvent = SpatialDragEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateStartEvent = SpatialRotateStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEvent = SpatialRotateEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEndEvent = SpatialRotateEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyStartEvent = SpatialMagnifyStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEvent = SpatialMagnifyEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEndEvent = SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
+

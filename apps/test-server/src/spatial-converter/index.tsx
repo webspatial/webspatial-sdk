@@ -4,22 +4,31 @@ import {
   enableDebugTool,
   SpatialTapEvent,
   SpatialDragEvent,
-  SpatialRotateEndEvent,
-  SpatialRotateStartEvent,
+  // SpatialRotateEndEvent,
+  // SpatialRotateStartEvent,
   // SpatialMagnifyEndEvent,
-  SpatializedStatic3DElementContainer,
   SpatializedElementRef,
-  SpatializedStatic3DElementRef,
-  SpatialMagnifyEvent,
+  // SpatialMagnifyEvent,
   toSceneSpatial,
-  SpatialDragEndEvent,
+  // SpatialDragEndEvent,
+  Model,
+  ModelRef,
+  ModelSpatialTapEvent,
+  // ModelSpatialDragStartEvent,
+  ModelSpatialDragEvent,
+  ModelSpatialDragEndEvent,
+  ModelSpatialRotateStartEvent,
+  // ModelSpatialRotateEvent,
+  ModelSpatialRotateEndEvent,
+  ModelSpatialMagnifyEvent,
+  // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
 enableDebugTool()
 
-function Model() {
+function ModelTest() {
   const style: CSSProperties = {
     width: '300px',
     height: '300px',
@@ -38,20 +47,20 @@ function Model() {
 
   const src = 'http://localhost:5173/public/modelasset/cone.usdz'
 
-  const refModel = useRef<SpatializedStatic3DElementRef>(null)
+  const refModel = useRef<ModelRef>(null)
 
-  const onSpatialTap = (e: SpatialTapEvent) => {
+  const onSpatialTap = (e: ModelSpatialTapEvent) => {
     console.log(
       'model onSpatialTap',
       e.currentTarget.getBoundingClientCube(),
       e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
       toSceneSpatial(e.detail.location3D, e.currentTarget),
-      (e.currentTarget as SpatializedStatic3DElementRef).src,
+      e.currentTarget.src,
     )
   }
 
-  const onSpatialDragStart = (e: SpatialDragEvent) => {
+  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
     console.log(
       'model onSpatialDragStart',
       e.isTrusted,
@@ -59,7 +68,7 @@ function Model() {
     )
   }
 
-  const onSpatialDrag = (e: SpatialDragEvent) => {
+  const onSpatialDrag = (e: ModelSpatialDragEvent) => {
     console.log(
       'model onSpatialDrag',
       e.isTrusted,
@@ -67,7 +76,7 @@ function Model() {
     )
   }
 
-  const onSpatialDragEnd = (e: SpatialDragEndEvent) => {
+  const onSpatialDragEnd = (e: ModelSpatialDragEndEvent) => {
     console.log(
       'model onSpatialDragEnd',
       e.isTrusted,
@@ -75,7 +84,7 @@ function Model() {
     )
   }
 
-  const onSpatialRotateEnd = (e: SpatialRotateEndEvent) => {
+  const onSpatialRotateEnd = (e: ModelSpatialRotateEndEvent) => {
     console.log(
       'model onSpatialRotateEnd:',
       e.detail,
@@ -84,7 +93,7 @@ function Model() {
     )
   }
 
-  const onSpatialRotateStart = (e: SpatialRotateStartEvent) => {
+  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
     console.log(
       'model onSpatialRotateStart:',
       e.detail,
@@ -93,7 +102,7 @@ function Model() {
     )
   }
 
-  const onSpatialMagnifyStart = (e: SpatialMagnifyEvent) => {
+  const onSpatialMagnifyStart = (e: ModelSpatialMagnifyEvent) => {
     console.log(
       'model onSpatialMagnifyStart:',
       e.detail,
@@ -105,13 +114,13 @@ function Model() {
   ;(window as any).refModel = refModel
   return (
     <div>
-      <SpatializedStatic3DElementContainer
+      <Model
         ref={refModel}
         style={style}
         src={src}
         onSpatialDragEnd={onSpatialDragEnd}
         onSpatialDragStart={onSpatialDragStart}
-        onSpatialTap={onSpatialTap}
+        // onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
         onSpatialRotateStart={onSpatialRotateStart}
         onSpatialRotateEnd={onSpatialRotateEnd}
@@ -215,7 +224,7 @@ function App() {
         <button>this is a button</button>
       </div>
       <div> End of SpatializedContainer </div>
-      <Model />
+      <ModelTest />
       <div> End of Model SpatializedContainer </div>
     </>
   )
