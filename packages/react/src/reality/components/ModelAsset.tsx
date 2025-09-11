@@ -4,6 +4,8 @@ type Props = {
   children?: React.ReactNode
   id: string // user id
   src: string // model url
+  onLoad?: () => void
+  onError?: (error: any) => void
 }
 export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
@@ -12,8 +14,15 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
-      const modelAsset = session.createModelAsset({ url: options.src })
-      resourceRegistry.add(options.id, modelAsset)
+      const modelAssetPromise = session.createModelAsset({ url: options.src })
+      resourceRegistry.add(options.id, modelAssetPromise)
+
+      try {
+        await modelAssetPromise
+        options.onLoad?.()
+      } catch (error: any) {
+        options.onError?.(error)
+      }
     }
     init()
 

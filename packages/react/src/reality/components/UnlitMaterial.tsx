@@ -14,8 +14,8 @@ export const UnlitMaterial: React.FC<Props> = ({ children, ...options }) => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
-      const material = session.createUnlitMaterial(options)
-      resourceRegistry.add(options.id, material)
+      const materialPromise = session.createUnlitMaterial(options)
+      resourceRegistry.add(options.id, materialPromise)
       // todo: racing condition??
     }
     init()
