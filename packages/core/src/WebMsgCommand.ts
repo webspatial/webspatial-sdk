@@ -10,6 +10,8 @@ import {
 export enum SpatialWebMsgType {
   cubeInfo = 'cubeInfo',
   transform = 'transform',
+  modelloaded = 'modelloaded',
+  modelloadfailed = 'modelloadfailed',
   spatialtap = 'spatialtap',
   spatialdragstart = 'spatialdragstart',
   spatialdrag = 'spatialdrag',

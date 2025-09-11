@@ -21,6 +21,7 @@ import {
   // ModelSpatialRotateEvent,
   ModelSpatialRotateEndEvent,
   ModelSpatialMagnifyEvent,
+  ModelOnLoadEvent,
   // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
@@ -112,6 +113,10 @@ function ModelTest() {
   }
 
   ;(window as any).refModel = refModel
+
+  const onLoad = (event: ModelOnLoadEvent) => {
+    console.log('model onLoad', event)
+  }
   return (
     <div>
       <Model
@@ -120,11 +125,12 @@ function ModelTest() {
         src={src}
         onSpatialDragEnd={onSpatialDragEnd}
         onSpatialDragStart={onSpatialDragStart}
-        // onSpatialTap={onSpatialTap}
+        onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
         onSpatialRotateStart={onSpatialRotateStart}
         onSpatialRotateEnd={onSpatialRotateEnd}
         onSpatialMagnifyStart={onSpatialMagnifyStart}
+        onLoad={onLoad}
       />
     </div>
   )

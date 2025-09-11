@@ -2,6 +2,8 @@ import React, { ForwardedRef, forwardRef, useEffect, useMemo } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
+  ModelOnErrorEvent,
+  ModelOnLoadEvent,
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
@@ -19,7 +21,7 @@ function getAbsoluteURL(url?: string) {
 }
 
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
-  const { src, spatializedElement } = props
+  const { src, spatializedElement, onLoad, onError } = props
   const spatializedStatic3DElement =
     spatializedElement as SpatializedStatic3DElement
 
@@ -30,6 +32,34 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedStatic3DElement.updateProperties({ modelURL: currentSrc })
     }
   }, [currentSrc])
+
+  useEffect(() => {
+    if (onLoad) {
+      spatializedStatic3DElement.onLoadCallback = () => {
+        const event = new CustomEvent('modelloaded', {
+          bubbles: false,
+          cancelable: false,
+        }) as ModelOnLoadEvent
+        onLoad(event)
+      }
+    } else {
+      spatializedStatic3DElement.onLoadCallback = undefined
+    }
+  }, [onLoad])
+
+  useEffect(() => {
+    if (onError) {
+      spatializedStatic3DElement.onLoadFailureCallback = () => {
+        const event = new CustomEvent('modelloadfailed', {
+          bubbles: false,
+          cancelable: false,
+        }) as ModelOnErrorEvent
+        onError(event)
+      }
+    } else {
+      spatializedStatic3DElement.onLoadFailureCallback = undefined
+    }
+  }, [onError])
 
   return <></>
 }

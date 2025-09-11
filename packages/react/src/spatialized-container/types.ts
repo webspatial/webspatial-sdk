@@ -12,6 +12,7 @@ import {
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 
+
 // SpatialEvents
 type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialTap?: (event: SpatialTapEvent<T>) => void
@@ -69,13 +70,15 @@ export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
     React.ComponentPropsWithoutRef<'div'> & {
       src?: string
-      // onLoad?: (element: SpatializedStatic3DElementRef) => void
-      // onError?: (element: SpatializedStatic3DElementRef) => void
+      onLoad?: (event: ModelOnLoadEvent) => void
+      onError?: (event: ModelOnErrorEvent) => void
     }
 
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
   src?: string
+  onLoad?: (event: ModelOnLoadEvent) => void
+  onError?: (event: ModelOnErrorEvent) => void
 }
 
 export const SpatialCustomStyleVars = {
@@ -147,16 +150,32 @@ export type SpatialMagnifyEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialMagnifyEvent & CurrentTarget<T>
 
-
 // Model Spatial Event
-export type ModelSpatialTapEvent = SpatialTapEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialDragStartEvent = SpatialDragStartEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialDragEvent = SpatialDragEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialDragEndEvent = SpatialDragEndEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialRotateStartEvent = SpatialRotateStartEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialRotateEvent = SpatialRotateEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialRotateEndEvent = SpatialRotateEndEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialMagnifyStartEvent = SpatialMagnifyStartEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialMagnifyEvent = SpatialMagnifyEvent<SpatializedStatic3DElementRef>
-export type ModelSpatialMagnifyEndEvent = SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialTapEvent =
+  SpatialTapEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragStartEvent =
+  SpatialDragStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEvent =
+  SpatialDragEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEndEvent =
+  SpatialDragEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateStartEvent =
+  SpatialRotateStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEvent =
+  SpatialRotateEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEndEvent =
+  SpatialRotateEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyStartEvent =
+  SpatialMagnifyStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEvent =
+  SpatialMagnifyEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEndEvent =
+  SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
+export type ModelOnLoadEvent = CustomEvent & {
+  target: SpatializedStatic3DElementRef
+}
+
+export type ModelOnErrorEvent = CustomEvent & {
+  target: SpatializedStatic3DElementRef
+}

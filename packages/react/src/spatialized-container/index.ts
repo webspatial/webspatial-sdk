@@ -3,6 +3,8 @@ export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
 export { withSpatialized2DElementContainer } from './Spatialized2DElementContainerFactory'
 export {
+  type Point3D,
+  type Vec3,
   type SpatializedElementRef,
   type SpatialTapEvent,
   type SpatialDragStartEvent,
@@ -25,5 +27,9 @@ export {
   type ModelSpatialRotateEndEvent,
   type ModelSpatialMagnifyEvent,
   type ModelSpatialMagnifyEndEvent,
+  type ModelOnLoadEvent,
+  type ModelOnErrorEvent,
 } from './types'
+
+
 export { toSceneSpatial, toLocalSpace } from './transform-utils'

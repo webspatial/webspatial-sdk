@@ -8,6 +8,14 @@ struct SpatializedStatic3DView: View {
     private var spatializedStatic3DElement: SpatializedStatic3DElement {
         return spatializedElement as! SpatializedStatic3DElement
     }
+    
+    func onLoadSuccess() {
+        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
+    }
+
+    func onLoadFailure() {
+        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
+    }
 
     @ViewBuilder
     var body: some View {
@@ -26,13 +34,12 @@ struct SpatializedStatic3DView: View {
                             contentMode: .fit
                         )
                         .onAppear {
-//                            self.onLoadSuccess()
+                            self.onLoadSuccess()
                         }
                         .if(enableGesture) { view in view.hoverEffect()}
                 case .failure:
-                    //                            use UIView.onAppear to notify error phase.
                     Text("").onAppear {
-//                        self.onLoadFailure(error.localizedDescription)
+                        self.onLoadFailure()
                     }
                 @unknown default:
                     EmptyView()
