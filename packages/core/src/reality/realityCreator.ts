@@ -1,18 +1,23 @@
 import {
   CreateModelComponentCommand,
+  CreateModelResourceCommand,
   CreateSpatialEntityCommand,
   CreateSpatialGeometryCommand,
+  CreateSpatialModelEntityCommand,
   CreateSpatialUnlitMaterialCommand,
 } from '../JSBCommand'
 import {
   ModelComponentOptions,
+  ModelResourceOptions,
   SpatialGeometryOptions,
+  SpatialModelEntityCreationOptions,
   SpatialUnlitMaterialOptions,
 } from '../types/types'
-import { SpatialEntity } from './entity'
+import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
 import { SpatialUnlitMaterial } from './material'
+import { ModelResource } from './resource'
 
 export async function createSpatialEntity(
   name?: string,
@@ -57,9 +62,31 @@ export async function createSpatialUnlitMaterial(
 export async function createModelComponent(options: ModelComponentOptions) {
   const result = await new CreateModelComponentCommand(options).execute()
   if (!result.success) {
-    throw new Error('createSpatialGeometry failed')
+    throw new Error('createModelComponent failed')
   } else {
     const { id } = result.data
     return new ModelComponent(id, options)
+  }
+}
+
+export async function createSpatialModelEntity(
+  options: SpatialModelEntityCreationOptions,
+) {
+  const result = await new CreateSpatialModelEntityCommand(options).execute()
+  if (!result.success) {
+    throw new Error('createSpatialModelEntity failed')
+  } else {
+    const { id } = result.data
+    return new SpatialModelEntity(id)
+  }
+}
+
+export async function createModelResource(options: ModelResourceOptions) {
+  const result = await new CreateModelResourceCommand(options).execute()
+  if (!result.success) {
+    throw new Error('createModelResource failed')
+  } else {
+    const { id } = result.data
+    return new ModelResource(id, options)
   }
 }

@@ -167,6 +167,15 @@ export interface ModelComponentOptions {
   materials: SpatialMaterial[]
 }
 
+export interface SpatialModelEntityCreationOptions {
+  modelResourceId: string
+  name?: string
+}
+
+export interface ModelResourceOptions {
+  url:string
+}
+
 export enum SpatialSceneState {
   idle = 'idle',
   pending = 'pending',

@@ -18,6 +18,8 @@ import {
   SpatialGeometryType,
   ModelComponentOptions,
   SpatialEntityProperties,
+  ModelResourceOptions,
+  SpatialModelEntityCreationOptions,
 } from './types/types'
 import { composeSRT } from './utils'
 
@@ -281,6 +283,27 @@ export class CreateModelComponentCommand extends JSBCommand {
   }
   commandType = 'CreateModelComponent'
 }
+
+export class CreateSpatialModelEntityCommand extends JSBCommand {
+  constructor(private options: SpatialModelEntityCreationOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreateSpatialModelEntity'
+}
+
+export class CreateModelResourceCommand extends JSBCommand {
+  constructor(private options: ModelResourceOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreateModelResource'
+}
+
 export class CreateSpatialGeometryCommand extends JSBCommand {
   constructor(
     private type: SpatialGeometryType,

@@ -9,10 +9,12 @@ import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import {
   ModelComponentOptions,
+  ModelResourceOptions,
   SpatialBoxGeometryOptions,
   SpatialConeGeometryOptions,
   SpatialCylinderGeometryOptions,
   SpatialGeometryOptions,
+  SpatialModelEntityCreationOptions,
   SpatialPlaneGeometryOptions,
   SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
@@ -22,8 +24,10 @@ import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import {
   createModelComponent,
+  createModelResource,
   createSpatialEntity,
   createSpatialGeometry,
+  createSpatialModelEntity,
   createSpatialUnlitMaterial,
 } from './reality/realityCreator'
 import {
@@ -86,6 +90,13 @@ export class SpatialSession {
 
   createUnlitMaterial(options: SpatialUnlitMaterialOptions) {
     return createSpatialUnlitMaterial(options)
+  }
+  createModelResource(options: ModelResourceOptions) {
+    return createModelResource(options)
+  }
+
+  createSpatialModelEntity(options: SpatialModelEntityCreationOptions) {
+    return createSpatialModelEntity(options)
   }
 
   initScene(

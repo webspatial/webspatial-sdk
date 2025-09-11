@@ -130,6 +130,34 @@ function App() {
 
             await spatialScene.addSpatializedElement(reality)
 
+            const modelResource = await session.createModelResource({
+              url: 'http://localhost:5173/public/assets/RocketToy1.usdz',
+            })
+            const ent = await session.createSpatialModelEntity({
+              modelResourceId: modelResource.id,
+            })
+
+            await reality.addEntity(ent)
+          } catch (error) {
+            console.log('🚀 ~ error:', error)
+          }
+        }}
+      >
+        create model entity
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          try {
+            const session = getSession()!
+
+            const spatialScene = session.getSpatialScene()
+
+            const reality = await session.createSpatializedDynamic3DElement()
+
+            await spatialScene.addSpatializedElement(reality)
+
             const entity = await session.createEntity()
 
             const geometry = await session.createBoxGeometry({
