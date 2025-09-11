@@ -2,6 +2,7 @@ import { SpatialTransform, Vec3 } from '../../types/types'
 import {
   AddComponentToEntityCommand,
   AddEntityToEntityCommand,
+  RemoveEntityFromParentCommand,
   UpdateEntityPropertiesCommand,
 } from '../../JSBCommand'
 import { SpatialObject } from '../../SpatialObject'
@@ -34,6 +35,9 @@ export class SpatialEntity extends SpatialObject {
 
   async addEntity(ent: SpatialEntity) {
     return new AddEntityToEntityCommand(this, ent).execute()
+  }
+  async removeFromParent() {
+    return new RemoveEntityFromParentCommand(this).execute()
   }
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
     return new UpdateEntityPropertiesCommand(this, properties).execute()

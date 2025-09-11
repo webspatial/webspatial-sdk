@@ -376,6 +376,18 @@ export class AddEntityToEntityCommand extends JSBCommand {
   commandType = 'AddEntityToEntity'
 }
 
+export class RemoveEntityFromParentCommand extends JSBCommand {
+  constructor(public entity: SpatialEntity) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entity.id,
+    }
+  }
+  commandType = 'RemoveEntityFromParent'
+}
+
 export class CreateTextureResourceCommand extends JSBCommand {
   constructor(private url: string) {
     super()
