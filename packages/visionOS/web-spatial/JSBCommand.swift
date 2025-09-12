@@ -215,6 +215,8 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     static let commandType: String = "UpdateSpatializedDynamic3DElementProperties"
     let id: String
     let name: String?
+    var clientX: Double?
+    var clientY: Double?
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -224,7 +226,17 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    let enableGesture: Bool?
+    
+    var enableDragStartGesture: Bool?
+    let enableDragGesture: Bool?
+    let enableDragEndGesture: Bool?
+    var enableRotateStartGesture: Bool?
+    let enableRotateGesture: Bool?
+    let enableRotateEndGesture: Bool?
+    var enableMagnifyStartGesture: Bool?
+    let enableMagnifyGesture: Bool?
+    let enableMagnifyEndGesture: Bool?
+    let enableTapGesture: Bool?
 }
 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {
