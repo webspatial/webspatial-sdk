@@ -8,6 +8,7 @@ import {
 import { SpatialObject } from '../../SpatialObject'
 import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
+import { SpatialWebEvent } from '../../SpatialWebEvent'
 
 export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
@@ -18,6 +19,7 @@ export class SpatialEntity extends SpatialObject {
     public name?: string,
   ) {
     super(id)
+    SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent)
   }
 
   async addComponent(component: SpatialComponent) {
@@ -41,6 +43,9 @@ export class SpatialEntity extends SpatialObject {
   }
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
+  }
+  private onReceiveEvent = (data: any) => {
+    console.log('SpatialEntityEvent', data)
   }
   // onUpdate(properties: SpatialEntityProperties) {
   //   this.position = properties.position
