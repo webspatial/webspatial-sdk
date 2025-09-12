@@ -31,7 +31,7 @@ export abstract class SpatializedElement extends SpatialObject {
   constructor(public readonly id: string) {
     super(id)
 
-    SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent)
+    SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent.bind(this))
   }
   abstract updateProperties(
     properties: Partial<SpatializedElementProperties>,
@@ -55,7 +55,7 @@ export abstract class SpatializedElement extends SpatialObject {
     return this._transformInv
   }
 
-  private onReceiveEvent = (
+  protected onReceiveEvent(
     data:
       | CubeInfoMsg
       | TransformMsg
@@ -64,7 +64,7 @@ export abstract class SpatializedElement extends SpatialObject {
       | SpatialDragEndMsg
       | SpatialRotateMsg
       | SpatialRotateEndMsg,
-  ) => {
+  ) {
     const { type } = data
     if (type === SpatialWebMsgType.cubeInfo) {
       const cubeInfoMsg = data as CubeInfoMsg

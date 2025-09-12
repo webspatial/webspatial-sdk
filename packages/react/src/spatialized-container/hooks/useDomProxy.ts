@@ -3,22 +3,31 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
-export class SpatialContainerRefProxy {
+export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
-  private ref: ForwardedRef<SpatializedElementRef>
-  public domProxy?: SpatializedElementRef | null
+  private ref: ForwardedRef<SpatializedElementRef<T>>
+  public domProxy?: T | null
   private styleProxy?: CSSStyleDeclaration
 
-  constructor(ref: ForwardedRef<SpatializedElementRef>) {
+  // extre ref props, used to add extra props to ref
+  private extraRefProps?:
+    | ((domProxy: T) => Record<string, () => any>)
+    | undefined
+
+  constructor(
+    ref: ForwardedRef<SpatializedElementRef<T>>,
+    extraRefProps?: (domProxy: T) => Record<string, () => any>,
+  ) {
     this.ref = ref
+    this.extraRefProps = extraRefProps
   }
 
   updateStandardSpatializedContainerDom(dom: HTMLElement | null) {
     const self = this
 
     if (dom) {
-      const domProxy = new Proxy<SpatializedElementRef>(
-        dom as SpatializedElementRef,
+      const domProxy = new Proxy<SpatializedElementRef<T>>(
+        dom as SpatializedElementRef<T>,
         {
           get(target, prop) {
             if (prop === '__raw') {
@@ -134,7 +143,15 @@ export class SpatialContainerRefProxy {
                   },
                 })
               }
+
               return self.styleProxy
+            }
+
+            if (typeof prop === 'string' && self.extraRefProps) {
+              const extraProps = self.extraRefProps(domProxy)
+              if (extraProps.hasOwnProperty(prop)) {
+                return extraProps[prop]()
+              }
             }
             const value = Reflect.get(target, prop)
             if (typeof value === 'function') {
@@ -151,6 +168,11 @@ export class SpatialContainerRefProxy {
       // clear styleProxy
       this.styleProxy = undefined
       this.updateDomProxyToRef()
+
+      // assign domProxy to dom
+      Object.assign(dom, {
+        __targetProxy: domProxy,
+      })
     }
   }
 
@@ -179,7 +201,7 @@ export class SpatialContainerRefProxy {
     }
   }
 
-  updateRef(ref: ForwardedRef<SpatializedElementRef>) {
+  updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
     this.ref = ref
   }
 }
@@ -198,9 +220,12 @@ function hijackGetComputedStyle() {
 }
 hijackGetComputedStyle()
 
-export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
-  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy>(
-    new SpatialContainerRefProxy(ref),
+export function useDomProxy<T extends SpatializedElementRef>(
+  ref: ForwardedRef<T>,
+  extraRefProps?: (domProxy: T) => Record<string, () => any>,
+) {
+  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy<T>>(
+    new SpatialContainerRefProxy<T>(ref, extraRefProps),
   )
 
   useEffect(() => {
@@ -229,3 +254,4 @@ export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
     spatialContainerRefProxy,
   }
 }
+
