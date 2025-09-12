@@ -1,11 +1,4 @@
-import {
-  ElementType,
-  ForwardedRef,
-  forwardRef,
-  useContext,
-  useEffect,
-  useMemo,
-} from 'react'
+import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -119,7 +112,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         transformVisibilityTaskContainerCallback,
         standardSpatializedContainerCallback,
         spatialContainerRefProxy,
-      } = useDomProxy(ref, extraRefProps)
+      } = useDomProxy<T>(ref, extraRefProps)
 
       useEffect(() => {
         rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(

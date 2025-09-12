@@ -50,7 +50,7 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps<T>,
   typeof SpatialID
 > & {
-  extraRefProps?: Record<string, () => any>
+  extraRefProps?: (domProxy: T) => Record<string, () => any>
 }
 
 export type SpatializedContentProps<
@@ -70,15 +70,15 @@ export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
     React.ComponentPropsWithoutRef<'div'> & {
       src?: string
-      onLoad?: (event: ModelOnLoadEvent) => void
-      onError?: (event: ModelOnErrorEvent) => void
+      onLoad?: (event: ModelLoadEvent) => void
+      onError?: (event: ModelLoadEvent) => void
     }
 
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
   src?: string
-  onLoad?: (event: ModelOnLoadEvent) => void
-  onError?: (event: ModelOnErrorEvent) => void
+  onLoad?: (event: ModelLoadEvent) => void
+  onError?: (event: ModelLoadEvent) => void
 }
 
 export const SpatialCustomStyleVars = {
@@ -103,7 +103,7 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
-  ready: Promise<SpatializedStatic3DElementRef>
+  ready: Promise<ModelLoadEvent>
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {
@@ -172,10 +172,6 @@ export type ModelSpatialMagnifyEvent =
 export type ModelSpatialMagnifyEndEvent =
   SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
-export type ModelOnLoadEvent = CustomEvent & {
-  target: SpatializedStatic3DElementRef
-}
-
-export type ModelOnErrorEvent = CustomEvent & {
+export type ModelLoadEvent = CustomEvent & {
   target: SpatializedStatic3DElementRef
 }

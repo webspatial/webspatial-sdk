@@ -283,6 +283,11 @@ export class PortalInstanceObject {
 
     // update transform
     spatializedElement.updateTransform(this.transformMatrix!)
+
+    // assign spatializedElement to dom
+    Object.assign(this.dom, {
+      __spatializedElement: spatializedElement,
+    })
   }
 }
 
