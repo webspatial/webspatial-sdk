@@ -7,18 +7,7 @@ export interface Vec3 {
   z: number
 }
 
-export interface Vec4 {
-  x: number
-  y: number
-  z: number
-  w: number
-}
-
-export interface SpatialTransform {
-  position: Vec3
-  quaternion: Vec4
-  scale: Vec3
-}
+export type Point3D = Vec3
 
 /**
  * Material type for SpatialDiv or HTML document.
@@ -63,6 +52,8 @@ export enum SpatializedElementType {
 
 export interface SpatializedElementProperties {
   name: string
+  clientX: number
+  clientY: number
   width: number
   height: number
   depth: number
@@ -71,8 +62,17 @@ export interface SpatializedElementProperties {
   scrollWithParent: boolean
   zIndex: number
   backOffset: number
-  rotationAnchor: Vec3
-  enableGesture: boolean
+  rotationAnchor: Point3D
+  enableTapGesture: boolean
+  enableDragStartGesture: boolean
+  enableDragGesture: boolean
+  enableDragEndGesture: boolean
+  enableRotateStartGesture: boolean
+  enableRotateGesture: boolean
+  enableRotateEndGesture: boolean
+  enableMagnifyStartGesture: boolean
+  enableMagnifyGesture: boolean
+  enableMagnifyEndGesture: boolean
 }
 
 export interface Spatialized2DElementProperties
@@ -89,10 +89,7 @@ export interface SpatializedStatic3DElementProperties
 }
 
 export interface SpatialSceneCreationOptions {
-  defaultSize?: {
-    width: number // Initial width of the window
-    height: number // Initial height of the window
-  }
+  defaultSize?: Size
 
   resizability?: {
     minWidth?: number
@@ -226,12 +223,15 @@ declare global {
 export interface Size {
   width: number
   height: number
+}
+
+export interface Size3D extends Size {
   depth: number
 }
 
 export class CubeInfo {
   constructor(
-    public size: Size,
+    public size: Size3D,
     public origin: Vec3,
   ) {
     this.size = size
@@ -286,3 +286,43 @@ export class CubeInfo {
     return this.z + this.depth
   }
 }
+
+export interface SpatialTapEventDetail {
+  location3D: Point3D
+}
+
+export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
+
+export interface SpatialDragEventDetail {
+  location3D: Point3D
+  startLocation3D: Point3D
+  translation3D: Vec3
+  predictedEndTranslation3D: Vec3
+  predictedEndLocation3D: Point3D
+  velocity: Size
+}
+
+export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
+
+export type SpatialDragEndEvent = SpatialDragEvent
+
+export interface SpatialRotateEventDetail {
+  rotation: { vector: [number, number, number, number] }
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialRotateEvent = CustomEvent<SpatialRotateEventDetail>
+
+export type SpatialRotateEndEvent = SpatialRotateEvent
+
+export interface SpatialMagnifyEventDetail {
+  magnification: number
+  velocity: number
+  startAnchor3D: Vec3
+  startLocation3D: Point3D
+}
+
+export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
+
+export type SpatialMagnifyEndEvent = SpatialMagnifyEvent

@@ -120,6 +120,8 @@ struct DestroyCommand: CommandDataProtocol {
 
 protocol SpatializedElementProperties: SpatialObjectCommand {
     var name: String? { get }
+    var clientX: Double? { get }
+    var clientY: Double? { get }
     var width: Double? { get }
     var height: Double? { get }
     var depth: Double? { get }
@@ -129,13 +131,26 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var visible: Bool? { get }
     var scrollWithParent: Bool? { get }
     var zIndex: Double? { get }
-    var enableGesture: Bool? { get }
+    
+    var enableDragStartGesture: Bool? { get }
+    var enableDragGesture: Bool? { get }
+    var enableDragEndGesture: Bool? { get }
+    
+    var enableRotateStartGesture: Bool? { get }
+    var enableRotateGesture: Bool? { get }
+    var enableRotateEndGesture: Bool? { get }
+    var enableMagnifyStartGesture: Bool? { get }
+    var enableMagnifyGesture: Bool? { get }
+    var enableMagnifyEndGesture: Bool? { get }
+    var enableTapGesture: Bool? { get }
 }
 
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatialized2DElementProperties"
     let id: String
     let name: String?
+    var clientX: Double?
+    var clientY: Double?
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -145,8 +160,18 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    let enableGesture: Bool?
-
+    
+    var enableDragStartGesture: Bool?
+    var enableDragGesture: Bool?
+    var enableDragEndGesture: Bool?
+    var enableRotateStartGesture: Bool?
+    var enableRotateGesture: Bool?
+    var enableRotateEndGesture: Bool?
+    var enableMagnifyStartGesture: Bool?
+    var enableMagnifyGesture: Bool?
+    var enableMagnifyEndGesture: Bool?
+    var enableTapGesture: Bool?  
+    
     let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
@@ -160,6 +185,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
     let name: String?
+    var clientX: Double?
+    var clientY: Double?  
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -169,7 +196,17 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    let enableGesture: Bool?
+    
+    var enableDragStartGesture: Bool?
+    let enableDragGesture: Bool?
+    let enableDragEndGesture: Bool?
+    var enableRotateStartGesture: Bool?
+    let enableRotateGesture: Bool?
+    let enableRotateEndGesture: Bool?
+    var enableMagnifyStartGesture: Bool?
+    let enableMagnifyGesture: Bool?
+    let enableMagnifyEndGesture: Bool?
+    let enableTapGesture: Bool?
 
     let modelURL: String?
 }
@@ -193,9 +230,7 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {
     static let commandType: String = "UpdateSpatializedElementTransform"
     let id: String
-    let position: Vec3?
-    let quaternion: Vec4?
-    let scale: Vec3?
+    let matrix: [Double]
 }
 
 struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {

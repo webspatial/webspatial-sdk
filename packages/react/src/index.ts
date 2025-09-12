@@ -5,5 +5,6 @@ export * from './spatialized-container-monitor'
 export * from './reality'
 
 export { SpatializedStatic3DElementContainer as Model } from './spatialized-container'
+export { type SpatializedStatic3DElementRef as ModelRef } from './spatialized-container'
 
 export const version = __WEBSPATIAL_REACT_SDK_VERSION__

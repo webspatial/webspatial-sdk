@@ -2,14 +2,34 @@ import ReactDOM from 'react-dom/client'
 
 import {
   enableDebugTool,
-  // Spatialized2DElementContainer,
-  SpatializedStatic3DElementContainer,
+  SpatialTapEvent,
+  SpatialDragEvent,
+  // SpatialRotateEndEvent,
+  // SpatialRotateStartEvent,
+  // SpatialMagnifyEndEvent,
+  SpatializedElementRef,
+  // SpatialMagnifyEvent,
+  toSceneSpatial,
+  // SpatialDragEndEvent,
+  Model,
+  ModelRef,
+  ModelSpatialTapEvent,
+  // ModelSpatialDragStartEvent,
+  ModelSpatialDragEvent,
+  ModelSpatialDragEndEvent,
+  ModelSpatialRotateStartEvent,
+  // ModelSpatialRotateEvent,
+  ModelSpatialRotateEndEvent,
+  ModelSpatialMagnifyEvent,
+  ModelLoadEvent,
+  // ModelSpatialMagnifyEndEvent,
+  // toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
 enableDebugTool()
 
-function Model() {
+function ModelTest() {
   const style: CSSProperties = {
     width: '300px',
     height: '300px',
@@ -20,23 +40,103 @@ function Model() {
     display: 'block',
     visibility: 'visible',
     // background: 'blue',
-    // '--xr-back': '400px',
-    // transform: 'translateX(100px) rotateY(30deg)',
+    '--xr-back': '140px',
+    // transform: 'translateX(100px) rotateX(30deg)',
     // display: 'none',
     contentVisibility: 'visible',
   }
 
-  const src = 'http://localhost:5173/public/modelasset/cone.usdz'
+  const src = 'http://localhost:5173/public/modelasset/1cone.usdz'
 
-  const refModel = useRef<HTMLElement>(null)
+  const refModel = useRef<ModelRef>(null)
+
+  const onSpatialTap = (e: ModelSpatialTapEvent) => {
+    console.log(
+      'model onSpatialTap',
+      e.currentTarget.getBoundingClientCube(),
+      e.currentTarget.getBoundingClientRect(),
+      e.detail.location3D,
+      toSceneSpatial(e.detail.location3D, e.currentTarget),
+      e.currentTarget.currentSrc,
+    )
+  }
+
+  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
+    console.log(
+      'model onSpatialDragStart',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialDrag = (e: ModelSpatialDragEvent) => {
+    console.log(
+      'model onSpatialDrag',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialDragEnd = (e: ModelSpatialDragEndEvent) => {
+    console.log(
+      'model onSpatialDragEnd',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialRotateEnd = (e: ModelSpatialRotateEndEvent) => {
+    console.log(
+      'model onSpatialRotateEnd:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
+    console.log(
+      'model onSpatialRotateStart:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialMagnifyStart = (e: ModelSpatialMagnifyEvent) => {
+    console.log(
+      'model onSpatialMagnifyStart:',
+      e.detail,
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
 
   ;(window as any).refModel = refModel
+
+  const onLoad = (event: ModelLoadEvent) => {
+    console.log('model onLoad', event, event.target.getBoundingClientCube())
+  }
+
+  const onError = (event: ModelLoadEvent) => {
+    console.log('model onError', event, event.target.getBoundingClientCube())
+  }
+
   return (
     <div>
-      <SpatializedStatic3DElementContainer
+      <Model
         ref={refModel}
         style={style}
         src={src}
+        onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialDragStart={onSpatialDragStart}
+        onSpatialTap={onSpatialTap}
+        onSpatialDrag={onSpatialDrag}
+        onSpatialRotateStart={onSpatialRotateStart}
+        onSpatialRotateEnd={onSpatialRotateEnd}
+        onSpatialMagnifyStart={onSpatialMagnifyStart}
+        onLoad={onLoad}
+        onError={onError}
       />
     </div>
   )
@@ -58,16 +158,16 @@ function App() {
     '--xr-background-material': 'translucent',
     '--xr-back': '10px',
     '--xr-depth': '150px',
-    // transform: 'rotateX(30deg)',
+    // transform: 'rotate3d(0, 1, 1, 45deg)',
     // display: 'none',
     contentVisibility: 'visible',
     overflow: 'scroll',
   }
 
-  const style2: CSSProperties = {
-    ...style,
-    transform: 'rotateZ(0deg)',
-  }
+  // const style2: CSSProperties = {
+  //   ...style,
+  //   transform: 'rotateZ(0deg)',
+  // }
 
   const childStyle: CSSProperties = {
     position: 'relative',
@@ -79,26 +179,64 @@ function App() {
     background: 'blue',
   }
 
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
   ;(window as any).ref = ref
+
+  const refChild = useRef<SpatializedElementRef<HTMLDivElement>>(null)
+  ;(window as any).refChild = refChild
+
+  const onSpatialTap = (e: SpatialTapEvent) => {
+    console.log('child:', e.isTrusted, e.currentTarget.getBoundingClientCube())
+  }
+
+  const onSpatialDrag = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
+
+  const onSpatialDragEnd = (e: SpatialDragEvent) => {
+    console.log(
+      'child onSpatialDrag End:',
+      e.isTrusted,
+      e.currentTarget.getBoundingClientCube(),
+    )
+  }
 
   return (
     <>
       <div style={{ width: '100px', height: '100px' }}>
         Start of SpatializedContainer
       </div>
-      <div enable-xr data-name="parent" style={style} ref={ref} id="parent">
+      <div
+        enable-xr
+        // onSpatialDrag={onSpatialDrag}
+        // onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialTap={onSpatialTap}
+        data-name="parent"
+        style={style}
+        ref={ref}
+        id="parent"
+      >
         this is spatialdiv
         <a href="https://www.baidu.com">this is a link</a>
-        {/* <div enable-xr style={childStyle} data-name="child">
+        <div
+          enable-xr
+          onSpatialDrag={onSpatialDrag}
+          onSpatialDragEnd={onSpatialDragEnd}
+          style={childStyle}
+          ref={refChild}
+          data-name="child"
+        >
           this is child spatialdiv
         </div>
-        <Model /> */}
         <button>this is a button</button>
       </div>
       <div> End of SpatializedContainer </div>
-
+      <ModelTest />
       <div> End of Model SpatializedContainer </div>
     </>
   )

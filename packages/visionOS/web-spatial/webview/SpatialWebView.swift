@@ -29,6 +29,6 @@ struct SpatialWebView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: SpatialWebController) {
-        print("dismantleUIView", coordinator.model?.id)
+//        print("dismantleUIView", coordinator.model?.id)
     }
 }

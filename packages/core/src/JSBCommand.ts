@@ -11,7 +11,6 @@ import {
   SpatializedElementProperties,
   SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
-  SpatialTransform,
   SpatialSceneCreationOptions,
   SpatialUnlitMaterialOptions,
   SpatialGeometryOptions,
@@ -176,19 +175,16 @@ export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
 }
 
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
-  spatialTransform: Partial<SpatialTransform>
+  matrix: DOMMatrix
   commandType = 'UpdateSpatializedElementTransform'
 
-  constructor(
-    spatialObject: SpatialObject,
-    spatialTransform: Partial<SpatialTransform>,
-  ) {
+  constructor(spatialObject: SpatialObject, matrix: DOMMatrix) {
     super(spatialObject)
-    this.spatialTransform = spatialTransform
+    this.matrix = matrix
   }
 
   protected getExtraParams() {
-    return this.spatialTransform
+    return { matrix: Array.from(this.matrix.toFloat64Array()) }
   }
 }
 

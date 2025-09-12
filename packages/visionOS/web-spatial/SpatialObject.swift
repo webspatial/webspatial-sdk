@@ -35,7 +35,6 @@ class SpatialObjectWeakRefManager {
 
 class SpatialObject: SpatialObjectProtocol {
     internal var listeners: [String : [(Any, Any) -> Void]] = [:]
-    
     static var objects = [String: (any SpatialObjectProtocol)]()
     
     static func get(_ id: String) -> (any SpatialObjectProtocol)? {

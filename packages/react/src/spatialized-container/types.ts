@@ -1,8 +1,31 @@
-// 首先确保导入所需的类型
 import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
-import { SpatializedElement } from '@webspatial/core-sdk'
-import { Matrix4 } from '../utils/math'
+import {
+  CubeInfo,
+  SpatializedElement,
+  SpatialTapEvent as CoreSpatialTapEvent,
+  SpatialDragEvent as CoreSpatialDragEvent,
+  SpatialRotateEvent as CoreSpatialRotateEvent,
+  SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
+  SpatializedStatic3DElement,
+} from '@webspatial/core-sdk'
+
+export type { Point3D, Vec3 } from '@webspatial/core-sdk'
+
+
+// SpatialEvents
+type SpatialEventProps<T extends SpatializedElementRef> = {
+  onSpatialTap?: (event: SpatialTapEvent<T>) => void
+  onSpatialDragStart?: (event: SpatialDragStartEvent<T>) => void
+  onSpatialDrag?: (event: SpatialDragEvent<T>) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEvent<T>) => void
+  onSpatialRotateStart?: (event: SpatialRotateStartEvent<T>) => void
+  onSpatialRotate?: (event: SpatialRotateEvent<T>) => void
+  onSpatialRotateEnd?: (event: SpatialRotateEndEvent<T>) => void
+  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent<T>) => void
+  onSpatialMagnify?: (event: SpatialMagnifyEvent<T>) => void
+  onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
+}
 
 export interface StandardSpatializedContainerProps
   extends React.ComponentPropsWithoutRef<'div'> {
@@ -10,44 +33,52 @@ export interface StandardSpatializedContainerProps
   [SpatialID]: string
 }
 
-export interface PortalSpatializedContainerProps
-  extends React.ComponentPropsWithoutRef<'div'> {
-  component: ElementType
-  spatializedContent: ElementType
-  createSpatializedElement: () => Promise<SpatializedElement>
-  getExtraSpatializedElementProperties?: (
-    computedStyle: CSSStyleDeclaration,
-  ) => Record<string, any>
-  [SpatialID]: string
+export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
+  SpatialEventProps<T> &
+    React.ComponentPropsWithoutRef<'div'> & {
+      component: ElementType
+      spatializedContent: ElementType
+      createSpatializedElement: () => Promise<SpatializedElement>
+      getExtraSpatializedElementProperties?: (
+        computedStyle: CSSStyleDeclaration,
+      ) => Record<string, any>
+
+      [SpatialID]: string
+    }
+
+export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
+  StandardSpatializedContainerProps & PortalSpatializedContainerProps<T>,
+  typeof SpatialID | 'onLoad' | 'onError'
+> & {
+  extraRefProps?: (domProxy: T) => Record<string, () => any>
 }
 
-export type SpatializedContainerProps = Omit<
-  StandardSpatializedContainerProps & PortalSpatializedContainerProps,
-  typeof SpatialID
->
-
-
-export interface SpatializedContentProps
-  extends Omit<PortalSpatializedContainerProps, 'spatializedContent'> {
+export type SpatializedContentProps<
+  T extends SpatializedElementRef,
+  P extends ElementType,
+> = Omit<PortalSpatializedContainerProps<T>, 'spatializedContent'> & {
   spatializedElement: SpatializedElement
 }
 
-export type Spatialized2DElementContainerProps = Omit<
-  SpatializedContainerProps,
-  | 'spatializedContent'
-  | 'createSpatializedElement'
-  | 'getExtraSpatializedElementProperties'
->
+export type Spatialized2DElementContainerProps<P extends ElementType> =
+  SpatialEventProps<SpatializedElementRef> &
+    React.ComponentPropsWithRef<'div'> & {
+      component: P
+    }
 
-export interface SpatializedStatic3DContainerProps
-  extends Omit<Spatialized2DElementContainerProps, 'component'> {
-  src?: string
-}
+export type SpatializedStatic3DContainerProps =
+  SpatialEventProps<SpatializedStatic3DElementRef> &
+    Omit<React.ComponentPropsWithoutRef<'div'>, 'onLoad' | 'onError'> & {
+      src?: string
+      onLoad?: (event: ModelLoadEvent) => void
+      onError?: (event: ModelLoadEvent) => void
+    }
 
-export interface SpatializedStatic3DContentProps
-  extends React.ComponentPropsWithoutRef<'div'> {
-  spatializedElement: SpatializedElement
+export type SpatializedStatic3DContentProps = {
+  spatializedElement: SpatializedStatic3DElement
   src?: string
+  onLoad?: (event: ModelLoadEvent) => void
+  onError?: (event: ModelLoadEvent) => void
 }
 
 export const SpatialCustomStyleVars = {
@@ -58,12 +89,89 @@ export const SpatialCustomStyleVars = {
 }
 
 export interface SpatialTransformVisibility {
-  transformMatrix: Matrix4
-  transformExist: boolean
+  transform: string
   visibility: string
 }
 
-export interface SpatializedElementRef extends HTMLElement {
+export type SpatializedElementRef<T extends HTMLElement = HTMLElement> = T & {
   clientDepth: number
   offsetBack: number
+  getBoundingClientCube: () => CubeInfo | undefined
+}
+
+export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
+
+export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
+  currentSrc: string
+  ready: Promise<ModelLoadEvent>
+}
+
+type CurrentTarget<T extends SpatializedElementRef> = {
+  currentTarget: T
+}
+
+export type SpatialTapEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialTapEvent & CurrentTarget<T>
+
+export type SpatialDragStartEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialDragEvent & CurrentTarget<T>
+
+export type SpatialDragEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialDragEvent & CurrentTarget<T>
+
+export type SpatialDragEndEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialDragEvent & CurrentTarget<T>
+
+export type SpatialRotateStartEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialRotateEvent & CurrentTarget<T>
+
+export type SpatialRotateEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialRotateEvent & CurrentTarget<T>
+
+export type SpatialRotateEndEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialRotateEvent & CurrentTarget<T>
+
+export type SpatialMagnifyStartEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialMagnifyEvent & CurrentTarget<T>
+
+export type SpatialMagnifyEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialMagnifyEvent & CurrentTarget<T>
+
+export type SpatialMagnifyEndEvent<
+  T extends SpatializedElementRef = SpatializedElementRef,
+> = CoreSpatialMagnifyEvent & CurrentTarget<T>
+
+// Model Spatial Event
+export type ModelSpatialTapEvent =
+  SpatialTapEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragStartEvent =
+  SpatialDragStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEvent =
+  SpatialDragEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialDragEndEvent =
+  SpatialDragEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateStartEvent =
+  SpatialRotateStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEvent =
+  SpatialRotateEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialRotateEndEvent =
+  SpatialRotateEndEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyStartEvent =
+  SpatialMagnifyStartEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEvent =
+  SpatialMagnifyEvent<SpatializedStatic3DElementRef>
+export type ModelSpatialMagnifyEndEvent =
+  SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
+
+export type ModelLoadEvent = CustomEvent & {
+  target: SpatializedStatic3DElementRef
 }

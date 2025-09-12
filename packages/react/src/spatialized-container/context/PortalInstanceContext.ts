@@ -2,9 +2,9 @@ import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
-import { SpatialCustomStyleVars } from '../types'
+import { SpatialCustomStyleVars, Point3D } from '../types'
 import { getSession } from '../../utils'
-import { Matrix4, Quaternion, Vector3 } from '../../utils/math'
+import { convertDOMRectToSceneSpace } from '../transform-utils'
 
 type DomRect = {
   x: number
@@ -22,7 +22,7 @@ type CachedDomInfo = {
 
 type CachedTransformVisibilityInfo = {
   visibility: string
-  transformMatrix: Matrix4
+  transformMatrix: DOMMatrix
 }
 
 export class PortalInstanceObject {
@@ -97,7 +97,10 @@ export class PortalInstanceObject {
     spatializedContainerObject.onSpatialTransformVisibilityChange(
       spatialId,
       spatialTransform => {
-        this.cachedTransformVisibilityInfo = spatialTransform
+        this.cachedTransformVisibilityInfo = {
+          transformMatrix: new DOMMatrix(spatialTransform.transform),
+          visibility: spatialTransform.visibility,
+        }
         this.updateSpatializedElementProperties()
       },
     )
@@ -105,13 +108,13 @@ export class PortalInstanceObject {
 
   // called when 2D frame change
   notify2DFrameChange() {
-    console.log('notify2DFrameChange')
+    // console.log('notify2DFrameChange')
 
     const dom = this.spatializedContainerObject.querySpatialDomBySpatialId(
       this.spatialId,
     )
     if (!dom) {
-      console.log('dom not exist!')
+      // console.log('dom not exist!')
       return
     }
     const computedStyle = getComputedStyle(dom)
@@ -122,6 +125,40 @@ export class PortalInstanceObject {
     }
 
     this.updateSpatializedElementProperties()
+
+    // attach __getBoundingClientCube to dom
+    const __getBoundingClientCube = () => {
+      return this.spatializedElement?.cubeInfo
+    }
+    const __getBoundingClientRect = () => {
+      const domRect = new DOMRect(
+        this.domRect?.x,
+        this.domRect?.y,
+        this.domRect?.width,
+        this.domRect?.height,
+      )
+      return convertDOMRectToSceneSpace(
+        domRect,
+        this.spatializedElement?.transform as DOMMatrix,
+      )
+    }
+    const __toSceneSpace = (point: Point3D): DOMPoint => {
+      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
+        this.spatializedElement?.transform,
+      )
+    }
+    const __toLocalSpace = (point: Point3D): DOMPoint => {
+      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
+        this.spatializedElement?.transformInv,
+      )
+    }
+
+    Object.assign(dom, {
+      __getBoundingClientCube,
+      __getBoundingClientRect,
+      __toSceneSpace,
+      __toLocalSpace,
+    })
   }
 
   private async getSpatializedElement() {
@@ -130,7 +167,6 @@ export class PortalInstanceObject {
 
   // called when SpatializedElement is created
   attachSpatializedElement(spatializedElement: SpatializedElement) {
-    console.log('attachSpatializedElement', spatializedElement)
     this.spatializedElement = spatializedElement
     // attach to spatializedContainerObject
     this.addToParent(spatializedElement)
@@ -161,15 +197,15 @@ export class PortalInstanceObject {
   }
 
   private updateSpatializedElementProperties() {
-    console.log('updateSpatializedElement', this.spatializedElement)
+    // console.log('updateSpatializedElement', this.spatializedElement)
     // read from spatializedContainerContext
     const dom = this.dom
     const spatializedElement = this.spatializedElement
     const visibility = this.visibility
     if (!dom || !spatializedElement || !visibility || !this.transformMatrix) {
-      console.log(
-        `not ready to  updateSpatializedElementProperties! dom is ${!!dom} spatializedElement is ${spatializedElement} visibility is ${visibility}`,
-      )
+      // console.log(
+      //   `not ready to  updateSpatializedElementProperties! dom is ${!!dom} spatializedElement is ${spatializedElement} visibility is ${visibility}`,
+      // )
       return
     }
 
@@ -199,7 +235,7 @@ export class PortalInstanceObject {
       height: domRect.height,
     }
 
-    console.log('updateSpatializedElementProperties', domRect)
+    // console.log('updateSpatializedElementProperties', domRect)
 
     const width = domRect.width
     const height = domRect.height
@@ -231,6 +267,8 @@ export class PortalInstanceObject {
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
 
     spatializedElement.updateProperties({
+      clientX: x,
+      clientY: y,
       width,
       height,
       depth,
@@ -244,37 +282,11 @@ export class PortalInstanceObject {
     })
 
     // update transform
-    const transform = this.transformMatrix!
-    const position = new Vector3()
-    const quaternion = new Quaternion()
-    const scale = new Vector3()
-    transform.decompose(position, quaternion, scale)
+    spatializedElement.updateTransform(this.transformMatrix!)
 
-    const parentWindow = this.parentPortalInstanceObject
-      ? (
-          this.parentPortalInstanceObject
-            .spatializedElement! as Spatialized2DElement
-        ).windowProxy
-      : window
-    const parrentOffsetX: number = parentWindow.scrollX
-    const parrentOffsetY: number = parentWindow.scrollY
-    spatializedElement.updateTransform({
-      position: {
-        x: x + position.x + parrentOffsetX,
-        y: y + position.y + parrentOffsetY,
-        z: position.z + backOffset,
-      },
-      quaternion: {
-        x: quaternion.x,
-        y: quaternion.y,
-        z: quaternion.z,
-        w: quaternion.w,
-      },
-      scale: {
-        x: scale.x,
-        y: scale.y,
-        z: scale.z,
-      },
+    // assign spatializedElement to dom
+    Object.assign(this.dom, {
+      __spatializedElement: spatializedElement,
     })
   }
 }
