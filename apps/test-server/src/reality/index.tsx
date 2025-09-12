@@ -4,7 +4,6 @@ import {
   BoxEntity,
   Entity,
   getSession,
-  initScene,
   ModelAsset,
   ModelEntity,
   Reality,
@@ -16,8 +15,6 @@ import { SpatialEntity } from '@webspatial/core-sdk'
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 
-const extUrl = 'https://www.google.com/'
-const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
   const [logs, setLogs] = useState('')
 
@@ -30,10 +27,6 @@ function App() {
       window.onerror = null
     }
   }, [])
-
-  function startlog(str: string) {
-    setLogs(str)
-  }
 
   function log(...args: any[]) {
     setLogs(pre => {
