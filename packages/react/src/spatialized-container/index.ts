@@ -27,8 +27,7 @@ export {
   type ModelSpatialRotateEndEvent,
   type ModelSpatialMagnifyEvent,
   type ModelSpatialMagnifyEndEvent,
-  type ModelOnLoadEvent,
-  type ModelOnErrorEvent,
+  type ModelLoadEvent,
 } from './types'
 
 

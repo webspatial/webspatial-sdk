@@ -21,7 +21,7 @@ import {
   // ModelSpatialRotateEvent,
   ModelSpatialRotateEndEvent,
   ModelSpatialMagnifyEvent,
-  ModelOnLoadEvent,
+  ModelLoadEvent,
   // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
@@ -46,7 +46,7 @@ function ModelTest() {
     contentVisibility: 'visible',
   }
 
-  const src = 'http://localhost:5173/public/modelasset/cone.usdz'
+  const src = 'http://localhost:5173/public/modelasset/1cone.usdz'
 
   const refModel = useRef<ModelRef>(null)
 
@@ -57,7 +57,7 @@ function ModelTest() {
       e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
       toSceneSpatial(e.detail.location3D, e.currentTarget),
-      e.currentTarget.src,
+      e.currentTarget.currentSrc,
     )
   }
 
@@ -114,9 +114,14 @@ function ModelTest() {
 
   ;(window as any).refModel = refModel
 
-  const onLoad = (event: ModelOnLoadEvent) => {
-    console.log('model onLoad', event)
+  const onLoad = (event: ModelLoadEvent) => {
+    console.log('model onLoad', event, event.target.getBoundingClientCube())
   }
+
+  const onError = (event: ModelLoadEvent) => {
+    console.log('model onError', event, event.target.getBoundingClientCube())
+  }
+
   return (
     <div>
       <Model
@@ -131,6 +136,7 @@ function ModelTest() {
         onSpatialRotateEnd={onSpatialRotateEnd}
         onSpatialMagnifyStart={onSpatialMagnifyStart}
         onLoad={onLoad}
+        onError={onError}
       />
     </div>
   )

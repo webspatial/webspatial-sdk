@@ -10,7 +10,7 @@ The core-sdk library is responsible for interacting with the target platforms na
 # How to use
 To run a WebSpatial website you currently need to package it within a native app. 
  
-See docs on our [github](https://github.com/webspatial/webspatial-sd) for more information.
+See docs on our [github](https://github.com/webspatial/webspatial-sdk) for more information.
 
 ## Hello World Example
 

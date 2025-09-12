@@ -1,14 +1,24 @@
-import React, { ForwardedRef, forwardRef, useEffect, useMemo } from 'react'
+import {
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
 import {
-  ModelOnErrorEvent,
-  ModelOnLoadEvent,
+  ModelLoadEvent,
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
 import { SpatializedStatic3DElement } from '@webspatial/core-sdk'
+import {
+  PortalInstanceObject,
+  PortalInstanceContext,
+} from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url?: string) {
   if (!url) {
@@ -20,10 +30,45 @@ function getAbsoluteURL(url?: string) {
   return window.location.origin + url
 }
 
+function createLoadEvent(
+  type: string,
+  targetGetter: () => SpatializedStatic3DElementRef,
+): ModelLoadEvent {
+  const event = new CustomEvent(type, {
+    bubbles: false,
+    cancelable: false,
+  })
+  const proxyEvent = new Proxy(event, {
+    get(target, prop) {
+      if (prop === 'target') {
+        return targetGetter()
+      }
+      return Reflect.get(target, prop)
+    },
+  })
+  return proxyEvent as ModelLoadEvent
+}
+
+function createLoadFailureEvent(
+  targetGetter: () => SpatializedStatic3DElementRef,
+): ModelLoadEvent {
+  return createLoadEvent('modelloadfailed', targetGetter)
+}
+
+function createLoadSuccessEvent(
+  targetGetter: () => SpatializedStatic3DElementRef,
+): ModelLoadEvent {
+  return createLoadEvent('modelloaded', targetGetter)
+}
+
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
   const { src, spatializedElement, onLoad, onError } = props
   const spatializedStatic3DElement =
     spatializedElement as SpatializedStatic3DElement
+
+  const portalInstanceObject: PortalInstanceObject = useContext(
+    PortalInstanceContext,
+  )!
 
   const currentSrc: string = useMemo(() => getAbsoluteURL(src), [src])
 
@@ -36,11 +81,11 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   useEffect(() => {
     if (onLoad) {
       spatializedStatic3DElement.onLoadCallback = () => {
-        const event = new CustomEvent('modelloaded', {
-          bubbles: false,
-          cancelable: false,
-        }) as ModelOnLoadEvent
-        onLoad(event)
+        onLoad(
+          createLoadSuccessEvent(
+            () => (portalInstanceObject.dom as any).__targetProxy,
+          ),
+        )
       }
     } else {
       spatializedStatic3DElement.onLoadCallback = undefined
@@ -50,11 +95,11 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   useEffect(() => {
     if (onError) {
       spatializedStatic3DElement.onLoadFailureCallback = () => {
-        const event = new CustomEvent('modelloadfailed', {
-          bubbles: false,
-          cancelable: false,
-        }) as ModelOnErrorEvent
-        onError(event)
+        onError(
+          createLoadFailureEvent(
+            () => (portalInstanceObject.dom as any).__targetProxy,
+          ),
+        )
       }
     } else {
       spatializedStatic3DElement.onLoadFailureCallback = undefined
@@ -72,9 +117,21 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
-  const extraRefProps = useMemo(
-    () => ({
-      src: () => getAbsoluteURL(props.src),
+  const extraRefProps = useCallback(
+    (domProxy: SpatializedStatic3DElementRef) => ({
+      currentSrc: () => getAbsoluteURL(props.src),
+      ready: () => {
+        const spatializedElement = (domProxy as any)
+          .__spatializedElement as SpatializedStatic3DElement
+
+        const promise = spatializedElement.ready.then((success: boolean) => {
+          if (success) {
+            return createLoadSuccessEvent(() => domProxy)
+          }
+          throw createLoadFailureEvent(() => domProxy)
+        })
+        return promise
+      },
     }),
     [],
   )
