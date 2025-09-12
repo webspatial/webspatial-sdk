@@ -12,10 +12,24 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
     internal var listeners: [String: [(_ object: Any, _ data: Any) -> Void]] = [:]
     
-    private var isEnableTap: Bool = false
-    private var isEnableRotate: Bool = false
-    private var isEnableDrag: Bool = false
-    private var isEnableScale: Bool = false
+    var enableTap: Bool {
+        return _enableTap
+    }
+    var enableRotate: Bool {
+        return _enableRotate
+    }
+    var enableDrag: Bool {
+        return _enableDrag
+    }
+    var enableScale: Bool {
+        return _enableScale
+    }
+    
+    
+    private var _enableTap: Bool = false
+    private var _enableRotate: Bool = false
+    private var _enableDrag: Bool = false
+    private var _enableScale: Bool = false
     private var rotation: simd_quatd = simd_quatd()
     private var spatialChildren: [String:SpatialEntity] = [:]
     private var spatialComponents: [SpatialComponentType: SpatialComponent] = [:]
@@ -64,6 +78,28 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     
     public func updateTransform(_ matrix:[String:Float]){
         transform.matrix = float4x4([matrix["0"]!, matrix["1"]!, matrix["2"]!, matrix["3"]!], [matrix["4"]!, matrix["5"]!, matrix["6"]!, matrix["7"]!], [matrix["8"]!, matrix["9"]!, matrix["10"]!, matrix["11"]!], [matrix["12"]!, matrix["13"]!, matrix["14"]!, matrix["15"]!])
+    }
+    
+    public func updateGesture(_ type:String, _ isEable:Bool){
+        switch SpatialEntityGestureType(rawValue: type){
+        case .Tap:
+            _enableTap = isEable
+        case .Rotate:
+            _enableRotate = isEable
+        case .Drag:
+            _enableDrag = isEable
+        case .Scale:
+            _enableScale = isEable
+        default:
+            return
+        }
+        
+        if !(_enableTap || _enableRotate || _enableDrag || _enableScale){
+            components.remove(CollisionComponent.self)
+        }
+        else if !components.has(CollisionComponent.self){
+            generateCollisionShapes(recursive: true)
+        }
     }
     
     public func setRotation(_ rotation: simd_quatd) {
@@ -122,4 +158,11 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
         spatialChildren = [:]
     }
+}
+
+enum SpatialEntityGestureType: String{
+    case Tap = "tap"
+    case Rotate = "rotate"
+    case Drag = "drag"
+    case Scale = "scale"
 }

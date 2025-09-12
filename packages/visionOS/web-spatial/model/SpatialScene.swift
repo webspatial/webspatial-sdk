@@ -223,6 +223,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
+        
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
@@ -233,10 +234,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
         spatialWebViewModel.addJSBListener(RemoveEntityFromParent.self, onRemoveEntityFromParent)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
-        spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelResource)
+        spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelAsset)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
-        
-        
+        spatialWebViewModel.addJSBListener(UpdateEntityEvent.self, onUpdateEntityEvent)
         
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
         
@@ -723,7 +723,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
     }
     
-    private func onCreateModelResource(command: CreateModelAsset, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+    private func onCreateModelAsset(command: CreateModelAsset, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         _ = SpatialModelResource(command.url, { onload in
             switch onload {
             case .success(let modelResource):
@@ -743,6 +743,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelAsset not found")))
+    }
+    
+    private func onUpdateEntityEvent(command: UpdateEntityEvent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        guard let entity = spatialObjects[command.entityId] as? SpatialEntity else{
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity not found")))
+            return
+        }
+        entity.updateGesture(command.type, command.isEnable)
+        resolve(.success(baseReplyData))
     }
 
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {

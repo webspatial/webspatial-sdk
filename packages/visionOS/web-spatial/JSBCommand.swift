@@ -97,6 +97,13 @@ struct UpdateEntityProperties: CommandDataProtocol{
     let transform: [String:Float]
 }
 
+struct UpdateEntityEvent: CommandDataProtocol{
+    static let commandType: String = "UpdateEntityEvent"
+    let type: String
+    let entityId: String
+    let isEnable:Bool
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
