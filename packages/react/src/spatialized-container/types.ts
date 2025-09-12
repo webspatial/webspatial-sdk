@@ -48,7 +48,7 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
 
 export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps<T>,
-  typeof SpatialID
+  typeof SpatialID | 'onLoad' | 'onError'
 > & {
   extraRefProps?: (domProxy: T) => Record<string, () => any>
 }
@@ -68,7 +68,7 @@ export type Spatialized2DElementContainerProps<P extends ElementType> =
 
 export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
-    React.ComponentPropsWithoutRef<'div'> & {
+    Omit<React.ComponentPropsWithoutRef<'div'>, 'onLoad' | 'onError'> & {
       src?: string
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void

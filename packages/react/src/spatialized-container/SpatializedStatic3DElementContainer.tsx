@@ -124,13 +124,12 @@ function SpatializedStatic3DElementContainerBase(
         const spatializedElement = (domProxy as any)
           .__spatializedElement as SpatializedStatic3DElement
 
-        const promise = spatializedElement.ready
-          .then(() => {
+        const promise = spatializedElement.ready.then((success: boolean) => {
+          if (success) {
             return createLoadSuccessEvent(() => domProxy)
-          })
-          .catch(() => {
-            return createLoadFailureEvent(() => domProxy)
-          })
+          }
+          throw createLoadFailureEvent(() => domProxy)
+        })
         return promise
       },
     }),

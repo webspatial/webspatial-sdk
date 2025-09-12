@@ -4,20 +4,18 @@ import { SpatializedStatic3DElementProperties } from './types/types'
 import { SpatialWebMsgType } from './WebMsgCommand'
 
 export class SpatializedStatic3DElement extends SpatializedElement {
-  private _readyResolve?: () => void
-  private _readyReject?: () => void
+  private _readyResolve?: (success: boolean) => void
 
   // used to cach last modelURL
   private modelURL: string = ''
 
   private createReadyPromise() {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<boolean>(resolve => {
       this._readyResolve = resolve
-      this._readyReject = reject
     })
   }
 
-  ready: Promise<void> = this.createReadyPromise()
+  ready: Promise<boolean> = this.createReadyPromise()
 
   async updateProperties(
     properties: Partial<SpatializedStatic3DElementProperties>,
@@ -37,10 +35,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   override onReceiveEvent(data: { type: SpatialWebMsgType }) {
     if (data.type === SpatialWebMsgType.modelloaded) {
       this._onLoadCallback?.()
-      this._readyResolve?.()
+      this._readyResolve?.(true)
     } else if (data.type === SpatialWebMsgType.modelloadfailed) {
       this._onLoadFailureCallback?.()
-      this._readyReject?.()
+      this._readyResolve?.(false)
     } else {
       super.onReceiveEvent(data as any)
     }
