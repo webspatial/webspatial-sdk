@@ -1,4 +1,4 @@
-import { SpatialTransform, Vec3 } from '../../types/types'
+import { Vec3 } from '../../types/types'
 import {
   AddComponentToEntityCommand,
   AddEntityToEntityCommand,
