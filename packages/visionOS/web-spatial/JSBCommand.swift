@@ -17,6 +17,93 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     let modelURL: String
 }
 
+struct CreateSpatializedDynamic3DElement: CommandDataProtocol{
+    static let commandType: String = "CreateSpatializedDynamic3DElement"
+    let test: Bool
+}
+
+struct CreateSpatialEntity: CommandDataProtocol{
+    static let commandType: String = "CreateSpatialEntity"
+    let name: String?
+}
+
+struct CreateGeometryProperties: CommandDataProtocol{
+    static let commandType: String = "CreateGeometry"
+    let type: String
+    let width: Float?
+    let height: Float?
+    let depth: Float?
+    let cornerRadius: Float?
+    let splitFaces: Bool?
+    let radius: Float?
+}
+
+struct CreateUnlitMaterial: CommandDataProtocol{
+    static let commandType: String = "CreateUnlitMaterial"
+    let color: String?
+    let textureId: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct CreateTexture: CommandDataProtocol{
+    static let commandType: String = "CreateTexture"
+    let url: String
+}
+
+struct CreateModelAsset: CommandDataProtocol{
+    static let commandType: String = "CreateModelAsset"
+    let url: String
+}
+
+struct CreateSpatialModelEntity: CommandDataProtocol{
+    static let commandType: String = "CreateSpatialModelEntity"
+    let modelAssetId:String
+    let name:String?
+}
+
+struct CreateModelComponent: CommandDataProtocol{
+    static let commandType: String = "CreateModelComponent"
+    let geometryId: String
+    let materialIds: [String]
+}
+
+struct AddComponentToEntity: CommandDataProtocol{
+    static let commandType: String = "AddComponentToEntity"
+    let entityId: String
+    let componentId: String
+}
+
+struct AddEntityToDynamic3D: CommandDataProtocol{
+    static let commandType: String = "AddEntityToDynamic3D"
+    let dynamic3dId: String
+    let entityId: String
+}
+
+struct AddEntityToEntity: CommandDataProtocol{
+    static let commandType: String = "AddEntityToEntity"
+    let childId: String
+    let parentId: String
+}
+
+struct RemoveEntityFromParent: CommandDataProtocol{
+    static let commandType: String = "RemoveEntityFromParent"
+    let entityId: String
+}
+
+struct UpdateEntityProperties: CommandDataProtocol{
+    static let commandType: String = "UpdateEntityProperties"
+    let entityId: String
+    let transform: [String:Float]
+}
+
+struct UpdateEntityEvent: CommandDataProtocol{
+    static let commandType: String = "UpdateEntityEvent"
+    let type: String
+    let entityId: String
+    let isEnable:Bool
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
@@ -122,6 +209,22 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let enableTapGesture: Bool?
 
     let modelURL: String?
+}
+
+struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
+    static let commandType: String = "UpdateSpatializedDynamic3DElementProperties"
+    let id: String
+    let name: String?
+    let width: Double?
+    let height: Double?
+    let depth: Double?
+    let backOffset: Double?
+    let rotationAnchor: Vec3?
+    let opacity: Double?
+    let visible: Bool?
+    let scrollWithParent: Bool?
+    let zIndex: Double?
+    let enableGesture: Bool?
 }
 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {

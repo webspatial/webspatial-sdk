@@ -2,6 +2,20 @@ import Foundation
 
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
+    private var rootEntity = SpatialEntity()
+    
+    func getRoot() -> SpatialEntity{
+        return rootEntity
+    }
+    
+    func addEntity(_ entity:SpatialEntity){
+        rootEntity.addChild(entity)
+    }
+    
+    func removeEntity(_ id:String){
+        
+    }
+    
     enum CodingKeys: String, CodingKey {
         case type
     }

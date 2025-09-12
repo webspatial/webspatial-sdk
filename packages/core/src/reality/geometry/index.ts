@@ -1,0 +1,6 @@
+export * from './SpatialGeometry'
+export * from './SpatialBoxGeometry'
+export * from './SpatialSphereGeometry'
+export * from './SpatialCylinderGeometry'
+export * from './SpatialPlaneGeometry'
+export * from './SpatialConeGeometry'

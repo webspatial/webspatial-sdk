@@ -1,3 +1,6 @@
+import { SpatialGeometry } from '../reality/geometry/SpatialGeometry'
+import { SpatialMaterial } from '../reality/material/SpatialMaterial'
+
 export interface Vec3 {
   x: number
   y: number
@@ -93,6 +96,127 @@ export interface SpatialSceneCreationOptions {
     minHeight?: number
     maxWidth?: number
     maxHeight?: number
+  }
+}
+
+export interface SpatialEntityProperties {
+  position: Vec3
+  rotation: Vec3
+  scale: Vec3
+}
+
+export type SpatialGeometryType =
+  | 'BoxGeometry'
+  | 'PlaneGeometry'
+  | 'SphereGeometry'
+  | 'CylinderGeometry'
+  | 'ConeGeometry'
+
+export interface SpatialBoxGeometryOptions {
+  width?: number
+  height?: number
+  depth?: number
+  cornerRadius?: number
+  splitFaces?: boolean
+}
+
+export interface SpatialPlaneGeometryOptions {
+  width?: number
+  height?: number
+  cornerRadius?: number
+}
+
+export interface SpatialSphereGeometryOptions {
+  radius?: number
+}
+
+export interface SpatialConeGeometryOptions {
+  radius?: number
+  height?: number
+}
+
+export interface SpatialCylinderGeometryOptions {
+  radius?: number
+  height?: number
+}
+
+export type SpatialGeometryOptions =
+  | SpatialBoxGeometryOptions
+  | SpatialPlaneGeometryOptions
+  | SpatialSphereGeometryOptions
+  | SpatialCylinderGeometryOptions
+  | SpatialConeGeometryOptions
+
+export type SpatialMaterialType = 'unlit'
+
+type BlendingType = 'opaque' | 'transparent'
+
+export interface SpatialUnlitMaterialOptions {
+  color?: string
+  textureId?: string
+  blending?: BlendingType
+
+  opacity?: number
+}
+
+export interface ModelComponentOptions {
+  mesh: SpatialGeometry
+  materials: SpatialMaterial[]
+}
+
+export interface SpatialModelEntityCreationOptions {
+  modelAssetId: string
+  name?: string
+}
+
+export interface ModelAssetOptions {
+  url:string
+}
+
+export enum SpatialSceneState {
+  idle = 'idle',
+  pending = 'pending',
+  willVisible = 'willVisible',
+  visible = 'visible',
+  fail = 'fail',
+}
+
+/**
+ * Translate event, matching similar behavior to https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/drag_event
+ */
+export type SpatialModelDragEvent = {
+  eventType: 'dragstart' | 'dragend' | 'drag'
+  translation3D: Vec3
+  startLocation3D: Vec3
+}
+
+declare global {
+  interface Window {
+    xrCurrentSceneDefaults: (
+      defaultConfig: SpatialSceneCreationOptions,
+    ) => Promise<SpatialSceneCreationOptions>
+
+    // Location for webspatial custom functions
+    __WebSpatialData: {
+      androidNativeMessage: Function
+      getNativeVersion: Function
+    }
+
+    // Location for webspatial internal callbacks (eg. completion events)
+    __SpatialWebEvent: Function
+
+    // Used to access webkit specific api
+    webkit: any
+
+    // Will be removed in favor of __WebSpatialData
+    WebSpatailNativeVersion: string
+
+    __webspatialsdk__?: {
+      XR_ENV?: string
+      'natvie-version'?: string
+      'react-sdk-version'?: string
+      'core-sdk-version'?: string
+    }
   }
 }
 
