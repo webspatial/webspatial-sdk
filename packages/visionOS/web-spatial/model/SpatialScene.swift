@@ -250,6 +250,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
         
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
+        spatialWebViewModel.addJSBListener(UpdateSpatializedDynamic3DElementProperties.self, onUpdateSpatializedDynamic3DElementProperties)
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
         spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
@@ -383,6 +384,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let spatialObject: SpatializedDynamic3DElement = createSpatializedElement(.SpatializedDynamic3DElement)
         
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
+    }
+    
+    private func onUpdateSpatializedDynamic3DElementProperties(command: UpdateSpatializedDynamic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        guard let spatializedElement: SpatializedDynamic3DElement = findSpatialObject(command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedDynamic3DElement spatial object id not exsit!")))
+            return
+        }
+        updateSpatializedElementProperties(spatializedElement, command)
     }
 
     private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
