@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   Entity,
+  EntityRef,
   getSession,
   ModelAsset,
   ModelEntity,
@@ -96,6 +97,8 @@ function App() {
 
     return () => {}
   }, [boxRotationOn])
+
+  const myRef = useRef<EntityRef>(null)
 
   return (
     <div className="pl-5 pt-2">
@@ -244,6 +247,7 @@ function App() {
               scale={{ x: 1, y: 1, z: 1 }}
             >
               <BoxEntity
+                id="boxRed"
                 width={0.2}
                 height={0.2}
                 depth={0.1}
@@ -257,8 +261,10 @@ function App() {
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
+              ref={myRef}
             >
               <BoxEntity
+                id="boxGreen"
                 width={0.2}
                 height={0.2}
                 depth={0.1}
@@ -266,8 +272,19 @@ function App() {
                 materials={['matGreen']}
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
-                onSpatialTap={e => {
+                onSpatialTap={async e => {
                   console.log('tap box', e.detail.location3D)
+                  const pos = await myRef.current?.convertFromEntityToEntity(
+                    'boxGreen',
+                    'boxRed',
+                    e.detail.location3D,
+                  )
+                  console.log('🚀 ~ pos:', pos)
+                  const pos2 = await myRef.current?.convertFromEntityToScene(
+                    'boxGreen',
+                    e.detail.location3D,
+                  )
+                  console.log("🚀 ~ pos2:", pos2)
                 }}
               ></BoxEntity>
             </Entity>
