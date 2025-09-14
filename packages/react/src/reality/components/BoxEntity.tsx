@@ -1,17 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  SpatialEntity,
-  SpatialMaterial,
-  SpatialObject,
-} from '@webspatial/core-sdk'
-import { ParentContext, useParentContext, useRealityContext } from '../context'
-import { EntityEventHandler, EntityProps } from '../type'
-import { useEntityEvent, useEntityId, useEntityTransform } from '../hooks'
-type Props = {
-  children?: React.ReactNode
-} & EntityProps &
-  BoxProps &
-  EntityEventHandler
+import React, { forwardRef } from 'react'
+import { ParentContext, useRealityContext } from '../context'
+import { EntityProps, EntityEventHandler } from '../type'
+import { useEntityRef, EntityRef, useEntity } from '../hooks'
+import { SpatialMaterial } from '@webspatial/core-sdk'
 
 type BoxProps = {
   width?: number
@@ -21,81 +12,63 @@ type BoxProps = {
   materials?: string[]
 }
 
-export const BoxEntity: React.FC<Props> = ({
-  id,
-  children,
-  width = 0.2,
-  height = 0.2,
-  depth = 0.1,
-  cornerRadius,
-  materials,
-  position,
-  rotation,
-  scale,
-  onSpatialTap,
-}) => {
-  const ctx = useRealityContext()
-  const parent = useParentContext()
-  const [entity, setEntity] = useState<SpatialEntity | null>(null)
+type Props = EntityProps &
+  BoxProps &
+  EntityEventHandler & {
+    children?: React.ReactNode
+  }
 
-  useEntityEvent({ entity, onSpatialTap })
+export const BoxEntity = forwardRef<EntityRef, Props>(
+  (
+    {
+      id,
+      width = 0.2,
+      height = 0.2,
+      depth = 0.1,
+      cornerRadius,
+      materials,
+      position,
+      rotation,
+      scale,
+      onSpatialTap,
+      children,
+    },
+    ref,
+  ) => {
+    const ctx = useRealityContext()
+    const entity = useEntity({
+      id,
+      position,
+      rotation,
+      scale,
+      onSpatialTap,
+      createEntity: async () => {
+        const ent = await ctx!.session.createEntity()
+        const boxGeometry = await ctx!.session.createBoxGeometry({
+          width,
+          height,
+          depth,
+          cornerRadius,
+        })
+        const materialList: SpatialMaterial[] = await Promise.all(
+          materials
+            ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
+            .filter(Boolean) ?? [],
+        )
+        const modelComponent = await ctx!.session.createModelComponent({
+          mesh: boxGeometry,
+          materials: materialList,
+        })
+        await ent.addComponent(modelComponent)
+        return ent
+      },
+    })
 
-  useEffect(() => {
-    let cancelled = false
-    if (!ctx) return
-    const { reality } = ctx
-    const init = async () => {
-      // createBoxGeometry + createModelComponent
-      const ent = await ctx.session.createEntity()
+    useEntityRef(ref, entity)
 
-      // work start
-
-      const boxGeometry = await ctx.session.createBoxGeometry({
-        width,
-        height,
-        depth,
-        cornerRadius,
-      })
-
-      const materialList = await Promise.all(
-        materials
-          ?.map(id => ctx.resourceRegistry.get<SpatialMaterial>(id))
-          .filter(Boolean) ?? [],
-      )
-      const modelComponent = await ctx.session.createModelComponent({
-        mesh: boxGeometry,
-        materials: materialList,
-      })
-      await ent.addComponent(modelComponent)
-      if (cancelled) {
-        ent.destroy()
-        return
-      }
-      // work end
-
-      if (parent) {
-        await parent.addEntity(ent)
-      } else {
-        await reality.addEntity(ent)
-      }
-      setEntity(ent)
-    }
-
-    init()
-
-    return () => {
-      cancelled = true
-      entity?.destroy()
-    }
-  }, [ctx, parent])
-
-  useEntityId({ id, entity })
-
-  useEntityTransform(entity, { position, rotation, scale })
-
-  if (!entity) return null
-
-  return (
-    <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
-  )
-}
+    if (!entity) return null
+    return (
+      <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
+    )
+  },
+)

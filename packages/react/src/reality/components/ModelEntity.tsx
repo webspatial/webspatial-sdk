@@ -1,79 +1,36 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  SpatialEntity,
-  SpatialMaterial,
-  SpatialModelAsset,
-  SpatialObject,
-} from '@webspatial/core-sdk'
-import { ParentContext, useParentContext, useRealityContext } from '../context'
-import { EntityEventHandler, EntityProps } from '../type'
-import { useEntityEvent, useEntityId, useEntityTransform } from '../hooks'
-type Props = {
-  children?: React.ReactNode
-} & EntityProps & {
-    model: string // name
-  } & EntityEventHandler
+import React, { forwardRef } from 'react'
+import { ParentContext, useRealityContext } from '../context'
+import { EntityProps, EntityEventHandler } from '../type'
+import { EntityRef, useEntity, useEntityRef } from '../hooks'
 
-export const ModelEntity: React.FC<Props> = ({
-  id,
-  children,
-  model,
-  position,
-  rotation,
-  scale,
-  onSpatialTap,
-}) => {
-  const ctx = useRealityContext()
-  const parent = useParentContext()
-  const [entity, setEntity] = useState<SpatialEntity | null>(null)
+type Props = EntityProps & { model: string } & EntityEventHandler & {
+    children?: React.ReactNode
+  }
 
-  useEntityEvent({ entity, onSpatialTap })
+export const ModelEntity = forwardRef<EntityRef, Props>(
+  ({ id, model, position, rotation, scale, onSpatialTap, children }, ref) => {
+    const ctx = useRealityContext()
+    const entity = useEntity({
+      id,
+      position,
+      rotation,
+      scale,
+      onSpatialTap,
+      createEntity: async () => {
+        const modelAsset = await ctx!.resourceRegistry.get(model)
+        if (!modelAsset)
+          throw new Error(`ModelEntity: model not found ${model}`)
+        return ctx!.session.createSpatialModelEntity({
+          modelAssetId: modelAsset.id,
+        })
+      },
+    })
 
-  useEffect(() => {
-    let cancelled = false
-    if (!ctx) return
-    const { reality } = ctx
-    const init = async () => {
-      // work start
+    useEntityRef(ref, entity)
 
-      const modelAsset =
-        await ctx.resourceRegistry.get<SpatialModelAsset>(model)
-      if (!modelAsset) {
-        console.error('ModelEntity: model not found', model)
-        return
-      }
-      const ent = await ctx.session.createSpatialModelEntity({
-        modelAssetId: modelAsset.id,
-      })
-      if (cancelled) {
-        ent.destroy()
-        return
-      }
-      // work end
-
-      if (parent) {
-        await parent.addEntity(ent)
-      } else {
-        await reality.addEntity(ent)
-      }
-      setEntity(ent)
-    }
-
-    init()
-
-    return () => {
-      cancelled = true
-      entity?.destroy()
-    }
-  }, [ctx, parent])
-
-  useEntityId({ id, entity })
-
-  useEntityTransform(entity, { position, rotation, scale })
-
-  if (!entity) return null
-
-  return (
-    <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
-  )
-}
+    if (!entity) return null
+    return (
+      <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
+    )
+  },
+)
