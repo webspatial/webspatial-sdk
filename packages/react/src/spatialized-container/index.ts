@@ -13,6 +13,7 @@ export {
   type SpatialRotateStartEvent,
   type SpatialRotateEvent,
   type SpatialRotateEndEvent,
+  type SpatialMagnifyStartEvent,
   type SpatialMagnifyEvent,
   type SpatialMagnifyEndEvent,
   type SpatializedStatic3DContainerProps,
