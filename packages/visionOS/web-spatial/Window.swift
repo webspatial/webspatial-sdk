@@ -8,6 +8,7 @@ class SceneDelegate: NSObject, ObservableObject, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
         window = windowScene.keyWindow // << store !!!
+        window?.overrideUserInterfaceStyle = .light
     }
 
     // do memory cleanup after scene removed, otherwise windowContainer cannot destroy content after being dismissed
