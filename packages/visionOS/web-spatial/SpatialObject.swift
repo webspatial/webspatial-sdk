@@ -104,5 +104,5 @@ class SpatialObject: SpatialObjectProtocol {
         listeners = [:]
     }
 
-    func onDestroy() {}
+    internal func onDestroy() {}
 }
