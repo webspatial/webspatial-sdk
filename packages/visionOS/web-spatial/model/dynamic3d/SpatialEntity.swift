@@ -3,7 +3,6 @@ import RealityKit
 
 @Observable
 class SpatialEntity: Entity, SpatialObjectProtocol {
-    
     let spatialId: String
     
     private var _isDestroyed: Bool = false
@@ -64,23 +63,23 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
     
-    public func addComponent(_ comp: SpatialComponent) {
+    func addComponent(_ comp: SpatialComponent) {
         spatialComponents[comp.type] = comp
-        components.set(comp.resource!)
+        comp.addToEntity(entity: self)
     }
     
-    public func removeComponent(_ comp: SpatialComponent) {
+    func removeComponent(_ comp: SpatialComponent) {
         if spatialComponents[comp.type] != nil {
+            comp.removeFromEntity(entity: self)
             spatialComponents.removeValue(forKey: comp.type)
-            components.remove(type(of: comp.resource!))
         }
     }
     
-    public func updateTransform(_ matrix:[String:Float]){
+    func updateTransform(_ matrix:[String:Float]){
         transform.matrix = float4x4([matrix["0"]!, matrix["1"]!, matrix["2"]!, matrix["3"]!], [matrix["4"]!, matrix["5"]!, matrix["6"]!, matrix["7"]!], [matrix["8"]!, matrix["9"]!, matrix["10"]!, matrix["11"]!], [matrix["12"]!, matrix["13"]!, matrix["14"]!, matrix["15"]!])
     }
     
-    public func updateGesture(_ type:String, _ isEable:Bool){
+    func updateGesture(_ type:String, _ isEable:Bool){
         switch SpatialEntityGestureType(rawValue: type){
         case .Tap:
             _enableTap = isEable
@@ -108,7 +107,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
     
-    public func setRotation(_ rotation: simd_quatd) {
+    func setRotation(_ rotation: simd_quatd) {
         self.rotation = rotation
         self.transform.rotation = simd_quatf(ix: Float(rotation.imag.x), iy: Float(rotation.imag.y), iz: Float(rotation.imag.z), r: Float(rotation.real))
     }
@@ -150,7 +149,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         SpatialObject.objects.removeValue(forKey: spatialId)
     }
     
-    func onDestroy() {
+    internal func onDestroy() {
         if(parent != nil){
             removeFromParent()
         }

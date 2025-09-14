@@ -5,14 +5,39 @@ import RealityKit
 class SpatialComponent: SpatialObject {
     let type: SpatialComponentType
     
+    
     internal var _resource:Component? = nil
     var resource:Component? {
         _resource
     }
     
+    internal var _entity:SpatialEntity? = nil
+    var entity:SpatialEntity? {
+        _entity
+    }
+    
     init(_ _type:SpatialComponentType){
         type = _type
         super.init()
+    }
+    
+    func addToEntity(entity:SpatialEntity){
+        if _entity != nil {
+            print("This component has already been added to another entity")
+            return
+        }
+        if let component = resource{
+            _entity = entity
+            entity.components.set(component)
+        }
+    }
+    
+    func removeFromEntity(entity:SpatialEntity){
+        if let component = resource,
+           self.entity == entity{
+            entity.components.remove(Swift.type(of: component))
+            _entity = nil
+        }
     }
 }
 
@@ -27,7 +52,7 @@ class SpatialModelComponent: SpatialComponent {
         _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
     }
     
-    override func onDestroy() {
+    override internal func onDestroy() {
         _resource = nil
     }
 }
