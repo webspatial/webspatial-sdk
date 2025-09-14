@@ -82,7 +82,7 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Callback function for successful model loading.
    */
   private _onLoadCallback?: () => void
-  
+
   /**
    * Sets the callback function for successful model loading.
    * @param callback Function to call when the model is loaded successfully
@@ -95,12 +95,17 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Callback function for model loading failure.
    */
   private _onLoadFailureCallback?: undefined | (() => void)
-  
+
   /**
    * Sets the callback function for model loading failure.
    * @param callback Function to call when the model fails to load
    */
   set onLoadFailureCallback(callback: undefined | (() => void)) {
     this._onLoadFailureCallback = callback
+  }
+
+  updateModelTransform(transform: DOMMatrix) {
+    const modelTransform = Array.from(transform.toFloat64Array())
+    this.updateProperties({ modelTransform })
   }
 }

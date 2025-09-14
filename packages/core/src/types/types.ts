@@ -86,6 +86,7 @@ export interface Spatialized2DElementProperties
 export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
+  modelTransform?: number[]
 }
 
 export interface SpatialSceneCreationOptions {

@@ -17,10 +17,7 @@ const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const { 'enable-xr': enableXR, ...restProps } = props
-  console.log('ModelBase', enableXR, restProps, props)
   if (!enableXR || !spatial.runInSpatialWeb()) {
-    console.log('ModelBase hit here')
-
     const {
       onSpatialTap,
       onSpatialDragStart,

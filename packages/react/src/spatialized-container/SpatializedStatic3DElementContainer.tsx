@@ -118,21 +118,54 @@ function SpatializedStatic3DElementContainerBase(
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
   const extraRefProps = useCallback(
-    (domProxy: SpatializedStatic3DElementRef) => ({
-      currentSrc: () => getAbsoluteURL(props.src),
-      ready: () => {
+    (domProxy: SpatializedStatic3DElementRef) => {
+      const modelTransform = new DOMMatrix()
+      let needupdate = false
+      const triggerUpdate = () => {
         const spatializedElement = (domProxy as any)
           .__spatializedElement as SpatializedStatic3DElement
-
-        const promise = spatializedElement.ready.then((success: boolean) => {
-          if (success) {
-            return createLoadSuccessEvent(() => domProxy)
+        spatializedElement.updateModelTransform(modelTransform)
+        needupdate = false
+      }
+      const domMatrixProxy = new Proxy(modelTransform, {
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop, receiver)
+          if (typeof value === 'function') {
+            return function (...args: any[]) {
+              requestAnimationFrame(triggerUpdate)
+              return value.apply(target, args)
+            }
+          } else {
+            return value
           }
-          throw createLoadFailureEvent(() => domProxy)
-        })
-        return promise
-      },
-    }),
+        },
+        set(target, prop, value) {
+          const success = Reflect.set(target, prop, value)
+          if (!needupdate) {
+            needupdate = true
+            requestAnimationFrame(triggerUpdate)
+          }
+          return success
+        },
+      })
+
+      return {
+        currentSrc: () => getAbsoluteURL(props.src),
+        ready: () => {
+          const spatializedElement = (domProxy as any)
+            .__spatializedElement as SpatializedStatic3DElement
+
+          const promise = spatializedElement.ready.then((success: boolean) => {
+            if (success) {
+              return createLoadSuccessEvent(() => domProxy)
+            }
+            throw createLoadFailureEvent(() => domProxy)
+          })
+          return promise
+        },
+        entityTransform: () => domMatrixProxy,
+      }
+    },
     [],
   )
 

@@ -26,6 +26,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
     const self = this
 
     if (dom) {
+      let cacheExtraRefProps: Record<string, () => any> | undefined
       const domProxy = new Proxy<SpatializedElementRef<T>>(
         dom as SpatializedElementRef<T>,
         {
@@ -148,7 +149,10 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             }
 
             if (typeof prop === 'string' && self.extraRefProps) {
-              const extraProps = self.extraRefProps(domProxy)
+              if (!cacheExtraRefProps) {
+                cacheExtraRefProps = self.extraRefProps(domProxy)
+              }
+              const extraProps = cacheExtraRefProps
               if (extraProps.hasOwnProperty(prop)) {
                 return extraProps[prop]()
               }

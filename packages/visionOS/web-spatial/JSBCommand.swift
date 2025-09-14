@@ -222,6 +222,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let enableTapGesture: Bool?
 
     let modelURL: String?
+    let modelTransform: [Double]?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
