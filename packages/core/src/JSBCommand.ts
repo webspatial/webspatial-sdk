@@ -20,6 +20,7 @@ import {
   ModelAssetOptions,
   SpatialModelEntityCreationOptions,
 } from './types/types'
+import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
 
 const platform = createPlatform()
@@ -475,7 +476,7 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
 
   constructor(
     private url: string,
-    private config: SpatialSceneCreationOptions | undefined,
+    private config: SpatialSceneCreationOptionsInternal | undefined,
     public target?: string,
     public features?: string,
   ) {

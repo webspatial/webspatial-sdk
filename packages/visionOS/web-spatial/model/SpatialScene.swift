@@ -34,9 +34,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    enum WindowStyle: String, Codable, CaseIterable {
-        case plain = "Plain"
-        case volume = "Volume"
+    public enum WindowStyle: String, Codable, CaseIterable {
+        case window    = "window"
+        case volume    = "volume"
     }
 
     // TOPIC begin
@@ -46,7 +46,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle: WindowStyle = .plain
+    var windowStyle: WindowStyle {
+        didSet {
+            resetBackgroundMaterialOnWindowStyleChange(windowStyle)
+        }
+    }
+    
+    private func resetBackgroundMaterialOnWindowStyleChange(_ windowStyle:WindowStyle) {
+        if windowStyle == .volume {
+            self.backgroundMaterial = .Transparent
+        } else {
+            self.backgroundMaterial = .None
+        }
+    }
+    
 
     enum SceneStateKind: String {
         // default value
@@ -67,11 +80,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var spatialWebViewModel: SpatialWebViewModel
 
-    init(_ url: String, _ windowStyle: WindowStyle, _ state: SceneStateKind, _ sceneOptions: XPlainSceneOptions?) {
+    init(
+        _ url: String,
+        _ windowStyle: WindowStyle,
+        _ state: SceneStateKind,
+        _ sceneOptions: SceneOptions?
+    ) {
         self.windowStyle = windowStyle
         self.url = url
         spatialWebViewModel = SpatialWebViewModel(url: url)
         super.init()
+        resetBackgroundMaterialOnWindowStyleChange(windowStyle)
 
         setupSpatialWebView()
 
@@ -124,7 +143,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 // no scene config, need to create pending SpatialScene
                 let newScene = SpatialApp.Instance.createScene(
                     decodedUrl,
-                    .plain,
+                    .window,
                     .pending,
                     nil
                 )
@@ -135,15 +154,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 )
             } else {
                 do {
-                    let config: XSceneOptionsJSB = try decoder.decode(XSceneOptionsJSB.self, from: configData)
-
+                    let config: XSceneOptionsJSB  = try decoder.decode(XSceneOptionsJSB.self, from: configData)
+                    
+                    let sceneType = config.type ?? .window
+                    
                     let newScene = SpatialApp.Instance.createScene(
                         decodedUrl,
-                        .plain,
+                        sceneType,
                         .willVisible,
-                        XPlainSceneOptions(config)
+                        SceneOptions(config)
                     )
-
+                    
+                    
                     return WebViewElementInfo(
                         id: newScene.id,
                         element: newScene.spatialWebViewModel
@@ -164,12 +186,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         print("window.close")
         SpatialApp.Instance.closeWindowGroup(self)
     }
+    
+    public var sceneConfig: SceneOptions?
 
-    func moveToState(_ newState: SceneStateKind, _ sceneConfig: XPlainSceneOptions?) {
-        print(" moveToState \(state) to \(newState) ")
+    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+        print(" moveToState \(self.state) to \(newState) ")
 
         let oldState = state
         state = newState
+        
+        if sceneConfig != nil {
+            self.sceneConfig = sceneConfig
+        }
 
         if oldState == .idle, newState == .pending {
             SpatialApp.Instance.openLoadingUI(self, true)
@@ -177,23 +205,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             SpatialApp.Instance.openLoadingUI(self, false)
             // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                SpatialApp.Instance.openWindowGroup(self, sceneConfig!) {
-                    [weak self] in
-                    self?.moveToState(.visible, nil)
-                }
+                SpatialApp.Instance
+                    .openWindowGroup(self, sceneConfig!)
             }
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-
-        } else if oldState == .idle, newState == .willVisible {
+        } else if oldState == .idle &&  newState == .willVisible {
             // window.open with scene config
-            SpatialApp.Instance.openWindowGroup(self, sceneConfig!) {
-                [weak self] in
-                self?.moveToState(.visible, nil)
-            }
+            SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
     }
+
 
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(GetSpatialSceneStateCommand.self, onGetSpatialSceneState)
@@ -240,6 +263,30 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
     }
+    
+    
+    var width: Double = 0
+    
+    var height: Double = 0
+    
+    var depth: Double = 0
+    
+    static let navHeight = 60.0
+    
+    
+    func updateSize3D(_ size:Size3D) {
+        self.width = size.width
+        self.height = size.height
+        self.depth = size.depth
+        
+        // write through
+        spatialWebViewModel.updateWindowKV([
+            "innerDepth":depth,
+            "outerDepth":depth,
+            "outerHeight":height + SpatialScene.navHeight
+        ])
+    }
+    
 
     private func setupWebViewStateListner() {
         spatialWebViewModel.addStateListener(.didUnload) {
@@ -249,6 +296,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didStartLoad) {
             self.backgroundMaterial = .None
+        }
+        
+        spatialWebViewModel.addStateListener(.didReceive) {
         }
 
         spatialWebViewModel.addScrollUpdateListener { _, point in
@@ -384,10 +434,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         print("onUpdateSceneConfig \(command.config)")
 
         // find scene
-        let sceneConfig = XPlainSceneOptions(sceneConfigJSBData)
+        let sceneConfig = SceneOptions(sceneConfigJSBData)
 
-        moveToState(.willVisible, sceneConfig)
-
+        // update sceneType
+        self.windowStyle = sceneConfigJSBData.type!
+        
+        self.moveToState(.willVisible, sceneConfig)
+        
         resolve(.success(baseReplyData))
     }
 
@@ -623,7 +676,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         set(newValue) {
             _backgroundMaterial = newValue
-            spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
+            if windowStyle == .volume {
+                // default background for volume scene is transparent
+                spatialWebViewModel
+                    .setBackgroundTransparent(
+                        _backgroundMaterial == .None || _backgroundMaterial
+                        == .Transparent)
+            } else {
+                spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
+            }
         }
     }
 

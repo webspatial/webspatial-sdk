@@ -56,6 +56,7 @@ export class SpatialSession {
     return createSpatializedStatic3DElement(modelURL)
   }
 
+  initScene = initScene
   createSpatializedDynamic3DElement(): Promise<SpatializedDynamic3DElement> {
     return createSpatializedDynamic3DElement()
   }
@@ -97,12 +98,5 @@ export class SpatialSession {
 
   createSpatialModelEntity(options: SpatialModelEntityCreationOptions) {
     return createSpatialModelEntity(options)
-  }
-
-  initScene(
-    name: string,
-    callback: (pre: SpatialSceneCreationOptions) => SpatialSceneCreationOptions,
-  ) {
-    return initScene(name, callback)
   }
 }

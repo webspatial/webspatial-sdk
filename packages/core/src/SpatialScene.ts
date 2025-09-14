@@ -2,6 +2,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
 } from './types/types'
+import { SpatialSceneCreationOptionsInternal } from "./types/internal"
 import {
   AddSpatializedElementToSpatialScene,
   GetSpatialSceneState,
@@ -31,7 +32,7 @@ export class SpatialScene extends SpatialObject {
     return new AddSpatializedElementToSpatialScene(element).execute()
   }
 
-  async updateSceneCreationConfig(config: SpatialSceneCreationOptions) {
+  async updateSceneCreationConfig(config: SpatialSceneCreationOptionsInternal) {
     return new UpdateSceneConfig(config).execute()
   }
 
