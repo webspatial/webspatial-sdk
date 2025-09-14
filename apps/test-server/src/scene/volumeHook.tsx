@@ -1,23 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { initScene } from '@webspatial/react-sdk'
+
+window.xrCurrentSceneType = 'volume'
 window.xrCurrentSceneDefaults = async () => {
   return {
-    type: 'volume',
     defaultSize: {
-      width: 1,
+      width: 2,
       height: 1,
       depth: 1,
     },
     resizability: {
       minWidth: 0.5,
-      maxWidth: 1.5,
+      maxWidth: 2,
       minHeight: 0.5,
-      maxHeight: 1.5,
+      maxHeight: 1,
     },
-    worldScaling: 'automatic',
-    worldAlignment: 'automatic',
-    automatic: 'automatic',
+    // worldScaling: 'automatic',
+    // worldAlignment: 'automatic',
+    // automatic: 'automatic',
   }
 }
 
@@ -29,12 +30,20 @@ const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 function App() {
   const [logs, setLogs] = useState('')
 
-  useEffect(() => {
+  function logDepth() {
     //@ts-ignore
-    log('windowID:', window._webSpatialID)
+    log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+    //@ts-ignore
+    log('outerHeight:' + window.outerHeight)
+  }
+
+  useEffect(() => {
+    logDepth()
     window.onerror = (error: any) => {
       log('error:', error.message)
     }
+
+    window.onresize = logDepth
 
     return () => {
       window.onerror = null

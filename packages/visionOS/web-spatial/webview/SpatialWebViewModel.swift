@@ -258,6 +258,21 @@ class SpatialWebViewModel: SpatialObject {
             controller?.callJS("window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
+    
+    func updateWindowKV(_ dict: [String: Any]) {
+        var js = ""
+        for (key, value) in dict {
+            if let num = value as? Double {
+                js += "window.\(key)=\(num);"
+            } else if let str = value as? String {
+                js += "window.\(key)='\(str)';"
+            } else if let bool = value as? Bool {
+                js += "window.\(key)=\(bool ? "true" : "false");"
+            }
+        }
+        controller?.callJS(js)
+    }
+
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)

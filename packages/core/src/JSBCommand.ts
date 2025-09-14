@@ -1,5 +1,8 @@
 import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
+import { SpatialComponent } from './reality/component/SpatialComponent'
+import { SpatialEntity } from './reality/entity/SpatialEntity'
+import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
 
@@ -9,7 +12,16 @@ import {
   SpatializedStatic3DElementProperties,
   SpatialSceneProperties,
   SpatialSceneCreationOptions,
+  SpatialUnlitMaterialOptions,
+  SpatialGeometryOptions,
+  SpatialGeometryType,
+  ModelComponentOptions,
+  SpatialEntityProperties,
+  ModelAssetOptions,
+  SpatialModelEntityCreationOptions,
 } from './types/types'
+import { SpatialSceneCreationOptionsInternal } from './types/internal'
+import { composeSRT } from './utils'
 
 const platform = createPlatform()
 
@@ -21,6 +33,29 @@ abstract class JSBCommand {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
     return platform.callJSB(this.commandType, msg)
+  }
+}
+
+export class UpdateEntityPropertiesCommand extends JSBCommand {
+  commandType = 'UpdateEntityProperties'
+
+  constructor(
+    public entity: SpatialEntity,
+    public properties: Partial<SpatialEntityProperties>,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    const transform = composeSRT(
+      this.properties.position ?? this.entity.position,
+      this.properties.rotation ?? this.entity.rotation,
+      this.properties.scale ?? this.entity.scale,
+    ).toFloat64Array()
+    return {
+      entityId: this.entity.id,
+      transform,
+    }
   }
 }
 
@@ -96,6 +131,40 @@ export class UpdateSpatialized2DElementProperties extends SpatializedElementComm
   constructor(
     spatialObject: SpatialObject,
     properties: Partial<SpatializedElementProperties>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
+export class UpdateSpatializedDynamic3DElementProperties extends SpatializedElementCommand {
+  properties: Partial<Spatialized2DElementProperties>
+  commandType = 'UpdateSpatializedDynamic3DElementProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatializedElementProperties>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
+export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
+  properties: Partial<SpatialUnlitMaterialOptions>
+  commandType = 'UpdateUnlitMaterialProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatialUnlitMaterialOptions>,
   ) {
     super(spatialObject)
     this.properties = properties
@@ -183,6 +252,151 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   }
 }
 
+export class CreateSpatializedDynamic3DElementCommand extends JSBCommand {
+  protected getParams(): Record<string, any> | undefined {
+    return { test: true }
+  }
+  commandType = 'CreateSpatializedDynamic3DElement'
+}
+
+export class CreateSpatialEntityCommand extends JSBCommand {
+  constructor(private name?: string) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return { name: this.name }
+  }
+  commandType = 'CreateSpatialEntity'
+}
+
+export class CreateModelComponentCommand extends JSBCommand {
+  constructor(private options: ModelComponentOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    let geometryId = this.options.mesh.id
+    let materialIds = this.options.materials.map(material => material.id)
+    return { geometryId, materialIds }
+  }
+  commandType = 'CreateModelComponent'
+}
+
+export class CreateSpatialModelEntityCommand extends JSBCommand {
+  constructor(private options: SpatialModelEntityCreationOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreateSpatialModelEntity'
+}
+
+export class CreateModelAssetCommand extends JSBCommand {
+  constructor(private options: ModelAssetOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return { url: this.options.url }
+  }
+  commandType = 'CreateModelAsset'
+}
+
+export class CreateSpatialGeometryCommand extends JSBCommand {
+  constructor(
+    private type: SpatialGeometryType,
+    private options: SpatialGeometryOptions = {},
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return { type: this.type, ...this.options }
+  }
+  commandType = 'CreateGeometry'
+}
+
+export class CreateSpatialUnlitMaterialCommand extends JSBCommand {
+  constructor(private options: SpatialUnlitMaterialOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreateUnlitMaterial'
+}
+
+export class AddComponentToEntityCommand extends JSBCommand {
+  constructor(
+    public entity: SpatialEntity,
+    public comp: SpatialComponent,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entity.id,
+      componentId: this.comp.id,
+    }
+  }
+  commandType = 'AddComponentToEntity'
+}
+
+export class AddEntityToDynamic3DCommand extends JSBCommand {
+  constructor(
+    public d3dEle: SpatializedDynamic3DElement,
+    public entity: SpatialEntity,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entity.id,
+      dynamic3dId: this.d3dEle.id,
+    }
+  }
+
+  commandType = 'AddEntityToDynamic3D'
+}
+
+export class AddEntityToEntityCommand extends JSBCommand {
+  constructor(
+    public parent: SpatialEntity,
+    public child: SpatialEntity,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      parentId: this.parent.id,
+      childId: this.child.id,
+    }
+  }
+  commandType = 'AddEntityToEntity'
+}
+
+export class RemoveEntityFromParentCommand extends JSBCommand {
+  constructor(public entity: SpatialEntity) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entity.id,
+    }
+  }
+  commandType = 'RemoveEntityFromParent'
+}
+
+export class CreateTextureResourceCommand extends JSBCommand {
+  constructor(private url: string) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      url: this.url,
+    }
+  }
+  commandType = 'CreateTextureResource'
+}
+
 export class InspectCommand extends JSBCommand {
   commandType = 'Inspect'
 
@@ -262,7 +476,7 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
 
   constructor(
     private url: string,
-    private config: SpatialSceneCreationOptions | undefined,
+    private config: SpatialSceneCreationOptionsInternal | undefined,
     public target?: string,
     public features?: string,
   ) {
