@@ -2,6 +2,7 @@ declare global {
   declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
   interface Window {
+    xrCurrentSceneType: SpatialSceneType
     xrCurrentSceneDefaults: (
       defaultConfig: SpatialSceneCreationOptions,
     ) => Promise<SpatialSceneCreationOptions>
@@ -27,6 +28,9 @@ declare global {
       'react-sdk-version'?: string
       'core-sdk-version'?: string
     }
+
+    innerDepth: number
+    outerDepth: number
   }
 }
 
