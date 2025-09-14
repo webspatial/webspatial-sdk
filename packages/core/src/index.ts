@@ -8,6 +8,7 @@ export { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 export { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 export * from './reality'
 export * from './types/types'
+export * from './types/global.d'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'
