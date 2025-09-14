@@ -12,7 +12,7 @@ class SpatialTextureResource:SpatialObject {
         super.init()
     }
     
-    override func onDestroy() {
+    override internal func onDestroy() {
         _resource = nil
     }
 }

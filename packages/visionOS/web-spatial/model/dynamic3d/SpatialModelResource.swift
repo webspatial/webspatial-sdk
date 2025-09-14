@@ -30,7 +30,7 @@ class SpatialModelResource:SpatialObject {
         }
     }
     
-    override func onDestroy() {
+    override internal func onDestroy() {
         _resource = nil
     }
 }
