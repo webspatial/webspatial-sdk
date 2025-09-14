@@ -158,6 +158,10 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
         spatialChildren = [:]
     }
+    
+    deinit {
+        SpatialObjectWeakRefManager.removeWeakRef(spatialId)
+    }
 }
 
 enum SpatialEntityGestureType: String{

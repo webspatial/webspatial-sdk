@@ -2,7 +2,7 @@ import SwiftUI
 @preconcurrency import WebKit
 
 @Observable
-class SpatialWebViewModel: SpatialObject {
+class SpatialWebViewModel {
     var url = ""
     private(set) var title: String?
     private var view: SpatialWebView?
@@ -28,7 +28,6 @@ class SpatialWebViewModel: SpatialObject {
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
-        super.init()
         controller = SpatialWebController()
         self.url = url ?? ""
         controller!.model = self
@@ -68,7 +67,7 @@ class SpatialWebViewModel: SpatialObject {
 
     func getView() -> SpatialWebView {
         if view == nil {
-            print("get spatial webview", id)
+//            print("get spatial webview", id)
             view = SpatialWebView()
             view!.model = self
             view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -243,7 +242,7 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    override func onDestroy() {
+    func destroy() {
         removeAllListener()
         view?.destroy()
         controller?.destroy()

@@ -2,11 +2,7 @@ import Foundation
 
 protocol SpatialObjectProtocol: Encodable, Equatable, EventEmitterProtocol {
     var spatialId: String { get }
-    var name: String { get set }
-    var isDestroyed: Bool { get }
-    
     func destroy()
-    func onDestroy()
 }
 
 class WeakReference<T: AnyObject> {
