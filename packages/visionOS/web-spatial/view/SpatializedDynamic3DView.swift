@@ -17,7 +17,7 @@ struct SpatializedDynamic3DView: View {
             .onEnded{ value in
                 if let entity = value.entity as? SpatialEntity{
                     if entity.enableTap == true {
-                        spatialScene.sendWebMsg(entity.spatialId, EntityTapEvent(location3D: value.location3D))
+                        spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
                     }
                 }
         }
@@ -98,13 +98,4 @@ struct SpatializedDynamic3DView: View {
         .simultaneousGesture(dragEvent)
         .simultaneousGesture(magnifyEvent)
     }
-}
-
-protocol EntityEventProtocol: Encodable {
-    var type:String { get }
-}
-
-struct EntityTapEvent: EntityEventProtocol {
-    var type: String = "tap"
-    var location3D: Point3D
 }
