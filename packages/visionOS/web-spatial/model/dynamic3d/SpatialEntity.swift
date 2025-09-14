@@ -96,9 +96,15 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         
         if !(_enableTap || _enableRotate || _enableDrag || _enableScale){
             components.remove(CollisionComponent.self)
+            components.remove(InputTargetComponent.self)
         }
-        else if !components.has(CollisionComponent.self){
-            generateCollisionShapes(recursive: true)
+        else {
+            if !components.has(CollisionComponent.self){
+                generateCollisionShapes(recursive: true)
+            }
+            if !components.has(InputTargetComponent.self){
+                components.set(InputTargetComponent())
+            }
         }
     }
     
