@@ -1,3 +1,7 @@
+import {
+  ConvertFromEntityToEntityCommand,
+  ConvertFromEntityToSceneCommand,
+} from './../../JSBCommand'
 import { SpatialEntityEventType, Vec3 } from '../../types/types'
 import {
   AddComponentToEntityCommand,
@@ -48,10 +52,7 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
 
-  async addEvent(
-    type: SpatialEntityEventType,
-    callback: (data: any) => void,
-  ) {
+  async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {
     if (this.events[type]) {
       // replace if exist
       this.events[type] = callback
@@ -99,4 +100,19 @@ export class SpatialEntity extends SpatialObject {
   //   this.rotation = properties.rotation
   //   this.scale = properties.scale
   // }
+  async convertFromEntityToEntity(
+    fromEntityId: string,
+    toEntityId: string,
+    position: Vec3,
+  ) {
+    return new ConvertFromEntityToEntityCommand(
+      fromEntityId,
+      toEntityId,
+      position,
+    ).execute()
+  }
+
+  async convertFromEntityToScene(fromEntityId: string, position: Vec3) {
+    return new ConvertFromEntityToSceneCommand(fromEntityId, position).execute()
+  }
 }

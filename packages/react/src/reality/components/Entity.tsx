@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { ParentContext, useParentContext, useRealityContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
-import { useEntityEvent, useEntityTransform } from '../hooks'
+import { useEntityEvent, useEntityId, useEntityTransform } from '../hooks'
+import { ResourceRegistry } from '../utils'
 
 type Props = {
   children?: React.ReactNode
@@ -10,6 +11,7 @@ type Props = {
   EntityEventHandler
 
 export const Entity: React.FC<Props> = ({
+  id,
   children,
   position,
   rotation,
@@ -49,6 +51,8 @@ export const Entity: React.FC<Props> = ({
   }, [ctx, parent])
 
   useEntityTransform(entity, { position, rotation, scale })
+
+  useEntityId({ id, entity })
 
   if (!entity) return null
 

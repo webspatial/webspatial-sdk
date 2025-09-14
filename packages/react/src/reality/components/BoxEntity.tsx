@@ -6,7 +6,7 @@ import {
 } from '@webspatial/core-sdk'
 import { ParentContext, useParentContext, useRealityContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
-import { useEntityEvent, useEntityTransform } from '../hooks'
+import { useEntityEvent, useEntityId, useEntityTransform } from '../hooks'
 type Props = {
   children?: React.ReactNode
 } & EntityProps &
@@ -22,6 +22,7 @@ type BoxProps = {
 }
 
 export const BoxEntity: React.FC<Props> = ({
+  id,
   children,
   width = 0.2,
   height = 0.2,
@@ -87,6 +88,8 @@ export const BoxEntity: React.FC<Props> = ({
       entity?.destroy()
     }
   }, [ctx, parent])
+
+  useEntityId({ id, entity })
 
   useEntityTransform(entity, { position, rotation, scale })
 

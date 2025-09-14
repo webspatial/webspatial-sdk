@@ -20,6 +20,7 @@ import {
   ModelAssetOptions,
   SpatialModelEntityCreationOptions,
   SpatialEntityEventType,
+  Vec3,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
@@ -33,6 +34,11 @@ abstract class JSBCommand {
   async execute() {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
+    console.log(
+      '🚀 ~ JSBCommand ~ execute ~ this.commandType:',
+      this.commandType,
+      param,
+    )
     return platform.callJSB(this.commandType, msg)
   }
 }
@@ -404,6 +410,42 @@ export class RemoveEntityFromParentCommand extends JSBCommand {
     }
   }
   commandType = 'RemoveEntityFromParent'
+}
+
+export class ConvertFromEntityToEntityCommand extends JSBCommand {
+  constructor(
+    public fromEntityId: string,
+    public toEntityId: string,
+    public fromPosition: Vec3,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      fromEntityId: this.fromEntityId,
+      toEntityId: this.toEntityId,
+      position: this.fromPosition,
+    }
+  }
+  commandType = 'ConverFromEntityToEntity'
+}
+
+export class ConvertFromEntityToSceneCommand extends JSBCommand {
+  constructor(
+    public fromEntityId: string,
+    public position: Vec3,
+  ) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      fromEntityId: this.fromEntityId,
+      position: this.position,
+    }
+  }
+
+  commandType = 'ConverFromEntityToScene'
 }
 
 export class CreateTextureResourceCommand extends JSBCommand {
