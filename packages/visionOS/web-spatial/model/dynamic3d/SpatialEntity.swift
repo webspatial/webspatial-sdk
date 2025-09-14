@@ -170,8 +170,8 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
 }
 
 enum SpatialEntityGestureType: String{
-    case Tap = "tap"
-    case Rotate = "rotate"
-    case Drag = "drag"
-    case Scale = "scale"
+    case Tap = "spatialtap"
+    case Rotate = "spatialrotate"
+    case Drag = "spatialdrag"
+    case Scale = "spatialscale"
 }

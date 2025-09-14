@@ -85,7 +85,7 @@ export class SpatialEntity extends SpatialObject {
   }
   private onReceiveEvent = (data: any) => {
     console.log('SpatialEntityEvent', data)
-    const evt = new CustomEvent(data.type, { detail: data })
+    const evt = new CustomEvent(data.type, data)
     // filter event
     if (this.events[data.type]) {
       this.events[data.type](evt)
