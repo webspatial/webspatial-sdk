@@ -100,7 +100,7 @@ class SpatialApp {
 
 
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {
-        let scene = SpatialScene(url, style, state, sceneOptions)
+        var scene = SpatialScene(url, style, state, sceneOptions)
         scenes[scene.id] = scene
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
