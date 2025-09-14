@@ -38,10 +38,11 @@ struct SpatialSceneContentView: View {
                 let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
                 
                 ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedDynamic3DView()
-                    }
-                    .environment(child)
+//                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+//                        SpatializedDynamic3DView()
+//                    }
+//                    .environment(child)
+                    SpatializedDynamic3DView().environment(child)
                 }
             }
             .opacity(spatialScene.opacity)
@@ -71,8 +72,7 @@ struct PreviewSpatializedStatic3DElement: View {
         
         spatializedStatic3DElement.width = 200
         spatializedStatic3DElement.height = 100
-        spatializedStatic3DElement.enableGesture = true
-         
+ 
         spatializedStatic3DElement.modelURL = "http://localhost:5173/public/modelasset/cone.usdz"
         spatializedStatic3DElement.setParent(spatialScene)
         
@@ -84,7 +84,6 @@ struct PreviewSpatializedStatic3DElement: View {
         spatializedStatic3DElementB.transform.translation.z = 0
         spatializedStatic3DElementB.width = 200
         spatializedStatic3DElementB.height = 200
-        spatializedStatic3DElementB.enableGesture = false
         spatializedStatic3DElementB.name = "tom"
 
         spatializedStatic3DElementB.modelURL = "http://localhost:5173/public/modelasset/vehicle-speedster.usdz"
@@ -105,7 +104,6 @@ struct PreviewSpatializedStatic3DElement: View {
         spatializedElement.width = 200
         spatializedElement.height = 200
         spatializedElement.setParent(spatialScene)
-        spatializedElement.enableGesture = true
     }
     
     var body: some View {

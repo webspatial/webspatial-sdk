@@ -1,3 +1,5 @@
+import { Vec3 } from './types/types'
+
 function parseBorderRadius(borderProperty: string, width: number) {
   if (borderProperty === '') {
     return 0
@@ -32,4 +34,26 @@ export function parseCornerRadius(computedStyle: CSSStyleDeclaration) {
   }
 
   return cornerRadius
+}
+
+/**
+ *
+ * compose SRT matrix
+ * @export
+ * @param {Vec3} position meter
+ * @param {Vec3} rotation degree
+ * @param {Vec3} scale
+ * @return {*}  {DOMMatrix}
+ */
+export function composeSRT(position: Vec3, rotation: Vec3, scale: Vec3) {
+  const { x: px, y: py, z: pz } = position
+  const { x: rx, y: ry, z: rz } = rotation
+  const { x: sx, y: sy, z: sz } = scale
+
+  let m = new DOMMatrix()
+  m = m.scale(sx, sy, sz)
+  m = m.rotate(rx, ry, rz)
+  m = m.translate(px, py, pz)
+
+  return m
 }

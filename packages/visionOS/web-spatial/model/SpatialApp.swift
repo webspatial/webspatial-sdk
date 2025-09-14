@@ -110,7 +110,7 @@ class SpatialApp {
     }
     
     private func onSceneDestroyed(_ object: Any, _ data: Any) {
-        let spatialObject = object as! SpatialObject
+        var spatialObject = object as! SpatialObject
         spatialObject
             .off(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
         

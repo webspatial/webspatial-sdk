@@ -11,7 +11,6 @@ function CaseA() {
   return (
     <div
       enable-xr
-      enablegesture={true}
       data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
@@ -33,8 +32,8 @@ function CaseA() {
       </div>
 
       <button
-        onClick={(event: MouseEvent) => {
-          console.log('DDD onclick')
+        onClick={e => {
+          console.log('DDD onclick', e)
         }}
         style={{
           width: '200px',
@@ -64,8 +63,7 @@ function CaseB() {
   return (
     <div
       enable-xr
-      enablegesture={true}
-      debugName="parent spatial div"
+      data-name="parent spatial div"
       onClick={() => {
         console.log('parent spatial div clicked')
       }}
@@ -87,8 +85,7 @@ function CaseB() {
 
       <div
         enable-xr
-        enablegesture={true}
-        debugName="child spatial div"
+        data-name="child spatial div"
         style={{
           width: '800px',
           height: '200px',
@@ -136,8 +133,7 @@ function CaseC() {
   return (
     <div
       enable-xr
-      enablegesture={false}
-      debugName="parent spatial div"
+      data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
       }}
@@ -159,21 +155,20 @@ function CaseC() {
 
       <div
         enable-xr
-        enablegesture={false}
-        debugName="child spatial div"
+        data-name="child spatial div"
         style={{
           width: '800px',
           height: '200px',
           '--xr-back': 100,
           background: 'green',
         }}
-        onClick={(e: MouseEvent) => {
+        onClick={() => {
           console.log('child spatial div onclick')
         }}
       >
         this is sub child
         <div
-          onClick={e => {
+          onClick={() => {
             console.log('sub button onclick')
           }}
         >
@@ -209,7 +204,6 @@ function CaseD() {
   return (
     <div
       enable-xr
-      enablegesture={true}
       data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
@@ -235,7 +229,6 @@ function CaseD() {
           width: '800px',
           height: '200px',
         }}
-        enablegesture={false}
       >
         <source
           src={'http://localhost:5173/public/modelasset/cone.usdz'}
@@ -273,8 +266,7 @@ function CaseE() {
   return (
     <div
       enable-xr
-      enablegesture={true}
-      debugName="parent spatial div"
+      data-name="parent spatial div"
       onClick={() => {
         console.log('hi tom')
       }}
@@ -299,7 +291,6 @@ function CaseE() {
           width: '800px',
           height: '200px',
         }}
-        enablegesture={true}
       >
         <source
           src={'http://localhost:5173/public/modelasset/cone.usdz'}
@@ -327,44 +318,14 @@ function CaseE() {
 
 function App() {
   return (
-    <div
-      enable-xr
-      enablegesture={true}
-      debugName="parent spatial div"
-      onClick={() => {
-        console.log('hi tom')
-      }}
-      style={{
-        width: '800px',
-        height: '800px',
-        '--xr-back': 100,
-      }}
-    >
-      <div
-        style={{
-          width: '800px',
-          height: '200px',
-          '--xr-background-material': 'translucent',
-          // background: 'white',
-        }}
-      >
-        this is parent spatialdiv tom
-      </div>
-
-      <button
-        onClick={() => {
-          console.log('DDD onclick')
-        }}
-        style={{
-          width: '200px',
-          height: '200px',
-          background: 'blue',
-        }}
-      >
-        DDD
-      </button>
+    <div>
+      <CaseD />
+      <CaseE />
+      <CaseC />
+      <CaseB />
+      <CaseA />
     </div>
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<CaseD />)
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
