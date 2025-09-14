@@ -51,7 +51,6 @@
 		2B06AF302E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Dynamic3DManager.swift,
 				JSBManager.swift,
 				WKWebViewManager.swift,
 			);
@@ -60,13 +59,6 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				dynamic3d/Geometry.swift,
-				dynamic3d/SpatialComponent.swift,
-				dynamic3d/SpatialEntity.swift,
-				dynamic3d/SpatialMaterial.swift,
-				dynamic3d/SpatialModelEntity.swift,
-				dynamic3d/SpatialModelResource.swift,
-				dynamic3d/SpatialTextureResource.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
