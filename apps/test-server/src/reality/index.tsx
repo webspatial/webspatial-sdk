@@ -174,6 +174,8 @@ function App() {
               setTimeout(resolve, 2000)
             })
 
+            entity.updateEntityEvent('tap', true)
+
             entityRef.current = entity
           } catch (error) {
             console.log('🚀 ~ error:', error)
@@ -264,9 +266,18 @@ function App() {
                 materials={['matGreen']}
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
+                onTap={e => {
+                  console.log('tap box', e.detail.location3D)
+                }}
               ></BoxEntity>
             </Entity>
-            <ModelEntity model="model" rotation={boxRotation} />
+            <ModelEntity
+              model="model"
+              rotation={boxRotation}
+              onTap={e => {
+                console.log('tap model', e.detail.location3D)
+              }}
+            />
           </SceneGraph>
         </Reality>
       </div>

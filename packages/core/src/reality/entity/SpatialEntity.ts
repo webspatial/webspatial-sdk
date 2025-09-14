@@ -1,8 +1,9 @@
-import { Vec3 } from '../../types/types'
+import { SpatialEntityEventType, Vec3 } from '../../types/types'
 import {
   AddComponentToEntityCommand,
   AddEntityToEntityCommand,
   RemoveEntityFromParentCommand,
+  UpdateEntityEventCommand,
   UpdateEntityPropertiesCommand,
 } from '../../JSBCommand'
 import { SpatialObject } from '../../SpatialObject'
@@ -14,6 +15,8 @@ export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
   rotation: Vec3 = { x: 0, y: 0, z: 0 }
   scale: Vec3 = { x: 1, y: 1, z: 1 }
+
+  events: Record<string, (data: any) => void> = {}
   constructor(
     id: string,
     public name?: string,
@@ -44,8 +47,52 @@ export class SpatialEntity extends SpatialObject {
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
+
+  async addEvent(
+    type: SpatialEntityEventType,
+    callback: (data: any) => void,
+  ) {
+    if (this.events[type]) {
+      // replace if exist
+      this.events[type] = callback
+    } else {
+      try {
+        await this.updateEntityEvent(type, true)
+        this.events[type] = callback
+      } catch (error) {
+        console.error('addEvent failed', type)
+      }
+    }
+  }
+
+  async removeEvent(eventName: SpatialEntityEventType) {
+    if (this.events[eventName]) {
+      delete this.events[eventName]
+      try {
+        await this.updateEntityEvent(eventName, false)
+      } catch (error) {
+        console.error('removeEvent failed', eventName)
+      }
+    }
+  }
+
+  async updateEntityEvent(
+    eventName: SpatialEntityEventType,
+    isEnable: boolean,
+  ) {
+    return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
+  }
   private onReceiveEvent = (data: any) => {
     console.log('SpatialEntityEvent', data)
+    const evt = new CustomEvent(data.type, { detail: data })
+    // filter event
+    if (this.events[data.type]) {
+      this.events[data.type](evt)
+    }
+  }
+
+  protected onDestroy(): void {
+    SpatialWebEvent.removeEventReceiver(this.id)
   }
   // onUpdate(properties: SpatialEntityProperties) {
   //   this.position = properties.position

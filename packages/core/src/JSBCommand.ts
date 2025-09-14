@@ -19,6 +19,7 @@ import {
   SpatialEntityProperties,
   ModelAssetOptions,
   SpatialModelEntityCreationOptions,
+  SpatialEntityEventType,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
@@ -55,6 +56,26 @@ export class UpdateEntityPropertiesCommand extends JSBCommand {
     return {
       entityId: this.entity.id,
       transform,
+    }
+  }
+}
+
+export class UpdateEntityEventCommand extends JSBCommand {
+  commandType = 'UpdateEntityEvent'
+
+  constructor(
+    public entity: SpatialEntity,
+    public type: SpatialEntityEventType,
+    public isEnable: boolean,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      type: this.type,
+      entityId: this.entity.id,
+      isEnable: this.isEnable,
     }
   }
 }

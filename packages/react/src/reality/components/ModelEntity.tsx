@@ -6,13 +6,13 @@ import {
   SpatialObject,
 } from '@webspatial/core-sdk'
 import { ParentContext, useParentContext, useRealityContext } from '../context'
-import { EntityProps } from '../type'
-import { useEntityTransform } from '../hooks'
+import { EntityEventHandler, EntityProps } from '../type'
+import { useEntityEvent, useEntityTransform } from '../hooks'
 type Props = {
   children?: React.ReactNode
 } & EntityProps & {
     model: string // name
-  }
+  } & EntityEventHandler
 
 export const ModelEntity: React.FC<Props> = ({
   children,
@@ -20,10 +20,14 @@ export const ModelEntity: React.FC<Props> = ({
   position,
   rotation,
   scale,
+  onTap,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
   const [entity, setEntity] = useState<SpatialEntity | null>(null)
+
+  useEntityEvent({ entity, onTap })
+
   useEffect(() => {
     let cancelled = false
     if (!ctx) return
