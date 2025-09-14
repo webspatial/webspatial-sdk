@@ -27,34 +27,89 @@ import {
   TransformMsg,
 } from './WebMsgCommand'
 
+/**
+ * Abstract base class for all spatialized elements in the WebSpatial environment.
+ * Provides common functionality for elements that can exist in 3D space,
+ * including transformation handling and gesture event processing.
+ */
 export abstract class SpatializedElement extends SpatialObject {
+  /**
+   * Creates a new spatialized element with the specified ID.
+   * Registers the element to receive spatial events.
+   * @param id Unique identifier for this element
+   */
   constructor(public readonly id: string) {
     super(id)
 
     SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent.bind(this))
   }
+  
+  /**
+   * Updates the properties of this spatialized element.
+   * Must be implemented by derived classes to handle specific property updates.
+   * @param properties Partial set of properties to update
+   * @returns Promise resolving to the result of the update operation
+   */
   abstract updateProperties(
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
 
+  /**
+   * Updates the transformation matrix of this element in 3D space.
+   * This affects the position, rotation, and scale of the element.
+   * @param matrix The new transformation matrix
+   * @returns Promise resolving when the transform is updated
+   */
   async updateTransform(matrix: DOMMatrix) {
     return new UpdateSpatializedElementTransform(this, matrix).execute()
   }
 
+  /**
+   * Information about the element's bounding cube.
+   * Used for spatial calculations and hit testing.
+   */
   private _cubeInfo?: CubeInfo
+  
+  /**
+   * Gets the current cube information for this element.
+   * @returns The current CubeInfo or undefined if not set
+   */
   get cubeInfo() {
     return this._cubeInfo
   }
 
+  /**
+   * The current transformation matrix of this element.
+   */
   private _transform?: DOMMatrix
+  
+  /**
+   * The inverse of the current transformation matrix.
+   * Used for converting world coordinates to local coordinates.
+   */
   private _transformInv?: DOMMatrix
+  
+  /**
+   * Gets the current transformation matrix.
+   * @returns The current transformation matrix or undefined if not set
+   */
   get transform() {
     return this._transform
   }
+  
+  /**
+   * Gets the inverse of the current transformation matrix.
+   * @returns The inverse transformation matrix or undefined if not set
+   */
   get transformInv() {
     return this._transformInv
   }
 
+  /**
+   * Processes events received from the WebSpatial environment.
+   * Handles various spatial events like transforms, gestures, and interactions.
+   * @param data The event data received from the WebSpatial system
+   */
   protected onReceiveEvent(
     data:
       | CubeInfoMsg
@@ -67,9 +122,11 @@ export abstract class SpatializedElement extends SpatialObject {
   ) {
     const { type } = data
     if (type === SpatialWebMsgType.cubeInfo) {
+      // Handle cube info updates (bounding box information)
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
     } else if (type === SpatialWebMsgType.transform) {
+      // Handle transformation matrix updates
       this._transform = new DOMMatrix([
         data.detail.column0[0],
         data.detail.column0[1],
@@ -90,12 +147,14 @@ export abstract class SpatializedElement extends SpatialObject {
       ])
       this._transformInv = this._transform.inverse()
     } else if (type === SpatialWebMsgType.spatialtap) {
+      // Handle tap gestures
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialtap,
         (data as SpatialTapMsg).detail,
       )
       this._onSpatialTap?.(event)
     } else if (type === SpatialWebMsgType.spatialdrag) {
+      // Handle drag gestures, with special handling for drag start
       if (!this._isDragging) {
         const dragStartEvent = createSpatialEvent(
           SpatialWebMsgType.spatialdragstart,
@@ -258,6 +317,10 @@ export abstract class SpatializedElement extends SpatialObject {
     })
   }
 
+  /**
+   * Cleans up resources when this element is destroyed.
+   * Removes event receivers to prevent memory leaks.
+   */
   override onDestroy() {
     SpatialWebEvent.removeEventReceiver(this.id)
   }
