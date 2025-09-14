@@ -4,16 +4,16 @@ import { SpatialEntity } from '@webspatial/core-sdk'
 type Props = {
   entity: SpatialEntity | null
 } & EntityEventHandler
-export const useEntityEvent: React.FC<Props> = ({ entity, onTap }) => {
+export const useEntityEvent: React.FC<Props> = ({ entity, onSpatialTap }) => {
   useEffect(() => {
     if (!entity) return
-    if (onTap) {
-      entity.addEvent('tap', onTap)
+    if (onSpatialTap) {
+      entity.addEvent('spatialtap', onSpatialTap)
     }
     return () => {
-      entity.removeEvent('tap')
+      entity.removeEvent('spatialtap')
     }
-  }, [entity, onTap])
+  }, [entity, onSpatialTap])
 
   return null
 }

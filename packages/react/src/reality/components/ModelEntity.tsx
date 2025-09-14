@@ -20,13 +20,13 @@ export const ModelEntity: React.FC<Props> = ({
   position,
   rotation,
   scale,
-  onTap,
+  onSpatialTap,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
   const [entity, setEntity] = useState<SpatialEntity | null>(null)
 
-  useEntityEvent({ entity, onTap })
+  useEntityEvent({ entity, onSpatialTap })
 
   useEffect(() => {
     let cancelled = false

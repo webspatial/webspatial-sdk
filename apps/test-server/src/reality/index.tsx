@@ -174,7 +174,7 @@ function App() {
               setTimeout(resolve, 2000)
             })
 
-            entity.updateEntityEvent('tap', true)
+            entity.updateEntityEvent('spatialtap', true)
 
             entityRef.current = entity
           } catch (error) {
@@ -266,7 +266,7 @@ function App() {
                 materials={['matGreen']}
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
-                onTap={e => {
+                onSpatialTap={e => {
                   console.log('tap box', e.detail.location3D)
                 }}
               ></BoxEntity>
@@ -274,7 +274,7 @@ function App() {
             <ModelEntity
               model="model"
               rotation={boxRotation}
-              onTap={e => {
+              onSpatialTap={e => {
                 console.log('tap model', e.detail.location3D)
               }}
             />

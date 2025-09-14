@@ -178,7 +178,7 @@ export interface SpatialEntityProperties {
   scale: Vec3
 }
 
-export type SpatialEntityEventType = 'tap' //| 'drag' | 'rotate' | 'scale'
+export type SpatialEntityEventType = 'spatialtap' //| 'drag' | 'rotate' | 'scale'
 
 export type SpatialGeometryType =
   | 'BoxGeometry'

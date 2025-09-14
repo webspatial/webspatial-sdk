@@ -7,5 +7,5 @@ export type EntityProps = {
 }
 
 export type EntityEventHandler = {
-  onTap?: (event: SpatialTapEvent) => void
+  onSpatialTap?: (event: SpatialTapEvent) => void
 }
