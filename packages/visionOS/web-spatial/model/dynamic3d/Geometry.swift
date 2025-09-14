@@ -14,6 +14,10 @@ class Geometry: SpatialObject {
         type = _type
         super.init()
     }
+    
+    override func onDestroy() {
+        _resource = nil
+    }
 }
 
 @Observable

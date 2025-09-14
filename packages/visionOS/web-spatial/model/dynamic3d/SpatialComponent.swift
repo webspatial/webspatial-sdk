@@ -27,9 +27,8 @@ class SpatialModelComponent: SpatialComponent {
         _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
     }
     
-    override func destroy() {
+    override func onDestroy() {
         _resource = nil
-        super.destroy()
     }
 }
 

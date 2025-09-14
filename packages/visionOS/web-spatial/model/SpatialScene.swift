@@ -27,6 +27,11 @@ struct UpdateSpatializedStatic3DElementReply: Codable {
     let id: String
 }
 
+struct ConvertReply: Codable {
+    let id: String
+    let position: SIMD3<Float>
+}
+
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
 @Observable
@@ -257,6 +262,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelAsset)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
         spatialWebViewModel.addJSBListener(UpdateEntityEvent.self, onUpdateEntityEvent)
+        spatialWebViewModel.addJSBListener(ConverFromEntityToEntity.self, onConverFromEntityToEntity)
+        spatialWebViewModel.addJSBListener(ConverFromEntityToScene.self, onConverFromEntityToScene)
         
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
@@ -847,6 +854,31 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         entity.updateGesture(command.type, command.isEnable)
         resolve(.success(baseReplyData))
+    }
+    
+    private func onConverFromEntityToEntity(command: ConverFromEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
+            return
+        }
+        
+        guard let toEntity = spatialObjects[command.toEntityId] as? SpatialEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.toEntityId) not found")))
+            return
+        }
+        let position = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
+        let point = fromEntity.convert(position: position, to: toEntity)
+        resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
+    }
+    
+    private func onConverFromEntityToScene(command: ConverFromEntityToScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
+            return
+        }
+        let position = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
+        let point = fromEntity.convert(position: position, to: nil)
+        resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
     }
 
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {

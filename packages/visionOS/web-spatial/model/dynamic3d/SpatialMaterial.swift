@@ -15,9 +15,8 @@ class SpatialMaterial: SpatialObject {
         super.init()
     }
     
-    override func destroy() {
+    override func onDestroy() {
         _resource = nil
-        super.destroy()
     }
 }
 

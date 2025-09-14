@@ -104,6 +104,19 @@ struct UpdateEntityEvent: CommandDataProtocol{
     let isEnable:Bool
 }
 
+struct ConverFromEntityToEntity: CommandDataProtocol{
+    static let commandType: String = "ConverFromEntityToEntity"
+    let fromEntityId: String
+    let toEntityId: String
+    let position:Vec3
+}
+
+struct ConverFromEntityToScene: CommandDataProtocol{
+    static let commandType: String = "ConverFromEntityToScene"
+    let fromEntityId: String
+    let position:Vec3
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
