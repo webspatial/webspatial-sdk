@@ -56,6 +56,8 @@ export function TransformVisibilityTaskContainerBase(
     // to make sure the element is not visible, we set left/top to a very large negative value
     left: -10000,
     top: -10000,
+    pointerEvents: 'none',
+    opacity: 0,
     // width: 0,
     // height: 0,
     padding: 0,
