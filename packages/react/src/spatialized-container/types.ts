@@ -104,6 +104,7 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
   ready: Promise<ModelLoadEvent>
+  entityTransform: DOMMatrix
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {
