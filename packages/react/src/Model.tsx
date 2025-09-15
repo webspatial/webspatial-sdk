@@ -33,7 +33,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
     } = restProps
     // map to VisionOS26 model tag
     // @ts-ignore
-    return <model ref={refModel} {...modelProps} />
+    return <model ref={ref} {...modelProps} />
   }
 
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
