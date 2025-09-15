@@ -16,8 +16,11 @@ struct SpatializedDynamic3DView: View {
         SpatialTapGesture(count: 1).targetedToAnyEntity()
             .onEnded{ value in
                 if let entity = value.entity as? SpatialEntity{
-                    if entity.enableTap == true {
-                        spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
+                    spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
+                }
+                else {
+                    if let spatialEntity = SpatialEntity.findNearestParent(entity: value.entity){
+                        spatialScene.sendWebMsg(spatialEntity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
                     }
                 }
         }

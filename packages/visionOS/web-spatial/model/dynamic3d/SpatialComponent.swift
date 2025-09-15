@@ -52,6 +52,16 @@ class SpatialModelComponent: SpatialComponent {
         _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
     }
     
+    override func addToEntity(entity:SpatialEntity){
+        super.addToEntity(entity: entity)
+        entity.generateCollisionShapes(recursive: true)
+    }
+    
+    override func removeFromEntity(entity:SpatialEntity){
+        super.removeFromEntity(entity: entity)
+        entity.generateCollisionShapes(recursive: true)
+    }
+    
     override internal func onDestroy() {
         _resource = nil
     }

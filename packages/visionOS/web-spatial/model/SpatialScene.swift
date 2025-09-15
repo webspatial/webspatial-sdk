@@ -258,13 +258,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AddComponentToEntity.self, onAddComponentToEntity)
         spatialWebViewModel.addJSBListener(AddEntityToDynamic3D.self, onAddEntityToDynamic3D)
         spatialWebViewModel.addJSBListener(AddEntityToEntity.self, onAddEntityToEntity)
+        spatialWebViewModel.addJSBListener(SetParentForEntity.self, onSetParentForEntity)
         spatialWebViewModel.addJSBListener(RemoveEntityFromParent.self, onRemoveEntityFromParent)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
         spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelAsset)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
         spatialWebViewModel.addJSBListener(UpdateEntityEvent.self, onUpdateEntityEvent)
-        spatialWebViewModel.addJSBListener(ConverFromEntityToEntity.self, onConverFromEntityToEntity)
-        spatialWebViewModel.addJSBListener(ConverFromEntityToScene.self, onConverFromEntityToScene)
+        spatialWebViewModel.addJSBListener(ConvertFromEntityToEntity.self, onConvertFromEntityToEntity)
+        spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
+        spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
         
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
@@ -351,7 +353,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             if let spatialObject: SpatialObject = findSpatialObject(targetId) {
                 resolve(.success(spatialObject))
                 return
-            } else {
+            }
+            else if let spatialEntity: SpatialEntity = findSpatialObject(targetId) {
+                resolve(.success(spatialEntity))
+                return
+            }
+            else {
                 resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid inspect spatial object id not exsit!")))
                 return
             }
@@ -367,7 +374,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatialObject.destroy()
             resolve(.success(nil))
             return
-        } else {
+        }
+        else if let spatialEntity: SpatialEntity = findSpatialObject(command.id) {
+            spatialEntity.destroy()
+            resolve(.success(nil))
+            return
+        }
+        else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to destroy SpatialObject: invalid inspect spatial object id \(command.id) not exsit!")))
             return
         }
@@ -825,6 +838,31 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
     }
     
+    private func onSetParentForEntity(command: SetParentForEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        if let entity = spatialObjects[command.childId] as? SpatialEntity{
+            if let parentId = command.parentId {
+                if let parentEntity = spatialObjects[parentId] as? SpatialEntity{
+                    parentEntity.addChild(entity: entity)
+                }
+                else if let container = spatialObjects[parentId] as? SpatializedDynamic3DElement {
+                    container.addEntity(entity)
+                }
+                else{
+                    resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Parent \(parentId) not found")))
+                    return
+                }
+                resolve(.success(baseReplyData))
+                return
+            }
+            else{
+                entity.removeFromParent()
+                resolve(.success(baseReplyData))
+                return
+            }
+        }
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.childId) not found")))
+    }
+    
     private func onRemoveEntityFromParent(command: RemoveEntityFromParent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         if let entity = spatialObjects[command.entityId] as? SpatialEntity {
             if entity.parent != nil,
@@ -880,7 +918,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(baseReplyData))
     }
     
-    private func onConverFromEntityToEntity(command: ConverFromEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+    private func onConvertFromEntityToEntity(command: ConvertFromEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
             return
@@ -895,7 +933,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
     }
     
-    private func onConverFromEntityToScene(command: ConverFromEntityToScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+    private func onConvertFromEntityToScene(command: ConvertFromEntityToScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
         guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
             return
@@ -903,6 +941,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let position = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
         let point = fromEntity.convert(position: position, to: nil)
         resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
+    }
+    
+    private func onConvertFromSceneToEntity(command: ConvertFromSceneToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+        guard let entity = spatialObjects[command.entityId] as? SpatialEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.entityId) not found")))
+            return
+        }
+        let position = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
+        let point = entity.convert(position: position, from: nil)
+        resolve(.success(ConvertReply(id: command.entityId, position: point)))
     }
 
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {
@@ -925,7 +973,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialObjects.removeValue(forKey: spatialObject.id)
     }
 
-    func findSpatialObject<T: SpatialObject>(_ id: String) -> T? {
+    func findSpatialObject<T: SpatialObjectProtocol>(_ id: String) -> T? {
         return spatialObjects[id] as? T
     }
 

@@ -2,6 +2,19 @@
 
 import SwiftUI
 
+enum WebSpatialGestureType: String, Encodable {
+    case spatialtap = "spatialtap"
+    case spatialdragstart = "spatialdragstart"
+    case spatialdrag = "spatialdrag"
+    case spatialdragend = "spatialdragend"
+    case spatialrotatestart = "spatialrotatestart"
+    case spatialrotate = "spatialrotate"
+    case spatialrotateend = "spatialrotateend"
+    case spatialmagnifystart = "spatialmagnifystart"
+    case spatialmagnify = "spatialmagnify"
+    case spatialmagnifyend = "spatialmagnifyend"
+}
+
 enum SpatialWebMsgType: String, Encodable {
     case cubeInfo = "cubeInfo"
     case transform = "transform"

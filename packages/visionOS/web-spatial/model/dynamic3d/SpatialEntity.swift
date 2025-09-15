@@ -11,27 +11,47 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
     internal var listeners: [String: [(_ object: Any, _ data: Any) -> Void]] = [:]
     
+    private var _enableTap: Bool = false
+    private var _enableRotate: Bool = false
+    private var _enableRotateStart: Bool = false
+    private var _enableRotateEnd: Bool = false
+    private var _enableDrag: Bool = false
+    private var _enableDragStart: Bool = false
+    private var _enableDragEnd: Bool = false
+    private var _enableMagnify: Bool = false
+    private var _enableMagnifyStart: Bool = false
+    private var _enableMagnifyEnd: Bool = false
+    
+    internal var rotation: simd_quatd = simd_quatd()
+    internal var spatialChildren: [String:SpatialEntity] = [:]
+    internal var spatialComponents: [String: SpatialComponent] = [:]
+    
     var enableTap: Bool {
         return _enableTap
     }
     var enableRotate: Bool {
-        return _enableRotate
+        return _enableRotate || _enableRotateStart
     }
     var enableDrag: Bool {
-        return _enableDrag
+        return _enableDrag || _enableDragStart
     }
-    var enableScale: Bool {
-        return _enableScale
+    var enableMagnify: Bool {
+        return _enableMagnify || _enableMagnifyStart
     }
     
+    var enableRotateEnd: Bool {
+        return _enableRotateEnd
+    }
+    var enableDragEnd: Bool {
+        return _enableDragEnd
+    }
+    var enableMagnifyEnd: Bool {
+        return _enableMagnifyEnd
+    }
     
-    private var _enableTap: Bool = false
-    private var _enableRotate: Bool = false
-    private var _enableDrag: Bool = false
-    private var _enableScale: Bool = false
-    private var rotation: simd_quatd = simd_quatd()
-    private var spatialChildren: [String:SpatialEntity] = [:]
-    private var spatialComponents: [SpatialComponentType: SpatialComponent] = [:]
+    var enableInteractive: Bool {
+        return enableTap || enableRotate || enableDrag || enableMagnify || enableRotateEnd || enableDragEnd || enableMagnifyEnd
+    }
     
     required init() {
         self.spatialId = UUID().uuidString
@@ -63,15 +83,21 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
     
+    func removeFromParent(){
+        if let parent = parent as? SpatialEntity{
+            parent.removeChild(self)
+        }
+    }
+    
     func addComponent(_ comp: SpatialComponent) {
-        spatialComponents[comp.type] = comp
+        spatialComponents[comp.type.rawValue] = comp
         comp.addToEntity(entity: self)
     }
     
     func removeComponent(_ comp: SpatialComponent) {
-        if spatialComponents[comp.type] != nil {
+        if spatialComponents[comp.type.rawValue] != nil {
             comp.removeFromEntity(entity: self)
-            spatialComponents.removeValue(forKey: comp.type)
+            spatialComponents.removeValue(forKey: comp.type.rawValue)
         }
     }
     
@@ -80,31 +106,51 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
     
     func updateGesture(_ type:String, _ isEable:Bool){
-        switch SpatialEntityGestureType(rawValue: type){
-        case .Tap:
+        switch WebSpatialGestureType(rawValue: type){
+        case .spatialtap:
             _enableTap = isEable
-        case .Rotate:
+        case .spatialrotate:
             _enableRotate = isEable
-        case .Drag:
+        case .spatialrotatestart:
+            _enableRotateStart = isEable
+        case .spatialrotateend:
+            _enableRotateEnd = isEable
+        case .spatialdrag:
             _enableDrag = isEable
-        case .Scale:
-            _enableScale = isEable
+        case .spatialdragstart:
+            _enableDragStart = isEable
+        case .spatialdragend:
+            _enableDragEnd = isEable
+        case .spatialmagnify:
+            _enableMagnify = isEable
+        case .spatialmagnifystart:
+            _enableMagnifyStart = isEable
+        case .spatialmagnifyend:
+            _enableMagnifyEnd = isEable
         default:
             return
         }
         
-        if !(_enableTap || _enableRotate || _enableDrag || _enableScale){
-            components.remove(CollisionComponent.self)
-            components.remove(InputTargetComponent.self)
-        }
-        else {
-            if !components.has(CollisionComponent.self){
-                generateCollisionShapes(recursive: true)
-            }
+        if enableInteractive {
             if !components.has(InputTargetComponent.self){
                 components.set(InputTargetComponent())
             }
         }
+        else {
+            if components.has(InputTargetComponent.self){
+                components.remove(InputTargetComponent.self)
+            }
+        }
+    }
+    
+    static func findNearestParent(entity: Entity) -> SpatialEntity?{
+        if let parent = entity.parent as? SpatialEntity{
+            return parent
+        }
+        else if entity.parent != nil {
+            return findNearestParent(entity: entity.parent!)
+        }
+        return nil
     }
     
     func setRotation(_ rotation: simd_quatd) {
@@ -114,7 +160,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     
     // Encodable
     enum CodingKeys: String, CodingKey {
-        case id, name, isDestroyed
+        case id, name, isDestroyed, children, components
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -122,6 +168,8 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         try container.encode(spatialId, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(isDestroyed, forKey: .isDestroyed)
+        try container.encode(spatialChildren, forKey: .children)
+        try container.encode(spatialComponents, forKey: .components)
     }
     
     // Equatable
@@ -167,11 +215,4 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     deinit {
         SpatialObjectWeakRefManager.removeWeakRef(spatialId)
     }
-}
-
-enum SpatialEntityGestureType: String{
-    case Tap = "spatialtap"
-    case Rotate = "spatialrotate"
-    case Drag = "spatialdrag"
-    case Scale = "spatialscale"
 }

@@ -86,6 +86,12 @@ struct AddEntityToEntity: CommandDataProtocol{
     let parentId: String
 }
 
+struct SetParentForEntity: CommandDataProtocol{
+    static let commandType: String = "SetParentToEntity"
+    let childId: String
+    let parentId: String?
+}
+
 struct RemoveEntityFromParent: CommandDataProtocol{
     static let commandType: String = "RemoveEntityFromParent"
     let entityId: String
@@ -104,16 +110,22 @@ struct UpdateEntityEvent: CommandDataProtocol{
     let isEnable:Bool
 }
 
-struct ConverFromEntityToEntity: CommandDataProtocol{
-    static let commandType: String = "ConverFromEntityToEntity"
+struct ConvertFromEntityToEntity: CommandDataProtocol{
+    static let commandType: String = "ConvertFromEntityToEntity"
     let fromEntityId: String
     let toEntityId: String
     let position:Vec3
 }
 
-struct ConverFromEntityToScene: CommandDataProtocol{
-    static let commandType: String = "ConverFromEntityToScene"
+struct ConvertFromEntityToScene: CommandDataProtocol{
+    static let commandType: String = "ConvertFromEntityToScene"
     let fromEntityId: String
+    let position:Vec3
+}
+
+struct ConvertFromSceneToEntity: CommandDataProtocol{
+    static let commandType: String = "ConvertFromSceneToEntity"
+    let entityId: String
     let position:Vec3
 }
 
