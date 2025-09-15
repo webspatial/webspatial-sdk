@@ -50,8 +50,13 @@ function renderRootCSSSpatialComponent(
 
   const divRefStyle: CSSProperties = {
     ...style,
-    width: 0,
-    height: 0,
+    // width: 0,
+    // height: 0,
+    left: -10000,
+    top: -10000,
+    opacity: 0,
+    pointerEvents: 'none',
+
     padding: 0,
     transition: 'none',
     position: 'absolute',
@@ -149,8 +154,13 @@ function renderInPortalInstance(
   const { ref, spatialStyle, ready } = useSpatialStyle()
   const divRefStyle: CSSProperties = {
     ...style,
-    width: 0,
-    height: 0,
+    // width: 0,
+    // height: 0,
+    left: -10000,
+    top: -10000,
+    opacity: 0,
+    pointerEvents: 'none',
+
     padding: 0,
     transition: 'none',
     position: 'absolute',

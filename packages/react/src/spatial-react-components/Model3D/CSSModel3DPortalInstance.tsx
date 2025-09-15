@@ -28,8 +28,13 @@ export function renderCSSModel3DPortalInstance(
 
   const cssParserDomStyle: CSSProperties = {
     ...style,
-    width: 0,
-    height: 0,
+    // width: 0,
+    // height: 0,
+    left: -10000,
+    top: -10000,
+    opacity: 0,
+    pointerEvents: 'none',
+
     padding: 0,
     position: 'absolute',
   }
