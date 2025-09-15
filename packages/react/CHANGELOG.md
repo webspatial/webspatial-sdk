@@ -1,10 +1,18 @@
 # @webspatial/react-sdk
 
+## 1.0.3
+
+### Patch Changes
+
+- d83cd93: fix: translateX(10%) not work in transform style
+  - @webspatial/core-sdk@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes
 
 - a45aabd: fix spatialDiv a link should change the main window url and support nested
+
   - @webspatial/core-sdk@1.0.2
 
 - 94e2e0d0: fix: scene hook param
