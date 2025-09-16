@@ -233,7 +233,13 @@ function App() {
       <div>
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
-        <Reality>
+        <Reality
+          style={{
+            width: '500px',
+            height: '800px',
+            '--xr-depth': 100,
+          }}
+        >
           <UnlitMaterial id="matRed" color="#ff0000" />
           <UnlitMaterial id="matGreen" color="#00ff00" />
           <ModelAsset
@@ -284,7 +290,12 @@ function App() {
                     'boxGreen',
                     e.detail.location3D,
                   )
-                  console.log("🚀 ~ pos2:", pos2)
+                  console.log('🚀 ~ pos2:', pos2)
+                  const pos3 = await myRef.current?.convertFromSceneToEntity(
+                    'boxGreen',
+                    e.detail.location3D,
+                  )
+                  console.log('🚀 ~ pos3:', pos3)
                 }}
               ></BoxEntity>
             </Entity>

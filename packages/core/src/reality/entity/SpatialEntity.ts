@@ -1,6 +1,7 @@
 import {
   ConvertFromEntityToEntityCommand,
   ConvertFromEntityToSceneCommand,
+  ConvertFromSceneToEntityCommand,
 } from './../../JSBCommand'
 import { SpatialEntityEventType, Vec3 } from '../../types/types'
 import {
@@ -114,5 +115,8 @@ export class SpatialEntity extends SpatialObject {
 
   async convertFromEntityToScene(fromEntityId: string, position: Vec3) {
     return new ConvertFromEntityToSceneCommand(fromEntityId, position).execute()
+  }
+  async convertFromSceneToEntity(entityId: string, position: Vec3) {
+    return new ConvertFromSceneToEntityCommand(entityId, position).execute()
   }
 }

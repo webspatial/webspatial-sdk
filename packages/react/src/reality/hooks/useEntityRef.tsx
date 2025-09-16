@@ -9,6 +9,7 @@ export type EntityRef = {
     position: Vec3,
   ) => Promise<Vec3>
   convertFromEntityToScene: (entityId: string, position: Vec3) => Promise<Vec3>
+  convertFromSceneToEntity: (entityId: string, position: Vec3) => Promise<Vec3>
 }
 
 export const useEntityRef = (
@@ -31,6 +32,12 @@ export const useEntityRef = (
       const ent = await ctx?.resourceRegistry.get(entityId)
       if (!ent) return pos
       return (await entity.convertFromEntityToScene(ent.id, pos)).data
+    },
+    convertFromSceneToEntity: async (entityId, pos) => {
+      if (!entity) return pos
+      const ent = await ctx?.resourceRegistry.get(entityId)
+      if (!ent) return pos
+      return (await entity.convertFromSceneToEntity(ent.id, pos)).data
     },
   }))
 }

@@ -429,7 +429,7 @@ export class ConvertFromEntityToEntityCommand extends JSBCommand {
       position: this.fromPosition,
     }
   }
-  commandType = 'ConverFromEntityToEntity'
+  commandType = 'ConvertFromEntityToEntity'
 }
 
 export class ConvertFromEntityToSceneCommand extends JSBCommand {
@@ -447,7 +447,22 @@ export class ConvertFromEntityToSceneCommand extends JSBCommand {
     }
   }
 
-  commandType = 'ConverFromEntityToScene'
+  commandType = 'ConvertFromEntityToScene'
+}
+
+export class ConvertFromSceneToEntityCommand extends JSBCommand {
+  //  let entityId: String
+    // let position:Vec3
+    constructor(public entityId: string, public position: Vec3) {
+      super()
+    }
+    protected getParams(): Record<string, any> | undefined {
+      return {
+        entityId: this.entityId,
+        position: this.position,
+      }
+    }
+    commandType = 'ConvertFromSceneToEntity'
 }
 
 export class CreateTextureResourceCommand extends JSBCommand {
