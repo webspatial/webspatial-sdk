@@ -86,6 +86,25 @@ export class UpdateEntityEventCommand extends JSBCommand {
   }
 }
 
+// todo: to be used in SpatialEntity
+export class UpdateEntityEventsCommand extends JSBCommand {
+// let types:[String:Bool]
+// let entityId:String
+  constructor(
+    public entity: SpatialEntity,
+    public types: Record<SpatialEntityEventType, boolean>,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      entityId: this.entity.id,
+      types: this.types,
+    }
+  }
+}
+
 export class UpdateSpatialSceneProperties extends JSBCommand {
   properties: Partial<SpatialSceneProperties>
   commandType = 'UpdateSpatialSceneProperties'
