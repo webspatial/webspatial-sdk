@@ -181,7 +181,9 @@ export class UpdateSpatializedDynamic3DElementProperties extends SpatializedElem
   }
 
   protected getExtraParams() {
-    return this.properties
+    return { 
+      id: this.spatialObject.id,
+      ...this.properties }
   }
 }
 

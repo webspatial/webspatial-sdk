@@ -405,6 +405,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         updateSpatializedElementProperties(spatializedElement, command)
+        resolve(.success(baseReplyData))
     }
 
     private func onUpdateSpatialSceneProperties(command: UpdateSpatialSceneProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
