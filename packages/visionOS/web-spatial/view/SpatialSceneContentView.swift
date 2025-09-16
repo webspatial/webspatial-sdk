@@ -42,7 +42,6 @@ struct SpatialSceneContentView: View {
                         SpatializedDynamic3DView()
                     }
                     .environment(child)
-//                    SpatializedDynamic3DView().environment(child)
                 }
             }
             .opacity(spatialScene.opacity)
