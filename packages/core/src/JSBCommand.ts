@@ -181,9 +181,10 @@ export class UpdateSpatializedDynamic3DElementProperties extends SpatializedElem
   }
 
   protected getExtraParams() {
-    return { 
+    return {
       id: this.spatialObject.id,
-      ...this.properties }
+      ...this.properties,
+    }
   }
 }
 
@@ -414,6 +415,23 @@ export class RemoveEntityFromParentCommand extends JSBCommand {
   commandType = 'RemoveEntityFromParent'
 }
 
+export class SetParentForEntityCommand extends JSBCommand {
+  // childId, parentId
+  constructor(
+    public childId: string,
+    public parentId?: string,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      childId: this.childId,
+      parentId: this.parentId,
+    }
+  }
+  commandType = 'SetParentToEntity'
+}
+
 export class ConvertFromEntityToEntityCommand extends JSBCommand {
   constructor(
     public fromEntityId: string,
@@ -452,17 +470,20 @@ export class ConvertFromEntityToSceneCommand extends JSBCommand {
 
 export class ConvertFromSceneToEntityCommand extends JSBCommand {
   //  let entityId: String
-    // let position:Vec3
-    constructor(public entityId: string, public position: Vec3) {
-      super()
+  // let position:Vec3
+  constructor(
+    public entityId: string,
+    public position: Vec3,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entityId,
+      position: this.position,
     }
-    protected getParams(): Record<string, any> | undefined {
-      return {
-        entityId: this.entityId,
-        position: this.position,
-      }
-    }
-    commandType = 'ConvertFromSceneToEntity'
+  }
+  commandType = 'ConvertFromSceneToEntity'
 }
 
 export class CreateTextureResourceCommand extends JSBCommand {

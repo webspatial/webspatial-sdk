@@ -2,6 +2,7 @@ import {
   ConvertFromEntityToEntityCommand,
   ConvertFromEntityToSceneCommand,
   ConvertFromSceneToEntityCommand,
+  SetParentForEntityCommand,
 } from './../../JSBCommand'
 import { SpatialEntityEventType, Vec3 } from '../../types/types'
 import {
@@ -44,11 +45,12 @@ export class SpatialEntity extends SpatialObject {
   }
 
   async addEntity(ent: SpatialEntity) {
-    return new AddEntityToEntityCommand(this, ent).execute()
+    return new SetParentForEntityCommand(ent.id, this.id).execute()
   }
   async removeFromParent() {
-    return new RemoveEntityFromParentCommand(this).execute()
+    return new SetParentForEntityCommand(this.id, undefined).execute()
   }
+
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
