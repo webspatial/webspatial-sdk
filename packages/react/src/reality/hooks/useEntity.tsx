@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
-import { useEntityEvent, useEntityId, useEntityTransform } from '../hooks'
+import {
+  useEntityEvent,
+  useEntityId,
+  useEntityTransform,
+  useForceUpdate,
+} from '../hooks'
 
 type UseEntityOptions = {
   createEntity: () => Promise<SpatialEntity>
@@ -19,9 +24,11 @@ export const useEntity = ({
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
-  const [entity, setEntity] = useState<SpatialEntity | null>(null)
+  const entityRef = useRef<SpatialEntity | null>(null)
 
-  useEntityEvent({ entity, onSpatialTap })
+  const forceUpdate = useForceUpdate()
+
+  useEntityEvent({ entity: entityRef.current, onSpatialTap })
 
   useEffect(() => {
     if (!ctx) return
@@ -38,19 +45,20 @@ export const useEntity = ({
       } else {
         await ctx.reality.addEntity(ent)
       }
-      setEntity(ent)
+      entityRef.current = ent
+      forceUpdate()
     }
 
     init()
 
     return () => {
       cancelled = true
-      entity?.destroy()
+      entityRef.current?.destroy()
     }
   }, [ctx, parent])
 
-  useEntityId({ id, entity })
-  useEntityTransform(entity, { position, rotation, scale })
+  useEntityId({ id, entity: entityRef.current })
+  useEntityTransform(entityRef.current, { position, rotation, scale })
 
-  return entity
+  return entityRef.current
 }

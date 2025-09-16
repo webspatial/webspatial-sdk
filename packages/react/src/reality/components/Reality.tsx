@@ -32,10 +32,7 @@ export const Reality = forwardRef<SpatializedElementRef, Props>(
       <SpatializedContainer<SpatializedElementRef>
         component={'div'}
         ref={ref}
-        createSpatializedElement={async () => {
-          const reality = await createRealitySpatializedElement()
-          return reality
-        }}
+        createSpatializedElement={createRealitySpatializedElement}
         spatializedContent={({ spatializedElement }) => {
           // spatializedElement is reality
           const ctx: RealityContextValue = {

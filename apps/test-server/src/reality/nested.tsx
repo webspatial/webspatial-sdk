@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
+  enableDebugTool,
   Entity,
   EntityRef,
   getSession,
@@ -14,6 +15,8 @@ import {
 } from '@webspatial/react-sdk'
 import { SpatialEntity } from '@webspatial/core-sdk'
 import { Reality } from '@webspatial/react-sdk'
+
+enableDebugTool()
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -102,11 +105,13 @@ function App() {
 
   const myRef = useRef<EntityRef>(null)
 
+  const [showModelEntity, setShowModelEntity] = useState(true)
+
   return (
     <div className="pl-5 pt-2">
       <h1 className="text-2xl text-black">openscene</h1>
 
-      <button
+      {/* <button
         className={btnCls}
         onClick={async () => {
           const session = getSession()!
@@ -116,7 +121,7 @@ function App() {
         }}
       >
         create reality
-      </button>
+      </button> */}
 
       <button
         className={btnCls}
@@ -185,17 +190,16 @@ function App() {
           />
         </Model> */}
         <div
-          enable-xr
+          // enable-xr
           style={{
             width: '800px',
             height: '500px',
-            '--xr-back': 100,
+            // '--xr-back': 100,
             background: 'green',
           }}
         >
-        
-        <div>console</div>
-        <div>console</div>
+          <div>console</div>
+          <div>console</div>
           <Reality
             style={{
               width: '600px',
@@ -210,7 +214,7 @@ function App() {
               src="http://localhost:5173/public/assets/RocketToy1.usdz"
             />
             <SceneGraph>
-              <Entity
+              {/* <Entity
                 position={{ x: -0.2, y: 0, z: 0 }}
                 rotation={{ x: 0, y: 0, z: 0 }}
                 scale={{ x: 1, y: 1, z: 1 }}
@@ -224,8 +228,23 @@ function App() {
                   materials={['matRed']}
                   position={boxPosition}
                   rotation={boxRotation}
+                  onSpatialTap={async e => {
+                    console.log('tap box', e.detail.location3D)
+                    const pos = await myRef.current?.convertFromEntityToEntity(
+                      'boxGreen',
+                      'boxRed',
+                      e.detail.location3D,
+                    )
+                    console.log('🚀 ~ pos:', pos)
+                    const pos2 = await myRef.current?.convertFromEntityToScene(
+                      'boxGreen',
+                      e.detail.location3D,
+                    )
+                    console.log('🚀 ~ pos2:', pos2)
+                    setShowModelEntity(p => !p)
+                  }}
                 ></BoxEntity>
-              </Entity>
+              </Entity> */}
               <Entity
                 position={{ x: 0.2, y: 0, z: 0 }}
                 rotation={{ x: 0, y: 0, z: 0 }}
@@ -242,28 +261,38 @@ function App() {
                   position={{ x: 0, y: 0, z: 0 }}
                   rotation={boxRotation}
                   onSpatialTap={async e => {
-                    console.log('tap box', e.detail.location3D)
-                    const pos = await myRef.current?.convertFromEntityToEntity(
-                      'boxGreen',
-                      'boxRed',
-                      e.detail.location3D,
-                    )
-                    console.log('🚀 ~ pos:', pos)
-                    const pos2 = await myRef.current?.convertFromEntityToScene(
-                      'boxGreen',
-                      e.detail.location3D,
-                    )
-                    console.log('🚀 ~ pos2:', pos2)
+                    // console.log('tap box', e.detail.location3D)
+                    // const pos = await myRef.current?.convertFromEntityToEntity(
+                    //   'boxGreen',
+                    //   'boxRed',
+                    //   e.detail.location3D,
+                    // )
+                    // console.log('🚀 ~ pos:', pos)
+                    // const pos2 = await myRef.current?.convertFromEntityToScene(
+                    //   'boxGreen',
+                    //   e.detail.location3D,
+                    // )
+                    // console.log('🚀 ~ pos2:', pos2)
+                    // setShowModelEntity(p => !p)
+                    const ans = await (
+                      window as any
+                    )?.inspectCurrentSpatialScene()
+                    console.log('🚀 ~ ans:', ans)
+
+                    setShowModelEntity(p => !p)
                   }}
                 ></BoxEntity>
               </Entity>
-              <ModelEntity
-                model="model"
-                rotation={boxRotation}
-                onSpatialTap={e => {
-                  console.log('tap model', e.detail.location3D)
-                }}
-              />
+
+              {showModelEntity && (
+                <ModelEntity
+                  model="model"
+                  rotation={boxRotation}
+                  onSpatialTap={e => {
+                    console.log('tap model', e.detail.location3D)
+                  }}
+                />
+              )}
             </SceneGraph>
           </Reality>
         </div>
