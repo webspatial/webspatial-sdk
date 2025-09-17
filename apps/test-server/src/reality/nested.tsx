@@ -159,7 +159,7 @@ function App() {
       <div>
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
-        {/* <div
+        <div
           enable-xr
           style={{
             '--xr-back': 121,
@@ -167,7 +167,7 @@ function App() {
           className="text-blue fixed w-full  bg-base-200	bg-clip-border px-6 py-6  "
         >
           <a href="#">Go Back</a>
-        </div> */}
+        </div>
         {/* <div
           enable-xr
           style={{
@@ -190,12 +190,12 @@ function App() {
           />
         </Model> */}
         <div
-          // enable-xr
+          enable-xr
           style={{
-            width: '800px',
+            width: '500px',
             height: '500px',
-            // '--xr-back': 100,
-            background: 'green',
+            '--xr-back': 100,
+            background: 'red',
           }}
         >
           <div>console</div>
@@ -214,7 +214,7 @@ function App() {
               src="http://localhost:5173/public/assets/RocketToy1.usdz"
             />
             <SceneGraph>
-              {/* <Entity
+              <Entity
                 position={{ x: -0.2, y: 0, z: 0 }}
                 rotation={{ x: 0, y: 0, z: 0 }}
                 scale={{ x: 1, y: 1, z: 1 }}
@@ -244,7 +244,7 @@ function App() {
                     setShowModelEntity(p => !p)
                   }}
                 ></BoxEntity>
-              </Entity> */}
+              </Entity>
               <Entity
                 position={{ x: 0.2, y: 0, z: 0 }}
                 rotation={{ x: 0, y: 0, z: 0 }}
