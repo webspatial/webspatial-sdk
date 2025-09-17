@@ -34,11 +34,6 @@ abstract class JSBCommand {
   async execute() {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
-    console.log(
-      '🚀 ~ JSBCommand ~ execute ~ this.commandType:',
-      this.commandType,
-      param,
-    )
     return platform.callJSB(this.commandType, msg)
   }
 }
@@ -88,8 +83,8 @@ export class UpdateEntityEventCommand extends JSBCommand {
 
 // todo: to be used in SpatialEntity
 export class UpdateEntityEventsCommand extends JSBCommand {
-// let types:[String:Bool]
-// let entityId:String
+  // let types:[String:Bool]
+  // let entityId:String
   constructor(
     public entity: SpatialEntity,
     public types: Record<SpatialEntityEventType, boolean>,
