@@ -13,7 +13,6 @@ import {
   SceneGraph,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { SpatialEntity } from '@webspatial/core-sdk'
 import { Reality } from '@webspatial/react-sdk'
 
 enableDebugTool()
@@ -46,35 +45,6 @@ function App() {
       }
       return ans
     })
-  }
-
-  const entityRef = useRef<SpatialEntity>()
-  const animationRef = useRef<any>()
-  const rotationRef = useRef<number>(0)
-
-  const [isAnimationOn, setIsAnimationOn] = useState(false)
-
-  function startAnimation() {
-    if (!entityRef.current) return
-    if (animationRef.current) return
-    function doRotate(delta: number) {
-      entityRef.current?.setRotation({
-        x: 0,
-        y: 0,
-        z: rotationRef.current + 0.1 * delta,
-      })
-      animationRef.current = requestAnimationFrame(doRotate)
-    }
-    doRotate(0)
-    setIsAnimationOn(true)
-  }
-
-  function cancelAnimation() {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-      animationRef.current = null
-      setIsAnimationOn(false)
-    }
   }
 
   // const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
@@ -122,19 +92,6 @@ function App() {
       >
         create reality
       </button> */}
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          if (isAnimationOn) {
-            cancelAnimation()
-          } else {
-            startAnimation()
-          }
-        }}
-      >
-        rotation animation {isAnimationOn ? 'stop' : 'start'}
-      </button>
 
       <h1 className="text-2xl text-black">openscene</h1>
 

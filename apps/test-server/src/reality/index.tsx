@@ -11,7 +11,6 @@ import {
   SceneGraph,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { SpatialEntity } from '@webspatial/core-sdk'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -43,36 +42,6 @@ function App() {
     })
   }
 
-  const entityRef = useRef<SpatialEntity>()
-  const animationRef = useRef<any>()
-  const rotationRef = useRef<number>(0)
-
-  const [isAnimationOn, setIsAnimationOn] = useState(false)
-
-  function startAnimation() {
-    if (!entityRef.current) return
-    if (animationRef.current) return
-    function doRotate(delta: number) {
-      entityRef.current?.setRotation({
-        x: 0,
-        y: 0,
-        z: rotationRef.current + 0.1 * delta,
-      })
-      animationRef.current = requestAnimationFrame(doRotate)
-    }
-    doRotate(0)
-    setIsAnimationOn(true)
-  }
-
-  function cancelAnimation() {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-      animationRef.current = null
-      setIsAnimationOn(false)
-    }
-  }
-
-  // const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotationOn, setBoxRotationOn] = useState(false)
@@ -102,115 +71,7 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">openscene</h1>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          const session = getSession()!
-          const reality = await session.createSpatializedDynamic3DElement()
-          const spatialScene = session.getSpatialScene()
-          await spatialScene.addSpatializedElement(reality)
-        }}
-      >
-        create reality
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          try {
-            const session = getSession()!
-
-            const spatialScene = session.getSpatialScene()
-
-            const reality = await session.createSpatializedDynamic3DElement()
-
-            await spatialScene.addSpatializedElement(reality)
-
-            const modelAsset = await session.createModelAsset({
-              url: 'http://localhost:5173/public/assets/RocketToy1.usdz',
-            })
-            const ent = await session.createSpatialModelEntity({
-              modelAssetId: modelAsset.id,
-            })
-
-            await reality.addEntity(ent)
-          } catch (error) {
-            console.log('🚀 ~ error:', error)
-          }
-        }}
-      >
-        create model entity
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          try {
-            const session = getSession()!
-
-            const spatialScene = session.getSpatialScene()
-
-            const reality = await session.createSpatializedDynamic3DElement()
-
-            await spatialScene.addSpatializedElement(reality)
-
-            const entity = await session.createEntity()
-
-            const geometry = await session.createBoxGeometry({
-              width: 0.2,
-              height: 0.2,
-              depth: 0.1,
-            })
-            const material = await session.createUnlitMaterial({
-              color: '#ff0000',
-            })
-            const modelComponent = await session.createModelComponent({
-              mesh: geometry,
-              materials: [material],
-            })
-            await entity.addComponent(modelComponent)
-
-            await reality.addEntity(entity)
-            await new Promise(resolve => {
-              setTimeout(resolve, 2000)
-            })
-
-            entity.updateEntityEvent('spatialtap', true)
-
-            entityRef.current = entity
-          } catch (error) {
-            console.log('🚀 ~ error:', error)
-          }
-        }}
-      >
-        create modelComponent
-      </button>
-
-      <button
-        className={btnCls}
-        onClick={async () => {
-          if (isAnimationOn) {
-            cancelAnimation()
-          } else {
-            startAnimation()
-          }
-        }}
-      >
-        rotation animation {isAnimationOn ? 'stop' : 'start'}
-      </button>
-
-      <h1 className="text-2xl text-black">openscene</h1>
-
-      {/* <button
-        className={btnCls}
-        onClick={async () => {
-          setPosition(prePos => ({ ...prePos, x: prePos.x + 0.1 }))
-        }}
-      >
-        change position right
-      </button> */}
+      <h1 className="text-2xl text-black">reality test</h1>
 
       <button
         className={btnCls}
