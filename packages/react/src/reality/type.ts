@@ -1,4 +1,5 @@
-import { SpatialTapEvent, Vec3 } from '@webspatial/core-sdk'
+import { Vec3 } from '@webspatial/core-sdk'
+import { SpatialTapEvent } from '../spatialized-container'
 
 export type EntityProps = {
   id?: string
