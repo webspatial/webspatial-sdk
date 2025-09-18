@@ -16,6 +16,7 @@ import { SpatialObject } from '../../SpatialObject'
 import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
+import { createSpatialEvent } from '../../SpatialWebEventCreator'
 
 export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
@@ -88,9 +89,8 @@ export class SpatialEntity extends SpatialObject {
   }
   private onReceiveEvent = (data: any) => {
     console.log('SpatialEntityEvent', data)
-    const evt = new CustomEvent(data.type, data)
-    // filter event
     if (this.events[data.type]) {
+      const evt = createSpatialEvent(data.type, data.detail)
       this.events[data.type](evt)
     }
   }
