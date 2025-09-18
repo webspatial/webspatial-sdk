@@ -218,7 +218,7 @@ function App() {
              />
              {entityList.map((entityInfo, index) => (
                <BoxEntity
-                key={index}
+                key={entityInfo.id}
                 width={boxSize.width}
                 height={boxSize.height}
                 depth={boxSize.depth}
