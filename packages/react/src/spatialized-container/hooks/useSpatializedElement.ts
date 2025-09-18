@@ -19,6 +19,8 @@ export function useSpatializedElement(
           portalInstanceObject.attachSpatializedElement(spatializedElement)
 
           setSpatializedElement(spatializedElement)
+        } else {
+          inSpatializedElement.destroy()
         }
       },
     )

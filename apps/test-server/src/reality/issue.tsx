@@ -127,16 +127,20 @@ function App() {
         </div> */}
         <div
           enable-xr
+          data-name="parent"
           style={{
             width: '200px',
             height: '200px',
             '--xr-back': 100,
             background: 'green',
+            transform: 'translateZ(111px)     ',
+            transformOrigin: 'bottom center',
           }}
         >
           <div>div1</div>
           <div
-            enable-xr
+            // enable-xr
+            data-name="child"
             style={{
               width: '200px',
               height: '200px',
