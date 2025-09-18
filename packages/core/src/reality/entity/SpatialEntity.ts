@@ -53,6 +53,9 @@ export class SpatialEntity extends SpatialObject {
   }
 
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
+    this.position = properties.position ?? this.position
+    this.rotation = properties.rotation ?? this.rotation
+    this.scale = properties.scale ?? this.scale
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
 
