@@ -177,22 +177,15 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         return lhs.spatialId == rhs.spatialId
     }
     
-    // Destroy
-    enum Events: String {
-        case BeforeDestroyed = "SpatialEntity::BeforeDestroyed"
-        case Destroyed = "SpatialEntity::Destroyed"
-    }
-    
     func destroy() {
         if _isDestroyed {
-            print("SpatialEntity already destroyed \(self)")
             return
         }
-        emit(event: Events.BeforeDestroyed.rawValue, data: ["object": self])
+        emit(event: SpatialObject.Events.BeforeDestroyed.rawValue, data: ["object": self])
         onDestroy()
         _isDestroyed = true
 
-        emit(event: Events.Destroyed.rawValue, data: ["object": self])
+        emit(event: SpatialObject.Events.Destroyed.rawValue, data: ["object": self])
         listeners = [:]
         SpatialObject.objects.removeValue(forKey: spatialId)
     }
@@ -209,7 +202,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         spatialComponents.forEach { id, components in
             components.destroy()
         }
-        spatialChildren = [:]
+        spatialComponents = [:]
     }
     
     deinit {

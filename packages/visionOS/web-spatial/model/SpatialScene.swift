@@ -965,13 +965,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onSptatialObjectDestroyed(_ object: Any, _ data: Any) {
-        var spatialObject = object as! SpatialObject
+        var spatialObject = object as! (any SpatialObjectProtocol)
         spatialObject
             .off(
                 event: SpatialObject.Events.BeforeDestroyed.rawValue,
                 listener: onSptatialObjectDestroyed
             )
-        spatialObjects.removeValue(forKey: spatialObject.id)
+        spatialObjects.removeValue(forKey: spatialObject.spatialId)
     }
 
     func findSpatialObject<T: SpatialObjectProtocol>(_ id: String) -> T? {
