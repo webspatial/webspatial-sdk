@@ -129,9 +129,9 @@ struct SpatializedElementView<Content: View>: View {
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation!
-        let x = spatializedElement.clientX + (spatializedElement.scrollWithParent ? ( translation.x - parentScrollOffset.x) : translation.x)
-        let y = spatializedElement.clientY + (spatializedElement.scrollWithParent ? ( translation.y - parentScrollOffset.y) : translation.y)
-        let z =  translation.z + spatializedElement.backOffset + (spatializedElement.zIndex * zOrderBias)
+        let x =  (spatializedElement.scrollWithParent ? ( translation.x - parentScrollOffset.x) : translation.x)
+        let y =  (spatializedElement.scrollWithParent ? ( translation.y - parentScrollOffset.y) : translation.y)
+        let z =  translation.z +  (spatializedElement.zIndex * zOrderBias)
         let width = spatializedElement.width
         let height = spatializedElement.height
         let depth = spatializedElement.depth
@@ -141,6 +141,8 @@ struct SpatializedElementView<Content: View>: View {
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
         let clip = spatializedElement.clip
+        
+        let smallOffset = z == 0.0 ? 0.0001: 0
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
@@ -148,7 +150,6 @@ struct SpatializedElementView<Content: View>: View {
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
-
                 return proxy.transform(in: .named("SpatialScene"))!
             } action: { _, new in
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
@@ -157,9 +158,9 @@ struct SpatializedElementView<Content: View>: View {
             })
 
             .frame(depth: 0, alignment: .back)
-            //            .background(Color(hex: "#161616E5"))
+                        
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-//            .offset(z: 0.0001)
+            .offset(z: smallOffset )
             .scaleEffect(
                 x: scale.width,
                 y: scale.height,
@@ -172,6 +173,10 @@ struct SpatializedElementView<Content: View>: View {
             )
             .offset(x: x, y: y)
             .offset(z: z)
+             
+        
+            .position(x: spatializedElement.clientX + width/2, y: spatializedElement.clientY + height/2)
+            .offset(z: spatializedElement.backOffset)
             .opacity(opacity)
             .hidden(!visible)
     }
