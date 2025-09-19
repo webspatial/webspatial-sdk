@@ -74,6 +74,7 @@ export const Reality = forwardRef<SpatializedElementRef, Props>(
         <SpatializedContainer<SpatializedElementRef>
           component={'div'}
           ref={ref}
+          //@ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
           {...props}
