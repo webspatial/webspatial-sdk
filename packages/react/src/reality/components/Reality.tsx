@@ -42,7 +42,24 @@ export const Reality = forwardRef<SpatializedElementRef, Props>(
 
       const reality = await session.createSpatializedDynamic3DElement()
 
-      await session.getSpatialScene().addSpatializedElement(reality)
+      function cleanup() {
+        resourceRegistry.destroy()
+        reality.destroy()
+        setIsReady(false)
+      }
+
+      if (isCancelled.current) {
+        cleanup()
+        return
+      }
+
+      const result = await session
+        .getSpatialScene()
+        .addSpatializedElement(reality)
+      if (!result.success) {
+        cleanup()
+        return
+      }
       ctxRef.current = { session, reality, resourceRegistry }
       setIsReady(true)
       return reality as SpatializedElement
