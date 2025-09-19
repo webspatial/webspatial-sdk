@@ -299,16 +299,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     
 
     private func setupWebViewStateListner() {
-        spatialWebViewModel.addStateListener(.didUnload) {
-            print("---------------onLeavePageSession---------------")
-            self.onLeavePageSession()
-        }
-
         spatialWebViewModel.addStateListener(.didStartLoad) {
-            self.backgroundMaterial = .None
-        }
-        
-        spatialWebViewModel.addStateListener(.didReceive) {
+            self.onPageStartLoad()
         }
 
         spatialWebViewModel.addScrollUpdateListener { _, point in
@@ -333,12 +325,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    private func onLeavePageSession() {
+    private func onPageStartLoad() {
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+        self.backgroundMaterial = .None
     }
 
     private func onGetSpatialSceneState(
