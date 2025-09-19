@@ -51,9 +51,11 @@ export function composeSRT(position: Vec3, rotation: Vec3, scale: Vec3) {
   const { x: sx, y: sy, z: sz } = scale
 
   let m = new DOMMatrix()
-  m = m.scale(sx, sy, sz)
-  m = m.rotate(rx, ry, rz)
+  // https://drafts.fxtf.org/geometry/#immutable-transformation-methods
+  // as these methods are post-multiplication, the order of transformations is reversed
+  // we want SRT = T * R * S
   m = m.translate(px, py, pz)
-
+  m = m.rotate(rx, ry, rz)
+  m = m.scale(sx, sy, sz)
   return m
 }
