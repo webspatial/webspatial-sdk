@@ -1,115 +1,146 @@
+# WebSpatial Core SDK
+
 > [!NOTE]
-> This library is still in development. APIs may change as we enable additional platforms/features
+> This library is still in development. APIs may change as we enable additional platforms/features.
 
-# Core SDK for WebSpatial
+## Overview
 
-WebSpatial SDK is implemented on top of the Core SDK, which is a framework-agnostic pure-JS API that enables the WebSpatial App Shell to natively spatialize 2D HTML content and render 3D content.
+WebSpatial Core SDK is a framework-agnostic pure JavaScript API that enables the WebSpatial App Shell to natively spatialize 2D HTML content and render 3D content. The core-sdk library is responsible for interacting with the target platform's native APIs to expose spatial behaviors not commonly found on the web.
 
-The core-sdk library is responsible for interacting with the target platforms native APIs to expose behavior not commonly found on the web.
+## Installation
 
-# How to use
-To run a WebSpatial website you currently need to package it within a native app. 
- 
-See docs on our [github](https://github.com/webspatial/webspatial-sd) for more information.
+```bash
+npm install @webspatial/core-sdk
+```
 
-## Hello World Example
+## Getting Started
 
-```jsx
-import { Spatial, SpatialHelper } from '@webspatial/core-sdk'
+To run a WebSpatial website, you currently need to package it within a native app. See documentation on our [GitHub repository](https://github.com/webspatial/webspatial-sdk) for more information.
 
-var main = async () => {
-    var spatial = new Spatial()
-    var versionInfo = "clientVersion:" + spatial.getClientVersion() + "\nnativeVersion:" + spatial.getNativeVersion() + "\nisSupported:" + spatial.isSupported()
+### Hello World Example
 
-    let sh = SpatialHelper.instance!
-    if (sh) {
-        // Create a new window container
-        var container = await sh.session.createWindowContainer({ style: 'Volumetric' })
+```javascript
+import { Spatial } from '@webspatial/core-sdk'
 
-        // Setup volume for the entity
-        var rootEntity = await sh.session.createEntity()
-        await rootEntity.setCoordinateSpace("Root")
-        rootEntity.setComponent(await sh.session.createViewComponent())
-
-        // Create a mesh. and add it tot the root volume
-        var box = await sh.shape.createShapeEntity("box")
-        await box.setParent(rootEntity)
-
-        // add the volume to the window
-        await container.setRootEntity(rootEntity)
+const main = async () => {
+  // Initialize the Spatial environment
+  const spatial = new Spatial()
+  
+  if (spatial.isSupported()) {
+    const session = spatial.requestSession()
+    if (session) {
+      console.log("Session supported and created")
+      
+      // Now you can create spatial elements
+      // Example: Create a 2D element
+      const element2D = await session.createSpatialized2DElement()
+      
+      // Example: Create a 3D static element (for models)
+      const static3DElement = await session.createSpatializedStatic3DElement()
+      
+      // Example: Create a 3D dynamic element (for custom geometry)
+      const dynamic3DElement = await session.createSpatializedDynamic3DElement()
     }
+  }
 }
+
 main()
 ```
 
-# **Initialization**
+## Core Concepts
 
-Create a new spatial object which is the root entry point to the API. This object should be available in standard browsers as well as webspatial environments. This object can check client and native versions of the library and detect if webspatial is available in this setup.
+### Initialization
 
-```
-var spatial = new Spatial()
-if(spatial.isSupported()){
-  var session = spatial.requestSession()
-  if(session){
-    console.log("session supported and created")
+Create a new `Spatial` object which is the root entry point to the API. This object should be available in standard browsers as well as WebSpatial environments. It can check client and native versions of the library and detect if WebSpatial is available in your setup.
+
+```javascript
+const spatial = new Spatial()
+if (spatial.isSupported()) {
+  const session = spatial.requestSession()
+  if (session) {
+    console.log("Session supported and created")
   }
 }
 ```
 
-# **Async/Await/Promises**
+### Async/Await/Promises
 
-Due to the architecture of webspatial, the client library communicates to native code over a JS Bridge provided by the platform. Because of this, function calls may not be completed immediately. To accomidate this, the majority of webspatial api use [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) to keep track of completion. It is recommended you create an async main function to allow you to use the await syntax for app setup.
+Due to the architecture of WebSpatial, the client library communicates with native code over a JS Bridge provided by the platform. Because of this, function calls may not be completed immediately. To accommodate this, the majority of WebSpatial API uses [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) to track completion. It is recommended you create an async main function to allow you to use the await syntax for app setup.
 
-```
-var main = async ()=>{
-    // Your code goes here
-};
-main()'
-```
-
-# **WindowContainer**
-
-To create a new WindowContainer (aka WindowGroup on apple vision pro)
-
-```
-var windowContainer = await session.createWindowContainer({ style: 'Volumetric' })
+```javascript
+const main = async () => {
+  // Your code goes here
+}
+main()
 ```
 
-Depending on if you want to display content as a panel or within a volume, you can choose to use "Plain" or "Volumetric" style.
+## Key Components
 
-# **Entity/Component api**
+### SpatialSession
 
-To start displaying content within a WindowContainer, you must create an entity.
+The `SpatialSession` class is used to establish a connection to the spatial renderer of the system. All spatial resources must be created through this session.
 
-```
-// Create entity
-var entity = await session.createEntity()
-
-// Create component
-await entity.setComponent(
-    await session.createViewComponent({ windowContainer: windowContainer }),
-)
-await entity.setCoordinateSpace('Root')
-
-// Set root entity on the window container.
-// Note the entity much have:
-// - Root coordinate space
-// - have a ViewComponent for Volumetric windowContainer
-// - have a WindowComponent for Plain windowContainer
-await windowContainer.setRootEntity(entity)
+```javascript
+const session = spatial.requestSession()
 ```
 
-Entity maps to an object that will be displayed. Components tell how that object should be displayed.
+Key methods include:
+- `getSpatialScene()`: Returns the current spatial scene
+- `createSpatialized2DElement()`: Creates a 2D element in spatial environment
+- `createSpatializedStatic3DElement()`: Creates a static 3D element for models
+- `createSpatializedDynamic3DElement()`: Creates a dynamic 3D element for custom geometry
 
-# **Helper**
+### SpatializedElement
 
-This library, similar to (webGL or webXR) may be a bit too verbose to use directly. You can use the helper we provide to do some common tasks such as opening a new webpage panel or use our higher level react API.
+The base class for all spatial elements. It provides common functionality for:
 
-```
-import { SpatialHelper } from '@webspatial/core-sdk'
-SpatialHelper.instance.navigation.openPanel(
-    'https://www.npmjs.com/package/@webspatial/core-sdk',
-    { resolution: { width: 600, height: 100 } },
-)
-```
+- Updating element properties
+- Handling spatial transforms
+- Processing spatial events (tap, drag, rotate, magnify)
 
+### Element Types
+
+#### Spatialized2DElement
+
+Represents HTML content in a spatial environment with properties like:
+- Corner radius
+- Background material type
+- Scroll behavior
+
+#### SpatializedStatic3DElement
+
+Represents static 3D models loaded from URLs.
+
+#### SpatializedDynamic3DElement
+
+Represents dynamic 3D content with custom geometry and materials.
+
+## Spatial Geometry and Materials
+
+The SDK provides various geometry types:
+- `SpatialBoxGeometry`
+- `SpatialPlaneGeometry`
+- `SpatialSphereGeometry`
+- `SpatialConeGeometry`
+- `SpatialCylinderGeometry`
+
+And material options including:
+- Background material types: 'none', 'translucent', 'thick', 'regular', 'thin', 'transparent'
+- Custom unlit materials
+
+## Event Handling
+
+The SDK supports various spatial events:
+- Tap events
+- Drag events (start, drag, end)
+- Rotate events (start, rotate, end)
+- Magnify events (start, magnify, end)
+
+## Advanced Usage
+
+For more advanced usage and detailed API documentation, please refer to the [official documentation](https://github.com/webspatial/webspatial-sdk).
+
+## License
+
+See the LICENSE file in the repository root for more information.
+ 

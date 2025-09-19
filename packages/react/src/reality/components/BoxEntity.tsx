@@ -1,0 +1,74 @@
+import React, { forwardRef } from 'react'
+import { ParentContext, useRealityContext } from '../context'
+import { EntityProps, EntityEventHandler } from '../type'
+import { useEntityRef, EntityRef, useEntity } from '../hooks'
+import { SpatialMaterial } from '@webspatial/core-sdk'
+
+type BoxProps = {
+  width?: number
+  height?: number
+  depth?: number
+  cornerRadius?: number
+  materials?: string[]
+}
+
+type Props = EntityProps &
+  BoxProps &
+  EntityEventHandler & {
+    children?: React.ReactNode
+  }
+
+export const BoxEntity = forwardRef<EntityRef, Props>(
+  (
+    {
+      id,
+      width = 0.2,
+      height = 0.2,
+      depth = 0.1,
+      cornerRadius,
+      materials,
+      position,
+      rotation,
+      scale,
+      onSpatialTap,
+      children,
+    },
+    ref,
+  ) => {
+    const ctx = useRealityContext()
+    const entity = useEntity({
+      id,
+      position,
+      rotation,
+      scale,
+      onSpatialTap,
+      createEntity: async () => {
+        const ent = await ctx!.session.createEntity()
+        const boxGeometry = await ctx!.session.createBoxGeometry({
+          width,
+          height,
+          depth,
+          cornerRadius,
+        })
+        const materialList: SpatialMaterial[] = await Promise.all(
+          materials
+            ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
+            .filter(Boolean) ?? [],
+        )
+        const modelComponent = await ctx!.session.createModelComponent({
+          mesh: boxGeometry,
+          materials: materialList,
+        })
+        await ent.addComponent(modelComponent)
+        return ent
+      },
+    })
+
+    useEntityRef(ref, entity)
+
+    if (!entity) return null
+    return (
+      <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
+    )
+  },
+)
