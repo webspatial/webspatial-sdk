@@ -11,6 +11,7 @@ import { RealityContext, RealityContextValue } from '../context'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { SpatializedElementRef } from '../../spatialized-container/types'
+import { SpatializedElement } from '@webspatial/core-sdk'
 
 type Props = {
   children?: React.ReactNode
@@ -37,22 +38,14 @@ export const Reality = forwardRef<SpatializedElementRef, Props>(
 
     const createReality = useCallback(async () => {
       const resourceRegistry = new ResourceRegistry()
-      const session = await getSession()
-      if (!session) {
-        console.error('getSession failed')
-        return
-      }
+      const session = await getSession()!
+
       const reality = await session.createSpatializedDynamic3DElement()
-      if (isCancelled.current) {
-        reality.destroy()
-        resourceRegistry.destroy()
-        setIsReady(false)
-        return
-      }
+
       await session.getSpatialScene().addSpatializedElement(reality)
       ctxRef.current = { session, reality, resourceRegistry }
       setIsReady(true)
-      return reality
+      return reality as SpatializedElement
     }, [])
 
     const content = useCallback(({ spatializedElement, ...rest }: any) => {
