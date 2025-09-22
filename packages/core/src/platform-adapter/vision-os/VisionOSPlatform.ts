@@ -4,6 +4,11 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 
+
+type JSBError = {
+  message: string
+}
+
 export class VisionOSPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     try {
@@ -11,9 +16,10 @@ export class VisionOSPlatform implements PlatformAbility {
         `${cmd}::${msg}`,
       )
       return CommandResultSuccess(result)
-    } catch (error) {
-      console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
-      return CommandResultFailure('errorNo', 'error')
+    } catch (error: unknown) {
+      // console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
+      const { code, message } = JSON.parse((error as JSBError).message)
+      return CommandResultFailure(code, message)
     }
   }
 

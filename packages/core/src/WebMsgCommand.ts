@@ -22,6 +22,18 @@ export enum SpatialWebMsgType {
   spatialmagnifystart = 'spatialmagnifystart',
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
+
+  objectdestroy = 'objectdestroy',
+}
+
+export interface ObjectDestroyMsg {
+  type: SpatialWebMsgType.objectdestroy
+}
+
+export interface CubeInfoMsg {
+  type: SpatialWebMsgType.cubeInfo
+  origin: Vec3
+  size: Size3D
 }
 
 export interface CubeInfoMsg {

@@ -16,6 +16,7 @@ import {
 } from './types/types'
 import {
   CubeInfoMsg,
+  ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
   SpatialMagnifyEndMsg,
@@ -43,7 +44,7 @@ export abstract class SpatializedElement extends SpatialObject {
 
     SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent.bind(this))
   }
-  
+
   /**
    * Updates the properties of this spatialized element.
    * Must be implemented by derived classes to handle specific property updates.
@@ -69,7 +70,7 @@ export abstract class SpatializedElement extends SpatialObject {
    * Used for spatial calculations and hit testing.
    */
   private _cubeInfo?: CubeInfo
-  
+
   /**
    * Gets the current cube information for this element.
    * @returns The current CubeInfo or undefined if not set
@@ -82,13 +83,13 @@ export abstract class SpatializedElement extends SpatialObject {
    * The current transformation matrix of this element.
    */
   private _transform?: DOMMatrix
-  
+
   /**
    * The inverse of the current transformation matrix.
    * Used for converting world coordinates to local coordinates.
    */
   private _transformInv?: DOMMatrix
-  
+
   /**
    * Gets the current transformation matrix.
    * @returns The current transformation matrix or undefined if not set
@@ -96,7 +97,7 @@ export abstract class SpatializedElement extends SpatialObject {
   get transform() {
     return this._transform
   }
-  
+
   /**
    * Gets the inverse of the current transformation matrix.
    * @returns The inverse transformation matrix or undefined if not set
@@ -118,10 +119,13 @@ export abstract class SpatializedElement extends SpatialObject {
       | SpatialDragMsg
       | SpatialDragEndMsg
       | SpatialRotateMsg
-      | SpatialRotateEndMsg,
+      | SpatialRotateEndMsg
+      | ObjectDestroyMsg,
   ) {
     const { type } = data
-    if (type === SpatialWebMsgType.cubeInfo) {
+    if (type === SpatialWebMsgType.objectdestroy) {
+      this.isDestroyed = true
+    } else if (type === SpatialWebMsgType.cubeInfo) {
       // Handle cube info updates (bounding box information)
       const cubeInfoMsg = data as CubeInfoMsg
       this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)

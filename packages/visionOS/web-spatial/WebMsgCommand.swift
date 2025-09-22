@@ -27,6 +27,8 @@ enum SpatialWebMsgType: String, Encodable {
     case spatialrotateend = "spatialrotateend"
     case spatialmagnify = "spatialmagnify"
     case spatialmagnifyend = "spatialmagnifyend"
+    
+    case objectdestroy = "objectdestroy"
 }
 
 // notify Spatialized3DElement Container Cube, used for ref.current.getBoundingClientCube()
@@ -110,4 +112,8 @@ struct ModelLoadSuccess: Encodable {
 
 struct ModelLoadFailure: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.modelloadfailed
+}
+
+struct SpatialObjectDestroiedEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.objectdestroy
 }

@@ -11,7 +11,9 @@ export class SpatialObject {
     public readonly id: string,
   ) {}
 
-  private isDestroyed = false
+  name?: string
+
+  isDestroyed = false
 
   async inspect() {
     const ret = await new InspectCommand(this.id).execute()
@@ -31,7 +33,11 @@ export class SpatialObject {
       this.onDestroy()
       this.isDestroyed = true
       return ret.data
+    } else if (this.isDestroyed) {
+      // already destroyed
+      return
     }
+
     throw new Error(ret.errorMessage)
   }
 

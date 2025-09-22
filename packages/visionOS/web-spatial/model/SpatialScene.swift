@@ -965,6 +965,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 listener: onSptatialObjectDestroyed
             )
         spatialObjects.removeValue(forKey: spatialObject.spatialId)
+        
+        // notify web side, spatialObject is destroyed
+        self.sendWebMsg(spatialObject.spatialId, SpatialObjectDestroiedEvent())
     }
 
     func findSpatialObject<T: SpatialObjectProtocol>(_ id: String) -> T? {
