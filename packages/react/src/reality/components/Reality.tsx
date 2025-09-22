@@ -2,7 +2,6 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -19,62 +18,77 @@ type Props = {
 
 export const Reality = forwardRef<SpatializedElementRef, Props>(
   function RealityBase({ children, ...props }, ref) {
-    const ctxRef = useRef<RealityContextValue>(null)
+    const ctxRef = useRef<RealityContextValue | null>(null)
 
-    const isCancelled = useRef(false)
+    const creationId = useRef(0)
 
     const [isReady, setIsReady] = useState(false)
-    useEffect(() => {
-      isCancelled.current = false
 
-      return () => {
-        isCancelled.current = true
-        ctxRef.current?.resourceRegistry.destroy()
-        ctxRef.current?.reality.destroy()
-        ctxRef.current = null
-        setIsReady(false)
-      }
+    const cleanupReality = useCallback(() => {
+      ctxRef.current?.resourceRegistry.destroy()
+      ctxRef.current?.reality.destroy()
+      ctxRef.current = null
+      setIsReady(false)
     }, [])
 
+    useEffect(() => {
+      return () => {
+        creationId.current++
+        cleanupReality()
+      }
+    }, [cleanupReality])
+
     const createReality = useCallback(async () => {
+      const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
-      const session = await getSession()!
+      const session = await getSession()
+      if (!session) {
+        resourceRegistry.destroy()
+        return null
+      }
 
       const reality = await session.createSpatializedDynamic3DElement()
 
-      function cleanup() {
+      const isCancelled = () => id !== creationId.current
+
+      if (isCancelled()) {
         resourceRegistry.destroy()
         reality.destroy()
-        setIsReady(false)
+        return null
       }
 
-      if (isCancelled.current) {
-        cleanup()
-        return
-      }
+      try {
+        const result = await session
+          .getSpatialScene()
+          .addSpatializedElement(reality)
 
-      const result = await session
-        .getSpatialScene()
-        .addSpatializedElement(reality)
-      if (!result.success) {
-        cleanup()
-        return
-      }
-      ctxRef.current = { session, reality, resourceRegistry }
-      setIsReady(true)
-      return reality as SpatializedElement
-    }, [])
+        if (!result.success || isCancelled()) {
+          resourceRegistry.destroy()
+          reality.destroy()
+          return null
+        }
 
-    const content = useCallback(({ spatializedElement, ...rest }: any) => {
-      return <></>
-    }, [])
+        cleanupReality()
+
+        ctxRef.current = { session, reality, resourceRegistry }
+        setIsReady(true)
+        return reality as SpatializedElement
+      } catch (err) {
+        console.error('[createReality] failed', err)
+        resourceRegistry.destroy()
+        reality.destroy()
+        return null
+      }
+    }, [cleanupReality])
+
+    const content = useCallback(() => <></>, [])
 
     return (
       <RealityContext.Provider value={ctxRef.current}>
         <SpatializedContainer<SpatializedElementRef>
-          component={'div'}
+          component="div"
           ref={ref}
-          //@ts-ignore
+          // @ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
           {...props}
