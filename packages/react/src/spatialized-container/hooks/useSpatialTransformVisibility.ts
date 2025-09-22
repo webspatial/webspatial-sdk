@@ -9,10 +9,10 @@ function parseTransformAndVisibilityProperties(
   const computedStyle = getComputedStyle(node)
 
   // handle transform properties
-  const transform = computedStyle.getPropertyValue('transform')
+  const transform = computedStyle.getPropertyValue('transform') || 'none'
 
   // parse visibility
-  const visibility = computedStyle.getPropertyValue('visibility')
+  const visibility = computedStyle.getPropertyValue('visibility') || 'visible'
 
   return {
     visibility,

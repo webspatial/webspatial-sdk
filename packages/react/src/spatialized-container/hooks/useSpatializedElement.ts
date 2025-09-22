@@ -20,7 +20,7 @@ export function useSpatializedElement(
 
           setSpatializedElement(spatializedElement)
         } else {
-          inSpatializedElement.destroy()
+          inSpatializedElement?.destroy()
         }
       },
     )
