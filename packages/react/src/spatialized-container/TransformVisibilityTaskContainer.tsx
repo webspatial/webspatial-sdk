@@ -17,9 +17,8 @@ cssParserDivContainer.style.position = 'absolute'
 
 cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
 
-window.addEventListener('load', () => {
-  document.body.appendChild(cssParserDivContainer)
-})
+document.body.appendChild(cssParserDivContainer)
+
 
 function useInternalRef(ref: ForwardedRef<HTMLElement | null>) {
   const refInternal = useRef<HTMLElement | null>(null)
