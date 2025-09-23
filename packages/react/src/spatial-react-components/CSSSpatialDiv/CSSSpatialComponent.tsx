@@ -25,12 +25,9 @@ import {
   CSSSpatialRootContextObject,
 } from './CSSSpatialRootContext'
 
-//
 const cssParserDivContainer = document.createElement('div')
-window.addEventListener('load', () => {
-  cssParserDivContainer.style.position = 'absolute'
-  document.body.appendChild(cssParserDivContainer)
-})
+cssParserDivContainer.style.position = 'absolute'
+document.body.appendChild(cssParserDivContainer)
 
 interface CSSSpatialComponentWithUniqueIDProps
   extends SpatialReactComponentProps {
