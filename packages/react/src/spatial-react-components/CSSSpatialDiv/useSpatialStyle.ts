@@ -250,5 +250,5 @@ export function useSpatialStyle() {
     }
   }, [])
 
-  return { ref, ready, spatialStyle }
+  return { ref, ready: true, spatialStyle }
 }
