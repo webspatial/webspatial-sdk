@@ -254,7 +254,7 @@ class SpatialWebViewModel {
         let encoder = JSONEncoder()
         if let jsonData = try? encoder.encode(data) {
             let dataString = String(data: jsonData, encoding: .utf8)
-            controller?.callJS("window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
+            controller?.callJS("window.__SpatialWebEvent && window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
     
