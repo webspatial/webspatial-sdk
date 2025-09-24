@@ -9,6 +9,7 @@ import {
   ModelEntity,
   Reality,
   SceneGraph,
+  SpatializedElementRef,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
@@ -67,7 +68,11 @@ function App() {
     return () => {}
   }, [boxRotationOn])
 
-  const myRef = useRef<EntityRef>(null)
+  const entRef = useRef<EntityRef>(null)
+  const modelEntRef = useRef<EntityRef>(null)
+  const boxEntRef = useRef<EntityRef>(null)
+
+  const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
   return (
     <div className="pl-5 pt-2">
@@ -95,17 +100,26 @@ function App() {
         <div>console</div>
         <p style={{ fontSize: '46px' }}>{logs}</p>
         <Reality
+          id="testReality"
           style={{
             width: '500px',
             height: '800px',
             '--xr-depth': 100,
+            '--xr-back': 200,
           }}
+          ref={realityRef}
         >
           <UnlitMaterial id="matRed" color="#ff0000" />
           <UnlitMaterial id="matGreen" color="#00ff00" />
           <ModelAsset
             id="model"
             src="http://localhost:5173/public/assets/RocketToy1.usdz"
+            onLoad={() => {
+              console.log('model load')
+            }}
+            onError={e => {
+              console.log('model error', e)
+            }}
           />
           <SceneGraph>
             <Entity
@@ -115,6 +129,8 @@ function App() {
             >
               <BoxEntity
                 id="boxRed"
+                name="boxRedName"
+                ref={boxEntRef}
                 width={0.2}
                 height={0.2}
                 depth={0.1}
@@ -125,10 +141,12 @@ function App() {
               ></BoxEntity>
             </Entity>
             <Entity
+              id="hehe"
+              name="hehehe"
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              ref={myRef}
+              ref={entRef}
             >
               <BoxEntity
                 id="boxGreen"
@@ -140,31 +158,50 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  console.log('tap box', e.detail.location3D)
-                  const pos = await myRef.current?.convertFromEntityToEntity(
-                    'boxGreen',
-                    'boxRed',
-                    e.detail.location3D,
-                  )
-                  console.log('🚀 ~ pos:', pos)
-                  const pos2 = await myRef.current?.convertFromEntityToScene(
-                    'boxGreen',
-                    e.detail.location3D,
-                  )
-                  console.log('🚀 ~ pos2:', pos2)
-                  const pos3 = await myRef.current?.convertFromSceneToEntity(
-                    'boxGreen',
-                    e.detail.location3D,
-                  )
-                  console.log('🚀 ~ pos3:', pos3)
+                  // console.log('tap box', e.detail.location3D)
+                  // const pos = await myRef.current?.convertFromEntityToEntity(
+                  //   'boxGreen',
+                  //   'boxRed',
+                  //   e.detail.location3D,
+                  // )
+                  // console.log('🚀 ~ pos:', pos)
+                  // const pos2 = await myRef.current?.convertFromEntityToScene(
+                  //   'boxGreen',
+                  //   e.detail.location3D,
+                  // )
+                  // console.log('🚀 ~ pos2:', pos2)
+                  // const pos3 = await myRef.current?.convertFromSceneToEntity(
+                  //   'boxGreen',
+                  //   e.detail.location3D,
+                  // )
+                  // console.log('🚀 ~ pos3:', pos3)
+                  // console.log(
+                  //   'realityRef.current:',
+                  //   realityRef.current?.clientDepth,
+                  //   realityRef.current?.offsetBack,
+                  //   realityRef.current?.getBoundingClientCube(),
+                  // )
+                  // const domEleReality = document.getElementById("testReality")
+                  // console.log("🚀 ~ domEleReality:", domEleReality)
+
+                  // console.log(
+                  //   'entity position',
+                  //   document.getElementById('boxGreen'),
+                  // )
+                  console.log(entRef.current)
+                  console.log(boxEntRef.current)
                 }}
               ></BoxEntity>
             </Entity>
             <ModelEntity
+              id="modelEnt"
+              name="modelEntName"
               model="model"
+              ref={modelEntRef}
               rotation={boxRotation}
               onSpatialTap={e => {
                 console.log('tap model', e.detail.location3D)
+                console.log(modelEntRef.current)
               }}
             />
           </SceneGraph>

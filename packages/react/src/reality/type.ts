@@ -3,6 +3,7 @@ import { SpatialTapEvent } from '../spatialized-container'
 
 export type EntityProps = {
   id?: string
+  name?: string
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3

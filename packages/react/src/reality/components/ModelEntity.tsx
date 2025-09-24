@@ -8,7 +8,10 @@ type Props = EntityProps & { model: string } & EntityEventHandler & {
   }
 
 export const ModelEntity = forwardRef<EntityRef, Props>(
-  ({ id, model, position, rotation, scale, onSpatialTap, children }, ref) => {
+  (
+    { id, model, position, rotation, scale, onSpatialTap, children, name },
+    ref,
+  ) => {
     const ctx = useRealityContext()
     const entity = useEntity({
       id,
@@ -25,9 +28,13 @@ export const ModelEntity = forwardRef<EntityRef, Props>(
             return null
           }
 
-          return ctx!.session.createSpatialModelEntity({
-            modelAssetId: modelAsset.id,
-          })
+          return ctx!.session.createSpatialModelEntity(
+            {
+              modelAssetId: modelAsset.id,
+              name,
+            },
+            { id, name },
+          )
         } catch (error) {
           console.error('ModelEntity error:', error)
           return null as any

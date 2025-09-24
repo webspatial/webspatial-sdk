@@ -12,6 +12,7 @@ import {
   SpatialGeometryOptions,
   SpatialModelEntityCreationOptions,
   SpatialUnlitMaterialOptions,
+  SpatialEntityUserData,
 } from '../types/types'
 import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
@@ -20,14 +21,14 @@ import { SpatialUnlitMaterial } from './material'
 import { SpatialModelAsset } from './resource'
 
 export async function createSpatialEntity(
-  name?: string,
+  userData?: SpatialEntityUserData,
 ): Promise<SpatialEntity> {
-  const result = await new CreateSpatialEntityCommand(name).execute()
+  const result = await new CreateSpatialEntityCommand(userData?.name).execute()
   if (!result.success) {
     throw new Error('createSpatialEntity failed:' + result?.errorMessage)
   } else {
     const { id } = result.data
-    return new SpatialEntity(id, name)
+    return new SpatialEntity(id, userData)
   }
 }
 
@@ -71,13 +72,14 @@ export async function createModelComponent(options: ModelComponentOptions) {
 
 export async function createSpatialModelEntity(
   options: SpatialModelEntityCreationOptions,
+  userData?: SpatialEntityUserData,
 ) {
   const result = await new CreateSpatialModelEntityCommand(options).execute()
   if (!result.success) {
     throw new Error('createSpatialModelEntity failed:' + result?.errorMessage)
   } else {
     const { id } = result.data
-    return new SpatialModelEntity(id)
+    return new SpatialModelEntity(id, options, userData)
   }
 }
 

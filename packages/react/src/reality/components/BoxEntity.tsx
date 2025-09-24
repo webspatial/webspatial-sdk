@@ -33,6 +33,7 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
       scale,
       onSpatialTap,
       children,
+      name,
     },
     ref,
   ) => {
@@ -48,7 +49,7 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
 
         try {
           const ent = await manager.addResource(() =>
-            ctx!.session.createEntity(),
+            ctx!.session.createEntity({ id, name }),
           )
 
           const boxGeometry = await manager.addResource(() =>

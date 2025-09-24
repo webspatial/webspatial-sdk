@@ -4,7 +4,11 @@ import {
   ConvertFromSceneToEntityCommand,
   SetParentForEntityCommand,
 } from './../../JSBCommand'
-import { SpatialEntityEventType, Vec3 } from '../../types/types'
+import {
+  SpatialEntityEventType,
+  SpatialEntityUserData,
+  Vec3,
+} from '../../types/types'
 import {
   AddComponentToEntityCommand,
   AddEntityToEntityCommand,
@@ -26,7 +30,7 @@ export class SpatialEntity extends SpatialObject {
   events: Record<string, (data: any) => void> = {}
   constructor(
     id: string,
-    public name?: string,
+    public userData?: SpatialEntityUserData,
   ) {
     super(id)
     SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent)

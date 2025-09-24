@@ -39,5 +39,7 @@ export const useEntityRef = (
       if (!ent) return pos
       return (await entity.convertFromSceneToEntity(ent.id, pos)).data
     },
+    id: entity?.userData?.id,
+    name: entity?.userData?.name,
   }))
 }

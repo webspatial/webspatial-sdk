@@ -240,6 +240,11 @@ export interface ModelComponentOptions {
   materials: SpatialMaterial[]
 }
 
+export interface SpatialEntityUserData {
+  id?: string
+  name?: string
+}
+
 export interface SpatialModelEntityCreationOptions {
   modelAssetId: string
   name?: string

@@ -19,6 +19,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
+  SpatialEntityUserData,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
@@ -95,8 +96,8 @@ export class SpatialSession {
    * @param name Optional name for the entity
    * @returns Promise resolving to a new SpatialEntity instance
    */
-  createEntity(name?: string): Promise<SpatialEntity> {
-    return createSpatialEntity(name)
+  createEntity(userData?: SpatialEntityUserData,): Promise<SpatialEntity> {
+    return createSpatialEntity(userData)
   }
 
   /**
@@ -180,7 +181,7 @@ export class SpatialSession {
    * @param options Configuration options for the spatial model entity
    * @returns Promise resolving to a new SpatialModelEntity instance
    */
-  createSpatialModelEntity(options: SpatialModelEntityCreationOptions) {
-    return createSpatialModelEntity(options)
+  createSpatialModelEntity(options: SpatialModelEntityCreationOptions, userData?: SpatialEntityUserData) {
+    return createSpatialModelEntity(options, userData)
   }
 }
