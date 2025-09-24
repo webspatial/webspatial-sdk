@@ -10,7 +10,7 @@ import {
 } from '../hooks'
 
 type UseEntityOptions = {
-  createEntity: () => Promise<SpatialEntity>
+  createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
 } & EntityProps &
   EntityEventHandler
 
@@ -32,27 +32,35 @@ export const useEntity = ({
 
   useEffect(() => {
     if (!ctx) return
-    let cancelled = false
+    const controller = new AbortController()
 
     const init = async () => {
-      const ent = await createEntity()
-      if (cancelled) {
-        ent.destroy()
-        return
+      try {
+        const ent = await createEntity(controller.signal)
+        if (!ent) return
+        if (controller.signal.aborted) {
+          ent.destroy()
+          return
+        }
+        if (parent) {
+          const result = await parent.addEntity(ent)
+          if (!result.success) throw new Error('parent.addEntity failed')
+        } else {
+          const result = await ctx.reality.addEntity(ent)
+          if (!result.success) throw new Error('ctx.reality.addEntity failed')
+        }
+
+        entityRef.current = ent
+        forceUpdate()
+      } catch (error) {
+        console.error('useEntity init ~ error:', error)
       }
-      if (parent) {
-        await parent.addEntity(ent)
-      } else {
-        await ctx.reality.addEntity(ent)
-      }
-      entityRef.current = ent
-      forceUpdate()
     }
 
     init()
 
     return () => {
-      cancelled = true
+      controller.abort()
       entityRef.current?.destroy()
     }
   }, [ctx, parent])

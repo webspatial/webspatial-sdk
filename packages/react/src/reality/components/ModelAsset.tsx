@@ -12,6 +12,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialModelAsset>()
   useEffect(() => {
+    const controller = new AbortController()
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
@@ -20,6 +21,10 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
 
       try {
         const mat = await modelAssetPromise
+        if (controller.signal.aborted) {
+          mat.destroy()
+          return
+        }
         materialRef.current = mat
         options.onLoad?.()
       } catch (error: any) {
@@ -29,6 +34,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
     init()
 
     return () => {
+      controller.abort()
       materialRef.current?.destroy()
     }
   }, [ctx])

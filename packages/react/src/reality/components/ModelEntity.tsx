@@ -16,13 +16,22 @@ export const ModelEntity = forwardRef<EntityRef, Props>(
       rotation,
       scale,
       onSpatialTap,
-      createEntity: async () => {
-        const modelAsset = await ctx!.resourceRegistry.get(model)
-        if (!modelAsset)
-          throw new Error(`ModelEntity: model not found ${model}`)
-        return ctx!.session.createSpatialModelEntity({
-          modelAssetId: modelAsset.id,
-        })
+      createEntity: async (signal: AbortSignal) => {
+        try {
+          const modelAsset = await ctx!.resourceRegistry.get(model)
+          if (!modelAsset)
+            throw new Error(`ModelEntity: model not found ${model}`)
+          if (signal.aborted) {
+            return null
+          }
+
+          return ctx!.session.createSpatialModelEntity({
+            modelAssetId: modelAsset.id,
+          })
+        } catch (error) {
+          console.error('ModelEntity error:', error)
+          return null as any
+        }
       },
     })
 

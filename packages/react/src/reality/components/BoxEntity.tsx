@@ -3,6 +3,7 @@ import { ParentContext, useRealityContext } from '../context'
 import { EntityProps, EntityEventHandler } from '../type'
 import { useEntityRef, EntityRef, useEntity } from '../hooks'
 import { SpatialMaterial } from '@webspatial/core-sdk'
+import { AbortResourceManager } from '../utils'
 
 type BoxProps = {
   width?: number
@@ -42,25 +43,41 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
       rotation,
       scale,
       onSpatialTap,
-      createEntity: async () => {
-        const ent = await ctx!.session.createEntity()
-        const boxGeometry = await ctx!.session.createBoxGeometry({
-          width,
-          height,
-          depth,
-          cornerRadius,
-        })
-        const materialList: SpatialMaterial[] = await Promise.all(
-          materials
-            ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
-            .filter(Boolean) ?? [],
-        )
-        const modelComponent = await ctx!.session.createModelComponent({
-          mesh: boxGeometry,
-          materials: materialList,
-        })
-        await ent.addComponent(modelComponent)
-        return ent
+      createEntity: async (signal: AbortSignal) => {
+        const manager = new AbortResourceManager(signal)
+
+        try {
+          const ent = await manager.addResource(() =>
+            ctx!.session.createEntity(),
+          )
+
+          const boxGeometry = await manager.addResource(() =>
+            ctx!.session.createBoxGeometry({
+              width,
+              height,
+              depth,
+              cornerRadius,
+            }),
+          )
+
+          const materialList: SpatialMaterial[] = await Promise.all(
+            materials
+              ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
+              .filter(Boolean) ?? [],
+          )
+          const modelComponent = await manager.addResource(() =>
+            ctx!.session.createModelComponent({
+              mesh: boxGeometry,
+              materials: materialList,
+            }),
+          )
+
+          await ent.addComponent(modelComponent)
+          return ent
+        } catch (error) {
+          await manager.dispose()
+          return null as any
+        }
       },
     })
 
