@@ -193,10 +193,11 @@ function App() {
                       e.detail.location3D,
                     )
                     console.log('🚀 ~ pos:', pos)
-                    const pos2 = await myRef.current?.convertFromEntityToScene(
-                      'boxGreen',
-                      e.detail.location3D,
-                    )
+                    const pos2 =
+                      await myRef.current?.convertFromEntityToReality(
+                        'boxGreen',
+                        e.detail.location3D,
+                      )
                     console.log('🚀 ~ pos2:', pos2)
                     setShowModelEntity(p => !p)
                   }}

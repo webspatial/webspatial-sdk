@@ -8,8 +8,14 @@ export type EntityRef = {
     toEntityId: string,
     position: Vec3,
   ) => Promise<Vec3>
-  convertFromEntityToScene: (entityId: string, position: Vec3) => Promise<Vec3>
-  convertFromSceneToEntity: (entityId: string, position: Vec3) => Promise<Vec3>
+  convertFromEntityToReality: (
+    entityId: string,
+    position: Vec3,
+  ) => Promise<Vec3>
+  convertFromRealityToEntity: (
+    entityId: string,
+    position: Vec3,
+  ) => Promise<Vec3>
   id: string | undefined
   name: string | undefined
   entity: SpatialEntity | null
@@ -30,13 +36,13 @@ export const useEntityRef = (
       return (await entity.convertFromEntityToEntity(fromEnt.id, toEnt.id, pos))
         .data
     },
-    convertFromEntityToScene: async (entityId, pos) => {
+    convertFromEntityToReality: async (entityId, pos) => {
       if (!entity) return pos
       const ent = await ctx?.resourceRegistry.get(entityId)
       if (!ent) return pos
       return (await entity.convertFromEntityToScene(ent.id, pos)).data
     },
-    convertFromSceneToEntity: async (entityId, pos) => {
+    convertFromRealityToEntity: async (entityId, pos) => {
       if (!entity) return pos
       const ent = await ctx?.resourceRegistry.get(entityId)
       if (!ent) return pos
