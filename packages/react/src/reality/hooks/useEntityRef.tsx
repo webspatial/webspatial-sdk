@@ -10,6 +10,9 @@ export type EntityRef = {
   ) => Promise<Vec3>
   convertFromEntityToScene: (entityId: string, position: Vec3) => Promise<Vec3>
   convertFromSceneToEntity: (entityId: string, position: Vec3) => Promise<Vec3>
+  id: string | undefined
+  name: string | undefined
+  entity: SpatialEntity | null
 }
 
 export const useEntityRef = (
@@ -41,5 +44,6 @@ export const useEntityRef = (
     },
     id: entity?.userData?.id,
     name: entity?.userData?.name,
+    entity,
   }))
 }

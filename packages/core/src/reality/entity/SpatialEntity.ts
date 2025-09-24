@@ -28,6 +28,8 @@ export class SpatialEntity extends SpatialObject {
   scale: Vec3 = { x: 1, y: 1, z: 1 }
 
   events: Record<string, (data: any) => void> = {}
+  children: SpatialEntity[] = []
+  parent: SpatialEntity | null = null
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,
@@ -50,10 +52,23 @@ export class SpatialEntity extends SpatialObject {
   }
 
   async addEntity(ent: SpatialEntity) {
-    return new SetParentForEntityCommand(ent.id, this.id).execute()
+    const ans = await new SetParentForEntityCommand(ent.id, this.id).execute()
+    this.children.push(ent)
+    ent.parent = this
+    return ans
   }
   async removeFromParent() {
-    return new SetParentForEntityCommand(this.id, undefined).execute()
+    const ans = await new SetParentForEntityCommand(
+      this.id,
+      undefined,
+    ).execute()
+    if (this.parent) {
+      this.parent.children = this.parent.children.filter(
+        child => child.id !== this.id,
+      )
+      this.parent = null
+    }
+    return ans
   }
 
   async updateTransform(properties: Partial<SpatialEntityProperties>) {
@@ -95,7 +110,7 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (data: any) => {
-    console.log('SpatialEntityEvent', data)
+    // console.log('SpatialEntityEvent', data)
     if (this.events[data.type]) {
       const evt = createSpatialEvent(data.type, data.detail)
       this.events[data.type](evt)
@@ -104,6 +119,18 @@ export class SpatialEntity extends SpatialObject {
 
   protected onDestroy(): void {
     SpatialWebEvent.removeEventReceiver(this.id)
+    // handle children
+    this.children.forEach(child => {
+      child.parent = null
+    })
+    this.children = []
+    // handle parent
+    if (this.parent) {
+      this.parent.children = this.parent.children.filter(
+        child => child.id !== this.id,
+      )
+      this.parent = null
+    }
   }
   // onUpdate(properties: SpatialEntityProperties) {
   //   this.position = properties.position

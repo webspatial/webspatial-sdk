@@ -74,6 +74,8 @@ function App() {
 
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
+  const [showModelEntity, setShowModelEntity] = useState(true)
+
   return (
     <div className="pl-5 pt-2">
       <h1 className="text-2xl text-black">reality test</h1>
@@ -138,6 +140,10 @@ function App() {
                 materials={['matRed']}
                 position={boxPosition}
                 rotation={boxRotation}
+                onSpatialTap={async e => {
+                  setShowModelEntity(pre => !pre)
+                  console.log('ent parent', entRef.current?.entity?.parent)
+                }}
               ></BoxEntity>
             </Entity>
             <Entity
@@ -147,6 +153,9 @@ function App() {
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
               ref={entRef}
+              // onSpatialTap={async e => {
+              //   console.log('parent tap', e.detail.location3D)
+              // }}
             >
               <BoxEntity
                 id="boxGreen"
@@ -188,22 +197,30 @@ function App() {
                   //   'entity position',
                   //   document.getElementById('boxGreen'),
                   // )
-                  console.log(entRef.current)
-                  console.log(boxEntRef.current)
+                  // console.log(entRef.current)
+                  // console.log(boxEntRef.current)
+                  // console.log('children tap', e.detail.location3D)
+
+                  // console.log('boxGreen children', boxEntRef.current?.entity)
+
+                  console.log('realityRef.current:', realityRef.current?.offsetBack)
+                  // console.log('ent parent', entRef.current?.entity?.parent)
                 }}
               ></BoxEntity>
             </Entity>
-            <ModelEntity
-              id="modelEnt"
-              name="modelEntName"
-              model="model"
-              ref={modelEntRef}
-              rotation={boxRotation}
-              onSpatialTap={e => {
-                console.log('tap model', e.detail.location3D)
-                console.log(modelEntRef.current)
-              }}
-            />
+            {showModelEntity && (
+              <ModelEntity
+                id="modelEnt"
+                name="modelEntName"
+                model="model"
+                ref={modelEntRef}
+                rotation={boxRotation}
+                onSpatialTap={e => {
+                  // console.log('tap model', e.detail.location3D)
+                  // console.log(modelEntRef.current)
+                }}
+              />
+            )}
           </SceneGraph>
         </Reality>
       </div>
