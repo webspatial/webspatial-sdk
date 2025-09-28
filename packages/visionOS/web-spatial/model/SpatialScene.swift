@@ -284,8 +284,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
+    public var didFailLoad = false
+
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
+            self.didFailLoad = false
             self.onPageStartLoad()
         }
 
@@ -296,6 +299,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didClose) {
             self.handleWindowClose()
+        }
+
+        spatialWebViewModel.addStateListener(.didFailLoad) {
+            self.didFailLoad = true
         }
     }
 
