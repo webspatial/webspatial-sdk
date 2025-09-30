@@ -81,8 +81,16 @@ export class SpatializedContainerObject<
     }
   }
 
-  public offSpatialTransformVisibilityChange(spatialId: string) {
-    delete this.fnsForSpatialTransformVisibility[spatialId]
+  public offSpatialTransformVisibilityChange(
+    spatialId: string,
+    fn: (spatialTransformVisibility: SpatialTransformVisibility) => void,
+  ) {
+    const fns = this.fnsForSpatialTransformVisibility[spatialId]
+    if (fns) {
+      this.fnsForSpatialTransformVisibility[spatialId] = fns.filter(
+        f => f !== fn,
+      )
+    }
   }
 
   public on2DFrameChange(spatialId: string, fn: () => void) {

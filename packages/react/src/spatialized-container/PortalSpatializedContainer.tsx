@@ -1,4 +1,4 @@
-import { useMemo, useContext, useEffect, ElementType } from 'react'
+import { useMemo, useContext, useEffect } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -88,6 +88,12 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
       ),
     [],
   )
+  useEffect(() => {
+    portalInstanceObject.init()
+    return () => {
+      portalInstanceObject.destroy()
+    }
+  }, [])
 
   useSync2DFrame(spatialId, portalInstanceObject, spatializedContainerObject)
 

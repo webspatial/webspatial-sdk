@@ -2,7 +2,11 @@ import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
-import { SpatialCustomStyleVars, Point3D } from '../types'
+import {
+  SpatialCustomStyleVars,
+  Point3D,
+  SpatialTransformVisibility,
+} from '../types'
 import { getSession } from '../../utils'
 import { convertDOMRectToSceneSpace } from '../transform-utils'
 
@@ -93,28 +97,40 @@ export class PortalInstanceObject {
         this.spatializedElementResolver = resolve
       },
     )
+  }
 
-    spatializedContainerObject.onSpatialTransformVisibilityChange(
-      spatialId,
-      spatialTransform => {
-        this.cachedTransformVisibilityInfo = {
-          transformMatrix: new DOMMatrix(spatialTransform.transform),
-          visibility: spatialTransform.visibility,
-        }
-        this.updateSpatializedElementProperties()
-      },
+  // called when PortalSpatializedContainer is mounted
+  init() {
+    this.spatializedContainerObject.onSpatialTransformVisibilityChange(
+      this.spatialId,
+      this.onSpatialTransformVisibilityChange,
     )
+  }
+
+  // called when PortalSpatializedContainer is unmounted
+  destroy() {
+    this.spatializedContainerObject.offSpatialTransformVisibilityChange(
+      this.spatialId,
+      this.onSpatialTransformVisibilityChange,
+    )
+  }
+
+  private onSpatialTransformVisibilityChange = (
+    spatialTransform: SpatialTransformVisibility,
+  ) => {
+    this.cachedTransformVisibilityInfo = {
+      transformMatrix: new DOMMatrix(spatialTransform.transform),
+      visibility: spatialTransform.visibility,
+    }
+    this.updateSpatializedElementProperties()
   }
 
   // called when 2D frame change
   notify2DFrameChange() {
-    // console.log('notify2DFrameChange')
-
     const dom = this.spatializedContainerObject.querySpatialDomBySpatialId(
       this.spatialId,
     )
     if (!dom) {
-      // console.log('dom not exist!')
       return
     }
     const computedStyle = getComputedStyle(dom)

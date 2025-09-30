@@ -1,5 +1,6 @@
 import {
   SpatializedElementRef,
+  SpatialTransformVisibility,
   StandardSpatializedContainerProps,
 } from './types'
 import { use2DFrameDetector } from './hooks/use2DFrameDetector'
@@ -20,14 +21,15 @@ function useSpatialTransformVisibilityWatcher(spatialId: string) {
 
   const spatializedContainerObject = useContext(SpatializedContainerContext)!
   useEffect(() => {
-    spatializedContainerObject.onSpatialTransformVisibilityChange(
-      spatialId,
-      spatialTransform => {
-        setTransformExist(spatialTransform.transform !== 'none')
-      },
-    )
+    const fn = (spatialTransform: SpatialTransformVisibility) => {
+      setTransformExist(spatialTransform.transform !== 'none')
+    }
+    spatializedContainerObject.onSpatialTransformVisibilityChange(spatialId, fn)
     return () => {
-      spatializedContainerObject.offSpatialTransformVisibilityChange(spatialId)
+      spatializedContainerObject.offSpatialTransformVisibilityChange(
+        spatialId,
+        fn,
+      )
     }
   }, [spatialId, spatializedContainerObject])
 
