@@ -5,8 +5,8 @@ var pwaManager = PWAManager()
 
 struct PWAManager: Codable {
     var isLocal: Bool = false
-    var start_url: String = "http://localhost:5173/src/reality/"
-    
+    var start_url: String = "http://localhost:5173/"
+
     var scope: String = ""
     var id: String = "com.webspatial.pico"
 
@@ -19,16 +19,16 @@ struct PWAManager: Codable {
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "web+spatial", url: "./?cmd=%s")]
     var mainScene: XSceneOptionsJSB = .init(
         defaultSize: .init(
-            width: 1,
-            height: 1,
+            width: 1024,
+            height: 768,
             depth: 0.1
         ),
         type: nil,
         resizability: ResizeRange(
-            minWidth: 0.5*1360,
-            minHeight: 0.5*1360,
-            maxWidth: 2*1360,
-            maxHeight: 2*1360
+            minWidth: 0.5 * 1360,
+            minHeight: 0.5 * 1360,
+            maxWidth: 2 * 1360,
+            maxHeight: 2 * 1360
         ),
         worldScaling: nil,
         worldAlignment: nil,
