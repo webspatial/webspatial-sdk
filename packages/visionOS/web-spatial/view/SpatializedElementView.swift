@@ -129,20 +129,22 @@ struct SpatializedElementView<Content: View>: View {
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation!
-        let x =  (spatializedElement.scrollWithParent ? ( translation.x - parentScrollOffset.x) : translation.x)
-        let y =  (spatializedElement.scrollWithParent ? ( translation.y - parentScrollOffset.y) : translation.y)
-        let z =  translation.z +  (spatializedElement.zIndex * zOrderBias)
+
         let width = spatializedElement.width
         let height = spatializedElement.height
         let depth = spatializedElement.depth
         let anchor = spatializedElement.rotationAnchor
 
+        let centerX = spatializedElement.clientX - (spatializedElement.scrollWithParent ? parentScrollOffset.x : 0)
+        let centerY = spatializedElement.clientY - (spatializedElement.scrollWithParent ? parentScrollOffset.y : 0)
+
         let opacity = spatializedElement.opacity
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
         let clip = spatializedElement.clip
-        
-        let smallOffset = z == 0.0 ? 0.0001: 0
+
+        let z = translation.z + (spatializedElement.zIndex * zOrderBias)
+        let smallOffset = z == 0.0 ? 0.0001 : 0
 
         content.simultaneousGesture(enableGesture ? gesture : nil)
             .frame(width: width, height: height)
@@ -158,9 +160,8 @@ struct SpatializedElementView<Content: View>: View {
             })
 
             .frame(depth: 0, alignment: .back)
-                        
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
-            .offset(z: smallOffset )
+            .offset(z: smallOffset)
             .scaleEffect(
                 x: scale.width,
                 y: scale.height,
@@ -171,11 +172,9 @@ struct SpatializedElementView<Content: View>: View {
                 rotation,
                 anchor: anchor
             )
-            .offset(x: x, y: y)
+            .offset(x: translation.x, y: translation.y)
             .offset(z: z)
-             
-        
-            .position(x: spatializedElement.clientX + width/2, y: spatializedElement.clientY + height/2)
+            .position(x: centerX + width / 2, y: centerY + height / 2)
             .offset(z: spatializedElement.backOffset)
             .opacity(opacity)
             .hidden(!visible)

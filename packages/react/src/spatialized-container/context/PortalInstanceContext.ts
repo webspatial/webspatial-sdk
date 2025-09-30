@@ -240,6 +240,10 @@ export class PortalInstanceObject {
         const parentDomRect = parentDom.getBoundingClientRect()
         x -= parentDomRect.x
         y -= parentDomRect.y
+      } else {
+        // Adjust to get the page relative to document instead of viewport
+        x += window.scrollX
+        y += window.scrollY
       }
     }
 
