@@ -93,11 +93,7 @@ export interface SpatialTransformVisibility {
   visibility: string
 }
 
-export type SpatializedElementRef<T extends HTMLElement = HTMLElement> = T & {
-  clientDepth: number
-  offsetBack: number
-  getBoundingClientCube: () => CubeInfo | undefined
-}
+export type SpatializedElementRef<T extends HTMLElement = HTMLElement> = T
 
 export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 

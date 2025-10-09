@@ -32,6 +32,12 @@ declare global {
     innerDepth: number
     outerDepth: number
   }
+
+  interface HTMLElement {
+    offsetBack: number
+    clientDepth: number
+    getBoundingClientCube: () => CubeInfo | undefined
+  }
 }
 
 export {}
