@@ -58,10 +58,17 @@ export function StandardSpatializedContainerBase(
   props: StandardSpatializedContainerProps,
   ref: ForwardedRef<HTMLElement | null>,
 ) {
-  const { component: Component, style: inStyle = {}, ...restProps } = props
+  const {
+    component: Component,
+    style: inStyle = {},
+    inStandardSpatializedContainer = false,
+    ...restProps
+  } = props
 
   const { refInternal, refInternalCallback } = useInternalRef(ref)
-  use2DFrameDetector(refInternal)
+  if (!inStandardSpatializedContainer) {
+    use2DFrameDetector(refInternal)
+  }
   const transformExist = useSpatialTransformVisibilityWatcher(props[SpatialID])
 
   const extraStyle = {

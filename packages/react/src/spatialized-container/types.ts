@@ -12,7 +12,6 @@ import {
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 
-
 // SpatialEvents
 type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialTap?: (event: SpatialTapEvent<T>) => void
@@ -30,6 +29,7 @@ type SpatialEventProps<T extends SpatializedElementRef> = {
 export interface StandardSpatializedContainerProps
   extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType
+  inStandardSpatializedContainer?: boolean
   [SpatialID]: string
 }
 

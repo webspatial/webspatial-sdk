@@ -133,6 +133,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
             {...restProps}
+            inStandardSpatializedContainer={true}
           />
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
@@ -187,6 +188,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
             {...restProps}
+            inStandardSpatializedContainer={false}
           />
           <PortalSpatializedContainer<T>
             {...spatialIdProps}
