@@ -3,6 +3,10 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
+function makeOriginalKey(key: string) {
+  return `__original_${key}`
+}
+
 export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   private ref: ForwardedRef<SpatializedElementRef<T>>
@@ -164,11 +168,39 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             return value
           },
           set(target, prop, value) {
+            if (self.transformVisibilityTaskContainerDom) {
+              self.transformVisibilityTaskContainerDom.className = dom.className
+            }
             return Reflect.set(target, prop, value)
           },
         },
       )
       this.domProxy = domProxy
+
+      // hijack classList
+      const domClassList = dom.classList
+      const domClassMethodKeys: Array<'add' | 'remove' | 'toggle' | 'replace'> =
+        ['add', 'remove', 'toggle', 'replace']
+      domClassMethodKeys.forEach(key => {
+        const hiddenKey = makeOriginalKey(key)
+        const hiddenKeyExist = (domClassList as any)[hiddenKey] !== undefined
+        const originalMethod = hiddenKeyExist
+          ? (domClassList as any)[hiddenKey]
+          : domClassList[key].bind(domClassList)
+
+        ;(domClassList as any)[hiddenKey] = originalMethod
+
+        domClassList[key] = function (this: any, ...args: any[]) {
+          const result = (originalMethod as Function)(...args)
+          // update transformVisibilityTaskContainerDom className
+          if (self.transformVisibilityTaskContainerDom) {
+            self.transformVisibilityTaskContainerDom.className = dom.className
+          }
+
+          return result
+        }
+      })
+
       // clear styleProxy
       this.styleProxy = undefined
       this.updateDomProxyToRef()
@@ -258,4 +290,3 @@ export function useDomProxy<T extends SpatializedElementRef>(
     spatialContainerRefProxy,
   }
 }
-
