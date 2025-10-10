@@ -112,7 +112,11 @@ export class SpatialEntity extends SpatialObject {
   private onReceiveEvent = (data: any) => {
     // console.log('SpatialEntityEvent', data)
     if (this.events[data.type]) {
-      const evt = createSpatialEvent(data.type, data.detail)
+      const evt = createSpatialEvent(data.type, data.detail, {
+        target: this,
+        currentTarget: this,
+      })
+      // todo: emulate event bubble on parent
       this.events[data.type](evt)
     }
   }
