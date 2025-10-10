@@ -147,6 +147,9 @@ export class PortalInstanceObject {
       return this.spatializedElement?.cubeInfo
     }
     const __getBoundingClientRect = () => {
+      if (!this.spatializedElement?.transform) {
+        return null
+      }
       const domRect = new DOMRect(
         this.domRect?.x,
         this.domRect?.y,
