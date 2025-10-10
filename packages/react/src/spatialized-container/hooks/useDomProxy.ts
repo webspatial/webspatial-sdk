@@ -163,6 +163,27 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             }
             const value = Reflect.get(target, prop)
             if (typeof value === 'function') {
+              if ('removeAttribute' === prop) {
+                return function (this: any, ...args: any[]) {
+                  const [property] = args
+                  if (property === 'style') {
+                    dom.style.cssText =
+                      'visibility: hidden; transition: none; transform: none;'
+                    if (self.transformVisibilityTaskContainerDom) {
+                      self.transformVisibilityTaskContainerDom.style.visibility =
+                        ''
+                      self.transformVisibilityTaskContainerDom.style.transform =
+                        ''
+                    }
+                    return true
+                  }
+                  if (property === 'class') {
+                    domProxy.className = ''
+                    return true
+                  }
+                }
+              }
+
               return value.bind(target)
             }
             return value
