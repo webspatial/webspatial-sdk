@@ -17,8 +17,12 @@ cssParserDivContainer.style.position = 'absolute'
 
 cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
 
-document.body.appendChild(cssParserDivContainer)
-
+function createOrGetCSSParserDivContainer() {
+  if (!cssParserDivContainer.parentElement) {
+    document.body.appendChild(cssParserDivContainer)
+  }
+  return cssParserDivContainer
+}
 
 function useInternalRef(ref: ForwardedRef<HTMLElement | null>) {
   const refInternal = useRef<HTMLElement | null>(null)
@@ -68,6 +72,8 @@ export function TransformVisibilityTaskContainerBase(
 
   const style: CSSProperties = { ...inStyle, ...extraStyle }
   useSpatialTransformVisibility(props[SpatialID], refInternal)
+
+  const cssParserDivContainer = createOrGetCSSParserDivContainer()
 
   return createPortal(
     <div ref={refInternalCallback} style={style} {...restProps} />,
