@@ -261,13 +261,9 @@ export class PortalInstanceObject {
     const height = domRect.height
     const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
     const scrollWithParent = !isFixedPosition
-    const contentVisibility =
-      computedStyle.getPropertyValue('content-visibility')
+
     const display = computedStyle.getPropertyValue('display')
-    const visible =
-      visibility === 'visible' &&
-      contentVisibility !== 'hidden' &&
-      display !== 'none'
+    const visible = visibility === 'visible' && display !== 'none'
 
     const zIndex =
       parseFloat(
