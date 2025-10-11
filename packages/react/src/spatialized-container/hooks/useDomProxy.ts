@@ -178,7 +178,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
                     return true
                   }
                   if (property === 'class') {
-                    domProxy.className = ''
+                    domProxy.className = 'xr-spatial-default'
                     return true
                   }
                 }
@@ -189,9 +189,16 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             return value
           },
           set(target, prop, value) {
-            if (self.transformVisibilityTaskContainerDom) {
-              self.transformVisibilityTaskContainerDom.className = dom.className
+            if (prop === 'className') {
+              if (value && value.indexOf('xr-spatial-default') === -1) {
+                value = value + ' xr-spatial-default'
+              }
+
+              if (self.transformVisibilityTaskContainerDom) {
+                self.transformVisibilityTaskContainerDom.className = value
+              }
             }
+
             return Reflect.set(target, prop, value)
           },
         },

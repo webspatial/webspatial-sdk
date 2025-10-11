@@ -61,6 +61,7 @@ export function StandardSpatializedContainerBase(
   const {
     component: Component,
     style: inStyle = {},
+    className,
     inStandardSpatializedContainer = false,
     ...restProps
   } = props
@@ -78,7 +79,18 @@ export function StandardSpatializedContainerBase(
   }
   const style = { ...inStyle, ...extraStyle }
 
-  return <Component ref={refInternalCallback} style={style} {...restProps} />
+  const classNames = className
+    ? `${className} xr-spatial-default`
+    : 'xr-spatial-default'
+
+  return (
+    <Component
+      ref={refInternalCallback}
+      style={style}
+      className={classNames}
+      {...restProps}
+    />
+  )
 }
 
 export const StandardSpatializedContainer = forwardRef(
@@ -88,3 +100,10 @@ export const StandardSpatializedContainer = forwardRef(
     ref?: ForwardedRef<SpatializedElementRef<T>>
   },
 ) => React.ReactElement | null
+
+// inject xr-spatial-default style to head
+const styleElement = document.createElement('style')
+styleElement.type = 'text/css'
+styleElement.innerHTML =
+  ' .xr-spatial-default {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
+document.head.appendChild(styleElement)
