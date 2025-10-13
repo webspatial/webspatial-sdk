@@ -2,53 +2,52 @@ import RealityKit
 import SwiftUI
 
 struct SpatialSceneContentView: View {
-    @State var sceneId: String
+    @State var spatialScene: SpatialScene
     var width: Double
     var height: Double
 
     var body: some View {
-        if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
-            ZStack(alignment: Alignment.topLeading) {
-                // Display the main webview
-                spatialScene.getView()
-                    .materialWithBorderCorner(
-                        spatialScene.backgroundMaterial,
-                        spatialScene.cornerRadius
-                    )
-                    .frame(width: width, height: height)
-                    .offset(z: -1)
+        ZStack(alignment: Alignment.topLeading) {
+            // Display the main webview
+            spatialScene.getView()
+                .materialWithBorderCorner(
+                    spatialScene.backgroundMaterial,
+                    spatialScene.cornerRadius,
+                    spatialScene.windowStyle
+                )
+                .frame(width: width, height: height)
+                .offset(z: -1)
 
-                let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
+            let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
 
-                ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        Spatialized2DElementView()
-                    }
-                    .environment(child)
+            ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                    Spatialized2DElementView()
                 }
-
-                let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
-
-                ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedStatic3DView()
-                    }
-                    .environment(child)
-                }
-
-                let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
-
-                ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedDynamic3DView()
-                    }
-                    .environment(child)
-                }
+                .environment(child)
             }
-            .opacity(spatialScene.opacity)
-            .environment(spatialScene)
-            .coordinateSpace(name: "SpatialScene")
+
+            let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
+
+            ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                    SpatializedStatic3DView()
+                }
+                .environment(child)
+            }
+
+            let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
+
+            ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                    SpatializedDynamic3DView()
+                }
+                .environment(child)
+            }
         }
+        .opacity(spatialScene.opacity)
+        .environment(spatialScene)
+        .coordinateSpace(name: "SpatialScene")
     }
 }
 
@@ -107,7 +106,8 @@ struct PreviewSpatializedStatic3DElement: View {
     }
 
     var body: some View {
-        SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 1000)
+        let spatialScene = SpatialApp.Instance.getScene(sceneId)!
+        SpatialSceneContentView(spatialScene: spatialScene, width: 1200, height: 1000)
     }
 }
 
@@ -154,7 +154,8 @@ struct PreviewSpatialized2DElement: View {
     }
 
     var body: some View {
-        SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 1000)
+        let spatialScene = SpatialApp.Instance.getScene(sceneId)!
+        SpatialSceneContentView(spatialScene: spatialScene, width: 1200, height: 1000)
     }
 }
 
@@ -186,7 +187,8 @@ struct PreviewSpatializedDynamic3DElement: View {
     }
 
     var body: some View {
-        SpatialSceneContentView(sceneId: sceneId, width: 1200, height: 1000)
+        let spatialScene = SpatialApp.Instance.getScene(sceneId)!
+        SpatialSceneContentView(spatialScene: spatialScene, width: 1200, height: 1000)
     }
 }
 
