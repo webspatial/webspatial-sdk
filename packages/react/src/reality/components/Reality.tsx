@@ -9,14 +9,13 @@ import { SpatializedContainer } from '../../spatialized-container/SpatializedCon
 import { RealityContext, RealityContextValue } from '../context'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
-import { SpatializedElementRef } from '../../spatialized-container/types'
+import {
+  RealityProps,
+  SpatializedElementRef,
+} from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
 
-type Props = {
-  children?: React.ReactNode
-} & React.ComponentPropsWithRef<'div'>
-
-export const Reality = forwardRef<SpatializedElementRef, Props>(
+export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...props }, ref) {
     const ctxRef = useRef<RealityContextValue | null>(null)
 

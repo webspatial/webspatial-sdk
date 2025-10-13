@@ -33,6 +33,8 @@ export interface StandardSpatializedContainerProps
   [SpatialID]: string
 }
 
+export type RealityProps = SpatialEventProps<SpatializedElementRef> &
+  React.ComponentPropsWithRef<'div'>
 export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
   SpatialEventProps<T> &
     React.ComponentPropsWithoutRef<'div'> & {
