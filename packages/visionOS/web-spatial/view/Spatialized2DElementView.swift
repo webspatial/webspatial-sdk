@@ -35,7 +35,8 @@ struct Spatialized2DElementView: View {
             spatialized2DElement.getView()
                 .materialWithBorderCorner(
                     spatialized2DElement.backgroundMaterial,
-                    spatialized2DElement.cornerRadius
+                    spatialized2DElement.cornerRadius,
+                    .window
                 )
                 .simultaneousGesture(spatialized2DElement.scrollPageEnabled ? dragWebGesture : nil)
 
@@ -55,9 +56,9 @@ struct Spatialized2DElementView: View {
                 }
                 .environment(child)
             }
-            
+
             let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedDynamic3DElement).values)
-            
+
             ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
                 SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
                     SpatializedDynamic3DView()

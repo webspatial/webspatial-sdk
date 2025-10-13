@@ -51,7 +51,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle: WindowStyle {
+    public var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
