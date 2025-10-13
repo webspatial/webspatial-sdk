@@ -10,6 +10,7 @@ type BoxProps = {
   height?: number
   depth?: number
   cornerRadius?: number
+  splitFaces?: boolean
   materials?: string[]
 }
 
@@ -26,6 +27,7 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
       width = 0.2,
       height = 0.2,
       depth = 0.1,
+      splitFaces = false,
       cornerRadius,
       materials,
       position,
@@ -58,6 +60,7 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
               height,
               depth,
               cornerRadius,
+              splitFaces,
             }),
           )
 

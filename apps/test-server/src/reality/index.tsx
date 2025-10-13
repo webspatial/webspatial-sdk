@@ -137,7 +137,15 @@ function App() {
                 height={0.2}
                 depth={0.1}
                 cornerRadius={1}
-                materials={['matRed']}
+                materials={[
+                  'matRed',
+                  'matGreen',
+                  'matRed',
+                  'matGreen',
+                  'matRed',
+                  'matGreen',
+                ]}
+                splitFaces={true}
                 position={boxPosition}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
@@ -203,7 +211,10 @@ function App() {
 
                   // console.log('boxGreen children', boxEntRef.current?.entity)
 
-                  console.log('realityRef.current:', realityRef.current?.offsetBack)
+                  console.log(
+                    'realityRef.current:',
+                    realityRef.current?.offsetBack,
+                  )
                   // console.log('ent parent', entRef.current?.entity?.parent)
                 }}
               ></BoxEntity>
