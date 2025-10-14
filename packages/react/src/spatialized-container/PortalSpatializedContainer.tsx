@@ -1,10 +1,9 @@
-import { useMemo, useContext, forwardRef, useImperativeHandle } from 'react'
+import { useMemo, useContext, useEffect } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import { PortalSpatializedContainerProps } from './types'
-import { CubeInfo } from '@webspatial/core-sdk'
+import { PortalSpatializedContainerProps, SpatializedElementRef } from './types'
 
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
@@ -53,24 +52,23 @@ function renderPlaceholderInSubPortal(
   )
 }
 
-export interface PortalSpatializedContainerRef {
-  getBoundingClientRectCube(): CubeInfo | undefined
-}
-
-function PortalSpatializedContainerBase(
-  props: PortalSpatializedContainerProps,
-  ref: React.Ref<PortalSpatializedContainerRef>,
+export function PortalSpatializedContainer<T extends SpatializedElementRef>(
+  props: PortalSpatializedContainerProps<T>,
 ) {
-  useImperativeHandle(ref, () => ({
-    getBoundingClientRectCube(): CubeInfo | undefined {
-      return spatializedElement?.cubeInfo
-    },
-  }))
-
   const {
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
+    onSpatialTap,
+    onSpatialDragStart,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotateStart,
+    onSpatialRotate,
+    onSpatialRotateEnd,
+    onSpatialMagnifyStart,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -90,6 +88,12 @@ function PortalSpatializedContainerBase(
       ),
     [],
   )
+  useEffect(() => {
+    portalInstanceObject.init()
+    return () => {
+      portalInstanceObject.destroy()
+    }
+  }, [])
 
   useSync2DFrame(spatialId, portalInstanceObject, spatializedContainerObject)
 
@@ -103,6 +107,76 @@ function PortalSpatializedContainerBase(
     props.component,
   )
 
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialTap = onSpatialTap
+    }
+  }, [spatializedElement, onSpatialTap])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDrag = onSpatialDrag
+    }
+  }, [spatializedElement, onSpatialDrag])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragEnd = onSpatialDragEnd
+    }
+  }, [spatializedElement, onSpatialDragEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotate = onSpatialRotate
+    }
+  }, [spatializedElement, onSpatialRotate])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotateEnd = onSpatialRotateEnd
+    }
+  }, [spatializedElement, onSpatialRotateEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnify = onSpatialMagnify
+    }
+  }, [spatializedElement, onSpatialMagnify])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyEnd = onSpatialMagnifyEnd
+    }
+  }, [spatializedElement, onSpatialMagnifyEnd])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialDragStart = onSpatialDragStart
+    }
+  }, [spatializedElement, onSpatialDragStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialRotateStart = onSpatialRotateStart
+    }
+  }, [spatializedElement, onSpatialRotateStart])
+
+  useEffect(() => {
+    if (spatializedElement) {
+      // @ts-ignore
+      spatializedElement.onSpatialMagnifyStart = onSpatialMagnifyStart
+    }
+  }, [spatializedElement, onSpatialMagnifyStart])
+
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
       {spatializedElement && portalInstanceObject.dom && (
@@ -112,7 +186,3 @@ function PortalSpatializedContainerBase(
     </PortalInstanceContext.Provider>
   )
 }
-
-export const PortalSpatializedContainer = forwardRef(
-  PortalSpatializedContainerBase,
-)

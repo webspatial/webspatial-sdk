@@ -1,5 +1,6 @@
 import React, {
   CSSProperties,
+  ElementType,
   ForwardedRef,
   forwardRef,
   useContext,
@@ -12,6 +13,7 @@ import {
   Spatialized2DElementContainerProps,
   SpatializedElementRef,
   SpatializedContentProps,
+  SpatializedDivElementRef,
 } from './types'
 import {
   PortalInstanceContext,
@@ -89,8 +91,11 @@ async function syncParentHeadToChild(childWindow: WindowProxy) {
   return Promise.all(styleLoadedPromises)
 }
 
-function getJSXPortalInstance(
-  inProps: Omit<SpatializedContentProps, 'spatializedElement'>,
+function getJSXPortalInstance<P extends ElementType>(
+  inProps: Omit<
+    SpatializedContentProps<SpatializedElementRef, P>,
+    'spatializedElement'
+  >,
   portalInstanceObject: PortalInstanceObject,
 ) {
   const { component: El, style: inStyle = {}, ...props } = inProps
@@ -149,15 +154,16 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
-function SpatializedContent(props: SpatializedContentProps) {
+function SpatializedContent<P extends ElementType>(
+  props: SpatializedContentProps<SpatializedElementRef, P>,
+) {
   const { spatializedElement, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
 
-  const name: string = (restProps as any)['data-name'] || ''
-  console.log('dbg name:', name, restProps)
   useSyncHeaderStyle(windowProxy)
 
+  const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
   const portalInstanceObject: PortalInstanceObject = useContext(
@@ -198,16 +204,29 @@ async function createSpatializedElement() {
   setOpenWindowStyle(windowProxy)
   await syncParentHeadToChild(windowProxy)
 
+  const viewport = windowProxy.document.querySelector('meta[name="viewport"]')
+  if (viewport) {
+    viewport?.setAttribute(
+      'content',
+      ` initial-scale=1.0, maximum-scale=1.0, user-scalable=no`,
+    )
+  } else {
+    const meta = windowProxy.document.createElement('meta')
+    meta.name = 'viewport'
+    meta.content = 'initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+    windowProxy.document.head.appendChild(meta)
+  }
+
   return spatializedElement
 }
 
-function Spatialized2DElementContainerBase(
-  props: Spatialized2DElementContainerProps,
-  ref: ForwardedRef<SpatializedElementRef>,
+function Spatialized2DElementContainerBase<P extends ElementType>(
+  props: Spatialized2DElementContainerProps<P>,
+  ref: ForwardedRef<SpatializedDivElementRef>,
 ) {
   return (
-    <SpatializedContainer
-      ref={ref}
+    <SpatializedContainer<SpatializedElementRef>
+      ref={ref as any}
       createSpatializedElement={createSpatializedElement}
       getExtraSpatializedElementProperties={
         getExtraSpatializedElementProperties
@@ -220,4 +239,8 @@ function Spatialized2DElementContainerBase(
 
 export const Spatialized2DElementContainer = forwardRef(
   Spatialized2DElementContainerBase,
-)
+) as <P extends ElementType>(
+  props: Spatialized2DElementContainerProps<P> & {
+    ref: ForwardedRef<SpatializedElementRef>
+  },
+) => React.ReactElement | null

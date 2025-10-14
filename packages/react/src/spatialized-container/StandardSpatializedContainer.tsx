@@ -1,4 +1,8 @@
-import { StandardSpatializedContainerProps } from './types'
+import {
+  SpatializedElementRef,
+  SpatialTransformVisibility,
+  StandardSpatializedContainerProps,
+} from './types'
 import { use2DFrameDetector } from './hooks/use2DFrameDetector'
 import {
   ForwardedRef,
@@ -17,14 +21,15 @@ function useSpatialTransformVisibilityWatcher(spatialId: string) {
 
   const spatializedContainerObject = useContext(SpatializedContainerContext)!
   useEffect(() => {
-    spatializedContainerObject.onSpatialTransformVisibilityChange(
-      spatialId,
-      spatialTransform => {
-        setTransformExist(spatialTransform.transformExist)
-      },
-    )
+    const fn = (spatialTransform: SpatialTransformVisibility) => {
+      setTransformExist(spatialTransform.transform !== 'none')
+    }
+    spatializedContainerObject.onSpatialTransformVisibilityChange(spatialId, fn)
     return () => {
-      spatializedContainerObject.offSpatialTransformVisibilityChange(spatialId)
+      spatializedContainerObject.offSpatialTransformVisibilityChange(
+        spatialId,
+        fn,
+      )
     }
   }, [spatialId, spatializedContainerObject])
 
@@ -53,11 +58,18 @@ export function StandardSpatializedContainerBase(
   props: StandardSpatializedContainerProps,
   ref: ForwardedRef<HTMLElement | null>,
 ) {
-  const { component: Component, style: inStyle = {}, ...restProps } = props
+  const {
+    component: Component,
+    style: inStyle = {},
+    className,
+    inStandardSpatializedContainer = false,
+    ...restProps
+  } = props
 
   const { refInternal, refInternalCallback } = useInternalRef(ref)
-
-  use2DFrameDetector(refInternal)
+  if (!inStandardSpatializedContainer) {
+    use2DFrameDetector(refInternal)
+  }
   const transformExist = useSpatialTransformVisibilityWatcher(props[SpatialID])
 
   const extraStyle = {
@@ -67,9 +79,31 @@ export function StandardSpatializedContainerBase(
   }
   const style = { ...inStyle, ...extraStyle }
 
-  return <Component ref={refInternalCallback} style={style} {...restProps} />
+  const classNames = className
+    ? `${className} xr-spatial-default`
+    : 'xr-spatial-default'
+
+  return (
+    <Component
+      ref={refInternalCallback}
+      style={style}
+      className={classNames}
+      {...restProps}
+    />
+  )
 }
 
 export const StandardSpatializedContainer = forwardRef(
   StandardSpatializedContainerBase,
-)
+) as <T extends SpatializedElementRef>(
+  props: StandardSpatializedContainerProps & {
+    ref?: ForwardedRef<SpatializedElementRef<T>>
+  },
+) => React.ReactElement | null
+
+// inject xr-spatial-default style to head
+const styleElement = document.createElement('style')
+styleElement.type = 'text/css'
+styleElement.innerHTML =
+  ' .xr-spatial-default {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
+document.head.appendChild(styleElement)

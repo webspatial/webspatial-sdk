@@ -4,22 +4,10 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 
-// declare global {
-//   interface Window {
-//     webkit: {
-//       messageHandlers: Record<
-//         string,
-//         {
-//           postMessage(
-//             message: string,
-//             reply?: (reply: any) => any,
-//             error?: (error: string) => void,
-//           ): any
-//         }
-//       >
-//     }
-//   }
-// }
+
+type JSBError = {
+  message: string
+}
 
 export class VisionOSPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
@@ -28,9 +16,10 @@ export class VisionOSPlatform implements PlatformAbility {
         `${cmd}::${msg}`,
       )
       return CommandResultSuccess(result)
-    } catch (error) {
-      console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
-      return CommandResultFailure('errorNo', 'error')
+    } catch (error: unknown) {
+      // console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
+      const { code, message } = JSON.parse((error as JSBError).message)
+      return CommandResultFailure(code, message)
     }
   }
 
@@ -73,7 +62,6 @@ export class VisionOSPlatform implements PlatformAbility {
     target?: string,
     features?: string,
   ) {
-    console.log('openWindow:', command, query, target, features)
     const windowProxy = window.open(
       `webspatial://${command}?${query || ''}`,
       target,

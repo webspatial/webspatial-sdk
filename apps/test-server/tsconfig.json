@@ -16,8 +16,8 @@
     "jsxImportSource": "@webspatial/react-sdk",
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "web-spatial": ["../npmLib/src"]

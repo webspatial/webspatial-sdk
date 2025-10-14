@@ -3,6 +3,7 @@ import reactJSXRuntime from 'react/jsx-runtime'
 import {
   withSpatialMonitor,
   withSpatialized2DElementContainer,
+  Model,
   //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
@@ -14,6 +15,10 @@ export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
+  if (type === Model) {
+    return type
+  }
+
   const propsObject = props as Record<string, any>
   if (attributeFlag in propsObject) {
     delete propsObject[attributeFlag]

@@ -1,3 +1,4 @@
+import _RealityKit_SwiftUI
 import SwiftUI
 
 struct SpatialSceneView: View {
@@ -6,23 +7,29 @@ struct SpatialSceneView: View {
     @State private var timer: Timer?
 
     var body: some View {
-        GeometryReader { proxy3D in
-            let width = proxy3D.size.width
-            let height = proxy3D.size.height
+        GeometryReader3D { proxy3D in
+                let width = proxy3D.size.width
+                let height = proxy3D.size.height
 
-            SceneHandlerUIView(sceneId: sceneId).onChange(of: proxy3D.size) {
-                windowResizeInProgress = true
-                if timer != nil {
-                    timer!.invalidate()
-                }
-                // If we don't detect resolution change after x seconds we treat the resize as complete
-                timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
-                    windowResizeInProgress = false
-                    timer = nil
-                }
-            }
-            
             if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
+                SceneHandlerUIView(sceneId: sceneId).onChange(of: proxy3D.size) {
+                    windowResizeInProgress = true
+                    if timer != nil {
+                        timer!.invalidate()
+                    }
+                    // If we don't detect resolution change after x seconds we treat the resize as complete
+                    timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
+                        windowResizeInProgress = false
+                        timer = nil
+                    }
+                    spatialScene.updateSize3D(proxy3D.size)
+                   
+                }
+                .onAppear(){
+                    spatialScene.moveToState(.visible, nil)
+                    spatialScene.updateSize3D(proxy3D.size)
+                }
+
                 if windowResizeInProgress {
                     let x = width / 2
                     let y = height / 2
@@ -39,7 +46,9 @@ struct SpatialSceneView: View {
                                     .offset(y: -15)
                                 }.frame(height: 100)
                             }
-                        }
+                        }.volumeBaseplateVisibility(
+                            spatialScene.sceneConfig?.baseplateVisibility ?? .automatic
+                        )
                 }
             }
         }

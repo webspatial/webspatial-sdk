@@ -4,25 +4,8 @@ import {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
-import { Quaternion, Euler } from 'three'
-// const euler = new Euler(0, Math.PI / 3, 0)
-// const euler = new Euler(0, 0, Math.PI / 4)
-// const euler = new Euler(0, 0, 0)
-// const quaternion = new Quaternion().setFromEuler(euler)
-// const transform = {
-//   position: { x: 0, y: 0, z: 100 },
-//   quaternion: {
-//     x: quaternion.x,
-//     y: quaternion.y,
-//     z: quaternion.z,
-//     w: quaternion.w,
-//   },
-//   scale: { x: 1, y: 1, z: 1 },
-// }
-
 const spatial = new Spatial()
 const session = spatial.requestSession()
-console.log('session', session)
 
 export function testSpatialSceneCorner() {
   if (session) {
@@ -77,20 +60,14 @@ export async function testCreateSpatialized2DElement() {
         y: 2,
         z: 0.5,
       },
-      scrollEnabled: false,
-      enableGesture: true,
     })
 
     const spatialScene = session.getSpatialScene()
     await spatialScene.addSpatializedElement(spatialized2DElement)
 
-    await spatialized2DElement.updateTransform({
-      position: {
-        x: 100,
-        y: 10,
-        z: 50,
-      },
-    })
+    const matrix = new DOMMatrix()
+    matrix.translate(100, 10, 50)
+    await spatialized2DElement.updateTransform(matrix)
 
     await spatialized2DElement.updateProperties({ material: 'translucent' })
     await spatialized2DElement.updateProperties({
@@ -122,17 +99,11 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'A',
       width: 300,
       height: 300,
-      scrollEnabled: false,
-      enableGesture: false,
     })
 
-    await spatialized2DElementA.updateTransform({
-      position: {
-        x: 320,
-        y: 150,
-        z: 10,
-      },
-    })
+    await spatialized2DElementA.updateTransform(
+      new DOMMatrix().translate(320, 150, 10),
+    )
     spatialized2DElementA.windowProxy.document.body.style.background =
       'rgb(5, 0, 128)'
     spatialized2DElementA.windowProxy.document.title = 'A'
@@ -162,16 +133,11 @@ export async function testAddMultipleSpatialized2DElement(
       name: 'B',
       width: 200,
       height: 100,
-      scrollEnabled: false,
-      enableGesture: true,
     })
-    await spatialized2DElementB.updateTransform({
-      position: {
-        x: 100,
-        y: 50,
-        z: 20,
-      },
-    })
+
+    const matrix = new DOMMatrix()
+    matrix.translate(100, 50, 20)
+    await spatialized2DElementB.updateTransform(matrix)
     spatialized2DElementB.windowProxy.document.title = 'B'
     spatialized2DElementB.windowProxy.document.body.style.background = 'green'
     spatialized2DElementB.windowProxy.document.documentElement.style.width =
@@ -209,16 +175,10 @@ export async function testAddMultipleSpatializedStatic3DElement(
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
-      enableGesture: true,
     })
 
-    await spatializedStatic3DElementA.updateTransform({
-      position: {
-        x: 0,
-        y: 0,
-        z: 0,
-      },
-    })
+    const matrix = new DOMMatrix().translate(0, 0, 0)
+    await spatializedStatic3DElementA.updateTransform(matrix)
 
     if (parent) {
       parent.addSpatializedElement(spatializedStatic3DElementA)
@@ -234,16 +194,11 @@ export async function testAddMultipleSpatializedStatic3DElement(
       width: 200,
       height: 200,
       modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
-      enableGesture: false,
     })
 
-    await spatializedStatic3DElementB.updateTransform({
-      position: {
-        x: 300,
-        y: 0,
-        z: 0,
-      },
-    })
+    await spatializedStatic3DElementB.updateTransform(
+      new DOMMatrix().translate(300, 0, 0),
+    )
 
     if (parent) {
       parent.addSpatializedElement(spatializedStatic3DElementB)
@@ -253,10 +208,10 @@ export async function testAddMultipleSpatializedStatic3DElement(
   }
 }
 
-export async function testAddMultipleSpatializedDynamic3DElement(
-  parent: Spatialized2DElement | null = null,
-) {
-  if (session) {
-    const spatialScene = session.getSpatialScene()
-  }
-}
+// export async function testAddMultipleSpatializedDynamic3DElement(
+//   parent: Spatialized2DElement | null = null,
+// ) {
+//   if (session) {
+//     const spatialScene = session.getSpatialScene()
+//   }
+// }

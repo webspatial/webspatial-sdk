@@ -12,11 +12,17 @@ import { useSpatialTransformVisibility } from './hooks/useSpatialTransformVisibi
 // used as root conntainer for all TransformVisibilityTaskContainer
 const cssParserDivContainer = document.createElement('div')
 cssParserDivContainer.style.position = 'absolute'
+// cssParserDivContainer.style.width = '0px'
+// cssParserDivContainer.style.overflow = 'hidden'
+
 cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
 
-window.addEventListener('load', () => {
-  document.body.appendChild(cssParserDivContainer)
-})
+function createOrGetCSSParserDivContainer() {
+  if (!cssParserDivContainer.parentElement) {
+    document.body.appendChild(cssParserDivContainer)
+  }
+  return cssParserDivContainer
+}
 
 function useInternalRef(ref: ForwardedRef<HTMLElement | null>) {
   const refInternal = useRef<HTMLElement | null>(null)
@@ -49,8 +55,14 @@ export function TransformVisibilityTaskContainerBase(
 ) {
   const { style: inStyle, ...restProps } = props
   const extraStyle: CSSProperties = {
-    width: 0,
-    height: 0,
+    // when width/height equal to zero, transform: translateX(-50%) won't work
+    // to make sure the element is not visible, we set left/top to a very large negative value
+    left: -10000,
+    top: -10000,
+    pointerEvents: 'none',
+    opacity: 0,
+    // width: 0,
+    // height: 0,
     padding: 0,
     transition: 'none',
     position: 'absolute',
@@ -60,6 +72,8 @@ export function TransformVisibilityTaskContainerBase(
 
   const style: CSSProperties = { ...inStyle, ...extraStyle }
   useSpatialTransformVisibility(props[SpatialID], refInternal)
+
+  const cssParserDivContainer = createOrGetCSSParserDivContainer()
 
   return createPortal(
     <div ref={refInternalCallback} style={style} {...restProps} />,

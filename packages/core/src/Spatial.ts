@@ -2,12 +2,14 @@ import { SpatialSession } from './SpatialSession'
 import { SpatialWebEvent } from './SpatialWebEvent'
 
 /**
- * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr
+ * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr.
+ * This is the main entry point for the WebSpatial SDK, providing access to spatial capabilities.
  */
 export class Spatial {
   /**
-   * Requests a session object from the browser
-   * @returns The session or null if not availible in the current browser
+   * Requests a spatial session object from the browser.
+   * This is the primary method to initialize spatial functionality.
+   * @returns The SpatialSession instance or null if not available in the current browser
    * [TODO] discuss implications of this not being async
    */
   requestSession() {
@@ -22,7 +24,11 @@ export class Spatial {
     }
   }
 
-  // check if current page is running in spatial web
+  /**
+   * Checks if the current page is running in a spatial web environment.
+   * This method detects if the application is running in a WebSpatial-compatible browser.
+   * @returns True if running in a spatial web environment, false otherwise
+   */
   runInSpatialWeb() {
     if (navigator.userAgent.indexOf('WebSpatial/') > 0) {
       return true
@@ -31,7 +37,9 @@ export class Spatial {
   }
 
   /**
-   * @returns true if web spatial is supported by this webpage
+   * Checks if WebSpatial is supported in the current environment.
+   * Verifies compatibility between native and client versions.
+   * @returns True if web spatial is supported by this webpage
    */
   isSupported() {
     // todo: enhance judgement
@@ -39,8 +47,9 @@ export class Spatial {
   }
 
   /**
-   * Gets the native version, format is "x.x.x"
-   * @returns native version string
+   * Gets the native WebSpatial version from the browser environment.
+   * The version format follows semantic versioning (x.x.x).
+   * @returns Native version string in format "x.x.x"
    */
   getNativeVersion() {
     if (window.__WebSpatialData && window.__WebSpatialData.getNativeVersion) {
@@ -52,8 +61,9 @@ export class Spatial {
   }
 
   /**
-   * Gets the client version, format is "x.x.x"
-   * @returns client version string
+   * Gets the client SDK version.
+   * The version format follows semantic versioning (x.x.x).
+   * @returns Client SDK version string in format "x.x.x"
    */
   getClientVersion() {
     // @ts-ignore

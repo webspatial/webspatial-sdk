@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef } from 'react'
+import { ElementType, ForwardedRef, forwardRef } from 'react'
 import { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 import {
   Spatialized2DElementContainerProps,
@@ -7,23 +7,23 @@ import {
 
 const CachedSpatialized2DElementContainerType = new Map()
 
-export function withSpatialized2DElementContainer(
-  Component: React.ElementType,
+export function withSpatialized2DElementContainer<P extends ElementType>(
+  Component: P,
 ) {
   if (CachedSpatialized2DElementContainerType.has(Component)) {
-    return CachedSpatialized2DElementContainerType.get(Component)
+    return CachedSpatialized2DElementContainerType.get(Component) as P
   } else {
     const TypedSpatialized2DElementContainer = forwardRef(
       (
-        givenProps: Spatialized2DElementContainerProps,
+        givenProps: Spatialized2DElementContainerProps<P>,
         ref: ForwardedRef<SpatializedElementRef>,
       ) => {
         const { component: ignoreComponent, ...props } = givenProps
         return (
-          <Spatialized2DElementContainer
+          <Spatialized2DElementContainer<P>
             component={Component}
             {...props}
-            ref={ref}
+            ref={ref as any}
           />
         )
       },

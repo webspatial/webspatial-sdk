@@ -2,7 +2,7 @@ import SwiftUI
 @preconcurrency import WebKit
 
 @Observable
-class SpatialWebViewModel: SpatialObject {
+class SpatialWebViewModel {
     var url = ""
     private(set) var title: String?
     private var view: SpatialWebView?
@@ -28,7 +28,6 @@ class SpatialWebViewModel: SpatialObject {
     var scrollOffset: CGPoint = .zero
 
     init(url: String?) {
-        super.init()
         controller = SpatialWebController()
         self.url = url ?? ""
         controller!.model = self
@@ -68,7 +67,7 @@ class SpatialWebViewModel: SpatialObject {
 
     func getView() -> SpatialWebView {
         if view == nil {
-            print("get spatial webview", id)
+//            print("get spatial webview", id)
             view = SpatialWebView()
             view!.model = self
             view?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -243,7 +242,7 @@ class SpatialWebViewModel: SpatialObject {
         }
     }
 
-    override func onDestroy() {
+    func destroy() {
         removeAllListener()
         view?.destroy()
         controller?.destroy()
@@ -255,9 +254,24 @@ class SpatialWebViewModel: SpatialObject {
         let encoder = JSONEncoder()
         if let jsonData = try? encoder.encode(data) {
             let dataString = String(data: jsonData, encoding: .utf8)
-            controller?.callJS("window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
+            controller?.callJS("window.__SpatialWebEvent && window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
+    
+    func updateWindowKV(_ dict: [String: Any]) {
+        var js = ""
+        for (key, value) in dict {
+            if let num = value as? Double {
+                js += "window.\(key)=\(num);"
+            } else if let str = value as? String {
+                js += "window.\(key)='\(str)';"
+            } else if let bool = value as? Bool {
+                js += "window.\(key)=\(bool ? "true" : "false");"
+            }
+        }
+        controller?.callJS(js)
+    }
+
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)

@@ -1,12 +1,10 @@
-
 import Foundation
+import SwiftUI
 
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
-    
-    var enableTapEvent = true
-
+    var modelTransform: AffineTransform3D = AffineTransform3D.identity
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type

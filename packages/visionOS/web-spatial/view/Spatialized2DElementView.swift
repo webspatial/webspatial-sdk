@@ -55,6 +55,15 @@ struct Spatialized2DElementView: View {
                 }
                 .environment(child)
             }
+            
+            let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedDynamic3DElement).values)
+            
+            ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
+                    SpatializedDynamic3DView()
+                }
+                .environment(child)
+            }
         }
     }
 

@@ -19,6 +19,8 @@ export function useSpatializedElement(
           portalInstanceObject.attachSpatializedElement(spatializedElement)
 
           setSpatializedElement(spatializedElement)
+        } else {
+          inSpatializedElement?.destroy()
         }
       },
     )
@@ -27,6 +29,7 @@ export function useSpatializedElement(
       isDestroyed = true
       if (spatializedElement) {
         spatializedElement.destroy()
+        spatializedElement = undefined
       }
     }
   }, [createSpatializedElement, portalInstanceObject])

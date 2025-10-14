@@ -5,8 +5,8 @@ var pwaManager = PWAManager()
 
 struct PWAManager: Codable {
     var isLocal: Bool = false
-    var start_url: String = "http://localhost:5173/src/spatial-converter/"
-    
+    var start_url: String = "http://localhost:5173/webspatial/avp/materialApiTest"
+
     var scope: String = ""
     var id: String = "com.webspatial.pico"
 
@@ -17,12 +17,22 @@ struct PWAManager: Codable {
     var display: PWADisplayMode = .minimal
     var display_override: [PWADisplayMode] = []
     var protocol_handlers: [PWAProtocol] = [PWAProtocol(protocolValue: "web+spatial", url: "./?cmd=%s")]
-    var mainScene: WindowContainerOptions = .init(
+    var mainScene: XSceneOptionsJSB = .init(
         defaultSize: .init(
-            width: 1280,
-            height: 720
+            width: 1024,
+            height: 768,
+            depth: 0.1
         ),
-        resizability: nil
+        type: nil,
+        resizability: ResizeRange(
+            minWidth: 0.5 * 1360,
+            minHeight: 0.5 * 1360,
+            maxWidth: 2 * 1360,
+            maxHeight: 2 * 1360
+        ),
+        worldScaling: nil,
+        worldAlignment: nil,
+        baseplateVisibility: nil
     )
     var useMainScene: Bool = true
     private var version: String = "PACKAGE_VERSION"

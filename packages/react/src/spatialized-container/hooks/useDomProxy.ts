@@ -1,30 +1,38 @@
-import { ForwardedRef, RefObject, useCallback, useEffect, useRef } from 'react'
+import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
-import { PortalSpatializedContainerRef } from '../PortalSpatializedContainer'
 
-class SpatialContainerRefProxy {
+function makeOriginalKey(key: string) {
+  return `__original_${key}`
+}
+
+export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
-  private ref: ForwardedRef<SpatializedElementRef>
-  private domProxy?: SpatializedElementRef | null
+  private ref: ForwardedRef<SpatializedElementRef<T>>
+  public domProxy?: T | null
   private styleProxy?: CSSStyleDeclaration
-  private portalSpatializedContainerRef: RefObject<PortalSpatializedContainerRef>
+
+  // extre ref props, used to add extra props to ref
+  private extraRefProps?:
+    | ((domProxy: T) => Record<string, () => any>)
+    | undefined
 
   constructor(
-    ref: ForwardedRef<SpatializedElementRef>,
-    portalSpatializedContainerRef: RefObject<PortalSpatializedContainerRef>,
+    ref: ForwardedRef<SpatializedElementRef<T>>,
+    extraRefProps?: (domProxy: T) => Record<string, () => any>,
   ) {
     this.ref = ref
-    this.portalSpatializedContainerRef = portalSpatializedContainerRef
+    this.extraRefProps = extraRefProps
   }
 
   updateStandardSpatializedContainerDom(dom: HTMLElement | null) {
     const self = this
 
     if (dom) {
-      const domProxy = new Proxy<SpatializedElementRef>(
-        dom as SpatializedElementRef,
+      let cacheExtraRefProps: Record<string, () => any> | undefined
+      const domProxy = new Proxy<SpatializedElementRef<T>>(
+        dom as SpatializedElementRef<T>,
         {
           get(target, prop) {
             if (prop === '__raw') {
@@ -37,13 +45,10 @@ class SpatialContainerRefProxy {
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
             }
             if (prop === 'getBoundingClientRect') {
-              // todo:
-              return target.style.getPropertyValue(SpatialCustomStyleVars.back)
+              return (dom as any).__getBoundingClientRect
             }
             if (prop === 'getBoundingClientCube') {
-              return self.portalSpatializedContainerRef.current?.getBoundingClientRectCube.bind(
-                self.portalSpatializedContainerRef.current,
-              )
+              return (dom as any).__getBoundingClientCube
             }
             if (prop === 'style') {
               if (!self.styleProxy) {
@@ -143,23 +148,95 @@ class SpatialContainerRefProxy {
                   },
                 })
               }
+
               return self.styleProxy
+            }
+
+            if (typeof prop === 'string' && self.extraRefProps) {
+              if (!cacheExtraRefProps) {
+                cacheExtraRefProps = self.extraRefProps(domProxy)
+              }
+              const extraProps = cacheExtraRefProps
+              if (extraProps.hasOwnProperty(prop)) {
+                return extraProps[prop]()
+              }
             }
             const value = Reflect.get(target, prop)
             if (typeof value === 'function') {
+              if ('removeAttribute' === prop) {
+                return function (this: any, ...args: any[]) {
+                  const [property] = args
+                  if (property === 'style') {
+                    dom.style.cssText =
+                      'visibility: hidden; transition: none; transform: none;'
+                    if (self.transformVisibilityTaskContainerDom) {
+                      self.transformVisibilityTaskContainerDom.style.visibility =
+                        ''
+                      self.transformVisibilityTaskContainerDom.style.transform =
+                        ''
+                    }
+                    return true
+                  }
+                  if (property === 'class') {
+                    domProxy.className = 'xr-spatial-default'
+                    return true
+                  }
+                }
+              }
+
               return value.bind(target)
             }
             return value
           },
           set(target, prop, value) {
+            if (prop === 'className') {
+              if (value && value.indexOf('xr-spatial-default') === -1) {
+                value = value + ' xr-spatial-default'
+              }
+
+              if (self.transformVisibilityTaskContainerDom) {
+                self.transformVisibilityTaskContainerDom.className = value
+              }
+            }
+
             return Reflect.set(target, prop, value)
           },
         },
       )
       this.domProxy = domProxy
+
+      // hijack classList
+      const domClassList = dom.classList
+      const domClassMethodKeys: Array<'add' | 'remove' | 'toggle' | 'replace'> =
+        ['add', 'remove', 'toggle', 'replace']
+      domClassMethodKeys.forEach(key => {
+        const hiddenKey = makeOriginalKey(key)
+        const hiddenKeyExist = (domClassList as any)[hiddenKey] !== undefined
+        const originalMethod = hiddenKeyExist
+          ? (domClassList as any)[hiddenKey]
+          : domClassList[key].bind(domClassList)
+
+        ;(domClassList as any)[hiddenKey] = originalMethod
+
+        domClassList[key] = function (this: any, ...args: any[]) {
+          const result = (originalMethod as Function)(...args)
+          // update transformVisibilityTaskContainerDom className
+          if (self.transformVisibilityTaskContainerDom) {
+            self.transformVisibilityTaskContainerDom.className = dom.className
+          }
+
+          return result
+        }
+      })
+
       // clear styleProxy
       this.styleProxy = undefined
       this.updateDomProxyToRef()
+
+      // assign domProxy to dom
+      Object.assign(dom, {
+        __targetProxy: domProxy,
+      })
     }
   }
 
@@ -188,7 +265,7 @@ class SpatialContainerRefProxy {
     }
   }
 
-  updateRef(ref: ForwardedRef<SpatializedElementRef>) {
+  updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
     this.ref = ref
   }
 }
@@ -207,12 +284,12 @@ function hijackGetComputedStyle() {
 }
 hijackGetComputedStyle()
 
-export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
-  const portalSpatializedContainerRef =
-    useRef<PortalSpatializedContainerRef>(null)
-
-  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy>(
-    new SpatialContainerRefProxy(ref, portalSpatializedContainerRef),
+export function useDomProxy<T extends SpatializedElementRef>(
+  ref: ForwardedRef<T>,
+  extraRefProps?: (domProxy: T) => Record<string, () => any>,
+) {
+  const spatialContainerRefProxy = useRef<SpatialContainerRefProxy<T>>(
+    new SpatialContainerRefProxy<T>(ref, extraRefProps),
   )
 
   useEffect(() => {
@@ -238,6 +315,6 @@ export function useDomProxy(ref: ForwardedRef<SpatializedElementRef>) {
   return {
     transformVisibilityTaskContainerCallback,
     standardSpatializedContainerCallback,
-    portalSpatializedContainerRef,
+    spatialContainerRefProxy,
   }
 }
