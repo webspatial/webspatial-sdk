@@ -581,8 +581,15 @@ abstract class WebSpatialProtocolCommand extends JSBCommand {
 
 export class createSpatialized2DElementCommand extends WebSpatialProtocolCommand {
   commandType = 'createSpatialized2DElement'
+  spatialId: string
+  constructor(){
+    super()
+    this.spatialId = uuid()
+  }
   protected getParams() {
-    return undefined
+    return {
+      spatialId: this.spatialId
+    }
   }
 }
 
@@ -603,6 +610,13 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
       config: this.config,
     }
   }
+}
+
+function uuid(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
 }
 
 /* WebSpatial Protocol End */

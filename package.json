@@ -10,7 +10,7 @@
     "buildPackages": "pnpm -r --filter \"@webspatial/*\" run build",
     "setup": "pnpm install && npm run buildPackages",
     "watchNPM": "concurrently \"cd packages/core/ && npm run start\" \"cd packages/react/ && npm run start\"",
-    "testServer": "cd apps/test-server/ && npm run dev -- --host",
+    "testServer": " npm run port:check:5173 && cd apps/test-server/ && npm run dev -- --host",
     "dev": "npm run testServer",
     "xcode": "open packages/visionOS/web-spatial.xcodeproj",
     "androidStudio": "open -a /Applications/Android\\ Studio.app packages/androidXR",
@@ -22,7 +22,9 @@
     "changeset": "changeset",
     "changeset:pre-enter": "changeset pre enter alpha",
     "changeset:pre-exit": "changeset pre exit alpha",
-    "generateStaticSite": "./tools/scripts/generateWebsite.sh"
+    "generateStaticSite": "./tools/scripts/generateWebsite.sh",
+    "port:check:5173": "bash ./check-port.sh 5173 force-kill",
+    "port:check:4000": "bash ./check-port.sh 4000 force-kill"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm test"

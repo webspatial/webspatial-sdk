@@ -75,8 +75,7 @@ class SceneManager {
       // send JSB to focus
       let focusCmd = new FocusScene(id)
       focusCmd.execute()
-    }
-
+    }    
     return result.data?.windowProxy
   }
   initScene(
