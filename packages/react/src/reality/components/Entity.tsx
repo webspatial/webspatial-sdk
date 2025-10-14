@@ -9,6 +9,7 @@ export const Entity = forwardRef<EntityRef, Props>(
   ({ id, children, position, rotation, scale, onSpatialTap, name }, ref) => {
     const ctx = useRealityContext()
     const entity = useEntity({
+      ref,
       id,
       position,
       rotation,
@@ -16,8 +17,6 @@ export const Entity = forwardRef<EntityRef, Props>(
       onSpatialTap,
       createEntity: async () => ctx!.session.createEntity({ id, name }),
     })
-
-    useEntityRef(ref, entity)
 
     if (!entity) return null
     return (

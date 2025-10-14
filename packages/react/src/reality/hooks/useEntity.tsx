@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
 import {
+  EntityRef,
   useEntityEvent,
   useEntityId,
+  useEntityRef,
   useEntityTransform,
   useForceUpdate,
 } from '../hooks'
@@ -12,9 +14,10 @@ import {
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
 } & EntityProps &
-  EntityEventHandler
+  EntityEventHandler & { ref: ForwardedRef<EntityRef> }
 
 export const useEntity = ({
+  ref,
   id,
   position,
   rotation,
@@ -27,8 +30,6 @@ export const useEntity = ({
   const entityRef = useRef<SpatialEntity | null>(null)
 
   const forceUpdate = useForceUpdate()
-
-  useEntityEvent({ entity: entityRef.current, onSpatialTap })
 
   useEffect(() => {
     if (!ctx) return
@@ -67,6 +68,12 @@ export const useEntity = ({
 
   useEntityId({ id, entity: entityRef.current })
   useEntityTransform(entityRef.current, { position, rotation, scale })
+  useEntityRef(ref, entityRef.current)
+
+  useEntityEvent({
+    entity: entityRef.current,
+    onSpatialTap,
+  })
 
   return entityRef.current
 }

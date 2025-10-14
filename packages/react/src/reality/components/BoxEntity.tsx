@@ -41,6 +41,7 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
   ) => {
     const ctx = useRealityContext()
     const entity = useEntity({
+      ref,
       id,
       position,
       rotation,
@@ -84,8 +85,6 @@ export const BoxEntity = forwardRef<EntityRef, Props>(
         }
       },
     })
-
-    useEntityRef(ref, entity)
 
     if (!entity) return null
     return (
