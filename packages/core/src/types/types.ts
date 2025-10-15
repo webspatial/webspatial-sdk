@@ -377,3 +377,9 @@ export interface SpatialMagnifyEventDetail {
 export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
 
 export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
+
+export interface SpatialEntityOrReality {
+  id: string
+  parent?: SpatialEntityOrReality | null
+  children: SpatialEntityOrReality[]
+}

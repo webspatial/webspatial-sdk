@@ -6,6 +6,7 @@ import {
 } from './../../JSBCommand'
 import {
   SpatialEntityEventType,
+  SpatialEntityOrReality,
   SpatialEntityUserData,
   Vec3,
 } from '../../types/types'
@@ -29,7 +30,7 @@ export class SpatialEntity extends SpatialObject {
 
   events: Record<string, (data: any) => void> = {}
   children: SpatialEntity[] = []
-  parent: SpatialEntity | null = null
+  parent: SpatialEntityOrReality | null = null
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,
