@@ -1,35 +1,41 @@
 import React, { useEffect } from 'react'
-import { EntityEventHandler } from '../type'
-import { SpatialEntity } from '@webspatial/core-sdk'
-import { createEntityRefProxy, EntityRef } from './useEntityRef'
-import { useRealityContext } from '../context'
+import { EntityEventHandler, eventMap } from '../type'
+import { EntityRef } from './useEntityRef'
+
+function createEventProxy(ev: any, instance: EntityRef) {
+  return new Proxy(ev, {
+    get(target, prop: PropertyKey) {
+      if (prop === 'target' || prop === 'currentTarget') {
+        return instance
+      }
+      const val = (target as any)[prop]
+      return typeof val === 'function' ? val.bind(target) : val
+    },
+  })
+}
+
 type Props = {
   instance: EntityRef
 } & EntityEventHandler
-export const useEntityEvent: React.FC<Props> = ({ instance, onSpatialTap }) => {
+export const useEntityEvent: React.FC<Props> = ({ instance, ...handlers }) => {
   useEffect(() => {
     const entity = instance.entity
     if (!entity) return
 
-    if (onSpatialTap) {
-      const handler = (ev: any) => {
-        const proxied = new Proxy(ev, {
-          get(target, prop: PropertyKey) {
-            if (prop === 'target' || prop === 'currentTarget') {
-              return instance
-            }
-            const val = (target as any)[prop]
-            return typeof val === 'function' ? val.bind(target) : val
-          },
-        })
-        onSpatialTap(proxied)
-      }
-      entity.addEvent('spatialtap', handler)
-      return () => {
-        entity.removeEvent('spatialtap')
-      }
+    const boundHandlers: (() => void)[] = []
+
+    Object.entries(eventMap).forEach(([reactKey, spatialEvent]) => {
+      const handlerFn = (handlers as any)[reactKey]
+      if (!handlerFn) return
+
+      const wrapped = (ev: any) => handlerFn(createEventProxy(ev, instance))
+      entity.addEvent(spatialEvent, wrapped)
+      boundHandlers.push(() => entity.removeEvent(spatialEvent))
+    })
+    return () => {
+      boundHandlers.forEach(unbind => unbind())
     }
-  }, [instance.entity, onSpatialTap])
+  }, [instance.entity, ...Object.values(handlers)])
 
   return null
 }

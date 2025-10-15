@@ -74,6 +74,7 @@ export const useEntity = ({
   useEntityEvent({
     instance: instanceRef.current,
     onSpatialTap,
+    // TODO: add other event handlers
   })
 
   return instanceRef.current.entity

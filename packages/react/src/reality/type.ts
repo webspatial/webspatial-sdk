@@ -20,3 +20,7 @@ export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
 export type EntityEventHandler = {
   onSpatialTap?: (event: SpatialTapEntityEvent) => void
 }
+
+export const eventMap = {
+  onSpatialTap: 'spatialtap',
+} as const
