@@ -10,7 +10,11 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
   rootEntity: SpatialEntity
   constructor(id: string) {
     super(id)
-    this.rootEntity = new SpatialEntity(id, { name: 'rootEntity' })
+    // the rootEntity is a fake entity to provide children only
+    // add suffix to avoid id conflict
+    this.rootEntity = new SpatialEntity(id + '_rootEntity', {
+      name: 'rootEntity',
+    })
   }
 
   async addEntity(entity: SpatialEntity) {
