@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useRef } from 'react'
 import { Vec3, SpatialEntity } from '@webspatial/core-sdk'
 import { RealityContextValue, useRealityContext } from '../context'
 
-export interface EntityRef {
+export interface EntityRefShape {
   convertFromEntityToEntity: (
     fromEntityId: string,
     toEntityId: string,
@@ -22,17 +22,13 @@ export interface EntityRef {
 }
 
 export const useEntityRef = (
-  ref: React.Ref<EntityRef>,
-  entity: SpatialEntity | null,
+  ref: React.Ref<EntityRefShape>,
+  instance: EntityRef,
 ) => {
-  const ctx = useRealityContext()
-
-  useImperativeHandle(ref, () => {
-    return createEntityRefProxy(entity, ctx)
-  }, [entity, ctx])
+  useImperativeHandle(ref, () => instance)
 }
 
-export class EntityRefImpl implements EntityRef {
+export class EntityRef implements EntityRefShape {
   private _entity: SpatialEntity | null
   private _ctx: RealityContextValue | null
 
@@ -44,9 +40,16 @@ export class EntityRefImpl implements EntityRef {
     this._ctx = ctx
   }
 
-  update(entity: SpatialEntity | null, ctx: RealityContextValue | null) {
-    this._entity = entity
-    this._ctx = ctx
+  updateEntity(entity?: SpatialEntity | null) {
+    if (entity) this._entity = entity
+  }
+
+  updateCtx(ctx?: RealityContextValue | null) {
+    if (ctx) this._ctx = ctx
+  }
+
+  destroy() {
+    this._entity?.destroy()
   }
 
   get entity() {
@@ -114,6 +117,6 @@ export class EntityRefImpl implements EntityRef {
 export function createEntityRefProxy(
   entity: SpatialEntity | null,
   ctx?: RealityContextValue | null,
-): EntityRef {
-  return new EntityRefImpl(entity, ctx)
+): EntityRefShape {
+  return new EntityRef(entity, ctx)
 }

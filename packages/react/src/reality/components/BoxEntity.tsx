@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react'
 import { ParentContext, useRealityContext } from '../context'
 import { EntityProps, EntityEventHandler } from '../type'
-import { useEntityRef, EntityRef, useEntity } from '../hooks'
+import { useEntityRef, EntityRefShape, useEntity } from '../hooks'
 import { SpatialMaterial } from '@webspatial/core-sdk'
 import { AbortResourceManager } from '../utils'
 
@@ -20,7 +20,7 @@ type Props = EntityProps &
     children?: React.ReactNode
   }
 
-export const BoxEntity = forwardRef<EntityRef, Props>(
+export const BoxEntity = forwardRef<EntityRefShape, Props>(
   (
     {
       id,

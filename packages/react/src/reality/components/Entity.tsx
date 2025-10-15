@@ -1,11 +1,11 @@
 import React, { forwardRef } from 'react'
 import { ParentContext, useRealityContext } from '../context'
 import { EntityProps, EntityEventHandler } from '../type'
-import { EntityRef, useEntity, useEntityRef } from '../hooks'
+import { EntityRefShape, useEntity, useEntityRef } from '../hooks'
 
 type Props = EntityProps & EntityEventHandler & { children?: React.ReactNode }
 
-export const Entity = forwardRef<EntityRef, Props>(
+export const Entity = forwardRef<EntityRefShape, Props>(
   ({ id, children, position, rotation, scale, onSpatialTap, name }, ref) => {
     const ctx = useRealityContext()
     const entity = useEntity({

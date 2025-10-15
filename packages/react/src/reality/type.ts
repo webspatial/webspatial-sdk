@@ -1,5 +1,5 @@
 import { Vec3 } from '@webspatial/core-sdk'
-import { EntityRef } from './hooks'
+import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 
 export type EntityProps = {
@@ -10,11 +10,11 @@ export type EntityProps = {
   scale?: Vec3
 }
 
-type allTarget<T extends EntityRef> = {
+type allTarget<T extends EntityRefShape> = {
   target: T
   currentTarget: T
 }
-export type SpatialTapEntityEvent<T extends EntityRef = EntityRef> =
+export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialTapEvent & allTarget<T>
 
 export type EntityEventHandler = {
