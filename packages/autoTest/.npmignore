@@ -1,6 +1,1 @@
-dist/
-node_modules/
-coverage/
-*.log
-.env
 testPathIgnorePatterns: ['/node_modules/', '/dist/'],
