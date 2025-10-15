@@ -1,4 +1,5 @@
 import { SpatialWebMsgType } from './WebMsgCommand'
+
 export function createSpatialEvent<T>(
   type: SpatialWebMsgType,
   detail: T,
