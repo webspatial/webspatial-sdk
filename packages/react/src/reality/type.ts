@@ -1,5 +1,6 @@
 import { Vec3 } from '@webspatial/core-sdk'
-import { SpatialTapEvent } from '../spatialized-container'
+import { EntityRefShape } from './hooks'
+import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 
 export type EntityProps = {
   id?: string
@@ -9,6 +10,17 @@ export type EntityProps = {
   scale?: Vec3
 }
 
-export type EntityEventHandler = {
-  onSpatialTap?: (event: SpatialTapEvent) => void
+type allTarget<T extends EntityRefShape> = {
+  target: T
+  currentTarget: T
 }
+export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
+  CoreSpatialTapEvent & allTarget<T>
+
+export type EntityEventHandler = {
+  onSpatialTap?: (event: SpatialTapEntityEvent) => void
+}
+
+export const eventMap = {
+  onSpatialTap: 'spatialtap',
+} as const

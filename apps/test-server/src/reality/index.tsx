@@ -163,7 +163,7 @@ function App() {
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              ref={entRef}
+              // ref={entRef}
               // onSpatialTap={async e => {
               //   console.log('parent tap', e.detail.location3D)
               // }}
@@ -178,7 +178,23 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  // console.log('tap box', e.detail.location3D)
+                  console.log('🚀 ~ e:', e.target)
+                  console.log(
+                    'tap box',
+                    await e.target.convertFromEntityToReality(
+                      'boxGreen',
+                      e.detail.location3D,
+                    ),
+                    // await e.target.convertFromEntityToEntity(
+                    //   'boxGreen',
+                    //   'hehe',
+                    //   {
+                    //     x: 0,
+                    //     y: 0,
+                    //     z: 0,
+                    //   },
+                    // ),
+                  ) // print entityRef
                   // const pos = await myRef.current?.convertFromEntityToEntity(
                   //   'boxGreen',
                   //   'boxRed',

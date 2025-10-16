@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
 import {
+  EntityRefShape,
+  EntityRef,
   useEntityEvent,
   useEntityId,
+  useEntityRef,
   useEntityTransform,
   useForceUpdate,
 } from '../hooks'
@@ -12,9 +15,10 @@ import {
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
 } & EntityProps &
-  EntityEventHandler
+  EntityEventHandler & { ref: ForwardedRef<EntityRefShape> }
 
 export const useEntity = ({
+  ref,
   id,
   position,
   rotation,
@@ -24,11 +28,9 @@ export const useEntity = ({
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
-  const entityRef = useRef<SpatialEntity | null>(null)
+  const instanceRef = useRef<EntityRef>(new EntityRef(null, ctx))
 
   const forceUpdate = useForceUpdate()
-
-  useEntityEvent({ entity: entityRef.current, onSpatialTap })
 
   useEffect(() => {
     if (!ctx) return
@@ -50,7 +52,7 @@ export const useEntity = ({
           if (!result.success) throw new Error('ctx.reality.addEntity failed')
         }
 
-        entityRef.current = ent
+        instanceRef.current?.updateEntity(ent)
         forceUpdate()
       } catch (error) {
         console.error('useEntity init ~ error:', error)
@@ -61,12 +63,19 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
-      entityRef.current?.destroy()
+      instanceRef.current?.destroy()
     }
   }, [ctx, parent])
 
-  useEntityId({ id, entity: entityRef.current })
-  useEntityTransform(entityRef.current, { position, rotation, scale })
+  useEntityId({ id, entity: instanceRef.current.entity })
+  useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
+  useEntityRef(ref, instanceRef.current)
 
-  return entityRef.current
+  useEntityEvent({
+    instance: instanceRef.current,
+    onSpatialTap,
+    // TODO: add other event handlers
+  })
+
+  return instanceRef.current.entity
 }
