@@ -29,10 +29,10 @@
   },
   "lint-staged": {
     "*.{js,json}": [
-      "prettier --write"
+      "npx prettier --write"
     ],
     "*.ts?(x)": [
-      "prettier --write"
+      "npx prettier --write"
     ],
     "*.swift": [
       "swiftformat"
