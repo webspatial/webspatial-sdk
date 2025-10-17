@@ -10,6 +10,7 @@ import {
   Reality,
   SceneGraph,
   SpatializedElementRef,
+  toSceneSpatial,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
@@ -112,10 +113,21 @@ function App() {
           ref={realityRef}
           onSpatialTap={async e => {
             console.log('tap reality', e, e.target, e.currentTarget)
+            // e.target not work as expected, use e.currentTarget instead
           }}
         >
-          <UnlitMaterial id="matRed" color="#ff0000" />
-          <UnlitMaterial id="matGreen" color="#00ff00" />
+          <UnlitMaterial
+            id="matRed"
+            color="#ff0000"
+            transparent={true}
+            opacity={0.5}
+          />
+          <UnlitMaterial
+            id="matGreen"
+            color="#00ff00"
+            transparent={true}
+            opacity={0.5}
+          />
           <ModelAsset
             id="model"
             src="http://localhost:5173/public/assets/RocketToy1.usdz"
