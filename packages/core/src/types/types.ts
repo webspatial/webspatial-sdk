@@ -225,13 +225,10 @@ export type SpatialGeometryOptions =
 
 export type SpatialMaterialType = 'unlit'
 
-type BlendingType = 'opaque' | 'transparent'
-
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
-  blending?: BlendingType
-
+  transparent?: boolean
   opacity?: number
 }
 
