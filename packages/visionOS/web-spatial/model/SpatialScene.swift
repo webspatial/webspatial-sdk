@@ -3,10 +3,6 @@ import Foundation
 import simd
 import SwiftUI
 
-struct SceneData: Decodable, Hashable, Encodable {
-    let sceneID: String
-}
-
 struct CustomReplyData: Codable {
     let type: String
     let name: String
@@ -21,10 +17,6 @@ struct ResizeRange: Codable {
     var minHeight: Double?
     var maxWidth: Double?
     var maxHeight: Double?
-}
-
-struct UpdateSpatializedStatic3DElementReply: Codable {
-    let id: String
 }
 
 struct ConvertReply: Codable {
