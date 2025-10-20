@@ -22,7 +22,17 @@ import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
-import { SpatialTapMsg, SpatialWebMsgType } from '../../WebMsgCommand'
+import {
+  CubeInfoMsg,
+  ObjectDestroyMsg,
+  SpatialDragEndMsg,
+  SpatialDragMsg,
+  SpatialRotateEndMsg,
+  SpatialRotateMsg,
+  SpatialTapMsg,
+  SpatialWebMsgType,
+  TransformMsg,
+} from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
@@ -111,15 +121,27 @@ export class SpatialEntity extends SpatialObject {
   ) {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
-  private onReceiveEvent = (data: SpatialTapMsg) => {
+  private onReceiveEvent = (
+    data: // | CubeInfoMsg
+    // | TransformMsg
+    | SpatialTapMsg
+      // | SpatialDragMsg
+      // | SpatialDragEndMsg
+      // | SpatialRotateMsg
+      // | SpatialRotateEndMsg
+      | ObjectDestroyMsg,
+  ) => {
     // console.log('SpatialEntityEvent', data)
-    if (this.events[data.type]) {
+    const { type } = data
+    if (type === SpatialWebMsgType.objectdestroy) {
+      this.isDestroyed = true
+    } else if (type === SpatialWebMsgType.spatialtap) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialtap,
         (data as SpatialTapMsg).detail,
       )
       // todo: emulate event bubble on parent
-      this.events[data.type](evt)
+      this.events[data.type]?.(evt)
     }
   }
 

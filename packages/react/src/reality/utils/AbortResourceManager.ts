@@ -28,7 +28,7 @@ export class AbortResourceManager {
       try {
         await r.destroy()
       } catch (e) {
-        console.error('AbortResourceManager dispose error:', e)
+        console.error('AbortResourceManager dispose error:', e, r)
       }
     }
   }
