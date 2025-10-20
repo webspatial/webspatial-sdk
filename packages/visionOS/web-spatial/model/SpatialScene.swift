@@ -100,7 +100,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     private func setupSpatialWebView() {
         setupJSBListeners()
-        setupWebViewStateListner()
+        setupWebViewStateListener()
     }
 
     private func handleNavigationCheck(_ url: URL) -> Bool {
@@ -284,7 +284,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    private func setupWebViewStateListner() {
+    private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
             self.onPageStartLoad()
         }
