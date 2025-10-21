@@ -505,7 +505,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         if let scrollEdgeInsetsMarginRight = command.scrollEdgeInsetsMarginRight {
-            spatialized2DElement.cornerRadius = cornerRadius
+            spatialized2DElement.scrollEdgeInsetsMarginRight = scrollEdgeInsetsMarginRight
         }
 
         resolve(.success(baseReplyData))
