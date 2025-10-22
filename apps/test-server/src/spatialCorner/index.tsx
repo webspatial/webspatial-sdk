@@ -6,11 +6,13 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
-let i = 0
 const materialVals = [
   'none',
-  'translucent',
   'transparent',
+  'thin',
+  'translucent',
+  'regular',
+  'thick',
 ] as BackgroundMaterialType[]
 
 function App() {
@@ -22,13 +24,16 @@ function App() {
   const [bottomRight, setBottomTrailing] = useState(10)
   const [topLeft, setTopLeading] = useState(10)
   const [topRight, setTopTrailing] = useState(10)
+  const [materialIndex, setMaterialIndex] = useState(0)
 
   const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
   const toggleBackgroundMaterial = () => {
-    i = (i + 1) % materialVals.length
-    document.documentElement.style['--xr-background-material'] = materialVals[i]
-    console.log('dbg materialVals[i]', materialVals[i])
+    const newIndex = (materialIndex + 1) % materialVals.length
+    document.documentElement.style['--xr-background-material'] =
+      materialVals[newIndex]
+    console.log('dbg materialVals[i]', materialVals[newIndex])
+    setMaterialIndex(newIndex)
   }
 
   useEffect(() => {
@@ -47,6 +52,7 @@ function App() {
         <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
           toggle background material:
         </button>
+        <p>{materialVals[materialIndex]}</p>
         <div className="">
           change main window borderRadius:
           <input
