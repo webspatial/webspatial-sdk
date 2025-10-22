@@ -20,7 +20,7 @@
     "build": "tsc && npm run copy-assets",
     "build1": "rollup -c ./rollup.config.js",
     "build2": "tsc && npm run copy-assets",
-    "copy-assets": "cp -R src/assets/ dist/assets/",
+    "copy-assets": "cp -R src/assets/ dist/assets/ && cp -R src/schema.json dist/",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{js,ts}\""
   },
@@ -34,6 +34,7 @@
     "dist/assets",
     "dist/index.d.ts",
     "dist/index.js",
+    "dist/schema.json",
     "bin",
     "package.json",
     "README.md"

@@ -12,27 +12,22 @@ function App() {
   const [stats, setStats] = useState<MemoryStats | null>(null)
 
   useEffect(() => {
-    // Set up window style
-    ;(async () => {
-      if (getSession()) {
-        await getSession()
-          ?.getCurrentWindowComponent()
-          .setStyle({
-            cornerRadius: 15,
-            material: { type: 'translucent' },
-          })
-        document.body.style.backgroundColor = '#22339933'
-      }
-    })()
-
     // Set up stats update interval
     const updateStats = () => {
       ;(async () => {
-        var stats = await getSession()!._getStats()
+        const session = await getSession()
+        if (!session) {
+          return
+        }
+
+        const spatialScene = session.getSpatialScene()
+        const ret = await spatialScene.inspect()
+        console.log('SpatialScene inspect', ret)
+
         setStats({
           backend: 'test',
-          objectCount: stats.objects.count,
-          refObjectCount: stats.refObjects.count,
+          objectCount: ret.spatialObjectCount,
+          refObjectCount: ret.spatialObjectRefCount,
         })
       })()
     }

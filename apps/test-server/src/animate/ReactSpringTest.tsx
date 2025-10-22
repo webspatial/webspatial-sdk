@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 
-import { CSSSpatialDiv } from '@webspatial/react-sdk'
+import { withSpatialized2DElementContainer } from '@webspatial/react-sdk'
 
 import { animated, useSpring } from '@react-spring/web'
 
-const AnimatedDiv = animated(CSSSpatialDiv)
+const AnimatedDiv = animated(withSpatialized2DElementContainer('div'))
 
 export function ReactSpringTest() {
   const ref = useRef<HTMLDivElement>(null)

@@ -49,12 +49,6 @@
     "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
-  "dependencies": {
-    "@google/model-viewer": "^4.0.0",
-    "@types/three": "^0.170.0",
-    "lodash.isequal": "^4.5.0",
-    "three": "^0.170.0"
-  },
   "peerDependencies": {
     "@webspatial/core-sdk": "workspace:*",
     "react": ">=18.0.0",
@@ -72,9 +66,6 @@
     }
   },
   "devDependencies": {
-    "@types/hast": "^3.0.4",
-    "@types/lodash": "^4.17.13",
-    "@types/lodash.isequal": "^4.5.8",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -86,7 +77,6 @@
     "tsup": "^8.4.0",
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
-    "typescript": "^5.5.4",
-    "webpack": "^5.98.0"
+    "typescript": "^5.5.4"
   }
 }

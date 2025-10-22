@@ -1,7 +1,11 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
-//@ts-ignore bypass ts check for external
-import { withCSSSpatial, withSpatialMonitor } from '@webspatial/react-sdk'
+import {
+  withSpatialMonitor,
+  withSpatialized2DElementContainer,
+  Model,
+  //@ts-ignore bypass ts check for external
+} from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
 const classFlag = '__enableXr__'
@@ -11,10 +15,14 @@ export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
+  if (type === Model) {
+    return type
+  }
+
   const propsObject = props as Record<string, any>
   if (attributeFlag in propsObject) {
     delete propsObject[attributeFlag]
-    return withCSSSpatial(type)
+    return withSpatialized2DElementContainer(type)
   }
 
   if (xrMonitorFlag in propsObject) {
@@ -24,7 +32,7 @@ export function replaceToSpatialPrimitiveType(
 
   if (propsObject && propsObject.style && styleFlag in propsObject.style) {
     delete propsObject.style[styleFlag]
-    return withCSSSpatial(type)
+    return withSpatialized2DElementContainer(type)
   }
 
   if (propsObject && propsObject.className) {
@@ -33,7 +41,7 @@ export function replaceToSpatialPrimitiveType(
     if (idx !== -1) {
       originalClassNames.splice(idx, 1)
       propsObject.className = originalClassNames.join(' ')
-      return withCSSSpatial(type)
+      return withSpatialized2DElementContainer(type)
     }
   }
 

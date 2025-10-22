@@ -1,6 +1,8 @@
-export * from './spatial-react-components'
 export * from './utils'
-export * from './XRApp'
 export * from './initScene'
-export * from './polyfill'
+export * from './spatialized-container'
+export * from './spatialized-container-monitor'
+export * from './reality'
+export * from './Model'
+ 
 export const version = __WEBSPATIAL_REACT_SDK_VERSION__
