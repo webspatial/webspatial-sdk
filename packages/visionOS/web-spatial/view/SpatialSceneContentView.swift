@@ -26,7 +26,8 @@ struct SpatialSceneContentView: View {
                     spatialScene.getView()
                         .materialWithBorderCorner(
                             spatialScene.backgroundMaterial,
-                            spatialScene.cornerRadius
+                            spatialScene.cornerRadius,
+                            spatialScene.windowStyle
                         )
                         .frame(width: width, height: height)
                         .offset(z: -1)

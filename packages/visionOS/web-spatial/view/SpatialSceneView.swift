@@ -34,7 +34,7 @@ struct SpatialSceneView: View {
                 VStack {}.frame(width: width, height: height).glassBackgroundEffect().padding3D(.front, -100_000)
                     .position(x: x, y: y)
             } else {
-                SpatialSceneContentView(spatialScene: spatialScene, width: width, height: height)
+                SpatialSceneContentView(sceneId: spatialScene.id, width: width, height: height)
                     .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
                         if pwaManager.display != .fullscreen {
                             ZStack {
