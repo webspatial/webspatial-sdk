@@ -213,7 +213,7 @@ class SpatialWebViewModel {
     }
 
     private func onOpenWindowInvoke(_ url: URL) -> WebViewElementInfo? {
-        var protocolRes: WebViewElementInfo? = nil
+        var protocolRes: WebViewElementInfo?
         for key in openWindowList.keys {
             if url.absoluteString.starts(with: key),
                let res = openWindowList[key]?(url)
@@ -257,7 +257,7 @@ class SpatialWebViewModel {
             controller?.callJS("window.__SpatialWebEvent && window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
-    
+
     func updateWindowKV(_ dict: [String: Any]) {
         var js = ""
         for (key, value) in dict {
@@ -272,6 +272,28 @@ class SpatialWebViewModel {
         controller?.callJS(js)
     }
 
+    func checkHookExist(_ completion: @escaping (Bool) -> Void) {
+        guard let webview = controller?.webview else {
+            completion(false)
+            return
+        }
+
+        let js = """
+        (function() {
+            return typeof window.xrCurrentSceneDefaults !== 'undefined';
+        })();
+        """
+
+        webview.evaluateJavaScript(js) { result, error in
+            if let error = error {
+                print("❌ checkHookExist JS error:", error.localizedDescription)
+                completion(false)
+                return
+            }
+
+            completion(result as? Bool ?? false)
+        }
+    }
 
 //    func evaluateJS(js: String) {
 //        controller?.callJS(js)

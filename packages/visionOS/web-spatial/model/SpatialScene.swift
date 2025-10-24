@@ -26,6 +26,14 @@ struct ConvertReply: Codable {
 
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
+let defaultSceneConfig = SceneOptions(
+    defaultSize: Size(width: 1280, height: 720),
+    windowResizability: .automatic,
+    worldScaling: .automatic,
+    worldAlignment: .automatic,
+    baseplateVisibility: .automatic
+)
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
     var parent: (any ScrollAbleSpatialElementContainer)?
@@ -303,6 +311,22 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didFailLoad) {
             self.didFailLoad = true
+        }
+        
+        spatialWebViewModel.addStateListener(.didFinishLoad) {
+            if self.state == .pending {
+                self.checkHookExist()
+            }
+        }
+    }
+
+    private func checkHookExist() {
+        // if has no hook, show directly
+        spatialWebViewModel.checkHookExist { exists in
+            if !exists {
+                // no hook, open with default config
+                self.moveToState(.willVisible, defaultSceneConfig)
+            }
         }
     }
 
