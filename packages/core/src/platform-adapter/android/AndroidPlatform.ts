@@ -11,9 +11,9 @@ type JSBError = {
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     try {
-      console.log(`${cmd}::${msg}`)
+      // console.log(`${cmd}::${msg}`)
       const result = await window.webspatialBridge.postMessage(`${cmd}::${msg}`)
-      return CommandResultSuccess(result)
+      return CommandResultSuccess(JSON.parse(result))
     } catch (error: unknown) {
       // console.error(`AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
       const { code, message } = JSON.parse((error as JSBError).message)
@@ -33,7 +33,7 @@ export class AndroidPlatform implements PlatformAbility {
       target,
       features,
     )
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, 300))
     /**
      * Note: Although the webview opened with a custom scheme URL can obtain the window object,
      * it cannot be successfully loaded. Therefore, a redirect to about:blank is required
