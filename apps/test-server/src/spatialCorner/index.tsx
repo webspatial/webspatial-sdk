@@ -30,8 +30,10 @@ function App() {
 
   const toggleBackgroundMaterial = () => {
     const newIndex = (materialIndex + 1) % materialVals.length
-    document.documentElement.style['--xr-background-material'] =
-      materialVals[newIndex]
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      materialVals[newIndex],
+    )
     console.log('dbg materialVals[i]', materialVals[newIndex])
     setMaterialIndex(newIndex)
   }
