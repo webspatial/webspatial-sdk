@@ -28,7 +28,11 @@ const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
-const originalOpen = window.open
+const getOriginalOpen = () => {
+  if (typeof window === 'undefined') return () => {}
+  return window.open
+}
+const originalOpen = getOriginalOpen()
 
 class SceneManager {
   private static instance: SceneManager
@@ -352,6 +356,7 @@ async function injectScenePolyfill() {
 }
 
 export function injectSceneHook() {
+  if (typeof window === 'undefined') return
   hijackWindowOpen(window)
   hijackWindowATag(window)
   injectScenePolyfill()
