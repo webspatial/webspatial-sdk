@@ -10,6 +10,7 @@ import {
   Reality,
   SceneGraph,
   SpatializedElementRef,
+  toSceneSpatial,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
@@ -110,9 +111,23 @@ function App() {
             '--xr-back': 200,
           }}
           ref={realityRef}
+          onSpatialTap={async e => {
+            console.log('tap reality', e, e.target, e.currentTarget)
+            // e.target not work as expected, use e.currentTarget instead
+          }}
         >
-          <UnlitMaterial id="matRed" color="#ff0000" />
-          <UnlitMaterial id="matGreen" color="#00ff00" />
+          <UnlitMaterial
+            id="matRed"
+            color="#ff0000"
+            transparent={true}
+            opacity={0.5}
+          />
+          <UnlitMaterial
+            id="matGreen"
+            color="#00ff00"
+            transparent={true}
+            opacity={0.5}
+          />
           <ModelAsset
             id="model"
             src="http://localhost:5173/public/assets/RocketToy1.usdz"
@@ -160,7 +175,7 @@ function App() {
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              ref={entRef}
+              // ref={entRef}
               // onSpatialTap={async e => {
               //   console.log('parent tap', e.detail.location3D)
               // }}
@@ -175,7 +190,23 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  // console.log('tap box', e.detail.location3D)
+                  console.log('🚀 ~ e:', e.target)
+                  console.log(
+                    'tap box',
+                    await e.target.convertFromEntityToReality(
+                      'boxGreen',
+                      e.detail.location3D,
+                    ),
+                    // await e.target.convertFromEntityToEntity(
+                    //   'boxGreen',
+                    //   'hehe',
+                    //   {
+                    //     x: 0,
+                    //     y: 0,
+                    //     z: 0,
+                    //   },
+                    // ),
+                  ) // print entityRef
                   // const pos = await myRef.current?.convertFromEntityToEntity(
                   //   'boxGreen',
                   //   'boxRed',

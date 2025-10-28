@@ -13,6 +13,6 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Used to publish WebSpatial projects to AndroidXRApp"
 }

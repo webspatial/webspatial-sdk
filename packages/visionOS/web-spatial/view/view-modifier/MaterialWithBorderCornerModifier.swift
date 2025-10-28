@@ -49,10 +49,17 @@ struct CornerRadius: Codable {
 struct MaterialWithBorderCornerModifier: ViewModifier {
     let backgroundMaterial: BackgroundMaterial
     let cornerRadius: CornerRadius
+    let windowStyle: SpatialScene.WindowStyle
 
-    init(_ backgroundMaterial: BackgroundMaterial, _ cornerRadius: CornerRadius) {
+    init(
+        _ backgroundMaterial: BackgroundMaterial,
+        _ cornerRadius: CornerRadius,
+        _ windowStyle: SpatialScene
+            .WindowStyle
+    ) {
         self.backgroundMaterial = backgroundMaterial
         self.cornerRadius = cornerRadius
+        self.windowStyle = windowStyle
     }
 
     func body(content: Content) -> some View {
@@ -60,12 +67,20 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
 
         switch backgroundMaterial {
         case .GlassMaterial:
-            content
-                .glassBackgroundEffect(
-                    in: .rect(cornerRadii: radii),
-                    displayMode: .always
-                )
-                .frame(depth: 0)
+            if windowStyle == .volume {
+                content
+                    .glassBackgroundEffect(
+                        in: .rect(cornerRadii: radii),
+                        displayMode: .always
+                    )
+            } else {
+                content
+                    .glassBackgroundEffect(
+                        in: .rect(cornerRadii: radii),
+                        displayMode: .always
+                    )
+                    .frame(depth: 0)
+            }
 
         case .RegularMaterial:
             content
@@ -90,9 +105,13 @@ struct MaterialWithBorderCornerModifier: ViewModifier {
 }
 
 extension View {
-    func materialWithBorderCorner(_ backgroundMaterial: BackgroundMaterial, _ cornerRadius: CornerRadius) -> some View {
+    func materialWithBorderCorner(_ backgroundMaterial: BackgroundMaterial, _ cornerRadius: CornerRadius, _ windowStyle: SpatialScene.WindowStyle) -> some View {
         return modifier(
-            MaterialWithBorderCornerModifier(backgroundMaterial, cornerRadius)
+            MaterialWithBorderCornerModifier(
+                backgroundMaterial,
+                cornerRadius,
+                windowStyle
+            )
         )
     }
 }

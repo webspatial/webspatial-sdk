@@ -10,39 +10,54 @@ struct SpatialSceneContentView: View {
         if let spatialScene = SpatialApp.Instance.getScene(sceneId) {
             ZStack(alignment: Alignment.topLeading) {
                 // Display the main webview
-                spatialScene.getView()
-                    .materialWithBorderCorner(
-                        spatialScene.backgroundMaterial,
-                        spatialScene.cornerRadius
-                    )
-                    .frame(width: width, height: height)
-                    .offset(z: -1)
+                if spatialScene.didFailLoad {
+                    VStack {
+                        Text("Failed to load webpage. Is the server running?")
+                            .foregroundColor(.white)
+                        Button("Reload") {
+                            let url = spatialScene.spatialWebViewModel.url
 
-                let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
-
-                ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        Spatialized2DElementView()
+                            spatialScene.spatialWebViewModel.load(url)
+                        }
+                        .foregroundColor(.white)
                     }
-                    .environment(child)
-                }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity).glassBackgroundEffect()
+                } else {
+                    spatialScene.getView()
+                        .materialWithBorderCorner(
+                            spatialScene.backgroundMaterial,
+                            spatialScene.cornerRadius,
+                            spatialScene.windowStyle
+                        )
+                        .frame(width: width, height: height)
+                        .offset(z: -1)
 
-                let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
+                    let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
 
-                ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedStatic3DView()
+                    ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                            Spatialized2DElementView()
+                        }
+                        .environment(child)
                     }
-                    .environment(child)
-                }
 
-                let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
+                    let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
 
-                ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                    SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                        SpatializedDynamic3DView()
+                    ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                            SpatializedStatic3DView()
+                        }
+                        .environment(child)
                     }
-                    .environment(child)
+
+                    let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
+
+                    ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
+                            SpatializedDynamic3DView()
+                        }
+                        .environment(child)
+                    }
                 }
             }
             .opacity(spatialScene.opacity)

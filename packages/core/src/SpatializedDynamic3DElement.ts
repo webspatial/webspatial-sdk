@@ -5,18 +5,20 @@ import {
 } from './JSBCommand'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
-import { SpatializedElementProperties } from './types/types'
+import {
+  SpatialEntityOrReality,
+  SpatializedElementProperties,
+} from './types/types'
 export class SpatializedDynamic3DElement extends SpatializedElement {
-  rootEntity: SpatialEntity
+  children: SpatialEntityOrReality[] = []
   constructor(id: string) {
     super(id)
-    this.rootEntity = new SpatialEntity(id, { name: 'rootEntity' })
   }
 
   async addEntity(entity: SpatialEntity) {
     const ans = new SetParentForEntityCommand(entity.id, this.id).execute()
-    this.rootEntity.children.push(entity)
-    entity.parent = this.rootEntity
+    this.children.push(entity)
+    entity.parent = this
     return ans
   }
   async updateProperties(properties: Partial<SpatializedElementProperties>) {

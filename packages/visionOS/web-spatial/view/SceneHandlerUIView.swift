@@ -7,10 +7,10 @@ struct SceneHandlerUIView: View {
     @Environment(\.dismissWindow) private var dismissWindow
     @EnvironmentObject private var sceneDelegate: SceneDelegate
 
-    @State var sceneId: String
+    @State var spatialScene: SpatialScene
 
     @Environment(\.scenePhase) private var scenePhase
-    
+
     private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
         sceneDelegate.window?.windowScene?
             .requestGeometryUpdate(
@@ -19,7 +19,7 @@ struct SceneHandlerUIView: View {
                 )
             )
     }
-    
+
     private func setResizeRange(resizeRange: ResizeRange) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
             sceneDelegate.window?.windowScene?
@@ -42,55 +42,51 @@ struct SceneHandlerUIView: View {
     }
 
     var body: some View {
-        if let scene = SpatialApp.Instance.getScene(sceneId) {
-            VStack {}
-                .onAppear {
-                    // window scene only resize logic
-                    guard scene.windowStyle == .window else {
-                        return
-                    }
-                    if let range = scene.sceneConfig?.resizeRange {
-                        self.setResizeRange(resizeRange: range)
-                        if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
-                            self.setResizibility(resizingRestrictions: .none)
-                        } else {
-                            self.setResizibility(resizingRestrictions: .freeform)
-                        }
+        VStack {}
+            .onAppear {
+                // window scene only resize logic
+                guard spatialScene.windowStyle == .window else {
+                    return
+                }
+                if let range = spatialScene.sceneConfig?.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
                     }
                 }
-                .onDisappear {
-                    print("onScene Disappear")
-                    scene.destroy()
+            }
+            .onDisappear {
+                print("onScene Disappear")
+                spatialScene.destroy()
+            }
+            .onReceive(spatialScene.openWindowData) { sceneID in
+                if let spatialScene = SpatialApp.Instance.getScene(sceneID) {
+                    let _ = openWindow(
+                        id: spatialScene.windowStyle.rawValue,
+                        value: sceneID
+                    )
                 }
-                .onReceive(scene.openWindowData) { sceneID in
-                    if let spatialScene = SpatialApp.Instance.getScene(sceneID){
-                        let _ = openWindow(
-                            id: spatialScene.windowStyle.rawValue,
-                            value: sceneID
-                        )
-                    }
-                    
+            }
+            .onReceive(spatialScene.closeWindowData) { sceneID in
+                if let spatialScene = SpatialApp.Instance.getScene(sceneID) {
+                    dismissWindow(
+                        id: spatialScene.windowStyle.rawValue,
+                        value: sceneID
+                    )
                 }
-                .onReceive(scene.closeWindowData) { sceneID in
-                    if let spatialScene = SpatialApp.Instance.getScene(sceneID){
-                        dismissWindow(
-                            id: spatialScene.windowStyle.rawValue,
-                            value: sceneID
-                        )
-                    }
-                    
+            }
+            .onReceive(spatialScene.setLoadingWindowData) { wd in
+                if wd.method == .show {
+                    openWindow(id: "loading", value: wd.sceneID)
+                } else if wd.method == .hide {
+                    dismissWindow(id: "loading", value: wd.sceneID)
                 }
-                .onReceive(scene.setLoadingWindowData) { wd in
-                    if wd.method == .show {
-                        openWindow(id: "loading", value: wd.sceneID)
-                    } else if wd.method == .hide {
-                        dismissWindow(id: "loading",value: wd.sceneID)
-                    }
-                }
+            }
 
-                .onChange(of: scenePhase) { oldValue, newValue in
-                    logger.debug("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
-                }
-        }
+            .onChange(of: scenePhase) { oldValue, newValue in
+                logger.debug("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
+            }
     }
 }

@@ -3,10 +3,6 @@ import Foundation
 import simd
 import SwiftUI
 
-struct SceneData: Decodable, Hashable, Encodable {
-    let sceneID: String
-}
-
 struct CustomReplyData: Codable {
     let type: String
     let name: String
@@ -23,10 +19,6 @@ struct ResizeRange: Codable {
     var maxHeight: Double?
 }
 
-struct UpdateSpatializedStatic3DElementReply: Codable {
-    let id: String
-}
-
 struct ConvertReply: Codable {
     let id: String
     let position: SIMD3<Float>
@@ -40,8 +32,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     // Enum
     public enum WindowStyle: String, Codable, CaseIterable {
-        case window    = "window"
-        case volume    = "volume"
+        case window
+        case volume
     }
 
     // TOPIC begin
@@ -51,20 +43,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle: WindowStyle {
+    public var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
     }
-    
-    private func resetBackgroundMaterialOnWindowStyleChange(_ windowStyle:WindowStyle) {
+
+    private func resetBackgroundMaterialOnWindowStyleChange(_ windowStyle: WindowStyle) {
         if windowStyle == .volume {
-            self.backgroundMaterial = .Transparent
+            backgroundMaterial = .Transparent
         } else {
-            self.backgroundMaterial = .None
+            backgroundMaterial = .None
         }
     }
-    
 
     enum SceneStateKind: String {
         // default value
@@ -109,7 +100,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     private func setupSpatialWebView() {
         setupJSBListeners()
-        setupWebViewStateListner()
+        setupWebViewStateListener()
     }
 
     private func handleNavigationCheck(_ url: URL) -> Bool {
@@ -159,18 +150,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 )
             } else {
                 do {
-                    let config: XSceneOptionsJSB  = try decoder.decode(XSceneOptionsJSB.self, from: configData)
-                    
+                    let config: XSceneOptionsJSB = try decoder.decode(XSceneOptionsJSB.self, from: configData)
+
                     let sceneType = config.type ?? .window
-                    
+
                     let newScene = SpatialApp.Instance.createScene(
                         decodedUrl,
                         sceneType,
                         .willVisible,
                         SceneOptions(config)
                     )
-                    
-                    
+
                     return WebViewElementInfo(
                         id: newScene.id,
                         element: newScene.spatialWebViewModel
@@ -191,15 +181,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         print("window.close")
         SpatialApp.Instance.closeWindowGroup(self)
     }
-    
+
     public var sceneConfig: SceneOptions?
 
     public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
-        print(" moveToState \(self.state) to \(newState) ")
+        print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
         state = newState
-        
+
         if sceneConfig != nil {
             self.sceneConfig = sceneConfig
         }
@@ -216,12 +206,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle &&  newState == .willVisible {
+        } else if oldState == .idle && newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
     }
-
 
     private func setupJSBListeners() {
         spatialWebViewModel.addJSBListener(GetSpatialSceneStateCommand.self, onGetSpatialSceneState)
@@ -248,7 +237,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
-        
+
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
         spatialWebViewModel.addJSBListener(UpdateSpatializedDynamic3DElementProperties.self, onUpdateSpatializedDynamic3DElementProperties)
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
@@ -267,39 +256,39 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertFromEntityToEntity.self, onConvertFromEntityToEntity)
         spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
         spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
-        
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
     }
-    
-    
+
     var width: Double = 0
-    
+
     var height: Double = 0
-    
+
     var depth: Double = 0
-    
+
     static let navHeight = 60.0
-    
-    
-    func updateSize3D(_ size:Size3D) {
-        self.width = size.width
-        self.height = size.height
-        self.depth = size.depth
-        
+
+    func updateSize3D(_ size: Size3D) {
+        width = size.width
+        height = size.height
+        depth = size.depth
+
         // write through
         spatialWebViewModel.updateWindowKV([
-            "innerDepth":depth,
-            "outerDepth":depth,
-            "outerHeight":height + SpatialScene.navHeight
+            "innerDepth": depth,
+            "outerDepth": depth,
+            "outerHeight": height + SpatialScene.navHeight,
         ])
     }
-    
 
-    private func setupWebViewStateListner() {
+    public var didFailLoad = false
+
+    private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
+            self.didFailLoad = false
             self.onPageStartLoad()
         }
 
@@ -310,6 +299,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didClose) {
             self.handleWindowClose()
+        }
+
+        spatialWebViewModel.addStateListener(.didFailLoad) {
+            self.didFailLoad = true
         }
     }
 
@@ -331,7 +324,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        self.backgroundMaterial = .None
+        backgroundMaterial = .None
     }
 
     private func onGetSpatialSceneState(
@@ -346,12 +339,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             if let spatialObject: SpatialObject = findSpatialObject(targetId) {
                 resolve(.success(spatialObject))
                 return
-            }
-            else if let spatialEntity: SpatialEntity = findSpatialObject(targetId) {
+            } else if let spatialEntity: SpatialEntity = findSpatialObject(targetId) {
                 resolve(.success(spatialEntity))
                 return
-            }
-            else {
+            } else {
                 resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid inspect spatial object id not exsit!")))
                 return
             }
@@ -367,13 +358,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatialObject.destroy()
             resolve(.success(nil))
             return
-        }
-        else if let spatialEntity: SpatialEntity = findSpatialObject(command.id) {
+        } else if let spatialEntity: SpatialEntity = findSpatialObject(command.id) {
             spatialEntity.destroy()
             resolve(.success(nil))
             return
-        }
-        else {
+        } else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to destroy SpatialObject: invalid inspect spatial object id \(command.id) not exsit!")))
             return
         }
@@ -385,14 +374,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
-    
+
     private func onCreateSpatializedDynamic3DElement(command: CreateSpatializedDynamic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedDynamic3DElement = createSpatializedElement(.SpatializedDynamic3DElement)
-        
+
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
-    
-    private func onUpdateSpatializedDynamic3DElementProperties(command: UpdateSpatializedDynamic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onUpdateSpatializedDynamic3DElementProperties(command: UpdateSpatializedDynamic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let spatializedElement: SpatializedDynamic3DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedDynamic3DElement spatial object id not exsit!")))
             return
@@ -427,9 +416,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let modelURL = command.modelURL {
             spatializedElement.modelURL = modelURL
         }
-        
+
         if let array = command.modelTransform {
-             guard array.count == 16 else {
+            guard array.count == 16 else {
                 print("Received modelTransform matrix array does not have 16 elements.")
                 return resolve(.failure(JsbError(code: .InvalidMatrix, message: "invalid UpdateSpatializedStatic3DElementProperties matrix should have length 16!")))
             }
@@ -475,10 +464,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let sceneConfig = SceneOptions(sceneConfigJSBData)
 
         // update sceneType
-        self.windowStyle = sceneConfigJSBData.type!
-        
-        self.moveToState(.willVisible, sceneConfig)
-        
+        windowStyle = sceneConfigJSBData.type!
+
+        moveToState(.willVisible, sceneConfig)
+
         resolve(.success(baseReplyData))
     }
 
@@ -534,7 +523,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let clientY = command.clientY {
             spatializedElement.clientY = clientY
         }
-        
+
         if let width = command.width {
             spatializedElement.width = width
         }
@@ -574,11 +563,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableTapGesture = command.enableTapGesture {
             spatializedElement.enableTapGesture = enableTapGesture
         }
-        
+
         if let enableDragStartGesture = command.enableDragStartGesture {
             spatializedElement.enableDragStartGesture = enableDragStartGesture
         }
-        
+
         if let enableDragGesture = command.enableDragGesture {
             spatializedElement.enableDragGesture = enableDragGesture
         }
@@ -594,11 +583,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableRotateEndGesture = command.enableRotateEndGesture {
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
         }
-        
+
         if let enableMagnifyStartGesture = command.enableMagnifyStartGesture {
             spatializedElement.enableMagnifyStartGesture = enableMagnifyStartGesture
         }
-        
+
         if let enableMagnifyGesture = command.enableMagnifyGesture {
             spatializedElement.enableMagnifyGesture = enableMagnifyGesture
         }
@@ -717,9 +706,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             if windowStyle == .volume {
                 // default background for volume scene is transparent
                 spatialWebViewModel
-                    .setBackgroundTransparent(
-                        _backgroundMaterial == .None || _backgroundMaterial
-                        == .Transparent)
+                    .setBackgroundTransparent(true)
             } else {
                 spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
             }
@@ -755,7 +742,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         return spatializedElement
     }
-    
+
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let geometry = Dynamic3DManager.createGeometry(command) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
@@ -774,81 +761,79 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private func onCreateComponent() {
         //      @fukang: add Component here
     }
-    
-    private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let material = Dynamic3DManager.createUnlitMaterial(command, nil)
         addSpatialObject(material)
         resolve(.success(AddSpatializedElementReply(id: material.id)))
     }
-    
-    private func onCreateModelComponent(command: CreateModelComponent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onCreateModelComponent(command: CreateModelComponent, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let geometry = spatialObjects[command.geometryId] as? Geometry {
-            var materials:[SpatialMaterial] = []
-            command.materialIds.forEach{ mid in
+            var materials: [SpatialMaterial] = []
+            for mid in command.materialIds {
                 if let material = spatialObjects[mid] as? SpatialMaterial {
                     materials.append(material)
-                }
-                else {
+                } else {
                     print("material \(mid) not found ")
                 }
             }
             let component = Dynamic3DManager.createModelComponent(mesh: geometry, mats: materials)
             addSpatialObject(component)
             resolve(.success(AddSpatializedElementReply(id: component.id)))
-        }
-        else{
+        } else {
             print("geometry \(command.geometryId) not found")
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "geometry \(command.geometryId) not found")))
         }
     }
-    
-    private func onAddComponentToEntity(command: AddComponentToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onAddComponentToEntity(command: AddComponentToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let entity = spatialObjects[command.entityId] as? SpatialEntity,
-           let component = spatialObjects[command.componentId] as? SpatialComponent{
+           let component = spatialObjects[command.componentId] as? SpatialComponent
+        {
             entity.addComponent(component)
             resolve(.success(baseReplyData))
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add component failed")))
     }
-    
-    private func onAddEntityToDynamic3D(command: AddEntityToDynamic3D, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onAddEntityToDynamic3D(command: AddEntityToDynamic3D, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let entity = spatialObjects[command.entityId] as? SpatialEntity,
-           let dynamic3dElement = spatialObjects[command.dynamic3dId] as? SpatializedDynamic3DElement {
+           let dynamic3dElement = spatialObjects[command.dynamic3dId] as? SpatializedDynamic3DElement
+        {
             dynamic3dElement.addEntity(entity)
             resolve(.success(baseReplyData))
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
     }
-    
-    private func onAddEntityToEntity(command: AddEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onAddEntityToEntity(command: AddEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let entityChild = spatialObjects[command.childId] as? SpatialEntity,
-           let entityParent = spatialObjects[command.parentId] as? SpatialEntity {
+           let entityParent = spatialObjects[command.parentId] as? SpatialEntity
+        {
             entityParent.addChild(entity: entityChild)
             resolve(.success(baseReplyData))
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Add Entity failed")))
     }
-    
-    private func onSetParentForEntity(command: SetParentForEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
-        if let entity = spatialObjects[command.childId] as? SpatialEntity{
+
+    private func onSetParentForEntity(command: SetParentForEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if let entity = spatialObjects[command.childId] as? SpatialEntity {
             if let parentId = command.parentId {
-                if let parentEntity = spatialObjects[parentId] as? SpatialEntity{
+                if let parentEntity = spatialObjects[parentId] as? SpatialEntity {
                     parentEntity.addChild(entity: entity)
-                }
-                else if let container = spatialObjects[parentId] as? SpatializedDynamic3DElement {
+                } else if let container = spatialObjects[parentId] as? SpatializedDynamic3DElement {
                     container.addEntity(entity)
-                }
-                else{
+                } else {
                     resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Parent \(parentId) not found")))
                     return
                 }
                 resolve(.success(baseReplyData))
                 return
-            }
-            else{
+            } else {
                 entity.removeFromParent()
                 resolve(.success(baseReplyData))
                 return
@@ -856,11 +841,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.childId) not found")))
     }
-    
-    private func onRemoveEntityFromParent(command: RemoveEntityFromParent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onRemoveEntityFromParent(command: RemoveEntityFromParent, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let entity = spatialObjects[command.entityId] as? SpatialEntity {
             if entity.parent != nil,
-               let parentEntity = entity.parent as? SpatialEntity{
+               let parentEntity = entity.parent as? SpatialEntity
+            {
                 parentEntity.removeChild(id: entity.spatialId)
                 resolve(.success(baseReplyData))
                 return
@@ -870,30 +856,31 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity not found")))
     }
-    
-    private func onUpdateEntityProperties(command: UpdateEntityProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onUpdateEntityProperties(command: UpdateEntityProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let entity = spatialObjects[command.entityId] as? SpatialEntity,
-           command.transform.count == 16 {
+           command.transform.count == 16
+        {
             entity.updateTransform(command.transform)
             resolve(.success(baseReplyData))
             return
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Update Entity failed")))
     }
-    
-    private func onCreateModelAsset(command: CreateModelAsset, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
-        _ = SpatialModelResource(command.url, { onload in
+
+    private func onCreateModelAsset(command: CreateModelAsset, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        _ = SpatialModelResource(command.url) { onload in
             switch onload {
-            case .success(let modelResource):
+            case let .success(modelResource):
                 self.addSpatialObject(modelResource)
                 resolve(.success(AddSpatializedElementReply(id: modelResource.id)))
-            case .failure(let error):
+            case let .failure(error):
                 resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to download model: \(error)")))
             }
-        })
+        }
     }
-    
-    private func onCreateSpatialModelEntity(command: CreateSpatialModelEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onCreateSpatialModelEntity(command: CreateSpatialModelEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let modelAsset = spatialObjects[command.modelAssetId] as? SpatialModelResource {
             let spatialModelEntity = SpatialModelEntity(modelAsset, command.name ?? "")
             addSpatialObject(spatialModelEntity)
@@ -902,22 +889,22 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelAsset not found")))
     }
-    
-    private func onUpdateEntityEvent(command: UpdateEntityEvent, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
-        guard let entity = spatialObjects[command.entityId] as? SpatialEntity else{
+
+    private func onUpdateEntityEvent(command: UpdateEntityEvent, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity not found")))
             return
         }
         entity.updateGesture(command.type, command.isEnable)
         resolve(.success(baseReplyData))
     }
-    
-    private func onConvertFromEntityToEntity(command: ConvertFromEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onConvertFromEntityToEntity(command: ConvertFromEntityToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
             return
         }
-        
+
         guard let toEntity = spatialObjects[command.toEntityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.toEntityId) not found")))
             return
@@ -926,8 +913,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let point = fromEntity.convert(position: position, to: toEntity)
         resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
     }
-    
-    private func onConvertFromEntityToScene(command: ConvertFromEntityToScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onConvertFromEntityToScene(command: ConvertFromEntityToScene, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let fromEntity = spatialObjects[command.fromEntityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.fromEntityId) not found")))
             return
@@ -936,8 +923,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let point = fromEntity.convert(position: position, to: nil)
         resolve(.success(ConvertReply(id: command.fromEntityId, position: point)))
     }
-    
-    private func onConvertFromSceneToEntity(command: ConvertFromSceneToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>){
+
+    private func onConvertFromSceneToEntity(command: ConvertFromSceneToEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let entity = spatialObjects[command.entityId] as? SpatialEntity else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Entity \(command.entityId) not found")))
             return
@@ -965,9 +952,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 listener: onSptatialObjectDestroyed
             )
         spatialObjects.removeValue(forKey: spatialObject.spatialId)
-        
+
         // notify web side, spatialObject is destroyed
-        self.sendWebMsg(spatialObject.spatialId, SpatialObjectDestroiedEvent())
+        sendWebMsg(spatialObject.spatialId, SpatialObjectDestroiedEvent())
     }
 
     func findSpatialObject<T: SpatialObjectProtocol>(_ id: String) -> T? {

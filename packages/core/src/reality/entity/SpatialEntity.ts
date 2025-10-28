@@ -6,6 +6,7 @@ import {
 } from './../../JSBCommand'
 import {
   SpatialEntityEventType,
+  SpatialEntityOrReality,
   SpatialEntityUserData,
   Vec3,
 } from '../../types/types'
@@ -21,6 +22,17 @@ import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
+import {
+  CubeInfoMsg,
+  ObjectDestroyMsg,
+  SpatialDragEndMsg,
+  SpatialDragMsg,
+  SpatialRotateEndMsg,
+  SpatialRotateMsg,
+  SpatialTapMsg,
+  SpatialWebMsgType,
+  TransformMsg,
+} from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
@@ -29,7 +41,7 @@ export class SpatialEntity extends SpatialObject {
 
   events: Record<string, (data: any) => void> = {}
   children: SpatialEntity[] = []
-  parent: SpatialEntity | null = null
+  parent: SpatialEntityOrReality | null = null
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,
@@ -109,11 +121,27 @@ export class SpatialEntity extends SpatialObject {
   ) {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
-  private onReceiveEvent = (data: any) => {
+  private onReceiveEvent = (
+    data: // | CubeInfoMsg
+    // | TransformMsg
+    | SpatialTapMsg
+      // | SpatialDragMsg
+      // | SpatialDragEndMsg
+      // | SpatialRotateMsg
+      // | SpatialRotateEndMsg
+      | ObjectDestroyMsg,
+  ) => {
     // console.log('SpatialEntityEvent', data)
-    if (this.events[data.type]) {
-      const evt = createSpatialEvent(data.type, data.detail)
-      this.events[data.type](evt)
+    const { type } = data
+    if (type === SpatialWebMsgType.objectdestroy) {
+      this.isDestroyed = true
+    } else if (type === SpatialWebMsgType.spatialtap) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialtap,
+        (data as SpatialTapMsg).detail,
+      )
+      // todo: emulate event bubble on parent
+      this.events[data.type]?.(evt)
     }
   }
 

@@ -225,13 +225,10 @@ export type SpatialGeometryOptions =
 
 export type SpatialMaterialType = 'unlit'
 
-type BlendingType = 'opaque' | 'transparent'
-
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
-  blending?: BlendingType
-
+  transparent?: boolean
   opacity?: number
 }
 
@@ -377,3 +374,9 @@ export interface SpatialMagnifyEventDetail {
 export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
 
 export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
+
+export interface SpatialEntityOrReality {
+  id: string
+  parent?: SpatialEntityOrReality | null
+  children: SpatialEntityOrReality[]
+}
