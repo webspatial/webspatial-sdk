@@ -1,10 +1,17 @@
-import { VisionOSPlatform } from './vision-os/VisionOSPlatform'
 import { PlatformAbility } from './interface'
-import { AndroidPlatform } from './android/AndroidPlatform'
+import { NoopPlatform } from './noop/NoopPlatform'
 
 export function createPlatform(): PlatformAbility {
-  if (window.navigator.userAgent.includes('Android')) {
-    return new AndroidPlatform()
+  if (typeof window === 'undefined') {
+    return new NoopPlatform()
   }
-  return new VisionOSPlatform()
+
+  if (window.navigator.userAgent.includes('Android')) {
+    const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
+    return new AndroidPlatform()
+  } else {
+    const VisionOSPlatform =
+      require('./vision-os/VisionOSPlatform').VisionOSPlatform
+    return new VisionOSPlatform()
+  }
 }

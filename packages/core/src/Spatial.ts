@@ -52,6 +52,7 @@ export class Spatial {
    * @returns Native version string in format "x.x.x"
    */
   getNativeVersion() {
+    if (typeof window === 'undefined') return ''
     if (window.__WebSpatialData && window.__WebSpatialData.getNativeVersion) {
       return window.__WebSpatialData.getNativeVersion()
     }
