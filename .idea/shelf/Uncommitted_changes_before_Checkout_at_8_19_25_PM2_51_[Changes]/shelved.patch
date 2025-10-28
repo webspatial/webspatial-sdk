@@ -1,0 +1,55 @@
+Index: tests/ci-test/test/e2e.test.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { runViteServer } from '../scripts/vite-server'\nimport { runWebSpatialBuilder } from './websptial-builder-utils'\nimport { AddressInfo } from 'node:net'\nimport { AsyncPromise } from '../utils/AsyncPromise'\nimport { assert } from 'chai'\nimport { postResultToLark } from '../src/api.ts'\nconst fail = assert.fail\n\ndescribe('E2E Test For Webspatial SDK', function () {\n  this.timeout(1000 * 60 * 5) // 5 minutes\n\n  it('should pass', async () => {\n    const promise = new AsyncPromise<TestResults>()\n\n    try {\n      const server = await runViteServer({\n        mochaResultCb: (data: any) => {\n          promise.resolve(data)\n        },\n      })\n\n      const address = server.address() as AddressInfo\n      const entryURL = `http://localhost:${address.port}/`\n      try {\n        await runWebSpatialBuilder(entryURL)\n      } catch (error) {\n        console.error(error)\n        fail()\n      }\n\n      // wait for mocha result finished\n      const result = await promise.waitFinish()\n\n      if (process.env.pingLark) {\n        postResultToLark(result)\n      }\n      const hasError = result.failures.length > 0\n      if (hasError) {\n        console.error('Failures', result.failures)\n        fail()\n      } else {\n        // close server\n        server.close()\n      }\n    } catch (error) {\n      console.log('error', error)\n      fail(error as string)\n    }\n  })\n})\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tests/ci-test/test/e2e.test.ts b/tests/ci-test/test/e2e.test.ts
+--- a/tests/ci-test/test/e2e.test.ts	(revision e54b4dfa8c30629b73df71e96815d5893c0b0acb)
++++ b/tests/ci-test/test/e2e.test.ts	(date 1755586259838)
+@@ -31,6 +31,7 @@
+       // wait for mocha result finished
+       const result = await promise.waitFinish()
+ 
++      // send result to lark
+       if (process.env.pingLark) {
+         postResultToLark(result)
+       }
+Index: tests/ci-test/src/api.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>export const MOCHA_RESULT_API = '/api/mockresult'\nconst config = {\n  appID: 'cli_a6e3e4809ebd500c',\n  appSecret: 'Xmb3brTadDGwQzEQszOjtfIgyZqr040n',\n  myReceiveID: 'ou_f4d2db0b1d9f396936dc450a83ec40d2',\n  groupReceiveID: 'oc_ff1c2256d7e8b6e80905adac71cd45d8',\n}\n\nexport function postMochaResult(data: TestResults) {\n  const requestOptions = {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json',\n    },\n    body: JSON.stringify(data),\n  }\n  return fetch(MOCHA_RESULT_API, requestOptions).then(response => {\n    if (!response.ok) {\n      throw new Error('Network response was not ok')\n    }\n    return response.json()\n  })\n}\n\nexport async function bot_card_msg_send_to_me(msg: string) {\n  const url =\n    'https://fsopen.bytedance.net/open-apis/im/v1/messages?receive_id_type=open_id'\n  const payload1 = JSON.stringify({\n    content: msg,\n    msg_type: 'interactive',\n    receive_id: config.myReceiveID,\n    uuid: '',\n  })\n  const token = await get_tenant_access_token()\n  const headers = {\n    'Content-Type': 'application/json',\n    Authorization: 'Bearer ' + token,\n  }\n\n  try {\n    // send msg to me\n    const response = await fetch(url, {\n      method: 'POST',\n      headers,\n      body: payload1,\n    })\n    const responseText1 = await response.text()\n    console.log('response when sending msg to me: ' + responseText1)\n    return responseText1\n  } catch (error) {\n    console.error('发送消息时出错:', error)\n    throw error\n  }\n}\n\nexport async function bot_card_msg_send_to_group(msg: string) {\n  const url =\n    'https://fsopen.bytedance.net/open-apis/im/v1/messages?receive_id_type=chat_id'\n  const payload1 = JSON.stringify({\n    content: msg,\n    msg_type: 'interactive',\n    receive_id: config.groupReceiveID,\n    uuid: '',\n  })\n  const token = await get_tenant_access_token()\n  const headers = {\n    'Content-Type': 'application/json',\n    Authorization: 'Bearer ' + token,\n  }\n\n  try {\n    // send msg to group\n    const response = await fetch(url, {\n      method: 'POST',\n      headers,\n      body: payload1,\n    })\n    const responseText1 = await response.text()\n    console.log('response when sending msg to group: ' + responseText1)\n    return responseText1\n  } catch (error) {\n    console.error('发送消息时出错:', error)\n    throw error\n  }\n}\n\nasync function get_tenant_access_token() {\n  const url =\n    'https://fsopen.bytedance.net/open-apis/auth/v3/tenant_access_token/internal'\n  const payload = JSON.stringify({\n    app_id: config.appID,\n    app_secret: config.appSecret,\n  })\n\n  const headers = {\n    'Content-Type': 'application/json',\n  }\n\n  try {\n    const response = await fetch(url, {\n      method: 'POST',\n      headers,\n      body: payload,\n    })\n\n    const responseText = await response.text()\n    // 解析响应文本获取token\n    const token = responseText.split(':')[4].split('\"')[1]\n    console.log('Token: ' + token)\n    return token\n  } catch (error) {\n    console.error('error getting tenant access token:', error)\n    throw error\n  }\n}\n\nexport async function postResultToLark(results: TestResults) {\n  const passedTests = results.passes.map(item => item.title).join(', ')\n  const failedTests = results.failures.map(item => item.title).join(', ')\n  const messageContent = {\n    schema: '2.0',\n    config: {\n      update_multi: true,\n      style: {\n        text_size: {\n          normal_v2: {\n            default: 'normal',\n            pc: 'normal',\n            mobile: 'heading',\n          },\n        },\n      },\n    },\n    body: {\n      direction: 'vertical',\n      padding: '12px 12px 12px 12px',\n      elements: [\n        {\n          tag: 'div',\n          text: {\n            tag: 'plain_text',\n            content: '',\n            text_size: 'normal_v2',\n            text_align: 'left',\n            text_color: 'default',\n          },\n          margin: '0px 0px 0px 0px',\n        },\n        {\n          tag: 'markdown',\n          // \"content\": \"coreSDK version: \"  + getPackageVersion(\"@webspatial/core-sdk\") + \"  \\nreactSDK version: \"  + getPackageVersion(\"@webspatial/react-sdk\") + \"\\nbuilderVersion version: \"  + getPackageVersion(\"@webspatial/builder\") + \" \\n\",\n          text_align: 'left',\n          text_size: 'normal_v2',\n          margin: '0px 0px 0px 0px',\n        },\n        {\n          tag: 'hr',\n          margin: '0px 0px 0px 0px',\n        },\n        {\n          tag: 'markdown',\n          content:\n            '<number_tag>1</number_tag>Passed Tests: ' +\n            passedTests +\n            ' \\n<number_tag>2</number_tag>Failed Tests: ' +\n            failedTests +\n            ' \\n',\n          text_align: 'left',\n          text_size: 'normal_v2',\n          margin: '0px 0px 0px 0px',\n        },\n        {\n          tag: 'div',\n          text: {\n            tag: 'plain_text',\n            content: '',\n            text_size: 'normal_v2',\n            text_align: 'left',\n            text_color: 'default',\n          },\n          margin: '0px 0px 0px 0px',\n        },\n      ],\n    },\n    header: {\n      title: {\n        tag: 'plain_text',\n        content: '[XR-Foundation]CI Test Complete',\n      },\n      subtitle: {\n        tag: 'plain_text',\n        content: 'Web Spatial Local AVP API Test',\n      },\n      text_tag_list: [\n        {\n          tag: 'text_tag',\n          text: {\n            tag: 'plain_text',\n            content: 'WebSpatial',\n          },\n          color: 'neutral',\n        },\n      ],\n      template: 'green',\n      padding: '12px 12px 12px 12px',\n    },\n  }\n  await bot_card_msg_send_to_me(JSON.stringify(messageContent))\n  // await bot_card_msg_send_to_group(JSON.stringify(messageContent))\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tests/ci-test/src/api.ts b/tests/ci-test/src/api.ts
+--- a/tests/ci-test/src/api.ts	(revision e54b4dfa8c30629b73df71e96815d5893c0b0acb)
++++ b/tests/ci-test/src/api.ts	(date 1755586259832)
+@@ -1,3 +1,5 @@
++import { getPackageVersion } from '../utils/utils.ts'
++
+ export const MOCHA_RESULT_API = '/api/mockresult'
+ const config = {
+   appID: 'cli_a6e3e4809ebd500c',
+Index: tests/ci-test/scripts/qaDailyTest.ts
+===================================================================
+diff --git a/tests/ci-test/scripts/qaDailyTest.ts b/tests/ci-test/scripts/qaDailyTest.ts
+new file mode 100644
+--- /dev/null	(date 1750146402076)
++++ b/tests/ci-test/scripts/qaDailyTest.ts	(date 1750146402076)
+@@ -0,0 +1,14 @@
++import mocha from 'mocha'
++
++console.log(111, mocha)
++
++const modules = import.meta.glob('./test/*.test.ts', { eager: true })
++for (const path in modules) {
++  modules[path]
++}
++const runner = mocha.run()
++
++const results: TestResults = {
++  passes: [],
++  failures: [],
++}

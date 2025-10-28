@@ -26,7 +26,7 @@ export class PWAGenerator {
   private static defaultManifestJson = {
     name: 'WebSpatialTest',
     display: 'minimal-ui',
-    start_url: '/',
+    start_url: '/index.html',
     scope: '/',
   }
 
