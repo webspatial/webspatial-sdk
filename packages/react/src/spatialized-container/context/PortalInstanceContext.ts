@@ -172,11 +172,14 @@ export class PortalInstanceObject {
       )
     }
 
+    const __innerSpatializedElement = () => this.spatializedElement
+
     Object.assign(dom, {
       __getBoundingClientCube,
       __getBoundingClientRect,
       __toSceneSpace,
       __toLocalSpace,
+      __innerSpatializedElement,
     })
   }
 
