@@ -13,6 +13,9 @@ export async function createSpatialized2DElement(): Promise<Spatialized2DElement
     throw new Error('createSpatialized2DElement failed')
   } else {
     const { id, windowProxy } = result.data!
+    // set base href to make sure the relative url is correct
+    windowProxy.document.head.innerHTML = `<meta name="viewport" content="width=device-width, initial-scale=1">
+      <base href="${document.baseURI}">`
     return new Spatialized2DElement(id, windowProxy)
   }
 }
