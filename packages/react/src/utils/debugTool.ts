@@ -1,23 +1,22 @@
+import { Spatialized2DElement } from '@webspatial/core-sdk'
 import { getSession } from './getSession'
-
-async function getStat() {
-  //@ts-ignore
-  const statsInfo = await getSession()!._getStats()
-
-  return statsInfo
-}
- 
 
 async function inspectCurrentSpatialScene() {
   const spatialScene = getSession()!.getSpatialScene()
   return spatialScene.inspect()
 }
 
+function getSpatialized2DElement(
+  spatialized2DElement: HTMLDivElement,
+): Spatialized2DElement {
+  return (
+    spatialized2DElement as any
+  ).__innerSpatializedElement?.() as Spatialized2DElement
+}
+
 export function enableDebugTool() {
-  const session = getSession()
   Object.assign(window, {
-    session,
-    getStat,
     inspectCurrentSpatialScene,
+    getSpatialized2DElement,
   })
 }
