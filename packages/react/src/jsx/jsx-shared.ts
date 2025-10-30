@@ -15,6 +15,9 @@ export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
+  if (typeof window === 'undefined') {
+    return type
+  }
   if (type === Model) {
     return type
   }

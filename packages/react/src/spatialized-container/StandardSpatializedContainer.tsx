@@ -101,7 +101,7 @@ export const StandardSpatializedContainer = forwardRef(
   },
 ) => React.ReactElement | null
 
-if (typeof window !== 'undefined') {
+export function injectSpatialDefaultStyle() {
   // inject xr-spatial-default style to head
   const styleElement = document.createElement('style')
   styleElement.type = 'text/css'

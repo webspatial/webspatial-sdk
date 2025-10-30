@@ -1,3 +1,5 @@
+import './ssr-polyfill'
+
 export { SpatialObject } from './SpatialObject'
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
@@ -12,7 +14,12 @@ export * from './types/global.d'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'
-injectSceneHook()
+import { isSSREnv } from './ssr-polyfill'
+if (!isSSREnv()) {
+  injectSceneHook()
+}
 
 import { spatialWindowPolyfill } from './spatial-window-polyfill'
-spatialWindowPolyfill()
+if (!isSSREnv()) {
+  spatialWindowPolyfill()
+}

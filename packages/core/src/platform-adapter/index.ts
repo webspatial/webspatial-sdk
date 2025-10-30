@@ -1,8 +1,9 @@
+import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
 import { NoopPlatform } from './noop/NoopPlatform'
 
 export function createPlatform(): PlatformAbility {
-  if (typeof window === 'undefined') {
+  if (isSSREnv()) {
     return new NoopPlatform()
   }
 
