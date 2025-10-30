@@ -15,6 +15,9 @@ function getSpatialized2DElement(
 }
 
 export function enableDebugTool() {
+  if (typeof window === 'undefined') {
+    return
+  }
   Object.assign(window, {
     inspectCurrentSpatialScene,
     getSpatialized2DElement,

@@ -22,7 +22,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
   const isWebSpatialEnv = getSession() !== null
-  if (!isWebSpatialEnv) {
+  if (!isWebSpatialEnv || typeof window === 'undefined') {
     const {
       component: Component,
       spatializedContent,

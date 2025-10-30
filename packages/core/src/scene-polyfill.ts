@@ -28,13 +28,9 @@ const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
-const getOriginalOpen = () => {
-  if (typeof window === 'undefined') return () => {}
-  return window.open
-}
-const originalOpen = getOriginalOpen()
 
 class SceneManager {
+  private originalOpen: any
   private static instance: SceneManager
   static getInstance() {
     if (!SceneManager.instance) {
@@ -44,6 +40,7 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
+    this.originalOpen = window.open
     ;(window as any).open = this.open
   }
 
@@ -56,7 +53,7 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      return originalOpen(url, target, features)
+      return this.originalOpen(url, target, features)
     }
 
     //  absolute url
@@ -67,7 +64,7 @@ class SceneManager {
 
     // if target is special
     if (target === '_self' || target === '_parent' || target === '_top') {
-      const newWindow = originalOpen(url, target, features)
+      const newWindow = this.originalOpen(url, target, features)
       return newWindow
     }
 
@@ -356,7 +353,6 @@ async function injectScenePolyfill() {
 }
 
 export function injectSceneHook() {
-  if (typeof window === 'undefined') return
   hijackWindowOpen(window)
   hijackWindowATag(window)
   injectScenePolyfill()
