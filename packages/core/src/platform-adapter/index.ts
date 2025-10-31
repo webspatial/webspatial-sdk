@@ -1,10 +1,10 @@
 import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
-import { NoopPlatform } from './noop/NoopPlatform'
+import { SSRPlatform } from './ssr/SSRPlatform'
 
 export function createPlatform(): PlatformAbility {
   if (isSSREnv()) {
-    return new NoopPlatform()
+    return new SSRPlatform()
   }
 
   if (window.navigator.userAgent.includes('Android')) {
