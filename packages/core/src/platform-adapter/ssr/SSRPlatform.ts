@@ -4,7 +4,7 @@ import {
   WebSpatialProtocolResult,
 } from '../interface'
 
-export class NoopPlatform implements PlatformAbility {
+export class SSRPlatform implements PlatformAbility {
   callJSB(cmd: string, msg: string): Promise<CommandResult> {
     return Promise.resolve({
       success: true,
