@@ -40,7 +40,7 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
-    this.originalOpen = window.open
+    this.originalOpen = window.open.bind(window)
     ;(window as any).open = this.open
   }
 
