@@ -3,10 +3,13 @@ import {
   CommandResultFailure,
   CommandResultSuccess,
 } from '../CommandResultUtils'
+import { CheckWebViewCanCreateCommand } from '../../JSBCommand'
 
 type JSBError = {
   message: string
 }
+
+let creatingElementCount = 0
 
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
@@ -27,21 +30,36 @@ export class AndroidPlatform implements PlatformAbility {
     target?: string,
     features?: string,
   ): Promise<CommandResult> {
-    const { spatialId: id, windowProxy } = this.openWindow(
+    // console.log(creatingElementCount)
+    await new Promise(resolve => setTimeout(resolve, 16 * creatingElementCount))
+    creatingElementCount++
+    let canCreate = await new CheckWebViewCanCreateCommand().execute()
+    // console.log("can create:", canCreate.data.can)
+    while(!canCreate.data.can){
+      await new Promise(resolve => setTimeout(resolve, 16))
+      canCreate = await new CheckWebViewCanCreateCommand().execute()
+    }
+    // console.log("create spatial div start")
+    const { windowProxy } = this.openWindow(
       command,
       query,
       target,
       features,
     )
-    await new Promise(resolve => setTimeout(resolve, 300))
-    /**
-     * Note: Although the webview opened with a custom scheme URL can obtain the window object,
-     * it cannot be successfully loaded. Therefore, a redirect to about:blank is required
-     * to ensure proper webview initialization and functionality.
-     */
-    windowProxy?.open('about:blank?spatialId=' + id, '_self')
+    while(!windowProxy?.open){
+      await new Promise(resolve => setTimeout(resolve, 16))
+    }
+    windowProxy?.open("about:blank", "_self")
+    while(!windowProxy?.SpatialId) {
+      await new Promise(resolve => setTimeout(resolve, 16))
+      // console.log("loop wait")
+    }
+    let spatialId = windowProxy?.SpatialId
+    // console.log(spatialId)
+    // console.log("create spatial div end")
+    creatingElementCount--
     return Promise.resolve(
-      CommandResultSuccess({ windowProxy: windowProxy, id }),
+      CommandResultSuccess({ windowProxy: windowProxy, id: spatialId }),
     )
   }
 
@@ -72,16 +90,6 @@ export class AndroidPlatform implements PlatformAbility {
       target,
       features,
     )
-    const ua = windowProxy?.navigator.userAgent
-    let spatialId = ua?.match(
-      /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi,
-    )?.[0]
-    if (!spatialId) {
-      spatialId = query?.match(
-        /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi,
-      )?.[0]
-    }
-    console.log('spatialId:', spatialId)
-    return { spatialId, windowProxy }
+    return { spatialId: "", windowProxy }
   }
 }

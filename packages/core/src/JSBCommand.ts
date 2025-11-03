@@ -536,6 +536,18 @@ export class DestroyCommand extends JSBCommand {
   }
 }
 
+export class CheckWebViewCanCreateCommand extends JSBCommand {
+  commandType = 'CheckWebViewCanCreate'
+
+  constructor(readonly id: string = "") {
+    super()
+  }
+
+  protected getParams() {
+    return { id: this.id }
+  }
+}
+
 /* WebSpatial Protocol Begin */
 abstract class WebSpatialProtocolCommand extends JSBCommand {
   target?: string
@@ -581,15 +593,11 @@ abstract class WebSpatialProtocolCommand extends JSBCommand {
 
 export class createSpatialized2DElementCommand extends WebSpatialProtocolCommand {
   commandType = 'createSpatialized2DElement'
-  spatialId: string
   constructor() {
     super()
-    this.spatialId = uuid()
   }
   protected getParams() {
-    return {
-      spatialId: this.spatialId,
-    }
+    return {}
   }
 }
 
