@@ -1,9 +1,10 @@
-import { Spatial, SpatialSession } from '@webspatial/core-sdk'
+import { isSSREnv, Spatial, SpatialSession } from '@webspatial/core-sdk'
 // Create the default Spatial session for the app
 let spatial: Spatial | null = null
 let _currentSession: SpatialSession | null = null
 /** @hidden */
 export function getSession() {
+  if (isSSREnv()) return null
   if (!spatial) {
     spatial = new Spatial()
   }
