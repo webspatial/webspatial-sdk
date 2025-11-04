@@ -8,8 +8,8 @@ function App() {
   const style = {
     width: '300px',
     height: '300px',
-    // '--xr-back': 100,
-    // transform: 'rotateX(30deg)',
+    '--xr-back': 150,
+    transform: 'rotateX(10deg)',
     backgroundColor: 'green',
   }
   return (
