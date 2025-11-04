@@ -19,6 +19,7 @@ declare global {
     // Used to access webkit specific api
     webkit: any
     webspatialBridge: any
+    __handleJSBMessage: any
 
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
