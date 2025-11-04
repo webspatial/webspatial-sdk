@@ -9,16 +9,15 @@ import { SpatialID } from './SpatialID'
 import { createPortal } from 'react-dom'
 import { useSpatialTransformVisibility } from './hooks/useSpatialTransformVisibility'
 
-// used as root conntainer for all TransformVisibilityTaskContainer
-const cssParserDivContainer =
-  typeof document !== 'undefined' ? document?.createElement('div') : null
+// used as root container for all TransformVisibilityTaskContainer
+let cssParserDivContainer: HTMLDivElement | null = null
 
-if (cssParserDivContainer) {
-  cssParserDivContainer.style.position = 'absolute'
-  // cssParserDivContainer.style.width = '0px'
-  // cssParserDivContainer.style.overflow = 'hidden'
-
-  cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
+export function initCSSParserDivContainer() {
+  cssParserDivContainer = document?.createElement('div')
+  if (cssParserDivContainer) {
+    cssParserDivContainer.style.position = 'absolute'
+    cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
+  }
 }
 
 function createOrGetCSSParserDivContainer() {

@@ -13,6 +13,7 @@ export * from './types/global.d'
 // side effects
 import { injectSceneHook } from './scene-polyfill'
 import { isSSREnv } from './ssr-polyfill'
+export { isSSREnv }
 if (!isSSREnv()) {
   injectSceneHook()
 }
