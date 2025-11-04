@@ -30,33 +30,34 @@ export class AndroidPlatform implements PlatformAbility {
     target?: string,
     features?: string,
   ): Promise<CommandResult> {
-    // console.log(creatingElementCount)
+    // Waiting for request to create spatial div
     await new Promise(resolve => setTimeout(resolve, 16 * creatingElementCount))
+    // Count the current total number of created spatial div queues
     creatingElementCount++
+    // Create a spatial div through JSB polling request
     let canCreate = await new CheckWebViewCanCreateCommand().execute()
-    // console.log("can create:", canCreate.data.can)
     while(!canCreate.data.can){
       await new Promise(resolve => setTimeout(resolve, 16))
       canCreate = await new CheckWebViewCanCreateCommand().execute()
     }
-    // console.log("create spatial div start")
+    // Request successful, call window.open
     const { windowProxy } = this.openWindow(
       command,
       query,
       target,
       features,
     )
+    // Polling waiting for windowProxy to convert into a real window object
     while(!windowProxy?.open){
       await new Promise(resolve => setTimeout(resolve, 16))
     }
+    // Make the page renderable through window.open
     windowProxy?.open("about:blank", "_self")
+    // Polling to check if SpatialId injection is successful
     while(!windowProxy?.SpatialId) {
       await new Promise(resolve => setTimeout(resolve, 16))
-      // console.log("loop wait")
     }
     let spatialId = windowProxy?.SpatialId
-    // console.log(spatialId)
-    // console.log("create spatial div end")
     creatingElementCount--
     return Promise.resolve(
       CommandResultSuccess({ windowProxy: windowProxy, id: spatialId }),
