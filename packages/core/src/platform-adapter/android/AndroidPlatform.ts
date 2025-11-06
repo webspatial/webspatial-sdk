@@ -4,6 +4,7 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 import { CheckWebViewCanCreateCommand } from '../../JSBCommand'
+import { SpatialWebEvent } from '../../SpatialWebEvent'
 
 type JSBError = {
   message: string
@@ -11,17 +12,27 @@ type JSBError = {
 
 let creatingElementCount = 0
 
+let requestId = 0
+
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
-    try {
-      // console.log(`${cmd}::${msg}`)
-      const result = await window.webspatialBridge.postMessage(`${cmd}::${msg}`)
-      return CommandResultSuccess(JSON.parse(result))
-    } catch (error: unknown) {
-      // console.error(`AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
-      const { code, message } = JSON.parse((error as JSBError).message)
-      return CommandResultFailure(code, message)
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        const rId = `rId${++requestId}`
+        // console.log(`${rId}::${cmd}::${msg}`)
+        SpatialWebEvent.addEventReceiver(rId, (data: any) => {
+          SpatialWebEvent.removeEventReceiver(rId)
+          resolve(CommandResultSuccess(JSON.parse(data)))
+        })
+        window.webspatialBridge.postMessage(`${rId}::${cmd}::${msg}`)
+      } catch (error: unknown) {
+        console.error(
+          `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
+        )
+        const { code, message } = JSON.parse((error as JSBError).message)
+        reject(CommandResultFailure(code, message))
+      }
+    })
   }
 
   async callWebSpatialProtocol(
@@ -36,25 +47,20 @@ export class AndroidPlatform implements PlatformAbility {
     creatingElementCount++
     // Create a spatial div through JSB polling request
     let canCreate = await new CheckWebViewCanCreateCommand().execute()
-    while(!canCreate.data.can){
+    while (!canCreate.data.can) {
       await new Promise(resolve => setTimeout(resolve, 16))
       canCreate = await new CheckWebViewCanCreateCommand().execute()
     }
     // Request successful, call window.open
-    const { windowProxy } = this.openWindow(
-      command,
-      query,
-      target,
-      features,
-    )
+    const { windowProxy } = this.openWindow(command, query, target, features)
     // Polling waiting for windowProxy to convert into a real window object
-    while(!windowProxy?.open){
+    while (!windowProxy?.open) {
       await new Promise(resolve => setTimeout(resolve, 16))
     }
     // Make the page renderable through window.open
-    windowProxy?.open("about:blank", "_self")
+    windowProxy?.open('about:blank', '_self')
     // Polling to check if SpatialId injection is successful
-    while(!windowProxy?.SpatialId) {
+    while (!windowProxy?.SpatialId) {
       await new Promise(resolve => setTimeout(resolve, 16))
     }
     let spatialId = windowProxy?.SpatialId
@@ -91,6 +97,6 @@ export class AndroidPlatform implements PlatformAbility {
       target,
       features,
     )
-    return { spatialId: "", windowProxy }
+    return { spatialId: '', windowProxy }
   }
 }
