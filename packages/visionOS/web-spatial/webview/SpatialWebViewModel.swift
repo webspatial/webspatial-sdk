@@ -272,32 +272,21 @@ class SpatialWebViewModel {
         controller?.callJS(js)
     }
 
-    func checkHookExist(_ completion: @escaping (Bool) -> Void) {
+    func evaluateJS(_ js: String, completion: @escaping (Any?) -> Void) {
         guard let webview = controller?.webview else {
-            completion(false)
+            completion(nil)
             return
         }
 
-        let js = """
-        (function() {
-            return typeof window.xrCurrentSceneDefaults !== 'undefined';
-        })();
-        """
-
         webview.evaluateJavaScript(js) { result, error in
             if let error = error {
-                print("❌ checkHookExist JS error:", error.localizedDescription)
-                completion(false)
+                print("❌ evaluateJavaScript JS error:", error.localizedDescription)
+                completion(nil)
                 return
             }
-
-            completion(result as? Bool ?? false)
+            completion(result)
         }
     }
-
-//    func evaluateJS(js: String) {
-//        controller?.callJS(js)
-//    }
 }
 
 enum SpatialWebViewState: String, CaseIterable {
