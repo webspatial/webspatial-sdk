@@ -7,6 +7,7 @@ import { CheckWebViewCanCreateCommand } from '../../JSBCommand'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 
 type JSBError = {
+  code: string
   message: string
 }
 
@@ -20,16 +21,21 @@ export class AndroidPlatform implements PlatformAbility {
       try {
         const rId = `rId${++requestId}`
         // console.log(`${rId}::${cmd}::${msg}`)
-        SpatialWebEvent.addEventReceiver(rId, (data: any) => {
+        SpatialWebEvent.addEventReceiver(rId, (result: any) => {
           SpatialWebEvent.removeEventReceiver(rId)
-          resolve(CommandResultSuccess(JSON.parse(data)))
+          if (result.success) {
+            resolve(CommandResultSuccess(result.data))
+          } else {
+            const { code, message } = result.data as JSBError
+            reject(CommandResultFailure(code, message))
+          }
         })
         window.webspatialBridge.postMessage(`${rId}::${cmd}::${msg}`)
       } catch (error: unknown) {
         console.error(
           `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
         )
-        const { code, message } = JSON.parse((error as JSBError).message)
+        const { code, message } = error as JSBError
         reject(CommandResultFailure(code, message))
       }
     })
