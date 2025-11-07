@@ -6,6 +6,10 @@ import {
 import { CheckWebViewCanCreateCommand } from '../../JSBCommand'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 
+interface JSBResponse {
+  success: boolean
+  data: any
+}
 type JSBError = {
   code: string
   message: string
@@ -15,13 +19,27 @@ let creatingElementCount = 0
 
 let requestId = 0
 
+function addRequestId(msg: string, rId: string): string {
+  let updatedMsg = msg
+  if (msg && msg.trim() !== '{}') {
+    updatedMsg = msg.slice(0, -1) + `,"requestId":"${rId}"}`
+  } else {
+    // If msg is empty, create new object with requestId
+    updatedMsg = `{"requestId":"${rId}"}`
+  }
+  return updatedMsg
+}
+
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     return new Promise((resolve, reject) => {
       try {
         const rId = `rId${++requestId}`
-        // console.log(`${rId}::${cmd}::${msg}`)
-        SpatialWebEvent.addEventReceiver(rId, (result: any) => {
+        // Insert requestId into end of msg by string manipulation
+        const updatedMsg = addRequestId(msg, rId)
+
+        // console.log(`${cmd}::${updatedMsg}`)
+        SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
           SpatialWebEvent.removeEventReceiver(rId)
           if (result.success) {
             resolve(CommandResultSuccess(result.data))
@@ -30,7 +48,7 @@ export class AndroidPlatform implements PlatformAbility {
             reject(CommandResultFailure(code, message))
           }
         })
-        window.webspatialBridge.postMessage(`${rId}::${cmd}::${msg}`)
+        window.webspatialBridge.postMessage(`${cmd}::${updatedMsg}`)
       } catch (error: unknown) {
         console.error(
           `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
