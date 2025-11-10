@@ -28,10 +28,11 @@ function nextRequestId() {
 
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
+    // android JS Bridge interface only support sync invoking
+    // in order to implement promise API, register every request by requestId and remove when resolve/reject.
     return new Promise((resolve, reject) => {
       try {
         const rId = nextRequestId()
-
         // console.log(`${cmd}::${updatedMsg}`)
         SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
           SpatialWebEvent.removeEventReceiver(rId)
