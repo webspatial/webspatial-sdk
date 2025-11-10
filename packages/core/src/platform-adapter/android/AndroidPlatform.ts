@@ -19,24 +19,18 @@ let creatingElementCount = 0
 
 let requestId = 0
 
-function addRequestId(msg: string, rId: string): string {
-  let updatedMsg = msg
-  if (msg && msg.trim() !== '{}') {
-    updatedMsg = msg.slice(0, -1) + `,"requestId":"${rId}"}`
-  } else {
-    // If msg is empty, create new object with requestId
-    updatedMsg = `{"requestId":"${rId}"}`
-  }
-  return updatedMsg
+const MAX_ID = 100000
+
+function nextRequestId() {
+  requestId = (requestId + 1) % MAX_ID
+  return `rId_${requestId}`
 }
 
 export class AndroidPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     return new Promise((resolve, reject) => {
       try {
-        const rId = `rId${++requestId}`
-        // Insert requestId into end of msg by string manipulation
-        const updatedMsg = addRequestId(msg, rId)
+        const rId = nextRequestId()
 
         // console.log(`${cmd}::${updatedMsg}`)
         SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
@@ -48,7 +42,7 @@ export class AndroidPlatform implements PlatformAbility {
             reject(CommandResultFailure(code, message))
           }
         })
-        window.webspatialBridge.postMessage(`${cmd}::${updatedMsg}`)
+        window.webspatialBridge.postMessage(rId, cmd, msg)
       } catch (error: unknown) {
         console.error(
           `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
