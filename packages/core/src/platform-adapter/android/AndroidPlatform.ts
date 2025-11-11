@@ -33,17 +33,29 @@ export class AndroidPlatform implements PlatformAbility {
     return new Promise((resolve, reject) => {
       try {
         const rId = nextRequestId()
-        // console.log(`${cmd}::${updatedMsg}`)
-        SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
-          SpatialWebEvent.removeEventReceiver(rId)
+
+        const ans = window.webspatialBridge.postMessage(rId, cmd, msg)
+        if (ans !== '') {
+          // sync call
+          const result = JSON.parse(ans) as JSBResponse
           if (result.success) {
             resolve(CommandResultSuccess(result.data))
           } else {
             const { code, message } = result.data as JSBError
-            reject(CommandResultFailure(code, message))
+            resolve(CommandResultFailure(code, message))
           }
-        })
-        window.webspatialBridge.postMessage(rId, cmd, msg)
+        } else {
+          // async call
+          SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
+            SpatialWebEvent.removeEventReceiver(rId)
+            if (result.success) {
+              resolve(CommandResultSuccess(result.data))
+            } else {
+              const { code, message } = result.data as JSBError
+              reject(CommandResultFailure(code, message))
+            }
+          })
+        }
       } catch (error: unknown) {
         console.error(
           `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
