@@ -34,8 +34,19 @@ export class AndroidPlatform implements PlatformAbility {
       try {
         const rId = nextRequestId()
 
+        SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
+          SpatialWebEvent.removeEventReceiver(rId)
+          if (result.success) {
+            resolve(CommandResultSuccess(result.data))
+          } else {
+            const { code, message } = result.data as JSBError
+            reject(CommandResultFailure(code, message))
+          }
+        })
+
         const ans = window.webspatialBridge.postMessage(rId, cmd, msg)
         if (ans !== '') {
+          SpatialWebEvent.removeEventReceiver(rId)
           // sync call
           const result = JSON.parse(ans) as JSBResponse
           if (result.success) {
@@ -44,17 +55,6 @@ export class AndroidPlatform implements PlatformAbility {
             const { code, message } = result.data as JSBError
             resolve(CommandResultFailure(code, message))
           }
-        } else {
-          // async call
-          SpatialWebEvent.addEventReceiver(rId, (result: JSBResponse) => {
-            SpatialWebEvent.removeEventReceiver(rId)
-            if (result.success) {
-              resolve(CommandResultSuccess(result.data))
-            } else {
-              const { code, message } = result.data as JSBError
-              reject(CommandResultFailure(code, message))
-            }
-          })
         }
       } catch (error: unknown) {
         console.error(
