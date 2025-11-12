@@ -1,10 +1,18 @@
-import { VisionOSPlatform } from './vision-os/VisionOSPlatform'
+import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
-import { AndroidPlatform } from './android/AndroidPlatform'
+import { SSRPlatform } from './ssr/SSRPlatform'
 
 export function createPlatform(): PlatformAbility {
-  if (window.navigator.userAgent.includes('Android')) {
-    return new AndroidPlatform()
+  if (isSSREnv()) {
+    return new SSRPlatform()
   }
-  return new VisionOSPlatform()
+
+  if (window.navigator.userAgent.includes('Android')) {
+    const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
+    return new AndroidPlatform()
+  } else {
+    const VisionOSPlatform =
+      require('./vision-os/VisionOSPlatform').VisionOSPlatform
+    return new VisionOSPlatform()
+  }
 }
