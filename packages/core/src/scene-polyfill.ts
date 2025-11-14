@@ -55,6 +55,12 @@ class SceneManager {
       return originalOpen(url, target, features)
     }
 
+    //  absolute url
+    const prefix = `${window.location.protocol}//${window.location.host}`
+    if (!url?.startsWith(prefix)) {
+      url = prefix + url
+    }
+
     // if target is special
     if (target === '_self' || target === '_parent' || target === '_top') {
       const newWindow = originalOpen(url, target, features)
