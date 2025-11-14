@@ -3,6 +3,7 @@ import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import * as path from 'path'
 import { PuppeteerRunner } from '../src/runtime/puppeteerRunner'
+import 'source-map-support/register'
 
 let runner: PuppeteerRunner | null = null
 let server: any = null
@@ -17,7 +18,7 @@ describe('React App E2E Test', function () {
     const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
     // Start Vite server and capture output for debugging
-    server = spawn(npmCmd, ['run', 'dev'], {
+    server = spawn(npmCmd, ['run', 'devAVP'], {
       shell: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -311,12 +312,6 @@ describe('React App E2E Test', function () {
     }
   })
 
-  it('test spatial scene creation', () => {
-    if (!runner) throw new Error('Puppeteer runner not initialized')
-
-    console.log('Testing spatial scene creation...')
-  })
-
   it('should capture console.log output after button click', async function () {
     if (!runner) throw new Error('Puppeteer runner not initialized')
 
@@ -361,7 +356,7 @@ describe('React App E2E Test', function () {
         }
       })
 
-      // 等待一段时间让控制台日志产生
+      // wait for a moment to let the console log produced
       await runner.evaluate(() => {
         return new Promise(resolve => setTimeout(resolve, 500))
       })

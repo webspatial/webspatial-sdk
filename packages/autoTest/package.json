@@ -4,9 +4,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc",
+    "devAVP": "XR_ENV=avp vite",
+    "build": "tsc -b && vite build",
+    "build:avp": "vite build && XR_ENV=avp vite build",
     "build-test": "tsc -p tsconfig.json --outDir dist",
-    "test": "npm run build-test && mocha dist/tests/**/*.test.js"
+    "test": "npm run build-test && mocha --require source-map-support/register dist/tests/**/*.test.js"
   },
   "keywords": [],
   "author": "",
@@ -21,15 +23,16 @@
     "chai": "^5.2.0",
     "mocha": "^11.1.0",
     "puppeteer": "^24.21.0",
+    "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
     "vite": "^6.3.1"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "@webspatial/core-sdk": "workspace:*",
-    "@webspatial/react-sdk": "workspace:*"
+    "@webspatial/react-sdk": "workspace:*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

@@ -539,7 +539,7 @@ export class DestroyCommand extends JSBCommand {
 export class CheckWebViewCanCreateCommand extends JSBCommand {
   commandType = 'CheckWebViewCanCreate'
 
-  constructor(readonly id: string = "") {
+  constructor(readonly id: string = '') {
     super()
   }
 
@@ -555,6 +555,9 @@ abstract class WebSpatialProtocolCommand extends JSBCommand {
 
   async execute(): Promise<WebSpatialProtocolResult> {
     const query = this.getQuery()
+    console.log(
+      `WebSpatialProtocolCommand: execute, commandType: ${this.commandType}, query: ${query}`,
+    )
     return platform.callWebSpatialProtocol(
       this.commandType,
       query,

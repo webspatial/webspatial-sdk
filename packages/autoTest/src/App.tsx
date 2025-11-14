@@ -1,4 +1,4 @@
-import React, { useState, CSSProperties } from 'react'
+import React, { useState, CSSProperties, useRef, useEffect } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -6,6 +6,12 @@ enableDebugTool()
 
 function App() {
   const [count, setCount] = useState(0)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    ;(window as any).btnRef = btnRef
+  })
+  console.log('spatialTest: ')
 
   // Mock spatial element states
   const [spatialElements, setSpatialElements] = useState([
@@ -44,10 +50,23 @@ function App() {
   console.log('session: ', session)
   const supported = spatial.isSupported()
   console.log('supported: ', supported)
+  async function inspectCurrentSpatialScene() {
+    return await window.inspectCurrentSpatialScene()
+  }
+
+  inspectCurrentSpatialScene().then(scene => {
+    console.log('inspectCurrentSpatialScene data: ', scene)
+  })
 
   try {
     session?.getSpatialScene().updateSpatialProperties({
       material: 'translucent',
+      cornerRadius: {
+        topLeading: 100,
+        bottomLeading: 100,
+        topTrailing: 100,
+        bottomTrailing: 100,
+      },
     })
   } catch (error) {
     console.log('setBackgroundStyle failed')
@@ -66,6 +85,12 @@ function App() {
     console.log('getState: ', session?.getSpatialScene().getState())
     session?.getSpatialScene().updateSpatialProperties({
       material: 'translucent',
+      cornerRadius: {
+        topLeading: 10,
+        bottomLeading: 10,
+        topTrailing: 10,
+        bottomTrailing: 10,
+      },
     })
 
     // When clicked, update the z-position of the first spatial element
@@ -77,10 +102,35 @@ function App() {
           ...prev[0].style,
           '--xr-back': prev[0].position[2] + 50,
           '--xr-z-index': prev[0].position[2] + 50,
-        } as CSSProperties,
+        },
       },
       ...prev.slice(1),
     ])
+  }
+
+  const getNativeVersion = () => {
+    const nativeVersion = spatial.getNativeVersion()
+    console.log('getNativeVersion:', nativeVersion)
+  }
+
+  const getClientVersion = () => {
+    const clientVersion = spatial.getClientVersion()
+    console.log('getClientVersion:', clientVersion)
+  }
+
+  const runInSpatialWeb = () => {
+    const runInSpatialWeb = spatial.runInSpatialWeb()
+    console.log('runInSpatialWeb:', runInSpatialWeb)
+  }
+
+  const getSpatialScene = () => {
+    const spatialScene = session?.getSpatialScene()
+    console.log('getSpatialScene:', spatialScene)
+  }
+
+  const isSupported = () => {
+    const isSupported = spatial.isSupported()
+    console.log('isSupported:', isSupported)
   }
 
   const handleCreateNewElement = () => {
@@ -114,19 +164,31 @@ function App() {
         margin: '0 auto',
       }}
     >
-      <h1>Web Spatial Test App</h1>
+      <h1
+        style={
+          {
+            '--xr-back': '100',
+            backgroundColor: 'rgba(255, 0, 0, 0.7)',
+          } as CSSProperties
+        }
+      >
+        Web Spatial Test App
+      </h1>
 
       {/* Counter Component */}
       <div style={{ marginBottom: '30px' }}>
         <h2 data-testid="counter">Count: {count}</h2>
         <button
           data-testid="btn"
+          ref={btnRef}
           onClick={onClick}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            cursor: 'pointer',
-          }}
+          style={
+            {
+              padding: '10px 20px',
+              fontSize: '16px',
+              cursor: 'pointer',
+            } as CSSProperties
+          }
         >
           Increment
         </button>
@@ -140,6 +202,21 @@ function App() {
           }}
         >
           Create New Spatial Element
+        </button>
+        <button data-testid="isSupportedBtn" onClick={isSupported}>
+          is supported
+        </button>
+        <button data-testid="getNativeVersionBtn" onClick={getNativeVersion}>
+          get spatial native version
+        </button>
+        <button data-testid="getClientVersionBtn" onClick={getClientVersion}>
+          get spatial client version
+        </button>
+        <button data-testid="runInSpatialWebBtn" onClick={runInSpatialWeb}>
+          run in spatial web
+        </button>
+        <button data-testid="getSpatialSceneBtn" onClick={getSpatialScene}>
+          get spatial scene
         </button>
       </div>
 
@@ -159,7 +236,8 @@ function App() {
         {spatialElements.map((element, index) => (
           <div
             key={element.id}
-            enable-xr
+            /// ref.current is the spatialized element info  input: ref.current, output: spatialized 2D element object info, windowproxy(content in html) inspect properties
+            // ref={ref}
             className={`spatial-div spatial-element-${index + 1}`}
             style={{
               ...element.style,
@@ -183,11 +261,8 @@ function App() {
       {/* Example Spatial Button */}
       <div style={{ marginTop: '30px' }}>
         <button
-          enable-xr
           style={
             {
-              '--xr-back': '200',
-              '--xr-z-index': '200',
               padding: '15px 30px',
               fontSize: '18px',
               backgroundColor: 'purple',
@@ -209,7 +284,7 @@ function App() {
         enable-xr
         style={
           {
-            '--xr-back': '100',
+            '--xr-back': '200',
             '--xr-z-index': '100',
             marginTop: '20px',
             padding: '20px',

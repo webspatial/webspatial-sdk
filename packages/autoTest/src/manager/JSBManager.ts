@@ -162,3 +162,5 @@ export class JSBManager {
     this.spatialScenes.delete(id)
   }
 }
+
+export default JSBManager

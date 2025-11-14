@@ -3,6 +3,8 @@ import {
   SpatializedElementType,
   Vec2,
   ScrollAbleSpatialElementContainer,
+  BackgroundMaterial,
+  CornerRadius,
 } from '../types/types'
 import { SpatializedElement } from './SpatializedElement'
 
@@ -10,30 +12,35 @@ export class Spatialized2DElement
   extends SpatializedElement
   implements ISpatialized2DElement
 {
-  private _cornerRadius: number = 0
-  private _backgroundMaterial: any = null
+  private _cornerRadius: CornerRadius = {
+    topLeading: 0,
+    topTrailing: 0,
+    bottomLeading: 0,
+    bottomTrailing: 0,
+  }
+  private _backgroundMaterial: BackgroundMaterial = BackgroundMaterial.none
   private _scrollEnabled: boolean = true
   private _scrollOffset: Vec2 = { x: 0, y: 0 }
-  private _scrollPageEnabled: boolean = true
+  private _scrollPageEnabled: boolean = false
 
   private _children: Record<string, SpatializedElement> = {}
   constructor(id?: string) {
     super(SpatializedElementType.Spatialized2DElement, id)
   }
 
-  get cornerRadius(): number {
+  get cornerRadius(): CornerRadius {
     return this._cornerRadius
   }
 
-  set cornerRadius(value: number) {
+  set cornerRadius(value: CornerRadius) {
     this._cornerRadius = value
   }
 
-  get backgroundMaterial(): any {
+  get backgroundMaterial(): BackgroundMaterial {
     return this._backgroundMaterial
   }
 
-  set backgroundMaterial(value: any) {
+  set backgroundMaterial(value: BackgroundMaterial) {
     this._backgroundMaterial = value
   }
 

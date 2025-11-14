@@ -1,9 +1,37 @@
 // src/runtime/puppeteerRunner.ts
 
 import puppeteer, { Browser, Page, Viewport } from 'puppeteer'
-import { JSBManager, PuppeteerPlatform } from './PuppeteerPlatform'
 import { WebSpatial } from '../WebSpatial'
-import { WindowStyle } from '../types/types'
+import {
+  BackgroundMaterial,
+  ScrollAbleSpatialElementContainer,
+  SpatializedElement,
+  WindowStyle,
+  Vec3,
+  CornerRadius,
+  Spatialized2DElement,
+} from '../types/types'
+import {
+  UpdateSpatialSceneProperties,
+  CreateSpatialScene,
+  AddSpatializedElementToSpatialScene,
+  InspectSpatialScene,
+  CreateSpatialized2DElement,
+  UpdateSpatialized2DElementProperties,
+  UpdateSpatializedElementTransform,
+  Inspect,
+} from '../types/JSBCommand'
+import JSBManager from '../manager/JSBManager'
+
+interface CustomReplyData {
+  type: string
+  name: string
+}
+
+const baseReplyData: CustomReplyData = {
+  type: 'BasicData',
+  name: 'jsb call back',
+}
 
 export interface PuppeteerRunnerOptions {
   width?: number
@@ -11,6 +39,7 @@ export interface PuppeteerRunnerOptions {
   headless?: boolean
   timeout?: number
   enableXR?: boolean // Whether to enable XR support
+  devtools?: boolean // Whether to enable devtools
 }
 
 export interface PageContentOptions {
@@ -25,7 +54,7 @@ export class PuppeteerRunner {
   private isInitialized: boolean = false
   private initOptions: PuppeteerRunnerOptions = {}
   private jsbManager: JSBManager | null = null
-  private puppeteerPlatform: PuppeteerPlatform | null = null
+  // private puppeteerPlatform: PuppeteerPlatform | null = null
   private webSpatial: WebSpatial | null = null
 
   /**
@@ -44,13 +73,13 @@ export class PuppeteerRunner {
       headless: options.headless !== undefined ? options.headless : true,
       timeout: options.timeout || 60000,
       enableXR: options.enableXR || false,
+      devtools: options.devtools || false,
       ...options,
     }
 
     // If XR support is enabled, initialize JSBManager
     if (this.initOptions.enableXR) {
       this.jsbManager = new JSBManager()
-      this.puppeteerPlatform = new PuppeteerPlatform(this.jsbManager)
       this.setupDefaultJSBHandlers()
       // 初始化WebSpatial实例
       this.webSpatial = WebSpatial.getInstance()
@@ -78,6 +107,7 @@ export class PuppeteerRunner {
     const height = mergedOptions.height || 800
     const headless = mergedOptions.headless ?? true
     const timeout = mergedOptions.timeout || 60000
+    const devtools = mergedOptions.devtools ?? true
 
     console.log('Starting Puppeteer with options:', {
       width,
@@ -87,7 +117,8 @@ export class PuppeteerRunner {
     })
 
     this.browser = await puppeteer.launch({
-      headless,
+      headless: headless,
+      devtools: devtools,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -208,14 +239,50 @@ export class PuppeteerRunner {
     await this.page.evaluateOnNewDocument(fn)
   }
 
+  async on(event: string, handler: (...args: any[]) => void): Promise<void> {
+    if (!this.page) throw new Error('Puppeteer runner not started')
+
+    await this.page.on(event, handler)
+  }
+
   /**
    * Set up XR environment, replacing platform-adapter in core package
    * Mimicking visionOS WKWebViewManager initialization logic
    */
   private async setupXREnvironment(): Promise<void> {
-    if (!this.page || !this.puppeteerPlatform) return
+    if (!this.page) return
 
     console.log('Setting up XR environment...')
+
+    // Expose log forwarding function to browser environment
+    await this.page.exposeFunction(
+      '__forwardLogsToNode',
+      (level: string, args: any[]) => {
+        const timestamp = new Date().toISOString()
+        const formattedArgs = args.map(arg => {
+          try {
+            return typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          } catch (e) {
+            return '[Circular object]'
+          }
+        })
+
+        // Add SDK identification logic
+        let source = 'PAGE'
+        const logContent = formattedArgs.join(' ')
+        if (logContent.includes('core SDK')) {
+          source = 'CORE-SDK'
+        } else if (logContent.includes('react SDK')) {
+          source = 'REACT-SDK'
+        }
+
+        // Print with source identification
+        console[level === 'error' ? 'error' : 'log'](
+          `[${timestamp}] [${source}]`,
+          ...formattedArgs,
+        )
+      },
+    )
 
     // Inject JavaScript variables similar to WKWebViewManager.swift
     await this.page.evaluateOnNewDocument(() => {
@@ -242,19 +309,36 @@ export class PuppeteerRunner {
             },
           },
         }
-      }
 
-      // Save original console.log for debugging
-      const originalConsoleLog = console.log
-      console.log = (...args: any[]) => {
-        originalConsoleLog('PAGE LOG:', ...args)
+        // Override all console methods to forward logs to Node.js
+        // Use type assertion to handle console methods safely
+        const consoleMethods: Array<
+          'log' | 'error' | 'warn' | 'info' | 'debug'
+        > = ['log', 'error', 'warn', 'info', 'debug']
+        consoleMethods.forEach(method => {
+          const originalMethod = (console as any)[method]
+          ;(console as any)[method] = (...args: any[]) => {
+            try {
+              // Forward logs to Node.js environment
+              if (win.__forwardLogsToNode) {
+                win.__forwardLogsToNode(method, args)
+              }
+            } catch (e) {
+              // Fallback to original method if forwarding fails
+              originalMethod('LOG FORWARDING ERROR:', e)
+              originalMethod(...args)
+            }
+            // Also keep original behavior for browser console
+            originalMethod(...args)
+          }
+        })
       }
     })
 
     // Modify User-Agent similar to WKWebViewManager.swift
     const originalUA = await this.page.evaluate(() => navigator.userAgent)
     const spatialId = 'test-spatial-id'
-    const modifiedUA = `${originalUA} WebSpatial/PACKAGE_VERSION SpatialID/${spatialId}`
+    const modifiedUA = `${originalUA} WebSpatial/PACKAGE_VERSION SpatialID/${spatialId} Puppeteer`
     await this.page.setUserAgent(modifiedUA)
     console.log('Modified User-Agent:', modifiedUA)
 
@@ -265,6 +349,56 @@ export class PuppeteerRunner {
       const sceneData = webSpatial?.inspectCurrentSpatialScene()
       console.log('Returning spatial scene data from WebSpatial:', sceneData)
       return sceneData
+    })
+
+    // Set up iframe message listener
+    await this.page.exposeFunction('onIframeLoaded', (data: any) => {
+      this.handleIframeLoaded(data)
+    })
+
+    // Inject message listener script
+    await this.page.evaluateOnNewDocument(() => {
+      // Set up global message listener to catch iframe loaded events
+      window.addEventListener('message', event => {
+        console.log(
+          'Puppeteer Runner Received iframe_loaded message:',
+          event.data,
+        )
+        try {
+          // Validate the message source (iframe)
+          if (event.source && event.source !== window) {
+            const data = event.data
+
+            // Check if this is an iframe_loaded message
+            if (data && data.type === 'iframe_loaded') {
+              // Forward the message to puppeteer runner
+              const win = window as any
+              if (win.onIframeLoaded) {
+                win.onIframeLoaded(data)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error handling message event:', error)
+        }
+      })
+
+      // Override window.open to support webspatial protocol
+      const originalOpen = window.open
+      window.open = function (
+        url?: string | URL,
+        target?: string,
+        features?: string,
+      ): Window | null {
+        // 处理url可能为undefined的情况
+        const urlStr = url?.toString() || ''
+        if (urlStr.startsWith('webspatial://')) {
+          console.log('Intercepted webspatial protocol URL:', urlStr)
+          // Handle webspatial protocol URLs
+          return null
+        }
+        return originalOpen.call(window, url, target, features)
+      }
     })
 
     // Inject JSB message handling
@@ -281,61 +415,6 @@ export class PuppeteerRunner {
         throw error
       }
     })
-
-    // Override platform-adapter in the page
-    await this.page.evaluate(() => {
-      // Mock Platform Adaptor replacement
-      const mockPlatform = {
-        callJSB: async (cmd: string, msg: string) => {
-          try {
-            // Use type assertion to avoid TypeScript errors
-            const win = window as any
-            const result = await win.__handleJSBMessage(`${cmd}::${msg}`)
-            return {
-              success: true,
-              data: result,
-              errorCode: undefined,
-              errorMessage: undefined,
-            }
-          } catch (error: any) {
-            return {
-              success: false,
-              data: null,
-              errorCode: 'CommandError',
-              errorMessage: error.message,
-            }
-          }
-        },
-        callWebSpatialProtocol: async (command: string, query?: string) => {
-          return {
-            success: true,
-            data: {
-              windowProxy: window,
-              id: `mock-${command}-${Date.now()}`,
-            },
-            errorCode: undefined,
-            errorMessage: undefined,
-          }
-        },
-        callWebSpatialProtocolSync: (command: string) => {
-          return {
-            success: true,
-            data: {
-              windowProxy: window,
-              id: `mock-${command}-${Date.now()}`,
-            },
-            errorCode: undefined,
-            errorMessage: undefined,
-          }
-        },
-      }
-
-      // Try to replace platform in core package
-      const win = window as any
-      if (win.__platform_adapter_hook) {
-        win.__platform_adapter_hook(mockPlatform)
-      }
-    })
   }
 
   /**
@@ -348,161 +427,177 @@ export class PuppeteerRunner {
 
     // Register UpdateSpatialSceneProperties command handler
     this.jsbManager.registerWithData(
-      class UpdateSpatialSceneProperties {
-        commandType = 'UpdateSpatialSceneProperties'
-        id?: string
-        name?: string
-        properties?: Record<string, any>
-      },
+      UpdateSpatialSceneProperties,
       (data, callback) => {
         console.log('Handling UpdateSpatialSceneProperties:', data)
 
+        let sceneId: string | undefined
+        let foundScene: any = undefined
+
         // Get scene ID or use default
-        const sceneId = data.id || 'default-scene'
-
-        // Check if scene exists, create if not
-        let scene = this.jsbManager?.getSpatialScene(sceneId)
-        if (!scene) {
-          scene = {
-            id: sceneId,
-            name: data.name || 'Default Scene',
-            version: '1.0.0',
-            children: {},
-            properties: {},
+        if (this.webSpatial) {
+          foundScene = this.webSpatial.getCurrentScene()
+          if (foundScene) {
+            sceneId = foundScene.id
+            console.log('Found scene ID:', sceneId)
+            // 使用 !== undefined 判断以正确处理 0 或空字符串等有效值
+            if (data.cornerRadius !== undefined) {
+              foundScene.cornerRadius = data.cornerRadius
+            }
+            if (data.material !== undefined) {
+              foundScene.backgroundMaterial =
+                data.material as BackgroundMaterial
+            }
+            if (data.opacity !== undefined) {
+              foundScene.opacity = data.opacity
+            }
           }
-          this.jsbManager?.addSpatialScene(sceneId, scene)
-          console.log('Created new spatial scene:', sceneId)
+        }
+        console.log(
+          'Updated scene properties:',
+          'opacity:',
+          foundScene.opacity,
+          'material:',
+          foundScene.backgroundMaterial,
+          'cornerRadius:',
+          foundScene.cornerRadius,
+        )
+
+        // 如果没有找到场景，使用默认ID
+        if (!sceneId) {
+          console.log(
+            'No scene ID found, using default:',
+            data.id || 'default-scene',
+          )
+          sceneId = data.id || 'default-scene'
         }
 
-        // Update scene properties
-        if (data.properties) {
-          scene.properties = { ...scene.properties, ...data.properties }
-        }
-
-        // Update scene in storage
-        this.jsbManager?.addSpatialScene(sceneId, scene)
-
-        callback({ success: true })
+        callback({ success: true, data: baseReplyData })
       },
     )
 
     // Register CreateSpatialScene command handler
-    this.jsbManager.registerWithData(
-      class CreateSpatialScene {
-        commandType = 'CreateSpatialScene'
-        id?: string
-        name?: string
-        version?: string
-        properties?: Record<string, any>
-      },
-      (data, callback) => {
-        console.log('Handling CreateSpatialScene:', data)
+    this.jsbManager.registerWithData(CreateSpatialScene, (data, callback) => {
+      console.log('Handling CreateSpatialScene:', data)
 
-        const sceneId = data.id || `scene-${Date.now()}`
-        const scene = {
-          id: sceneId,
-          name: data.name || 'New Scene',
-          version: data.version || '1.0.0',
-          children: {},
-          properties: data.properties || {},
-        }
+      const sceneId = data.id || `scene-${Date.now()}`
+      const scene = {
+        id: sceneId,
+        name: data.name || 'New Scene',
+        version: data.version || '1.0.0',
+        children: {},
+        properties: data.properties || {},
+      }
 
-        this.jsbManager?.addSpatialScene(sceneId, scene)
-        callback({ id: sceneId })
-      },
-    )
+      this.jsbManager?.addSpatialScene(sceneId, scene)
+      callback({ id: sceneId })
+    })
 
     // Register AddSpatializedElementToSpatialScene command handler
     this.jsbManager.registerWithData(
-      class AddSpatializedElementToSpatialScene {
-        commandType = 'AddSpatializedElementToSpatialScene'
-        sceneId?: string
-        elementId: string = ''
-      },
+      AddSpatializedElementToSpatialScene,
       (data, callback) => {
         console.log('Handling AddSpatializedElementToSpatialScene:', data)
 
-        const sceneId = data.sceneId || 'default-scene'
-        const elementId = data.elementId
-
+        const elementId = data.spatializedElementId
         // Get scene
-        let scene = this.jsbManager?.getSpatialScene(sceneId)
-        if (!scene) {
-          // Create default scene if not exists
-          scene = {
-            id: sceneId,
-            name: 'Default Scene',
-            version: '1.0.0',
-            children: {},
-            properties: {},
-          }
-          this.jsbManager?.addSpatialScene(sceneId, scene)
-        }
+        if (this.webSpatial) {
+          const foundScene = this.webSpatial.getCurrentScene()
+          if (foundScene) {
+            console.log(
+              'AddSpatializedElementToSpatialScene Found scene id:',
+              foundScene.id,
+            )
+            const spatializedElement: SpatializedElement | null =
+              foundScene.findSpatialObject(elementId)
 
-        // Get element
-        const element = this.jsbManager?.getSpatialObject(elementId)
-        if (element) {
-          // Add element to scene children
-          scene.children[elementId] = {
-            id: elementId,
-            type: element.type || 'Spatialized2DElement',
-            transform: element.properties?.transform || {
-              translation: [0, 0, 0],
-            },
-            properties: element.properties,
+            if (!spatializedElement) {
+              console.log(
+                'AddSpatializedElementToSpatialScene spatializedElement not found:',
+                elementId,
+              )
+              callback({
+                success: false,
+                error:
+                  'invalid addSpatializedElementCommand spatial object id not exsit!',
+              })
+              return
+            }
+            console.log(
+              'AddSpatializedElementToSpatialScene spatializedElement found:',
+              spatializedElement.id,
+            )
+            spatializedElement.setParent(foundScene)
           }
-
-          // Update scene
-          this.jsbManager?.addSpatialScene(sceneId, scene)
-          callback({ success: true })
-        } else {
-          callback({ success: false, error: 'Element not found' })
         }
+        callback({ success: true, data: baseReplyData })
       },
     )
-
     // Register InspectSpatialScene command handler
-    this.jsbManager.registerWithData(
-      class InspectSpatialScene {
-        commandType = 'InspectSpatialScene'
-        id?: string
-      },
-      (data, callback) => {
-        console.log('Handling InspectSpatialScene:', data)
+    this.jsbManager.registerWithData(InspectSpatialScene, (data, callback) => {
+      console.log('Handling InspectSpatialScene:', data)
 
-        // Get scene ID or use default
-        const sceneId = data.id || 'default-scene'
+      // Get scene ID or use default
+      const sceneId = data.id || 'default-scene'
 
-        // Get scene
-        let scene = this.jsbManager?.getSpatialScene(sceneId)
+      // Get scene
+      let scene = this.jsbManager?.getSpatialScene(sceneId)
 
-        // If scene doesn't exist, create a default one
-        if (!scene) {
-          scene = {
-            id: sceneId,
-            name: 'Default Scene',
-            version: '1.0.0',
-            children: {},
-            properties: {},
-          }
-          this.jsbManager?.addSpatialScene(sceneId, scene)
-          console.log('Created default scene for inspection')
+      // If scene doesn't exist, create a default one
+      if (!scene) {
+        scene = {
+          id: sceneId,
+          name: 'Default Scene',
+          version: '1.0.0',
+          children: {},
+          properties: {},
         }
+        this.jsbManager?.addSpatialScene(sceneId, scene)
+        console.log('Created default scene for inspection')
+      }
 
-        // Return scene information
-        callback(scene)
-      },
-    )
+      // Return scene information
+      callback(scene)
+    })
 
     // Register CreateSpatialized2DElement command handler
     this.jsbManager.registerWithData(
-      class CreateSpatialized2DElement {
-        commandType = 'CreateSpatialized2DElement'
-      },
+      CreateSpatialized2DElement,
       (data, callback) => {
-        console.log('Handling CreateSpatialized2DElement:', data)
-        const elementId = `element-${Date.now()}`
+        console.log('Handling CreateSpatialized2DElement from platform:', data)
+        const elementId = data.id
+        const url = data.url
         // Store element
+        const spatialScene = this.webSpatial?.getCurrentScene()
+        if (!spatialScene) {
+          console.log('CreateSpatialized2DElement spatialScene not found')
+          callback({
+            success: false,
+            error:
+              'invalid createSpatialized2DElementCommand, spatial scene not exsit!',
+          })
+          return
+        }
+        console.log(
+          'CreateSpatialized2DElement spatialScene found:',
+          spatialScene.id,
+        )
+        const spatializedElementWebViewModel =
+          spatialScene.createSpatializedElement(url, elementId)
+        if (!spatializedElementWebViewModel) {
+          console.log(
+            'CreateSpatialized2DElement spatializedElementWebViewModel not created:',
+            elementId,
+          )
+          callback({
+            success: false,
+            error:
+              'invalid createSpatialized2DElementCommand, spatialized element web view model not exsit!',
+          })
+          return
+        }
+
+        // add element to jsbManager spatialObjects
         this.jsbManager?.addSpatialObject(elementId, {
           id: elementId,
           type: 'Spatialized2DElement',
@@ -514,44 +609,116 @@ export class PuppeteerRunner {
 
     // Register UpdateSpatialized2DElementProperties command handler
     this.jsbManager.registerWithData(
-      class UpdateSpatialized2DElementProperties {
-        commandType = 'UpdateSpatialized2DElementProperties'
-        id: string = ''
-      },
+      UpdateSpatialized2DElementProperties,
       (data, callback) => {
         console.log('Handling UpdateSpatialized2DElementProperties:', data)
+        const elementId = data.id || (data as any).spatialObject?.id
+        // console.log('Handling UpdateSpatialized2DElementProperties with ID:', elementId)
+        // console.log('UpdateSpatialized2DElementProperties id:', data.id)
+
+        // update jsbManager spatialObjects properties
         const element = this.jsbManager?.getSpatialObject(data.id)
         console.log('found element:', element)
         if (element) {
           element.properties = { ...element.properties, ...data }
           this.jsbManager?.addSpatialObject(data.id, element)
-          callback({ success: true })
+          // console.log('UpdateSpatialized2DElementProperties jsbManager updated element:', element)
         } else {
           console.log('Element not found:', data.id)
           callback({ success: false, error: 'Element not found' })
         }
+
+        // update spatialScene spatializedElement properties
+        this.webSpatial
+          ?.getCurrentScene()
+          ?.handleUpdateSpatialized2DElementProperties(data)
+        const spatialized2DElement = this.webSpatial
+          ?.getCurrentScene()
+          ?.findSpatialObject(elementId)
+        // console.log('UpdateSpatialized2DElementProperties spatialScene updated element:', spatialized2DElement)
+        callback({ success: true })
+      },
+    )
+
+    this.jsbManager.registerWithData(
+      UpdateSpatializedElementTransform,
+      (data, callback) => {
+        console.log('Handling UpdateSpatializedElementTransform:', data)
+
+        // 检查data.id是否存在
+        if (!data.id) {
+          console.log('Missing element id')
+          callback({ success: false, error: 'Missing element id' })
+          return
+        }
+
+        // update jsbManager spatialObjects transform
+        const element = this.jsbManager?.getSpatialObject(data.id)
+        console.log('found element:', element)
+        if (element) {
+          // 按照Vision OS端的实现，检查并使用matrix数组
+          if (data.matrix) {
+            // 验证matrix数组长度是否为16
+            if (data.matrix.length !== 16) {
+              console.log('Received matrix array does not have 16 elements.')
+              callback({
+                success: false,
+                error: 'Invalid matrix: should have 16 elements',
+              })
+              return
+            }
+
+            // 使用matrix数组创建transform对象
+            // 这里模拟Vision OS端的matrix处理方式
+            element.transform = {
+              matrix: data.matrix,
+              // 保留原有的transform属性
+              ...element.transform,
+            }
+          } else {
+            // 如果没有matrix，保留原有行为
+            element.transform = { ...element.transform, ...data }
+          }
+
+          this.jsbManager?.addSpatialObject(data.id, element)
+        } else {
+          console.log('Element not found:', data.id)
+          callback({
+            success: false,
+            error:
+              'invalid UpdateSpatializedElementTransform spatial object id not exist!',
+          })
+          return
+        }
+
+        // update spatialScene spatializedElement transform
+        this.webSpatial
+          ?.getCurrentScene()
+          ?.handleUpdateSpatializedElementTransform(data)
+        const spatializedElement = this.webSpatial
+          ?.getCurrentScene()
+          ?.findSpatialObject(data.id)
+        console.log(
+          'UpdateSpatializedElementTransform spatialScene updated element:',
+          spatializedElement,
+        )
+        callback({ success: true })
       },
     )
 
     // Register Inspect command handler
-    this.jsbManager.registerWithData(
-      class Inspect {
-        commandType = 'Inspect'
-        id: string = ''
-      },
-      (data, callback) => {
-        console.log('Handling Inspect:', data)
-        if (data.id) {
-          const object = this.jsbManager?.getSpatialObject(data.id)
-          callback(object || { id: data.id, exists: false })
-        } else {
-          // Return all objects
-          const objects: any[] = []
-          this.jsbManager?.spatialObjects.forEach(obj => objects.push(obj))
-          callback({ objects })
-        }
-      },
-    )
+    this.jsbManager.registerWithData(Inspect, (data, callback) => {
+      console.log('Handling Inspect:', data)
+      if (data.id) {
+        const object = this.jsbManager?.getSpatialObject(data.id)
+        callback(object || { id: data.id, exists: false })
+      } else {
+        // Return all objects
+        const objects: any[] = []
+        this.jsbManager?.spatialObjects.forEach(obj => objects.push(obj))
+        callback({ objects })
+      }
+    })
   }
 
   /**
@@ -574,6 +741,7 @@ export class PuppeteerRunner {
     }
 
     this.jsbManager.registerWithData(
+      // Create a dynamic class for custom command
       class CustomCommand {
         commandType = commandType
       },
@@ -669,6 +837,14 @@ export class PuppeteerRunner {
 
     console.log(`Taking screenshot${path ? ` to ${path}` : ''}`)
     await this.page.screenshot({ path, ...options })
+  }
+
+  /**
+   * Handle iframe loaded event and trigger spatial_iframe_created event
+   */
+  private handleIframeLoaded(data: any): void {
+    console.log('Puppeteer Runner Handling iframe loaded event:', data)
+    // can trigger spatial_iframe_created event
   }
 
   /**

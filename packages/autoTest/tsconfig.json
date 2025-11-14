@@ -1,13 +1,23 @@
 {
   "compilerOptions": {
+    "jsxImportSource": "@webspatial/react-sdk",
     "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
     "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@webspatial/react-sdk/jsx-runtime": [
+        "node_modules/@webspatial/react-sdk/dist/jsx/jsx-runtime.d.ts"
+      ]
+    },
     "types": ["mocha", "node", "chai"]
   },
   "include": ["src", "tests"]

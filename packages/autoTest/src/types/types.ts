@@ -29,6 +29,7 @@ export enum SceneStateKind {
 export enum SpatializedElementType {
   Spatialized2DElement = 'Spatialized2DElement',
   SpatializedStatic3DElement = 'SpatializedStatic3DElement',
+  SpatializedDynamic3DElement = 'SpatializedDynamic3DElement',
 }
 
 // 事件发射器接口
@@ -76,17 +77,18 @@ export interface SpatializedElement extends SpatialObjectProtocol {
   id: string
   name: string
   type: SpatializedElementType
-  position: { clientX: number; clientY: number }
+  clientX: number
+  clientY: number
   width: number
   height: number
   depth: number
   transform: any // 简化实现，实际应该是变换矩阵
   rotationAnchor: Vec3
   opacity: number
-  visibility: boolean
-  scrollBehavior: string
+  visible: boolean
+  scrollWithParent: boolean
   zIndex: number
-  clipToBounds: boolean
+  clip: boolean
   enableTapGesture: boolean
   enableDragStartGesture: boolean
   enableDragGesture: boolean
@@ -105,8 +107,8 @@ export interface SpatializedElement extends SpatialObjectProtocol {
 export interface Spatialized2DElement
   extends SpatializedElement,
     ScrollAbleSpatialElementContainer {
-  cornerRadius: number
-  backgroundMaterial: any
+  cornerRadius: CornerRadius
+  backgroundMaterial: BackgroundMaterial
   scrollEnabled: boolean
   scrollOffset: Vec2
 }
@@ -145,4 +147,20 @@ export interface SpatialScene extends SpatialObjectProtocol {
   handleNavigationCheck(url: string): boolean
   handleWindowOpenCustom(url: string, windowStyle: WindowStyle): void
   handleWindowClose(): void
+}
+
+export enum BackgroundMaterial {
+  transparent = 'transparent',
+  translucent = 'translucent',
+  thin = 'thin',
+  thick = 'thick',
+  regular = 'regular',
+  none = 'none',
+}
+
+export interface CornerRadius {
+  topLeading: number
+  bottomLeading: number
+  topTrailing: number
+  bottomTrailing: number
 }
