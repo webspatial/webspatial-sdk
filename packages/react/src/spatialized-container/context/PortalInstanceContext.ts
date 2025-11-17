@@ -150,9 +150,10 @@ export class PortalInstanceObject {
       if (!this.spatializedElement?.transform) {
         return null
       }
+
       const domRect = new DOMRect(
-        this.domRect?.x,
-        this.domRect?.y,
+        0,
+        0,
         this.domRect?.width,
         this.domRect?.height,
       )
