@@ -1,6 +1,7 @@
 import { WindowStyle, SceneStateKind } from './types/types'
 import { SpatialScene } from './model/SpatialScene'
 import { Spatialized2DElement } from './model/Spatialized2DElement'
+import { SpatialObjectWeakRefManager } from './model/SpatialObject'
 
 export class WebSpatial {
   private static instance: WebSpatial
@@ -28,37 +29,7 @@ export class WebSpatial {
     this.scenes[scene.id] = scene
     this.currentScene = scene
 
-    // 添加默认的空间化元素到场景中
-    const testElement = this.createDefaultElement('test-element-1')
-    scene.addChild(testElement)
-
     return scene
-  }
-
-  private createDefaultElement(id: string): any {
-    // 创建一个符合SpatializedElement接口的对象
-    return {
-      id,
-      position: [0, 0, 100],
-      dimensions: [100, 100, 1],
-      transform: {
-        translation: [0, 0, 100],
-        rotation: [0, 0, 0],
-        scale: [1, 1, 1],
-      },
-      style: { '--xr-back': '100' },
-      parent: null,
-      // 实现必要的方法
-      addChild: function () {},
-      removeChild: function () {},
-      getChild: function () {
-        return null
-      },
-      getChildren: function () {
-        return []
-      },
-      setParent: function () {},
-    }
   }
 
   // 获取当前场景
@@ -93,14 +64,17 @@ export class WebSpatial {
     return {
       id: scene.id || scene.spatialId || 'default-scene',
       name: scene.name || 'Default Scene',
+      backgroundMaterial: scene.backgroundMaterial,
+      cornerRadius: scene.cornerRadius,
+      scrollOffset: scene.scrollOffset,
+      spatialObjectCount: scene.spatialObjects.length,
+      spatialObjectRefCount: SpatialObjectWeakRefManager.getWeakRefCount(),
       version: scene.version || '1.0.0',
       children: this.formatChildren(children),
-      properties: {
-        url: scene.url,
-        windowStyle: scene.windowStyle,
-        state: scene.state,
-        sceneConfig: scene.sceneConfig,
-      },
+      url: scene.url,
+      windowStyle: scene.windowStyle,
+      state: scene.state,
+      sceneConfig: scene.sceneConfig,
     }
   }
 
@@ -137,14 +111,49 @@ export class WebSpatial {
                     scale: [1, 1, 1],
                   },
             style: 'style' in child ? child.style : {},
-            properties: {
-              width: 'width' in child ? child.width : undefined,
-              height: 'height' in child ? child.height : undefined,
-              depth: 'depth' in child ? child.depth : undefined,
-              opacity: 'opacity' in child ? child.opacity : undefined,
-              visibility: 'visibility' in child ? child.visibility : undefined,
-              zIndex: 'zIndex' in child ? child.zIndex : undefined,
-            },
+            clientX: 'clientX' in child ? child.clientX : undefined,
+            clientY: 'clientY' in child ? child.clientY : undefined,
+            width: 'width' in child ? child.width : undefined,
+            height: 'height' in child ? child.height : undefined,
+            depth: 'depth' in child ? child.depth : undefined,
+            opacity: 'opacity' in child ? child.opacity : undefined,
+            visibility: 'visibility' in child ? child.visibility : undefined,
+            zIndex: 'zIndex' in child ? child.zIndex : undefined,
+            enableDragEndGesture:
+              'enableDragEndGesture' in child
+                ? child.enableDragEndGesture
+                : undefined,
+            enableDragGesture:
+              'enableDragGesture' in child
+                ? child.enableDragGesture
+                : undefined,
+            enableMagnifyGesture:
+              'enableMagnifyGesture' in child
+                ? child.enableMagnifyGesture
+                : undefined,
+            enableMagnifyEndGesture:
+              'enableMagnifyEndGesture' in child
+                ? child.enableMagnifyEndGesture
+                : undefined,
+            enableMagnifyStartGesture:
+              'enableMagnifyStartGesture' in child
+                ? child.enableMagnifyStartGesture
+                : undefined,
+            enableRotateGesture:
+              'enableRotateGesture' in child
+                ? child.enableRotateGesture
+                : undefined,
+            enableRotateEndGesture:
+              'enableRotateEndGesture' in child
+                ? child.enableRotateEndGesture
+                : undefined,
+            enableRotateStartGesture:
+              'enableRotateStartGesture' in child
+                ? child.enableRotateStartGesture
+                : undefined,
+            enableTapGesture:
+              'enableTapGesture' in child ? child.enableTapGesture : undefined,
+            parent: 'parent' in child ? child.parent : undefined,
           }
         }
       })

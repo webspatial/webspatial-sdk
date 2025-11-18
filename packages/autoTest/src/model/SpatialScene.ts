@@ -10,7 +10,7 @@ import {
   SpatializedElementType,
   CornerRadius,
 } from '../types/types'
-import { SpatialObject } from './SpatialObject'
+import { SpatialObject, SpatialObjectWeakRefManager } from './SpatialObject'
 import { PuppeteerWebViewModel } from '../webview/PuppeteerWebViewModel'
 import { ProtocolHandlerManager } from '../webview/ProtocolHandlerManager'
 import { Spatialized2DElement } from './Spatialized2DElement'
@@ -45,7 +45,7 @@ export class SpatialScene
   private _scrollOffset: Vec2 = { x: 0, y: 0 }
   private _scrollPageEnabled: boolean = true
 
-  private spatialObjects: Record<string, any> = {}
+  private _spatialObjects: Record<string, any> = {}
   private _children: Record<string, SpatializedElement> = {}
   // private _boundSpatialIframeCreatedHandler: EventListener;
 
@@ -99,6 +99,10 @@ export class SpatialScene
 
   set scrollPageEnabled(value: boolean) {
     this._scrollPageEnabled = value
+  }
+
+  get spatialObjects(): Record<string, SpatialObject> {
+    return { ...this._spatialObjects }
   }
 
   constructor(
@@ -163,7 +167,7 @@ export class SpatialScene
   }
 
   get children(): Record<string, SpatializedElement> {
-    return { ...this._children } // 返回副本
+    return { ...this._children }
   }
 
   get sceneConfig(): SceneConfig {
@@ -224,34 +228,11 @@ export class SpatialScene
   }
 
   /**
-   * 设置JSB监听器
-   */
-  private setupJSBListeners(): void {
-    if (this.spatialWebViewModel) {
-      // 注册UpdateSpatialized2DElementProperties命令监听器
-      this.spatialWebViewModel.addJSBListener(
-        'UpdateSpatialized2DElementProperties',
-        (command: any) => {
-          this.handleUpdateSpatialized2DElementProperties(command)
-        },
-      )
-
-      // 注册AddSpatializedElementToSpatialized2DElement命令监听器
-      this.spatialWebViewModel.addJSBListener(
-        'AddSpatializedElementToSpatialized2DElement',
-        (command: any) => {
-          this.handleAddSpatializedElementToSpatialized2DElement(command)
-        },
-      )
-    }
-  }
-
-  /**
    * 处理更新空间化元素属性命令
    */
   handleUpdateSpatialized2DElementProperties(data: any): void {
     const elementId = data.id
-    const element = this.spatialObjects[elementId] as Spatialized2DElement
+    const element = this._spatialObjects[elementId] as Spatialized2DElement
     // 调用updateSpatializedElementProperties更新通用属性
     this.updateSpatializedElementProperties(elementId, data)
 
@@ -278,7 +259,7 @@ export class SpatialScene
    */
   handleUpdateSpatializedElementTransform(data: any): void {
     const elementId = data.id
-    const element = this.spatialObjects[elementId] as SpatializedElement
+    const element = this._spatialObjects[elementId] as SpatializedElement
 
     if (element && data) {
       // 按照Vision OS端的实现，优先处理matrix数组
@@ -310,8 +291,8 @@ export class SpatialScene
     command: any,
   ): void {
     const { parentId, childId } = command
-    const parent = this.spatialObjects[parentId] as Spatialized2DElement
-    const child = this.spatialObjects[childId] as SpatializedElement
+    const parent = this._spatialObjects[parentId] as Spatialized2DElement
+    const child = this._spatialObjects[childId] as SpatializedElement
 
     if (parent && child) {
       parent.addChild(child)
@@ -381,7 +362,7 @@ export class SpatialScene
       }
 
       // 存储元素引用
-      this.spatialObjects[element.id] = element
+      this._spatialObjects[element.id] = element
 
       // 注册到ProtocolHandlerManager
       if (element instanceof Spatialized2DElement) {
@@ -457,7 +438,7 @@ export class SpatialScene
   }
 
   findSpatialObject(id: string): SpatializedElement | null {
-    return (this.spatialObjects[id] as SpatializedElement) || null
+    return (this._spatialObjects[id] as SpatializedElement) || null
   }
 
   updateSpatializedElementProperties(
@@ -662,7 +643,7 @@ export class SpatialScene
       return
     }
 
-    this.spatialObjects[object.spatialId] = object
+    this._spatialObjects[object.spatialId] = object
 
     // 使用duck typing来检查对象是否有必要的属性，而不是依赖instanceof
     if (object && typeof object === 'object' && 'id' in object && object.id) {
@@ -681,7 +662,7 @@ export class SpatialScene
   private onSpatialObjectDestroyed(data: any): void {
     const destroyedObject = data?.object || this
     if (destroyedObject?.spatialId) {
-      delete this.spatialObjects[destroyedObject.spatialId]
+      delete this._spatialObjects[destroyedObject.spatialId]
       if (this._children[destroyedObject.spatialId]) {
         delete this._children[destroyedObject.spatialId]
       } else if (destroyedObject.id && this._children[destroyedObject.id]) {
@@ -726,12 +707,12 @@ export class SpatialScene
     // window.removeEventListener('spatial_iframe_created', this._boundSpatialIframeCreatedHandler);
 
     // 销毁所有空间对象
-    Object.values(this.spatialObjects).forEach(obj => {
+    Object.values(this._spatialObjects).forEach(obj => {
       if (obj && typeof obj.destroy === 'function') {
         obj.destroy()
       }
     })
-    this.spatialObjects = {}
+    this._spatialObjects = {}
     // 销毁所有子元素
     Object.values(this._children).forEach(child => {
       if (child && typeof child.destroy === 'function') {

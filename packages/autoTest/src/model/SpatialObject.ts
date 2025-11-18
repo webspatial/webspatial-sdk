@@ -5,6 +5,9 @@ import { EventEmitter } from '../EventEmitter'
 export class SpatialObjectWeakRefManager {
   private static weakRefObjects: Record<string, { value: any }> = {}
 
+  static getWeakRefCount(): number {
+    return Object.keys(this.weakRefObjects).length
+  }
   static setWeakRef(id: string, object: any): void {
     this.weakRefObjects[id] = { value: object }
   }

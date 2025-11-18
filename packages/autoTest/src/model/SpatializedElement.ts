@@ -44,7 +44,14 @@ export class SpatializedElement
   }
 
   setParent(parent: ScrollAbleSpatialElementContainer): void {
+    if (this._parent?.id === parent.id) {
+      return
+    }
+    if (this._parent) {
+      this._parent.removeChild(this)
+    }
     this._parent = parent
+    parent.addChild(this)
   }
 
   getParent(): ScrollAbleSpatialElementContainer | null {

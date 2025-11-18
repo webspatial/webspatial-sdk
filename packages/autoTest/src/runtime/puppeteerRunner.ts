@@ -5,11 +5,11 @@ import { WebSpatial } from '../WebSpatial'
 import {
   BackgroundMaterial,
   ScrollAbleSpatialElementContainer,
-  SpatializedElement,
   WindowStyle,
   Vec3,
   CornerRadius,
   Spatialized2DElement,
+  SpatialScene,
 } from '../types/types'
 import {
   UpdateSpatialSceneProperties,
@@ -22,6 +22,7 @@ import {
   Inspect,
 } from '../types/JSBCommand'
 import JSBManager from '../manager/JSBManager'
+import { SpatializedElement } from '../model/SpatializedElement'
 
 interface CustomReplyData {
   type: string
@@ -149,6 +150,14 @@ export class PuppeteerRunner {
     if (this.initOptions.enableXR && this.page) {
       await this.setupXREnvironment()
     }
+  }
+
+  /**
+   * Get current spatial scene
+   * @returns Current spatial scene instance
+   */
+  public getCurrentScene(): SpatialScene | null {
+    return this.webSpatial?.getCurrentScene() || null
   }
 
   /**
@@ -528,6 +537,7 @@ export class PuppeteerRunner {
               spatializedElement.id,
             )
             spatializedElement.setParent(foundScene)
+            foundScene.addChild(spatializedElement)
           }
         }
         callback({ success: true, data: baseReplyData })
@@ -709,14 +719,14 @@ export class PuppeteerRunner {
     // Register Inspect command handler
     this.jsbManager.registerWithData(Inspect, (data, callback) => {
       console.log('Handling Inspect:', data)
+
       if (data.id) {
         const object = this.jsbManager?.getSpatialObject(data.id)
         callback(object || { id: data.id, exists: false })
       } else {
-        // Return all objects
-        const objects: any[] = []
-        this.jsbManager?.spatialObjects.forEach(obj => objects.push(obj))
-        callback({ objects })
+        // Return current spatial Scene
+        const sceneData = this.webSpatial?.inspectCurrentSpatialScene()
+        callback({ sceneData })
       }
     })
   }
@@ -791,7 +801,7 @@ export class PuppeteerRunner {
   async hasXrBackProperty(selector: string): Promise<boolean> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
-    return this.page.$eval(selector, el => {
+    return this.page.$eval(selector, (el: Element) => {
       const computedStyle = window.getComputedStyle(el)
       return computedStyle.getPropertyValue('--xr-back') !== ''
     })
@@ -804,7 +814,7 @@ export class PuppeteerRunner {
   async getXrBackPropertyValue(selector: string): Promise<string> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
-    return this.page.$eval(selector, el => {
+    return this.page.$eval(selector, (el: Element) => {
       const computedStyle = window.getComputedStyle(el)
       return computedStyle.getPropertyValue('--xr-back').trim()
     })

@@ -281,11 +281,15 @@ function App() {
 
       {/* Original Spatial Div */}
       <div
+        data-testid="spatial-div"
         enable-xr
         style={
           {
-            '--xr-back': '200',
+            visibility: 'visible',
+            display: 'block',
+            '--xr-back': '100',
             '--xr-z-index': '100',
+            '--xr-background-material': 'translucent',
             marginTop: '20px',
             padding: '20px',
             backgroundColor: 'rgba(255, 165, 0, 0.8)',
@@ -294,6 +298,25 @@ function App() {
         }
       >
         this is spatial div with --xr-back: 100
+      </div>
+      <div
+        data-testid="spatial-div-2"
+        style={
+          {
+            enableXr: true,
+            visibility: 'visible',
+            display: 'block',
+            '--xr-back': '150',
+            '--xr-z-index': '100',
+            '--xr-background-material': 'thin',
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: 'rgba(255, 165, 0, 0.8)',
+            border: '2px solid #ff8c00',
+          } as CSSProperties
+        }
+      >
+        this is spatial div with enabled xr style
       </div>
 
       {/* Spatial Scene Information */}

@@ -260,12 +260,6 @@ export class ConvertFromSceneToEntity implements CommandDataProtocol {
   }
 }
 
-// 检查命令 - 重命名以匹配Swift中的InspectCommand
-export class InspectCommand implements CommandDataProtocol {
-  commandType = 'Inspect'
-  id?: string
-}
-
 // 保留原有的Inspect类以保持兼容性
 export class Inspect implements CommandDataProtocol {
   commandType = 'Inspect'
