@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from 'react'
+import { ForwardedRef, forwardRef, useState, useEffect } from 'react'
 import {
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DElementContainer,
@@ -17,7 +17,11 @@ const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const { 'enable-xr': enableXR, ...restProps } = props
-  if (!enableXR || !spatial.runInSpatialWeb()) {
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+  if (!enableXR || !isMounted || !spatial.runInSpatialWeb()) {
     const {
       onSpatialTap,
       onSpatialDragStart,
