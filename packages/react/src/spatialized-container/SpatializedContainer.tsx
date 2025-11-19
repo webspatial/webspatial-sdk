@@ -1,11 +1,4 @@
-import {
-  ForwardedRef,
-  forwardRef,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -23,20 +16,53 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
+import { withClientOnly } from '../hocs/withClientOnly'
 
 export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
-  // --- ALL HOOKS AT THE TOP ---
+  const isWebSpatialEnv = getSession() !== null
+  if (!isWebSpatialEnv) {
+    const {
+      component: Component,
+      spatializedContent,
+      createSpatializedElement,
+      getExtraSpatializedElementProperties,
+      onSpatialTap,
+      onSpatialDragStart,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      onSpatialRotateStart,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnifyStart,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
+      extraRefProps,
+      ...restProps
+    } = inprops
+    // make sure SpatializedContainer can work on web env
+    return <Component ref={ref} {...restProps} />
+  }
 
-  // 1. Hydration safety
-  const [isClientReady, setIsClientReady] = useState(false)
-  useEffect(() => {
-    setIsClientReady(true)
+  const layer = useContext(SpatialLayerContext) + 1
+  const rootSpatializedContainerObject = useContext(
+    SpatializedContainerContext,
+  ) as unknown as SpatializedContainerObject<T>
+  const inSpatializedContainer = !!rootSpatializedContainerObject
+  const portalInstanceObject = useContext(PortalInstanceContext)
+  const inPortalInstanceEnv = !!portalInstanceObject
+  const isInStandardInstance = !inPortalInstanceEnv
+
+  const spatialId = useMemo(() => {
+    return !inSpatializedContainer
+      ? `root_container`
+      : rootSpatializedContainerObject.getSpatialId(layer, isInStandardInstance)
   }, [])
-
-  // 2. Props destructuring
+  const spatialIdProps = {
+    [SpatialID]: spatialId,
+  }
   const {
     onSpatialTap,
     onSpatialDragStart,
@@ -52,126 +78,50 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
     ...props
   } = inprops
 
-  // 3. Contexts
-  const layer = useContext(SpatialLayerContext) + 1
-  const rootSpatializedContainerObject = useContext(
-    SpatializedContainerContext,
-  ) as unknown as SpatializedContainerObject<T>
-  const portalInstanceObject = useContext(PortalInstanceContext)
-
-  // 4. Derived state from context
-  const inSpatializedContainer = !!rootSpatializedContainerObject
-  const inPortalInstanceEnv = !!portalInstanceObject
-  const isInStandardInstance = !inPortalInstanceEnv
-  const isWebSpatialEnv = getSession() !== null && isClientReady
-
-  // 5. Memos
-  const spatialId = useMemo(() => {
-    return !inSpatializedContainer
-      ? `root_container`
-      : rootSpatializedContainerObject.getSpatialId(layer, isInStandardInstance)
-  }, [
-    inSpatializedContainer,
-    rootSpatializedContainerObject,
-    layer,
-    isInStandardInstance,
-  ])
-
-  // This is the root spatialized container
-  const spatializedContainerObject = useMemo(
-    () => new SpatializedContainerObject(),
-    [],
-  )
-
-  // 6. Custom Hooks
-  const {
-    transformVisibilityTaskContainerCallback,
-    standardSpatializedContainerCallback,
-    spatialContainerRefProxy,
-  } = useDomProxy<T>(ref, extraRefProps)
-
-  const spatialEvents = useSpatialEvents<T>(
-    {
-      onSpatialTap,
-      onSpatialDragStart,
-      onSpatialDrag,
-      onSpatialDragEnd,
-      onSpatialRotateStart,
-      onSpatialRotate,
-      onSpatialRotateEnd,
-      onSpatialMagnifyStart,
-      onSpatialMagnify,
-      onSpatialMagnifyEnd,
-    },
-    spatialContainerRefProxy,
-  )
-
-  const spatialEventsWhenSpatializedContainerExist =
-    useSpatialEventsWhenSpatializedContainerExist<T>(
-      {
-        onSpatialTap,
-        onSpatialDragStart,
-        onSpatialDrag,
-        onSpatialDragEnd,
-        onSpatialRotateStart,
-        onSpatialRotate,
-        onSpatialRotateEnd,
-        onSpatialMagnifyStart,
-        onSpatialMagnify,
-        onSpatialMagnifyEnd,
-      },
-      spatialId,
-      rootSpatializedContainerObject,
-    )
-
-  // 7. Effects
-  useEffect(() => {
-    if (inSpatializedContainer && !inPortalInstanceEnv) {
-      rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
-        spatialId,
-        spatialContainerRefProxy.current,
-      )
-    }
-  }, [
-    inSpatializedContainer,
-    inPortalInstanceEnv,
-    rootSpatializedContainerObject,
-    spatialId,
-    spatialContainerRefProxy,
-  ])
-
-  // --- CONDITIONAL RENDERING LOGIC ---
-
-  if (!isWebSpatialEnv) {
-    const {
-      component: Component,
-      spatializedContent,
-      createSpatializedElement,
-      getExtraSpatializedElementProperties,
-      ...restProps
-    } = props
-    // make sure SpatializedContainer can work on web env
-    return <Component ref={ref} {...restProps} />
-  }
-
-  const spatialIdProps = {
-    [SpatialID]: spatialId,
-  }
-
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
+      const spatialEvents = useSpatialEventsWhenSpatializedContainerExist<T>(
+        {
+          onSpatialTap,
+          onSpatialDragStart,
+          onSpatialDrag,
+          onSpatialDragEnd,
+          onSpatialRotateStart,
+          onSpatialRotate,
+          onSpatialRotateEnd,
+          onSpatialMagnifyStart,
+          onSpatialMagnify,
+          onSpatialMagnifyEnd,
+        },
+        spatialId,
+        rootSpatializedContainerObject,
+      )
+
       // nested in another PortalSpatializedContainer
       return (
         <SpatialLayerContext.Provider value={layer}>
           <PortalSpatializedContainer<T>
             {...spatialIdProps}
             {...props}
-            {...spatialEventsWhenSpatializedContainerExist}
+            {...spatialEvents}
           />
         </SpatialLayerContext.Provider>
       )
     } else {
       // in standard instance env
+      const {
+        transformVisibilityTaskContainerCallback,
+        standardSpatializedContainerCallback,
+        spatialContainerRefProxy,
+      } = useDomProxy<T>(ref, extraRefProps)
+
+      useEffect(() => {
+        rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
+          spatialId,
+          spatialContainerRefProxy.current,
+        )
+      }, [spatialContainerRefProxy.current])
+
       const {
         spatializedContent,
         createSpatializedElement,
@@ -196,7 +146,33 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       )
     }
   } else {
+    const {
+      transformVisibilityTaskContainerCallback,
+      standardSpatializedContainerCallback,
+      spatialContainerRefProxy,
+    } = useDomProxy<T>(ref, extraRefProps)
+
+    const spatialEvents = useSpatialEvents<T>(
+      {
+        onSpatialTap,
+        onSpatialDragStart,
+        onSpatialDrag,
+        onSpatialDragEnd,
+        onSpatialRotateStart,
+        onSpatialRotate,
+        onSpatialRotateEnd,
+        onSpatialMagnifyStart,
+        onSpatialMagnify,
+        onSpatialMagnifyEnd,
+      },
+      spatialContainerRefProxy,
+    )
+
     // This is the root spatialized container
+    const spatializedContainerObject = useMemo(
+      () => new SpatializedContainerObject(),
+      [],
+    )
     const {
       spatializedContent,
       createSpatializedElement,
@@ -232,9 +208,9 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   }
 }
 
-export const SpatializedContainer = forwardRef(SpatializedContainerBase) as <
-  T extends SpatializedElementRef,
->(
+export const SpatializedContainer = withClientOnly(
+  forwardRef(SpatializedContainerBase),
+) as <T extends SpatializedElementRef>(
   props: SpatializedContainerProps<T> & {
     ref?: ForwardedRef<SpatializedElementRef<T>>
   },

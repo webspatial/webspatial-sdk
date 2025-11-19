@@ -1,9 +1,10 @@
-import { ForwardedRef, forwardRef, useState, useEffect } from 'react'
+import { ForwardedRef, forwardRef } from 'react'
 import {
   SpatializedStatic3DContainerProps,
   SpatializedStatic3DElementContainer,
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
+import { withClientOnly } from './hocs/withClientOnly'
 
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -17,11 +18,7 @@ const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const { 'enable-xr': enableXR, ...restProps } = props
-  const [isMounted, setIsMounted] = useState(false)
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-  if (!enableXR || !isMounted || !spatial.runInSpatialWeb()) {
+  if (!enableXR || !spatial.runInSpatialWeb()) {
     const {
       onSpatialTap,
       onSpatialDragStart,
@@ -43,5 +40,5 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
 }
 
-export const Model = forwardRef(ModelBase)
+export const Model = withClientOnly(forwardRef(ModelBase))
 Model.displayName = 'Model'
