@@ -28,9 +28,9 @@ const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
-const originalOpen = window.open
 
 class SceneManager {
+  private originalOpen: any
   private static instance: SceneManager
   static getInstance() {
     if (!SceneManager.instance) {
@@ -40,6 +40,7 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
+    this.originalOpen = window.open.bind(window)
     ;(window as any).open = this.open
   }
 
@@ -52,7 +53,7 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      return originalOpen(url, target, features)
+      return this.originalOpen(url, target, features)
     }
 
     //  absolute url
@@ -63,7 +64,7 @@ class SceneManager {
 
     // if target is special
     if (target === '_self' || target === '_parent' || target === '_top') {
-      const newWindow = originalOpen(url, target, features)
+      const newWindow = this.originalOpen(url, target, features)
       return newWindow
     }
 
