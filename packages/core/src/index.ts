@@ -13,12 +13,11 @@ export * from './types/global.d'
 // side effects
 import { injectSceneHook } from './scene-polyfill'
 import { isSSREnv } from './ssr-polyfill'
-export { isSSREnv }
-if (!isSSREnv()) {
-  injectSceneHook()
-}
-
 import { spatialWindowPolyfill } from './spatial-window-polyfill'
-if (!isSSREnv()) {
+
+export { isSSREnv }
+
+if (!isSSREnv() && navigator.userAgent.indexOf('WebSpatial/') > 0) {
+  injectSceneHook()
   spatialWindowPolyfill()
 }
