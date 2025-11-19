@@ -274,12 +274,6 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
 export function hijackGetComputedStyle() {
   const rawFn = window.getComputedStyle.bind(window)
   window.getComputedStyle = (element, pseudoElt) => {
-    if (!(element instanceof Element)) {
-      // Return computed style of a dummy element for invalid inputs
-      const dummy = document.createElement('div')
-      return rawFn(dummy, pseudoElt)
-    }
-
     const dom = (element as any).__raw
 
     if (dom) {

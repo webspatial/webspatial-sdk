@@ -27,6 +27,9 @@ export function useSpatialTransformVisibility(
   const spatializedContainerObject = useContext(SpatializedContainerContext)!
 
   const checkSpatialStyleUpdate = useCallback(() => {
+    if (!ref.current) {
+      return
+    }
     const spatialTransformVisibility = parseTransformAndVisibilityProperties(
       ref.current!,
     )
