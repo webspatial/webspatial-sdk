@@ -11,7 +11,7 @@ import React, {
  * It returns null during server-side rendering.
  * @param Component The component to be rendered only on the client.
  */
-export function withClientOnly<T extends {}>(Component: ComponentType<T>) {
+export function withSSRSupported<T extends {}>(Component: ComponentType<T>) {
   const ClientOnlyComponent = (
     props: PropsWithoutRef<T>,
     ref: React.ForwardedRef<any>,

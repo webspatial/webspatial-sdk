@@ -16,7 +16,7 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
-import { withClientOnly } from '../hocs/withClientOnly'
+import { withSSRSupported } from '../hocs/withSSRSupported'
 
 export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
@@ -208,7 +208,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   }
 }
 
-export const SpatializedContainer = withClientOnly(
+export const SpatializedContainer = withSSRSupported(
   forwardRef(SpatializedContainerBase),
 ) as <T extends SpatializedElementRef>(
   props: SpatializedContainerProps<T> & {
