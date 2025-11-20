@@ -7,7 +7,7 @@ export function createPlatform(): PlatformAbility {
     return new SSRPlatform()
   }
 
-  if (window.navigator.userAgent.includes('Android')) {
+  if (window.navigator.userAgent.includes('Linux')) {
     const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
     return new AndroidPlatform()
   } else {

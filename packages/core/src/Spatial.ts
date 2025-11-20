@@ -30,7 +30,10 @@ export class Spatial {
    * @returns True if running in a spatial web environment, false otherwise
    */
   runInSpatialWeb() {
-    if (navigator.userAgent.indexOf('WebSpatial/') > 0) {
+    if (
+      navigator.userAgent.indexOf('WebSpatial/') > 0 ||
+      navigator.userAgent.indexOf('Linux') > 0
+    ) {
       return true
     }
     return false
