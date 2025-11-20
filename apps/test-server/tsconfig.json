@@ -20,10 +20,19 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "web-spatial": ["../npmLib/src"]
+      "web-spatial": ["../npmLib/src"],
+      "@webspatial/react-sdk": ["../../packages/react/src"],
+      "@webspatial/react-sdk/jsx-runtime": [
+        "../../packages/react/src/jsx/jsx-runtime.ts"
+      ],
+      "@webspatial/core-sdk": ["../../packages/core/src"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "../../packages/core/src/types/*.d.ts",
+    "../../packages/react/src/types/*.d.ts"
+  ],
   "exclude": ["node_modules"]
   // "references": [{ "path": "./tsconfig.node.json" }]
 }
