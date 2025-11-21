@@ -14,7 +14,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "test": "npm run coverage",
+    "test": "vitest run",
     "lint": "tsc -p ./tsconfig.json",
     "coverage": "vitest run --coverage",
     "test:w": "vitest",
