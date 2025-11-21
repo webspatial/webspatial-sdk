@@ -1,5 +1,13 @@
 # web-content
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [67a908c]
+  - @webspatial/react-sdk@1.0.4
+  - @webspatial/core-sdk@1.0.4
+
 ## 0.0.15
 
 ### Patch Changes
