@@ -1,0 +1,57 @@
+name: "WebSpatial participant bugs"
+description: Bug template to be used by WebSpatial program participants
+labels: ["bug"]
+assignees: []
+body:
+  - type: checkboxes
+    id: duplicates
+    attributes:
+      label: Duplicate check
+      description: |
+        **Please confirm you searched existing issues and the FAQs.**
+      options:
+        - label: "I searched existing issues and discussions"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        **Describe how to reproduce the bug.**
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected vs Actual Behavior
+      description: |
+        **Describe what output you expected and what actually happened. Screenshots and console logs help speed up resolution!**
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Dev Environment
+      description: |
+        **Commands to find versions:**
+
+        **Node.js version**
+        ```bash
+        node -v
+        ```
+
+        **WebSpatial & Vite packages**
+        ```bash
+        cd your-project-folder/
+        npm ls @webspatial/react-sdk @webspatial/core-sdk @webspatial/vite-plugin \
+        @webspatial/builder @webspatial/platform-visionos vite vite-plugin-html react react-dom
+        ```
+      value: |
+        • Run Target (Vision Pro / Simulator / Browser):
+        • OS:
+        • Node.js version:
+        • WebSpatial & Vite versions:
+    validations:
+      required: true

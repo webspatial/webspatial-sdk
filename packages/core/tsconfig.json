@@ -21,6 +21,6 @@
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/index.ts", "src/types/*.d.ts"],
+  "include": ["src/**/*.ts", "src/types/*.d.ts"],
   "references": []
 }

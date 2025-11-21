@@ -19,7 +19,7 @@
     "package.json"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {},
   "devDependencies": {},
   "publishConfig": {

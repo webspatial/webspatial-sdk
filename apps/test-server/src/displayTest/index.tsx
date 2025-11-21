@@ -76,13 +76,14 @@ function InlineComponent() {
   }
   return (
     <p
+      enable-xr
       style={{
         width: '100%',
         display: 'flex',
         justifyContent: 'center',
       }}
     >
-      <a enable-xr style={style}>
+      <a style={style}>
         Edit <code>src/App.tsx</code> and save to test HMR
       </a>
     </p>
