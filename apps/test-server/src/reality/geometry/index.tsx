@@ -69,7 +69,7 @@ function App() {
       // Add to the reality and enable tap logging
       await reality.addEntity(entity)
       await entity.addEvent('spatialtap', (evt: any) => {
-        log('plane tapped', { location3D: evt.location3D })
+        log('plane tapped')
       })
 
       log('Plane created ✅')
