@@ -1,6 +1,6 @@
 import { initPolyfill } from './spatialized-container'
 
-export * from './utils'
+export { enableDebugTool } from './utils'
 export * from './initScene'
 export * from './spatialized-container'
 export * from './spatialized-container-monitor'
