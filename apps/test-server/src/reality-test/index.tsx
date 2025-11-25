@@ -1,16 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
-  Entity,
-  EntityRef,
-  getSession,
-  ModelAsset,
-  ModelEntity,
   Reality,
   SceneGraph,
   SpatialTapEntityEvent,
-  SpatialTapEvent,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 import { Particle } from './particle'

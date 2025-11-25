@@ -4,13 +4,11 @@ import {
   BoxEntity,
   Entity,
   EntityRef,
-  getSession,
   ModelAsset,
   ModelEntity,
   Reality,
   SceneGraph,
   SpatializedElementRef,
-  toSceneSpatial,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
