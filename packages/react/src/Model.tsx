@@ -4,7 +4,7 @@ import {
   SpatializedStatic3DElementContainer,
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
-import { withSSRSupported } from './hocs/withSSRSupported'
+import { withSSRSupported } from './ssr'
 
 import { Spatial } from '@webspatial/core-sdk'
 
