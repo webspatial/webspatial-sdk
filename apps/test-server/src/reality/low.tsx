@@ -142,13 +142,13 @@ function App() {
 
             const entity = await session.createEntity()
 
-            const geometry = await session.createPlaneGeometry({
-              width: 0.3,
+            const geometry = await session.createBoxGeometry({
+              width: 0.2,
               height: 0.2,
-              cornerRadius: 0.02,
+              depth: 0.1,
             })
             const material = await session.createUnlitMaterial({
-              color: '#00ff88',
+              color: '#ff0000',
             })
             const modelComponent = await session.createModelComponent({
               mesh: geometry,
@@ -161,12 +161,7 @@ function App() {
               setTimeout(resolve, 2000)
             })
 
-            // enable and attach tap handler
-            await entity.addEvent('spatialtap', (evt: any) => {
-              log('plane tapped', {
-                location3D: evt.location3D,
-              })
-            })
+            entity.updateEntityEvent('spatialtap', true)
 
             entityRef.current = entity
           } catch (error) {
@@ -174,57 +169,7 @@ function App() {
           }
         }}
       >
-        create plane modelComponent
-      </button>
-
-      {/* Create a second rounded plane to verify options and multiple entities */}
-      <button
-        className={btnCls}
-        onClick={async () => {
-          try {
-            const session = getSession()!
-            const spatialScene = session.getSpatialScene()
-            const reality = await session.createSpatializedDynamic3DElement()
-
-            await reality.updateProperties({
-              width: 500,
-              height: 500,
-              depth: 100,
-            })
-
-            await spatialScene.addSpatializedElement(reality)
-
-            const entity = await session.createEntity()
-            const geometry = await session.createPlaneGeometry({
-              width: 0.2,
-              height: 0.2,
-              cornerRadius: 0.05,
-            })
-            const material = await session.createUnlitMaterial({
-              color: '#3399ff',
-            })
-            const modelComponent = await session.createModelComponent({
-              mesh: geometry,
-              materials: [material],
-            })
-            await entity.addComponent(modelComponent)
-
-            // position it beside the first one so both are visible
-            await entity.setPosition({ x: 0.25, y: 0, z: 0 })
-
-            await reality.addEntity(entity)
-
-            await entity.addEvent('spatialtap', (evt: any) => {
-              log('rounded plane tapped', {
-                location3D: evt.location3D,
-              })
-            })
-          } catch (error) {
-            console.log('🚀 ~ error:', error)
-          }
-        }}
-      >
-        create rounded plane modelComponent
+        create modelComponent
       </button>
 
       <button
