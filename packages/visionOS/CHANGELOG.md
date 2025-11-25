@@ -1,5 +1,7 @@
 # @webspatial/platform-avp
 
+## 1.0.4
+
 ## 1.0.3
 
 ## 1.0.2
