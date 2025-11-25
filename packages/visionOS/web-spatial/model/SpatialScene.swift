@@ -1008,7 +1008,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -1023,6 +1023,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // for debug only
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
+
+        let spatialObjectList = SpatialObject.objects.map { object in
+            ["id": object.key, "type": String(describing: type(of: object.value))]
+        }
+        try container.encode(spatialObjectList, forKey: .spatialObjectList)
+
         try container.encode(SpatialObjectWeakRefManager.weakRefObjects.count, forKey: .spatialObjectRefCount)
     }
 }
