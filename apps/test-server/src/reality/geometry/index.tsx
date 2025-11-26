@@ -123,6 +123,44 @@ function App() {
     }
   }
 
+  const createSphere = async () => {
+    try {
+      const session = getSession()
+      if (!session) {
+        log(
+          'WebSpatial session unavailable. Please open this demo in Safari on visionOS (Spatial Web) or run with XR_ENV=avp.',
+        )
+        return
+      }
+
+      const reality = await ensureReality()
+      if (!reality) return
+
+      const entity = await session.createEntity()
+      const geometry = await session.createSphereGeometry({
+        radius: 0.12,
+      })
+      const material = await session.createUnlitMaterial({
+        color: '#cc2244',
+      })
+      const modelComponent = await session.createModelComponent({
+        mesh: geometry,
+        materials: [material],
+      })
+      await entity.addComponent(modelComponent)
+
+      await reality.addEntity(entity)
+      await entity.addEvent('spatialtap', (evt: any) => {
+        log('sphere tapped', { location3D: evt.location3D })
+      })
+
+      log('Sphere created ✅')
+    } catch (error) {
+      console.error(error)
+      log('Error creating sphere ❌', error)
+    }
+  }
+
   const supported = !!getSession()
 
   return (
@@ -145,6 +183,9 @@ function App() {
         </button>
         <button className={btnCls} onClick={createBox} disabled={!supported}>
           Create Box
+        </button>
+        <button className={btnCls} onClick={createSphere} disabled={!supported}>
+          Create Sphere
         </button>
       </div>
 

@@ -52,10 +52,20 @@ class PlaneGeometry: Geometry {
     }
 }
 
+@Observable
+class SphereGeometry: Geometry {
+    let radius: Float
+    init(radius: Float) {
+        self.radius = radius
+        super.init(.SphereGeometry)
+        _resource = MeshResource.generateSphere(radius: radius)
+    }
+}
+
 enum GeometryType: String {
     case BoxGeometry
     case PlaneGeometry
-//    case SphereGeometry = "SphereGeometry"
+    case SphereGeometry
 //    case ConeGeometry = "ConeGeometry"
 //    case CylinderGeometry = "CylinderGeometry"
 }

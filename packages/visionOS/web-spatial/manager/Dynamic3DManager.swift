@@ -24,6 +24,10 @@ class Dynamic3DManager {
             if let width = props.width, let height = props.height {
                 geometry = PlaneGeometry(width: width, height: height, cornerRadius: props.cornerRadius ?? 0)
             }
+        case .SphereGeometry:
+            if let radius = props.radius {
+                geometry = SphereGeometry(radius: radius)
+            }
         }
         return geometry
     }
