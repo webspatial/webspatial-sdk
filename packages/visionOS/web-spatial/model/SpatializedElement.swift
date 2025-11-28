@@ -16,16 +16,13 @@ class SpatializedElement: SpatialObject {
     var height: Double = 0.0
     var depth: Double = 0.0
     var backOffset: Double = 0.0
-    var transform: AffineTransform3D = AffineTransform3D.identity
+    var transform: AffineTransform3D = .identity
     var rotationAnchor: UnitPoint3D = .center
     var opacity: Double = 1.0
     var visible = true
     var scrollWithParent = true
     var zIndex: Double = 0
-    
-    // whether require clip action
-    var clip = true
-    
+
     var enableDragStartGesture: Bool = false
     var enableDragGesture: Bool = false
     var enableDragEndGesture: Bool = false
@@ -36,16 +33,13 @@ class SpatializedElement: SpatialObject {
     var enableMagnifyGesture: Bool = false
     var enableMagnifyEndGesture: Bool = false
     var enableTapGesture: Bool = false
-    
+
     var enableGesture: Bool {
-        get {
-            return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateStartGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyStartGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
-        }
+        return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateStartGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyStartGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
     }
 
-
     enum CodingKeys: String, CodingKey {
-        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateStartGesture, enableRotateGesture,enableRotateEndGesture,enableMagnifyStartGesture, enableMagnifyGesture, enableMagnifyEndGesture
+        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateStartGesture, enableRotateGesture, enableRotateEndGesture, enableMagnifyStartGesture, enableMagnifyGesture, enableMagnifyEndGesture
     }
 
     override func encode(to encoder: Encoder) throws {
