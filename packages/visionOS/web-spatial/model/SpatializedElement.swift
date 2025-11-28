@@ -23,9 +23,6 @@ class SpatializedElement: SpatialObject {
     var scrollWithParent = true
     var zIndex: Double = 0
 
-    // whether require clip action
-    //    var clip = true
-
     var enableDragStartGesture: Bool = false
     var enableDragGesture: Bool = false
     var enableDragEndGesture: Bool = false
