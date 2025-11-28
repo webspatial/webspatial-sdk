@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
+  ConeEntity,
   enableDebugTool,
   Entity,
   EntityRef,
@@ -162,7 +163,7 @@ function App() {
           />
           <SceneGraph>
             <Entity
-              position={{ x: -0.2, y: 0, z: 0 }}
+              position={{ x: 0, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
             >
@@ -190,24 +191,6 @@ function App() {
                   console.log('ent parent', entRef.current?.entity?.parent)
                 }}
               ></BoxEntity>
-            </Entity>
-            <Entity
-              id="hehe"
-              name="hehehe"
-              position={{ x: 0.2, y: 0, z: 0 }}
-              rotation={{ x: 0, y: 0, z: 0 }}
-              scale={{ x: 1, y: 1, z: 1 }}
-            >
-              {/* <BoxEntity
-                id="boxGreen"
-                width={0.2}
-                height={0.2}
-                depth={0.1}
-                cornerRadius={0.5}
-                materials={['matGreen']}
-                position={{ x: 0, y: 0, z: 0 }}
-                rotation={boxRotation}
-              ></BoxEntity> */}
               <SphereEntity
                 id="sphereGreen"
                 radius={0.1}
@@ -215,6 +198,13 @@ function App() {
                 position={{ x: 0.2, y: 0, z: 0 }}
                 rotation={boxRotation}
               ></SphereEntity>
+              <ConeEntity
+                radius={0.1}
+                height={0.1}
+                materials={['matGreen']}
+                position={{ x: 0.4, y: 0, z: 0 }}
+                rotation={boxRotation}
+              ></ConeEntity>
             </Entity>
           </SceneGraph>
         </Reality>
