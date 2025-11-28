@@ -12,6 +12,7 @@ import {
   SceneGraph,
   SpatializedElementRef,
   SphereEntity,
+  CylinderEntity,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
@@ -205,6 +206,13 @@ function App() {
                 position={{ x: 0.4, y: 0, z: 0 }}
                 rotation={boxRotation}
               ></ConeEntity>
+              <CylinderEntity
+                radius={0.1}
+                height={0.1}
+                materials={['matGreen']}
+                position={{ x: 0.6, y: 0, z: 0 }}
+                rotation={boxRotation}
+              ></CylinderEntity>
             </Entity>
           </SceneGraph>
         </Reality>
