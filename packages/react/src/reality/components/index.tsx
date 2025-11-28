@@ -1,6 +1,7 @@
 export * from './Entity'
 export * from './BoxEntity'
 export * from './UnlitMaterial'
+export * from './SphereEntity'
 export * from './SceneGraph'
 export * from './ModelAsset'
 export * from './ModelEntity'
