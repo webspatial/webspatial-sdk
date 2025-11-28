@@ -1,29 +1,27 @@
 import React, { forwardRef } from 'react'
 import { EntityProps, EntityEventHandler } from '../type'
 import { EntityRefShape } from '../hooks'
-import { SpatialBoxGeometryOptions } from '@webspatial/core-sdk'
+import { SpatialCylinderGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type BoxEntityProps = EntityProps &
+type CylinderEntityProps = EntityProps &
   EntityEventHandler & {
     children?: React.ReactNode
     materials?: string[]
-  } & SpatialBoxGeometryOptions
+  } & SpatialCylinderGeometryOptions
 
-export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
+export const CylinderEntity = forwardRef<EntityRefShape, CylinderEntityProps>(
   ({ children, ...props }, ref) => {
     const ctx = useRealityContext()
     return (
       <GeometryEntity
         {...props}
         ref={ref}
-        createGeometry={options => ctx!.session.createBoxGeometry(options)}
+        createGeometry={options => ctx!.session.createCylinderGeometry(options)}
         geometryOptions={{
-          width: props.width,
+          radius: props.radius,
           height: props.height,
-          depth: props.depth,
-          cornerRadius: props.cornerRadius,
         }}
       >
         {children}
