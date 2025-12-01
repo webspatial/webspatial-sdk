@@ -1,12 +1,5 @@
 # @webspatial/react-sdk
 
-## 1.0.4
-
-### Patch Changes
-
-- 67a908c: move CSSSpatialDiv to isolated div, which help make SpatialDiv structure clean
-  - @webspatial/core-sdk@1.0.4
-
 ## 1.0.3
 
 ### Patch Changes

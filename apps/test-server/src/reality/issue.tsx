@@ -5,6 +5,7 @@ import {
   enableDebugTool,
   Entity,
   EntityRef,
+  getSession,
   Model,
   ModelAsset,
   ModelEntity,

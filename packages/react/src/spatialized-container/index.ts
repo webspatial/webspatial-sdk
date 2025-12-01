@@ -1,7 +1,3 @@
-import { hijackGetComputedStyle } from './hooks/useDomProxy'
-import { injectSpatialDefaultStyle } from './StandardSpatializedContainer'
-import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
-
 export { SpatializedContainer } from './SpatializedContainer'
 export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
@@ -35,10 +31,5 @@ export {
   type ModelLoadEvent,
 } from './types'
 
-export { toSceneSpatial, toLocalSpace } from './transform-utils'
 
-export function initPolyfill() {
-  hijackGetComputedStyle()
-  injectSpatialDefaultStyle()
-  initCSSParserDivContainer()
-}
+export { toSceneSpatial, toLocalSpace } from './transform-utils'

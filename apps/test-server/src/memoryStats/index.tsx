@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Spatial } from '@webspatial/core-sdk'
+import { getSession } from '@webspatial/react-sdk'
 import ReactDOM from 'react-dom/client'
 
 interface MemoryStats {
   backend: string
   objectCount: number
   refObjectCount: number
-}
-
-function getSession() {
-  const spatial = new Spatial()
-  if (!spatial.isSupported()) {
-    return null
-  }
-  return spatial.requestSession()
 }
 
 function App() {

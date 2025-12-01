@@ -5,12 +5,15 @@ import {
   enableDebugTool,
   Entity,
   EntityRef,
+  getSession,
+  Model,
   ModelAsset,
   ModelEntity,
+  // Reality,
   SceneGraph,
   UnlitMaterial,
-  Reality,
 } from '@webspatial/react-sdk'
+import { Reality } from '@webspatial/react-sdk'
 
 enableDebugTool()
 

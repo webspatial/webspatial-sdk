@@ -4,7 +4,6 @@ import {
   SpatializedStatic3DElementContainer,
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
-import { withSSRSupported } from './ssr'
 
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -40,5 +39,5 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
 }
 
-export const Model = withSSRSupported(forwardRef(ModelBase))
+export const Model = forwardRef(ModelBase)
 Model.displayName = 'Model'

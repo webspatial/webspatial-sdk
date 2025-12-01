@@ -288,7 +288,7 @@ export class PortalInstanceObject {
     const rotationAnchor = parseTransformOrigin(computedStyle)
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
-    console.log('react SDK updateSpatializedElementProperties visibility', visible)
+
     spatializedElement.updateProperties({
       clientX: x,
       clientY: y,

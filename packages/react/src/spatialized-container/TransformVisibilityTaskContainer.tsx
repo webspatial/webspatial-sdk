@@ -9,20 +9,17 @@ import { SpatialID } from './SpatialID'
 import { createPortal } from 'react-dom'
 import { useSpatialTransformVisibility } from './hooks/useSpatialTransformVisibility'
 
-// used as root container for all TransformVisibilityTaskContainer
-let cssParserDivContainer: HTMLDivElement | null = null
+// used as root conntainer for all TransformVisibilityTaskContainer
+const cssParserDivContainer = document.createElement('div')
+cssParserDivContainer.style.position = 'absolute'
+// cssParserDivContainer.style.width = '0px'
+// cssParserDivContainer.style.overflow = 'hidden'
 
-export function initCSSParserDivContainer() {
-  cssParserDivContainer = document?.createElement('div')
-  if (cssParserDivContainer) {
-    cssParserDivContainer.style.position = 'absolute'
-    cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
-  }
-}
+cssParserDivContainer.setAttribute('data-id', 'css-parser-div-container')
 
 function createOrGetCSSParserDivContainer() {
-  if (cssParserDivContainer && !cssParserDivContainer.parentElement) {
-    document?.body.appendChild(cssParserDivContainer)
+  if (!cssParserDivContainer.parentElement) {
+    document.body.appendChild(cssParserDivContainer)
   }
   return cssParserDivContainer
 }
@@ -77,10 +74,6 @@ export function TransformVisibilityTaskContainerBase(
   useSpatialTransformVisibility(props[SpatialID], refInternal)
 
   const cssParserDivContainer = createOrGetCSSParserDivContainer()
-
-  if (!cssParserDivContainer) {
-    return null
-  }
 
   return createPortal(
     <div ref={refInternalCallback} style={style} {...restProps} />,

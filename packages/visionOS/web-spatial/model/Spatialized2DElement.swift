@@ -9,7 +9,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     var backgroundMaterial = BackgroundMaterial.None
 
     var scrollPageEnabled = false
-
+    
     var scrollEdgeInsetsMarginRight: CGFloat? {
         get {
             return spatialWebViewModel.getController().webview?.scrollView.contentInset.right
@@ -46,6 +46,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         spatialWebViewModel = SpatialWebViewModel(url: nil)
 
         super.init()
+        
+        clip = false
 
         spatialWebViewModel.setBackgroundTransparent(true)
         spatialWebViewModel.addScrollUpdateListener { _, point in
@@ -53,6 +55,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             self._scrollOffset.y = point.y
         }
         spatialWebViewModel.scrollEnabled = false
+
     }
 
     // Spatialized2DElement can hold a collection of SpatializedElement children
@@ -89,7 +92,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     func loadHtml(_ html: String) {
         spatialWebViewModel.loadHTML(html)
     }
-
+    
     func load(_ url: String) {
         spatialWebViewModel.load(url)
     }

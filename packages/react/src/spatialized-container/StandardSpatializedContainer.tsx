@@ -101,11 +101,9 @@ export const StandardSpatializedContainer = forwardRef(
   },
 ) => React.ReactElement | null
 
-export function injectSpatialDefaultStyle() {
-  // inject xr-spatial-default style to head
-  const styleElement = document.createElement('style')
-  styleElement.type = 'text/css'
-  styleElement.innerHTML =
-    ' .xr-spatial-default {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
-  document.head.appendChild(styleElement)
-}
+// inject xr-spatial-default style to head
+const styleElement = document.createElement('style')
+styleElement.type = 'text/css'
+styleElement.innerHTML =
+  ' .xr-spatial-default {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
+document.head.appendChild(styleElement)

@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/core-sdk",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -14,7 +14,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "test": "vitest run",
+    "test": "npm run coverage",
     "lint": "tsc -p ./tsconfig.json",
     "coverage": "vitest run --coverage",
     "test:w": "vitest",
