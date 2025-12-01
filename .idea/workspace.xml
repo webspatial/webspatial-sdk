@@ -4,7 +4,76 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="290398ee-8430-445b-917b-022b868bec62" name="Changes" comment="add qsTest script and pingLark API." />
+    <list default="true" id="290398ee-8430-445b-917b-022b868bec62" name="Changes" comment="add spatialScene refresh object clean up logic, add spatialDiv test, move testApp into a folder">
+      <change afterPath="$PROJECT_DIR$/apps/test-server/src/reality/geometryEntity.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/test-server/src/reality/geometryEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/core/src/platform-adapter/ssr/SSRPlatform.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/core/src/ssr-polyfill.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/reality/components/ConeEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/reality/components/CylinderEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/reality/components/GeometryEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/reality/components/PlaneEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/reality/components/SphereEntity.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/ssr/SSRContext.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/ssr/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/ssr/useSSRPhase.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/ssr/withSSRSupported.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/src/ssr/withSSRSupported.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/vitest.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/react/vitest.setup.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_8_19_25_PM2_51_[Changes]1/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_8_19_25_PM2_51__Changes_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/memoryStats/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/memoryStats/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/reality-test/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/reality-test/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/reality/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/reality/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/reality/issue.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/reality/issue.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/reality/low.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/reality/low.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/test-server/src/reality/nested.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/test-server/src/reality/nested.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/androidXR/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/packages/androidXR/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/androidXR/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/androidXR/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/cli/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/packages/cli/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/cli/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/cli/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/SpatialObject.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/SpatialObject.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/SpatialScene.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/SpatialScene.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/SpatializedElementCreator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/SpatializedElementCreator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/platform-adapter/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/platform-adapter/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/core/src/scene-polyfill.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/core/src/scene-polyfill.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/Model.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/Model.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/noRuntime.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/noRuntime.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/reality/components/BoxEntity.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/reality/components/BoxEntity.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/reality/components/ModelAsset.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/reality/components/ModelAsset.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/reality/components/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/reality/components/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/SpatializedContainer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/SpatializedContainer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/StandardSpatializedContainer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/StandardSpatializedContainer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/TransformVisibilityTaskContainer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/TransformVisibilityTaskContainer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/context/PortalInstanceContext.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/context/PortalInstanceContext.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/hooks/useDomProxy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/hooks/useDomProxy.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/hooks/useSpatialTransformVisibility.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/hooks/useSpatialTransformVisibility.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/spatialized-container/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/spatialized-container/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/utils/debugTool.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/utils/debugTool.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/react/src/utils/getSession.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/react/src/utils/getSession.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial.xcodeproj/xcshareddata/xcschemes/web-spatial.xcscheme" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial.xcodeproj/xcshareddata/xcschemes/web-spatial.xcscheme" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/manifest.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/manifest.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatialScene.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatialScene.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/Spatialized2DElement.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/Spatialized2DElement.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatializedDynamic3DElement.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatializedDynamic3DElement.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatializedElement.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/model/SpatializedElement.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/visionOS/web-spatial/view/SpatializedElementView.swift" beforeDir="false" afterPath="$PROJECT_DIR$/packages/visionOS/web-spatial/view/SpatializedElementView.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/ci-test/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/ci-test/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/ci-test/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/tests/ci-test/package.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -42,6 +111,7 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Merging auto-test-package",
     "last_opened_file_path": "/Users/bytedance/Projects/reactProj/webspatialTest/webspatial-sdk/tests/ci-test/scripts",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -49,7 +119,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "pnpm",
     "prettierjs.PrettierConfiguration.Package": "/Users/bytedance/Projects/reactProj/webspatialTest/webspatial-sdk/node_modules/prettier",
-    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
+    "ts.external.directory.path": "/Users/bytedance/Projects/reactProj/webspatialTest/webspatial-sdk/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -66,6 +136,9 @@
     </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SwiftWorkspaceSettings">
+    <option name="detectedToolchain" value="true" />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="290398ee-8430-445b-917b-022b868bec62" name="Changes" comment="" />
@@ -78,6 +151,12 @@
       <workItem from="1750143471191" duration="12366000" />
       <workItem from="1750304151856" duration="9167000" />
       <workItem from="1755586025031" duration="1001000" />
+      <workItem from="1761789438346" duration="303000" />
+      <workItem from="1761826375525" duration="10905000" />
+      <workItem from="1762481098369" duration="10378000" />
+      <workItem from="1762828184116" duration="10138000" />
+      <workItem from="1763344279179" duration="13689000" />
+      <workItem from="1764586215759" duration="1167000" />
     </task>
     <task id="LOCAL-00001" summary="add qsTest script and pingLark API.">
       <option name="closed" value="true" />
@@ -87,11 +166,56 @@
       <option name="project" value="LOCAL" />
       <updated>1750148758127</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="add puppeteerPlatform in core sdk">
+      <option name="closed" value="true" />
+      <created>1762222992791</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1762222992791</updated>
+    </task>
+    <task id="LOCAL-00003" summary="add webspatial protocol in PuppeteerPlatform.ts (create iframe as window proxy), add UpdateSpatialized2DElementProperties, UpdateSpatializedElementTransform, createSpatialScene, can inspectCurrentSpatialScene in window object, use Puppeteer browser visible mode.">
+      <option name="closed" value="true" />
+      <created>1763118698763</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1763118698763</updated>
+    </task>
+    <task id="LOCAL-00004" summary="update inspectCurrentSpatialScene interface, add getSpatialized2DElement interface in autoTest Pacakge">
+      <option name="closed" value="true" />
+      <created>1763470041307</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1763470041307</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add spatialScene refresh object clean up logic, add spatialDiv test, move testApp into a folder">
+      <option name="closed" value="true" />
+      <created>1764586867105</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1764586867105</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/packages/autoTest1/test-interaction.js.map" />
+        <option value="$PROJECT_DIR$/packages/autoTest1/test-interaction.d.ts" />
+        <option value="$PROJECT_DIR$/packages/autoTest1/test-interaction.js" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/app.test.js.map" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/core-sdk.test.js.map" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/runtime-info.js.map" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/runtime-info.js" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/core-sdk.test.js" />
+        <option value="$PROJECT_DIR$/packages/autoTest/tests/app.test.js" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -104,7 +228,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="CITestQA" />
+                        <option value="main" />
                       </list>
                     </value>
                   </entry>
@@ -118,6 +242,11 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="add qsTest script and pingLark API." />
-    <option name="LAST_COMMIT_MESSAGE" value="add qsTest script and pingLark API." />
+    <MESSAGE value="setup Jest in autoTest Package" />
+    <MESSAGE value="add puppeteerPlatform in core sdk" />
+    <MESSAGE value="add webspatial protocol in PuppeteerPlatform.ts (create iframe as window proxy), add UpdateSpatialized2DElementProperties, UpdateSpatializedElementTransform, createSpatialScene, can inspectCurrentSpatialScene in window object, use Puppeteer browser visible mode." />
+    <MESSAGE value="update inspectCurrentSpatialScene interface, add getSpatialized2DElement interface in autoTest Pacakge" />
+    <MESSAGE value="add spatialScene refresh object clean up logic, add spatialDiv test, move testApp into a folder" />
+    <option name="LAST_COMMIT_MESSAGE" value="add spatialScene refresh object clean up logic, add spatialDiv test, move testApp into a folder" />
   </component>
 </project>

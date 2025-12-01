@@ -41,6 +41,7 @@ export class SpatialScene extends SpatialObject {
    * @returns Promise resolving when the update is complete
    */
   async updateSpatialProperties(properties: Partial<SpatialSceneProperties>) {
+    console.log('core SDK updateSpatialProperties: ', properties)
     return new UpdateSpatialSceneProperties(properties).execute()
   }
 

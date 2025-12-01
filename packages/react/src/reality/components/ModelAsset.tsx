@@ -8,6 +8,15 @@ type Props = {
   onLoad?: () => void
   onError?: (error: any) => void
 }
+
+// Resolve relative URLs to absolute for the native bridge
+const resolveAssetUrl = (url: string): string => {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  return new URL(url, window.location.href).href
+}
+
 export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialModelAsset>()
@@ -16,7 +25,8 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
-      const modelAssetPromise = session.createModelAsset({ url: options.src })
+      const resolvedUrl = resolveAssetUrl(options.src)
+      const modelAssetPromise = session.createModelAsset({ url: resolvedUrl })
       resourceRegistry.add(options.id, modelAssetPromise)
 
       try {

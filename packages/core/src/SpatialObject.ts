@@ -29,6 +29,7 @@ export class SpatialObject {
     }
 
     const ret = await new DestroyCommand(this.id).execute()
+    console.log(`DestroyCommand: executed, id: ${this.id}, ret: ${JSON.stringify(ret)}`)
     if (ret.success) {
       this.onDestroy()
       this.isDestroyed = true

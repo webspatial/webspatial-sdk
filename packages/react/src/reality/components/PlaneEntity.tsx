@@ -1,28 +1,27 @@
 import React, { forwardRef } from 'react'
 import { EntityProps, EntityEventHandler } from '../type'
 import { EntityRefShape } from '../hooks'
-import { SpatialBoxGeometryOptions } from '@webspatial/core-sdk'
+import { SpatialPlaneGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type BoxEntityProps = EntityProps &
+type PlaneEntityProps = EntityProps &
   EntityEventHandler & {
     children?: React.ReactNode
     materials?: string[]
-  } & SpatialBoxGeometryOptions
+  } & SpatialPlaneGeometryOptions
 
-export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
+export const PlaneEntity = forwardRef<EntityRefShape, PlaneEntityProps>(
   ({ children, ...props }, ref) => {
     const ctx = useRealityContext()
     return (
       <GeometryEntity
         {...props}
         ref={ref}
-        createGeometry={options => ctx!.session.createBoxGeometry(options)}
+        createGeometry={options => ctx!.session.createPlaneGeometry(options)}
         geometryOptions={{
           width: props.width,
           height: props.height,
-          depth: props.depth,
           cornerRadius: props.cornerRadius,
         }}
       >
