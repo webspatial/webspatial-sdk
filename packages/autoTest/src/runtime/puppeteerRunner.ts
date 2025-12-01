@@ -2,15 +2,7 @@
 
 import puppeteer, { Browser, Page, Viewport } from 'puppeteer'
 import { WebSpatial } from '../WebSpatial'
-import {
-  BackgroundMaterial,
-  ScrollAbleSpatialElementContainer,
-  WindowStyle,
-  Vec3,
-  CornerRadius,
-  Spatialized2DElement,
-  SpatialScene,
-} from '../types/types'
+import { BackgroundMaterial, WindowStyle, SpatialScene } from '../types/types'
 import {
   UpdateSpatialSceneProperties,
   CreateSpatialScene,
@@ -20,6 +12,7 @@ import {
   UpdateSpatialized2DElementProperties,
   UpdateSpatializedElementTransform,
   Inspect,
+  DestroyCommand,
 } from '../types/JSBCommand'
 import JSBManager from '../manager/JSBManager'
 import { SpatializedElement } from '../model/SpatializedElement'
@@ -47,6 +40,7 @@ export interface PageContentOptions {
   waitUntil?: 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   timeout?: number
 }
+let firstLoad = true
 
 export class PuppeteerRunner {
   private browser: Browser | null = null
@@ -171,6 +165,12 @@ export class PuppeteerRunner {
     console.log(
       `Navigating to ${url} with waitUntil: ${options?.waitUntil || 'networkidle0'}`,
     )
+    if (this.initOptions.enableXR) {
+      const scene = this.getCurrentScene()
+      if (scene && typeof (scene as any).onPageStartLoad === 'function') {
+        ;(scene as any).onPageStartLoad()
+      }
+    }
     await this.page.goto(url, {
       waitUntil: options?.waitUntil || 'networkidle0',
       timeout: options?.timeout,
@@ -187,6 +187,12 @@ export class PuppeteerRunner {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
     console.log('Setting page content')
+    if (this.initOptions.enableXR) {
+      const scene = this.getCurrentScene()
+      if (scene && typeof (scene as any).onPageStartLoad === 'function') {
+        ;(scene as any).onPageStartLoad()
+      }
+    }
     await this.page.setContent(html, {
       waitUntil: options?.waitUntil || 'networkidle0',
       timeout: options?.timeout,
@@ -363,6 +369,19 @@ export class PuppeteerRunner {
     // Set up iframe message listener
     await this.page.exposeFunction('onIframeLoaded', (data: any) => {
       this.handleIframeLoaded(data)
+    })
+
+    await this.page.on('framenavigated', frame => {
+      // 只监听主页面
+      if (frame !== this.page?.mainFrame()) return
+
+      if (firstLoad) {
+        firstLoad = false // 第一次加载，忽略
+        return
+      }
+
+      console.log('Detected a refresh:', frame.url(), 'reset spatial Scene')
+      this.webSpatial?.getCurrentScene()?.onPageStartLoad()
     })
 
     // Inject message listener script
@@ -621,7 +640,7 @@ export class PuppeteerRunner {
     this.jsbManager.registerWithData(
       UpdateSpatialized2DElementProperties,
       (data, callback) => {
-        console.log('Handling UpdateSpatialized2DElementProperties:', data)
+        // console.log('Handling UpdateSpatialized2DElementProperties:', data)
         const elementId = data.id || (data as any).spatialObject?.id
         // console.log('Handling UpdateSpatialized2DElementProperties with ID:', elementId)
         // console.log('UpdateSpatialized2DElementProperties id:', data.id)
@@ -653,7 +672,7 @@ export class PuppeteerRunner {
     this.jsbManager.registerWithData(
       UpdateSpatializedElementTransform,
       (data, callback) => {
-        console.log('Handling UpdateSpatializedElementTransform:', data)
+        // console.log('Handling UpdateSpatializedElementTransform:', data)
 
         // 检查data.id是否存在
         if (!data.id) {
@@ -708,10 +727,10 @@ export class PuppeteerRunner {
         const spatializedElement = this.webSpatial
           ?.getCurrentScene()
           ?.findSpatialObject(data.id)
-        console.log(
-          'UpdateSpatializedElementTransform spatialScene updated element:',
-          spatializedElement,
-        )
+        // console.log(
+        //   'UpdateSpatializedElementTransform spatialScene updated element:',
+        //   spatializedElement,
+        // )
         callback({ success: true })
       },
     )
@@ -727,6 +746,27 @@ export class PuppeteerRunner {
         // Return current spatial Scene
         const sceneData = this.webSpatial?.inspectCurrentSpatialScene()
         callback({ sceneData })
+      }
+    })
+
+    this.jsbManager.registerWithData(DestroyCommand, (data, callback) => {
+      console.log('Handling DestroyCommand: ', data)
+
+      if (data.id) {
+        // remove SpatialObject in jsbManager
+        const object = this.jsbManager?.getSpatialObject(data.id)
+        if (object) {
+          this.jsbManager?.removeSpatialObject(data.id)
+        }
+        // remove SpatialObject in spatialScene
+        const spatialSceneObject =
+          this.webSpatial?.getCurrentScene()?.spatialObjects[data.id]
+        if (spatialSceneObject) {
+          spatialSceneObject.destroy()
+        }
+        callback({ success: true })
+      } else {
+        callback({ success: false, error: 'Missing object id' })
       }
     })
   }

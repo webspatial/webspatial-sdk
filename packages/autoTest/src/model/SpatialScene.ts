@@ -550,13 +550,25 @@ export class SpatialScene
       throw new Error('Invalid child element')
     }
 
+    // 检查子元素是否已经存在，避免重复添加
+    if (this._children[child.id]) {
+      console.warn(
+        `Child element with id ${child.id} already exists, skipping addition`,
+      )
+      return
+    }
+
     this._children[child.id] = child
     // 安全地设置parent属性
     try {
       if (child.setParent) {
         // 类型断言，因为this现在实现了ScrollAbleSpatialElementContainer接口
-        child.setParent(this as unknown as ScrollAbleSpatialElementContainer)
-      } else if ('parent' in child) {
+        // 避免循环调用：检查child._parent是否已经是this
+        const childParent = (child as any)._parent
+        if (!childParent || childParent.id !== this.id) {
+          child.setParent(this as unknown as ScrollAbleSpatialElementContainer)
+        }
+      } else if ('parent' in child && !(child as any).parent) {
         ;(child as any).parent = this
       }
     } catch (error) {
@@ -684,6 +696,17 @@ export class SpatialScene
   handleWindowClose(): void {
     console.log('Closing window')
     this.destroy()
+  }
+
+  onPageStartLoad(): void {
+    const objects = Object.values(this._spatialObjects)
+    objects.forEach(obj => {
+      if (obj && typeof obj.destroy === 'function') {
+        obj.destroy()
+      }
+    })
+    this._spatialObjects = {}
+    this.backgroundMaterial = BackgroundMaterial.none
   }
 
   addObject(object: any): void {

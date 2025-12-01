@@ -1,6 +1,7 @@
 import React, { useState, CSSProperties, useRef, useEffect } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { Spatial } from '@webspatial/core-sdk'
+import { Link } from 'react-router-dom'
 
 enableDebugTool()
 
@@ -219,6 +220,15 @@ function App() {
           get spatial scene
         </button>
       </div>
+      <Link
+        to="/domApiTest"
+        className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-black hover:bg-opacity-40 transition-all"
+      >
+        <h2 className="text-xl font-bold mb-2">DOM API Test</h2>
+        <p className="text-sm opacity-80">
+          Test DOM style and class operations
+        </p>
+      </Link>
 
       {/* Spatial Elements Container */}
       <div
@@ -237,7 +247,7 @@ function App() {
           <div
             key={element.id}
             /// ref.current is the spatialized element info  input: ref.current, output: spatialized 2D element object info, windowproxy(content in html) inspect properties
-            // ref={ref}
+            // ref={ref}Detected a refresh:
             className={`spatial-div spatial-element-${index + 1}`}
             style={{
               ...element.style,
@@ -299,14 +309,52 @@ function App() {
       >
         this is spatial div with --xr-back: 100
       </div>
+      {/* spatial div with enableXr = true style and nested spatialized element */}
       <div
-        data-testid="spatial-div-2"
+        data-testid="spatial-div-2-container"
         style={
           {
-            enableXr: true,
             visibility: 'visible',
             display: 'block',
             '--xr-back': '150',
+            '--xr-z-index': '100',
+            '--xr-background-material': 'thin',
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: 'rgba(0, 255, 17, 0.8)',
+            border: '2px solid #ff8c00',
+          } as CSSProperties
+        }
+      >
+        spatial div without enableXr = true style and nested parent element
+        <div
+          data-testid="spatial-div-2"
+          style={
+            {
+              enableXr: true,
+              visibility: 'visible',
+              display: 'block',
+              '--xr-back': '150',
+              '--xr-z-index': '100',
+              '--xr-background-material': 'thin',
+              marginTop: '20px',
+              padding: '20px',
+              backgroundColor: 'rgba(255, 165, 0, 0.8)',
+              border: '2px solid #ff8c00',
+            } as CSSProperties
+          }
+        >
+          this is spatial div with enableXr = true style
+        </div>
+      </div>
+      <div
+        data-testid="spatial-div-3"
+        className="p-2 __enableXr__ bg-gray-600 hover:bg-gray-700 text-black text-center rounded-lg"
+        style={
+          {
+            visibility: 'visible',
+            display: 'block',
+            '--xr-back': '200',
             '--xr-z-index': '100',
             '--xr-background-material': 'thin',
             marginTop: '20px',
@@ -316,7 +364,7 @@ function App() {
           } as CSSProperties
         }
       >
-        this is spatial div with enabled xr style
+        this is spatial div with __enableXr__ in className
       </div>
 
       {/* Spatial Scene Information */}

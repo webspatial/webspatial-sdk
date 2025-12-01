@@ -60,6 +60,7 @@ export class WebSpatial {
 
     // 从scene获取所有children
     const children = scene.children || {}
+    console.log('inspectCurrentSpatialScene children: ', Object.keys(children))
 
     return {
       id: scene.id || scene.spatialId || 'default-scene',
@@ -98,6 +99,7 @@ export class WebSpatial {
       Object.entries(childrenToProcess).forEach(([key, value]) => {
         const child = value as any // 使用类型断言
         if (child && typeof child === 'object') {
+          // 创建一个不包含parent引用的格式化对象，避免循环引用和重复添加
           formatted[key] = {
             id: 'id' in child ? child.id : key,
             type: 'type' in child ? child.type : 'Spatialized2DElement',
@@ -153,7 +155,7 @@ export class WebSpatial {
                 : undefined,
             enableTapGesture:
               'enableTapGesture' in child ? child.enableTapGesture : undefined,
-            parent: 'parent' in child ? child.parent : undefined,
+            // 移除parent属性，避免循环引用和children重复添加
           }
         }
       })

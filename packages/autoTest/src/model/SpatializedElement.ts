@@ -43,15 +43,28 @@ export class SpatializedElement
     this.type = type
   }
 
-  setParent(parent: ScrollAbleSpatialElementContainer): void {
-    if (this._parent?.id === parent.id) {
+  setParent(parent: ScrollAbleSpatialElementContainer | null): void {
+    // 如果parent相同，直接返回，避免重复操作
+    if (this._parent?.id === parent?.id) {
       return
     }
+
+    // 移除旧的父引用
     if (this._parent) {
-      this._parent.removeChild(this)
+      // 存储旧父引用
+      const oldParent = this._parent
+      // 先设置_parent为null，避免循环调用
+      this._parent = null
+      // 移除从旧父元素
+      oldParent.removeChild(this)
     }
+
+    // 设置新的父引用
     this._parent = parent
-    parent.addChild(this)
+
+    // 添加到新父元素，但避免循环调用
+    // 检查parent的addChild方法是否会导致循环
+    // 这里依赖SpatialScene.addChild方法中的检查来避免重复添加
   }
 
   getParent(): ScrollAbleSpatialElementContainer | null {
