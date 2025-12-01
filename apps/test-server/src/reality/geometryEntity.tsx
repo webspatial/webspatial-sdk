@@ -15,6 +15,7 @@ import {
   CylinderEntity,
   // PlaneEntity,
   UnlitMaterial,
+  PlaneEntity,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
@@ -214,14 +215,14 @@ function App() {
                 position={{ x: 0.6, y: 0, z: 0 }}
                 rotation={boxRotation}
               ></CylinderEntity>
-              {/* <PlaneEntity
+              <PlaneEntity
                 width={0.1}
                 height={0.1}
                 cornerRadius={0.01}
                 materials={['matGreen']}
                 position={{ x: 0, y: 0.2, z: 0 }}
                 rotation={boxRotation}
-              ></PlaneEntity> */}
+              ></PlaneEntity>
             </Entity>
           </SceneGraph>
         </Reality>
