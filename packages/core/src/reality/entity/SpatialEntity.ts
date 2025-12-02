@@ -140,8 +140,16 @@ export class SpatialEntity extends SpatialObject {
         SpatialWebMsgType.spatialtap,
         (data as SpatialTapMsg).detail,
       )
-      // todo: emulate event bubble on parent
-      this.events[data.type]?.(evt)
+      this.dispatchEvent(evt)
+    }
+  }
+
+  dispatchEvent(evt: CustomEvent) {
+    this.events[evt.type]?.(evt)
+    if (evt.bubbles && !evt.cancelBubble) {
+      if (this.parent && this.parent instanceof SpatialEntity) {
+        this.parent.dispatchEvent(evt)
+      }
     }
   }
 

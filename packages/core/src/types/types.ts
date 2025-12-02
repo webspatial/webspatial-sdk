@@ -1,5 +1,7 @@
+import type { SpatialEntity } from '..'
 import { SpatialGeometry } from '../reality/geometry/SpatialGeometry'
 import { SpatialMaterial } from '../reality/material/SpatialMaterial'
+import type { SpatializedDynamic3DElement } from '../SpatializedDynamic3DElement'
 
 export interface Vec3 {
   x: number
@@ -375,8 +377,4 @@ export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
 
 export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
 
-export interface SpatialEntityOrReality {
-  id: string
-  parent?: SpatialEntityOrReality | null
-  children: SpatialEntityOrReality[]
-}
+export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
