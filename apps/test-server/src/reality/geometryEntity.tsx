@@ -74,6 +74,31 @@ function App() {
     return () => {}
   }, [boxRotationOn])
 
+  const [planePosition, setPlanePosition] = useState({ x: 0, y: 0.2, z: 0 })
+  const [planeRotation, setPlaneRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [planeRotationOn, setPlaneRotationOn] = useState(false)
+  const planeAnimationRef = useRef<any>()
+  useEffect(() => {
+    if (planeRotationOn) {
+      function doRotate(delta: number) {
+        setPlaneRotation({
+          x: 0,
+          y: 0,
+          z: planeRotation.z + 0.1 * delta,
+        })
+        planeAnimationRef.current = requestAnimationFrame(doRotate)
+      }
+      doRotate(0)
+    } else {
+      if (planeAnimationRef.current) {
+        cancelAnimationFrame(planeAnimationRef.current)
+        planeAnimationRef.current = null
+      }
+    }
+
+    return () => {}
+  }, [planeRotationOn])
+
   const entRef = useRef<EntityRef>(null)
   const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
@@ -98,7 +123,7 @@ function App() {
           setBoxPosition(prePos => ({ ...prePos, x: prePos.x === 0 ? 0.1 : 0 }))
         }}
       >
-        toggle red box position
+        Toggle Box Position
       </button>
 
       <button
@@ -107,7 +132,28 @@ function App() {
           setBoxRotationOn(prev => !prev)
         }}
       >
-        toggle box rotation
+        Toggle Box Rotation
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          setPlanePosition(prePos => ({
+            ...prePos,
+            y: prePos.y === 0.2 ? 0 : 0.2,
+          }))
+        }}
+      >
+        Toggle Plane Position
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          setPlaneRotationOn(prev => !prev)
+        }}
+      >
+        Toggle Plane Rotation
       </button>
 
       <div>
@@ -219,8 +265,8 @@ function App() {
                 height={0.1}
                 cornerRadius={0.01}
                 materials={['matGreen']}
-                position={{ x: 0, y: 0.2, z: 0 }}
-                rotation={boxRotation}
+                position={planePosition}
+                rotation={planeRotation}
               ></PlaneEntity>
             </Entity>
           </SceneGraph>

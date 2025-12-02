@@ -778,12 +778,36 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let geometry = Dynamic3DManager.createGeometry(command) else {
-            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
+        if let geometry = Dynamic3DManager.createGeometry(command) {
+            addSpatialObject(geometry)
+            resolve(.success(AddSpatializedElementReply(id: geometry.id)))
             return
         }
-        addSpatialObject(geometry)
-        resolve(.success(AddSpatializedElementReply(id: geometry.id)))
+
+        var message = "invalid geometry params"
+        if let gtype = GeometryType(rawValue: command.type) {
+            switch gtype {
+            case .BoxGeometry:
+                var missing: [String] = []
+                if command.width == nil { missing.append("width") }
+                if command.height == nil { missing.append("height") }
+                if command.depth == nil { missing.append("depth") }
+                if !missing.isEmpty {
+                    message = "missing required fields for BoxGeometry: " + missing.joined(separator: ", ")
+                }
+            case .PlaneGeometry:
+                var missing: [String] = []
+                if command.width == nil { missing.append("width") }
+                if command.height == nil { missing.append("height") }
+                if !missing.isEmpty {
+                    message = "missing required fields for PlaneGeometry: " + missing.joined(separator: ", ")
+                }
+            }
+        } else {
+            message = "invalid geometry type: \(command.type)"
+        }
+
+        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: message)))
     }
 
     private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
