@@ -13,9 +13,8 @@ import {
   SpatializedElementRef,
   SphereEntity,
   CylinderEntity,
-  // PlaneEntity,
-  UnlitMaterial,
   PlaneEntity,
+  UnlitMaterial,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
