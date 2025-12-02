@@ -22,15 +22,9 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
     "paths": {
-      "@webspatial/react-sdk": ["./src"],
-      "@webspatial/core-sdk": ["../core/src"]
+      "@webspatial/react-sdk": ["./src"]
     }
   },
-  "include": [
-    "src/index.ts",
-    "esbuild.mjs",
-    "src/types/*.d.ts",
-    "../core/src/types/*.d.ts"
-  ],
+  "include": ["src/index.ts", "esbuild.mjs", "src/types/*.d.ts"],
   "references": []
 }
