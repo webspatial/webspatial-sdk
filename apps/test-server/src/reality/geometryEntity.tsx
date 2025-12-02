@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
+  ConeEntity,
+  enableDebugTool,
   Entity,
   EntityRef,
   ModelAsset,
@@ -9,8 +11,14 @@ import {
   Reality,
   SceneGraph,
   SpatializedElementRef,
+  SphereEntity,
+  CylinderEntity,
+  // PlaneEntity,
   UnlitMaterial,
+  PlaneEntity,
 } from '@webspatial/react-sdk'
+
+enableDebugTool()
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -77,7 +85,13 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">reality test</h1>
+      <h1
+        // enable-xr
+        style={{ '--xr-back': 100 }}
+        className="text-2xl text-black"
+      >
+        reality test
+      </h1>
 
       <button
         className={btnCls}
@@ -126,19 +140,33 @@ function App() {
             transparent={true}
             opacity={0.5}
           />
-          <ModelAsset
-            id="model"
-            src="http://localhost:5173/public/assets/RocketToy1.usdz"
-            onLoad={() => {
-              console.log('model load')
-            }}
-            onError={e => {
-              console.log('model error', e)
-            }}
+          <UnlitMaterial
+            id="matBlue"
+            color="#0000ff"
+            transparent={true}
+            opacity={0.5}
+          />
+          <UnlitMaterial
+            id="matBlack"
+            color="#000000"
+            transparent={true}
+            opacity={0.5}
+          />
+          <UnlitMaterial
+            id="mat5"
+            color="#eb45b7"
+            transparent={true}
+            opacity={0.5}
+          />
+          <UnlitMaterial
+            id="mat6"
+            color="#0e4c20"
+            transparent={true}
+            opacity={0.5}
           />
           <SceneGraph>
             <Entity
-              position={{ x: -0.2, y: 0, z: 0 }}
+              position={{ x: 0, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
             >
@@ -153,10 +181,10 @@ function App() {
                 materials={[
                   'matRed',
                   'matGreen',
-                  'matRed',
-                  'matGreen',
-                  'matRed',
-                  'matGreen',
+                  'matBlue',
+                  'matBlack',
+                  'mat5',
+                  'mat6',
                 ]}
                 splitFaces={true}
                 position={boxPosition}
@@ -166,101 +194,36 @@ function App() {
                   console.log('ent parent', entRef.current?.entity?.parent)
                 }}
               ></BoxEntity>
-            </Entity>
-            <Entity
-              id="hehe"
-              name="hehehe"
-              position={{ x: 0.2, y: 0, z: 0 }}
-              rotation={{ x: 0, y: 0, z: 0 }}
-              scale={{ x: 1, y: 1, z: 1 }}
-              // ref={entRef}
-              // onSpatialTap={async e => {
-              //   console.log('parent tap', e.detail.location3D)
-              // }}
-            >
-              <BoxEntity
-                id="boxGreen"
-                width={0.2}
-                height={0.2}
-                depth={0.1}
-                cornerRadius={0.5}
+              <SphereEntity
+                id="sphereGreen"
+                radius={0.1}
                 materials={['matGreen']}
-                position={{ x: 0, y: 0, z: 0 }}
+                position={{ x: 0.2, y: 0, z: 0 }}
                 rotation={boxRotation}
-                onSpatialTap={async e => {
-                  console.log('🚀 ~ e:', e.target)
-                  console.log(
-                    'tap box',
-                    await e.target.convertFromEntityToReality(
-                      'boxGreen',
-                      e.detail.location3D,
-                    ),
-                    // await e.target.convertFromEntityToEntity(
-                    //   'boxGreen',
-                    //   'hehe',
-                    //   {
-                    //     x: 0,
-                    //     y: 0,
-                    //     z: 0,
-                    //   },
-                    // ),
-                  ) // print entityRef
-                  // const pos = await myRef.current?.convertFromEntityToEntity(
-                  //   'boxGreen',
-                  //   'boxRed',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos:', pos)
-                  // const pos2 = await myRef.current?.convertFromEntityToScene(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos2:', pos2)
-                  // const pos3 = await myRef.current?.convertFromSceneToEntity(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos3:', pos3)
-                  // console.log(
-                  //   'realityRef.current:',
-                  //   realityRef.current?.clientDepth,
-                  //   realityRef.current?.offsetBack,
-                  //   realityRef.current?.getBoundingClientCube(),
-                  // )
-                  // const domEleReality = document.getElementById("testReality")
-                  // console.log("🚀 ~ domEleReality:", domEleReality)
-
-                  // console.log(
-                  //   'entity position',
-                  //   document.getElementById('boxGreen'),
-                  // )
-                  // console.log(entRef.current)
-                  // console.log(boxEntRef.current)
-                  // console.log('children tap', e.detail.location3D)
-
-                  // console.log('boxGreen children', boxEntRef.current?.entity)
-
-                  console.log(
-                    'realityRef.current:',
-                    realityRef.current?.offsetBack,
-                  )
-                  // console.log('ent parent', entRef.current?.entity?.parent)
-                }}
-              ></BoxEntity>
+              ></SphereEntity>
+              <ConeEntity
+                radius={0.1}
+                height={0.1}
+                materials={['matGreen']}
+                position={{ x: 0.4, y: 0, z: 0 }}
+                rotation={boxRotation}
+              ></ConeEntity>
+              <CylinderEntity
+                radius={0.1}
+                height={0.1}
+                materials={['matGreen']}
+                position={{ x: 0.6, y: 0, z: 0 }}
+                rotation={boxRotation}
+              ></CylinderEntity>
+              <PlaneEntity
+                width={0.1}
+                height={0.1}
+                cornerRadius={0.01}
+                materials={['matGreen']}
+                position={{ x: 0, y: 0.2, z: 0 }}
+                rotation={boxRotation}
+              ></PlaneEntity>
             </Entity>
-            {showModelEntity && (
-              <ModelEntity
-                id="modelEnt"
-                name="modelEntName"
-                model="model"
-                ref={modelEntRef}
-                rotation={boxRotation}
-                onSpatialTap={e => {
-                  // console.log('tap model', e.detail.location3D)
-                  // console.log(modelEntRef.current)
-                }}
-              />
-            )}
           </SceneGraph>
         </Reality>
       </div>

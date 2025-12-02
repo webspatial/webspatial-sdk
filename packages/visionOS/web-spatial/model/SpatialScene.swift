@@ -26,12 +26,20 @@ struct ConvertReply: Codable {
 
 let baseReplyData = CustomReplyData(type: "BasicData", name: "jsb call back")
 
+let defaultSceneConfig = SceneOptions(
+    defaultSize: Size(width: 1280, height: 720),
+    windowResizability: .automatic,
+    worldScaling: .automatic,
+    worldAlignment: .automatic,
+    baseplateVisibility: .automatic
+)
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    public enum WindowStyle: String, Codable, CaseIterable {
+    enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
     }
@@ -43,7 +51,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    public var windowStyle: WindowStyle {
+    var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
@@ -182,9 +190,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    public var sceneConfig: SceneOptions?
+    var sceneConfig: SceneOptions?
 
-    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+    func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
@@ -206,7 +214,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle && newState == .willVisible {
+        } else if oldState == .idle, newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
@@ -284,7 +292,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    public var didFailLoad = false
+    var didFailLoad = false
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
@@ -303,6 +311,32 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didFailLoad) {
             self.didFailLoad = true
+        }
+
+        spatialWebViewModel.addStateListener(.didFinishLoad) {
+            if self.state == .pending {
+                self.checkHookExist()
+            }
+        }
+    }
+
+    private func checkHookExist(_ completion: ((Bool) -> Void)? = nil) {
+        let js = """
+        (function() {
+            return typeof window.xrCurrentSceneDefaults !== 'undefined';
+        })();
+        """
+
+        spatialWebViewModel.evaluateJS(js) { result in
+            let exists = result as? Bool ?? false
+
+            if let completion = completion {
+                completion(exists)
+            } else {
+                if !exists {
+                    self.moveToState(.willVisible, defaultSceneConfig)
+                }
+            }
         }
     }
 
@@ -974,7 +1008,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -989,6 +1023,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // for debug only
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
+
+        let spatialObjectList = SpatialObject.objects.map { object in
+            ["id": object.key, "type": String(describing: type(of: object.value))]
+        }
+        try container.encode(spatialObjectList, forKey: .spatialObjectList)
+
         try container.encode(SpatialObjectWeakRefManager.weakRefObjects.count, forKey: .spatialObjectRefCount)
     }
 }

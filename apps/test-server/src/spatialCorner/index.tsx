@@ -50,7 +50,7 @@ function App() {
         </a>
       </div>
 
-      <div className="text-orange-200 mx-2.5 my-2.5">
+      <div className="text-gray-950 mx-2.5 my-2.5">
         <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
           toggle background material:
         </button>
@@ -131,7 +131,7 @@ function App() {
         </div>
       </div>
 
-      <div className="flex flex-row space-x-2 w-screen text-orange-500   text-center">
+      <div className="flex flex-row space-x-2 w-screen text-gray-900   text-center">
         <div
           enable-xr
           style={{

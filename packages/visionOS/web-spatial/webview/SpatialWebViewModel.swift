@@ -213,7 +213,7 @@ class SpatialWebViewModel {
     }
 
     private func onOpenWindowInvoke(_ url: URL) -> WebViewElementInfo? {
-        var protocolRes: WebViewElementInfo? = nil
+        var protocolRes: WebViewElementInfo?
         for key in openWindowList.keys {
             if url.absoluteString.starts(with: key),
                let res = openWindowList[key]?(url)
@@ -257,7 +257,7 @@ class SpatialWebViewModel {
             controller?.callJS("window.__SpatialWebEvent && window.__SpatialWebEvent({id:'" + id + "', data: " + dataString! + "})")
         }
     }
-    
+
     func updateWindowKV(_ dict: [String: Any]) {
         var js = ""
         for (key, value) in dict {
@@ -272,10 +272,21 @@ class SpatialWebViewModel {
         controller?.callJS(js)
     }
 
+    func evaluateJS(_ js: String, completion: @escaping (Any?) -> Void) {
+        guard let webview = controller?.webview else {
+            completion(nil)
+            return
+        }
 
-//    func evaluateJS(js: String) {
-//        controller?.callJS(js)
-//    }
+        webview.evaluateJavaScript(js) { result, error in
+            if let error = error {
+                print("❌ evaluateJavaScript JS error:", error.localizedDescription)
+                completion(nil)
+                return
+            }
+            completion(result)
+        }
+    }
 }
 
 enum SpatialWebViewState: String, CaseIterable {
