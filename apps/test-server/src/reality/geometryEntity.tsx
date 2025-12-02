@@ -99,6 +99,85 @@ function App() {
     return () => {}
   }, [planeRotationOn])
 
+  const [spherePosition, setSpherePosition] = useState({ x: 0.2, y: 0, z: 0 })
+  const [sphereRotation, setSphereRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [sphereRotationOn, setSphereRotationOn] = useState(false)
+  const sphereAnimationRef = useRef<any>()
+  useEffect(() => {
+    if (sphereRotationOn) {
+      function doRotate(delta: number) {
+        setSphereRotation({
+          x: 0,
+          y: 0,
+          z: sphereRotation.z + 0.1 * delta,
+        })
+        sphereAnimationRef.current = requestAnimationFrame(doRotate)
+      }
+      doRotate(0)
+    } else {
+      if (sphereAnimationRef.current) {
+        cancelAnimationFrame(sphereAnimationRef.current)
+        sphereAnimationRef.current = null
+      }
+    }
+
+    return () => {}
+  }, [sphereRotationOn])
+
+  const [conePosition, setConePosition] = useState({ x: 0.4, y: 0, z: 0 })
+  const [coneRotation, setConeRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [coneRotationOn, setConeRotationOn] = useState(false)
+  const coneAnimationRef = useRef<any>()
+  useEffect(() => {
+    if (coneRotationOn) {
+      function doRotate(delta: number) {
+        setConeRotation({
+          x: 0,
+          y: 0,
+          z: coneRotation.z + 0.1 * delta,
+        })
+        coneAnimationRef.current = requestAnimationFrame(doRotate)
+      }
+      doRotate(0)
+    } else {
+      if (coneAnimationRef.current) {
+        cancelAnimationFrame(coneAnimationRef.current)
+        coneAnimationRef.current = null
+      }
+    }
+
+    return () => {}
+  }, [coneRotationOn])
+
+  const [cylinderPosition, setCylinderPosition] = useState({
+    x: 0.6,
+    y: 0,
+    z: 0,
+  })
+  const [cylinderRotation, setCylinderRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [cylinderRotationOn, setCylinderRotationOn] = useState(false)
+  const cylinderAnimationRef = useRef<any>()
+  useEffect(() => {
+    if (cylinderRotationOn) {
+      function doRotate(delta: number) {
+        setCylinderRotation({
+          x: 0,
+          y: 0,
+          z: cylinderRotation.z + 0.1 * delta,
+        })
+        cylinderAnimationRef.current = requestAnimationFrame(doRotate)
+      }
+      doRotate(0)
+    } else {
+      if (cylinderAnimationRef.current) {
+        cancelAnimationFrame(cylinderAnimationRef.current)
+        cylinderAnimationRef.current = null
+      }
+    }
+
+    return () => {}
+  }, [cylinderRotationOn])
+
   const entRef = useRef<EntityRef>(null)
   const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
@@ -155,6 +234,62 @@ function App() {
       >
         Toggle Plane Rotation
       </button>
+
+      <div className="flex gap-3 mt-4">
+        <button
+          className={btnCls}
+          onClick={() => {
+            setSpherePosition(pre => ({ ...pre, x: pre.x === 0.2 ? 0.3 : 0.2 }))
+          }}
+        >
+          Toggle Sphere Position
+        </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            setSphereRotationOn(prev => !prev)
+          }}
+        >
+          Toggle Sphere Rotation
+        </button>
+
+        <button
+          className={btnCls}
+          onClick={() => {
+            setConePosition(pre => ({ ...pre, x: pre.x === 0.4 ? 0.5 : 0.4 }))
+          }}
+        >
+          Toggle Cone Position
+        </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            setConeRotationOn(prev => !prev)
+          }}
+        >
+          Toggle Cone Rotation
+        </button>
+
+        <button
+          className={btnCls}
+          onClick={() => {
+            setCylinderPosition(pre => ({
+              ...pre,
+              x: pre.x === 0.6 ? 0.7 : 0.6,
+            }))
+          }}
+        >
+          Toggle Cylinder Position
+        </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            setCylinderRotationOn(prev => !prev)
+          }}
+        >
+          Toggle Cylinder Rotation
+        </button>
+      </div>
 
       <div>
         <div>console</div>
@@ -243,23 +378,24 @@ function App() {
                 id="sphereGreen"
                 radius={0.1}
                 materials={['matGreen']}
-                position={{ x: 0.2, y: 0, z: 0 }}
-                rotation={boxRotation}
+                position={spherePosition}
+                rotation={sphereRotation}
               ></SphereEntity>
               <ConeEntity
                 radius={0.1}
                 height={0.1}
                 materials={['matGreen']}
-                position={{ x: 0.4, y: 0, z: 0 }}
-                rotation={boxRotation}
+                position={conePosition}
+                rotation={coneRotation}
               ></ConeEntity>
               <CylinderEntity
                 radius={0.1}
                 height={0.1}
                 materials={['matGreen']}
-                position={{ x: 0.6, y: 0, z: 0 }}
-                rotation={boxRotation}
+                position={cylinderPosition}
+                rotation={cylinderRotation}
               ></CylinderEntity>
+
               <PlaneEntity
                 width={0.1}
                 height={0.1}

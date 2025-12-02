@@ -55,7 +55,41 @@ class PlaneGeometry: Geometry {
 enum GeometryType: String {
     case BoxGeometry
     case PlaneGeometry
-//    case SphereGeometry = "SphereGeometry"
-//    case ConeGeometry = "ConeGeometry"
-//    case CylinderGeometry = "CylinderGeometry"
+    case SphereGeometry
+    case ConeGeometry
+    case CylinderGeometry
+}
+
+@Observable
+class SphereGeometry: Geometry {
+    let radius: Float
+    init(radius: Float) {
+        self.radius = radius
+        super.init(.SphereGeometry)
+        _resource = MeshResource.generateSphere(radius: radius)
+    }
+}
+
+@Observable
+class ConeGeometry: Geometry {
+    let radius: Float
+    let height: Float
+    init(radius: Float, height: Float) {
+        self.radius = radius
+        self.height = height
+        super.init(.ConeGeometry)
+        _resource = MeshResource.generateCone(height: height, radius: radius)
+    }
+}
+
+@Observable
+class CylinderGeometry: Geometry {
+    let radius: Float
+    let height: Float
+    init(radius: Float, height: Float) {
+        self.radius = radius
+        self.height = height
+        super.init(.CylinderGeometry)
+        _resource = MeshResource.generateCylinder(height: height, radius: radius)
+    }
 }

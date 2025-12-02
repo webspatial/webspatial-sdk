@@ -802,6 +802,26 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 if !missing.isEmpty {
                     message = "missing required fields for PlaneGeometry: " + missing.joined(separator: ", ")
                 }
+            case .SphereGeometry:
+                var missing: [String] = []
+                if command.radius == nil { missing.append("radius") }
+                if !missing.isEmpty {
+                    message = "missing required fields for SphereGeometry: " + missing.joined(separator: ", ")
+                }
+            case .ConeGeometry:
+                var missing: [String] = []
+                if command.radius == nil { missing.append("radius") }
+                if command.height == nil { missing.append("height") }
+                if !missing.isEmpty {
+                    message = "missing required fields for ConeGeometry: " + missing.joined(separator: ", ")
+                }
+            case .CylinderGeometry:
+                var missing: [String] = []
+                if command.radius == nil { missing.append("radius") }
+                if command.height == nil { missing.append("height") }
+                if !missing.isEmpty {
+                    message = "missing required fields for CylinderGeometry: " + missing.joined(separator: ", ")
+                }
             }
         } else {
             message = "invalid geometry type: \(command.type)"
