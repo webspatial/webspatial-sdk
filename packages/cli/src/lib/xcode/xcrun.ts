@@ -142,9 +142,10 @@ export default class Xcrun {
     console.log(`use simulator: ${device.deviceId}`)
     // launch visionOS simulator
     this.launchSimulator(device)
-    try {
+    try{
       this.uninstallApp(device.deviceId, appInfo.id)
-    } catch {}
+    }
+    catch{}
     // install app
     console.log('installing app')
     this.installApp(PROJECT_TEST_DIRECTORY, device.deviceId, appInfo.name)
@@ -341,23 +342,20 @@ export default class Xcrun {
    * Apple Vision Pro (xxx) (8C7AD003-4039-478F-9F94-938876D57817) (Shutdown)
    */
   private static parseDeviceInfo(device: string) {
-    const uuidRegex =
-      /[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}/i
-    const uuidMatch = device.match(uuidRegex) ?? ['()']
-    const deviceId = uuidMatch[0]
-    const name = device.substring(0, device.indexOf(deviceId) - 1).trim()
-
-    const statePart = device
-      .substring(device.indexOf(deviceId) + deviceId.length)
-      .trim()
-    const stateMatch = statePart.match(/\(([^)]+)\)/)
-    const state = stateMatch ? stateMatch[1].trim() : 'Unknown'
-
+    const uuidRegex = /[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}/i;
+    const uuidMatch = device.match(uuidRegex) ?? ["()"];
+    const deviceId = uuidMatch[0];
+    const name = device.substring(0, device.indexOf(deviceId) - 1).trim();
+    
+    const statePart = device.substring(device.indexOf(deviceId) + deviceId.length).trim();
+    const stateMatch = statePart.match(/\(([^)]+)\)/);
+    const state = stateMatch ? stateMatch[1].trim() : 'Unknown';
+    
     return {
-      name: name,
-      deviceId: deviceId,
-      state: state,
-    }
+        name: name,
+        deviceId: deviceId,
+        state: state
+    };
   }
   // Try to find an available simulator, if not, create one and save the running record for the next time direct use.
   public static findSimulator(deviceId?: string) {
@@ -526,8 +524,8 @@ class XcrunCMD {
   }
 
   public uninstall(device: string, packName: string) {
-    this.line += ` uninstall "${device}" "${packName}"`
-    return this
+    this.line += ` uninstall "${device}" "${packName}"`;
+    return this;
   }
 
   public launch(device: string, packName: string) {
