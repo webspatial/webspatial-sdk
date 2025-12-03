@@ -782,8 +782,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let geometry = try Dynamic3DManager.createGeometry(command)
             addSpatialObject(geometry)
             resolve(.success(AddSpatializedElementReply(id: geometry.id)))
+        } catch let err as GeometryCreationError {
+            switch err {
+            case .invalidType:
+                resolve(.failure(JsbError(code: .TypeError, message: err.localizedDescription)))
+            case .missingFields:
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: err.localizedDescription)))
+            }
         } catch {
-            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: error.localizedDescription)))
+            resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
         }
     }
 
