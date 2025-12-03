@@ -24,6 +24,7 @@ export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
           height: props.height,
           depth: props.depth,
           cornerRadius: props.cornerRadius,
+          splitFaces: props.splitFaces,
         }}
       >
         {children}

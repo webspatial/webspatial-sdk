@@ -29,7 +29,7 @@ plugins.push(
 plugins.push(sassPlugin())
 
 var outdir = 'dist'
-var port = 5173
+var port = process.env.PORT ? Number(process.env.PORT) : 5173
 var liveReloadServerPort = 35729
 
 var ctx = await esbuild.context({
@@ -41,7 +41,7 @@ var ctx = await esbuild.context({
   jsx: 'automatic',
   plugins,
   define: {
-    'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV),
+    'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV ?? ''),
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
