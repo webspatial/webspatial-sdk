@@ -13,10 +13,7 @@ export class Spatial {
    * [TODO] discuss implications of this not being async
    */
   requestSession() {
-    if (
-      this.isSupported() &&
-      this.getNativeVersion() === this.getClientVersion()
-    ) {
+    if (this.runInSpatialWeb()) {
       SpatialWebEvent.init()
       return new SpatialSession()
     } else {
@@ -36,17 +33,16 @@ export class Spatial {
     return false
   }
 
-  /**
+  /** @deprecated
    * Checks if WebSpatial is supported in the current environment.
    * Verifies compatibility between native and client versions.
    * @returns True if web spatial is supported by this webpage
    */
   isSupported() {
-    // todo: enhance judgement
-    return this.getNativeVersion() === this.getClientVersion()
+    return true
   }
 
-  /**
+  /** @deprecated
    * Gets the native WebSpatial version from the browser environment.
    * The version format follows semantic versioning (x.x.x).
    * @returns Native version string in format "x.x.x"
@@ -60,7 +56,7 @@ export class Spatial {
       : window.WebSpatailNativeVersion
   }
 
-  /**
+  /** @deprecated
    * Gets the client SDK version.
    * The version format follows semantic versioning (x.x.x).
    * @returns Client SDK version string in format "x.x.x"
