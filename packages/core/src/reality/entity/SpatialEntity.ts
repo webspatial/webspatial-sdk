@@ -32,8 +32,6 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
   TransformMsg,
-  SpatialMagnifyMsg,
-  SpatialMagnifyEndMsg,
 } from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
@@ -44,9 +42,6 @@ export class SpatialEntity extends SpatialObject {
   events: Record<string, (data: any) => void> = {}
   children: SpatialEntity[] = []
   parent: SpatialEntityOrReality | null = null
-  private _isDragging = false
-  private _isRotating = false
-  private _isMagnify = false
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,
@@ -127,16 +122,13 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (
-    data:
-      | CubeInfoMsg
-      | TransformMsg
-      | SpatialTapMsg
-      | SpatialDragMsg
-      | SpatialDragEndMsg
-      | SpatialRotateMsg
-      | SpatialRotateEndMsg
-      | SpatialMagnifyMsg
-      | SpatialMagnifyEndMsg
+    data: // | CubeInfoMsg
+    // | TransformMsg
+    | SpatialTapMsg
+      // | SpatialDragMsg
+      // | SpatialDragEndMsg
+      // | SpatialRotateMsg
+      // | SpatialRotateEndMsg
       | ObjectDestroyMsg,
   ) => {
     // console.log('SpatialEntityEvent', data)
@@ -150,69 +142,6 @@ export class SpatialEntity extends SpatialObject {
       )
       // todo: emulate event bubble on parent
       this.events[data.type]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialdrag) {
-      if (!this._isDragging) {
-        const dragStartEvent = createSpatialEvent(
-          SpatialWebMsgType.spatialdragstart,
-          (data as SpatialDragMsg).detail,
-        )
-        this.events[SpatialWebMsgType.spatialdragstart]?.(dragStartEvent)
-      }
-      this._isDragging = true
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialdrag,
-        (data as SpatialDragMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialdrag]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialdragend) {
-      this._isDragging = false
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialdragend,
-        (data as SpatialDragEndMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialdragend]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialrotate) {
-      if (!this._isRotating) {
-        const rotateStartEvent = createSpatialEvent(
-          SpatialWebMsgType.spatialrotatestart,
-          (data as SpatialRotateMsg).detail,
-        )
-        this.events[SpatialWebMsgType.spatialrotatestart]?.(rotateStartEvent)
-      }
-      this._isRotating = true
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialrotate,
-        (data as SpatialRotateMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialrotate]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialrotateend) {
-      this._isRotating = false
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialrotateend,
-        (data as SpatialRotateEndMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialrotateend]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialmagnify) {
-      if (!this._isMagnify) {
-        const magnifyStartEvent = createSpatialEvent(
-          SpatialWebMsgType.spatialmagnifystart,
-          (data as SpatialMagnifyMsg).detail,
-        )
-        this.events[SpatialWebMsgType.spatialmagnifystart]?.(magnifyStartEvent)
-      }
-      this._isMagnify = true
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialmagnify,
-        (data as SpatialMagnifyMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialmagnify]?.(evt)
-    } else if (type === SpatialWebMsgType.spatialmagnifyend) {
-      this._isMagnify = false
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialmagnifyend,
-        (data as SpatialMagnifyEndMsg).detail,
-      )
-      this.events[SpatialWebMsgType.spatialmagnifyend]?.(evt)
     }
   }
 
