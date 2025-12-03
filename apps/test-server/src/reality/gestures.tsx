@@ -79,24 +79,7 @@ function App() {
         onSpatialRotateStart={e => enabled && logLine('rotateStart')}
         onSpatialRotate={e => {
           if (!enabled) return
-          const v = e.detail.rotation.vector
-          const [qx, qy, qz, qw] = v
-          const sinr_cosp = 2 * (qw * qx + qy * qz)
-          const cosr_cosp = 1 - 2 * (qx * qx + qy * qy)
-          const roll = Math.atan2(sinr_cosp, cosr_cosp)
-
-          const sinp = 2 * (qw * qy - qz * qx)
-          const pitch =
-            Math.abs(sinp) >= 1
-              ? (Math.sign(sinp) * Math.PI) / 2
-              : Math.asin(sinp)
-
-          const siny_cosp = 2 * (qw * qz + qx * qy)
-          const cosy_cosp = 1 - 2 * (qy * qy + qz * qz)
-          const yaw = Math.atan2(siny_cosp, cosy_cosp)
-
-          setBoxRot({ x: roll, y: pitch, z: yaw })
-          logLine('rotate', v)
+          logLine('rotate tbd')
         }}
         onSpatialRotateEnd={e => enabled && logLine('rotateEnd')}
         onSpatialMagnifyStart={e => {
