@@ -28,9 +28,12 @@ export const useEntityEvent: React.FC<Props> = ({ instance, ...handlers }) => {
       const handlerFn = (handlers as any)[reactKey]
       if (!handlerFn) return
 
-      const wrapped = (ev: any) => handlerFn(createEventProxy(ev, instance))
-      entity.addEvent(spatialEvent, wrapped)
-      boundHandlers.push(() => entity.removeEvent(spatialEvent))
+      const wrapped = (ev: any) =>
+        handlerFn(createEventProxy(ev, instance))(entity.addEvent as any)(
+          spatialEvent,
+          wrapped,
+        )
+      boundHandlers.push(() => (entity.removeEvent as any)(spatialEvent))
     })
     return () => {
       boundHandlers.forEach(unbind => unbind())
