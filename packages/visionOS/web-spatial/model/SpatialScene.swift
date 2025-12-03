@@ -204,7 +204,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if oldState == .idle, newState == .pending {
             SpatialApp.Instance.openLoadingUI(self, true)
-        } else if oldState == .idle && newState == .willVisible {
+        } else if oldState == .idle, newState == .willVisible {
             SpatialApp.Instance.openLoadingUI(self, false)
             // hack to fix windowGroup floating, we need it stay in place of loadingView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -214,7 +214,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle, newState == .willVisible {
+        } else if oldState == .idle && newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
