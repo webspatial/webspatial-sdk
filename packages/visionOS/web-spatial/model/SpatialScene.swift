@@ -39,7 +39,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    enum WindowStyle: String, Codable, CaseIterable {
+    public enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
     }
@@ -51,7 +51,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    var windowStyle: WindowStyle {
+    public var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
@@ -190,9 +190,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    var sceneConfig: SceneOptions?
+    public var sceneConfig: SceneOptions?
 
-    func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
@@ -202,7 +202,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             self.sceneConfig = sceneConfig
         }
 
-        if oldState == .idle, newState == .pending {
+        if oldState == .idle && newState == .pending {
             SpatialApp.Instance.openLoadingUI(self, true)
         } else if oldState == .pending, newState == .willVisible {
             SpatialApp.Instance.openLoadingUI(self, false)
@@ -292,7 +292,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    var didFailLoad = false
+    public var didFailLoad = false
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
