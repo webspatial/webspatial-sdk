@@ -1,6 +1,20 @@
 import Foundation
 import RealityKit
 
+enum GeometryCreationError: LocalizedError {
+    case invalidType(String)
+    case missingFields(String, [String])
+
+    var errorDescription: String? {
+        switch self {
+        case let .invalidType(t):
+            return "invalid geometry type: \(t)"
+        case let .missingFields(type, fields):
+            return "missing required fields for \(type): " + fields.joined(separator: ", ")
+        }
+    }
+}
+
 class Dynamic3DManager {
     static func createEntity(_ props: CreateSpatialEntity) -> SpatialEntity {
         let entity = SpatialEntity()
@@ -12,33 +26,45 @@ class Dynamic3DManager {
         return SpatialModelComponent(mesh: mesh, mats: mats)
     }
 
-    static func createGeometry(_ props: CreateGeometryProperties) -> Geometry? {
-        guard let type = GeometryType(rawValue: props.type) else { return nil }
-        var geometry: Geometry? = nil
+    static func createGeometry(_ props: CreateGeometryProperties) throws -> Geometry {
+        guard let type = GeometryType(rawValue: props.type) else {
+            throw GeometryCreationError.invalidType(props.type)
+        }
         switch type {
         case .BoxGeometry:
-            if let width = props.width, let height = props.height, let depth = props.depth {
-                geometry = BoxGeometry(width: width, height: height, depth: depth, cornerRadius: props.cornerRadius ?? 0, splitFaces: props.splitFaces ?? false)
-            }
+            var missing: [String] = []
+            if props.width == nil { missing.append("width") }
+            if props.height == nil { missing.append("height") }
+            if props.depth == nil { missing.append("depth") }
+            if !missing.isEmpty { throw GeometryCreationError.missingFields("BoxGeometry", missing) }
+            return BoxGeometry(width: props.width!, height: props.height!, depth: props.depth!, cornerRadius: props.cornerRadius ?? 0, splitFaces: props.splitFaces ?? false)
         case .PlaneGeometry:
-            if let width = props.width, let height = props.height {
-                geometry = PlaneGeometry(width: width, height: height, cornerRadius: props.cornerRadius ?? 0)
-            }
+            var missing: [String] = []
+            if props.width == nil { missing.append("width") }
+            if props.height == nil { missing.append("height") }
+            if !missing.isEmpty { throw GeometryCreationError.missingFields("PlaneGeometry", missing) }
+            return PlaneGeometry(width: props.width!, height: props.height!, cornerRadius: props.cornerRadius ?? 0)
         case .SphereGeometry:
-            if let radius = props.radius {
-                geometry = SphereGeometry(radius: radius)
-            }
+            var missing: [String] = []
+            if props.radius == nil { missing.append("radius") }
+            if !missing.isEmpty { throw GeometryCreationError.missingFields("SphereGeometry", missing) }
+            return SphereGeometry(radius: props.radius!)
         case .ConeGeometry:
-            if let radius = props.radius, let height = props.height {
-                geometry = ConeGeometry(radius: radius, height: height)
-            }
+            var missing: [String] = []
+            if props.radius == nil { missing.append("radius") }
+            if props.height == nil { missing.append("height") }
+            if !missing.isEmpty { throw GeometryCreationError.missingFields("ConeGeometry", missing) }
+            return ConeGeometry(radius: props.radius!, height: props.height!)
         case .CylinderGeometry:
-            if let radius = props.radius, let height = props.height {
-                geometry = CylinderGeometry(radius: radius, height: height)
-            }
+            var missing: [String] = []
+            if props.radius == nil { missing.append("radius") }
+            if props.height == nil { missing.append("height") }
+            if !missing.isEmpty { throw GeometryCreationError.missingFields("CylinderGeometry", missing) }
+            return CylinderGeometry(radius: props.radius!, height: props.height!)
         }
-        return geometry
     }
+
+    // Error messages are thrown from createGeometry using GeometryCreationError
 
     static func createUnlitMaterial(_ props: CreateUnlitMaterial, _ tex: TextureResource? = nil) -> SpatialUnlitMaterial {
         return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)

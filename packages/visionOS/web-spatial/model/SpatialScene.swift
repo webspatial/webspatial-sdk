@@ -778,56 +778,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        if let geometry = Dynamic3DManager.createGeometry(command) {
+        do {
+            let geometry = try Dynamic3DManager.createGeometry(command)
             addSpatialObject(geometry)
             resolve(.success(AddSpatializedElementReply(id: geometry.id)))
-            return
+        } catch {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: error.localizedDescription)))
         }
-
-        var message = "invalid geometry params"
-        if let gtype = GeometryType(rawValue: command.type) {
-            switch gtype {
-            case .BoxGeometry:
-                var missing: [String] = []
-                if command.width == nil { missing.append("width") }
-                if command.height == nil { missing.append("height") }
-                if command.depth == nil { missing.append("depth") }
-                if !missing.isEmpty {
-                    message = "missing required fields for BoxGeometry: " + missing.joined(separator: ", ")
-                }
-            case .PlaneGeometry:
-                var missing: [String] = []
-                if command.width == nil { missing.append("width") }
-                if command.height == nil { missing.append("height") }
-                if !missing.isEmpty {
-                    message = "missing required fields for PlaneGeometry: " + missing.joined(separator: ", ")
-                }
-            case .SphereGeometry:
-                var missing: [String] = []
-                if command.radius == nil { missing.append("radius") }
-                if !missing.isEmpty {
-                    message = "missing required fields for SphereGeometry: " + missing.joined(separator: ", ")
-                }
-            case .ConeGeometry:
-                var missing: [String] = []
-                if command.radius == nil { missing.append("radius") }
-                if command.height == nil { missing.append("height") }
-                if !missing.isEmpty {
-                    message = "missing required fields for ConeGeometry: " + missing.joined(separator: ", ")
-                }
-            case .CylinderGeometry:
-                var missing: [String] = []
-                if command.radius == nil { missing.append("radius") }
-                if command.height == nil { missing.append("height") }
-                if !missing.isEmpty {
-                    message = "missing required fields for CylinderGeometry: " + missing.joined(separator: ", ")
-                }
-            }
-        } else {
-            message = "invalid geometry type: \(command.type)"
-        }
-
-        resolve(.failure(JsbError(code: .InvalidSpatialObject, message: message)))
     }
 
     private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
