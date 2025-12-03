@@ -778,12 +778,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let geometry = Dynamic3DManager.createGeometry(command) else {
-            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
-            return
+        do {
+            let geometry = try Dynamic3DManager.createGeometry(command)
+            addSpatialObject(geometry)
+            resolve(.success(AddSpatializedElementReply(id: geometry.id)))
+        } catch let err as GeometryCreationError {
+            switch err {
+            case .invalidType:
+                resolve(.failure(JsbError(code: .TypeError, message: err.localizedDescription)))
+            case .missingFields:
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: err.localizedDescription)))
+            }
+        } catch {
+            resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
         }
-        addSpatialObject(geometry)
-        resolve(.success(AddSpatializedElementReply(id: geometry.id)))
     }
 
     private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
