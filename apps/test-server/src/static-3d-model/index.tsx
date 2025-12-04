@@ -11,7 +11,7 @@ function App() {
       <Model
         enable-xr
         style={{ width: '800px', height: '200px' }}
-        src={'/public/modelasset/cone.usdz'}
+        src={'/public/modelasset/Duck.glb'} 
       >
         <div> this is place holder when failure </div>
       </Model>
