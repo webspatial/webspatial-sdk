@@ -1,18 +1,18 @@
-import SwiftUI
 import RealityKit
+import SwiftUI
 
 @Observable
-class SpatialModelResource:SpatialObject {
-    internal var _resource:Entity? = nil
-    var resource:Entity? {
+class SpatialModelResource: SpatialObject {
+    var _resource: Entity? = nil
+    var resource: Entity? {
         _resource
     }
-    
-    init(_ urlString:String, _ onload: @escaping (Result<SpatialModelResource, Error>) -> Void){
+
+    init(_ urlString: String, _ onload: @escaping (Result<SpatialModelResource, Error>) -> Void) {
         super.init()
-        Dynamic3DManager.loadResourceToLocal(urlString){ result in
+        Dynamic3DManager.loadResourceToLocal(urlString) { result in
             switch result {
-            case .success(let url):
+            case let .success(url):
                 DispatchQueue.main.async {
                     do {
                         let entity = try Entity.load(contentsOf: url)
@@ -21,16 +21,18 @@ class SpatialModelResource:SpatialObject {
                     } catch {
                         print("Failed to load entity from URL: \(error)")
                         onload(.failure(error))
+                        self.destroy()
                     }
                 }
-            case .failure(let error):
+            case let .failure(error):
                 print("Failed to download model: \(error)")
                 onload(.failure(error))
+                self.destroy()
             }
         }
     }
-    
-    override internal func onDestroy() {
+
+    override func onDestroy() {
         _resource = nil
     }
 }
