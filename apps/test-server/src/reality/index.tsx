@@ -141,6 +141,9 @@ function App() {
               position={{ x: -0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
+              onSpatialTap={async e => {
+                console.log('tap child', e.detail.location3D)
+              }}
             >
               <BoxEntity
                 id="boxRed"
@@ -163,7 +166,8 @@ function App() {
                 rotation={boxRotation}
                 onSpatialTap={async e => {
                   setShowModelEntity(pre => !pre)
-                  console.log('ent parent', entRef.current?.entity?.parent)
+                  console.log('ent location', e.detail.location3D)
+                  // e.stopPropagation()
                 }}
               ></BoxEntity>
             </Entity>
@@ -174,9 +178,9 @@ function App() {
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
               // ref={entRef}
-              // onSpatialTap={async e => {
-              //   console.log('parent tap', e.detail.location3D)
-              // }}
+              onSpatialTap={async e => {
+                console.log('parent tap', e.detail.location3D)
+              }}
             >
               <BoxEntity
                 id="boxGreen"
@@ -195,71 +199,37 @@ function App() {
                       'boxGreen',
                       e.detail.location3D,
                     ),
-                    // await e.target.convertFromEntityToEntity(
-                    //   'boxGreen',
-                    //   'hehe',
-                    //   {
-                    //     x: 0,
-                    //     y: 0,
-                    //     z: 0,
-                    //   },
-                    // ),
-                  ) // print entityRef
-                  // const pos = await myRef.current?.convertFromEntityToEntity(
-                  //   'boxGreen',
-                  //   'boxRed',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos:', pos)
-                  // const pos2 = await myRef.current?.convertFromEntityToScene(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos2:', pos2)
-                  // const pos3 = await myRef.current?.convertFromSceneToEntity(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos3:', pos3)
-                  // console.log(
-                  //   'realityRef.current:',
-                  //   realityRef.current?.clientDepth,
-                  //   realityRef.current?.offsetBack,
-                  //   realityRef.current?.getBoundingClientCube(),
-                  // )
-                  // const domEleReality = document.getElementById("testReality")
-                  // console.log("🚀 ~ domEleReality:", domEleReality)
-
-                  // console.log(
-                  //   'entity position',
-                  //   document.getElementById('boxGreen'),
-                  // )
-                  // console.log(entRef.current)
-                  // console.log(boxEntRef.current)
-                  // console.log('children tap', e.detail.location3D)
-
-                  // console.log('boxGreen children', boxEntRef.current?.entity)
-
-                  console.log(
-                    'realityRef.current:',
-                    realityRef.current?.offsetBack,
+                    await e.target.convertFromEntityToEntity(
+                      'boxGreen',
+                      'hehe',
+                      {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                      },
+                    ),
                   )
-                  // console.log('ent parent', entRef.current?.entity?.parent)
                 }}
               ></BoxEntity>
             </Entity>
             {showModelEntity && (
-              <ModelEntity
-                id="modelEnt"
-                name="modelEntName"
-                model="model"
-                ref={modelEntRef}
-                rotation={boxRotation}
+              <Entity
                 onSpatialTap={e => {
-                  // console.log('tap model', e.detail.location3D)
-                  // console.log(modelEntRef.current)
+                  console.log('tap model parent', e.detail.location3D)
                 }}
-              />
+              >
+                <ModelEntity
+                  id="modelEnt"
+                  name="modelEntName"
+                  model="model"
+                  ref={modelEntRef}
+                  rotation={boxRotation}
+                  // onSpatialTap={e => {
+                  //   console.log('tap model', e.detail.location3D)
+                  //   // console.log(modelEntRef.current)
+                  // }}
+                />
+              </Entity>
             )}
           </SceneGraph>
         </Reality>

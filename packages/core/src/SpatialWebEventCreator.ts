@@ -5,7 +5,7 @@ export function createSpatialEvent<T>(
   detail: T,
 ): CustomEvent<T> {
   return new CustomEvent<T>(type, {
-    bubbles: false,
+    bubbles: true,
     cancelable: false,
     detail,
   })
