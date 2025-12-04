@@ -7,28 +7,29 @@ struct SpatializedDynamic3DView: View {
     @State private var isDrag = false
     @State private var isRotate = false
     @State private var isScale = false
-
+    
     private var spatializedDynamic3DElement: SpatializedDynamic3DElement {
         return spatializedElement as! SpatializedDynamic3DElement
     }
-
-    var spatialTapEvent: some Gesture {
+    
+    var spatialTapEvent: some Gesture{
         SpatialTapGesture(count: 1).targetedToAnyEntity()
-            .onEnded { value in
-                if let entity = value.entity as? SpatialEntity {
+            .onEnded{ value in
+                if let entity = value.entity as? SpatialEntity{
                     spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
-                } else {
-                    if let spatialEntity = SpatialEntity.findNearestParent(entity: value.entity) {
+                }
+                else {
+                    if let spatialEntity = SpatialEntity.findNearestParent(entity: value.entity){
                         spatialScene.sendWebMsg(spatialEntity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
                     }
                 }
-            }
+        }
     }
-
-    var rotate3dEvent: some Gesture {
-        RotateGesture3D().targetedToAnyEntity().onChanged { value in
+    
+    var rotate3dEvent: some Gesture{
+        RotateGesture3D().targetedToAnyEntity().onChanged{ value in
             print(value.gestureValue)
-            if let entity = value.entity as? SpatialEntity {
+            if let entity = value.entity as? SpatialEntity{
                 if entity.enableTap == true {
 //                    if(isRotate == false){
 //                        print("start rotate")
@@ -41,17 +42,17 @@ struct SpatializedDynamic3DView: View {
                 }
             }
             isRotate = false
-        }.onEnded { value in
+        }.onEnded{ value in
             print(value.rotation)
             print("rotate end")
 //            isRotate = false
         }
     }
-
-    var magnifyEvent: some Gesture {
-        MagnifyGesture().targetedToAnyEntity().onChanged { value in
+    
+    var magnifyEvent: some Gesture{
+        MagnifyGesture().targetedToAnyEntity().onChanged{ value in
             print(value)
-            if let entity = value.entity as? SpatialEntity {
+            if let entity = value.entity as? SpatialEntity{
                 if entity.enableTap == true {
 //                    if(isScale == false){
 //                        print("start scale")
@@ -63,15 +64,15 @@ struct SpatializedDynamic3DView: View {
                     return
                 }
             }
-        }.onEnded { _ in
+        }.onEnded{ value in
             print("scale end")
 //            isScale = false
         }
     }
-
-    var dragEvent: some Gesture {
-        DragGesture().targetedToAnyEntity().onChanged { value in
-            if let entity = value.entity as? SpatialEntity {
+    
+    var dragEvent: some Gesture{
+        DragGesture().targetedToAnyEntity().onChanged{ value in
+            if let entity = value.entity as? SpatialEntity{
                 if entity.enableTap == true {
 //                    if(isDrag == false){
 //                        print("start drag")
@@ -83,13 +84,13 @@ struct SpatializedDynamic3DView: View {
                     return
                 }
             }
-
-        }.onEnded { _ in
+            
+        }.onEnded{ value in
             print("drag end")
 //            isDrag = false
         }
     }
-
+    
     var body: some View {
         RealityView(make: { content in
             let rootEntity = spatializedDynamic3DElement.getRoot()

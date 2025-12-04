@@ -104,6 +104,7 @@ function App() {
         <SceneGraph>
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <BoxEntity
+              key={matId}
               width={0.18}
               height={0.18}
               depth={0.18}
