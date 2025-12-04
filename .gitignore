@@ -28,6 +28,3 @@ node_modules
 coverage
 **/dist
 temp
-
-# Model assets
-**/modelasset/**
