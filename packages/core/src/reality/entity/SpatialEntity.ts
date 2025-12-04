@@ -141,6 +141,18 @@ export class SpatialEntity extends SpatialObject {
         (data as SpatialTapMsg).detail,
       )
       this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialdrag) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialdrag,
+        (data as SpatialDragMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialdragend) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialdragend,
+        (data as SpatialDragEndMsg).detail,
+      )
+      this.dispatchEvent(evt)
     }
   }
 

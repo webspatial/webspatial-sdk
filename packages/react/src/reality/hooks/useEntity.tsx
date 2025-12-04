@@ -24,6 +24,9 @@ export const useEntity = ({
   rotation,
   scale,
   onSpatialTap,
+  onSpatialDrag,
+  onSpatialDragEnd,
+  // TODO: add other event handlers
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -74,6 +77,8 @@ export const useEntity = ({
   useEntityEvent({
     instance: instanceRef.current,
     onSpatialTap,
+    onSpatialDrag,
+    onSpatialDragEnd,
     // TODO: add other event handlers
   })
 

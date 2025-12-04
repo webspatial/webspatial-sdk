@@ -21,6 +21,9 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       rotation,
       scale,
       onSpatialTap,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      // TODO: add other event handlers
       children,
       name,
       materials,
@@ -37,6 +40,9 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       rotation,
       scale,
       onSpatialTap,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      // TODO: add other event handlers
       createEntity: async (signal: AbortSignal) => {
         const manager = new AbortResourceManager(signal)
 
