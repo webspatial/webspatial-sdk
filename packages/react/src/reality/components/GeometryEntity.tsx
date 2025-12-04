@@ -21,8 +21,15 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       rotation,
       scale,
       onSpatialTap,
+      onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
+      onSpatialRotateStart,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnifyStart,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
       // TODO: add other event handlers
       children,
       name,
@@ -40,9 +47,16 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       rotation,
       scale,
       onSpatialTap,
+      onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
-      // TODO: add other event handlers
+      onSpatialRotateStart,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnifyStart,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
+
       createEntity: async (signal: AbortSignal) => {
         const manager = new AbortResourceManager(signal)
 
