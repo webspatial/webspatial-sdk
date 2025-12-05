@@ -40,7 +40,7 @@ export class AndroidPlatform implements PlatformAbility {
             resolve(CommandResultSuccess(result.data))
           } else {
             const { code, message } = result.data as JSBError
-            reject(CommandResultFailure(code, message))
+            resolve(CommandResultFailure(code, message))
           }
         })
 
@@ -61,7 +61,7 @@ export class AndroidPlatform implements PlatformAbility {
           `AndroidPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`,
         )
         const { code, message } = error as JSBError
-        reject(CommandResultFailure(code, message))
+        resolve(CommandResultFailure(code, message))
       }
     })
   }
