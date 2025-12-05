@@ -113,6 +113,9 @@ function App() {
             console.log('tap reality', e, e.target, e.currentTarget)
             // e.target not work as expected, use e.currentTarget instead
           }}
+          onSpatialDrag={async e => {
+            console.log('parent drag')
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -128,7 +131,9 @@ function App() {
           />
           <ModelAsset
             id="model"
-            src="http://localhost:5173/public/assets/RocketToy1.usdz"
+            src="http://localhost:5173/public/assets/vehicle-speedster.usdz"
+            // src="http://10.0.2.2:5173/public/assets/RocketToy1.usdz"
+            // src="http://10.0.2.2:5173/public/assets/vehicle-speedster.usdz"
             onLoad={() => {
               console.log('model load')
             }}
@@ -192,23 +197,46 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  console.log('🚀 ~ e:', e.target)
+                  // console.log('🚀 ~ e:', e.target)
                   console.log(
                     'tap box',
-                    await e.target.convertFromEntityToReality(
-                      'boxGreen',
-                      e.detail.location3D,
-                    ),
-                    await e.target.convertFromEntityToEntity(
-                      'boxGreen',
-                      'hehe',
-                      {
-                        x: 0,
-                        y: 0,
-                        z: 0,
-                      },
-                    ),
+                    // await e.target.convertFromEntityToReality(
+                    //   'boxGreen',
+                    //   e.detail.location3D,
+                    // ),
+                    // await e.target.convertFromEntityToEntity(
+                    //   'boxGreen',
+                    //   'hehe',
+                    //   {
+                    //     x: 0,
+                    //     y: 0,
+                    //     z: 0,
+                    //   },
+                    // ),
                   )
+                  console.log('🚀 ~ e:', e.detail.location3D)
+                  // console.log(
+                  //   'tap box',
+                  //   await e.target.convertFromEntityToReality(
+                  //     'boxGreen',
+                  //     e.detail.location3D,
+                  //   ),
+                  //   await e.target.convertFromEntityToEntity(
+                  //     'boxGreen',
+                  //     'hehe',
+                  //     {
+                  //       x: 0,
+                  //       y: 0,
+                  //       z: 0,
+                  //     },
+                  //   ),
+                  // )
+                }}
+                onSpatialDrag={async e => {
+                  console.log('🚀 ~drag e:', e.detail)
+                }}
+                onSpatialDragEnd={async e => {
+                  console.log('🚀 ~drag end e:', e.detail)
                 }}
               ></BoxEntity>
             </Entity>
@@ -224,10 +252,11 @@ function App() {
                   model="model"
                   ref={modelEntRef}
                   rotation={boxRotation}
-                  // onSpatialTap={e => {
-                  //   console.log('tap model', e.detail.location3D)
-                  //   // console.log(modelEntRef.current)
-                  // }}
+                  scale={{ x: 0.2, y: 0.2, z: 0.2 }}
+                  onSpatialTap={e => {
+                    console.log('tap model', e.detail.location3D)
+                    // console.log(modelEntRef.current)
+                  }}
                 />
               </Entity>
             )}

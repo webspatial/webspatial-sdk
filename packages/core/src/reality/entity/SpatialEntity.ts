@@ -27,6 +27,7 @@ import {
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialMagnifyMsg,
   SpatialRotateEndMsg,
   SpatialRotateMsg,
   SpatialTapMsg,
@@ -135,10 +136,70 @@ export class SpatialEntity extends SpatialObject {
     const { type } = data
     if (type === SpatialWebMsgType.objectdestroy) {
       this.isDestroyed = true
-    } else if (type === SpatialWebMsgType.spatialtap) {
+    }
+    // tap
+    else if (type === SpatialWebMsgType.spatialtap) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialtap,
         (data as SpatialTapMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialdragstart) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialdragstart,
+        (data as SpatialDragMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialdrag) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialdrag,
+        (data as SpatialDragMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialdragend) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialdragend,
+        (data as SpatialDragEndMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    }
+    // rotate
+    else if (type === SpatialWebMsgType.spatialrotatestart) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialrotatestart,
+        (data as SpatialRotateMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialrotate) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialrotate,
+        (data as SpatialRotateMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialrotateend) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialrotateend,
+        (data as SpatialRotateEndMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    }
+    // magnify
+    else if (type === SpatialWebMsgType.spatialmagnifystart) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnifystart,
+        (data as SpatialMagnifyMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialmagnify) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnify,
+        (data as SpatialMagnifyMsg).detail,
+      )
+      this.dispatchEvent(evt)
+    } else if (type === SpatialWebMsgType.spatialmagnifyend) {
+      const evt = createSpatialEvent(
+        SpatialWebMsgType.spatialmagnifyend,
+        (data as SpatialMagnifyMsg).detail,
       )
       this.dispatchEvent(evt)
     }
