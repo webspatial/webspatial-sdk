@@ -27,7 +27,8 @@ export const UnlitMaterial: React.FC<Props> = ({ children, ...options }) => {
     init()
 
     return () => {
-      materialRef.current?.destroy()
+      // Use registry to schedule destruction after promise resolves
+      resourceRegistry.removeAndDestroy(options.id)
     }
   }, [ctx])
 
