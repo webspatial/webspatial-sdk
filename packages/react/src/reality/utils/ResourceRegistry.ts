@@ -18,15 +18,7 @@ export class ResourceRegistry {
     const p = this.resources.get(id)
     if (p) {
       // Schedule destruction when the resource becomes available
-      void p
-        .then(r => r.destroy())
-        .catch(e =>
-          console.error(
-            '[ResourceRegistry.removeAndDestroy] destroy failed:',
-            e,
-            id,
-          ),
-        )
+      p.then(spatialObj => spatialObj.destroy())
     }
     this.resources.delete(id)
   }
@@ -39,12 +31,6 @@ export class ResourceRegistry {
     this.resources.clear()
 
     // Best-effort destroy for all resolved and future-resolving resources
-    for (const p of pending) {
-      void p
-        .then(r => r.destroy())
-        .catch(e =>
-          console.error('[ResourceRegistry.destroy] destroy failed:', e),
-        )
-    }
+    pending.forEach(promise => promise.then(spatialObj => spatialObj.destroy()))
   }
 }
