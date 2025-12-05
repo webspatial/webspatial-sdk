@@ -1,6 +1,15 @@
-export * from './spatial-react-components'
-export * from './utils'
-export * from './XRApp'
+import { initPolyfill } from './spatialized-container'
+
+export { enableDebugTool } from './utils'
 export * from './initScene'
-export * from './polyfill'
+export * from './spatialized-container'
+export * from './spatialized-container-monitor'
+export * from './reality'
+export * from './Model'
+export { SSRProvider } from './ssr'
+
 export const version = __WEBSPATIAL_REACT_SDK_VERSION__
+
+if (typeof window !== 'undefined') {
+  initPolyfill()
+}

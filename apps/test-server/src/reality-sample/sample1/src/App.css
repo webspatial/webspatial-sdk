@@ -1,0 +1,13 @@
+#root {
+  margin: 0 0;
+  text-align: center;
+}
+
+.card {
+  padding: 2em;
+}
+
+.block{
+  width:100vw;
+  height:100vh;
+}

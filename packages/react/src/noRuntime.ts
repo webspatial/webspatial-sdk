@@ -13,6 +13,14 @@ export class Spatial {
     return null
   }
   /**
+   * Checks if the current page is running in a spatial web environment.
+   * This method detects if the application is running in a WebSpatial-compatible browser.
+   * @returns True if running in a spatial web environment, false otherwise
+   */
+  runInSpatialWeb() {
+    return false
+  }
+  /**
    * @returns true if web spatial is supported by this webpage
    */
   isSupported() {
@@ -35,3 +43,9 @@ export class Spatial {
 }
 
 export const version = undefined // no runtime so this should set undefined
+
+export class SpatialScene {}
+
+export function isSSREnv() {
+  return false
+}

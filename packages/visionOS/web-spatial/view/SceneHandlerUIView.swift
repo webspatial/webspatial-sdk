@@ -1,0 +1,92 @@
+import SwiftUI
+
+struct SceneHandlerUIView: View {
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
+    @EnvironmentObject private var sceneDelegate: SceneDelegate
+
+    @State var spatialScene: SpatialScene
+
+    @Environment(\.scenePhase) private var scenePhase
+
+    private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
+        sceneDelegate.window?.windowScene?
+            .requestGeometryUpdate(
+                .Vision(
+                    resizingRestrictions: resizingRestrictions
+                )
+            )
+    }
+
+    private func setResizeRange(resizeRange: ResizeRange) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.0) {
+            sceneDelegate.window?.windowScene?
+                .requestGeometryUpdate(
+                    .Vision(
+                        minimumSize: CGSize(
+                            width: resizeRange.minWidth ?? 0,
+                            height: resizeRange
+                                .minHeight ?? 0
+                        ),
+                        maximumSize: CGSize(
+                            width: resizeRange.maxWidth ?? .infinity,
+                            height: resizeRange.maxHeight ?? .infinity
+                        )
+                    )
+                ) { error in
+                    print("error:", error)
+                }
+        }
+    }
+
+    var body: some View {
+        VStack {}
+            .onAppear {
+                // window scene only resize logic
+                guard spatialScene.windowStyle == .window else {
+                    return
+                }
+                if let range = spatialScene.sceneConfig?.resizeRange {
+                    self.setResizeRange(resizeRange: range)
+                    if (range.minWidth != nil || range.minHeight != nil) && range.minWidth == range.maxWidth && range.minHeight == range.maxHeight {
+                        self.setResizibility(resizingRestrictions: .none)
+                    } else {
+                        self.setResizibility(resizingRestrictions: .freeform)
+                    }
+                }
+            }
+            .onDisappear {
+                print("onScene Disappear")
+                spatialScene.destroy()
+            }
+            .onReceive(spatialScene.openWindowData) { sceneID in
+                if let spatialScene = SpatialApp.Instance.getScene(sceneID) {
+                    let _ = openWindow(
+                        id: spatialScene.windowStyle.rawValue,
+                        value: sceneID
+                    )
+                }
+            }
+            .onReceive(spatialScene.closeWindowData) { sceneID in
+                if let spatialScene = SpatialApp.Instance.getScene(sceneID) {
+                    dismissWindow(
+                        id: spatialScene.windowStyle.rawValue,
+                        value: sceneID
+                    )
+                }
+            }
+            .onReceive(spatialScene.setLoadingWindowData) { wd in
+                if wd.method == .show {
+                    openWindow(id: "loading", value: wd.sceneID)
+                } else if wd.method == .hide {
+                    dismissWindow(id: "loading", value: wd.sceneID)
+                }
+            }
+
+            .onChange(of: scenePhase) { oldValue, newValue in
+                logger.debug("OpenDismissHandlerUI: Value changed from \(oldValue) to \(newValue)")
+            }
+    }
+}
