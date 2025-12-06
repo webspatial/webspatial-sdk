@@ -39,7 +39,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    public enum WindowStyle: String, Codable, CaseIterable {
+    enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
     }
@@ -51,7 +51,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    public var windowStyle: WindowStyle {
+    var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
@@ -190,9 +190,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    public var sceneConfig: SceneOptions?
+    var sceneConfig: SceneOptions?
 
-    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+    func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
@@ -214,7 +214,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle && newState == .willVisible {
+        } else if oldState == .idle, newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
@@ -292,7 +292,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    public var didFailLoad = false
+    var didFailLoad = false
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
@@ -465,6 +465,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
             spatializedElement.modelTransform = affineTransform3D
         }
+
+        if let v = command.animationAutoplay { spatializedElement.animationAutoplay = v }
+        if let v = command.animationLoop { spatializedElement.animationLoop = v }
+        if let v = command.animationPaused { spatializedElement.animationPaused = v }
+        if let v = command.animationDuration { spatializedElement.animationDuration = v }
+        if let v = command.animationCurrentTime { spatializedElement.animationCurrentTime = v }
+        if let v = command.animationPlaybackRate { spatializedElement.animationPlaybackRate = v }
 
         resolve(.success(baseReplyData))
     }

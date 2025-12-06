@@ -232,12 +232,6 @@ function App() {
                   //   ),
                   // )
                 }}
-                onSpatialDrag={async e => {
-                  console.log('🚀 ~drag e:', e.detail)
-                }}
-                onSpatialDragEnd={async e => {
-                  console.log('🚀 ~drag end e:', e.detail)
-                }}
               ></BoxEntity>
             </Entity>
             {showModelEntity && (

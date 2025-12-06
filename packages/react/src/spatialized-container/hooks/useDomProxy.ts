@@ -199,6 +199,27 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
               }
             }
 
+            if (
+              prop === 'playbackRate' ||
+              prop === 'currentTime' ||
+              prop === 'paused'
+            ) {
+              const spatializedElement = (
+                dom as any
+              ).__innerSpatializedElement()
+              if (spatializedElement) {
+                const payload: Record<string, any> = {}
+                if (prop === 'playbackRate') {
+                  payload.animationPlaybackRate = value
+                } else if (prop === 'currentTime') {
+                  payload.animationCurrentTime = value
+                } else if (prop === 'paused') {
+                  payload.animationPaused = !!value
+                }
+                spatializedElement.updateProperties?.(payload)
+              }
+            }
+
             return Reflect.set(target, prop, value)
           },
         },

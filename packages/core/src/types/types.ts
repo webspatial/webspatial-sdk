@@ -89,6 +89,12 @@ export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
   modelTransform?: number[]
+  animationAutoplay?: boolean
+  animationLoop?: boolean
+  animationPaused?: boolean
+  animationDuration?: number
+  animationCurrentTime?: number
+  animationPlaybackRate?: number
 }
 
 export interface SpatialSceneCreationOptions {
