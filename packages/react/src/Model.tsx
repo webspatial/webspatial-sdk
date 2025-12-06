@@ -17,7 +17,7 @@ export type ModelRef = SpatializedStatic3DElementRef
 const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
-  const { 'enable-xr': enableXR, ...restProps } = props
+  const { 'enable-xr': enableXR, stageMode, ...restProps } = props
   if (!enableXR || !spatial.runInSpatialWeb()) {
     const {
       onSpatialTap,
@@ -34,7 +34,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
     } = restProps
     // map to VisionOS26 model tag
     // @ts-ignore
-    return <model ref={ref} {...modelProps} />
+    return <model ref={ref} {...modelProps} stagemode={stageMode} />
   }
 
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
