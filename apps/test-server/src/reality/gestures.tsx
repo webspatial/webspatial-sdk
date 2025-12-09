@@ -6,6 +6,9 @@ import {
   Entity,
   BoxEntity,
   UnlitMaterial,
+  SpatialTapEntityEvent,
+  SpatialDragEntityEvent,
+  SpatialRotateEntityEvent,
 } from '@webspatial/react-sdk'
 
 const btnCls =
@@ -14,7 +17,7 @@ const btnCls =
 function App() {
   const [logs, setLogs] = useState<string>('')
   const [enabled, setEnabled] = useState<boolean>(true)
-  const [matId, setMatId] = useState<'mat' | 'mat2'>('mat')
+  const [matId, setMatId] = useState<'matGreen'>('matGreen')
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0, z: 0 })
   const [boxRot, setBoxRot] = useState<{ x: number; y: number; z: number }>({
     x: 0,
@@ -25,6 +28,7 @@ function App() {
 
   const dragBaseRef = useRef(boxPos)
   const scaleBaseRef = useRef(boxScale)
+  const rotateBaseRef = useRef(boxRot)
 
   function logLine(...args: any[]) {
     const msg = args
@@ -35,7 +39,7 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">Spatial Gestures Demo</h1>
+      <h1 className="text-2xl text-black">Spatial Gestures Demos</h1>
       <div className="flex gap-2 my-3">
         <button className={btnCls} onClick={() => setEnabled(e => !e)}>
           {enabled ? 'Disable' : 'Enable'} Gestures
@@ -51,73 +55,123 @@ function App() {
           '--xr-depth': 150,
           '--xr-back': 100,
         }}
-        onSpatialTap={e => {
-          if (!enabled) return
-          logLine('tap', e.detail.location3D)
-          setMatId(prev => (prev === 'mat' ? 'mat2' : 'mat'))
-        }}
-        onSpatialDragStart={e => {
-          if (!enabled) return
-          logLine('dragStart', e.detail.translation3D)
-          dragBaseRef.current = boxPos
-        }}
-        onSpatialDrag={e => {
-          if (!enabled) return
-          const t = e.detail.translation3D
-          const TRANSLATION_SCALE = 0.001
-          const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
-          const ny = dragBaseRef.current.y + t.y * TRANSLATION_SCALE
-          const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
-
-          const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
-          setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
-          logLine('drag', t)
-        }}
-        onSpatialDragEnd={e =>
-          enabled && logLine('dragEnd', e.detail.translation3D)
-        }
-        onSpatialRotateStart={e => enabled && logLine('rotateStart')}
-        onSpatialRotate={e => {
-          if (!enabled) return
-          logLine('rotate tbd')
-        }}
-        onSpatialRotateEnd={e => enabled && logLine('rotateEnd')}
-        onSpatialMagnifyStart={e => {
-          if (!enabled) return
-          scaleBaseRef.current = boxScale
-          logLine('magnifyStart')
-        }}
-        onSpatialMagnify={e => {
-          if (!enabled) return
-          const f = e.detail.magnification
-          setBoxScale({
-            x: scaleBaseRef.current.x * f,
-            y: scaleBaseRef.current.y * f,
-            z: scaleBaseRef.current.z * f,
-          })
-          logLine('magnify', f)
-        }}
-        onSpatialMagnifyEnd={e => enabled && logLine('magnifyEnd')}
       >
-        <UnlitMaterial id="mat" color="#3399ff" />
-        <UnlitMaterial id="mat2" color="#ff9933" />
+        <UnlitMaterial id="matGreen" color="#22cc66" />
         <SceneGraph>
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <BoxEntity
+              id="boxGreen"
+              width={0.2}
+              height={0.2}
+              depth={0.1}
+              cornerRadius={0.5}
+              materials={['matGreen']}
+              position={{ x: 0, y: 0, z: 0 }}
+              // rotation={boxRotation}
+              onSpatialTap={async e => {
+                // console.log('🚀 ~ e:', e.target)
+                console.log(
+                  'tap box',
+                  // await e.target.convertFromEntityToReality(
+                  //   'boxGreen',
+                  //   e.detail.location3D,
+                  // ),
+                  // await e.target.convertFromEntityToEntity(
+                  //   'boxGreen',
+                  //   'hehe',
+                  //   {
+                  //     x: 0,
+                  //     y: 0,
+                  //     z: 0,
+                  //   },
+                  // ),
+                )
+                console.log('🚀 ~ e:', e.detail.location3D)
+                // console.log(
+                //   'tap box',
+                //   await e.target.convertFromEntityToReality(
+                //     'boxGreen',
+                //     e.detail.location3D,
+                //   ),
+                //   await e.target.convertFromEntityToEntity(
+                //     'boxGreen',
+                //     'hehe',
+                //     {
+                //       x: 0,
+                //       y: 0,
+                //       z: 0,
+                //     },
+                //   ),
+                // )
+              }}
+              onSpatialDrag={async e => {
+                console.log('🚀 ~drag e:', e.detail)
+              }}
+              onSpatialDragEnd={async e => {
+                console.log('🚀 ~drag end e:', e.detail)
+              }}
+            ></BoxEntity>
+            {/* <BoxEntity
+              id="boxGreen"
               key={matId}
-              width={0.18}
-              height={0.18}
-              depth={0.18}
+              width={0.2}
+              height={0.2}
+              depth={0.1}
+              cornerRadius={0.5}
               position={boxPos}
               rotation={boxRot}
               scale={boxScale}
               materials={[matId]}
-              onSpatialTap={e => {
+              onSpatialTap={async (e: SpatialTapEntityEvent) => {
                 if (!enabled) return
-                setMatId(prev => (prev === 'mat' ? 'mat2' : 'mat'))
-                logLine('box tap', e.detail.location3D)
+                console.log('tap box', e.detail.location3D)
+                logLine('tap box', e.detail.location3D)
               }}
-            />
+              onSpatialDragStart={async (e: SpatialDragEntityEvent) => {
+                if (!enabled) return
+                dragBaseRef.current = boxPos
+                console.log('dragStart', e.detail.translation3D)
+                logLine('dragStart', e.detail.translation3D)
+              }}
+              onSpatialDrag={async(e: SpatialDragEntityEvent) => {
+                if (!enabled) return
+                const t = e.detail.translation3D
+                const TRANSLATION_SCALE = 1
+                const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
+                const ny = dragBaseRef.current.y + t.y * TRANSLATION_SCALE
+                const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
+                const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
+                setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
+                console.log('drag', t)
+                logLine('drag', t)
+              }}
+              onSpatialDragEnd={async (e: SpatialDragEntityEvent) => {
+                if (!enabled) return
+                console.log('dragEnd', e.detail.translation3D)
+                logLine('dragEnd', e.detail.translation3D)
+              }}
+              // onSpatialRotateStart={(e: SpatialRotateEntityEvent) => {
+              //   if (!enabled) return
+              //   rotateBaseRef.current = boxRot
+              //   logLine('rotateStart')
+              // }}
+              // onSpatialRotate={(e: SpatialRotateEntityEvent) => {
+              //   if (!enabled) return
+              //   const [x, y, z, w] = e.detail.rotation.vector
+              //   const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+              //   const yawDeg = (yaw * 180) / Math.PI
+              //   setBoxRot({
+              //     x: rotateBaseRef.current.x,
+              //     y: rotateBaseRef.current.y,
+              //     z: rotateBaseRef.current.z + yawDeg,
+              //   })
+              //   logLine('rotate', { yawDeg })
+              // }}
+              // onSpatialRotateEnd={(e: SpatialRotateEntityEvent) => {
+              //   if (!enabled) return
+              //   logLine('rotateEnd')
+              // }}
+            /> */}
           </Entity>
         </SceneGraph>
       </Reality>
