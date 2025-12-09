@@ -6,11 +6,13 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
-let i = 0
 const materialVals = [
   'none',
-  'translucent',
   'transparent',
+  'thin',
+  'translucent',
+  'regular',
+  'thick',
 ] as BackgroundMaterialType[]
 
 function App() {
@@ -22,13 +24,18 @@ function App() {
   const [bottomRight, setBottomTrailing] = useState(10)
   const [topLeft, setTopLeading] = useState(10)
   const [topRight, setTopTrailing] = useState(10)
+  const [materialIndex, setMaterialIndex] = useState(0)
 
   const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
   const toggleBackgroundMaterial = () => {
-    i = (i + 1) % materialVals.length
-    document.documentElement.style['--xr-background-material'] = materialVals[i]
-    console.log('dbg materialVals[i]', materialVals[i])
+    const newIndex = (materialIndex + 1) % materialVals.length
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      materialVals[newIndex],
+    )
+    console.log('dbg materialVals[i]', materialVals[newIndex])
+    setMaterialIndex(newIndex)
   }
 
   useEffect(() => {
@@ -43,10 +50,11 @@ function App() {
         </a>
       </div>
 
-      <div className="text-orange-200 mx-2.5 my-2.5">
+      <div className="text-gray-950 mx-2.5 my-2.5">
         <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
           toggle background material:
         </button>
+        <p>{materialVals[materialIndex]}</p>
         <div className="">
           change main window borderRadius:
           <input
@@ -123,7 +131,7 @@ function App() {
         </div>
       </div>
 
-      <div className="flex flex-row space-x-2 w-screen text-orange-500   text-center">
+      <div className="flex flex-row space-x-2 w-screen text-gray-900   text-center">
         <div
           enable-xr
           style={{

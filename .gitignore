@@ -1,21 +1,30 @@
 
-**/*/xcuserdata
-**/*/visionOS/web-spatial/web-project
-**/*/visionOS/icon.*
-**/*/visionOS/build/**
+# Xcode
+**/xcuserdata
+**/visionOS/web-spatial/web-project
+**/visionOS/icon.*
+**/visionOS/build/**
 
 # We only allow pnpm lock files
-**/*/yarn.lock
-**/*/package-lock.json
+**/yarn.lock
+**/package-lock.json
+
 # No node_modules anywhere
-**/*/node_modules/
+**/node_modules/
 node_modules
+
+# System files
 .DS_Store
 *.log
+
+# Package managers
 .pnpm-store
 
+# IDEs and editors
 .vscode
+**/.idea
+
+# Build and test output
 coverage
-temp
-**/*/.idea
 **/dist
+temp

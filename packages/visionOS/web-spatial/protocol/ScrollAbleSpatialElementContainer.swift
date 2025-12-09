@@ -1,0 +1,1 @@
+protocol ScrollAbleSpatialElementContainer: SpatialScrollAble, SpatializedElementContainer {}
