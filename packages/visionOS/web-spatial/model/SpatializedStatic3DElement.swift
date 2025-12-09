@@ -4,7 +4,13 @@ import SwiftUI
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
-    var modelTransform: AffineTransform3D = AffineTransform3D.identity
+    var modelTransform: AffineTransform3D = .identity
+    var animationAutoplay: Bool = false
+    var animationLoop: Bool = false
+    var animationPaused: Bool = true
+    var animationDuration: Double = 0
+    var animationCurrentTime: Double = 0
+    var animationPlaybackRate: Double = 1
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type
