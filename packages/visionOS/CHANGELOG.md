@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 1.0.5
+
+### Patch Changes
+
+- d8cc711: support load nosdk html
+
 ## 1.0.4
 
 ## 1.0.3
