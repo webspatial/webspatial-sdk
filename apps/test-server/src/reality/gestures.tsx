@@ -59,59 +59,8 @@ function App() {
         <UnlitMaterial id="matGreen" color="#22cc66" />
         <SceneGraph>
           <Entity position={{ x: 0, y: 0, z: 0 }}>
+          
             <BoxEntity
-              id="boxGreen"
-              width={0.2}
-              height={0.2}
-              depth={0.1}
-              cornerRadius={0.5}
-              materials={['matGreen']}
-              position={{ x: 0, y: 0, z: 0 }}
-              // rotation={boxRotation}
-              onSpatialTap={async e => {
-                // console.log('🚀 ~ e:', e.target)
-                console.log(
-                  'tap box',
-                  // await e.target.convertFromEntityToReality(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // ),
-                  // await e.target.convertFromEntityToEntity(
-                  //   'boxGreen',
-                  //   'hehe',
-                  //   {
-                  //     x: 0,
-                  //     y: 0,
-                  //     z: 0,
-                  //   },
-                  // ),
-                )
-                console.log('🚀 ~ e:', e.detail.location3D)
-                // console.log(
-                //   'tap box',
-                //   await e.target.convertFromEntityToReality(
-                //     'boxGreen',
-                //     e.detail.location3D,
-                //   ),
-                //   await e.target.convertFromEntityToEntity(
-                //     'boxGreen',
-                //     'hehe',
-                //     {
-                //       x: 0,
-                //       y: 0,
-                //       z: 0,
-                //     },
-                //   ),
-                // )
-              }}
-              onSpatialDrag={async e => {
-                console.log('🚀 ~drag e:', e.detail)
-              }}
-              onSpatialDragEnd={async e => {
-                console.log('🚀 ~drag end e:', e.detail)
-              }}
-            ></BoxEntity>
-            {/* <BoxEntity
               id="boxGreen"
               key={matId}
               width={0.2}
@@ -136,7 +85,7 @@ function App() {
               onSpatialDrag={async(e: SpatialDragEntityEvent) => {
                 if (!enabled) return
                 const t = e.detail.translation3D
-                const TRANSLATION_SCALE = 1
+                const TRANSLATION_SCALE = 0.001
                 const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
                 const ny = dragBaseRef.current.y + t.y * TRANSLATION_SCALE
                 const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
@@ -150,28 +99,28 @@ function App() {
                 console.log('dragEnd', e.detail.translation3D)
                 logLine('dragEnd', e.detail.translation3D)
               }}
-              // onSpatialRotateStart={(e: SpatialRotateEntityEvent) => {
-              //   if (!enabled) return
-              //   rotateBaseRef.current = boxRot
-              //   logLine('rotateStart')
-              // }}
-              // onSpatialRotate={(e: SpatialRotateEntityEvent) => {
-              //   if (!enabled) return
-              //   const [x, y, z, w] = e.detail.rotation.vector
-              //   const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
-              //   const yawDeg = (yaw * 180) / Math.PI
-              //   setBoxRot({
-              //     x: rotateBaseRef.current.x,
-              //     y: rotateBaseRef.current.y,
-              //     z: rotateBaseRef.current.z + yawDeg,
-              //   })
-              //   logLine('rotate', { yawDeg })
-              // }}
-              // onSpatialRotateEnd={(e: SpatialRotateEntityEvent) => {
-              //   if (!enabled) return
-              //   logLine('rotateEnd')
-              // }}
-            /> */}
+              onSpatialRotateStart={(e: SpatialRotateEntityEvent) => {
+                if (!enabled) return
+                rotateBaseRef.current = boxRot
+                logLine('rotateStart')
+              }}
+              onSpatialRotate={(e: SpatialRotateEntityEvent) => {
+                if (!enabled) return
+                const [x, y, z, w] = e.detail.rotation.vector
+                const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+                const yawDeg = (yaw * 180) / Math.PI
+                setBoxRot({
+                  x: rotateBaseRef.current.x,
+                  y: rotateBaseRef.current.y,
+                  z: rotateBaseRef.current.z + yawDeg,
+                })
+                logLine('rotate', { yawDeg })
+              }}
+              onSpatialRotateEnd={(e: SpatialRotateEntityEvent) => {
+                if (!enabled) return
+                logLine('rotateEnd')
+              }}
+            /> 
           </Entity>
         </SceneGraph>
       </Reality>
