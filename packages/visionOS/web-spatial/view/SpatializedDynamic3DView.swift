@@ -29,6 +29,17 @@ struct SpatializedDynamic3DView: View {
         RotateGesture3D().targetedToAnyEntity().onChanged { value in
             if let entity = value.entity as? SpatialEntity {
                 if entity.enableRotate {
+                    if !isRotate {
+                        let startEvent = WebSpatialRotateStartGuestureEvent(
+                            detail: .init(
+                                rotation: value.rotation,
+                                startAnchor3D: value.startAnchor3D,
+                                startLocation3D: value.startLocation3D
+                            )
+                        )
+                        spatialScene.sendWebMsg(entity.spatialId, startEvent)
+                        isRotate = true
+                    }
                     let gestureEvent = WebSpatialRotateGuestureEvent(
                         detail: .init(
                             rotation: value.rotation,
@@ -52,6 +63,7 @@ struct SpatializedDynamic3DView: View {
                         )
                     )
                     spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
+                    isRotate = false
                     return
                 }
             }
@@ -62,6 +74,18 @@ struct SpatializedDynamic3DView: View {
         MagnifyGesture().targetedToAnyEntity().onChanged { value in
             if let entity = value.entity as? SpatialEntity {
                 if entity.enableMagnify {
+                    if !isScale {
+                        let startEvent = WebSpatialMagnifyStartGuestureEvent(
+                            detail: .init(
+                                magnification: value.magnification,
+                                velocity: value.velocity,
+                                startLocation3D: value.startLocation3D,
+                                startAnchor3D: value.startAnchor3D
+                            )
+                        )
+                        spatialScene.sendWebMsg(entity.spatialId, startEvent)
+                        isScale = true
+                    }
                     let gestureEvent = WebSpatialMagnifyGuestureEvent(
                         detail: .init(
                             magnification: value.magnification,
@@ -86,6 +110,7 @@ struct SpatializedDynamic3DView: View {
                         )
                     )
                     spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
+                    isScale = false
                     return
                 }
             }
@@ -96,6 +121,20 @@ struct SpatializedDynamic3DView: View {
         DragGesture().targetedToAnyEntity().onChanged { value in
             if let entity = value.entity as? SpatialEntity {
                 if entity.enableDrag {
+                    if !isDrag {
+                        let startEvent = WebSpatialDragStartGuestureEvent(
+                            detail: .init(
+                                location3D: value.location3D,
+                                startLocation3D: value.startLocation3D,
+                                translation3D: value.translation3D,
+                                predictedEndTranslation3D: value.predictedEndTranslation3D,
+                                predictedEndLocation3D: value.predictedEndLocation3D,
+                                velocity: value.velocity
+                            )
+                        )
+                        spatialScene.sendWebMsg(entity.spatialId, startEvent)
+                        isDrag = true
+                    }
                     let gestureEvent = WebSpatialDragGuestureEvent(
                         detail: .init(
                             location3D: value.location3D,
@@ -124,6 +163,7 @@ struct SpatializedDynamic3DView: View {
                         )
                     )
                     spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
+                    isDrag = false
                     return
                 }
             }
