@@ -14,7 +14,8 @@ const btnCls =
 function App() {
   const [logs, setLogs] = useState<string>('')
   const [enabled, setEnabled] = useState<boolean>(true)
-  const [matId, setMatId] = useState<'mat' | 'mat2'>('mat')
+  const [exclusive, setExclusive] = useState<boolean>(false)
+  const [matId, setMatId] = useState<'matGreen'>('matGreen')
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0, z: 0 })
   const [boxRot, setBoxRot] = useState<{ x: number; y: number; z: number }>({
     x: 0,
@@ -25,6 +26,8 @@ function App() {
 
   const dragBaseRef = useRef(boxPos)
   const scaleBaseRef = useRef(boxScale)
+  const rotateBaseRef = useRef(boxRot)
+  const activeGestureRef = useRef<null | 'drag' | 'rotate' | 'magnify'>(null)
 
   function logLine(...args: any[]) {
     const msg = args
@@ -35,10 +38,13 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">Spatial Gestures Demo</h1>
+      <h1 className="text-2xl text-black">Spatial Gestures Demos</h1>
       <div className="flex gap-2 my-3">
         <button className={btnCls} onClick={() => setEnabled(e => !e)}>
           {enabled ? 'Disable' : 'Enable'} Gestures
+        </button>
+        <button className={btnCls} onClick={() => setExclusive(e => !e)}>
+          {exclusive ? 'Exclusive' : 'Simultaneous'} Mode
         </button>
         <button className={btnCls} onClick={() => setLogs('')}>
           Clear Log
@@ -51,73 +57,120 @@ function App() {
           '--xr-depth': 150,
           '--xr-back': 100,
         }}
-        onSpatialTap={e => {
-          if (!enabled) return
-          logLine('tap', e.detail.location3D)
-          setMatId(prev => (prev === 'mat' ? 'mat2' : 'mat'))
-        }}
-        onSpatialDragStart={e => {
-          if (!enabled) return
-          logLine('dragStart', e.detail.translation3D)
-          dragBaseRef.current = boxPos
-        }}
-        onSpatialDrag={e => {
-          if (!enabled) return
-          const t = e.detail.translation3D
-          const TRANSLATION_SCALE = 0.001
-          const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
-          const ny = dragBaseRef.current.y + t.y * TRANSLATION_SCALE
-          const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
-
-          const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
-          setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
-          logLine('drag', t)
-        }}
-        onSpatialDragEnd={e =>
-          enabled && logLine('dragEnd', e.detail.translation3D)
-        }
-        onSpatialRotateStart={e => enabled && logLine('rotateStart')}
-        onSpatialRotate={e => {
-          if (!enabled) return
-          logLine('rotate tbd')
-        }}
-        onSpatialRotateEnd={e => enabled && logLine('rotateEnd')}
-        onSpatialMagnifyStart={e => {
-          if (!enabled) return
-          scaleBaseRef.current = boxScale
-          logLine('magnifyStart')
-        }}
-        onSpatialMagnify={e => {
-          if (!enabled) return
-          const f = e.detail.magnification
-          setBoxScale({
-            x: scaleBaseRef.current.x * f,
-            y: scaleBaseRef.current.y * f,
-            z: scaleBaseRef.current.z * f,
-          })
-          logLine('magnify', f)
-        }}
-        onSpatialMagnifyEnd={e => enabled && logLine('magnifyEnd')}
       >
-        <UnlitMaterial id="mat" color="#3399ff" />
-        <UnlitMaterial id="mat2" color="#ff9933" />
+        <UnlitMaterial id="matGreen" color="#22cc66" />
         <SceneGraph>
           <Entity position={{ x: 0, y: 0, z: 0 }}>
+          
             <BoxEntity
+              id="boxGreen"
               key={matId}
-              width={0.18}
-              height={0.18}
-              depth={0.18}
+              width={0.2}
+              height={0.2}
+              depth={0.1}
+              cornerRadius={0.5}
               position={boxPos}
               rotation={boxRot}
               scale={boxScale}
               materials={[matId]}
-              onSpatialTap={e => {
+              onSpatialTap={async e => {
                 if (!enabled) return
-                setMatId(prev => (prev === 'mat' ? 'mat2' : 'mat'))
-                logLine('box tap', e.detail.location3D)
+                console.log('tap box', e.detail.location3D)
+                logLine('tap box', e.detail.location3D)
               }}
-            />
+              onSpatialDragStart={async e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                activeGestureRef.current = 'drag'
+                dragBaseRef.current = boxPos
+                console.log('dragStart', e.detail.translation3D)
+                logLine('dragStart', e.detail.translation3D)
+              }}
+              onSpatialDrag={async e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                const t = e.detail.translation3D
+                const TRANSLATION_SCALE = 0.001
+                const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
+                const ny = dragBaseRef.current.y - t.y * TRANSLATION_SCALE
+                const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
+                const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
+                setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
+                console.log('drag', t)
+                logLine('drag', t)
+              }}
+              onSpatialDragEnd={async e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                if (exclusive) activeGestureRef.current = null
+                console.log('dragEnd', e.detail.translation3D)
+                logLine('dragEnd', e.detail.translation3D)
+              }}
+              onSpatialRotateStart={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
+                activeGestureRef.current = 'rotate'
+                rotateBaseRef.current = boxRot
+                logLine('rotateStart')
+              }}
+              onSpatialRotate={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
+                const [x, y, z, w] = e.detail.rotation.vector
+                const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y))
+                const pitch = Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x))))
+                const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+                const toDeg = (r: number) => (r * 180) / Math.PI
+                const rollDeg = toDeg(roll)
+                const pitchDeg = toDeg(pitch)
+                const yawDeg = toDeg(yaw)
+                setBoxRot({
+                  x: rotateBaseRef.current.x + rollDeg,
+                  y: rotateBaseRef.current.y + pitchDeg,
+                  z: rotateBaseRef.current.z + yawDeg,
+                })
+                logLine('rotate', { rollDeg, pitchDeg, yawDeg })
+              }}
+              onSpatialRotateEnd={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
+                if (exclusive) activeGestureRef.current = null
+                logLine('rotateEnd')
+              }}
+              onSpatialMagnifyStart={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
+                activeGestureRef.current = 'magnify'
+                scaleBaseRef.current = boxScale
+                logLine('magnifyStart', {
+                  magnification: e.detail.magnification,
+                  velocity: e.detail.velocity,
+                })
+              }}
+              onSpatialMagnify={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
+                const m = Math.max(0.3, Math.min(3, e.detail.magnification))
+                setBoxScale({
+                  x: scaleBaseRef.current.x * m,
+                  y: scaleBaseRef.current.y * m,
+                  z: scaleBaseRef.current.z * m,
+                })
+                logLine('magnify', {
+                  magnification: e.detail.magnification,
+                  clamped: m,
+                })
+              }}
+              onSpatialMagnifyEnd={e => {
+                if (!enabled) return
+                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
+                if (exclusive) activeGestureRef.current = null
+                logLine('magnifyEnd', {
+                  magnification: e.detail.magnification,
+                  velocity: e.detail.velocity,
+                })
+              }}
+            /> 
           </Entity>
         </SceneGraph>
       </Reality>
