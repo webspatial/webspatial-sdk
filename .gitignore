@@ -31,3 +31,6 @@ temp
 
 # Model assets
 **/modelasset/**
+
+# test reports
+/packages/autoTest/reports/

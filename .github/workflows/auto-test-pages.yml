@@ -1,0 +1,70 @@
+name: AutoTest & Pages
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stable
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/autoTest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (npm ci)
+        if: hashFiles('packages/autoTest/package-lock.json') != ''
+        run: npm ci
+
+      - name: Install dependencies (npm install)
+        if: hashFiles('packages/autoTest/package-lock.json') == ''
+        run: npm install
+
+      - name: Record START_TIME
+        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Set BRANCH_NAME
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: Set GITHUB_WORKFLOW_URL
+        run: echo "GITHUB_WORKFLOW_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Run tests (npm run test)
+        run: npm run test
+
+      - name: Upload report to Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/autoTest/reports
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Send summary to Lark with page URL
+        run: npm run post-test
+        env:
+          WEBSITE_URL: ${{ steps.deploy.outputs.page_url }}/autotest.html
+          BRANCH_NAME: ${{ env.BRANCH_NAME }}
+          START_TIME: ${{ env.START_TIME }}
+          GITHUB_WORKFLOW_URL: ${{ env.GITHUB_WORKFLOW_URL }}
