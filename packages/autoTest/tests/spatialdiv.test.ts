@@ -56,13 +56,13 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
   })
 
   after(async () => {
-    // console.log('Cleaning up...')
-    // if (runner && runner.close) {
-    //   await runner.close()
-    // }
-    // if (server) {
-    //   server.kill('SIGTERM')
-    // }
+    console.log('Cleaning up...')
+    if (runner && runner.close) {
+      await runner.close()
+    }
+    if (server) {
+      server.kill('SIGTERM')
+    }
   })
 
   it('should become a spatial div when enable-xr is present in html', async () => {
