@@ -1,10 +1,6 @@
-name: AutoTest & Pages
+name: AutoTest and deploy Pages
 
 on:
-  pull_request:
-    branches:
-      - main
-      - stable
   workflow_dispatch:
 
 permissions:
