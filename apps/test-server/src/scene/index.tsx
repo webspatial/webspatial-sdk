@@ -77,14 +77,14 @@ function App() {
             'sa',
             () => ({
               defaultSize: {
-                width: "10cm",
+                width: '10cm',
                 height: 1,
                 depth: 1,
               },
               // resizability: {
               //   minWidth: 0.5,
               //   maxWidth: 1.5,
-              //   minHeight: 0.5,  
+              //   minHeight: 0.5,
               //   maxHeight: 1.5,
               // },
               // worldScaling: 'automatic',
@@ -301,6 +301,52 @@ function App() {
         open volume baseplateVisibility visible
       </button>
 
+      <h1 className="text-2xl text-black">relative url</h1>
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              minWidth: 700,
+              minHeight: 700,
+              // maxWidth: 900,
+              // maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open('./xrapp.html', 'sa')
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open relative url
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={async () => {
+          startlog('open')
+          initScene('sa', () => ({
+            defaultSize: {
+              width: 900,
+              height: 900,
+            },
+            resizability: {
+              minWidth: 700,
+              minHeight: 700,
+              // maxWidth: 900,
+              // maxHeight: 900,
+            },
+          }))
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
+          // winARef.current = window.open('', 'sa')
+        }}
+      >
+        window.open relative url 2
+      </button>
       <h1 className="text-2xl text-black">resize</h1>
       <button
         className={btnCls}
