@@ -400,10 +400,10 @@ importers:
         version: link:../core
       react:
         specifier: '>=18.0.0'
-        version: 19.1.0
+        version: 19.2.3
       react-dom:
         specifier: '>=18.0.0'
-        version: 19.1.0(react@19.1.0)
+        version: 19.2.3(react@19.2.3)
     devDependencies:
       '@types/node':
         specifier: ^22.5.5
