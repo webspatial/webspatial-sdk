@@ -198,13 +198,13 @@ async function sendSummaryToLark(
           actions: [
             {
               tag: 'button',
-              text: { tag: 'plain_text', content: 'Github Workflow URL: ' },
+              text: { tag: 'plain_text', content: 'Github Workflow' },
               url: githubWorkflowUrl,
               type: 'primary',
             },
             {
               tag: 'button',
-              text: { tag: 'plain_text', content: 'Test Result page: ' },
+              text: { tag: 'plain_text', content: 'Test Result page download' },
               url: websiteUrl,
               type: 'primary',
             },
