@@ -40,7 +40,7 @@ const botCardMsgSendToMe = async (msg: string) => {
   const payload = {
     content: msg,
     msg_type: 'interactive',
-    receive_id: process.env.MY_RECEIVE_ID,
+    receive_id: process.env.RECEIVE_ID_PRIVATE || '',
     uuid: '',
   }
 
@@ -63,7 +63,7 @@ const botCardMsgSendToGroup = async (msg: string) => {
   const payload = {
     content: msg,
     msg_type: 'interactive',
-    receive_id: process.env.GROUP_RECEIVE_ID,
+    receive_id: process.env.RECEIVE_ID_PUBLIC || '',
     uuid: '',
   }
 

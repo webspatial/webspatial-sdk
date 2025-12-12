@@ -1,12 +1,12 @@
 import { expect } from 'chai'
-import { spawn } from 'child_process'
+import { spawn, ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import * as path from 'path'
 import { PuppeteerRunner } from '../src/runtime/puppeteerRunner'
 import 'source-map-support/register'
 
 let runner: PuppeteerRunner | null = null
-let server: any = null
+let server: ChildProcess | null = null
 
 describe('React App E2E Test', function () {
   this.timeout(30000) // Increase timeout duration
@@ -21,6 +21,7 @@ describe('React App E2E Test', function () {
     server = spawn(npmCmd, ['run', 'devAVP'], {
       shell: true,
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     })
 
     // Output server logs for debugging
@@ -62,7 +63,15 @@ describe('React App E2E Test', function () {
       await runner.close()
     }
     if (server) {
-      server.kill('SIGTERM')
+      if (server.pid) {
+        try {
+          process.kill(-server.pid)
+        } catch {
+          server.kill('SIGTERM')
+        }
+      } else {
+        server.kill('SIGTERM')
+      }
     }
   })
 

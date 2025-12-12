@@ -1,11 +1,11 @@
 import { expect } from 'chai'
 import { PuppeteerRunner } from '../src/runtime/puppeteerRunner'
-import { spawn } from 'child_process'
+import { spawn, ChildProcess } from 'child_process'
 import { before, after } from 'mocha'
 import 'source-map-support/register'
 
 let runner: PuppeteerRunner | null = null
-let server: any = null
+let server: ChildProcess | null = null
 
 describe('Enables spatial capabilities in HTML elements with nesting support tests', function (this: Mocha.Suite) {
   this.timeout(150000 * 360000)
@@ -20,6 +20,7 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
     server = spawn(npmCmd, ['run', 'devAVP'], {
       shell: true,
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     })
 
     // Output server logs for debugging
@@ -61,7 +62,15 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       await runner.close()
     }
     if (server) {
-      server.kill('SIGTERM')
+      if (server.pid) {
+        try {
+          process.kill(-server.pid)
+        } catch {
+          server.kill('SIGTERM')
+        }
+      } else {
+        server.kill('SIGTERM')
+      }
     }
   })
 

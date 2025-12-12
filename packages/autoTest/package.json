@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "build:avp": "vite build && XR_ENV=avp vite build",
     "build-test": "tsc -p tsconfig.json --outDir dist",
-    "test": "npm run build-test && mocha --require source-map-support/register --reporter mochawesome --reporter-options reportDir=reports,reportFilename=autotest,overwrite=true,html=true,json=true dist/tests/**/*.test.js",
+    "test": "npm run build-test && mocha --exit --require source-map-support/register --reporter mochawesome --reporter-options reportDir=reports,reportFilename=autotest,overwrite=true,html=true,json=true dist/tests/**/*.test.js",
     "post-test": "ts-node scripts/summarize-results.ts"
   },
   "keywords": [],
