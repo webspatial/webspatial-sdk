@@ -216,7 +216,7 @@ async function sendSummaryToLark(
     2,
   )
   await botCardMsgSendToMe(card)
-  // await botCardMsgSendToGroup(card)
+  await botCardMsgSendToGroup(card)
 }
 
 function main() {

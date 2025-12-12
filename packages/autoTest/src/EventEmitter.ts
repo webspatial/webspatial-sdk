@@ -20,7 +20,7 @@ export class EventEmitter implements EventEmitterProtocol {
 
   off(event: string, listener: (object: any, data: any) => void): void {
     if (this.listeners[event]) {
-      // 在TypeScript中，我们使用索引来移除监听器
+      // In TypeScript we remove listeners by index
       const index = this.listeners[event].indexOf(listener)
       if (index !== -1) {
         this.listeners[event].splice(index, 1)

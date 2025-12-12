@@ -17,7 +17,7 @@ export class SpatializedElement
   height: number = 0
   depth: number = 0
   backOffset: number = 0
-  transform: any = {} // 简化实现
+  transform: any = {} // simplified implementation
   rotationAnchor: Vec3 = { x: 0, y: 0, z: 0 }
   opacity: number = 1
   visible: boolean = true
@@ -44,27 +44,27 @@ export class SpatializedElement
   }
 
   setParent(parent: ScrollAbleSpatialElementContainer | null): void {
-    // 如果parent相同，直接返回，避免重复操作
+    // If parent is the same, return to avoid duplicate work
     if (this._parent?.id === parent?.id) {
       return
     }
 
-    // 移除旧的父引用
+    // Remove old parent reference
     if (this._parent) {
-      // 存储旧父引用
+      // Store the old parent reference
       const oldParent = this._parent
-      // 先设置_parent为null，避免循环调用
+      // Set _parent to null first to avoid recursive calls
       this._parent = null
-      // 移除从旧父元素
+      // Remove from old parent
       oldParent.removeChild(this)
     }
 
-    // 设置新的父引用
+    // Set new parent reference
     this._parent = parent
 
-    // 添加到新父元素，但避免循环调用
-    // 检查parent的addChild方法是否会导致循环
-    // 这里依赖SpatialScene.addChild方法中的检查来避免重复添加
+    // Add to the new parent, but avoid recursion
+    // Check whether parent's addChild causes recursion
+    // Rely on SpatialScene.addChild checks to avoid duplicate additions
   }
 
   getParent(): ScrollAbleSpatialElementContainer | null {
@@ -73,7 +73,7 @@ export class SpatializedElement
 
   protected onDestroy(): void {
     super.onDestroy()
-    // 清理父引用
+    // Clear parent reference
     if (this._parent) {
       this._parent.removeChild(this)
     }

@@ -1,7 +1,7 @@
 import { SpatialObjectProtocol } from '../types/types'
 import { EventEmitter } from '../EventEmitter'
 
-// 弱引用管理器类
+// Weak reference manager
 export class SpatialObjectWeakRefManager {
   private static weakRefObjects: Record<string, { value: any }> = {}
 
@@ -21,7 +21,7 @@ export class SpatialObjectWeakRefManager {
   }
 }
 
-// 空间对象基类
+// Spatial object base class
 export class SpatialObject
   extends EventEmitter
   implements SpatialObjectProtocol
@@ -68,11 +68,11 @@ export class SpatialObject
   }
 
   protected onDestroy(): void {
-    // 子类可以重写此方法
+    // Subclasses can override this method
   }
 
   private generateUUID(): string {
-    // 简单的UUID生成函数
+    // Simple UUID generator
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
       /[xy]/g,
       function (c) {
@@ -83,7 +83,7 @@ export class SpatialObject
     )
   }
 
-  // 简化的比较方法
+  // Simplified equality method
   equals(other: SpatialObject): boolean {
     return this.spatialId === other.spatialId
   }

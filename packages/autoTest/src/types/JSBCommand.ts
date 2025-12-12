@@ -1,16 +1,16 @@
 import { BackgroundMaterial, CornerRadius, Vec3, WindowStyle } from './types'
 
-// 基础命令接口，类似于Swift中的CommandDataProtocol
+// Base command interface, similar to Swift's CommandDataProtocol
 interface CommandDataProtocol {
   commandType: string
 }
 
-// 空间对象命令接口
+// Spatial object command interface
 interface SpatialObjectCommand extends CommandDataProtocol {
   id: string
 }
 
-// 空间化元素属性接口
+// Spatialized element properties interface
 interface SpatializedElementProperties extends SpatialObjectCommand {
   name?: string
   clientX?: number
@@ -36,7 +36,7 @@ interface SpatializedElementProperties extends SpatialObjectCommand {
   enableTapGesture?: boolean
 }
 
-// 更新空间场景属性命令
+// Update spatial scene properties command
 export class UpdateSpatialSceneProperties implements CommandDataProtocol {
   commandType = 'UpdateSpatialSceneProperties'
   id?: string
@@ -45,7 +45,7 @@ export class UpdateSpatialSceneProperties implements CommandDataProtocol {
   opacity?: number
 }
 
-// 创建空间场景命令
+// Create spatial scene command
 export class CreateSpatialScene implements CommandDataProtocol {
   commandType = 'CreateSpatialScene'
   id?: string
@@ -54,7 +54,7 @@ export class CreateSpatialScene implements CommandDataProtocol {
   properties?: Record<string, any>
 }
 
-// 向空间场景添加空间化元素命令
+// Add spatialized element to spatial scene command
 export class AddSpatializedElementToSpatialScene
   implements CommandDataProtocol
 {
@@ -62,20 +62,20 @@ export class AddSpatializedElementToSpatialScene
   spatializedElementId: string = ''
 }
 
-// 检查空间场景命令
+// Inspect spatial scene command
 export class InspectSpatialScene implements CommandDataProtocol {
   commandType = 'InspectSpatialScene'
   id?: string
 }
 
-// 创建空间化2D元素命令
+// Create spatialized 2D element command
 export class CreateSpatialized2DElement implements CommandDataProtocol {
   commandType = 'CreateSpatialized2DElement'
   id: string = ''
   url: string = ''
 }
 
-// 更新空间化2D元素属性命令
+// Update spatialized 2D element properties command
 export class UpdateSpatialized2DElementProperties
   implements SpatializedElementProperties
 {
@@ -108,32 +108,32 @@ export class UpdateSpatialized2DElementProperties
   cornerRadius?: CornerRadius
 }
 
-// 更新空间化元素变换命令
+// Update spatialized element transform command
 export class UpdateSpatializedElementTransform implements SpatialObjectCommand {
   commandType = 'UpdateSpatializedElementTransform'
   id: string = ''
-  matrix?: number[] // 添加matrix属性以匹配Swift中的定义
+  matrix?: number[] // add matrix property to match Swift definition
 }
 
-// 创建空间化静态3D元素命令
+// Create spatialized static 3D element command
 export class CreateSpatializedStatic3DElement implements CommandDataProtocol {
   commandType = 'CreateSpatializedStatic3DElement'
   modelURL: string = ''
 }
 
-// 创建空间化动态3D元素命令
+// Create spatialized dynamic 3D element command
 export class CreateSpatializedDynamic3DElement implements CommandDataProtocol {
   commandType = 'CreateSpatializedDynamic3DElement'
   test: boolean = false
 }
 
-// 创建空间实体命令
+// Create spatial entity command
 export class CreateSpatialEntity implements CommandDataProtocol {
   commandType = 'CreateSpatialEntity'
   name?: string
 }
 
-// 创建几何属性命令
+// Create geometry properties command
 export class CreateGeometryProperties implements CommandDataProtocol {
   commandType = 'CreateGeometry'
   type: string = ''
@@ -145,7 +145,7 @@ export class CreateGeometryProperties implements CommandDataProtocol {
   radius?: number
 }
 
-// 创建无光照材质命令
+// Create unlit material command
 export class CreateUnlitMaterial implements CommandDataProtocol {
   commandType = 'CreateUnlitMaterial'
   color?: string
@@ -154,74 +154,74 @@ export class CreateUnlitMaterial implements CommandDataProtocol {
   opacity?: number
 }
 
-// 创建纹理命令
+// Create texture command
 export class CreateTexture implements CommandDataProtocol {
   commandType = 'CreateTexture'
   url: string = ''
 }
 
-// 创建模型资源命令
+// Create model asset command
 export class CreateModelAsset implements CommandDataProtocol {
   commandType = 'CreateModelAsset'
   url: string = ''
 }
 
-// 创建空间模型实体命令
+// Create spatial model entity command
 export class CreateSpatialModelEntity implements CommandDataProtocol {
   commandType = 'CreateSpatialModelEntity'
   modelAssetId: string = ''
   name?: string
 }
 
-// 创建模型组件命令
+// Create model component command
 export class CreateModelComponent implements CommandDataProtocol {
   commandType = 'CreateModelComponent'
   geometryId: string = ''
   materialIds: string[] = []
 }
 
-// 向实体添加组件命令
+// Add component to entity command
 export class AddComponentToEntity implements CommandDataProtocol {
   commandType = 'AddComponentToEntity'
   entityId: string = ''
   componentId: string = ''
 }
 
-// 向动态3D添加实体命令
+// Add entity to dynamic 3D command
 export class AddEntityToDynamic3D implements CommandDataProtocol {
   commandType = 'AddEntityToDynamic3D'
   dynamic3dId: string = ''
   entityId: string = ''
 }
 
-// 向实体添加实体命令
+// Add entity to entity command
 export class AddEntityToEntity implements CommandDataProtocol {
   commandType = 'AddEntityToEntity'
   childId: string = ''
   parentId: string = ''
 }
 
-// 设置实体父级命令
+// Set parent for entity command
 export class SetParentForEntity implements CommandDataProtocol {
   commandType = 'SetParentToEntity'
   childId: string = ''
   parentId?: string
 }
 
-// 从父级移除实体命令
+// Remove entity from parent command
 export class RemoveEntityFromParent implements CommandDataProtocol {
   commandType = 'RemoveEntityFromParent'
   entityId: string = ''
 }
 
-// 更新实体属性命令
+// Update entity properties command
 export class UpdateEntityProperties implements CommandDataProtocol {
   commandType = 'UpdateEntityProperties'
   entityId: string = ''
   transform: Record<string, number> = {}
 }
 
-// 更新实体事件命令
+// Update entity event command
 export class UpdateEntityEvent implements CommandDataProtocol {
   commandType = 'UpdateEntityEvent'
   type: string = ''
@@ -229,7 +229,7 @@ export class UpdateEntityEvent implements CommandDataProtocol {
   isEnable: boolean = false
 }
 
-// 从实体转换到实体命令
+// Convert from entity to entity command
 export class ConvertFromEntityToEntity implements CommandDataProtocol {
   commandType = 'ConvertFromEntityToEntity'
   fromEntityId: string = ''
@@ -240,7 +240,7 @@ export class ConvertFromEntityToEntity implements CommandDataProtocol {
   }
 }
 
-// 从实体转换到场景命令
+// Convert from entity to scene command
 export class ConvertFromEntityToScene implements CommandDataProtocol {
   commandType = 'ConvertFromEntityToScene'
   fromEntityId: string = ''
@@ -250,7 +250,7 @@ export class ConvertFromEntityToScene implements CommandDataProtocol {
   }
 }
 
-// 从场景转换到实体命令
+// Convert from scene to entity command
 export class ConvertFromSceneToEntity implements CommandDataProtocol {
   commandType = 'ConvertFromSceneToEntity'
   entityId: string = ''
@@ -260,19 +260,19 @@ export class ConvertFromSceneToEntity implements CommandDataProtocol {
   }
 }
 
-// 保留原有的Inspect类以保持兼容性
+// Keep original Inspect class for compatibility
 export class Inspect implements CommandDataProtocol {
   commandType = 'Inspect'
   id: string = ''
 }
 
-// 销毁命令
+// Destroy command
 export class DestroyCommand implements CommandDataProtocol {
   commandType = 'Destroy'
   id: string = ''
 }
 
-// 更新空间化静态3D元素属性命令
+// Update spatialized static 3D element properties command
 export class UpdateSpatializedStatic3DElementProperties
   implements SpatializedElementProperties
 {
@@ -304,7 +304,7 @@ export class UpdateSpatializedStatic3DElementProperties
   modelTransform?: number[]
 }
 
-// 更新空间化动态3D元素属性命令
+// Update spatialized dynamic 3D element properties command
 export class UpdateSpatializedDynamic3DElementProperties
   implements SpatializedElementProperties
 {
@@ -334,7 +334,7 @@ export class UpdateSpatializedDynamic3DElementProperties
   enableTapGesture?: boolean
 }
 
-// 向空间化2D元素添加空间化元素命令
+// Add spatialized element to spatialized 2D element command
 export class AddSpatializedElementToSpatialized2DElement
   implements SpatialObjectCommand
 {
@@ -343,39 +343,39 @@ export class AddSpatializedElementToSpatialized2DElement
   spatializedElementId: string = ''
 }
 
-// 基础板可见性枚举
+// Baseplate visibility enum
 export enum BaseplateVisibilityJSB {
   automatic = 'automatic',
   visible = 'visible',
   hidden = 'hidden',
 }
 
-// 世界缩放枚举
+// World scaling enum
 export enum WorldScalingJSB {
   automatic = 'automatic',
   dynamic = 'dynamic',
 }
 
-// 世界对齐枚举
+// World alignment enum
 export enum WorldAlignmentJSB {
   adaptive = 'adaptive',
   automatic = 'automatic',
   gravityAligned = 'gravityAligned',
 }
 
-// 尺寸接口
+// Size interface
 interface Size {
   width: number
   height: number
 }
 
-// 调整范围接口
+// Resize range interface
 interface ResizeRange {
   min: Size
   max: Size
 }
 
-// 场景选项JSB接口
+// Scene options JSB interface
 export class XSceneOptionsJSB {
   defaultSize?: Size
   type?: WindowStyle
@@ -385,7 +385,7 @@ export class XSceneOptionsJSB {
   baseplateVisibility?: BaseplateVisibilityJSB
 }
 
-// 更新场景配置命令
+// Update scene config command
 export class UpdateSceneConfigCommand implements CommandDataProtocol {
   commandType = 'UpdateSceneConfig'
   config: XSceneOptionsJSB
@@ -394,7 +394,7 @@ export class UpdateSceneConfigCommand implements CommandDataProtocol {
   }
 }
 
-// 聚焦场景命令
+// Focus scene command
 export class FocusSceneCommand implements CommandDataProtocol {
   commandType = 'FocusScene'
   id: string
@@ -403,12 +403,12 @@ export class FocusSceneCommand implements CommandDataProtocol {
   }
 }
 
-// 获取空间场景状态命令
+// Get spatial scene state command
 export class GetSpatialSceneStateCommand implements CommandDataProtocol {
   commandType = 'GetSpatialSceneState'
 }
 
-// 导出基础接口，供其他文件使用
+// Export base interfaces for other files to use
 export {
   CommandDataProtocol,
   SpatialObjectCommand,

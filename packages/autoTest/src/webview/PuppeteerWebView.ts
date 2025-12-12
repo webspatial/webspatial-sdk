@@ -9,7 +9,7 @@ declare global {
 }
 
 /**
- * PuppeteerWebView类表示一个WebView实例，管理iframe和页面交互
+ * PuppeteerWebView represents a WebView instance, managing iframes and page interactions
  */
 export class PuppeteerWebView {
   private _webController: PuppeteerWebController
@@ -24,56 +24,56 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 获取WebController实例
+   * Get WebController instance
    */
   get webController(): PuppeteerWebController {
     return this._webController
   }
 
   /**
-   * 获取WebViewModel实例
+   * Get WebViewModel instance
    */
   get webViewModel(): PuppeteerWebViewModel {
     return this._webViewModel
   }
 
   /**
-   * 获取当前页面
+   * Get current page
    */
   get page(): Page {
     return this._webController.page
   }
 
   /**
-   * 初始化WebView
+   * Initialize WebView
    */
   private async initialize(): Promise<void> {
     if (!this._isInitialized) {
-      // 设置iframe监控
+      // Set up iframe monitoring
       this.setupIframeMonitoring()
-      // 设置消息监听
+      // Set up message listener
       this.setupMessageListener()
       this._isInitialized = true
     }
   }
 
   /**
-   * 设置iframe监控
+   * Set up iframe monitoring
    */
   private setupIframeMonitoring(): void {
-    // 监听frameattached事件，处理新添加的iframe
+    // Listen to frameattached event to handle newly added iframes
     this._webController.page.on('frameattached', frame => {
       if (frame !== this._webController.page.mainFrame()) {
         this.registerIframe(frame)
       }
     })
 
-    // 监听framedetached事件，处理移除的iframe
+    // Listen to framedetached event to handle removed iframes
     this._webController.page.on('framedetached', frame => {
       this.unregisterIframe(frame)
     })
 
-    // 监听framenavigated事件，处理iframe导航
+    // Listen to framenavigated event to handle iframe navigation
     this._webController.page.on('framenavigated', frame => {
       if (frame !== this._webController.page.mainFrame()) {
         this.updateIframe(frame)
@@ -82,10 +82,10 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 设置消息监听
+   * Set up message listener
    */
   private setupMessageListener(): void {
-    // 在页面中注入消息监听代码
+    // Inject message listener code into the page
     this._webController.page.exposeFunction(
       '__onWebSpatialMessage',
       (message: any) => {
@@ -93,9 +93,9 @@ export class PuppeteerWebView {
       },
     )
 
-    // 注入初始化脚本
+    // Inject initialization script
     this._webController.page.evaluateOnNewDocument(() => {
-      // 监听window.postMessage事件
+      // Listen to window.postMessage events
       window.addEventListener('message', event => {
         if (event.data && event.data.type === 'WEB_SPATIAL_MESSAGE') {
           window.__onWebSpatialMessage?.(event.data)
@@ -105,7 +105,7 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 注册iframe
+   * Register iframe
    */
   private registerIframe(frame: Frame): void {
     const frameId = this.generateFrameId(frame)
@@ -114,7 +114,7 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 注销iframe
+   * Unregister iframe
    */
   private unregisterIframe(frame: Frame): void {
     const frameId = this.generateFrameId(frame)
@@ -123,49 +123,49 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 更新iframe信息
+   * Update iframe information
    */
   private updateIframe(frame: Frame): void {
     const frameId = this.generateFrameId(frame)
     if (this._iframeMap.has(frameId)) {
-      // 更新iframe引用
+      // Update iframe reference
       this._iframeMap.set(frameId, frame)
       console.log(`Iframe updated: ${frameId}`)
     } else {
-      // 如果不存在则注册
+      // If not exists, register it
       this.registerIframe(frame)
     }
   }
 
   /**
-   * 生成iframe唯一标识符
+   * Generate a unique identifier for iframe
    */
   private generateFrameId(frame: Frame): string {
-    // 使用frame.url()和frame.parentFrame()信息生成唯一ID
+    // Use frame.url() and frame.parentFrame() info to build a unique ID
     const url = frame.url() || 'about:blank'
     const parentUrl = frame.parentFrame()?.url() || 'main'
     return `${parentUrl}_${url}_${Date.now()}`
   }
 
   /**
-   * 处理接收到的消息
+   * Handle received message
    */
   private handleMessage(message: any): void {
-    // 处理JSB命令
+    // Handle JSB commands
     if (message.type === 'JSB_COMMAND') {
       this._webViewModel.handleJSBCommand(message.data)
     }
   }
 
   /**
-   * 获取所有iframe
+   * Get all iframes
    */
   getAllIframes(): Map<string, Frame> {
     return this._iframeMap
   }
 
   /**
-   * 根据URL查找iframe
+   * Find iframe by URL
    */
   findIframeByUrl(url: string): Frame | undefined {
     for (const [id, frame] of this._iframeMap.entries()) {
@@ -177,7 +177,7 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 向指定iframe发送消息
+   * Send message to specified iframe
    */
   async sendMessageToIframe(frameId: string, message: any): Promise<boolean> {
     const frame = this._iframeMap.get(frameId)
@@ -195,7 +195,7 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 向所有iframe发送消息
+   * Send message to all iframes
    */
   async broadcastMessageToAllIframes(message: any): Promise<void> {
     for (const [frameId] of this._iframeMap.entries()) {
@@ -204,21 +204,21 @@ export class PuppeteerWebView {
   }
 
   /**
-   * 加载URL
+   * Load URL
    */
   async loadUrl(url: string): Promise<void> {
     await this._webViewModel.load(url)
   }
 
   /**
-   * 加载HTML内容
+   * Load HTML content
    */
   async loadHTML(html: string): Promise<void> {
     await this._webViewModel.loadHTML(html)
   }
 
   /**
-   * 清理资源
+   * Dispose resources
    */
   dispose(): void {
     this._iframeMap.clear()

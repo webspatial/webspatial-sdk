@@ -3,7 +3,7 @@ import { PuppeteerWebViewModel } from './PuppeteerWebViewModel'
 import { WebViewElementInfo } from '../model/SpatialScene'
 
 /**
- * PuppeteerWebController类负责管理Puppeteer中的WebView，处理协议拦截和iframe管理
+ * PuppeteerWebController manages WebView in Puppeteer, handling protocol interception and iframe management
  */
 export class PuppeteerWebController {
   private _page: Page
@@ -20,42 +20,42 @@ export class PuppeteerWebController {
   }
 
   /**
-   * 获取WebViewModel实例
+   * Get WebViewModel instance
    */
   get webViewModel(): PuppeteerWebViewModel {
     return this._webViewModel
   }
 
   /**
-   * 获取当前页面
+   * Get current page
    */
   get page(): Page {
     return this._page
   }
 
   /**
-   * 注册新窗口打开处理器
+   * Register open-window handler
    */
   registerOpenWindowInvoke(handler: (url: string) => Promise<any>): void {
     this._openWindowInvoke = handler
   }
 
   /**
-   * 注册导航处理器
+   * Register navigation handler
    */
   registerNavigationInvoke(handler: (url: string) => Promise<boolean>): void {
     this._navigationInvoke = handler
   }
 
   /**
-   * 注册JSB消息处理器
+   * Register JSB message handler
    */
   registerJSBListener(handler: (message: any) => void): void {
     this._jsbListener = handler
   }
 
   /**
-   * 处理新窗口打开请求
+   * Handle open-window request
    */
   async openWindowInvoke(url: string): Promise<any> {
     if (this._openWindowInvoke) {
@@ -65,7 +65,7 @@ export class PuppeteerWebController {
   }
 
   /**
-   * 处理导航请求
+   * Handle navigation request
    */
   async navigationInvoke(url: string): Promise<boolean> {
     if (this._navigationInvoke) {
@@ -75,7 +75,7 @@ export class PuppeteerWebController {
   }
 
   /**
-   * 发送JSB消息
+   * Send JSB message
    */
   sendJSBMessage(message: any): void {
     if (this._jsbListener) {
@@ -84,18 +84,18 @@ export class PuppeteerWebController {
   }
 
   /**
-   * 设置协议拦截
+   * Set up protocol interception
    */
   private setupProtocolInterception(): void {
-    // 监听页面的导航事件
+    // Listen to page navigation events
     this._page.on('framenavigated', frame => {
-      // 存储iframe引用
+      // Store iframe references
       if (frame !== this._page.mainFrame()) {
         this._iframes.set(frame.url(), frame)
       }
     })
 
-    // 监听页面的targetcreated事件，处理新窗口创建
+    // Listen to targetcreated events for new window creation
     this._page
       .browserContext()
       .browser()
@@ -106,7 +106,7 @@ export class PuppeteerWebController {
             if (newPage) {
               const url = newPage.url()
               if (url.startsWith('webspatial://')) {
-                // 处理webspatial协议
+                // Handle webspatial protocol
                 await this.handleWebspatialProtocol(url, newPage)
               }
             }
@@ -118,32 +118,32 @@ export class PuppeteerWebController {
   }
 
   /**
-   * 处理webspatial协议
+   * Handle webspatial protocol
    */
   private async handleWebspatialProtocol(
     url: string,
     page: Page,
   ): Promise<void> {
-    // 这里会被PuppeteerWebViewModel中的处理器调用
-    // 暂时留空，等待后续实现
+    // This will be called by handlers in PuppeteerWebViewModel
+    // Left unimplemented for future work
   }
 
   /**
-   * 获取指定URL的iframe
+   * Get iframe by URL
    */
   getIframeByUrl(url: string): Frame | undefined {
     return this._iframes.get(url)
   }
 
   /**
-   * 获取所有iframe
+   * Get all iframes
    */
   getAllIframes(): Map<string, Frame> {
     return this._iframes
   }
 
   /**
-   * 清理资源
+   * Dispose resources
    */
   dispose(): void {
     this._iframes.clear()

@@ -1,4 +1,4 @@
-// 基础向量类型
+// Basic vector types
 export interface Vec2 {
   x: number
   y: number
@@ -10,13 +10,13 @@ export interface Vec3 {
   z: number
 }
 
-// 窗口样式枚举
+// Window style enum
 export enum WindowStyle {
   volume = 'volume',
   window = 'window',
 }
 
-// 场景状态枚举
+// Scene state enum
 export enum SceneStateKind {
   idle = 'idle',
   pending = 'pending',
@@ -25,14 +25,14 @@ export enum SceneStateKind {
   fail = 'fail',
 }
 
-// 空间化元素类型枚举
+// Spatialized element type enum
 export enum SpatializedElementType {
   Spatialized2DElement = 'Spatialized2DElement',
   SpatializedStatic3DElement = 'SpatializedStatic3DElement',
   SpatializedDynamic3DElement = 'SpatializedDynamic3DElement',
 }
 
-// 事件发射器接口
+// Event emitter interface
 export interface EventEmitterProtocol {
   listeners: Record<string, Array<(object: any, data: any) => void>>
   on(event: string, listener: (object: any, data: any) => void): void
@@ -41,13 +41,13 @@ export interface EventEmitterProtocol {
   reset(): void
 }
 
-// 空间对象接口
+// Spatial object interface
 export interface SpatialObjectProtocol extends EventEmitterProtocol {
   spatialId: string
   destroy(): void
 }
 
-// 滚动相关接口
+// Scroll-related interface
 export interface SpatialScrollAble {
   updateDeltaScrollOffset(delta: Vec2): void
   stopScrolling(): void
@@ -55,7 +55,7 @@ export interface SpatialScrollAble {
   scrollOffset: Vec2
 }
 
-// 子元素容器接口
+// Child element container interface
 export interface SpatializedElementContainer {
   id: string
   parent: ScrollAbleSpatialElementContainer | null
@@ -67,12 +67,12 @@ export interface SpatializedElementContainer {
   ): Record<string, SpatializedElement>
 }
 
-// 可滚动元素容器接口
+// Scrollable element container interface
 export interface ScrollAbleSpatialElementContainer
   extends SpatialScrollAble,
     SpatializedElementContainer {}
 
-// 空间元素接口
+// Spatialized element interface
 export interface SpatializedElement extends SpatialObjectProtocol {
   id: string
   name: string
@@ -82,7 +82,7 @@ export interface SpatializedElement extends SpatialObjectProtocol {
   width: number
   height: number
   depth: number
-  transform: any // 简化实现，实际应该是变换矩阵
+  transform: any // simplified: in practice should be a transform matrix
   rotationAnchor: Vec3
   opacity: number
   visible: boolean
@@ -103,7 +103,7 @@ export interface SpatializedElement extends SpatialObjectProtocol {
   getParent(): ScrollAbleSpatialElementContainer | null
 }
 
-// 空间化2D元素接口
+// Spatialized 2D element interface
 export interface Spatialized2DElement
   extends SpatializedElement,
     ScrollAbleSpatialElementContainer {
@@ -113,7 +113,7 @@ export interface Spatialized2DElement
   scrollOffset: Vec2
 }
 
-// 场景配置接口
+// Scene config interface
 export interface SceneConfig {
   width: number
   height: number
@@ -121,7 +121,7 @@ export interface SceneConfig {
   navHeight: number
 }
 
-// 场景选项接口
+// Scene options interface
 export interface SceneOptions {
   width?: number
   height?: number
@@ -129,7 +129,7 @@ export interface SceneOptions {
   navHeight?: number
 }
 
-// 空间场景接口
+// Spatial scene interface
 export interface SpatialScene extends SpatialObjectProtocol {
   id: string
   name: string

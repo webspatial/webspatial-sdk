@@ -1,111 +1,111 @@
-# Webspatial Puppeteer 实现
+# Webspatial Puppeteer Implementation
 
-本目录包含了用于在Puppeteer环境中模拟Vision OS空间WebView功能的实现。该实现使开发者能够在不依赖Vision OS设备的情况下测试空间Web应用程序。
+This directory contains an implementation that simulates VisionOS spatial WebView features in a Puppeteer environment. It enables developers to test spatial web applications without relying on VisionOS devices.
 
-## 实现概览
+## Overview
 
-我们实现了与Vision OS中的`spatialWebController`、`spatialWebView`和`SpatialWebViewModel`相同逻辑和功能的组件，主要包括：
+We implemented components with similar logic and functionality to VisionOS `spatialWebController`, `spatialWebView`, and `SpatialWebViewModel`, mainly including:
 
-1. **iframe管理系统**：使用iframe模拟Vision OS中的window.open功能
-2. **协议拦截和处理机制**：支持`webspatial://`开头的协议处理
-3. **空间元素创建和管理**：实现`Spatialized2DElement`创建和管理流程
+1. **Iframe management system**: use iframes to simulate VisionOS `window.open` behavior
+2. **Protocol interception and handling**: support the `webspatial://` protocol
+3. **Spatial element creation and management**: implement `Spatialized2DElement` creation and management
 
-## 核心组件
+## Core Components
 
-### 1. WebView相关组件
-- **PuppeteerWebController**：负责管理WebView实例和iframe
-- **PuppeteerWebViewModel**：处理协议处理器注册和iframe管理
-- **PuppeteerWebView**：具体的WebView实现，管理iframe实例
+### 1. WebView-related components
+- **PuppeteerWebController**: manages WebView instances and iframes
+- **PuppeteerWebViewModel**: handles protocol handler registration and iframe management
+- **PuppeteerWebView**: concrete WebView implementation that manages iframe instances
 
-### 2. 协议处理系统
-- **ProtocolHandlerManager**：统一管理协议处理器的注册和分发
-- **WebspatialProtocolHandler**：专门处理`webspatial://`协议请求
+### 2. Protocol handling system
+- **ProtocolHandlerManager**: manages registration and dispatch of protocol handlers
+- **WebspatialProtocolHandler**: handles `webspatial://` protocol requests
 
-### 3. 模型类
-- **SpatialScene**：空间场景模型
-- **Spatialized2DElement**：空间2D元素模型
+### 3. Model classes
+- **SpatialScene**: spatial scene model
+- **Spatialized2DElement**: spatial 2D element model
 
-## 使用方法
+## Usage
 
-### 初始化WebView系统
+### Initialize WebView system
 
 ```typescript
-// 初始化Puppeteer WebController和WebViewModel
+// Initialize Puppeteer WebController and WebViewModel
 import { PuppeteerWebController } from './src/webview/PuppeteerWebController';
 import { PuppeteerWebViewModel } from './src/webview/PuppeteerWebViewModel';
 
-// 创建Puppeteer页面实例后
+// After creating a Puppeteer page instance
 const webController = new PuppeteerWebController(puppeteerPage);
 const webViewModel = new PuppeteerWebViewModel(webController);
 
-// 设置协议处理器
+// Set protocol handlers
 webViewModel.setupProtocolHandlers();
 ```
 
-### 注册自定义协议处理器
+### Register a custom protocol handler
 
 ```typescript
-// 注册自定义协议处理器
+// Register custom protocol handler
 webViewModel.addOpenWindowListener('myapp', async (url) => {
-  // 处理自定义协议请求
-  console.log('处理自定义协议:', url);
-  // 返回处理结果
+  // Handle custom protocol request
+  console.log('Handle custom protocol:', url);
+  // Return result
   return { id: 'custom-window-1', webViewModel };
 });
 ```
 
-### 处理webspatial协议
+### Handle webspatial protocol
 
-webspatial协议处理已内置支持，包括：
+Handling of the webspatial protocol is built-in, including:
 
-- `createSpatializedElement`：创建空间元素
-- `updateSpatializedElement`：更新空间元素
-- `addChildElement`：添加子元素
-- 等其他操作
+- `createSpatializedElement`: create spatial element
+- `updateSpatializedElement`: update spatial element
+- `addChildElement`: add child element
+- other actions
 
-示例：
+Example:
 
 ```typescript
-// 通过webspatial协议创建空间元素
+// Create spatial element via webspatial protocol
 const url = 'webspatial://createSpatializedElement?type=Spatialized2DElement&width=300&height=200&x=100&y=50';
 const result = await webViewModel.onOpenWindowInvoke(url);
-console.log('创建的元素ID:', result.id);
+console.log('Created element ID:', result.id);
 ```
 
-## 运行测试
+## Run tests
 
-### 前置条件
+### Prerequisites
 
-确保已安装项目依赖：
+Ensure project dependencies are installed:
 
 ```bash
 cd /Users/bytedance/Projects/reactProj/webspatialTest/webspatial-sdk
 npm install
 ```
 
-### 运行测试
+### Execute tests
 
-使用以下命令运行测试：
+Run tests with:
 
 ```bash
-# 在autoTest包目录下
+# In autoTest package directory
 cd packages/autoTest
 npx vitest run
 
-# 或直接从项目根目录
+# Or directly from repository root
 npm test -- --scope=@webspatial/autotest
 ```
 
-### 测试内容
+### Test contents
 
-测试套件验证了以下功能：
+The test suite verifies:
 
-1. PuppeteerWebController的iframe管理功能
-2. PuppeteerWebViewModel的协议处理功能
-3. ProtocolHandlerManager的协议注册和分发功能
-4. WebspatialProtocolHandler的协议解析和处理功能
-5. Spatialized2DElement的创建和管理功能
-6. 完整的从协议调用到元素创建的流程
+1. Iframe management in PuppeteerWebController
+2. Protocol handling in PuppeteerWebViewModel
+3. Protocol registration and dispatch in ProtocolHandlerManager
+4. Parsing and handling in WebspatialProtocolHandler
+5. Creation and management of Spatialized2DElement
+6. Full flow from protocol invocation to element creation
 
 ## License
 

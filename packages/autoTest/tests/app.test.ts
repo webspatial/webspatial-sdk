@@ -41,10 +41,10 @@ describe('React App E2E Test', function () {
     console.log('Waiting for server to start...')
     await new Promise(resolve => setTimeout(resolve, 5000))
 
-    // 初始化Puppeteer运行时
+    // Initialize Puppeteer runtime
     runner = new PuppeteerRunner()
 
-    // 先进行配置初始化，启用XR支持
+    // Initialize configuration first and enable XR support
     runner.init({
       width: 1280,
       height: 800,
@@ -53,7 +53,7 @@ describe('React App E2E Test', function () {
       enableXR: true, // Enable XR support for testing JSBCommand and spatial features
     })
 
-    // 然后启动浏览器实例
+    // Then start the browser instance
     await runner.start()
   })
 
@@ -80,13 +80,13 @@ describe('React App E2E Test', function () {
 
     console.log('Navigating to app...')
     try {
-      // 导航到应用页面
+      // Navigate to the app page
       await runner.navigate('http://localhost:5173', {
         waitUntil: 'networkidle0',
         timeout: 15000,
       })
 
-      // 等待计数器元素可见（使用evaluate和自定义等待逻辑）
+      // Wait for counter element to be visible (using evaluate and custom wait)
       console.log('Page loaded, checking for counter element...')
       await runner.evaluate(() => {
         return new Promise((resolve, reject) => {
@@ -104,7 +104,7 @@ describe('React App E2E Test', function () {
         })
       })
 
-      // 获取初始计数值
+      // Get initial counter value
       const initialText = await runner.evaluate(() => {
         const el = document.querySelector('[data-testid="counter"]')
         return el ? el.textContent : null
@@ -112,7 +112,7 @@ describe('React App E2E Test', function () {
       console.log(`Initial counter text: ${initialText}`)
       expect(initialText).to.include('0')
 
-      // 点击增加按钮
+      // Click increment button
       console.log('Clicking increment button...')
       await runner.evaluate(() => {
         const btn = document.querySelector('[data-testid="btn"]')
@@ -121,7 +121,7 @@ describe('React App E2E Test', function () {
         }
       })
 
-      // 等待UI更新，计数器变为1
+      // Wait for UI to update and counter becomes 1
       await runner.evaluate(() => {
         return new Promise((resolve, reject) => {
           const startTime = Date.now()
@@ -138,7 +138,7 @@ describe('React App E2E Test', function () {
         })
       })
 
-      // 获取更新后的计数值
+      // Get updated counter value
       const updatedText = await runner.evaluate(() => {
         const el = document.querySelector('[data-testid="counter"]')
         return el ? el.textContent : null
@@ -149,7 +149,7 @@ describe('React App E2E Test', function () {
       console.log('Test passed!')
     } catch (error) {
       console.error('Test failed with error:', error)
-      // 捕获页面截图用于调试
+      // Capture page screenshot for debugging
       if (runner && runner.screenshot) {
         await runner.screenshot('test-failure.png')
         console.log('Screenshot saved for debugging')
@@ -163,15 +163,15 @@ describe('React App E2E Test', function () {
 
     console.log('Testing --xr-back property...')
     try {
-      // 导航到应用页面
+      // Navigate to the app page
       await runner.navigate('http://localhost:5173', {
         waitUntil: 'networkidle0',
         timeout: 15000,
       })
 
-      // 等待XR元素加载
+      // Wait for XR elements to load
       console.log('Waiting for spatial elements...')
-      // 使用evaluate等待元素出现
+      // Use evaluate to wait for element
       await runner.evaluate(() => {
         return new Promise((resolve, reject) => {
           const startTime = Date.now()
@@ -188,7 +188,7 @@ describe('React App E2E Test', function () {
         })
       })
 
-      // 检查元素是否有--xr-back属性
+      // Check whether element has --xr-back property
       const hasXrBack = await runner.evaluate(() => {
         const el = document.querySelector('.spatial-div')
         if (!el) return false
@@ -198,7 +198,7 @@ describe('React App E2E Test', function () {
       console.log(`Element has --xr-back property: ${hasXrBack}`)
       expect(hasXrBack).to.be.true
 
-      // 获取--xr-back属性的值
+      // Get value of --xr-back property
       const xrBackValue = await runner.evaluate(() => {
         const el = document.querySelector('.spatial-div')
         if (!el) return ''
@@ -206,7 +206,7 @@ describe('React App E2E Test', function () {
         return computedStyle.getPropertyValue('--xr-back').trim()
       })
       console.log(`--xr-back property value: ${xrBackValue}`)
-      // 验证属性值不为空
+      // Verify the property value is not empty
       expect(xrBackValue).to.not.be.empty
 
       console.log('--xr-back property test passed!')
@@ -225,7 +225,7 @@ describe('React App E2E Test', function () {
 
     console.log('Testing JSB message handling...')
     try {
-      // 注册自定义JSB命令处理器来测试SpatialScene交互
+      // Register a custom JSB command handler to test SpatialScene interactions
       runner.registerJSBHandler('TestSpatialSceneJSB', (data, callback) => {
         console.log('Custom JSB handler called with data:', data)
         callback({
@@ -235,9 +235,9 @@ describe('React App E2E Test', function () {
         })
       })
 
-      // 在页面中执行JSB命令测试
+      // Execute JSB command test in page
       const res = await runner.evaluate(async () => {
-        // 模拟调用JSB命令
+        // Simulate invoking JSB command
         const win = window as any
         const data = JSON.stringify({
           data: 'test-JSB',
@@ -270,7 +270,7 @@ describe('React App E2E Test', function () {
 
     console.log('Testing spatial scene and element creation...')
 
-    // 注册自定义命令处理器来模拟空间场景创建
+    // Register custom command handler to simulate spatial scene creation
     runner.registerJSBHandler('CreateSpatialScene', (data, callback) => {
       console.log('Creating spatial scene with:', data)
       const sceneId = `scene-${Date.now()}`
@@ -278,7 +278,7 @@ describe('React App E2E Test', function () {
     })
 
     try {
-      // 在页面中模拟创建空间场景
+      // Simulate creating spatial scene in page
       const sceneResult = await runner.evaluate(async () => {
         const win = window as any
         if (win.__handleJSBMessage) {
@@ -292,7 +292,7 @@ describe('React App E2E Test', function () {
       expect(sceneResult).to.have.property('id')
       expect(sceneResult).to.have.property('success', true)
 
-      // 测试Spatialized2DElement属性更新
+      // Test updating Spatialized2DElement properties
       const updateResult = await runner.evaluate(async () => {
         const win = window as any
         if (win.__handleJSBMessage) {
@@ -327,23 +327,23 @@ describe('React App E2E Test', function () {
     console.log('Testing console.log capture after button click...')
 
     try {
-      // 导航到应用页面
+      // Navigate to the app page
       await runner.navigate('http://localhost:5173', {
         waitUntil: 'networkidle0',
         timeout: 15000,
       })
 
-      // 在页面中注入日志捕获代码，注意puppeteerRunner.ts中已对console.log做了自定义
+      // Inject log capture code in page; note console.log is customized in puppeteerRunner.ts
       await runner.evaluate(() => {
-        // 创建一个数组来存储控制台日志
+        // Create an array to store console logs
         ;(window as any).__capturedLogs = []
 
-        // 获取当前的console.log函数（可能已经被puppeteerRunner自定义过）
+        // Get current console.log function (may be customized by puppeteerRunner)
         const currentConsoleLog = console.log
 
-        // 重写console.log方法，但保留原有的自定义功能
+        // Override console.log while preserving custom behavior
         console.log = (...args) => {
-          // 将日志参数转换为字符串并存储
+          // Convert log args to string and store
           const logString = args
             .map(arg =>
               typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
@@ -351,12 +351,12 @@ describe('React App E2E Test', function () {
             .join(' ')
           ;(window as any).__capturedLogs.push(logString)
 
-          // 调用当前的console.log（保留puppeteerRunner中的自定义功能）
+          // Call the current console.log (preserving puppeteerRunner custom behavior)
           currentConsoleLog(...args)
         }
       })
 
-      // 点击增加按钮触发onClick事件
+      // Click increment button to trigger onClick
       console.log('Clicking increment button...')
       await runner.evaluate(() => {
         const btn = document.querySelector('[data-testid="btn"]')
@@ -370,12 +370,12 @@ describe('React App E2E Test', function () {
         return new Promise(resolve => setTimeout(resolve, 500))
       })
 
-      // 获取捕获的日志
+      // Get captured logs
       const consoleLogs: string[] = await runner.evaluate(() => {
         return (window as any).__capturedLogs || []
       })
 
-      // 查找包含'session: '和'supported: '的日志
+      // Find logs containing 'session: ' and 'supported: '
       const sessionLog = consoleLogs.find(log => log.includes('session: '))
       const supportedLog = consoleLogs.find(log => log.includes('supported: '))
       const getNativeVersionLog = consoleLogs.find(log =>
@@ -397,17 +397,17 @@ describe('React App E2E Test', function () {
       console.log('Found getClientVersion log:', getClientVersionLog)
       console.log('Found getSpatialScene log:', getSpatialSceneLog)
       console.log('Found runInSpatialWeb log:', runInSpatialWebLog)
-      // 断言getNativeVersion日志不为null
+      // Assert getNativeVersion log is not null
       expect(getNativeVersionLog).to.not.be.null
 
-      // 断言session日志不为null
+      // Assert session log is not null
       expect(sessionLog).to.not.be.null
-      // 断言session值不为null（即日志中不包含'session: null'）
+      // Assert session value not null (log does not contain 'session: null')
       expect(sessionLog).to.not.include('null')
 
-      // 断言supported日志不为null
+      // Assert supported log is not null
       expect(supportedLog).to.not.be.null
-      // supported应该是一个布尔值，断言它要么包含'true'要么包含'false'
+      // supported should be boolean; assert it contains 'true' or 'false'
       expect(supportedLog).to.satisfy(
         (log: string) => log.includes('true') || log.includes('false'),
       )

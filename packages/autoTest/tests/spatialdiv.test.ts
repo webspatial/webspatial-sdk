@@ -138,11 +138,11 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       timeout: 30000,
     })
 
-    // 1. 找到data-testid为"spatial-div-2"的元素
-    // 2. 检查它的style中enableXr是否为true
-    // 3. 如果是true，检查它是否在SpatialScene中
+    // 1. Find the element with data-testid "spatial-div-2"
+    // 2. Check if enableXr in style is true
+    // 3. If true, verify it exists in SpatialScene
 
-    // 注入日志捕获以辅助调试
+    // Inject log capture to help debugging
     await runner.evaluate(() => {
       ;(window as any).__capturedLogs = []
       const curConsoleLog = console.log
@@ -168,7 +168,7 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       }
     })
 
-    // 检查元素是否存在并获取其spatializedElement ID
+    // Check element exists and get its spatializedElement ID
     const spatilized2DElementId = await runner.evaluate(() => {
       const spatialdiv = document.querySelector(
         '[data-testid="spatial-div-2"]',
@@ -176,13 +176,13 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       if (spatialdiv) {
         console.log('Found spatial-div-2 element')
 
-        // 检查style中的enableXr值
+        // Check enableXr value in style
         const style = spatialdiv.style
         const computedStyle = window.getComputedStyle(spatialdiv)
         console.log('Element style:', style.cssText)
         console.log('Computed style:', computedStyle.cssText)
 
-        // 获取spatializedElement
+        // Get spatializedElement
         const spatializedElement = window.getSpatialized2DElement(spatialdiv)
         console.log('spatializedElement:', spatializedElement)
         return spatializedElement ? spatializedElement.id : null
@@ -194,7 +194,7 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
 
     console.log('spatialized2DElementId:', spatilized2DElementId)
 
-    // 验证元素已成为spatializedElement（有ID）
+    // Verify element becomes spatializedElement (has ID)
     expect(spatilized2DElementId).to.be.not.null
 
     // expect the spatializedElement to be in SpatialScene
@@ -218,7 +218,7 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       timeout: 30000,
     })
 
-    // 1. find the element with data-testid为"spatial-div-3"
+    // 1. Find the element with data-testid "spatial-div-3"
     // 2. check if className has __enableXr__
     // 3. if has, check if it is in SpatialScene
 

@@ -16,14 +16,14 @@ import { ProtocolHandlerManager } from '../webview/ProtocolHandlerManager'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedElement } from './SpatializedElement'
 
-// 添加缺失的Vec3类型定义
+// Add missing Vec3 type definition
 export interface Vec3 {
   x: number
   y: number
   z: number
 }
 
-// 定义WebViewElementInfo接口，用于返回创建的元素信息
+// Define WebViewElementInfo interface to return created element info
 export interface WebViewElementInfo {
   id: string
   webViewModel: PuppeteerWebViewModel
@@ -76,7 +76,7 @@ export class SpatialScene
     this.emit('opacityChanged', { opacity: value })
   }
 
-  // ScrollAbleSpatialElementContainer 接口实现
+  // ScrollAbleSpatialElementContainer interface implementation
   get parent(): ScrollAbleSpatialElementContainer | null {
     return this._parent
   }
@@ -122,7 +122,7 @@ export class SpatialScene
       bottomTrailing: 0,
     }
 
-    // 初始化场景配置
+    // Initialize scene config
     this._sceneConfig = {
       width: sceneOptions?.width || 1024,
       height: sceneOptions?.height || 768,
@@ -136,7 +136,7 @@ export class SpatialScene
   }
 
   get version(): string {
-    return '1.0.0' // 默认版本
+    return '1.0.0' // default version
   }
 
   get url(): string {
@@ -182,18 +182,18 @@ export class SpatialScene
   private resetBackgroundMaterialOnWindowStyleChange(
     windowStyle: WindowStyle,
   ): void {
-    // 简化实现
+    // Simplified implementation
     if (windowStyle === WindowStyle.volume) {
-      // 设置透明背景
+      // Set transparent background
     } else {
-      // 设置默认背景
+      // Set default background
     }
   }
 
   private setupSpatialWebView(): void {
-    // 初始化spatialWebViewModel
+    // Initialize spatialWebViewModel
     try {
-      // 创建模拟的WebController实例
+      // Create a mock WebController instance
       const mockWebController = {
         page: {} as any,
         registerOpenWindowInvoke: (handler: any) => {},
@@ -212,13 +212,13 @@ export class SpatialScene
         this._url,
       )
 
-      // 注册JSB监听器
+      // Register JSB listeners
       // this.setupJSBListeners()
 
-      // 注册到ProtocolHandlerManager
+      // Register into ProtocolHandlerManager
       ProtocolHandlerManager.getInstance().registerScene(this)
 
-      // 监听PuppeteerPlatform创建的iframe事件
+      // Listen to iframe creation events from PuppeteerPlatform
       // window.addEventListener('spatial_iframe_created', this._boundSpatialIframeCreatedHandler);
 
       console.log('Setting up spatial web view for URL:', this.url)
@@ -228,15 +228,15 @@ export class SpatialScene
   }
 
   /**
-   * 处理更新空间化元素属性命令
+   * Handle updating spatialized 2D element properties command
    */
   handleUpdateSpatialized2DElementProperties(data: any): void {
     const elementId = data.id
     const element = this._spatialObjects[elementId] as Spatialized2DElement
-    // 调用updateSpatializedElementProperties更新通用属性
+    // Call updateSpatializedElementProperties to update common properties
     this.updateSpatializedElementProperties(elementId, data)
 
-    // 按照Swift端实现，单独处理特定的2D元素属性
+    // Following Swift implementation, handle specific 2D element properties separately
     if (element && data) {
       if (data.scrollPageEnabled !== undefined) {
         element.scrollPageEnabled = data.scrollPageEnabled
@@ -250,7 +250,7 @@ export class SpatialScene
         element.cornerRadius = data.cornerRadius
       }
 
-      // 移除对不存在属性的引用
+      // Remove references to non-existent properties
     }
   }
 
@@ -262,11 +262,11 @@ export class SpatialScene
     const element = this._spatialObjects[elementId] as SpatializedElement
 
     if (element && data) {
-      // 按照Vision OS端的实现，优先处理matrix数组
+      // Following VisionOS implementation, prioritize the matrix array
       if (data.matrix) {
-        // 验证matrix数组长度是否为16
+        // Validate matrix array length equals 16
         if (data.matrix.length === 16) {
-          // 使用matrix数组更新transform
+          // Update transform using the matrix array
           element.transform = {
             ...element.transform,
             matrix: data.matrix,
@@ -278,14 +278,14 @@ export class SpatialScene
           )
         }
       } else if (data.transform) {
-        // 如果没有matrix但有transform，保留原有行为
+        // If there is no matrix but there is transform, preserve existing behavior
         element.transform = { ...element.transform, ...data.transform }
       }
     }
   }
 
   /**
-   * 处理添加子元素命令
+   * Handle add-child command
    */
   private handleAddSpatializedElementToSpatialized2DElement(
     command: any,
@@ -300,17 +300,17 @@ export class SpatialScene
   }
 
   /**
-   * 处理自定义窗口打开请求
+   * Handle custom window open request
    */
   public handleWindowOpenCustom(
     url: string,
   ): Promise<WebViewElementInfo | null> {
-    // 委托给ProtocolHandlerManager处理
+    // Delegate to ProtocolHandlerManager
     return ProtocolHandlerManager.getInstance().handleUrl(url)
   }
 
   /**
-   * 创建SpatializedElement
+   * Create SpatializedElement
    */
   createSpatializedElement(
     url: string,
@@ -326,21 +326,21 @@ export class SpatialScene
 
       let element: SpatializedElement | null = null
 
-      // 根据类型创建不同的元素
+      // Create different elements based on type
       switch (elementType) {
         case SpatializedElementType.Spatialized2DElement:
           element = new Spatialized2DElement(spatialId)
           break
         case SpatializedElementType.SpatializedStatic3DElement:
-          // 未来扩展支持3D元素
+          // Future: support 3D elements
           console.warn('SpatializedStatic3DElement not yet supported')
           return null
         case SpatializedElementType.SpatializedDynamic3DElement:
-          // 未来扩展支持动态3D元素
+          // Future: support dynamic 3D elements
           console.warn('SpatializedDynamic3DElement not yet supported')
           return null
         default:
-          // 默认创建2D元素
+          // Default: create 2D element
           element = new Spatialized2DElement(spatialId)
       }
 
@@ -348,7 +348,7 @@ export class SpatialScene
         return null
       }
 
-      // 设置元素属性
+      // Set element properties
       const width = urlObj.searchParams.get('width')
       const height = urlObj.searchParams.get('height')
       const x = urlObj.searchParams.get('x')
@@ -361,15 +361,15 @@ export class SpatialScene
         element.clientY = parseInt(y, 10)
       }
 
-      // 存储元素引用
+      // Store element reference
       this._spatialObjects[element.id] = element
 
-      // 注册到ProtocolHandlerManager
+      // Register into ProtocolHandlerManager
       if (element instanceof Spatialized2DElement) {
         ProtocolHandlerManager.getInstance().registerElement(element)
       }
 
-      // 创建WebViewModel
+      // Create WebViewModel
       const mockWebController = {
         page: {} as any,
         registerOpenWindowInvoke: (handler: any) => {},
@@ -396,7 +396,7 @@ export class SpatialScene
   }
 
   /**
-   * 发送消息到Web页面
+   * Send message to web page
    */
   sendWebMsg(message: any): void {
     if (this.spatialWebViewModel) {
@@ -405,7 +405,7 @@ export class SpatialScene
   }
 
   /**
-   * 更新3D尺寸
+   * Update 3D size
    */
   updateSize3D(width: number, height: number, depth: number): void {
     this._sceneConfig = {
@@ -422,7 +422,7 @@ export class SpatialScene
     this.state = state
     console.log(`Scene ${this.id} moved to state: ${state}`)
 
-    // 根据状态执行不同的逻辑
+    // Execute different logic based on state
     switch (state) {
       case SceneStateKind.idle:
         break
@@ -447,8 +447,8 @@ export class SpatialScene
   ): void {
     const element = this.findSpatialObject(id)
     if (element && properties) {
-      // 先检查properties对象是否存在
-      // 按照Swift端的实现，为每个属性单独检查并更新
+      // Check properties object exists
+      // Following Swift implementation: check and update each property individually
       if (properties.name !== undefined) {
         element.name = properties.name
       }
@@ -550,7 +550,7 @@ export class SpatialScene
       throw new Error('Invalid child element')
     }
 
-    // 检查子元素是否已经存在，避免重复添加
+    // Check if child already exists to avoid duplicate addition
     if (this._children[child.id]) {
       console.warn(
         `Child element with id ${child.id} already exists, skipping addition`,
@@ -559,11 +559,11 @@ export class SpatialScene
     }
 
     this._children[child.id] = child
-    // 安全地设置parent属性
+    // Safely set parent property
     try {
       if (child.setParent) {
-        // 类型断言，因为this现在实现了ScrollAbleSpatialElementContainer接口
-        // 避免循环调用：检查child._parent是否已经是this
+        // Type assertion because this now implements ScrollAbleSpatialElementContainer
+        // Avoid recursion: check whether child._parent is already this
         const childParent = (child as any)._parent
         if (!childParent || childParent.id !== this.id) {
           child.setParent(this as unknown as ScrollAbleSpatialElementContainer)
@@ -577,9 +577,9 @@ export class SpatialScene
     this.emit('childAdded', { child })
   }
 
-  // 移除方法重载，直接实现接口要求的方法
+  // Remove method overloading; implement the interface-required method directly
   removeChild(spatializedElement: SpatializedElement): void {
-    // 处理对象参数
+    // Handle object parameter
     if (!spatializedElement || !spatializedElement.id) {
       throw new Error('Invalid child element')
     }
@@ -587,10 +587,10 @@ export class SpatialScene
     const child = this._children[spatializedElement.id]
     if (child) {
       delete this._children[spatializedElement.id]
-      // 安全地移除parent属性
+      // Safely unset parent property
       try {
         if (child.setParent) {
-          // 类型断言，因为setParent方法可能不接受null
+          // Type assertion because setParent may not accept null
           child.setParent(null as unknown as ScrollAbleSpatialElementContainer)
         } else if ('parent' in child) {
           ;(child as any).parent = null
@@ -602,7 +602,7 @@ export class SpatialScene
     }
   }
 
-  // 实现ScrollAbleSpatialElementContainer接口要求的getChildrenOfType方法
+  // Implement getChildrenOfType required by ScrollAbleSpatialElementContainer
   getChildrenOfType(
     type: SpatializedElementType,
   ): Record<string, SpatializedElement> {
@@ -630,17 +630,17 @@ export class SpatialScene
     return this._children[id] || null
   }
 
-  // 实现ScrollAbleSpatialElementContainer接口要求的getChildren方法
+  // Implement getChildren required by ScrollAbleSpatialElementContainer
   getChildren(): Record<string, SpatializedElement> {
     return { ...this._children }
   }
 
-  // 为了向后兼容，提供获取子元素数组的方法
+  // For backward compatibility, provide a method to get children as array
   getChildrenArray(): any[] {
     return Object.values(this._children)
   }
 
-  // 为了向后兼容，提供泛型版本的getChildrenOfType方法
+  // For backward compatibility, provide a generic version of getChildrenOfType
   getChildrenOfTypeByClass<T extends SpatializedElement>(
     type: new (...args: any[]) => T,
   ): T[] {
@@ -657,12 +657,12 @@ export class SpatialScene
 
     this._spatialObjects[object.spatialId] = object
 
-    // 使用duck typing来检查对象是否有必要的属性，而不是依赖instanceof
+    // Use duck typing to check required properties instead of relying on instanceof
     if (object && typeof object === 'object' && 'id' in object && object.id) {
       this.addChild(object)
     }
 
-    // 设置销毁监听器
+    // Set destroy listener
     if (object.on) {
       object.on(
         'SpatialObject::BeforeDestroyed',
@@ -685,12 +685,12 @@ export class SpatialScene
 
   public sendWebMsgToElement(id: string, data: any): void {
     console.log(`Sending web message to ${id}:`, data)
-    // 简化实现，实际应该发送消息到WebView
+    // Simplified: in practice should send message to WebView
   }
 
   handleNavigationCheck(url: string): boolean {
     console.log('Checking navigation to:', url)
-    return true // 简化实现，允许所有导航
+    return true // simplified: allow all navigation
   }
 
   handleWindowClose(): void {
@@ -710,7 +710,7 @@ export class SpatialScene
   }
 
   addObject(object: any): void {
-    // 使用duck typing来检查对象是否有必要的属性，而不是依赖instanceof
+    // Use duck typing to check whether the object has required properties instead of relying on instanceof
     if (
       object &&
       typeof object === 'object' &&
@@ -726,17 +726,17 @@ export class SpatialScene
 
   protected onDestroy(): void {
     super.onDestroy()
-    // 清理事件监听器
+    // Clean up event listeners
     // window.removeEventListener('spatial_iframe_created', this._boundSpatialIframeCreatedHandler);
 
-    // 销毁所有空间对象
+    // Destroy all spatial objects
     Object.values(this._spatialObjects).forEach(obj => {
       if (obj && typeof obj.destroy === 'function') {
         obj.destroy()
       }
     })
     this._spatialObjects = {}
-    // 销毁所有子元素
+    // Destroy all child elements
     Object.values(this._children).forEach(child => {
       if (child && typeof child.destroy === 'function') {
         child.destroy()
@@ -744,7 +744,7 @@ export class SpatialScene
     })
     this._children = {}
 
-    // 清理父引用
+    // Clear parent reference
     this._parent = null
   }
 }

@@ -68,9 +68,9 @@ export class Spatialized2DElement
     this._scrollPageEnabled = value
   }
 
-  // 实现接口中定义的parent属性
+  // Implement parent property defined in interface
   get parent(): ScrollAbleSpatialElementContainer | null {
-    // 直接返回null作为默认值，因为父类没有定义parent属性
+    // Return null by default because base class does not define parent
     return null
   }
 
@@ -79,7 +79,7 @@ export class Spatialized2DElement
       throw new Error('Invalid child element')
     }
     this._children[spatializedElement.id] = spatializedElement
-    // 使用类型断言来避免类型错误
+    // Use type assertion to avoid type errors
     try {
       spatializedElement.setParent(this as any)
     } catch (error) {
@@ -89,7 +89,7 @@ export class Spatialized2DElement
 
   removeChild(spatializedElement: SpatializedElement): void {
     delete this._children[spatializedElement.id]
-    // 使用安全的方式设置parent
+    // Safely set parent
     try {
       if (spatializedElement.setParent) {
         spatializedElement.setParent(null as any)
@@ -104,7 +104,7 @@ export class Spatialized2DElement
   }
 
   getChildren(): Record<string, SpatializedElement> {
-    return { ...this._children } // 返回副本
+    return { ...this._children } // return a copy
   }
 
   getChildrenOfType(
@@ -129,13 +129,13 @@ export class Spatialized2DElement
   }
 
   stopScrolling(): void {
-    // 简化实现，实际可能需要更多逻辑
+    // Simplified implementation; may need more logic in practice
     this._scrollOffset = { x: 0, y: 0 }
   }
 
   protected onDestroy(): void {
     super.onDestroy()
-    // 销毁所有子元素
+    // Destroy all child elements
     Object.values(this._children).forEach(child => {
       child.destroy()
     })

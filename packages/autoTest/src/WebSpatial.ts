@@ -9,7 +9,7 @@ export class WebSpatial {
   private scenes: Record<string, SpatialScene> = {}
 
   private constructor() {
-    // 私有构造函数
+    // Private constructor
   }
 
   static getInstance(): WebSpatial {
@@ -19,12 +19,12 @@ export class WebSpatial {
     return WebSpatial.instance
   }
 
-  // 创建一个新的空间场景
+  // Create a new spatial scene
   createScene(
     url: string,
     windowStyle: WindowStyle = WindowStyle.window,
   ): SpatialScene {
-    // 直接传递参数，使用与SpatialScene构造函数匹配的参数列表
+    // Pass parameters directly to match SpatialScene constructor
     const scene = new SpatialScene(url, windowStyle, SceneStateKind.idle)
     this.scenes[scene.id] = scene
     this.currentScene = scene
@@ -32,12 +32,12 @@ export class WebSpatial {
     return scene
   }
 
-  // 获取当前场景
+  // Get current scene
   getCurrentScene(): SpatialScene | null {
     return this.currentScene
   }
 
-  // 销毁场景
+  // Destroy scene
   destroyScene(sceneId: string): void {
     const scene = this.scenes[sceneId]
     if (scene) {
@@ -49,16 +49,16 @@ export class WebSpatial {
     }
   }
 
-  // 检查当前空间场景
+  // Inspect current spatial scene
   inspectCurrentSpatialScene(): any {
     const scene = this.getCurrentScene()
     if (!scene) {
-      // 如果没有当前场景，创建一个默认场景
+      // If there is no current scene, create a default scene
       this.createScene('default://scene', WindowStyle.window)
       return this.inspectCurrentSpatialScene()
     }
 
-    // 从scene获取所有children
+    // Get all children from scene
     const children = scene.children || {}
     console.log('inspectCurrentSpatialScene children: ', Object.keys(children))
 
@@ -79,13 +79,13 @@ export class WebSpatial {
     }
   }
 
-  // 格式化子元素数据
+  // Format children data
   private formatChildren(children: any): Record<string, any> {
     const formatted: Record<string, any> = {}
 
-    // 检查children是否为对象
+    // Check whether children is an object
     if (typeof children === 'object' && children !== null) {
-      // 处理不同格式的children
+      // Handle different formats of children
       const childrenToProcess = Array.isArray(children)
         ? children.reduce(
             (acc: Record<string, any>, child: any) => {
@@ -97,9 +97,9 @@ export class WebSpatial {
         : children
 
       Object.entries(childrenToProcess).forEach(([key, value]) => {
-        const child = value as any // 使用类型断言
+        const child = value as any
         if (child && typeof child === 'object') {
-          // 创建一个不包含parent引用的格式化对象，避免循环引用和重复添加
+          // Create a formatted object without parent reference to avoid cycles and duplicate additions
           formatted[key] = {
             id: 'id' in child ? child.id : key,
             type: 'type' in child ? child.type : 'Spatialized2DElement',
@@ -155,7 +155,7 @@ export class WebSpatial {
                 : undefined,
             enableTapGesture:
               'enableTapGesture' in child ? child.enableTapGesture : undefined,
-            // 移除parent属性，避免循环引用和children重复添加
+            // Remove parent property to avoid cyclic references and duplicate children
           }
         }
       })

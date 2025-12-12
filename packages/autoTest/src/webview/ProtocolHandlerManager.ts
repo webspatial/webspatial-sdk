@@ -8,18 +8,18 @@ import { Spatialized2DElement } from '../model/Spatialized2DElement'
 import { WebspatialProtocolHandler } from './WebspatialProtocolHandler'
 import { SceneStateKind } from '../types/types'
 
-// 定义SceneStateKind的安全类型
+// Define a safe type for SceneStateKind
 type SafeSceneState = SceneStateKind | 'idle'
 
 /**
- * 协议处理器类型定义
+ * Protocol handler type definition
  */
 export type ProtocolHandler = (
   url: string,
 ) => Promise<WebViewElementInfo | null>
 
 /**
- * ProtocolHandlerManager类负责管理所有协议处理器的注册和分发
+ * ProtocolHandlerManager manages registration and dispatching of protocol handlers
  */
 export class ProtocolHandlerManager {
   private static _instance: ProtocolHandlerManager
@@ -29,14 +29,14 @@ export class ProtocolHandlerManager {
   private _webspatialProtocolHandler: WebspatialProtocolHandler
 
   constructor() {
-    // 初始化WebspatialProtocolHandler
+    // Initialize WebspatialProtocolHandler
     this._webspatialProtocolHandler = WebspatialProtocolHandler.getInstance()
-    // 设置协议管理器引用，打破循环依赖
+    // Set protocol manager reference to break cyclic dependency
     this._webspatialProtocolHandler.setProtocolManager(this)
   }
 
   /**
-   * 获取单例实例
+   * Get singleton instance
    */
   public static getInstance(): ProtocolHandlerManager {
     if (!ProtocolHandlerManager._instance) {
@@ -46,7 +46,7 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 注册协议处理器
+   * Register protocol handler
    */
   public registerProtocolHandler(
     protocol: string,
@@ -57,7 +57,7 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 注销协议处理器
+   * Unregister protocol handler
    */
   public unregisterProtocolHandler(protocol: string): void {
     delete this._protocolHandlers[protocol]
@@ -65,20 +65,20 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 处理URL（用于测试）
+   * Handle URL (for testing)
    */
   public async handleUrl(url: string): Promise<WebViewElementInfo | null> {
     return this.handleProtocolUrl(url)
   }
 
   /**
-   * 处理协议URL
+   * Handle protocol URL
    */
   public async handleProtocolUrl(
     url: string,
   ): Promise<WebViewElementInfo | null> {
     try {
-      // 检查URL是否是webspatial协议开头
+      // Check whether URL starts with webspatial protocol
       if (this._webspatialProtocolHandler && url.startsWith('webspatial://')) {
         return await this._webspatialProtocolHandler.handleWebspatialProtocol(
           url,
@@ -100,21 +100,21 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 注销场景
+   * Unregister scene
    */
   public unregisterScene(sceneId: string): void {
     this._scenes.delete(sceneId)
   }
 
   /**
-   * 注销元素
+   * Unregister element
    */
   public unregisterElement(elementId: string): void {
     this._elements.delete(elementId)
   }
 
   /**
-   * 注册webspatial协议处理器
+   * Register webspatial protocol handler
    */
   public registerWebspatialProtocolHandler(): void {
     this.registerProtocolHandler(
@@ -124,7 +124,7 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 处理webspatial协议
+   * Handle webspatial protocol
    */
   private async handleWebspatialProtocol(
     url: string,
@@ -133,13 +133,13 @@ export class ProtocolHandlerManager {
       const urlObj = new URL(url)
       const host = urlObj.host
 
-      // 根据host区分不同的操作
+      // Distinguish different actions based on host
       switch (host) {
         case 'createSpatialScene':
-          // 创建SpatialScene
+          // Create SpatialScene
           return await this.createSpatialScene(urlObj)
         case 'createSpatializedElement':
-          // 创建SpatializedElement
+          // Create SpatializedElement
           return await this.createSpatializedElement(urlObj)
         default:
           console.warn(`Unknown webspatial action: ${host}`)
@@ -152,29 +152,29 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 获取WebViewModel（添加空值检查）
+   * Get WebViewModel (with null checks)
    */
   public getWebViewModel(): PuppeteerWebViewModel | null {
-    // 假设在其他地方有设置_webViewModel的逻辑
+    // Assume logic elsewhere sets _webViewModel
     return (this as any)._webViewModel || null
   }
 
   /**
-   * 创建SpatialScene
+   * Create SpatialScene
    */
   private async createSpatialScene(urlObj: URL): Promise<WebViewElementInfo> {
-    // 从URL参数中获取配置
+    // Get configuration from URL parameters
     const sceneUrl = urlObj.searchParams.get('url') || ''
     const windowStyle =
       (urlObj.searchParams.get('windowStyle') as any) || 'window'
 
-    // 创建SpatialScene
+    // Create SpatialScene
     const scene = new SpatialScene(sceneUrl, windowStyle, SceneStateKind.idle)
 
-    // 存储scene引用
+    // Store scene reference
     this._scenes.set(scene.id, scene)
 
-    // 返回WebViewElementInfo
+    // Return WebViewElementInfo
     return {
       id: scene.id,
       webViewModel:
@@ -183,55 +183,55 @@ export class ProtocolHandlerManager {
   }
 
   /**
-   * 创建SpatializedElement
+   * Create SpatializedElement
    */
   private async createSpatializedElement(
     urlObj: URL,
   ): Promise<WebViewElementInfo | null> {
-    // 这里将在后续实现，需要与createSpatializedElement方法集成
+    // To be implemented: integrate with createSpatializedElement
     return null
   }
 
   /**
-   * 注册SpatialScene
+   * Register SpatialScene
    */
   public registerScene(scene: SpatialScene): void {
     this._scenes.set(scene.id, scene)
   }
 
   /**
-   * 获取SpatialScene
+   * Get SpatialScene
    */
   public getScene(id: string): SpatialScene | undefined {
     return this._scenes.get(id)
   }
 
   /**
-   * 注册SpatializedElement
+   * Register SpatializedElement
    */
   public registerElement(element: Spatialized2DElement): void {
     this._elements.set(element.id, element)
   }
 
   /**
-   * 获取SpatializedElement
+   * Get SpatializedElement
    */
   public getElement(id: string): Spatialized2DElement | undefined {
     return this._elements.get(id)
   }
 
   /**
-   * 初始化ProtocolHandlerManager
+   * Initialize ProtocolHandlerManager
    */
   public static initialize(): void {
     const instance = this.getInstance()
-    // 初始化webspatial协议处理器
+    // Initialize webspatial protocol handler
     WebspatialProtocolHandler.initialize()
     console.log('ProtocolHandlerManager initialized')
   }
 
   /**
-   * 清理资源
+   * Dispose resources
    */
   public dispose(): void {
     this._protocolHandlers = {}

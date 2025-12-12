@@ -76,9 +76,9 @@ export class PuppeteerRunner {
     if (this.initOptions.enableXR) {
       this.jsbManager = new JSBManager()
       this.setupDefaultJSBHandlers()
-      // 初始化WebSpatial实例
+      // Initialize WebSpatial instance
       this.webSpatial = WebSpatial.getInstance()
-      // 创建默认场景
+      // Create default scene
       this.webSpatial.createScene('http://localhost:5173', WindowStyle.window)
     }
 
@@ -224,14 +224,14 @@ export class PuppeteerRunner {
   ): Promise<T> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
-    // 特殊处理：如果是检查空间场景的操作，使用WebSpatial提供真实数据
+    // Special handling: when inspecting the spatial scene, use WebSpatial data
     const fnStr = typeof fn === 'function' ? fn.toString() : String(fn)
     if (fnStr.includes('inspectCurrentSpatialScene')) {
       console.log(
         'Intercepting inspectCurrentSpatialScene call, using WebSpatial data',
       )
 
-      // 使用WebSpatial实例获取场景数据
+      // Use WebSpatial instance to obtain scene data
       if (this.initOptions.enableXR) {
         const sceneData = this.webSpatial?.inspectCurrentSpatialScene()
         console.log('Returning spatial scene data:', sceneData)
@@ -372,11 +372,11 @@ export class PuppeteerRunner {
     })
 
     await this.page.on('framenavigated', frame => {
-      // 只监听主页面
+      // Only listen to the main page
       if (frame !== this.page?.mainFrame()) return
 
       if (firstLoad) {
-        firstLoad = false // 第一次加载，忽略
+        firstLoad = false // First load; ignore
         return
       }
 
@@ -418,7 +418,7 @@ export class PuppeteerRunner {
         target?: string,
         features?: string,
       ): Window | null {
-        // 处理url可能为undefined的情况
+        // Handle the case where url may be undefined
         const urlStr = url?.toString() || ''
         if (urlStr.startsWith('webspatial://')) {
           console.log('Intercepted webspatial protocol URL:', urlStr)
@@ -468,7 +468,7 @@ export class PuppeteerRunner {
           if (foundScene) {
             sceneId = foundScene.id
             console.log('Found scene ID:', sceneId)
-            // 使用 !== undefined 判断以正确处理 0 或空字符串等有效值
+            // Use !== undefined to correctly handle 0 or empty string as valid values
             if (data.cornerRadius !== undefined) {
               foundScene.cornerRadius = data.cornerRadius
             }
@@ -491,7 +491,7 @@ export class PuppeteerRunner {
           foundScene.cornerRadius,
         )
 
-        // 如果没有找到场景，使用默认ID
+        // If scene is not found, use a default ID
         if (!sceneId) {
           console.log(
             'No scene ID found, using default:',
@@ -674,7 +674,7 @@ export class PuppeteerRunner {
       (data, callback) => {
         // console.log('Handling UpdateSpatializedElementTransform:', data)
 
-        // 检查data.id是否存在
+        // Check whether data.id exists
         if (!data.id) {
           console.log('Missing element id')
           callback({ success: false, error: 'Missing element id' })
@@ -685,9 +685,9 @@ export class PuppeteerRunner {
         const element = this.jsbManager?.getSpatialObject(data.id)
         console.log('found element:', element)
         if (element) {
-          // 按照Vision OS端的实现，检查并使用matrix数组
+          // Following VisionOS implementation: check and use the matrix array
           if (data.matrix) {
-            // 验证matrix数组长度是否为16
+            // Validate that matrix array length equals 16
             if (data.matrix.length !== 16) {
               console.log('Received matrix array does not have 16 elements.')
               callback({
@@ -697,15 +697,15 @@ export class PuppeteerRunner {
               return
             }
 
-            // 使用matrix数组创建transform对象
-            // 这里模拟Vision OS端的matrix处理方式
+            // Create transform object using the matrix array
+            // Simulate the VisionOS matrix handling
             element.transform = {
               matrix: data.matrix,
-              // 保留原有的transform属性
+              // Preserve existing transform properties
               ...element.transform,
             }
           } else {
-            // 如果没有matrix，保留原有行为
+            // If no matrix present, preserve existing behavior
             element.transform = { ...element.transform, ...data }
           }
 

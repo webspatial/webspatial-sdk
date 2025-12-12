@@ -5,7 +5,7 @@ import { ProtocolHandlerManager } from './ProtocolHandlerManager'
 import { WebspatialProtocolHandler } from './WebspatialProtocolHandler'
 
 /**
- * WebViewElementInfo接口，用于返回创建的元素信息
+ * WebViewElementInfo interface, used to return created element info
  */
 export interface WebViewElementInfo {
   id: string
@@ -13,7 +13,7 @@ export interface WebViewElementInfo {
 }
 
 /**
- * PuppeteerWebViewModel类负责管理WebView的状态和行为，实现协议处理器注册
+ * PuppeteerWebViewModel manages WebView state and behavior, and registers protocol handlers
  */
 export class PuppeteerWebViewModel {
   private _webController: PuppeteerWebController
@@ -38,43 +38,43 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 获取WebController实例
+   * Get WebController instance
    */
   get webController(): PuppeteerWebController {
     return this._webController
   }
 
   /**
-   * 获取URL
+   * Get URL
    */
   get url(): string {
     return this._url
   }
 
   /**
-   * 设置URL
+   * Set URL
    */
   set url(value: string) {
     this._url = value
   }
 
   /**
-   * 设置事件处理器
+   * Set event handlers
    */
   private setupEventHandlers(): void {
-    // 注册onOpenWindowInvoke处理器
+    // Register onOpenWindowInvoke handler
     this._webController.registerOpenWindowInvoke(
       this.onOpenWindowInvoke.bind(this),
     )
 
-    // 注册onNavigationInvoke处理器
+    // Register onNavigationInvoke handler
     this._webController.registerNavigationInvoke(
       this.onNavigationInvoke.bind(this),
     )
   }
 
   /**
-   * 加载指定URL
+   * Load specified URL
    */
   async load(url: string): Promise<void> {
     this._url = url
@@ -82,14 +82,14 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 加载HTML内容
+   * Load HTML content
    */
   async loadHTML(html: string): Promise<void> {
     await this._webController.page.setContent(html)
   }
 
   /**
-   * 添加协议处理器
+   * Add protocol handler
    */
   addOpenWindowListener(
     protocol: string,
@@ -99,14 +99,14 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 移除协议处理器
+   * Remove protocol handler
    */
   removeOpenWindowListener(protocol: string): void {
     delete this._openWindowList[protocol]
   }
 
   /**
-   * 添加导航处理器
+   * Add navigation handler
    */
   addNavigationListener(
     protocol: string,
@@ -116,35 +116,35 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 移除导航处理器
+   * Remove navigation handler
    */
   removeNavigationListener(protocol: string): void {
     delete this._navigationList[protocol]
   }
 
   /**
-   * 添加JSB命令处理器
+   * Add JSB command handler
    */
   addJSBListener(commandName: string, handler: (command: any) => void): void {
     this._jsbCommandList[commandName] = handler
   }
 
   /**
-   * 移除JSB命令处理器
+   * Remove JSB command handler
    */
   removeJSBListener(commandName: string): void {
     delete this._jsbCommandList[commandName]
   }
 
   /**
-   * 处理新窗口打开请求
+   * Handle open window request
    */
   async onOpenWindowInvoke(url: string): Promise<any> {
     try {
-      // 检查是否是webspatial协议
+      // Check if the URL uses webspatial protocol
       if (url.startsWith('webspatial://')) {
         console.log(`Handling webspatial protocol URL: ${url}`)
-        // 直接通过WebspatialProtocolHandler处理
+        // Directly handle via WebspatialProtocolHandler
         return await this._webspatialProtocolHandler.handleWebspatialProtocol(
           url,
         )
@@ -153,7 +153,7 @@ export class PuppeteerWebViewModel {
       const urlObj = new URL(url)
       const protocol = urlObj.protocol.replace(':', '')
 
-      // 检查是否有对应的协议处理器
+      // Check if there is a corresponding protocol handler
       if (this._openWindowList[protocol]) {
         return await this._openWindowList[protocol](url)
       }
@@ -164,22 +164,22 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 处理导航请求
+   * Handle navigation request
    */
   async onNavigationInvoke(url: string): Promise<boolean> {
     try {
-      // 检查是否是webspatial协议
+      // Check if the URL uses webspatial protocol
       if (url.startsWith('webspatial://')) {
         console.log(`Intercepting navigation for webspatial protocol: ${url}`)
-        // 对于webspatial协议，拦截导航并通过协议处理器处理
+        // For webspatial protocol, intercept navigation and handle via the protocol handler
         await this._webspatialProtocolHandler.handleWebspatialProtocol(url)
-        return true // 返回true表示拦截导航
+        return true // return true indicates navigation intercepted
       }
 
       const urlObj = new URL(url)
       const protocol = urlObj.protocol.replace(':', '')
 
-      // 检查是否有对应的导航处理器
+      // Check if there is a corresponding navigation handler
       if (this._navigationList[protocol]) {
         return await this._navigationList[protocol](url)
       }
@@ -190,7 +190,7 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 处理JSB命令
+   * Handle JSB command
    */
   handleJSBCommand(command: any): void {
     if (command && command.name && this._jsbCommandList[command.name]) {
@@ -199,12 +199,12 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 发送消息到Web页面
+   * Send message to web page
    */
   async sendMessage(message: any): Promise<void> {
     try {
       await this._webController.page.evaluate(msg => {
-        // 发送消息到页面
+        // Send message to the page
         window.postMessage(msg, '*')
       }, message)
     } catch (error) {
@@ -213,10 +213,10 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 设置协议处理器
+   * Set up protocol handlers
    */
   private setupProtocolHandlers(): void {
-    // 注册webspatial协议的打开窗口处理器
+    // Register open window handler for webspatial protocol
     this.addOpenWindowListener(
       'webspatial',
       this._webspatialProtocolHandler.handleWebspatialProtocol.bind(
@@ -224,36 +224,36 @@ export class PuppeteerWebViewModel {
       ),
     )
 
-    // 注册webspatial协议的导航处理器
+    // Register navigation handler for webspatial protocol
     this.addNavigationListener('webspatial', async (url: string) => {
       await this._webspatialProtocolHandler.handleWebspatialProtocol(url)
-      return true // 拦截导航
+      return true // intercept navigation
     })
   }
 
   /**
-   * 清除所有监听器
+   * Remove all open window listeners
    */
   removeAllOpenWindowListeners(): void {
     this._openWindowList = {}
   }
 
   /**
-   * 清除所有导航监听器
+   * Remove all navigation listeners
    */
   removeAllNavigationListeners(): void {
     this._navigationList = {}
   }
 
   /**
-   * 清除所有JSB监听器
+   * Remove all JSB listeners
    */
   removeAllJSBListeners(): void {
     this._jsbCommandList = {}
   }
 
   /**
-   * 清除所有监听器
+   * Remove all listeners
    */
   removeAllListeners(): void {
     this.removeAllOpenWindowListeners()
@@ -262,7 +262,7 @@ export class PuppeteerWebViewModel {
   }
 
   /**
-   * 清理资源
+   * Dispose resources
    */
   dispose(): void {
     this.removeAllListeners()
