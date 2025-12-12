@@ -56,16 +56,15 @@ jobs:
       - name: Run mocha in autoTest package
         run: pnpm --filter autotest run test
 
-      - name: Upload report to Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload test report artifact
+        id: upload_report
+        uses: actions/upload-artifact@v4
         with:
+          name: autotest-report
           path: packages/autoTest/reports
 
-      - name: Resolve artifact download URL
-        run: |
-          ARTIFACTS_JSON=$(curl -sSL -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-          URL=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | select(.name=="github-pages") | .archive_download_url' | head -n1)
-          echo "WEBSITE_URL=$URL" >> $GITHUB_ENV
+      - name: Construct artifact download URL
+        run: echo "WEBSITE_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_report.outputs.artifact-id }}" >> $GITHUB_ENV
 
 
       - name: Send summary to Lark with page URL
