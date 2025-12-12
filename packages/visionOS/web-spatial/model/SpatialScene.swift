@@ -116,6 +116,35 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         return true
     }
 
+    private func handleNavigationCheckCustom(_ url: URL) -> Bool {
+        /*
+         because full url is webspatial://createSpatialScene?url=xxx
+         we need to get the real url.
+         we do 2 things:
+
+         1. let curUrl = parse url
+         2. if url is in scope do webviewModel.load(curUrl)
+            else open in safari
+         */
+        guard let components = URLComponents(string: url.absoluteString),
+              let queryItems = components.queryItems
+        else {
+            print("❌ fail to parse URL")
+            return false
+        }
+        guard let encodedUrl = queryItems.first(where: { $0.name == "url" })?.value,
+              let decodedUrl = encodedUrl.removingPercentEncoding
+        else {
+            return false
+        }
+        if pwaManager.checkInScope(url: decodedUrl) {
+            spatialWebViewModel.load(decodedUrl)
+            return false
+        }
+        UIApplication.shared.open(URL(string: decodedUrl)!, options: [:], completionHandler: nil)
+        return false
+    }
+
     private func handleWindowOpenCustom(_ url: URL) -> WebViewElementInfo? {
         // get config from url
         guard let components = URLComponents(string: url.absoluteString),
@@ -129,6 +158,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
               let decodedUrl = encodedUrl.removingPercentEncoding
         else {
             print("❌ lack of required param url")
+            return nil
+        }
+
+        if !pwaManager.checkInScope(url: decodedUrl) {
+            UIApplication.shared.open(URL(string: decodedUrl)!, options: [:], completionHandler: nil)
             return nil
         }
 
@@ -269,6 +303,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
+        spatialWebViewModel
+            .addNavigationListener(protocal: "webspatial://createSpatialScene", event: handleNavigationCheckCustom)
     }
 
     var width: Double = 0
