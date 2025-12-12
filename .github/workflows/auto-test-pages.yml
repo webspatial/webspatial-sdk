@@ -14,6 +14,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 jobs:
   test-and-deploy:
@@ -60,14 +61,17 @@ jobs:
         with:
           path: packages/autoTest/reports
 
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+      - name: Resolve artifact download URL
+        run: |
+          ARTIFACTS_JSON=$(curl -sSL -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
+          URL=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | select(.name=="github-pages") | .archive_download_url' | head -n1)
+          echo "WEBSITE_URL=$URL" >> $GITHUB_ENV
+
 
       - name: Send summary to Lark with page URL
         run: pnpm --filter autotest run post-test
         env:
-          WEBSITE_URL: ${{ steps.deploy.outputs.page_url }}/autotest.html
+          WEBSITE_URL: ${{ env.WEBSITE_URL }}
           BRANCH_NAME: ${{ env.BRANCH_NAME }}
           START_TIME: ${{ env.START_TIME }}
           GITHUB_WORKFLOW_URL: ${{ env.GITHUB_WORKFLOW_URL }}
