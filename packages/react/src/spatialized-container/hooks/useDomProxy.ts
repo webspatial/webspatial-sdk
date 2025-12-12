@@ -72,10 +72,10 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
 
                           if (validProperties.includes(property)) {
                             if (prop === 'setProperty') {
-                              const [, value] = args
+                              const [, kValue] = args
                               self.transformVisibilityTaskContainerDom?.style.setProperty(
                                 property,
-                                value as string,
+                                kValue as string,
                               )
                             } else if (prop === 'removeProperty') {
                               self.transformVisibilityTaskContainerDom?.style.removeProperty(
@@ -86,8 +86,10 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
                                 property,
                               )
                             }
+                          } else {
+                            return value.apply(this, args)
                           }
-                        }
+                        }.bind(target)
                       } else {
                         return value.bind(target)
                       }
