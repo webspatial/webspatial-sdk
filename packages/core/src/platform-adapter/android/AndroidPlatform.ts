@@ -91,10 +91,10 @@ export class AndroidPlatform implements PlatformAbility {
     // Make the page renderable through window.open
     windowProxy?.open('about:blank', '_self')
     // Polling to check if SpatialId injection is successful
-    while (!windowProxy?.SpatialId) {
+    while (!windowProxy?.__SpatialId) {
       await new Promise(resolve => setTimeout(resolve, 16))
     }
-    let spatialId = windowProxy?.SpatialId
+    let spatialId = windowProxy?.__SpatialId
     creatingElementCount--
     return Promise.resolve(
       CommandResultSuccess({ windowProxy: windowProxy, id: spatialId }),
