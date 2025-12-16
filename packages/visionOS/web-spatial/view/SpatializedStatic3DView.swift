@@ -19,6 +19,7 @@ struct SpatializedStatic3DView: View {
 
     @ViewBuilder
     var body: some View {
+        let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
         let translation = transform.translation
         let scale = transform.scale
@@ -41,6 +42,7 @@ struct SpatializedStatic3DView: View {
                             nil,
                             contentMode: .fit
                         )
+                        .if(!depth.isZero){ view in view.scaledToFit3D()}
                         .onAppear {
                             self.onLoadSuccess()
                         }
