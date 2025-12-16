@@ -72,6 +72,10 @@ export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
     Omit<React.ComponentPropsWithoutRef<'div'>, 'onLoad' | 'onError'> & {
       src?: string
+      loading?: 'eager' | 'lazy'
+      stageMode?: 'none' | 'orbit'
+      autoplay?: boolean
+      loop?: boolean
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
     }
@@ -79,6 +83,9 @@ export type SpatializedStatic3DContainerProps =
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
   src?: string
+  loading?: 'eager' | 'lazy'
+  autoplay?: boolean
+  loop?: boolean
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
 }
@@ -103,6 +110,12 @@ export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
   ready: Promise<ModelLoadEvent>
   entityTransform: DOMMatrix
+  play: () => void
+  pause: () => void
+  paused: boolean
+  duration: number
+  currentTime: number
+  playbackRate: number
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {

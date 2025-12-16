@@ -21,6 +21,13 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   private modelURL: string = ''
 
+  animationAutoplay?: boolean
+  animationLoop?: boolean
+  animationPaused?: boolean
+  animationDuration?: number
+  animationCurrentTime?: number
+  animationPlaybackRate?: number
+
   /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
@@ -51,6 +58,24 @@ export class SpatializedStatic3DElement extends SpatializedElement {
         this.modelURL = properties.modelURL
         this.ready = this.createReadyPromise()
       }
+    }
+    if (properties.animationAutoplay !== undefined) {
+      this.animationAutoplay = properties.animationAutoplay
+    }
+    if (properties.animationLoop !== undefined) {
+      this.animationLoop = properties.animationLoop
+    }
+    if (properties.animationPaused !== undefined) {
+      this.animationPaused = properties.animationPaused
+    }
+    if (properties.animationDuration !== undefined) {
+      this.animationDuration = properties.animationDuration
+    }
+    if (properties.animationCurrentTime !== undefined) {
+      this.animationCurrentTime = properties.animationCurrentTime
+    }
+    if (properties.animationPlaybackRate !== undefined) {
+      this.animationPlaybackRate = properties.animationPlaybackRate
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
