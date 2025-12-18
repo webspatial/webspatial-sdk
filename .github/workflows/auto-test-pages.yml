@@ -33,6 +33,9 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Disable pnpm frozen lockfile
+        run: pnpm config set prefer-frozen-lockfile false
+
       - name: Install autotest and build required packages
         run: pnpm -F autotest run setup-local
 
