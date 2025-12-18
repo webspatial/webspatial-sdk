@@ -10,7 +10,7 @@
     "build-test": "tsc -p tsconfig.json --outDir dist",
     "test": "npm run build-test && mocha --exit --require source-map-support/register --reporter mochawesome --reporter-options reportDir=reports,reportFilename=autotest,overwrite=true,html=true,json=true dist/tests/**/*.test.js",
     "post-test": "ts-node scripts/summarize-results.ts",
-    "setup-local": "pnpm -F autotest install && pnpm -r --filter '@webspatial/*' run build && pnpm -F autotest run build"
+    "setup-local": "pnpm -F autotest install --no-frozen-lockfile && pnpm -r --filter '@webspatial/*' run build && pnpm -F autotest run build"
   },
   "keywords": [],
   "author": "",
