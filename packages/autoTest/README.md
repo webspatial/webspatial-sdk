@@ -79,9 +79,21 @@ console.log('Created element ID:', result.id);
 Ensure project dependencies are installed:
 
 ```bash
-cd /Users/bytedance/Projects/reactProj/webspatialTest/webspatial-sdk
-npm install
+cd /Users/bytedance/Projects/reactProj/webspatialTest/newProj1/webspatial-sdk
+pnpm -F autotest install
+pnpm -r --filter "@webspatial/*" run build
+pnpm -F autotest run build
 ```
+
+### Local setup shortcut
+
+From the repository root, run:
+
+```bash
+pnpm -F autotest run setup-local
+```
+
+This installs only the `autotest` package, builds `@webspatial/*` workspace packages needed by `autotest`, and then builds `autotest` itself. It avoids cross-package postinstall conflicts such as esbuild binary version mismatches during a full workspace install.
 
 ### Execute tests
 
