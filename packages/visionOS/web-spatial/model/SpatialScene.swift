@@ -778,12 +778,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onCreateGeometry(command: CreateGeometryProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard let geometry = Dynamic3DManager.createGeometry(command) else {
-            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invaild Geometry params")))
-            return
+        do {
+            let geometry = try Dynamic3DManager.createGeometry(command)
+            addSpatialObject(geometry)
+            resolve(.success(AddSpatializedElementReply(id: geometry.id)))
+        } catch let err as GeometryCreationError {
+            switch err {
+            case .invalidType:
+                resolve(.failure(JsbError(code: .TypeError, message: err.localizedDescription)))
+            case .missingFields:
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: err.localizedDescription)))
+            }
+        } catch {
+            resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
         }
-        addSpatialObject(geometry)
-        resolve(.success(AddSpatializedElementReply(id: geometry.id)))
     }
 
     private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
@@ -1008,7 +1016,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -1023,6 +1031,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // for debug only
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
+
+        let spatialObjectList = SpatialObject.objects.map { object in
+            ["id": object.key, "type": String(describing: type(of: object.value))]
+        }
+        try container.encode(spatialObjectList, forKey: .spatialObjectList)
+
         try container.encode(SpatialObjectWeakRefManager.weakRefObjects.count, forKey: .spatialObjectRefCount)
     }
 }

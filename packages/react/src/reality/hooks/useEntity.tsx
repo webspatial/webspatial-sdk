@@ -24,6 +24,16 @@ export const useEntity = ({
   rotation,
   scale,
   onSpatialTap,
+  onSpatialDragStart,
+  onSpatialDrag,
+  onSpatialDragEnd,
+  onSpatialRotateStart,
+  onSpatialRotate,
+  onSpatialRotateEnd,
+  onSpatialMagnifyStart,
+  onSpatialMagnify,
+  onSpatialMagnifyEnd,
+  // TODO: add other event handlers
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -74,7 +84,15 @@ export const useEntity = ({
   useEntityEvent({
     instance: instanceRef.current,
     onSpatialTap,
-    // TODO: add other event handlers
+    onSpatialDragStart,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotateStart,
+    onSpatialRotate,
+    onSpatialRotateEnd,
+    onSpatialMagnifyStart,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
   })
 
   return instanceRef.current.entity

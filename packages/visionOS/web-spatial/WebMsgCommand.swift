@@ -21,13 +21,16 @@ enum SpatialWebMsgType: String, Encodable {
     case modelloaded = "modelloaded"
     case modelloadfailed = "modelloadfailed"
     case spatialtap = "spatialtap"
+    case spatialdragstart = "spatialdragstart"
     case spatialdrag = "spatialdrag"
     case spatialdragend = "spatialdragend"
+    case spatialrotatestart = "spatialrotatestart"
     case spatialrotate = "spatialrotate"
     case spatialrotateend = "spatialrotateend"
+    case spatialmagnifystart = "spatialmagnifystart"
     case spatialmagnify = "spatialmagnify"
     case spatialmagnifyend = "spatialmagnifyend"
-    
+
     case objectdestroy = "objectdestroy"
 }
 
@@ -68,6 +71,11 @@ struct WebSpatialDragGuestureEvent: Encodable {
     let detail: WebSpatialDragGuestureEventDetail
 }
 
+struct WebSpatialDragStartGuestureEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialdragstart
+    let detail: WebSpatialDragGuestureEventDetail
+}
+
 struct WebSpatialDragEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.spatialdragend
     let detail: WebSpatialDragGuestureEventDetail
@@ -77,10 +85,15 @@ struct WebSpatialRotateGuestureEventDetail: Encodable {
     let rotation: Rotation3D
     let startAnchor3D: UnitPoint3D
     let startLocation3D: Point3D
-    
 }
+
 struct WebSpatialRotateGuestureEvent: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotate
+    let detail: WebSpatialRotateGuestureEventDetail
+}
+
+struct WebSpatialRotateStartGuestureEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialrotatestart
     let detail: WebSpatialRotateGuestureEventDetail
 }
 
@@ -98,6 +111,11 @@ struct WebSpatialMagnifyGuestureEventDetail: Encodable {
 
 struct WebSpatialMagnifyGuestureEvent: Encodable {
     let type: SpatialWebMsgType = SpatialWebMsgType.spatialmagnify
+    let detail: WebSpatialMagnifyGuestureEventDetail
+}
+
+struct WebSpatialMagnifyStartGuestureEvent: Encodable {
+    let type: SpatialWebMsgType = SpatialWebMsgType.spatialmagnifystart
     let detail: WebSpatialMagnifyGuestureEventDetail
 }
 

@@ -1,4 +1,4 @@
-import { Spatialized2DElement } from '@webspatial/core-sdk'
+import { isSSREnv, Spatialized2DElement } from '@webspatial/core-sdk'
 import { getSession } from './getSession'
 
 async function inspectCurrentSpatialScene() {
@@ -15,6 +15,8 @@ function getSpatialized2DElement(
 }
 
 export function enableDebugTool() {
+  if (isSSREnv()) return
+
   Object.assign(window, {
     inspectCurrentSpatialScene,
     getSpatialized2DElement,

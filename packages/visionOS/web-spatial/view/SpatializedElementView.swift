@@ -141,7 +141,6 @@ struct SpatializedElementView<Content: View>: View {
         let opacity = spatializedElement.opacity
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
-        let clip = spatializedElement.clip
 
         let z = translation.z + (spatializedElement.zIndex * zOrderBias)
         let smallOffset = z == 0.0 ? 0.0001 : 0
@@ -155,10 +154,7 @@ struct SpatializedElementView<Content: View>: View {
                 return proxy.transform(in: .named("SpatialScene"))!
             } action: { _, new in
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
-            }.if(clip, transform: { view in
-                view.clipped()
-            })
-
+            }
             .frame(depth: 0, alignment: .back)
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
             .offset(z: smallOffset)

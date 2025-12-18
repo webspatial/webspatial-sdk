@@ -4,13 +4,11 @@ import {
   BoxEntity,
   Entity,
   EntityRef,
-  getSession,
   ModelAsset,
   ModelEntity,
   Reality,
   SceneGraph,
   SpatializedElementRef,
-  toSceneSpatial,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
@@ -115,6 +113,9 @@ function App() {
             console.log('tap reality', e, e.target, e.currentTarget)
             // e.target not work as expected, use e.currentTarget instead
           }}
+          onSpatialDrag={async e => {
+            console.log('parent drag')
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -130,7 +131,9 @@ function App() {
           />
           <ModelAsset
             id="model"
-            src="http://localhost:5173/public/assets/RocketToy1.usdz"
+            src="http://localhost:5173/public/assets/vehicle-speedster.usdz"
+            // src="http://10.0.2.2:5173/public/assets/RocketToy1.usdz"
+            // src="http://10.0.2.2:5173/public/assets/vehicle-speedster.usdz"
             onLoad={() => {
               console.log('model load')
             }}
@@ -143,6 +146,9 @@ function App() {
               position={{ x: -0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
+              onSpatialTap={async e => {
+                console.log('tap child', e.detail.location3D)
+              }}
             >
               <BoxEntity
                 id="boxRed"
@@ -165,7 +171,8 @@ function App() {
                 rotation={boxRotation}
                 onSpatialTap={async e => {
                   setShowModelEntity(pre => !pre)
-                  console.log('ent parent', entRef.current?.entity?.parent)
+                  console.log('ent location', e.detail.location3D)
+                  // e.stopPropagation()
                 }}
               ></BoxEntity>
             </Entity>
@@ -176,9 +183,9 @@ function App() {
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
               // ref={entRef}
-              // onSpatialTap={async e => {
-              //   console.log('parent tap', e.detail.location3D)
-              // }}
+              onSpatialTap={async e => {
+                console.log('parent tap', e.detail.location3D)
+              }}
             >
               <BoxEntity
                 id="boxGreen"
@@ -190,13 +197,13 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  console.log('🚀 ~ e:', e.target)
+                  // console.log('🚀 ~ e:', e.target)
                   console.log(
                     'tap box',
-                    await e.target.convertFromEntityToReality(
-                      'boxGreen',
-                      e.detail.location3D,
-                    ),
+                    // await e.target.convertFromEntityToReality(
+                    //   'boxGreen',
+                    //   e.detail.location3D,
+                    // ),
                     // await e.target.convertFromEntityToEntity(
                     //   'boxGreen',
                     //   'hehe',
@@ -206,62 +213,52 @@ function App() {
                     //     z: 0,
                     //   },
                     // ),
-                  ) // print entityRef
-                  // const pos = await myRef.current?.convertFromEntityToEntity(
-                  //   'boxGreen',
-                  //   'boxRed',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos:', pos)
-                  // const pos2 = await myRef.current?.convertFromEntityToScene(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos2:', pos2)
-                  // const pos3 = await myRef.current?.convertFromSceneToEntity(
-                  //   'boxGreen',
-                  //   e.detail.location3D,
-                  // )
-                  // console.log('🚀 ~ pos3:', pos3)
-                  // console.log(
-                  //   'realityRef.current:',
-                  //   realityRef.current?.clientDepth,
-                  //   realityRef.current?.offsetBack,
-                  //   realityRef.current?.getBoundingClientCube(),
-                  // )
-                  // const domEleReality = document.getElementById("testReality")
-                  // console.log("🚀 ~ domEleReality:", domEleReality)
-
-                  // console.log(
-                  //   'entity position',
-                  //   document.getElementById('boxGreen'),
-                  // )
-                  // console.log(entRef.current)
-                  // console.log(boxEntRef.current)
-                  // console.log('children tap', e.detail.location3D)
-
-                  // console.log('boxGreen children', boxEntRef.current?.entity)
-
-                  console.log(
-                    'realityRef.current:',
-                    realityRef.current?.offsetBack,
                   )
-                  // console.log('ent parent', entRef.current?.entity?.parent)
+                  console.log('🚀 ~ e:', e.detail.location3D)
+                  // console.log(
+                  //   'tap box',
+                  //   await e.target.convertFromEntityToReality(
+                  //     'boxGreen',
+                  //     e.detail.location3D,
+                  //   ),
+                  //   await e.target.convertFromEntityToEntity(
+                  //     'boxGreen',
+                  //     'hehe',
+                  //     {
+                  //       x: 0,
+                  //       y: 0,
+                  //       z: 0,
+                  //     },
+                  //   ),
+                  // )
+                }}
+                onSpatialDrag={async e => {
+                  console.log('🚀 ~drag e:', e.detail)
+                }}
+                onSpatialDragEnd={async e => {
+                  console.log('🚀 ~drag end e:', e.detail)
                 }}
               ></BoxEntity>
             </Entity>
             {showModelEntity && (
-              <ModelEntity
-                id="modelEnt"
-                name="modelEntName"
-                model="model"
-                ref={modelEntRef}
-                rotation={boxRotation}
+              <Entity
                 onSpatialTap={e => {
-                  // console.log('tap model', e.detail.location3D)
-                  // console.log(modelEntRef.current)
+                  console.log('tap model parent', e.detail.location3D)
                 }}
-              />
+              >
+                <ModelEntity
+                  id="modelEnt"
+                  name="modelEntName"
+                  model="model"
+                  ref={modelEntRef}
+                  rotation={boxRotation}
+                  scale={{ x: 0.2, y: 0.2, z: 0.2 }}
+                  onSpatialTap={e => {
+                    console.log('tap model', e.detail.location3D)
+                    // console.log(modelEntRef.current)
+                  }}
+                />
+              </Entity>
             )}
           </SceneGraph>
         </Reality>

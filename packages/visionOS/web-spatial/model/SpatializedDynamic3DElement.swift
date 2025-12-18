@@ -3,19 +3,19 @@ import Foundation
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
     private var rootEntity = SpatialEntity()
-    
-    func getRoot() -> SpatialEntity{
+
+    func getRoot() -> SpatialEntity {
         return rootEntity
     }
-    
-    func addEntity(_ entity:SpatialEntity){
+
+    func addEntity(_ entity: SpatialEntity) {
         rootEntity.addChild(entity)
     }
-    
-    func removeEntity(_ entity:SpatialEntity){
+
+    func removeEntity(_ entity: SpatialEntity) {
         rootEntity.removeChild(entity)
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case type, root
     }
@@ -25,5 +25,10 @@ class SpatializedDynamic3DElement: SpatializedElement {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(SpatializedElementType.SpatializedDynamic3DElement, forKey: .type)
         try container.encode(rootEntity, forKey: .root)
+    }
+
+    override func onDestroy() {
+        rootEntity.destroy()
+        super.onDestroy()
     }
 }

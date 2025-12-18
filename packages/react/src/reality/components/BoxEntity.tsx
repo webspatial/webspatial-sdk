@@ -1,94 +1,34 @@
 import React, { forwardRef } from 'react'
-import { ParentContext, useRealityContext } from '../context'
 import { EntityProps, EntityEventHandler } from '../type'
-import { useEntityRef, EntityRefShape, useEntity } from '../hooks'
-import { SpatialMaterial } from '@webspatial/core-sdk'
-import { AbortResourceManager } from '../utils'
+import { EntityRefShape } from '../hooks'
+import { SpatialBoxGeometryOptions } from '@webspatial/core-sdk'
+import { GeometryEntity } from './GeometryEntity'
+import { useRealityContext } from '../context'
 
-type BoxProps = {
-  width?: number
-  height?: number
-  depth?: number
-  cornerRadius?: number
-  splitFaces?: boolean
-  materials?: string[]
-}
-
-type Props = EntityProps &
-  BoxProps &
+type BoxEntityProps = EntityProps &
   EntityEventHandler & {
     children?: React.ReactNode
-  }
+    materials?: string[]
+  } & SpatialBoxGeometryOptions
 
-export const BoxEntity = forwardRef<EntityRefShape, Props>(
-  (
-    {
-      id,
-      width = 0.2,
-      height = 0.2,
-      depth = 0.1,
-      splitFaces = false,
-      cornerRadius,
-      materials,
-      position,
-      rotation,
-      scale,
-      onSpatialTap,
-      children,
-      name,
-    },
-    ref,
-  ) => {
+export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
+  ({ children, ...props }, ref) => {
     const ctx = useRealityContext()
-    const entity = useEntity({
-      ref,
-      id,
-      position,
-      rotation,
-      scale,
-      onSpatialTap,
-      createEntity: async (signal: AbortSignal) => {
-        const manager = new AbortResourceManager(signal)
-
-        try {
-          const ent = await manager.addResource(() =>
-            ctx!.session.createEntity({ id, name }),
-          )
-
-          const boxGeometry = await manager.addResource(() =>
-            ctx!.session.createBoxGeometry({
-              width,
-              height,
-              depth,
-              cornerRadius,
-              splitFaces,
-            }),
-          )
-
-          const materialList: SpatialMaterial[] = await Promise.all(
-            materials
-              ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
-              .filter(Boolean) ?? [],
-          )
-          const modelComponent = await manager.addResource(() =>
-            ctx!.session.createModelComponent({
-              mesh: boxGeometry,
-              materials: materialList,
-            }),
-          )
-
-          await ent.addComponent(modelComponent)
-          return ent
-        } catch (error) {
-          await manager.dispose()
-          return null as any
-        }
-      },
-    })
-
-    if (!entity) return null
     return (
-      <ParentContext.Provider value={entity}>{children}</ParentContext.Provider>
+      <GeometryEntity
+        {...props}
+        ref={ref}
+        createGeometry={options => ctx!.session.createBoxGeometry(options)}
+        geometryOptions={{
+          width: props.width,
+          height: props.height,
+          depth: props.depth,
+          cornerRadius: props.cornerRadius,
+          splitFaces: props.splitFaces,
+        }}
+      >
+        {children}
+      </GeometryEntity>
     )
   },
 )
