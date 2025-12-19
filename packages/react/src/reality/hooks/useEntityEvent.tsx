@@ -1,11 +1,23 @@
 import React, { useEffect } from 'react'
 import { EntityEventHandler, eventMap } from '../type'
 import { EntityRef } from './useEntityRef'
+import { SpatialEntity } from '@webspatial/core-sdk'
 
 function createEventProxy(ev: any, instance: EntityRef) {
   return new Proxy(ev, {
     get(target, prop: PropertyKey) {
-      if (prop === 'target' || prop === 'currentTarget') {
+      // Align with W3C: currentTarget is the listener owner
+      if (prop === 'currentTarget') {
+        return instance
+      }
+      // Align with W3C: target is the original dispatch target
+      if (prop === 'target') {
+        const origin = (target as any).__origin as SpatialEntity | undefined
+        if (origin) {
+          // Create a lightweight EntityRef for original target
+          return new EntityRef(origin, null)
+        }
+        // Fallback: if origin not set, return current instance
         return instance
       }
       const val = (target as any)[prop]
