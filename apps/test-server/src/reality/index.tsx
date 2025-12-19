@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
+  enableDebugTool,
   Entity,
   EntityRef,
   ModelAsset,
@@ -14,6 +15,8 @@ import {
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
+
+enableDebugTool()
 
 function App() {
   const [logs, setLogs] = useState('')
@@ -70,6 +73,7 @@ function App() {
   const entRef = useRef<EntityRef>(null)
   const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
+  const [showBoxRed, setShowBoxRed] = useState(true)
 
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
@@ -95,6 +99,25 @@ function App() {
         }}
       >
         toggle box rotation
+      </button>
+
+      <button
+        className={btnCls}
+        onClick={() => {
+          setShowBoxRed(prev => !prev)
+        }}
+      >
+        toggle red box
+      </button>
+
+      <h1 className="text-2xl text-black"> emtpy test</h1>
+      <button
+        className={btnCls}
+        onClick={() => {
+          location.href = './empty.html'
+        }}
+      >
+        go empty
       </button>
 
       <div>
@@ -150,31 +173,33 @@ function App() {
                 console.log('tap child', e.detail.location3D)
               }}
             >
-              <BoxEntity
-                id="boxRed"
-                name="boxRedName"
-                ref={boxEntRef}
-                width={0.2}
-                height={0.2}
-                depth={0.1}
-                cornerRadius={1}
-                materials={[
-                  'matRed',
-                  'matGreen',
-                  'matRed',
-                  'matGreen',
-                  'matRed',
-                  'matGreen',
-                ]}
-                splitFaces={true}
-                position={boxPosition}
-                rotation={boxRotation}
-                onSpatialTap={async e => {
-                  setShowModelEntity(pre => !pre)
-                  console.log('ent location', e.detail.location3D)
-                  // e.stopPropagation()
-                }}
-              ></BoxEntity>
+              {showBoxRed && (
+                <BoxEntity
+                  id="boxRed"
+                  name="boxRedName"
+                  ref={boxEntRef}
+                  width={0.2}
+                  height={0.2}
+                  depth={0.1}
+                  cornerRadius={1}
+                  materials={[
+                    'matRed',
+                    'matGreen',
+                    'matRed',
+                    'matGreen',
+                    'matRed',
+                    'matGreen',
+                  ]}
+                  splitFaces={true}
+                  position={boxPosition}
+                  rotation={boxRotation}
+                  // onSpatialTap={async e => {
+                  //   setShowModelEntity(pre => !pre)
+                  //   console.log('ent location', e.detail.location3D)
+                  //   // e.stopPropagation()
+                  // }}
+                ></BoxEntity>
+              )}
             </Entity>
             <Entity
               id="hehe"
@@ -231,6 +256,9 @@ function App() {
                   //     },
                   //   ),
                   // )
+                }}
+                onSpatialDragStart={async e => {
+                  console.log('🚀 ~drag start e:', e.detail)
                 }}
                 onSpatialDrag={async e => {
                   console.log('🚀 ~drag e:', e.detail)

@@ -58,6 +58,7 @@ function App() {
           ans += args[i]
         }
       }
+      console.log(ans)
       return ans
     })
   }
@@ -120,9 +121,9 @@ function App() {
             'sa',
             () => ({
               defaultSize: {
-                width: 2,
+                width: 1,
                 height: 1,
-                depth: 1,
+                depth: 0.1,
               },
               // resizability: {
               //   minWidth: 0.5,
@@ -204,7 +205,7 @@ function App() {
               defaultSize: {
                 width: 2,
                 height: 1,
-                depth: 1,
+                depth: 0.1,
               },
               worldScaling: 'dynamic',
               // worldAlignment: 'automatic',
@@ -232,7 +233,7 @@ function App() {
               defaultSize: {
                 width: 2,
                 height: 1,
-                depth: 1,
+                depth: 0.1,
               },
               // worldScaling: 'automatic',
               worldAlignment: 'gravityAligned',
@@ -354,8 +355,8 @@ function App() {
           startlog('open')
           initScene('sa', () => ({
             defaultSize: {
-              width: 900,
-              height: 900,
+              width: 1200,
+              height: 700,
             },
             resizability: {
               minWidth: 700,
