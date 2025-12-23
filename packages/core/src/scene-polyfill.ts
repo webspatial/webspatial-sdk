@@ -50,17 +50,37 @@ class SceneManager {
     return this.configMap[name]
   }
 
+  // Ensure URL is absolute; only convert when a relative path is provided
+  // - Keep external and special schemes untouched (http, https, data, blob, about, file, mailto, etc.)
+  // - Handle protocol-relative URLs (//example.com/path)
+  // - Resolve relative paths against document.baseURI (respects <base href>)
+  private ensureAbsoluteUrl(raw?: string): string | undefined {
+    if (!raw) return raw
+    // Already has a scheme (includes internal webspatial:// which is handled earlier)
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw)) {
+      return raw
+    }
+    // Protocol-relative URL
+    if (raw.startsWith('//')) {
+      return `${window.location.protocol}${raw}`
+    }
+    // Resolve against base URI
+    try {
+      return new URL(raw, document.baseURI).toString()
+    } catch {
+      // Fallback: leave unchanged
+      return raw
+    }
+  }
+
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
       return this.originalOpen(url, target, features)
     }
 
-    //  absolute url
-    const prefix = `${window.location.protocol}//${window.location.host}`
-    if (!url?.startsWith(prefix)) {
-      url = prefix + url
-    }
+    // Normalize only relative URLs to absolute for platform handling
+    url = this.ensureAbsoluteUrl(url)
 
     // if target is special
     if (target === '_self' || target === '_parent' || target === '_top') {

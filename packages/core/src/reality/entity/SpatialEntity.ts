@@ -206,6 +206,10 @@ export class SpatialEntity extends SpatialObject {
   }
 
   dispatchEvent(evt: CustomEvent) {
+    // Set origin once at the first dispatch in the bubbling chain
+    if (!(evt as any).__origin) {
+      Object.defineProperty(evt, '__origin', { value: this, enumerable: false })
+    }
     this.events[evt.type]?.(evt)
     if (evt.bubbles && !evt.cancelBubble) {
       if (this.parent && this.parent instanceof SpatialEntity) {

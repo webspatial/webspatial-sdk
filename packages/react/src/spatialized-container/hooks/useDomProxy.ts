@@ -54,19 +54,45 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
               if (!self.styleProxy) {
                 self.styleProxy = new Proxy<CSSStyleDeclaration>(target.style, {
                   get(target, prop) {
-                    if (prop === 'visibility') {
+                    if (prop === 'visibility' || prop === 'transform') {
                       return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
-                        'visibility',
-                      )
-                    }
-                    if (prop === 'transform') {
-                      return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
-                        'transform',
+                        prop as string,
                       )
                     }
                     const value = Reflect.get(target, prop)
                     if (typeof value === 'function') {
-                      return value.bind(target)
+                      if (
+                        prop === 'setProperty' ||
+                        prop === 'removeProperty' ||
+                        prop === 'getPropertyValue'
+                      ) {
+                        return function (this: any, ...args: any[]) {
+                          const validProperties = ['visibility', 'transform']
+                          const [property] = args
+
+                          if (validProperties.includes(property)) {
+                            if (prop === 'setProperty') {
+                              const [, kValue] = args
+                              self.transformVisibilityTaskContainerDom?.style.setProperty(
+                                property,
+                                kValue as string,
+                              )
+                            } else if (prop === 'removeProperty') {
+                              self.transformVisibilityTaskContainerDom?.style.removeProperty(
+                                property,
+                              )
+                            } else if (prop === 'getPropertyValue') {
+                              return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
+                                property,
+                              )
+                            }
+                          } else {
+                            return value.apply(this, args)
+                          }
+                        }.bind(target)
+                      } else {
+                        return value.bind(target)
+                      }
                     } else {
                       return value
                     }
