@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 1.1.0
+
+### Minor Changes
+
+- 5055826: Fix depth property not working on Model tag
+
 ## 1.0.5
 
 ### Patch Changes
