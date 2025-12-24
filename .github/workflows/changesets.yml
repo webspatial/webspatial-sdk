@@ -5,6 +5,7 @@ permissions:
   issues: write
   pull-requests: write
   packages: write
+  id-token: write  # Required for OIDC
 
 on:
   push:
@@ -49,7 +50,6 @@ jobs:
           publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create and push Git tags for published packages
         if: steps.changesets.outputs.published == 'true'
