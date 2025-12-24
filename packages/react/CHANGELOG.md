@@ -1,13 +1,13 @@
 # @webspatial/react-sdk
 
-## 2.0.0
+## 1.1.0
 
 ### Patch Changes
 
 - d1242ea: fixbug when spatialdiv.style.setProperty visibility/transform
 - ffcfcc8: fix window.open URL cast issue
 - Updated dependencies [3412d6d]
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/core-sdk@1.1.0
 
 ## 1.0.5
 
