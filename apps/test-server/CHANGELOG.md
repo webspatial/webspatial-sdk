@@ -7,8 +7,8 @@
 - Updated dependencies [d1242ea]
 - Updated dependencies [3412d6d]
 - Updated dependencies [ffcfcc8]
-  - @webspatial/react-sdk@2.0.0
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/react-sdk@1.1.0
+  - @webspatial/core-sdk@1.1.0
 
 ## 0.0.17
 
