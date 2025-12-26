@@ -1,7 +1,6 @@
 import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
 import { SSRPlatform } from './ssr/SSRPlatform'
-import { PuppeteerPlatform } from './puppeteer/PuppeteerPlatform'
 
 export function createPlatform(): PlatformAbility {
   if (isSSREnv()) {
@@ -15,6 +14,8 @@ export function createPlatform(): PlatformAbility {
     const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
     return new AndroidPlatform()
   } else if (window.navigator.userAgent.includes('Puppeteer')) {
+    const PuppeteerPlatform =
+      require('./puppeteer/PuppeteerPlatform').PuppeteerPlatform
     return new PuppeteerPlatform()
   } else {
     const VisionOSPlatform =

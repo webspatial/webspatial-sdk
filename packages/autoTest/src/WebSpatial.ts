@@ -120,6 +120,7 @@ export class WebSpatial {
             depth: 'depth' in child ? child.depth : undefined,
             opacity: 'opacity' in child ? child.opacity : undefined,
             visibility: 'visibility' in child ? child.visibility : undefined,
+            backOffset: 'backOffset' in child ? child.backOffset : undefined,
             zIndex: 'zIndex' in child ? child.zIndex : undefined,
             enableDragEndGesture:
               'enableDragEndGesture' in child
