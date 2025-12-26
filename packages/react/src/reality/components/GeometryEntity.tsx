@@ -84,6 +84,7 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
           await ent.addComponent(modelComponent)
           return ent
         } catch (error) {
+          console.error(error)
           await manager.dispose()
           return null as any
         }

@@ -10,7 +10,7 @@ function App() {
       <h1>Static 3D model test</h1>
       <Model
         enable-xr
-        style={{ width: '800px', height: '200px' }}
+        style={{ width: '800px', height: '200px', '--xr-depth': '50px' }}
         src={'/public/modelasset/cone.usdz'}
       >
         <div> this is place holder when failure </div>

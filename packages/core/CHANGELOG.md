@@ -1,5 +1,11 @@
 # @webspatial/core-sdk
 
+## 1.1.0
+
+### Patch Changes
+
+- 3412d6d: using correct spatialid name when running on Android
+
 ## 1.0.5
 
 ## 1.0.4
