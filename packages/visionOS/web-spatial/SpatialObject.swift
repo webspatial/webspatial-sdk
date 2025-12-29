@@ -15,26 +15,36 @@ class WeakReference<T: AnyObject> {
 
 class SpatialObjectWeakRefManager {
     static var weakRefObjects = [String: WeakReference<AnyObject>]()
-    
+    private static let serialQueue = DispatchQueue(label: "com.xrsdk.spatialObjectWeakRefQueue")
+
     static func setWeakRef<T: AnyObject>(_ id: String, _ object: T) {
-        weakRefObjects[id] = WeakReference(object as AnyObject)
+        serialQueue.sync {
+            weakRefObjects[id] = WeakReference(object as AnyObject)
+        }
     }
-    
+
     static func getWeakRef(_ id: String) -> AnyObject? {
-        return weakRefObjects[id]?.value
+        serialQueue.sync {
+            weakRefObjects[id]?.value
+        }
     }
-    
+
     static func removeWeakRef(_ id: String) {
-        weakRefObjects.removeValue(forKey: id)
+        serialQueue.sync {
+            weakRefObjects.removeValue(forKey: id)
+        }
     }
 }
 
 class SpatialObject: SpatialObjectProtocol {
-    internal var listeners: [String : [(Any, Any) -> Void]] = [:]
-    static var objects = [String: (any SpatialObjectProtocol)]()
-    
+    var listeners: [String: [(Any, Any) -> Void]] = [:]
+    static var objects = [String: any SpatialObjectProtocol]()
+    private static let serialQueue = DispatchQueue(label: "com.xrsdk.spatialObjectQueue")
+
     static func get(_ id: String) -> (any SpatialObjectProtocol)? {
-        return objects[id]
+        serialQueue.sync {
+            objects[id]
+        }
     }
 
     static func getRefObject(_ id: String) -> SpatialObject? {
@@ -69,14 +79,18 @@ class SpatialObject: SpatialObjectProtocol {
     init() {
         spatialId = UUID().uuidString
         id = spatialId
-        SpatialObject.objects[spatialId] = self
+        SpatialObject.serialQueue.sync {
+            SpatialObject.objects[spatialId] = self
+        }
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
 
     init(_ _id: String) {
         spatialId = _id
         id = spatialId
-        SpatialObject.objects[spatialId] = self
+        SpatialObject.serialQueue.sync {
+            SpatialObject.objects[spatialId] = self
+        }
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
 
@@ -99,10 +113,12 @@ class SpatialObject: SpatialObjectProtocol {
         _isDestroyed = true
 
         emit(event: Events.Destroyed.rawValue, data: ["object": self])
-        SpatialObject.objects.removeValue(forKey: spatialId)
+        SpatialObject.serialQueue.sync {
+            SpatialObject.objects.removeValue(forKey: spatialId)
+        }
 
         listeners = [:]
     }
 
-    internal func onDestroy() {}
+    func onDestroy() {}
 }
