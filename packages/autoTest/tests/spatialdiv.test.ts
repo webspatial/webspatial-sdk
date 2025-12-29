@@ -49,7 +49,7 @@ describe('Enables spatial capabilities in HTML elements with nesting support tes
       headless: true,
       timeout: 30000,
       enableXR: true, // Enable XR support for testing JSBCommand and spatial features
-      devtools: true, // Enable devtools for debugging
+      // devtools: process.env.CI !== 'true',
     })
 
     // start runner

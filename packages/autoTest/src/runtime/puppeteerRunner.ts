@@ -102,7 +102,9 @@ export class PuppeteerRunner {
     const height = mergedOptions.height || 800
     const headless = mergedOptions.headless ?? true
     const timeout = mergedOptions.timeout || 60000
-    const devtools = mergedOptions.devtools ?? true
+    const devtools = mergedOptions.devtools ?? false
+    // const isCI = process.env.CI === 'true'
+    // const devtools = mergedOptions.devtools ?? !isCI
 
     console.log('Starting Puppeteer with options:', {
       width,
@@ -125,6 +127,21 @@ export class PuppeteerRunner {
     })
 
     this.page = await this.browser.newPage()
+
+    // Forward browser-side errors and logs to Node for CI visibility
+    this.page.on('pageerror', error => {
+      console.error('Puppeteer pageerror:', error)
+    })
+    this.page.on('requestfailed', req => {
+      console.error('Puppeteer requestfailed:', req.url(), req.failure()?.errorText)
+    })
+    this.page.on('console', msg => {
+      try {
+        console.log(`[browser:${msg.type()}]`, msg.text())
+      } catch (e) {
+        console.log(`[browser:${msg.type()}]`, 'Console message parse error')
+      }
+    })
 
     // Set viewport size
     const viewport: Viewport = {
