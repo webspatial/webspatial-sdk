@@ -6,17 +6,16 @@ export function createPlatform(): PlatformAbility {
   if (isSSREnv()) {
     return new SSRPlatform()
   }
-
-  if (
+  if (window.navigator.userAgent.includes('Puppeteer')) {
+    const PuppeteerPlatform =
+      require('./puppeteer/PuppeteerPlatform').PuppeteerPlatform
+    return new PuppeteerPlatform()
+  } else if (
     window.navigator.userAgent.includes('Android') ||
     window.navigator.userAgent.includes('Linux')
   ) {
     const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
     return new AndroidPlatform()
-  } else if (window.navigator.userAgent.includes('Puppeteer')) {
-    const PuppeteerPlatform =
-      require('./puppeteer/PuppeteerPlatform').PuppeteerPlatform
-    return new PuppeteerPlatform()
   } else {
     const VisionOSPlatform =
       require('./vision-os/VisionOSPlatform').VisionOSPlatform
