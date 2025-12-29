@@ -1,3 +1,10 @@
 import { defineConfig } from 'vite'
 
-export default defineConfig({})
+export default defineConfig({
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
+})
