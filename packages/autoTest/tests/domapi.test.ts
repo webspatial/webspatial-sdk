@@ -47,7 +47,7 @@ describe('DOM API includes spatial support', function (this: Mocha.Suite) {
     runner.init({
       width: 1280,
       height: 800,
-      headless: false,
+      headless: true,
       timeout: 30000,
       enableXR: true, // Enable XR support for testing JSBCommand and spatial features
     })
@@ -200,7 +200,6 @@ describe('DOM API includes spatial support', function (this: Mocha.Suite) {
       // wait for the spatialized element to be ready
       await runner.waitForFunction(() => !!(window as any).ref?.current)
 
-      //
       const interactionResult = await runner.evaluate(() => {
         const sections = Array.from(
           document.querySelectorAll('.grid.grid-cols-2'),
