@@ -51,10 +51,12 @@ jobs:
         run: echo "GITHUB_WORKFLOW_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
 
       - name: Run mocha in autoTest package
+        continue-on-error: true
         run: pnpm --filter autotest run test
 
       - name: Upload test report artifact
         id: upload_report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: autotest-report

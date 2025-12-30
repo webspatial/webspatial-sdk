@@ -659,12 +659,12 @@ export class PuppeteerRunner {
       (data, callback) => {
         // console.log('Handling UpdateSpatialized2DElementProperties:', data)
         const elementId = data.id || (data as any).spatialObject?.id
-        // console.log('Handling UpdateSpatialized2DElementProperties with ID:', elementId)
+        console.log('Handling UpdateSpatialized2DElementProperties with ID:', elementId)
         // console.log('UpdateSpatialized2DElementProperties id:', data.id)
 
         // update jsbManager spatialObjects properties
         const element = this.jsbManager?.getSpatialObject(data.id)
-        console.log('found element:', element)
+        // console.log('found element:', element)
         if (element) {
           element.properties = { ...element.properties, ...data }
           this.jsbManager?.addSpatialObject(data.id, element)
@@ -700,7 +700,7 @@ export class PuppeteerRunner {
 
         // update jsbManager spatialObjects transform
         const element = this.jsbManager?.getSpatialObject(data.id)
-        console.log('found element:', element)
+        // console.log('found element:', element)
         if (element) {
           // Following VisionOS implementation: check and use the matrix array
           if (data.matrix) {
@@ -741,9 +741,9 @@ export class PuppeteerRunner {
         this.webSpatial
           ?.getCurrentScene()
           ?.handleUpdateSpatializedElementTransform(data)
-        const spatializedElement = this.webSpatial
-          ?.getCurrentScene()
-          ?.findSpatialObject(data.id)
+        // const spatializedElement = this.webSpatial
+        //   ?.getCurrentScene()
+        //   ?.findSpatialObject(data.id)
         // console.log(
         //   'UpdateSpatializedElementTransform spatialScene updated element:',
         //   spatializedElement,
