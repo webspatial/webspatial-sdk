@@ -49,7 +49,6 @@ export class PuppeteerRunner {
   private isInitialized: boolean = false
   private initOptions: PuppeteerRunnerOptions = {}
   private jsbManager: JSBManager | null = null
-  // private puppeteerPlatform: PuppeteerPlatform | null = null
   private webSpatial: WebSpatial | null = null
 
   /**
@@ -133,7 +132,11 @@ export class PuppeteerRunner {
       console.error('Puppeteer pageerror:', error)
     })
     this.page.on('requestfailed', req => {
-      console.error('Puppeteer requestfailed:', req.url(), req.failure()?.errorText)
+      console.error(
+        'Puppeteer requestfailed:',
+        req.url(),
+        req.failure()?.errorText,
+      )
     })
     this.page.on('console', msg => {
       try {
@@ -328,19 +331,6 @@ export class PuppeteerRunner {
         win.WebSpatailNativeVersion = 'PACKAGE_VERSION'
         console.log('WebSpatialEnabled:', win.WebSpatialEnabled)
         console.log('WebSpatailNativeVersion:', win.WebSpatailNativeVersion)
-
-        // Mock custom JSB bridge
-        win.customJSBBridge = {
-          messageHandlers: {
-            bridge: {
-              postMessage: (message: string) => {
-                // This method will be overridden by our implementation in evaluate
-                console.log('Mock bridge postMessage:', message)
-                return Promise.resolve({})
-              },
-            },
-          },
-        }
 
         // Override all console methods to forward logs to Node.js
         // Use type assertion to handle console methods safely
@@ -659,7 +649,10 @@ export class PuppeteerRunner {
       (data, callback) => {
         // console.log('Handling UpdateSpatialized2DElementProperties:', data)
         const elementId = data.id || (data as any).spatialObject?.id
-        console.log('Handling UpdateSpatialized2DElementProperties with ID:', elementId)
+        console.log(
+          'Handling UpdateSpatialized2DElementProperties with ID:',
+          elementId,
+        )
         // console.log('UpdateSpatialized2DElementProperties id:', data.id)
 
         // update jsbManager spatialObjects properties
