@@ -17,17 +17,17 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     let modelURL: String
 }
 
-struct CreateSpatializedDynamic3DElement: CommandDataProtocol{
+struct CreateSpatializedDynamic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedDynamic3DElement"
     let test: Bool
 }
 
-struct CreateSpatialEntity: CommandDataProtocol{
+struct CreateSpatialEntity: CommandDataProtocol {
     static let commandType: String = "CreateSpatialEntity"
     let name: String?
 }
 
-struct CreateGeometryProperties: CommandDataProtocol{
+struct CreateGeometryProperties: CommandDataProtocol {
     static let commandType: String = "CreateGeometry"
     let type: String
     let width: Float?
@@ -38,7 +38,7 @@ struct CreateGeometryProperties: CommandDataProtocol{
     let radius: Float?
 }
 
-struct CreateUnlitMaterial: CommandDataProtocol{
+struct CreateUnlitMaterial: CommandDataProtocol {
     static let commandType: String = "CreateUnlitMaterial"
     let color: String?
     let textureId: String?
@@ -46,87 +46,87 @@ struct CreateUnlitMaterial: CommandDataProtocol{
     let opacity: Float?
 }
 
-struct CreateTexture: CommandDataProtocol{
+struct CreateTexture: CommandDataProtocol {
     static let commandType: String = "CreateTexture"
     let url: String
 }
 
-struct CreateModelAsset: CommandDataProtocol{
+struct CreateModelAsset: CommandDataProtocol {
     static let commandType: String = "CreateModelAsset"
     let url: String
 }
 
-struct CreateSpatialModelEntity: CommandDataProtocol{
+struct CreateSpatialModelEntity: CommandDataProtocol {
     static let commandType: String = "CreateSpatialModelEntity"
-    let modelAssetId:String
-    let name:String?
+    let modelAssetId: String
+    let name: String?
 }
 
-struct CreateModelComponent: CommandDataProtocol{
+struct CreateModelComponent: CommandDataProtocol {
     static let commandType: String = "CreateModelComponent"
     let geometryId: String
     let materialIds: [String]
 }
 
-struct AddComponentToEntity: CommandDataProtocol{
+struct AddComponentToEntity: CommandDataProtocol {
     static let commandType: String = "AddComponentToEntity"
     let entityId: String
     let componentId: String
 }
 
-struct AddEntityToDynamic3D: CommandDataProtocol{
+struct AddEntityToDynamic3D: CommandDataProtocol {
     static let commandType: String = "AddEntityToDynamic3D"
     let dynamic3dId: String
     let entityId: String
 }
 
-struct AddEntityToEntity: CommandDataProtocol{
+struct AddEntityToEntity: CommandDataProtocol {
     static let commandType: String = "AddEntityToEntity"
     let childId: String
     let parentId: String
 }
 
-struct SetParentForEntity: CommandDataProtocol{
+struct SetParentForEntity: CommandDataProtocol {
     static let commandType: String = "SetParentToEntity"
     let childId: String
     let parentId: String?
 }
 
-struct RemoveEntityFromParent: CommandDataProtocol{
+struct RemoveEntityFromParent: CommandDataProtocol {
     static let commandType: String = "RemoveEntityFromParent"
     let entityId: String
 }
 
-struct UpdateEntityProperties: CommandDataProtocol{
+struct UpdateEntityProperties: CommandDataProtocol {
     static let commandType: String = "UpdateEntityProperties"
     let entityId: String
-    let transform: [String:Float]
+    let transform: [String: Float]
 }
 
-struct UpdateEntityEvent: CommandDataProtocol{
+struct UpdateEntityEvent: CommandDataProtocol {
     static let commandType: String = "UpdateEntityEvent"
     let type: String
     let entityId: String
-    let isEnable:Bool
+    let isEnable: Bool
 }
 
-struct ConvertFromEntityToEntity: CommandDataProtocol{
+struct ConvertFromEntityToEntity: CommandDataProtocol {
     static let commandType: String = "ConvertFromEntityToEntity"
     let fromEntityId: String
     let toEntityId: String
-    let position:Vec3
+    let position: Vec3
 }
 
-struct ConvertFromEntityToScene: CommandDataProtocol{
+struct ConvertFromEntityToScene: CommandDataProtocol {
     static let commandType: String = "ConvertFromEntityToScene"
     let fromEntityId: String
-    let position:Vec3
+    let position: Vec3
 }
 
-struct ConvertFromSceneToEntity: CommandDataProtocol{
+struct ConvertFromSceneToEntity: CommandDataProtocol {
     static let commandType: String = "ConvertFromSceneToEntity"
     let entityId: String
-    let position:Vec3
+    let position: Vec3
 }
 
 struct InspectCommand: CommandDataProtocol {
@@ -156,11 +156,11 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var visible: Bool? { get }
     var scrollWithParent: Bool? { get }
     var zIndex: Double? { get }
-    
+
     var enableDragStartGesture: Bool? { get }
     var enableDragGesture: Bool? { get }
     var enableDragEndGesture: Bool? { get }
-    
+
     var enableRotateStartGesture: Bool? { get }
     var enableRotateGesture: Bool? { get }
     var enableRotateEndGesture: Bool? { get }
@@ -185,7 +185,7 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    
+
     var enableDragStartGesture: Bool?
     var enableDragGesture: Bool?
     var enableDragEndGesture: Bool?
@@ -195,12 +195,12 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     var enableMagnifyStartGesture: Bool?
     var enableMagnifyGesture: Bool?
     var enableMagnifyEndGesture: Bool?
-    var enableTapGesture: Bool?  
-    
+    var enableTapGesture: Bool?
+
     let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
-    
+
     // this value is used by previous WebSpatial code, keep it here only for Compatibility consideration
     // may delete it when we think it's not needed
     let scrollEdgeInsetsMarginRight: Double?
@@ -211,7 +211,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let id: String
     let name: String?
     var clientX: Double?
-    var clientY: Double?  
+    var clientY: Double?
     let width: Double?
     let height: Double?
     let depth: Double?
@@ -221,7 +221,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    
+
     var enableDragStartGesture: Bool?
     let enableDragGesture: Bool?
     let enableDragEndGesture: Bool?
@@ -252,7 +252,7 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     let visible: Bool?
     let scrollWithParent: Bool?
     let zIndex: Double?
-    
+
     var enableDragStartGesture: Bool?
     let enableDragGesture: Bool?
     let enableDragEndGesture: Bool?
@@ -291,12 +291,12 @@ enum BaseplateVisibilityJSB: String, Codable {
     case automatic
     case visible
     case hidden
-    
+
     var toSDK: Visibility {
         switch self {
-            case .automatic: return .automatic
-            case .visible: return .visible
-            case .hidden: return .hidden
+        case .automatic: return .automatic
+        case .visible: return .visible
+        case .hidden: return .hidden
         }
     }
 }
@@ -304,11 +304,11 @@ enum BaseplateVisibilityJSB: String, Codable {
 enum WorldScalingJSB: String, Codable {
     case automatic
     case dynamic
-    
+
     var toSDK: WorldScalingBehavior {
         switch self {
-            case .automatic: return .automatic
-            case .dynamic: return .dynamic
+        case .automatic: return .automatic
+        case .dynamic: return .dynamic
         }
     }
 }
@@ -317,12 +317,12 @@ enum WorldAlignmentJSB: String, Codable {
     case adaptive
     case automatic
     case gravityAligned
-    
+
     var toSDK: WorldAlignmentBehavior {
         switch self {
-            case .adaptive: return .adaptive
-            case .automatic: return .automatic
-            case .gravityAligned: return .gravityAligned
+        case .adaptive: return .adaptive
+        case .automatic: return .automatic
+        case .gravityAligned: return .gravityAligned
         }
     }
 }
@@ -345,4 +345,37 @@ struct FocusSceneCommand: CommandDataProtocol {
 
 struct GetSpatialSceneStateCommand: CommandDataProtocol {
     static let commandType = "GetSpatialSceneState"
+}
+
+import Foundation
+
+struct CreateAttachment: CommandDataProtocol {
+    static let commandType: String = "CreateAttachment"
+    let id: String
+    let entityId: String
+    let url: String
+    let offsetX: Float
+    let offsetY: Float
+    let offsetZ: Float
+    let width: Double
+    let height: Double
+}
+
+struct UpdateAttachment: CommandDataProtocol {
+    static let commandType: String = "UpdateAttachment"
+    let id: String
+    let offsetX: Float?
+    let offsetY: Float?
+    let offsetZ: Float?
+    let width: Double?
+    let height: Double?
+}
+
+struct DestroyAttachment: CommandDataProtocol {
+    static let commandType: String = "DestroyAttachment"
+    let id: String
+}
+
+struct AttachmentCreatedReply: Encodable {
+    let id: String
 }

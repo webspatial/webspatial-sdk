@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import Observation
 import simd
 import SwiftUI
 
@@ -39,7 +40,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    public enum WindowStyle: String, Codable, CaseIterable {
+    enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
     }
@@ -51,7 +52,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    public var windowStyle: WindowStyle {
+    var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
@@ -83,6 +84,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     // TOPIC end
 
     var spatialWebViewModel: SpatialWebViewModel
+    let attachmentManager = AttachmentManager()
 
     init(
         _ url: String,
@@ -224,9 +226,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    public var sceneConfig: SceneOptions?
+    var sceneConfig: SceneOptions?
 
-    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+    func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
@@ -248,7 +250,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle && newState == .willVisible {
+        } else if oldState == .idle, newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
@@ -299,12 +301,51 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
         spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
 
+        spatialWebViewModel.addJSBListener(CreateAttachment.self, onCreateAttachment)
+        spatialWebViewModel.addJSBListener(UpdateAttachment.self, onUpdateAttachment)
+        spatialWebViewModel.addJSBListener(DestroyAttachment.self, onDestroyAttachment)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
         spatialWebViewModel
             .addNavigationListener(protocal: "webspatial://createSpatialScene", event: handleNavigationCheckCustom)
+    }
+
+    private func onCreateAttachment(command: CreateAttachment, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let offset = SIMD3<Float>(command.offsetX, command.offsetY, command.offsetZ)
+        let size = CGSize(width: command.width, height: command.height)
+
+        attachmentManager.create(
+            id: command.id,
+            entityId: command.entityId,
+            url: command.url,
+            offset: offset,
+            size: size
+        )
+
+        resolve(.success(AttachmentCreatedReply(id: command.id)))
+    }
+
+    private func onUpdateAttachment(command: UpdateAttachment, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        var offset: SIMD3<Float>? = nil
+        if let x = command.offsetX, let y = command.offsetY, let z = command.offsetZ {
+            offset = SIMD3<Float>(x, y, z)
+        }
+
+        var size: CGSize? = nil
+        if let w = command.width, let h = command.height {
+            size = CGSize(width: w, height: h)
+        }
+
+        attachmentManager.update(id: command.id, offset: offset, size: size)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onDestroyAttachment(command: DestroyAttachment, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        attachmentManager.destroy(id: command.id)
+        resolve(.success(baseReplyData))
     }
 
     var width: Double = 0
@@ -328,7 +369,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    public var didFailLoad = false
+    var didFailLoad = false
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
