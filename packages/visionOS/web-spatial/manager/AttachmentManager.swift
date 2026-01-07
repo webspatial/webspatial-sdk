@@ -5,6 +5,7 @@ import SwiftUI
 struct AttachmentInfo: Identifiable {
     let id: String
     let entityId: String
+    var anchor: SIMD3<Float>
     var offset: SIMD3<Float>
     var size: CGSize
     let webViewModel: SpatialWebViewModel
@@ -14,13 +15,13 @@ struct AttachmentInfo: Identifiable {
 class AttachmentManager {
     var attachments: [String: AttachmentInfo] = [:]
 
-    func create(id: String, entityId: String, url: String, offset: SIMD3<Float>, size: CGSize) {
-        let webViewModel = SpatialWebViewModel(url: url)
-        webViewModel.load()
+    func create(id: String, entityId: String, anchor: SIMD3<Float>, offset: SIMD3<Float>, size: CGSize) {
+        let webViewModel = SpatialWebViewModel(url: nil)
 
         attachments[id] = AttachmentInfo(
             id: id,
             entityId: entityId,
+            anchor: anchor,
             offset: offset,
             size: size,
             webViewModel: webViewModel
@@ -40,5 +41,10 @@ class AttachmentManager {
 
     func getWebViewModel(for id: String) -> SpatialWebViewModel? {
         return attachments[id]?.webViewModel
+    }
+
+    func setHTML(id: String, html: String) {
+        guard let model = attachments[id]?.webViewModel else { return }
+        model.loadHTML(html)
     }
 }

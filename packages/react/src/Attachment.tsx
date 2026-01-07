@@ -1,19 +1,22 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useMemo } from 'react'
+import ReactDOM from 'react-dom'
 import {
   createAttachment,
   Attachment as AttachmentInstance,
-} from '@webspatial/core-sdk'
+} from '../../core/src/Attachment'
 import { useParentContext } from './reality/context/ParentContext'
 
 interface AttachmentProps {
-  url: string
+  anchor?: [number, number, number]
   offset?: [number, number, number]
   size?: { width: number; height: number }
+  children?: React.ReactNode
 }
 
-export function Attachment({ url, offset, size }: AttachmentProps) {
+export function Attachment({ anchor, offset, size, children }: AttachmentProps) {
   const parent = useParentContext()
   const attachmentRef = useRef<AttachmentInstance | null>(null)
+  const [container, setContainer] = React.useState<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!parent) {
@@ -26,12 +29,14 @@ export function Attachment({ url, offset, size }: AttachmentProps) {
     const create = async () => {
       const attachment = await createAttachment({
         entityId: parent.id,
-        url,
+        anchor,
         offset,
         size,
       })
       if (mounted) {
         attachmentRef.current = attachment
+        setContainer(attachment.getContainer())
+        ;(attachment as any).initRenderSync?.()
       } else {
         attachment.destroy()
       }
@@ -43,11 +48,12 @@ export function Attachment({ url, offset, size }: AttachmentProps) {
       mounted = false
       attachmentRef.current?.destroy()
     }
-  }, [parent, url])
+  }, [parent])
 
   useEffect(() => {
     attachmentRef.current?.update({ offset, size })
   }, [offset, size])
 
-  return null
+  if (!container) return null
+  return ReactDOM.createPortal(children, container)
 }

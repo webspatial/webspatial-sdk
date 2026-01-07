@@ -174,18 +174,7 @@ struct SpatializedDynamic3DView: View {
         .simultaneousGesture(rotate3dEvent)
         .simultaneousGesture(dragEvent)
         .simultaneousGesture(magnifyEvent)
-        .onAppear {
-            if spatialScene.attachmentManager.attachments.isEmpty {
-                let rootId = element.getRoot().spatialId
-                spatialScene.attachmentManager.create(
-                    id: "__test_attachment__",
-                    entityId: rootId,
-                    url: "http://localhost:5173/test-label.html",
-                    offset: SIMD3<Float>(0, 0.3, 0),
-                    size: CGSize(width: 300, height: 100)
-                )
-            }
-        }
+        .onAppear {}
     }
 
     private func parentAttachments(content: RealityViewContent, attachments: RealityViewAttachments) {

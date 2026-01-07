@@ -353,7 +353,9 @@ struct CreateAttachment: CommandDataProtocol {
     static let commandType: String = "CreateAttachment"
     let id: String
     let entityId: String
-    let url: String
+    let anchorX: Float
+    let anchorY: Float
+    let anchorZ: Float
     let offsetX: Float
     let offsetY: Float
     let offsetZ: Float
@@ -378,4 +380,10 @@ struct DestroyAttachment: CommandDataProtocol {
 
 struct AttachmentCreatedReply: Encodable {
     let id: String
+}
+
+struct SetAttachmentHTML: CommandDataProtocol {
+    static let commandType: String = "SetAttachmentHTML"
+    let id: String
+    let html: String
 }
