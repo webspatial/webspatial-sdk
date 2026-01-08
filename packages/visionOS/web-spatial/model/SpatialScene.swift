@@ -315,6 +315,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onCreateAttachment(command: CreateAttachment, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        print("[Attachment] onCreateAttachment received: \(command.id), entityId: \(command.entityId)")
+        print("[Offset] Received: x=\(command.offsetX), y=\(command.offsetY), z=\(command.offsetZ)")
         let anchor = SIMD3<Float>(command.anchorX, command.anchorY, command.anchorZ)
         let offset = SIMD3<Float>(command.offsetX, command.offsetY, command.offsetZ)
         let size = CGSize(width: command.width, height: command.height)
@@ -351,6 +353,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onSetAttachmentHTML(command: SetAttachmentHTML, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        print("[Attachment] SetAttachmentHTML for \(command.id)")
+        print("[Attachment] HTML length: \(command.html.count) chars")
+        print("[Attachment] HTML preview: \(String(command.html.prefix(100)))")
         attachmentManager.setHTML(id: command.id, html: command.html)
         resolve(.success(baseReplyData))
     }
@@ -1087,6 +1092,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         return spatialObjects[id] as? T
     }
 
+    func debugSpatialObjectKeys() -> [String] {
+        return Array(spatialObjects.keys)
+    }
     /*
      * End SpatialObjects management
      */

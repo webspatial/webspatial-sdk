@@ -19,6 +19,10 @@ export function Attachment({ anchor, offset, size, children }: AttachmentProps) 
   const [container, setContainer] = React.useState<HTMLElement | null>(null)
 
   useEffect(() => {
+    console.log('[Attachment] entityId from context:', parent?.id)
+  }, [parent])
+
+  useEffect(() => {
     if (!parent) {
       console.warn('<Attachment> must be inside <Entity>')
       return
@@ -36,7 +40,6 @@ export function Attachment({ anchor, offset, size, children }: AttachmentProps) 
       if (mounted) {
         attachmentRef.current = attachment
         setContainer(attachment.getContainer())
-        ;(attachment as any).initRenderSync?.()
       } else {
         attachment.destroy()
       }

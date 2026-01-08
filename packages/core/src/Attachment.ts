@@ -45,8 +45,6 @@ export class Attachment {
       characterData: true,
       attributes: true,
     })
-    const html = this.container.innerHTML
-    platform.callJSB('SetAttachmentHTML', JSON.stringify({ id: this.id, html }))
   }
 
   async update(
@@ -86,6 +84,18 @@ export async function createAttachment(
   const size = options.size ?? { width: 400, height: 300 }
 
   const platform = createPlatform()
+  console.log('[Attachment] Calling CreateAttachment JSB:', {
+    id,
+    entityId: options.entityId,
+    anchorX: anchor[0],
+    anchorY: anchor[1],
+    anchorZ: anchor[2],
+    offsetX: offset[0],
+    offsetY: offset[1],
+    offsetZ: offset[2],
+    width: size.width,
+    height: size.height,
+  })
   await platform.callJSB(
     'CreateAttachment',
     JSON.stringify({

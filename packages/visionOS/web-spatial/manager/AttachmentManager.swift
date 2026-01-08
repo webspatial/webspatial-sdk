@@ -16,6 +16,16 @@ class AttachmentManager {
     var attachments: [String: AttachmentInfo] = [:]
 
     func create(id: String, entityId: String, anchor: SIMD3<Float>, offset: SIMD3<Float>, size: CGSize) {
+        print("[AttachmentManager] Creating attachment \(id) for entity \(entityId)")
+        // Remove any existing attachment for the same entity to avoid StrictMode duplicates
+        let duplicates = attachments.filter { $0.value.entityId == entityId }
+        if !duplicates.isEmpty {
+            let keys = Array(duplicates.keys)
+            for k in keys {
+                attachments.removeValue(forKey: k)
+            }
+            print("[AttachmentManager] Removed duplicates for entity \(entityId): \(keys)")
+        }
         let webViewModel = SpatialWebViewModel(url: nil)
 
         attachments[id] = AttachmentInfo(
@@ -26,6 +36,8 @@ class AttachmentManager {
             size: size,
             webViewModel: webViewModel
         )
+        print("[AttachmentManager] Attachments count: \(attachments.count)")
+        print("[AttachmentManager] Attachments keys: \(Array(attachments.keys))")
     }
 
     func update(id: String, offset: SIMD3<Float>?, size: CGSize?) {
@@ -44,7 +56,13 @@ class AttachmentManager {
     }
 
     func setHTML(id: String, html: String) {
-        guard let model = attachments[id]?.webViewModel else { return }
+        print("[setHTML] Setting HTML for \(id)")
+        print("[setHTML] HTML: \(html)")
+        guard let model = attachments[id]?.webViewModel else {
+            print("[setHTML] ❌ Attachment not found!")
+            return
+        }
         model.loadHTML(html)
+        print("[setHTML] ✓ Called loadHTML")
     }
 }

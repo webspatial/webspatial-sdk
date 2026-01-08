@@ -161,12 +161,14 @@ struct SpatializedDynamic3DView: View {
 
             parentAttachments(content: content, attachments: attachments)
         } update: { content, attachments in
+            print("[RealityView] update closure running")
             parentAttachments(content: content, attachments: attachments)
         } attachments: {
-            ForEach(Array(spatialScene.attachmentManager.attachments.values)) { info in
+            ForEach(Array(spatialScene.attachmentManager.attachments.values), id: \.id) { info in
                 Attachment(id: info.id) {
-                    info.webViewModel.getView()
+                    spatialScene.attachmentManager.getWebViewModel(for: info.id)?.getView()
                         .frame(width: info.size.width, height: info.size.height)
+                        .background(Color.red)
                 }
             }
         }
@@ -179,25 +181,39 @@ struct SpatializedDynamic3DView: View {
 
     private func parentAttachments(content: RealityViewContent, attachments: RealityViewAttachments) {
         for (id, info) in spatialScene.attachmentManager.attachments {
-            guard let attachmentEntity = attachments.entity(for: id) else { continue }
+            print("[RealityView] Processing attachment: \(id)")
+            guard let attachmentEntity = attachments.entity(for: id) else {
+                print("[RealityView] ❌ No attachment entity for id: \(id)")
+                continue
+            }
+            print("[RealityView] ✓ Got attachment entity")
 
             if let parentEntity = findEntity(info.entityId) {
-                attachmentEntity.position = info.offset
-
+                print("[RealityView] ✓ Found parent entity")
                 if attachmentEntity.parent == nil {
                     parentEntity.addChild(attachmentEntity)
+                    print("[RealityView] ✓ Parented attachment to entity")
                 }
+                print("[Position] Applying offset: \(info.offset)")
+                attachmentEntity.position = info.offset
+                print("[Position] Attachment position after: \(attachmentEntity.position)")
+            } else {
+                print("[RealityView] ❌ Parent entity not found: \(info.entityId)")
             }
         }
     }
 
     private func findEntity(_ id: String) -> Entity? {
+        print("[findEntity] Looking for: \(id)")
+        print("[findEntity] Available keys: \(spatialScene.debugSpatialObjectKeys())")
         if let spatialEntity: SpatialEntity = spatialScene.findSpatialObject(id) {
+            print("[findEntity] ✓ Found SpatialEntity")
             return spatialEntity
         }
         if id == element.getRoot().spatialId {
             return element.getRoot()
         }
+        print("[findEntity] ❌ Not found")
         return nil
     }
 }

@@ -1,8 +1,10 @@
 import SwiftUI
+import Foundation
 @preconcurrency import WebKit
 
 @Observable
 class SpatialWebViewModel {
+    private let id = UUID().uuidString.prefix(6)
     var url = ""
     private(set) var title: String?
     private var view: SpatialWebView?
@@ -31,6 +33,7 @@ class SpatialWebViewModel {
         controller = SpatialWebController()
         self.url = url ?? ""
         controller!.model = self
+        print("[SpatialWebViewModel] Created id: \(id)")
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
         controller?.registerWebviewStateChangeInvoke(invoke: onStateChangeInvoke)
@@ -62,7 +65,23 @@ class SpatialWebViewModel {
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
-        controller?.webview!.loadHTMLString(htmlText, baseURL: nil)
+        let fullHTML = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 100%; height: 100%; background-color: #333333; }
+                body { font-family: -apple-system, sans-serif; font-size: 48px; color: white; padding: 20px; }
+                .label { font-weight: bold; }
+            </style>
+        </head>
+        <body>\(htmlText)</body>
+        </html>
+        """
+        print("[loadHTML] Full HTML: \(fullHTML)")
+        controller?.webview!.loadHTMLString(fullHTML, baseURL: nil)
     }
 
     func getView() -> SpatialWebView {

@@ -39,7 +39,19 @@ function App() {
             materials={['matBlue']}
             position={{ x: 0, y: 0, z: 0 }}
           >
-            <Attachment anchor={[0.5,1,0.5]} offset={[0,0.1,0]}><div className="label">Robot Name</div></Attachment>
+            <Attachment anchor={[0.5, 1, 0.5]} offset={[0, 0.2, 0.2]} size={{ width: 300, height: 100 }}>
+              <div
+                style={{
+                  fontSize: '48px',
+                  color: 'black',
+                  fontWeight: 'bold',
+                  padding: '20px',
+                  backgroundColor: 'yellow',
+                }}
+              >
+                Robot Name
+              </div>
+            </Attachment>
           </BoxEntity>
         </SceneGraph>
       </Reality>

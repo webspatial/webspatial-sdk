@@ -8,7 +8,9 @@ struct SpatialWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         webviewStateChangeInvoke?(.didMakeView)
-        return model!.getController().webview!
+        let webview = model!.getController().webview!
+        print("[SpatialWebView] makeUIView returning: \(Unmanaged.passUnretained(webview).toOpaque())")
+        return webview
     }
 
     func makeCoordinator() -> SpatialWebController {
