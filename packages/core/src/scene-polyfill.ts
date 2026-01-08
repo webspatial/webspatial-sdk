@@ -92,10 +92,6 @@ class SceneManager {
     const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
     const result = cmd.executeSync()
 
-    if (typeof target === 'string' && this.configMap[target]) {
-      delete this.configMap[target]
-    }
-
     const id = result.data?.id
 
     if (id) {
