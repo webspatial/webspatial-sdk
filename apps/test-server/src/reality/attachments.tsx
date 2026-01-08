@@ -49,7 +49,7 @@ function App() {
                   backgroundColor: 'yellow',
                 }}
               >
-                Robot Name
+                Robot Name: Walle
               </div>
             </Attachment>
           </BoxEntity>

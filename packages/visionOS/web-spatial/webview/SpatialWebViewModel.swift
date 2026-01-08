@@ -60,29 +60,37 @@ class SpatialWebViewModel {
     }
 
     func loadHTML(_ htmlText: String) {
-        if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!)
-            controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
-            controller!.webview?.isOpaque = backgroundTransparent
-        }
-        let fullHTML = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                html, body { width: 100%; height: 100%; background-color: #333333; }
-                body { font-family: -apple-system, sans-serif; font-size: 48px; color: white; padding: 20px; }
-                .label { font-weight: bold; }
-            </style>
-        </head>
-        <body>\(htmlText)</body>
-        </html>
-        """
-        print("[loadHTML] Full HTML: \(fullHTML)")
-        controller?.webview!.loadHTMLString(fullHTML, baseURL: nil)
+    if controller?.webview == nil {
+        _ = WKWebViewManager.Instance.create(controller: controller!)
     }
+    
+    // Clear navigation delegate for attachment webviews
+    controller?.webview?.navigationDelegate = nil
+    controller?.webview?.uiDelegate = nil
+    
+    controller?.webview?.isOpaque = true
+    controller?.webview?.backgroundColor = .white
+    
+    let fullHTML = """
+    <!DOCTYPE html>
+    <html>
+    <head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="background: yellow; padding: 20px; font-size: 48px; color: black;">
+        \(htmlText)
+    </body>
+    </html>
+    """
+    
+    print("[loadHTML] Loading into webview: \(Unmanaged.passUnretained(controller!.webview!).toOpaque())")
+    controller?.webview!.loadHTMLString(fullHTML, baseURL: Bundle.main.bundleURL)
+    
+    // Debug
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        self?.controller?.webview?.evaluateJavaScript("document.body.innerHTML") { result, error in
+            print("[loadHTML] Body innerHTML after 0.5s: \(result ?? "nil")")
+        }
+    }
+}
 
     func getView() -> SpatialWebView {
         if view == nil {
