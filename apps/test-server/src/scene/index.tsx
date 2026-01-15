@@ -94,10 +94,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -107,7 +104,7 @@ function App() {
       <button
         className={btnCls}
         onClick={async () => {
-          window.open('http://localhost:5173/src/scene/nosdk.html')
+          window.open('/src/scene/nosdk.html')
         }}
       >
         open nosdk
@@ -138,7 +135,8 @@ function App() {
             { type: 'volume' },
           )
           winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
+            // '/src/scene/volume.html',
+            '/src/reality/index.html',
             'sa',
           )
           // winARef.current = window.open('', 'sa')
@@ -171,10 +169,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -185,10 +180,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volumeHook.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volumeHook.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -213,10 +205,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -240,10 +229,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -266,10 +252,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -292,10 +275,7 @@ function App() {
             }),
             { type: 'volume' },
           )
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/volume.html',
-            'sb',
-          )
+          winARef.current = window.open('/src/scene/volume.html', 'sb')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -365,10 +345,7 @@ function App() {
               // maxHeight: 900,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -391,10 +368,7 @@ function App() {
               maxHeight: 900,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -417,10 +391,7 @@ function App() {
               maxHeight: 900,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -442,10 +413,7 @@ function App() {
               maxHeight: 900,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -453,23 +421,19 @@ function App() {
       </button>
 
       <h1 className="text-2xl text-black">a tag</h1>
-      <a className={btnCls} href={`http://localhost:5173/src/scene/hook.html`}>
+      <a className={btnCls} href={`/src/scene/hook.html`}>
         open in place
       </a>
       <a className={btnCls} href={`https://www.google.com`}>
         open in place google
       </a>
 
-      <a
-        className={btnCls}
-        href={`http://localhost:5173/src/scene/hook.html`}
-        target="_blank"
-      >
+      <a className={btnCls} href={`/src/scene/hook.html`} target="_blank">
         open _blank
       </a>
       <a
         className={btnCls}
-        href={`http://localhost:5173/src/scene/hook.html`}
+        href={`/src/scene/hook.html`}
         target="_blank"
         onClick={e => {
           console.log('click on', e)
@@ -483,8 +447,8 @@ function App() {
         onClick={async () => {
           startlog('open no name')
           winARef.current = window.open(
-            'http://localhost:5173/src/scene/loading.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
+            '/src/scene/loading.html',
+            // '/src/scene/xrapp.html',
           )
         }}
       >
@@ -495,8 +459,8 @@ function App() {
         onClick={async () => {
           startlog('open no name')
           winARef.current = window.open(
-            'http://localhost:5173/src/scene/hook.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
+            '/src/scene/hook.html',
+            // '/src/scene/xrapp.html',
           )
         }}
       >
@@ -508,8 +472,8 @@ function App() {
         onClick={async () => {
           startlog('open no name')
           winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
+            '/src/scene/xrapp.html',
+            // '/src/scene/xrapp.html',
           )
         }}
       >
@@ -525,10 +489,7 @@ function App() {
               height: 900,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -540,7 +501,7 @@ function App() {
         onClick={async () => {
           startlog('open')
           winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
+            '/src/scene/xrapp.html',
             'sa',
             'width=800,height=600',
           )
@@ -587,10 +548,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winBRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sb',
-          )
+          winBRef.current = window.open('/src/scene/xrapp.html', 'sb')
         }}
       >
         open sb xrapp
@@ -610,10 +568,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winCRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sc',
-          )
+          winCRef.current = window.open('/src/scene/xrapp.html', 'sc')
         }}
       >
         open sc
@@ -633,14 +588,8 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sa',
-          )
-          winBRef.current = window.open(
-            'http://localhost:5173/src/scene/xrapp.html',
-            'sb',
-          )
+          winARef.current = window.open('/src/scene/xrapp.html', 'sa')
+          winBRef.current = window.open('/src/scene/xrapp.html', 'sb')
         }}
       >
         open sa+sb

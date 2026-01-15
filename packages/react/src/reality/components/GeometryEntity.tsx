@@ -84,7 +84,11 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
           await ent.addComponent(modelComponent)
           return ent
         } catch (error) {
-          console.error(error)
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            // AbortError is expected, just ignore it
+          } else {
+            console.error(error)
+          }
           await manager.dispose()
           return null as any
         }
