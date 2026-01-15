@@ -37,7 +37,8 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
             { id, name },
           )
         } catch (error) {
-          console.error('ModelEntity error:', error)
+          // error already handled in ModelAsset, no need to log again
+          // console.error('ModelEntity error:', error)
           return null as any
         }
       },
