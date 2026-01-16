@@ -66,7 +66,7 @@ class SpatialWebViewModel {
     
     // Clear navigation delegate for attachment webviews
     controller?.webview?.navigationDelegate = nil
-    controller?.webview?.uiDelegate = nil
+    // controller?.webview?.uiDelegate = nil
     
     controller?.webview?.isOpaque = true
     controller?.webview?.backgroundColor = .white

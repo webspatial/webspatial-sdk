@@ -433,12 +433,56 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let host = url.host ?? ""
         if host == "createSpatialScene" {
             return handleWindowOpenCustom(url)
+        } else if host == "createAttachment" {
+            return handleWindowOpenAttachment(url)
         } else {
             let spatialized2DElement: Spatialized2DElement = createSpatializedElement(
                 .Spatialized2DElement
             )
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
         }
+    }
+
+    private func handleWindowOpenAttachment(_ url: URL) -> WebViewElementInfo? {
+        guard let components = URLComponents(string: url.absoluteString),
+              let queryItems = components.queryItems
+        else {
+            return nil
+        }
+
+        guard let id = queryItems.first(where: { $0.name == "id" })?.value,
+              let entityId = queryItems.first(where: { $0.name == "entityId" })?.value
+        else {
+            return nil
+        }
+
+        let ax = Float(queryItems.first(where: { $0.name == "anchorX" })?.value ?? "0.5") ?? 0.5
+        let ay = Float(queryItems.first(where: { $0.name == "anchorY" })?.value ?? "0.5") ?? 0.5
+        let az = Float(queryItems.first(where: { $0.name == "anchorZ" })?.value ?? "0.5") ?? 0.5
+
+        let ox = Float(queryItems.first(where: { $0.name == "offsetX" })?.value ?? "0") ?? 0
+        let oy = Float(queryItems.first(where: { $0.name == "offsetY" })?.value ?? "0") ?? 0
+        let oz = Float(queryItems.first(where: { $0.name == "offsetZ" })?.value ?? "0") ?? 0
+
+        let w = Double(queryItems.first(where: { $0.name == "width" })?.value ?? "400") ?? 400
+        let h = Double(queryItems.first(where: { $0.name == "height" })?.value ?? "300") ?? 300
+
+        let anchor = SIMD3<Float>(ax, ay, az)
+        let offset = SIMD3<Float>(ox, oy, oz)
+        let size = CGSize(width: w, height: h)
+
+        attachmentManager.create(
+            id: id,
+            entityId: entityId,
+            anchor: anchor,
+            offset: offset,
+            size: size
+        )
+
+        if let model = attachmentManager.getWebViewModel(for: id) {
+            return WebViewElementInfo(id: id, element: model)
+        }
+        return nil
     }
 
     private func onPageStartLoad() {

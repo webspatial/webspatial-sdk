@@ -50,7 +50,7 @@ function App() {
         </a>
       </div>
 
-      <div className="text-gray-950 mx-2.5 my-2.5">
+      <div enable-xr className="text-gray-950 mx-2.5 my-2.5">
         <button className="bg-indigo-500" onClick={toggleBackgroundMaterial}>
           toggle background material:
         </button>

@@ -14,38 +14,25 @@ export class Attachment {
   private offset: [number, number, number]
   private size: { width: number; height: number }
   private container: HTMLElement
-  private observer: MutationObserver | null = null
+  private windowProxy: WindowProxy
 
-  constructor(id: string, options: AttachmentOptions) {
+  constructor(id: string, options: AttachmentOptions, windowProxy: WindowProxy) {
     this.id = id
     this.entityId = options.entityId
     this.anchor = options.anchor ?? [0.5, 0.5, 0.5]
     this.offset = options.offset ?? [0, 0, 0]
     this.size = options.size ?? { width: 400, height: 300 }
-    this.container = document.createElement('div')
+    this.windowProxy = windowProxy
+    const root = this.windowProxy.document.createElement('div')
+    this.windowProxy.document.body.appendChild(root)
+    this.container = root
   }
 
   getContainer(): HTMLElement {
     return this.container
   }
 
-  initRenderSync() {
-    if (this.observer) return
-    const platform = createPlatform()
-    this.observer = new MutationObserver(() => {
-      const html = this.container.innerHTML
-      platform.callJSB(
-        'SetAttachmentHTML',
-        JSON.stringify({ id: this.id, html }),
-      )
-    })
-    this.observer.observe(this.container, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-    })
-  }
+  initRenderSync() {}
 
   async update(
     options: Partial<Pick<AttachmentOptions, 'offset' | 'size'>>,
@@ -68,8 +55,6 @@ export class Attachment {
   }
 
   async destroy(): Promise<void> {
-    this.observer?.disconnect()
-    this.observer = null
     const platform = createPlatform()
     await platform.callJSB('DestroyAttachment', JSON.stringify({ id: this.id }))
   }
@@ -83,36 +68,25 @@ export async function createAttachment(
   const offset = options.offset ?? [0, 0, 0]
   const size = options.size ?? { width: 400, height: 300 }
 
-  const platform = createPlatform()
-  console.log('[Attachment] Calling CreateAttachment JSB:', {
+  const query = new URLSearchParams({
     id,
     entityId: options.entityId,
-    anchorX: anchor[0],
-    anchorY: anchor[1],
-    anchorZ: anchor[2],
-    offsetX: offset[0],
-    offsetY: offset[1],
-    offsetZ: offset[2],
-    width: size.width,
-    height: size.height,
-  })
-  await platform.callJSB(
-    'CreateAttachment',
-    JSON.stringify({
-      id,
-      entityId: options.entityId,
-      anchorX: anchor[0],
-      anchorY: anchor[1],
-      anchorZ: anchor[2],
-      offsetX: offset[0],
-      offsetY: offset[1],
-      offsetZ: offset[2],
-      width: size.width,
-      height: size.height,
-    }),
-  )
+    anchorX: String(anchor[0]),
+    anchorY: String(anchor[1]),
+    anchorZ: String(anchor[2]),
+    offsetX: String(offset[0]),
+    offsetY: String(offset[1]),
+    offsetZ: String(offset[2]),
+    width: String(size.width),
+    height: String(size.height),
+  }).toString()
 
-  const instance = new Attachment(id, options)
-  instance.initRenderSync()
+  const platform = createPlatform()
+  const result = await platform.callWebSpatialProtocol('createAttachment', query)
+  if (!result.success || !result.data) {
+    throw new Error('createAttachment failed')
+  }
+  const { windowProxy } = result.data
+  const instance = new Attachment(id, options, windowProxy)
   return instance
 }

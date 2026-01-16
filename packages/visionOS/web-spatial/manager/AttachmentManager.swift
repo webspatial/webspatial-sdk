@@ -27,6 +27,7 @@ class AttachmentManager {
             print("[AttachmentManager] Removed duplicates for entity \(entityId): \(keys)")
         }
         let webViewModel = SpatialWebViewModel(url: nil)
+        webViewModel.setBackgroundTransparent(true)
 
         attachments[id] = AttachmentInfo(
             id: id,

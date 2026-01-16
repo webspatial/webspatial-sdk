@@ -17,6 +17,9 @@ function App() {
   const [animating, setAnimating] = React.useState(false)
   const [t, setT] = React.useState(0)
   const rafRef = React.useRef<number | null>(null)
+    const [likes, setLikes] = React.useState(0)
+      const [count, setCount] = React.useState(0);
+
 
   const add = (a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }) => ({
     x: a.x + b.x,
@@ -83,6 +86,7 @@ function App() {
         ['--xr-background-material' as any]: 'translucent',
       }}
     >
+     
       <button
         style={{
           position: 'fixed',
@@ -106,6 +110,59 @@ function App() {
           height: '100vh',
         }}
       >
+         <div
+      enable-xr
+      style={{
+        backgroundColor: 'lightblue',
+        padding: '20px',
+        borderRadius: '10px',
+        border: '2px solid blue',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
+        // Spatial properties
+        '--xr-back': 50, // Pushes the div 50 units back in the spatial environment
+        width: '300px',
+        height: '200px',
+        position: 'absolute', // Allows for explicit positioning if needed
+        left: '100px',
+        top: '100px',
+        color: 'black',
+        fontSize: '24px',
+      }}
+    >
+      <p>Count: {count}</p>
+      <button
+        onClick={() => setCount(prevCount => prevCount + 1)}
+        style={{
+          padding: '10px 20px',
+          fontSize: '18px',
+          backgroundColor: 'blue',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+        }}
+      >
+        Increment
+      </button>
+      <button
+        onClick={() => setCount(prevCount => prevCount - 1)}
+        style={{
+          padding: '10px 20px',
+          fontSize: '18px',
+          backgroundColor: 'red',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          marginTop: '5px',
+        }}
+      >
+        Decrement
+      </button>
+    </div>
         <UnlitMaterial id="matBlue" color="#3388ff" />
         <UnlitMaterial id="matRed" color="#ff5a5f" />
         <UnlitMaterial id="matGreen" color="#35c759" />
@@ -127,6 +184,9 @@ function App() {
             <Attachment anchor={[0.5, 1, 0.5]} offset={[0, 0.12, 0.1]} size={{ width: 220, height: 120 }}>
               <div style={{ ...cardStyle, background: '#fff' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div>
+          <button onClick={() => setLikes(likes + 1)}>{likes} Like</button>
+        </div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>Robot Walle</div>
                   <div style={{ fontSize: 14, color: '#555' }}>Runtime {tick}s • Top anchor</div>
                 </div>

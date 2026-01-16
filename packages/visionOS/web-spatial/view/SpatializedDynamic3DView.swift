@@ -168,8 +168,7 @@ struct SpatializedDynamic3DView: View {
                 Attachment(id: info.id) {
                     spatialScene.attachmentManager.getWebViewModel(for: info.id)?.getView()
                         .frame(width: info.size.width, height: info.size.height)
-                        .background(Color.red)
-                }
+                } 
             }
         }
         .simultaneousGesture(spatialTapEvent)
