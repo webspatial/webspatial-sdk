@@ -1,14 +1,20 @@
 import ReactDOM from 'react-dom/client'
 
-import { enableDebugTool, Model, ModelRef } from '@webspatial/react-sdk'
+import {
+  enableDebugTool,
+  toSceneSpatial,
+  Model,
+  ModelRef,
+} from '@webspatial/react-sdk'
 import { useRef, useState } from 'react'
+import { useLogger, Logger } from './Logger'
 
 enableDebugTool()
 
 function App() {
   const modelRef = useRef<ModelRef>(null)
-  const [loadStatus, setLoadStatus] = useState('')
   const [loadCount, setLoadCount] = useState(0)
+  const [logs, logLine, clearLog] = useLogger()
 
   const [translateX, setTranslateX] = useState(0)
   const [translateY, setTranslateY] = useState(0)
@@ -126,18 +132,23 @@ function App() {
         }}
         src={'/public/modelasset/cone.usdz'}
         ref={modelRef}
-        onError={event => {
-          setLoadStatus(`Model load error`)
+        onError={e => {
+          logLine(`Model load error`)
         }}
-        onLoad={event => {
-          setLoadStatus('Model load success')
+        onLoad={e => {
+          logLine(`Model load success ${modelRef?.current?.currentSrc}`)
           setLoadCount(loadCount + 1)
         }}
+        onSpatialTap={e => {
+          logLine(
+            'model onSpatialTap',
+            e.currentTarget.getBoundingClientCube(),
+            e.detail.location3D,
+          )
+        }}
       />
-      <p>
-        {loadStatus} {loadCount}
-      </p>
-      <p>modelRef {modelRef?.current?.currentSrc}</p>
+      <p>{loadCount}</p>
+      <Logger logs={logs} clearLog={clearLog} />
     </div>
   )
 }
