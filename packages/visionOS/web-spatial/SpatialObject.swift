@@ -39,7 +39,7 @@ class SpatialObjectWeakRefManager {
 class SpatialObject: SpatialObjectProtocol {
     var listeners: [String: [(Any, Any) -> Void]] = [:]
     static var objects = [String: any SpatialObjectProtocol]()
-    private static let serialQueue = DispatchQueue(label: "com.xrsdk.spatialObjectQueue")
+    static let serialQueue = DispatchQueue(label: "com.xrsdk.spatialObjectQueue")
 
     static func get(_ id: String) -> (any SpatialObjectProtocol)? {
         serialQueue.sync {

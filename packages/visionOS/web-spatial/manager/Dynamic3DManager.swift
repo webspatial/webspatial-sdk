@@ -65,7 +65,6 @@ class Dynamic3DManager {
     }
 
     // Error messages are thrown from createGeometry using GeometryCreationError
-    private static let fileLock = NSLock()
 
     static func createUnlitMaterial(_ props: CreateUnlitMaterial, _ tex: TextureResource? = nil) -> SpatialUnlitMaterial {
         return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)
@@ -96,19 +95,15 @@ class Dynamic3DManager {
                 loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download location is nil"])))
                 return
             }
-            let fileManager = FileManager.default
-            do {
-                fileLock.lock()
-                defer { fileLock.unlock() }
-                if fileManager.fileExists(atPath: documentsUrl.path) {
-                    try fileManager.removeItem(atPath: documentsUrl.path)
+            Task {
+                do {
+                    try await FileCoordinator.shared.moveReplacingIfExists(from: location, to: documentsUrl)
+                    print("load complete")
+                    loadComplete(.success(documentsUrl))
+                } catch {
+                    print("File operation error: \(error)")
+                    loadComplete(.failure(error))
                 }
-                try fileManager.moveItem(at: location, to: documentsUrl)
-                print("load complete")
-                loadComplete(.success(documentsUrl))
-            } catch {
-                print("File operation error: \(error)")
-                loadComplete(.failure(error))
             }
 
         })
