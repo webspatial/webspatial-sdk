@@ -6,6 +6,7 @@ import {
   SceneGraph,
   SpatialTapEntityEvent,
   UnlitMaterial,
+  enableDebugTool,
 } from '@webspatial/react-sdk'
 import { Particle } from './particle'
 
@@ -25,6 +26,7 @@ export interface EntityInfo {
   }
   cornerRadius?: number
 }
+enableDebugTool()
 
 function App() {
   const [isPlayGame, setIsPlayGame] = useState(false)
