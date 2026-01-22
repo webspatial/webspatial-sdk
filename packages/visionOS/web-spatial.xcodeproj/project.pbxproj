@@ -52,6 +52,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Dynamic3DManager.swift,
+				FileCoordinator.swift,
 				JSBManager.swift,
 				WKWebViewManager.swift,
 			);
