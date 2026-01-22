@@ -47,7 +47,13 @@ export function ReactSpringModel3DTest() {
     <div>
       <div className="text-white">this is react spring test</div>
 
-      <AnimatedModel3D ref={ref} style={springProps} className="box">
+      <AnimatedModel3D
+        enable-xr
+        ref={ref}
+        style={springProps}
+        className="box"
+        src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
+      >
         <source
           src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
           type="model/vnd.usdz+zip"

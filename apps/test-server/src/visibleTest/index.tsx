@@ -52,7 +52,8 @@ function VisibleRefComponent() {
 
   const onClick = () => {
     if (!ref.current) return
-    ref.current.style.visibility !== 'hidden' ? 'hidden' : 'visible'
+    ref.current.style.visibility =
+      ref.current.style.visibility !== 'hidden' ? 'hidden' : 'visible'
   }
 
   useEffect(() => {
