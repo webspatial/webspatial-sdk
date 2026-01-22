@@ -75,8 +75,8 @@ class Dynamic3DManager {
             loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
             return
         }
-        var documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        documentsUrl.appendPathComponent(url.lastPathComponent)
+        // Use an immutable URL to avoid capturing a mutable var in concurrent code
+        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(url.lastPathComponent)
         let session = URLSession(configuration: URLSessionConfiguration.default)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
