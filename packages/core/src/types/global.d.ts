@@ -32,6 +32,8 @@ declare global {
 
     innerDepth: number
     outerDepth: number
+
+    __SpatialId?: string
   }
 
   interface HTMLElement {
