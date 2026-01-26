@@ -1,0 +1,109 @@
+name: AutoTest & Pages
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stable
+  push:
+    branches:
+      - auto-test-package
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare auto-test-package with PR changes (exclude autoTest and platform adapter index)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_BRANCH="auto-test-package"
+          PR_SHA="${{ github.event.pull_request.head.sha }}"
+          EXCLUDE_1="packages/autoTest"
+          EXCLUDE_2="packages/core/src/platform-adapter/index.ts"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
+          git checkout "${BASE_BRANCH}"
+          git checkout -b "ci/autotest-premerge-${{ github.run_id }}"
+
+          git fetch origin "${PR_SHA}"
+
+          git diff --binary "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" > /tmp/pr.patch || true
+          if [ ! -s /tmp/pr.patch ]; then
+            echo "No applicable changes to apply (after excludes)."
+            exit 0
+          fi
+
+          git apply --index --3way /tmp/pr.patch
+          git commit -m "ci: apply PR changes onto ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2})"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install autotest and build required packages
+        run: pnpm -F autotest run setup-local
+
+      - name: Record START_TIME
+        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Set BRANCH_NAME
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: Set GITHUB_WORKFLOW_URL
+        run: echo "GITHUB_WORKFLOW_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Run mocha in autoTest package
+        continue-on-error: true
+        run: pnpm --filter autotest run test
+
+      - name: Upload test report artifact
+        id: upload_report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autotest-report
+          path: packages/autoTest/reports
+
+      - name: Construct artifact download URL
+        run: echo "WEBSITE_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_report.outputs.artifact-id }}" >> $GITHUB_ENV
+
+
+      - name: Send summary to Lark with page URL
+        run: pnpm --filter autotest run post-test
+        env:
+          WEBSITE_URL: ${{ env.WEBSITE_URL }}
+          BRANCH_NAME: ${{ env.BRANCH_NAME }}
+          START_TIME: ${{ env.START_TIME }}
+          GITHUB_WORKFLOW_URL: ${{ env.GITHUB_WORKFLOW_URL }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          RECEIVE_ID_PRIVATE: ${{ secrets.RECEIVE_ID_PRIVATE }}
+          RECEIVE_ID_PUBLIC: ${{ secrets.RECEIVE_ID_PUBLIC }}
