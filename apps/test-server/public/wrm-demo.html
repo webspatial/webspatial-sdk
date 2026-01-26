@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WRM MVP Demo</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .header h1 {
+        color: #333;
+        margin-bottom: 0.5rem;
+      }
+      .header p {
+        color: #666;
+        font-size: 1.1rem;
+      }
+      .demo-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+      }
+      .primary-btn {
+        background: #007bff;
+        color: white;
+      }
+      .primary-btn:hover {
+        background: #0056b3;
+      }
+      .secondary-btn {
+        background: #6c757d;
+        color: white;
+      }
+      .secondary-btn:hover {
+        background: #545b62;
+      }
+      .success-btn {
+        background: #28a745;
+        color: white;
+      }
+      .success-btn:hover {
+        background: #1e7e34;
+      }
+      .stats {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .stats h3 {
+        margin-top: 0;
+        color: #495057;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+      }
+      .reality-container {
+        width: 100%;
+        height: 400px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        position: relative;
+      }
+      .loading {
+        color: #6c757d;
+        font-size: 1.1rem;
+      }
+      .resource-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 1rem;
+        background: white;
+      }
+      .resource-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        border-bottom: 1px solid #f1f3f4;
+      }
+      .resource-item:last-child {
+        border-bottom: none;
+      }
+      .resource-id {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .resource-state {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      .state-loading {
+        background: #cce5ff;
+        color: #004085;
+      }
+      .state-ready {
+        background: #d4edda;
+        color: #155724;
+      }
+      .state-attached {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .state-stale {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .state-evicted {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>WebSpatial Resource Manager (WRM) MVP</h1>
+        <p>Stage 0: Minimal Viable WRM + Stage 1: Instrumentation & Devtools</p>
+      </div>
+
+      <div class="demo-section">
+        <h2>Live Demo</h2>
+        <div id="root">
+          <div class="reality-container">
+            <div class="loading">Loading WebSpatial with WRM...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>Resource Management Controls</h2>
+        <div class="controls">
+          <button class="primary-btn" onclick="toggleModel()">Toggle Model</button>
+          <button class="secondary-btn" onclick="togglePreload()">Toggle Preload</button>
+          <button class="success-btn" onclick="loadMultiple()">Load Multiple</button>
+          <button class="secondary-btn" onclick="clearAll()">Clear All</button>
+        </div>
+        
+        <div class="stats">
+          <h3>WRM Statistics</h3>
+          <div class="stats-grid" id="stats">
+            <div class="stat-item">
+              <div class="stat-value" id="total-resources">0</div>
+              <div class="stat-label">Total Resources</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="memory-usage">0MB</div>
+              <div class="stat-label">Memory Usage</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="active-loads">0</div>
+              <div class="stat-label">Active Loads</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="cache-hit-rate">0%</div>
+              <div class="stat-label">Cache Hit Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <h3>Resource List</h3>
+          <div class="resource-list" id="resource-list">
+            <div style="text-align: center; color: #6c757d;">No resources loaded</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>Key Features Demonstrated</h2>
+        <ul>
+          <li><strong>Stage 0 - Asset Preloading:</strong> Toggle preload to see resources load before they're needed</li>
+          <li><strong>Stage 0 - Model Management:</strong> Load 3D models with automatic state tracking</li>
+          <li><strong>Stage 0 - Material Management:</strong> Create and manage materials with texture binding</li>
+          <li><strong>Stage 1 - Instrumentation:</strong> Real-time resource state monitoring and statistics</li>
+          <li><strong>Stage 1 - DevTools:</strong> Visual debugging panel showing resource lifecycle</li>
+          <li><strong>Resource State Machine:</strong> NOT_LOADED → LOADING → READY → ATTACHED → STALE → EVICTED</li>
+          <li><strong>Memory Management:</strong> Automatic eviction based on memory pressure and LRU policy</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Mock data for demo purposes
+      let demoState = {
+        modelVisible: false,
+        preloadEnabled: false,
+        resources: [],
+        stats: {
+          totalResources: 0,
+          totalMemoryUsage: 0,
+          activeLoadRequests: 0,
+          cacheHitRate: 0
+        }
+      };
+
+      function updateUI() {
+        // Update stats
+        document.getElementById('total-resources').textContent = demoState.stats.totalResources;
+        document.getElementById('memory-usage').textContent = (demoState.stats.totalMemoryUsage / 1024 / 1024).toFixed(1) + 'MB';
+        document.getElementById('active-loads').textContent = demoState.stats.activeLoadRequests;
+        document.getElementById('cache-hit-rate').textContent = (demoState.stats.cacheHitRate * 100).toFixed(0) + '%';
+
+        // Update resource list
+        const resourceList = document.getElementById('resource-list');
+        if (demoState.resources.length === 0) {
+          resourceList.innerHTML = '<div style="text-align: center; color: #6c757d;">No resources loaded</div>';
+        } else {
+          resourceList.innerHTML = demoState.resources.map(resource => `
+            <div class="resource-item">
+              <span class="resource-id">${resource.id}</span>
+              <span class="resource-state state-${resource.state.toLowerCase()}">${resource.state}</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      function toggleModel() {
+        demoState.modelVisible = !demoState.modelVisible;
+        
+        if (demoState.modelVisible) {
+          // Simulate loading a model
+          const modelId = 'demo-model-' + Date.now();
+          demoState.resources.push({
+            id: modelId,
+            type: 'MODEL',
+            state: 'LOADING',
+            size: 1024 * 1024 // 1MB
+          });
+          
+          demoState.stats.totalResources++;
+          demoState.stats.activeLoadRequests++;
+          demoState.stats.totalMemoryUsage += 1024 * 1024;
+          
+          // Simulate load completion
+          setTimeout(() => {
+            const resource = demoState.resources.find(r => r.id === modelId);
+            if (resource) {
+              resource.state = 'READY';
+              demoState.stats.activeLoadRequests--;
+              demoState.stats.cacheHitRate = Math.random() * 0.5 + 0.3; // 30-80%
+              updateUI();
+            }
+          }, 1500);
+        } else {
+          // Remove model
+          demoState.resources = demoState.resources.filter(r => !r.id.startsWith('demo-model'));
+          demoState.stats.totalResources = demoState.resources.length;
+          demoState.stats.totalMemoryUsage = demoState.resources.reduce((sum, r) => sum + (r.size || 0), 0);
+        }
+        
+        updateUI();
+      }
+
+      function togglePreload() {
+        demoState.preloadEnabled = !demoState.preloadEnabled;
+        console.log('Preload:', demoState.preloadEnabled ? 'ENABLED' : 'DISABLED');
+      }
+
+      function loadMultiple() {
+        const types = ['MODEL', 'TEXTURE', 'MATERIAL'];
+        const states = ['LOADING', 'READY', 'ATTACHED'];
+        
+        for (let i = 0; i < 5; i++) {
+          const resource = {
+            id: `resource-${Date.now()}-${i}`,
+            type: types[Math.floor(Math.random() * types.length)],
+            state: states[Math.floor(Math.random() * states.length)],
+            size: Math.random() * 2 * 1024 * 1024 // 0-2MB
+          };
+          
+          demoState.resources.push(resource);
+          demoState.stats.totalMemoryUsage += resource.size;
+        }
+        
+        demoState.stats.totalResources = demoState.resources.length;
+        updateUI();
+      }
+
+      function clearAll() {
+        demoState.resources = [];
+        demoState.stats = {
+          totalResources: 0,
+          totalMemoryUsage: 0,
+          activeLoadRequests: 0,
+          cacheHitRate: 0
+        };
+        demoState.modelVisible = false;
+        updateUI();
+      }
+
+      // Initialize UI
+      updateUI();
+
+      // Simulate periodic updates
+      setInterval(() => {
+        // Randomly transition some resources
+        demoState.resources.forEach(resource => {
+          if (Math.random() < 0.1) { // 10% chance to transition
+            const states = ['LOADING', 'READY', 'ATTACHED', 'STALE'];
+            const currentIndex = states.indexOf(resource.state);
+            if (currentIndex !== -1 && Math.random() < 0.7) {
+              resource.state = states[(currentIndex + 1) % states.length];
+            }
+          }
+        });
+        
+        updateUI();
+      }, 2000);
+    </script>
+  </body>
+</html>
