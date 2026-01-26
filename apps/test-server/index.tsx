@@ -29,7 +29,7 @@ function App() {
           <div ref={header}>
             <div className="bg-[#222222] inline-block px-4 py-1 rounded-full mb-8">
               <span className="text-sm">
-                ✨ WebSpatial Alpha is available now! ✨
+                ✨ WebSpatial 1.1.0 is available now! ✨
               </span>
             </div>
             <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-300 to-blue-500 text-transparent bg-clip-text">
@@ -54,7 +54,7 @@ function App() {
             {/* Window Content */}
             <div className="p-6 text-left">
               <pre className="text-sm text-gray-300">
-                <code>{`import { Model, SpatialDiv } from '@webspatial/react-sdk'
+                <code>{`import { Model } from '@webspatial/react-sdk'
 
 function App() {
   return (
@@ -64,14 +64,7 @@ function App() {
           <h1>3D UI on XR devices and embeded 3D models</h1>
       </div>
       
-      <Model>
-        <source
-          src="/assets/3DFile.usdz"
-          type="model/vnd.usdz+zip" />
-        <source
-          src="/assets/3DFile.glb"
-          type="model/gltf-binary" />
-      </Model>
+      <Model enable-xr  src="/assets/3DFile.usdz" />
   )
 }`}</code>
               </pre>
@@ -86,16 +79,11 @@ function App() {
               </div>
 
               <div className="w-64 h-64 bg-[#2A2A2A] rounded-lg p-4 flex items-center justify-center">
-                <Model style={{ width: '200px', height: '200px' }}>
-                  <source
-                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
-                    type="model/vnd.usdz+zip"
-                  />
-                  <source
-                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
-                    type="model/gltf-binary"
-                  />
-                </Model>
+                <Model
+                  enable-xr
+                  src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
+                  style={{ width: '200px', height: '200px' }}
+                />
               </div>
             </div>
           </div>
