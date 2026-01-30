@@ -39,5 +39,6 @@ export { toSceneSpatial, toLocalSpace } from './transform-utils'
 
 export function initPolyfill() {
   hijackGetComputedStyle()
+  // injectSpatialDefaultStyle()
   initCSSParserDivContainer()
 }
