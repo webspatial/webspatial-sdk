@@ -183,15 +183,16 @@ function getExtraSpatializedElementProperties(
   // get extra spatialized element properties for Spatialized2DElement
   const overflow = computedStyle.getPropertyValue('overflow')
   const scrollPageEnabled = ['visible', 'hidden', 'clip'].indexOf(overflow) >= 0
-  const material =
-    computedStyle
-      .getPropertyValue(SpatialCustomStyleVars.backgroundMaterial)
-      .trim() || 'none'
+  const material = computedStyle.getPropertyValue(
+    SpatialCustomStyleVars.backgroundMaterial,
+  )
 
   const properties: Record<string, any> = {}
   properties.scrollPageEnabled = scrollPageEnabled
   properties.cornerRadius = parseCornerRadius(computedStyle)
-  properties.material = material
+  if (material) {
+    properties.material = material
+  }
 
   // may need add scrollEdgeInsetsMarginRight in future
   return properties

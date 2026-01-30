@@ -284,9 +284,6 @@ export class PortalInstanceObject {
       parseFloat(
         computedStyle.getPropertyValue(SpatialCustomStyleVars.depth),
       ) || 0
-    const material = computedStyle.getPropertyValue(
-      SpatialCustomStyleVars.backgroundMaterial,
-    )
 
     const rotationAnchor = parseTransformOrigin(computedStyle)
     const extraProperties =
