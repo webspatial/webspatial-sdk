@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="is-spatial">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSpatial Solar System Demo</title>
+    <style>
+        html.is-spatial {
+            background-color: transparent;
+            --xr-background-material: transparent;
+            border-radius: 16px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            /* background: transparent; */
+            /* color: white; */
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .demo-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .demo-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .demo-description {
+            color: #ccc;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .card-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+
+        .link-card {
+            --xr-background-material: translucent;
+            --xr-z-index: 2;
+            --xr-back: 60;
+            position: relative;
+            min-width: 260px;
+            flex: 1;
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            color: #fff;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .link-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+        }
+
+        .link-card p {
+            margin: 0;
+            opacity: 0.85;
+        }
+
+        .link-card.transparent {
+            --xr-background-material: none;
+            --xr-z-index: 1;
+        }
+    </style>
+
+        <script type="module" src="../../dist/src/solar-system-simple/index.js" > </script>
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WebSpatial Solar System</h1>
+            <p>Interactive 3D Educational Demo</p>
+        </div>
+
+        <div class="demo-buttons">
+            <a href="dynamic-3d.html" class="btn">Dynamic</a>
+            <a href="static-model.html" class="btn">Models</a>
+            <a href="multi-scene.html" class="btn">🌌 Multi-Scene</a>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">Material Backgrounds</div>
+            <div class="demo-description">
+                Window uses a translucent material when spatial. Cards below show translucent vs transparent backgrounds.
+            </div>
+            <div class="card-row">
+                <div class="link-card">
+                    <h3>Translucent Card</h3>
+                    <p>Rounded corners, elevated with --xr-back, and material background.</p>
+                </div>
+                <div class="link-card transparent">
+                    <h3>Transparent Card</h3>
+                    <p>Default transparent material (no custom background) when spatialized.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

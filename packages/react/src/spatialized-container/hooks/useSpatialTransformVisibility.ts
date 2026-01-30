@@ -47,7 +47,7 @@ export function useSpatialTransformVisibility(
 
   useEffect(() => {
     // sync spatial style when this dom or sub dom change
-    const observer = new MutationObserver(mutationsList => {
+    const observer = new MutationObserver(() => {
       checkSpatialStyleUpdate()
     })
     const config = {

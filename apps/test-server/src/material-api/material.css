@@ -1,0 +1,30 @@
+.defaultMat { --xr-background-material: translucent; }
+.thickMat { --xr-background-material: thick; }
+.transparentMat { --xr-background-material: transparent; }
+.thinMat { --xr-background-material: thin; }
+.regularMat { --xr-background-material: regular; }
+
+.back0 { --xr-back: 0; }
+.back20 { --xr-back: 20; }
+.back50 { --xr-back: 50; }
+.back100 { --xr-back: 100; }
+
+.test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.test-card {
+  padding: 20px;
+  border-radius: 12px;
+  min-height: 180px;
+  --xr-back: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transform-origin: top left;
+  transform: translateZ(40px) rotateX(20deg);
+}
