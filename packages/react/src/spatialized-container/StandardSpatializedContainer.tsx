@@ -106,6 +106,8 @@ export function injectSpatialDefaultStyle() {
   const styleElement = document.createElement('style')
   styleElement.type = 'text/css'
   styleElement.innerHTML =
-    ' .xr-spatial-default {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
+    ' :where(.xr-spatial-default) {  --xr-back: 0; --xr-depth: 0; --xr-z-index: 0; --xr-background-material: none;  } '
   document.head.appendChild(styleElement)
 }
+
+console.log(1111)
