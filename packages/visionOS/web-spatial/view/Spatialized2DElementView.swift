@@ -12,11 +12,11 @@ extension View {
     }
 }
 
-class Spatialized2DViewGestureData {
-    var dragStarted = false
-    var dragStart: CGFloat = 0.0
-    var dragVelocity: CGFloat = 0.0
-}
+// class Spatialized2DViewGestureData {
+//    var dragStarted = false
+//    var dragStart: CGFloat = 0.0
+//    var dragVelocity: CGFloat = 0.0
+// }
 
 struct Spatialized2DElementView: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
@@ -26,7 +26,7 @@ struct Spatialized2DElementView: View {
         return spatializedElement as! Spatialized2DElement
     }
 
-    @State private var gestureData = Spatialized2DViewGestureData()
+//    @State private var gestureData = Spatialized2DViewGestureData()
 
     var body: some View {
         // Display child spatialized2DElements
@@ -38,7 +38,7 @@ struct Spatialized2DElementView: View {
                     spatialized2DElement.cornerRadius,
                     .window
                 )
-                .simultaneousGesture(spatialized2DElement.scrollPageEnabled ? dragWebGesture : nil)
+//                .simultaneousGesture(spatialized2DElement.scrollPageEnabled ? dragWebGesture : nil)
 
             let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
 
@@ -68,29 +68,29 @@ struct Spatialized2DElementView: View {
         }
     }
 
-    private var dragWebGesture: some Gesture {
-        DragGesture()
-            .onChanged { gesture in
-                print("\(spatialized2DElement.name) dragWebGesture")
-                if spatialized2DElement.scrollPageEnabled {
-                    if !gestureData.dragStarted {
-                        gestureData.dragStarted = true
-                        gestureData.dragStart = (gesture.translation.height)
-                    }
-
-                    // TODO: this should have velocity
-                    let delta = gestureData.dragStart - gesture.translation.height
-                    gestureData.dragStart = gesture.translation.height
-                    spatialScene.updateDeltaScrollOffset(Vec2(x: 0, y: delta))
-                }
-            }
-            .onEnded { _ in
-                print("\(spatialized2DElement.name) dragWebGestureEnd")
-                if spatialized2DElement.scrollPageEnabled {
-                    gestureData.dragStarted = false
-                    gestureData.dragStart = 0
-                    spatialScene.stopScrolling()
-                }
-            }
-    }
+//    private var dragWebGesture: some Gesture {
+//        DragGesture()
+//            .onChanged { gesture in
+//                print("\(spatialized2DElement.name) dragWebGesture")
+//                if spatialized2DElement.scrollPageEnabled {
+//                    if !gestureData.dragStarted {
+//                        gestureData.dragStarted = true
+//                        gestureData.dragStart = (gesture.translation.height)
+//                    }
+//
+//                    // TODO: this should have velocity
+//                    let delta = gestureData.dragStart - gesture.translation.height
+//                    gestureData.dragStart = gesture.translation.height
+//                    spatialScene.updateDeltaScrollOffset(Vec2(x: 0, y: delta))
+//                }
+//            }
+//            .onEnded { _ in
+//                print("\(spatialized2DElement.name) dragWebGestureEnd")
+//                if spatialized2DElement.scrollPageEnabled {
+//                    gestureData.dragStarted = false
+//                    gestureData.dragStart = 0
+//                    spatialScene.stopScrolling()
+//                }
+//            }
+//    }
 }
