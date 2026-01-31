@@ -1,6 +1,11 @@
 import { useRef, useState } from 'react'
 import './index.css'
-import { enableDebugTool, SpatialDragEvent, Model } from '@webspatial/react-sdk'
+import {
+  enableDebugTool,
+  SpatialDragEvent,
+  Model,
+  SpatialMagnifyEvent,
+} from '@webspatial/react-sdk'
 import ReactDOM from 'react-dom/client'
 
 enableDebugTool()
@@ -11,12 +16,15 @@ function App() {
   const [tz, setTz] = useState(0)
   const lastTranslation = useRef({ x: 0, y: 0, z: 0 })
 
+  const [scale, setScale] = useState(1)
+  const [magnification, setMagnification] = useState(1)
+
   const style = {
     width: '300px',
     height: '300px',
     '--xr-back': `${10}px`,
     // transform: `translate3d(${tx}px, ${ty}px, ${tz}px)`,
-    transform: `translate3d(${tx}px, ${ty}px, ${tz}px)   `,
+    transform: `translate3d(${tx}px, ${ty}px, ${tz}px) scale(${scale * magnification})`,
   }
 
   const onSpatialDragStart = () => {
@@ -51,6 +59,21 @@ function App() {
     lastTranslation.current = { x: 0, y: 0, z: 0 }
   }
 
+  const onSpatialMagnifyStart = () => {
+    console.log('magnify start')
+  }
+
+  const onSpatialMagnify = (evt: SpatialMagnifyEvent) => {
+    console.log('magnify move', evt.detail.magnification)
+    setMagnification(evt.detail.magnification)
+  }
+
+  const onSpatialMagnifyEnd = () => {
+    console.log('magnify end')
+    setScale(scale * magnification)
+    setMagnification(1)
+  }
+
   const src =
     'https://utzmqao3qthjebc2.public.blob.vercel-storage.com/saeukkang.usdz'
 
@@ -66,6 +89,12 @@ function App() {
         onSpatialDragStart={onSpatialDragStart}
         onSpatialDrag={onSpatialDrag}
         onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialMagnifyStart={onSpatialMagnifyStart}
+        onSpatialMagnify={onSpatialMagnify}
+        onSpatialMagnifyEnd={onSpatialMagnifyEnd}
+        onSpatialTap={() => {
+          console.log('dbg model tap')
+        }}
       />
       <div
         enable-xr
@@ -76,6 +105,9 @@ function App() {
         style={style}
         onClick={() => {
           console.log('dbg onClick')
+        }}
+        onSpatialTap={() => {
+          console.log('dbg div tap')
         }}
       >
         hello wolrd
