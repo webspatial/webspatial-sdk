@@ -35,6 +35,7 @@ jobs:
           PR_SHA="${{ github.event.pull_request.head.sha }}"
           EXCLUDE_1="packages/autoTest"
           EXCLUDE_2="packages/core/src/platform-adapter/index.ts"
+          EXCLUDE_3=".github"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -45,14 +46,14 @@ jobs:
 
           git fetch origin "${PR_SHA}"
 
-          git diff --binary "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" > /tmp/pr.patch || true
+          git diff --binary "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" > /tmp/pr.patch || true
           if [ ! -s /tmp/pr.patch ]; then
             echo "No applicable changes to apply (after excludes)."
             exit 0
           fi
 
           git apply --index --3way /tmp/pr.patch
-          git commit -m "ci: apply PR changes onto ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2})"
+          git commit -m "ci: apply PR changes onto ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2}, ${EXCLUDE_3})"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
