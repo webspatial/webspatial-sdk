@@ -70,7 +70,7 @@ struct SpatializedElementView<Content: View>: View {
                 predictedEndLocation3D: event.predictedEndLocation3D,
                 velocity: event.velocity
             ))
-            print("onDragging \(event.translation3D)")
+//            print("onDragging \(event.translation3D)")
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
@@ -86,7 +86,7 @@ struct SpatializedElementView<Content: View>: View {
                     predictedEndLocation3D: event.predictedEndLocation3D,
                     velocity: event.velocity
                 ))
-            print("onDragging \(event.translation3D)")
+//            print("onDragging \(event.translation3D)")
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
