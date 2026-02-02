@@ -1,0 +1,67 @@
+name: Sync PR Changes to auto-test-package
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+      - stable
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply PR patch onto auto-test-package
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PATCH_URL: ${{ github.event.pull_request.patch_url }}
+        run: |
+          set -euo pipefail
+          BASE_BRANCH="auto-test-package"
+          EXCLUDE_1="packages/autoTest"
+          EXCLUDE_2="packages/core/src/platform-adapter/index.ts"
+          EXCLUDE_3=".github"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          curl -sSL \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3.patch" \
+            "${PATCH_URL}" \
+            -o /tmp/pr.patch
+
+          if [ ! -s /tmp/pr.patch ]; then
+            echo "Empty PR patch. Nothing to sync."
+            exit 0
+          fi
+
+          git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
+          git checkout "${BASE_BRANCH}"
+          git checkout -b "ci/sync-pr-${PR_NUMBER}-to-${BASE_BRANCH}-${GITHUB_RUN_ID}"
+
+          git apply --index --3way \
+            --exclude="${EXCLUDE_1}" \
+            --exclude="${EXCLUDE_2}" \
+            --exclude="${EXCLUDE_3}" \
+            /tmp/pr.patch
+
+          if git diff --cached --quiet; then
+            echo "No applicable changes after excludes. Nothing to sync."
+            exit 0
+          fi
+
+          git commit -m "ci: sync PR #${PR_NUMBER} into ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2}, ${EXCLUDE_3})"
+          git push origin HEAD:"${BASE_BRANCH}"
