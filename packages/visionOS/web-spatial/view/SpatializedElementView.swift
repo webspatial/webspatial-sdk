@@ -17,7 +17,7 @@ struct SpatializedElementView<Content: View>: View {
 
     // Begin Interaction
     var gesture: some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 10)
             .onChanged(onDragging)
             .onEnded(onDraggingEnded)
             .simultaneously(with:
@@ -70,6 +70,7 @@ struct SpatializedElementView<Content: View>: View {
                 predictedEndLocation3D: event.predictedEndLocation3D,
                 velocity: event.velocity
             ))
+//            print("onDragging \(event.translation3D)")
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
@@ -85,6 +86,7 @@ struct SpatializedElementView<Content: View>: View {
                     predictedEndLocation3D: event.predictedEndLocation3D,
                     velocity: event.velocity
                 ))
+//            print("onDragging \(event.translation3D)")
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
@@ -145,9 +147,13 @@ struct SpatializedElementView<Content: View>: View {
         let z = translation.z + (spatializedElement.zIndex * zOrderBias)
         let smallOffset = z == 0.0 ? 0.0001 : 0
 
-        content.simultaneousGesture(enableGesture ? gesture : nil)
+        // when spatialdiv have regular/thick/thin material and alignment is back, there'll be a bug that clipping content
+        // so when spatializedElement is spatialdiv, .center alignment will be applied
+        let alignment = spatializedElement.defaultAlignment
+
+        content
             .frame(width: width, height: height)
-            .frame(depth: depth, alignment: .back)
+            .frame(depth: depth, alignment: alignment)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
@@ -174,5 +180,6 @@ struct SpatializedElementView<Content: View>: View {
             .offset(z: spatializedElement.backOffset)
             .opacity(opacity)
             .hidden(!visible)
+            .simultaneousGesture(enableGesture ? gesture : nil)
     }
 }

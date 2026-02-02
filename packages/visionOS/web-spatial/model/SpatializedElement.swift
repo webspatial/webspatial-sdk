@@ -34,6 +34,8 @@ class SpatializedElement: SpatialObject {
     var enableMagnifyEndGesture: Bool = false
     var enableTapGesture: Bool = false
 
+    var defaultAlignment: DepthAlignment = .back
+
     var enableGesture: Bool {
         return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateStartGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyStartGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
     }
