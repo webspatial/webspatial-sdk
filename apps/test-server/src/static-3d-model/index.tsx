@@ -158,11 +158,11 @@ type ToggleProps = {
 }
 function Toggle({ label, setValue, step }: ToggleProps) {
   return (
-    <label style={{marginRight: '1em'}}>
-      {label}:{' '}
-      <button onClick={e => setValue(-step)}>-</button>{' '} 
-      <button onClick={e => setValue(+step)}>+</button>{' '}
-    </label>
+    <span style={{ marginRight: '1em' }}>
+      <label>{label}</label>
+      <button onClick={e => setValue(-step)}>-</button>{' '}
+      <button onClick={e => setValue(step)}>+</button>{' '}
+    </span>
   )
 }
 
