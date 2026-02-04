@@ -13,7 +13,11 @@ enableDebugTool()
 
 function App() {
   const modelRef = useRef<ModelRef>(null)
-  const entityTransform = modelRef.current?.entityTransform
+  const entityTransform = (cb: (e: DOMMatrix) => DOMMatrixReadOnly) => {
+    let current = modelRef.current
+    if (current === null) return
+    current.entityTransform = cb(DOMMatrix.fromMatrix(current.entityTransform))
+  }
   const [loadCount, setLoadCount] = useState(0)
   const [logs, logLine, clearLog] = useLogger()
 
@@ -114,52 +118,52 @@ function App() {
           <Toggle
             label="translateX"
             step={10}
-            setValue={val => entityTransform?.translateSelf(val, 0, 0)}
+            setValue={val => entityTransform(e => e.translate(val, 0, 0))}
           />
           <Toggle
             label="translateY"
             step={10}
-            setValue={val => entityTransform?.translateSelf(0, val, 0)}
+            setValue={val => entityTransform(e => e.translate(0, val, 0))}
           />
           <Toggle
             label="translateZ"
             step={10}
-            setValue={val => entityTransform?.translateSelf(0, 0, val)}
+            setValue={val => entityTransform(e => e.translate(0, 0, val))}
           />
           <Toggle
             label="rotateX"
             step={5}
-            setValue={val => entityTransform?.rotateSelf(val, 0, 0)}
+            setValue={val => entityTransform(e => e.rotate(val, 0, 0))}
           />
           <Toggle
             label="rotateY"
             step={5}
-            setValue={val => entityTransform?.rotateSelf(0, val, 0)}
+            setValue={val => entityTransform(e => e.rotate(0, val, 0))}
           />
           <Toggle
             label="rotateZ"
             step={5}
-            setValue={val => entityTransform?.rotateSelf(0, 0, val)}
+            setValue={val => entityTransform(e => e.rotate(0, 0, val))}
           />
           <Toggle
             label="scaleX"
             step={0.1}
-            setValue={val => entityTransform?.scaleSelf(1 + val, 1, 1)}
+            setValue={val => entityTransform(e => e.scale(1 + val, 1, 1))}
           />
           <Toggle
             label="scaleY"
             step={0.1}
-            setValue={val => entityTransform?.scaleSelf(1, 1 + val, 1)}
+            setValue={val => entityTransform(e => e.scale(1, 1 + val, 1))}
           />
           <Toggle
             label="scaleZ"
             step={0.1}
-            setValue={val => entityTransform?.scaleSelf(1, 1, 1 + val)}
+            setValue={val => entityTransform(e => e.scale(1, 1, 1 + val))}
           />
           <button
             onClick={e => {
               const resetCSS = `translate3d(0, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0)`
-              entityTransform?.setMatrixValue(resetCSS)
+              entityTransform(e => e.setMatrixValue(resetCSS))
             }}
           >
             ❌
@@ -197,17 +201,12 @@ function App() {
             y: e.detail.translation3D.y - dragTranslation.y,
             z: e.detail.translation3D.z - dragTranslation.z,
           }
-          modelRef.current?.entityTransform.translateSelf(
-            delta.x,
-            delta.y,
-            delta.z,
-          )
-
+          entityTransform(e => e.translateSelf(delta.x, delta.y, delta.z))
           setDragTranslation(e.detail.translation3D)
         }}
         onSpatialDragEnd={e => {
-          modelRef.current?.entityTransform.setMatrixValue(
-            'translateX(0px) translateY(0px) translateZ(0px)',
+          entityTransform(e =>
+            e.setMatrixValue('translateX(0px) translateY(0px) translateZ(0px)'),
           )
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}

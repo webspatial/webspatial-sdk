@@ -59,14 +59,19 @@ function ModelTest() {
       y: e.detail.translation3D.y - dragTranslationRef.current.y,
       z: e.detail.translation3D.z - dragTranslationRef.current.z,
     }
-    refModel.current?.entityTransform.translateSelf(delta.x, delta.y, delta.z)
+    if (refModel.current) {
+      refModel.current.entityTransform = DOMMatrix.fromMatrix(
+        refModel.current.entityTransform,
+      ).translate(delta.x, delta.y, delta.z)
+    }
+
     dragTranslationRef.current = e.detail.translation3D
   }
 
   const onSpatialDragEnd = (e: ModelSpatialDragEndEvent) => {
-    refModel.current?.entityTransform.setMatrixValue(
-      'translateX(0px) translateY(0px) translateZ(0px)',
-    )
+    if (refModel.current) {
+      refModel.current.entityTransform = new DOMMatrix()
+    }
   }
 
   const onSpatialRotate = (e: ModelSpatialRotateEvent) => {
@@ -81,7 +86,11 @@ function ModelTest() {
     const y = (euler.y * 180) / Math.PI
     const z = (euler.z * 180) / Math.PI
     rotateRef.current = { x, y, z }
-    refModel.current?.entityTransform.rotateSelf(x, y, z)
+    if (refModel.current) {
+      refModel.current.entityTransform = DOMMatrix.fromMatrix(
+        refModel.current.entityTransform,
+      ).rotate(x, y, z)
+    }
   }
 
   const onSpatialMagnify = (e: ModelSpatialMagnifyEvent) => {
