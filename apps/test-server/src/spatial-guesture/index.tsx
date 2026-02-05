@@ -230,10 +230,7 @@ function CaseD() {
           height: '200px',
         }}
       >
-        <source
-          src={'http://localhost:5173/public/modelasset/cone.usdz'}
-          type="model/vnd.usdz+zip"
-        />
+        <source src={'/modelasset/cone.usdz'} type="model/vnd.usdz+zip" />
 
         <div> this is place holder when failure </div>
       </Model>
@@ -292,10 +289,7 @@ function CaseE() {
           height: '200px',
         }}
       >
-        <source
-          src={'http://localhost:5173/public/modelasset/cone.usdz'}
-          type="model/vnd.usdz+zip"
-        />
+        <source src={'/modelasset/cone.usdz'} type="model/vnd.usdz+zip" />
 
         <div> this is place holder when failure </div>
       </Model>

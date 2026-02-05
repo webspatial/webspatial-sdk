@@ -36,6 +36,8 @@ function ModelTest() {
     width: '300px',
     height: '300px',
     position: 'relative',
+    left: '50px',
+    top: '10px',
     opacity: 0.81,
     display: 'block',
     visibility: 'visible',
@@ -44,7 +46,7 @@ function ModelTest() {
     contentVisibility: 'visible',
   }
 
-  const src = '/public/modelasset/cone.usdz'
+  const src = '/modelasset/cone.usdz'
 
   const refModel = useRef<ModelRef>(null)
 
@@ -127,7 +129,16 @@ function ModelTest() {
         onSpatialDrag={onSpatialDrag}
         onSpatialRotateStart={onSpatialRotateStart}
         onSpatialMagnify={onSpatialMagnify}
-      />
+        onLoad={e => console.log('Model load success:', e)}
+        onError={e => console.error('Model load error:', e)}
+      >
+        <source src="/modelasset/cone.usdz" type="model/vnd.usdz+zip" />
+        <source src="/modelasset/cone.glb" type="model/gltf-binary" />
+        <source
+          src="/assets/vehicle-speedster.usdz"
+          type="model/vnd.usdz+zip"
+        />
+      </Model>
     </div>
   )
 }

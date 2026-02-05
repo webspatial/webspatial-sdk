@@ -174,7 +174,7 @@ export async function testAddMultipleSpatializedStatic3DElement(
       name: 'ModelA',
       width: 200,
       height: 200,
-      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+      modelURL: '/modelasset/cone.usdz',
     })
 
     const matrix = new DOMMatrix().translate(0, 0, 0)
@@ -193,7 +193,7 @@ export async function testAddMultipleSpatializedStatic3DElement(
       name: 'ModelB',
       width: 200,
       height: 200,
-      modelURL: 'http://localhost:5173/public/modelasset/cone.usdz',
+      modelURL: '/modelasset/cone.usdz',
     })
 
     await spatializedStatic3DElementB.updateTransform(

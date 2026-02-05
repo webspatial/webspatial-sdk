@@ -104,7 +104,7 @@ function App() {
             await spatialScene.addSpatializedElement(reality)
 
             const modelAsset = await session.createModelAsset({
-              url: 'http://localhost:5173/public/assets/RocketToy1.usdz',
+              url: '/assets/RocketToy1.usdz',
             })
             const ent = await session.createSpatialModelEntity({
               modelAssetId: modelAsset.id,

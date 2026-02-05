@@ -163,10 +163,7 @@ function App() {
           >
             <UnlitMaterial id="matRed" color="#ff0000" />
             <UnlitMaterial id="matGreen" color="#00ff00" />
-            <ModelAsset
-              id="model"
-              src="http://localhost:5173/public/assets/RocketToy1.usdz"
-            />
+            <ModelAsset id="model" src="/assets/RocketToy1.usdz" />
             <SceneGraph>
               <Entity
                 position={{ x: -0.2, y: 0, z: 0 }}

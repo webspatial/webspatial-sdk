@@ -46,7 +46,7 @@ function ModelTest() {
     contentVisibility: 'visible',
   }
 
-  const src = 'http://localhost:5173/public/modelasset/1cone.usdz'
+  const src = '/modelasset/cone.usdz'
 
   const refModel = useRef<ModelRef>(null)
 

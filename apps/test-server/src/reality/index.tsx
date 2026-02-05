@@ -156,7 +156,12 @@ export default function RealityTest() {
             onError={e => {
               console.log('model error', e)
             }}
-          />
+          >
+            <source
+              src="/assets/vehicle-speedster.usdz"
+              type="model/vnd.usdz+zip"
+            />
+          </ModelAsset>
           <SceneGraph>
             <Entity
               position={{ x: -0.2, y: 0, z: 0 }}

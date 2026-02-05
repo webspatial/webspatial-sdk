@@ -4,9 +4,9 @@ const VideoTest = () => {
   return (
     <div>
       <video controls width="250" autoPlay>
-        <source src="/public/videos/flower.webm" type="video/webm" />
+        <source src="/videos/flower.webm" type="video/webm" />
         Download the
-        <a href="/public/videos/flower.webm">WEBM</a>
+        <a href="/videos/flower.webm">WEBM</a>
         video.
       </video>
     </div>

@@ -131,7 +131,12 @@ export default function RealityDebug() {
             transparent={true}
             opacity={0.5}
           />
-          <ModelAsset id="model" src="/assets/vehicle-speedster.usdz" />
+          <ModelAsset id="model" src="/assets/vehicle-speedster.usdz">
+            <source
+              src="/assets/vehicle-speedster.usdz"
+              type="model/vnd.usdz+zip"
+            />
+          </ModelAsset>
           <SceneGraph>
             {showEntity && (
               <Entity

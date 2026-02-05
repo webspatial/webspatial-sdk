@@ -80,7 +80,7 @@ function App() {
             id="model"
             // src="http://localhost:5173/public/assets/vehicle-speedster.usdz"
             // src="http://10.0.2.2:5173/public/assets/RocketToy1.usdz"
-            src="http://10.0.2.2:5173/public/assets/vehicle-speedster.usdz"
+            src="/assets/vehicle-speedster.usdz"
             onLoad={() => {
               console.log('model load')
             }}
