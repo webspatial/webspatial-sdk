@@ -48,11 +48,17 @@ jobs:
             exit 0
           fi
 
+          if ! grep -q "^diff --git " /tmp/pr.patch; then
+            echo "Downloaded patch is not a git patch. First 20 lines:"
+            head -n 20 /tmp/pr.patch
+            exit 1
+          fi
+
           git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
           git checkout "${BASE_BRANCH}"
           git checkout -b "ci/sync-pr-${PR_NUMBER}-to-${BASE_BRANCH}-${GITHUB_RUN_ID}"
 
-          git apply --index --3way \
+          git apply --index --3way --allow-empty \
             --exclude="${EXCLUDE_1}" \
             --exclude="${EXCLUDE_2}" \
             --exclude="${EXCLUDE_3}" \
