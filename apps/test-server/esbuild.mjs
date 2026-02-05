@@ -8,6 +8,7 @@ import { createServer } from 'http-server'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 
+const isBuild = process.argv.includes('--build')
 const packagesBasePath = '../../packages'
 
 const corePkg = require(`${packagesBasePath}/core/package.json`)
@@ -32,12 +33,12 @@ var outdir = 'dist'
 var port = process.env.PORT ? Number(process.env.PORT) : 5173
 var liveReloadServerPort = 35729
 
-var ctx = await esbuild.context({
+const buildOptions = {
   entryPoints: entryPoints,
   outdir,
   bundle: true,
-  minify: false,
-  sourcemap: true,
+  minify: isBuild,
+  sourcemap: !isBuild,
   jsx: 'automatic',
   plugins,
   define: {
@@ -45,46 +46,56 @@ var ctx = await esbuild.context({
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
-  // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
-  banner: {
-    js: `
-        let liveReloadScript = document.createElement("script")
-        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
-        document.head.append(liveReloadScript)
-       `,
-  },
   // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
   alias: {
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
-    '@webspatial/react-sdk/jsx-runtime': path.resolve(  `${packagesBasePath}/react/src/jsx/jsx-runtime.ts` ),
+    '@webspatial/react-sdk/jsx-runtime': path.resolve(
+      `${packagesBasePath}/react/src/jsx/jsx-runtime.ts`,
+    ),
     '@webspatial/react-sdk': path.resolve(`${packagesBasePath}/react/src`),
     '@webspatial/core-sdk': path.resolve(`${packagesBasePath}/core/src`),
   },
-})
+}
 
-ctx.watch()
+if (isBuild) {
+  console.log('Building for production...')
+  await esbuild.build(buildOptions)
+  console.log('Build complete!')
+  process.exit(0)
+} else {
+  var ctx = await esbuild.context({
+    ...buildOptions,
+    // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
+    banner: {
+      js: `
+        let liveReloadScript = document.createElement("script")
+        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
+        document.head.append(liveReloadScript)
+       `,
+    },
+  })
 
-// Use http-server instead of ctx serve to avoid overhead delay of ~500ms
-const staticServer = createServer({
-  root: './', // Set the root directory
-  cache: -1, // Disable caching
-  port: port, // Define the port
-})
-staticServer.listen(port, () => {
-  console.log('HTTP server is running on http://localhost:' + port)
-})
+  ctx.watch()
 
-var server = livereload.createServer({
-  port: liveReloadServerPort,
-  extraExts: ['ts', 'tsx'],
-  delay: 50,
-})
-var watchPaths = [path.resolve(outdir)]
-watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
-// watchPaths = watchPaths.concat(await glob("./src/**/*.tsx"));
-// watchPaths = watchPaths.concat(await glob("./src/**/*.ts"));
-watchPaths.push('index.html')
-// watchPaths.push("index.tsx");
-server.watch(watchPaths)
-console.log('esbuild ready!')
+  // Use http-server instead of ctx serve to avoid overhead delay of ~500ms
+  const staticServer = createServer({
+    root: './', // Set the root directory
+    cache: -1, // Disable caching
+    port: port, // Define the port
+  })
+  staticServer.listen(port, () => {
+    console.log('HTTP server is running on http://localhost:' + port)
+  })
+
+  var server = livereload.createServer({
+    port: liveReloadServerPort,
+    extraExts: ['ts', 'tsx'],
+    delay: 50,
+  })
+  var watchPaths = [path.resolve(outdir)]
+  watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
+  watchPaths.push('index.html')
+  server.watch(watchPaths)
+  console.log('esbuild ready!')
+}

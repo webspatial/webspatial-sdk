@@ -1,3 +1,5 @@
 {
+  "buildCommand": "node esbuild.mjs --build",
+  "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
