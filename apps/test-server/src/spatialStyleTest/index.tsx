@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom/client'
+import React from 'react'
 import { CSSModelSample } from './CSSModelSample'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { SpatialTagComponent } from './SpatialTagComponent'
@@ -9,17 +9,12 @@ import { StyledTitleComponent } from './StyledTitleComponent'
 
 enableDebugTool()
 
-function App() {
+export default function SpatialStyleTest() {
   return (
-    <div className="w-screen h-screen  ">
-      <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
-        <a href="#" onClick={() => history.go(-1)}>
-          Go Back
-        </a>
-      </div>
-
-      <div enable-xr-monitor className="w-screen h-screen  ">
-        <div className="flex flex-col">
+    <div className="p-10 text-white min-h-full">
+      <h1 className="text-2xl mb-8">Spatial Style Test</h1>
+      <div enable-xr-monitor className="w-full h-full">
+        <div className="flex flex-col gap-10">
           <SimpleSpatialComponent />
           <SpatialTagComponent />
           <StyledTitleComponent />
@@ -31,5 +26,3 @@ function App() {
     </div>
   )
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)

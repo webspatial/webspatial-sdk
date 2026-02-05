@@ -1,111 +1,92 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Model } from '@webspatial/react-sdk'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import Sidebar from './src/components/Sidebar'
+import Home from './src/pages/Home'
 
-function App() {
-  let [_supported, setSupported] = useState(false)
-  var header = useRef<HTMLDivElement>(null)
+// Lazy load components
+const AnimateTest = lazy(() => import('./src/animate/index'))
+const RealityTest = lazy(() => import('./src/reality/index'))
+const RealityDebug = lazy(() => import('./src/reality/debug'))
+const RealityDynamic3D = lazy(() => import('./src/reality/dynamic3d'))
+const RealityGestures = lazy(() => import('./src/reality/gestures'))
+const RealitySpatialDiv = lazy(() => import('./src/reality/spatialDivDynamic'))
+const BasicTransform = lazy(() => import('./src/basic-transform/index'))
+const ModelTest = lazy(() => import('./src/model-test/index'))
+const SpatialStyleTest = lazy(() => import('./src/spatialStyleTest/index'))
+const CanvasTest = lazy(() => import('./src/canvas-test/index'))
+const JSAPITest = lazy(() => import('./src/jsapi-test/index'))
+const SceneTest = lazy(() => import('./src/scene/index'))
 
-  return (
-    <div className={`min-h-screen text-white`}>
-      {/* Navigation */}
-      <nav className="fixed w-full bg-[#111111] z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <span className="text-xl font-bold">WebSpatial</span>
-            <a
-              href="https://github.com/webspatial/webspatial-sdk"
-              className="text-gray-300 hover:text-white"
-            >
-              Github
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 pt-32 pb-20">
-        <div className="text-center max-w-4xl mx-auto">
-          <div ref={header}>
-            <div className="bg-[#222222] inline-block px-4 py-1 rounded-full mb-8">
-              <span className="text-sm">
-                ✨ WebSpatial 1.1.0 is available now! ✨
-              </span>
-            </div>
-            <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-300 to-blue-500 text-transparent bg-clip-text">
-              Ship XR apps with WebSpatial
-            </h1>
-            <p className="text-xl text-gray-400 mb-8">
-              Build cross-platform XR apps with JavaScript, React, HTML, and CSS
-            </p>
-          </div>
-
-          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
-            {/* Window Header */}
-            <div className="bg-[#222222] px-4 py-3 flex items-center">
-              <div className="flex space-x-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
-              </div>
-              <div className="mx-auto text-gray-400 text-sm">Example.jsx</div>
-            </div>
-
-            {/* Window Content */}
-            <div className="p-6 text-left">
-              <pre className="text-sm text-gray-300">
-                <code>{`import { Model } from '@webspatial/react-sdk'
+// Placeholder for other tests until refactored
+const Placeholder = ({ name }: { name: string }) => (
+  <div className="p-10 text-white">
+    <h1 className="text-2xl mb-4">{name}</h1>
+    <p className="text-gray-400">
+      This test is still being refactored into the SPA.
+    </p>
+  </div>
+)
 
 function App() {
   return (
-      <div
-        enable-xr
-        style={{color: "blue", "--xr-back": 50}}>
-          <h1>3D UI on XR devices and embeded 3D models</h1>
-      </div>
-      
-      <Model enable-xr  src="/assets/3DFile.usdz" />
-  )
-}`}</code>
-              </pre>
-            </div>
-          </div>
-          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
-            <div className="p-6 flex flex-col items-center space-y-8">
-              <div enable-xr style={{ color: 'blue-400', '--xr-back': 50 }}>
-                <h1 className="text-xl font-medium">
-                  3D UI on XR devices and embeded 3D models
-                </h1>
+    <Router>
+      <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-auto relative">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
-
-              <div className="w-64 h-64 bg-[#2A2A2A] rounded-lg p-4 flex items-center justify-center">
-                <Model
-                  enable-xr
-                  src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
-                  style={{ width: '200px', height: '200px' }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/animate" element={<AnimateTest />} />
+              <Route path="/reality" element={<RealityTest />} />
+              <Route path="/reality/debug" element={<RealityDebug />} />
+              <Route path="/reality/dynamic3d" element={<RealityDynamic3D />} />
+              <Route path="/reality/gestures" element={<RealityGestures />} />
+              <Route
+                path="/reality/spatial-div"
+                element={<RealitySpatialDiv />}
+              />
+              <Route path="/basic-transform" element={<BasicTransform />} />
+              <Route path="/model-test" element={<ModelTest />} />
+              <Route path="/spatialStyleTest" element={<SpatialStyleTest />} />
+              <Route path="/canvas-test" element={<CanvasTest />} />
+              <Route path="/jsapi-test" element={<JSAPITest />} />
+              <Route path="/scene" element={<SceneTest />} />
+            </Routes>
+          </Suspense>
+        </main>
       </div>
-    </div>
+    </Router>
   )
 }
 
-document.addEventListener('readystatechange', event => {
-  switch (document.readyState) {
-    case 'interactive':
-      // Initialize react
-      var root = document.createElement('div')
-      document.body.appendChild(root)
-      ReactDOM.createRoot(root).render(<App />)
-
-      // Force page height to 100% to get centering to work
-      document.documentElement.style.height = '100%'
-      document.body.style.height = '100%'
-      root.style.height = '100%'
-
-      break
+const init = () => {
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    console.error('Root element not found')
+    return
   }
-})
+
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+
+  // Force page height to 100%
+  document.documentElement.style.height = '100%'
+  document.body.style.height = '100%'
+  rootElement.style.height = '100%'
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init)
+} else {
+  init()
+}
