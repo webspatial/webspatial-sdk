@@ -2,6 +2,7 @@ import * as esbuild from 'esbuild'
 import { tailwindPlugin } from 'esbuild-plugin-tailwindcss'
 import glob from 'tiny-glob'
 import path from 'path'
+import fs from 'fs'
 import livereload from 'livereload'
 import { sassPlugin, postcssModules } from 'esbuild-sass-plugin'
 import { createServer } from 'http-server'
@@ -58,9 +59,43 @@ const buildOptions = {
   },
 }
 
+async function copyPublicFolder(src, dest) {
+  if (!fs.existsSync(src)) return
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
+  
+  const entries = fs.readdirSync(src, { withFileTypes: true })
+  for (let entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      await copyPublicFolder(srcPath, destPath)
+    } else {
+      fs.copyFileSync(srcPath, destPath)
+    }
+  }
+}
+
+async function prepareDist() {
+  console.log('Preparing dist folder...')
+  if (!fs.existsSync(outdir)) fs.mkdirSync(outdir, { recursive: true })
+  
+  // Copy index.html and fix paths
+  let html = fs.readFileSync('index.html', 'utf8')
+  // Remove /dist prefix from paths because dist will be the root in production
+  html = html.replace(/src="\/dist\//g, 'src="/')
+  html = html.replace(/href="\/dist\//g, 'href="/')
+  fs.writeFileSync(path.join(outdir, 'index.html'), html)
+  
+  // Copy public folder contents directly to dist root or to /public
+  // Most SPAs serve public folder contents from the root
+  await copyPublicFolder('public', outdir)
+  console.log('Assets copied to dist.')
+}
+
 if (isBuild) {
   console.log('Building for production...')
   await esbuild.build(buildOptions)
+  await prepareDist()
   console.log('Build complete!')
   process.exit(0)
 } else {
@@ -77,10 +112,11 @@ if (isBuild) {
   })
 
   ctx.watch()
+  await prepareDist()
 
   // Use http-server instead of ctx serve to avoid overhead delay of ~500ms
   const staticServer = createServer({
-    root: './', // Set the root directory
+    root: './dist', // Serve from dist now to be consistent with production
     cache: -1, // Disable caching
     port: port, // Define the port
   })
