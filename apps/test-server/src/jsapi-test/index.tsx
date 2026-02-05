@@ -1,8 +1,5 @@
 // @ts-nocheck
-
-// import React from 'react'
-// import ReactDOM from 'react-dom/client'
-
+import React, { useEffect } from 'react'
 import {
   testCreateSpatialized2DElement,
   testSpatialSceneCorner,
@@ -13,32 +10,30 @@ import {
   testAddMultipleSpatializedStatic3DElement,
 } from './jsapi'
 
-// testSpatialSceneMaterial()
-// testSpatialSceneCorner()
-testCreateSpatialized2DElement().then(spatialized2DElement => {
-  testAddMultipleSpatialized2DElement(spatialized2DElement)
-  // testAddMultipleSpatializedStatic3DElement(spatialized2DElement)
-  // .then(() =>
-  //   testSpatialSceneInspect(),
-  // )
-})
+export default function JSAPITest() {
+  useEffect(() => {
+    testCreateSpatialized2DElement().then(spatialized2DElement => {
+      testAddMultipleSpatialized2DElement(spatialized2DElement)
+    })
+    window.testSpatialSceneInspect = testSpatialSceneInspect
+  }, [])
 
-window.testSpatialSceneInspect = testSpatialSceneInspect
-
-// function App() {
-//   const style = {
-//     width: '100vw',
-//     height: '150vh',
-//   }
-//   return (
-//     <div className="min-h-screen bg-gray-900/60 text-white p-6" style={style}>
-//       this is jsapi test page
-//     </div>
-//   )
-// }
-
-// // Initialize react
-// var root = document.createElement('div')
-// document.body.appendChild(root)
-// ReactDOM.createRoot(root).render(<App />)
-
+  return (
+    <div className="p-10 text-white min-h-full">
+      <h1 className="text-2xl mb-8">JS API Test</h1>
+      <div className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">
+        <p className="mb-4">
+          JS API tests are running. Check the scene for created elements.
+        </p>
+        <div className="flex flex-col gap-2">
+          <button
+            className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => testSpatialSceneInspect()}
+          >
+            Inspect Scene
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

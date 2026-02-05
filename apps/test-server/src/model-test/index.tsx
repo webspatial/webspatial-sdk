@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom/client'
+import React, { CSSProperties, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 import {
@@ -7,18 +7,13 @@ import {
   Model,
   ModelRef,
   ModelSpatialTapEvent,
-  // ModelSpatialDragStartEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragEndEvent,
   ModelSpatialRotateStartEvent,
-  // ModelSpatialRotateEvent,
   ModelSpatialRotateEndEvent,
   ModelSpatialMagnifyEvent,
   ModelLoadEvent,
-  // ModelSpatialMagnifyEndEvent,
-  // toLocalSpace,
 } from '@webspatial/react-sdk'
-import { CSSProperties, useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -41,16 +36,11 @@ function ModelTest() {
     width: '300px',
     height: '300px',
     position: 'relative',
-    left: '50px',
-    top: '10px',
     opacity: 0.81,
     display: 'block',
     visibility: 'visible',
-    // background: 'blue',
     '--xr-back': '140px',
     transform: `scale(${scale})`,
-    // transform: `translateX(${dragTranslation.x}px) translateY(${dragTranslation.y}px) translateZ(${dragTranslation.z}px)`,
-    // display: 'none',
     contentVisibility: 'visible',
   }
 
@@ -91,7 +81,6 @@ function ModelTest() {
   }
 
   const onSpatialRotate = (e: ModelSpatialRotateEndEvent) => {
-    // console.log('model onSpatialRotateEnd:', e.detail.rotation)
     const quaternion = new THREE.Quaternion().fromArray(
       e.detail.rotation.vector,
     )
@@ -100,12 +89,6 @@ function ModelTest() {
     const y = (euler.y * 180) / Math.PI
     const z = (euler.z * 180) / Math.PI
 
-    const delta = {
-      x: x - rotateRef.current.x,
-      y: y - rotateRef.current.y,
-      z: z - rotateRef.current.z,
-    }
-
     rotateRef.current = {
       x: x,
       y: y,
@@ -113,12 +96,9 @@ function ModelTest() {
     }
 
     refModel.current?.entityTransform.rotateSelf(x, y, z)
-
-    console.log('model onSpatialRotate:', (euler.z * 180) / Math.PI)
   }
 
   const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
-    console.log('model onSpatialRotateStart:', e.detail.rotation)
     const quaternion = new THREE.Quaternion().fromArray(
       e.detail.rotation.vector,
     )
@@ -131,50 +111,38 @@ function ModelTest() {
   }
 
   const onSpatialMagnify = (e: ModelSpatialMagnifyEvent) => {
-    console.log('model onSpatialMagnify:', e.detail.magnification)
     setScale(e.detail.magnification)
   }
 
-  ;(window as any).refModel = refModel
-
-  const onLoad = (event: ModelLoadEvent) => {
-    console.log('model onLoad', event, event.target.getBoundingClientCube())
-  }
-
-  const onError = (event: ModelLoadEvent) => {
-    console.log('model onError', event, event.target.getBoundingClientCube())
-  }
-
   return (
-    <Model
-      enable-xr
-      ref={refModel}
-      style={style}
-      src={src}
-      onSpatialDragEnd={onSpatialDragEnd}
-      onSpatialDragStart={onSpatialDragStart}
-      onSpatialTap={onSpatialTap}
-      onSpatialDrag={onSpatialDrag}
-      onSpatialRotateStart={onSpatialRotateStart}
-      // onSpatialRotate={onSpatialRotate}
-      onSpatialMagnify={onSpatialMagnify}
-      // onLoad={onLoad}
-      // onError={onError}
-    />
+    <div className="flex flex-col items-center">
+      <Model
+        enable-xr
+        ref={refModel}
+        style={style}
+        src={src}
+        onSpatialDragEnd={onSpatialDragEnd}
+        onSpatialDragStart={onSpatialDragStart}
+        onSpatialTap={onSpatialTap}
+        onSpatialDrag={onSpatialDrag}
+        onSpatialRotateStart={onSpatialRotateStart}
+        onSpatialMagnify={onSpatialMagnify}
+      />
+    </div>
   )
 }
 
-function App() {
+export default function ModelTestPage() {
   return (
-    <>
-      <div style={{ width: '100px', height: '100px' }}>
-        Start of SpatializedContainer
-      </div>
-      <div className="flex justify-center ">
+    <div className="p-10 text-white">
+      <h1 className="text-2xl mb-8 text-center">Model Test</h1>
+      <div className="bg-[#1A1A1A] p-10 rounded-2xl border border-gray-800">
         <ModelTest />
       </div>
-    </>
+      <div className="mt-8 text-sm text-gray-500 text-center">
+        Use spatial gestures to interact with the model: tap, drag, rotate, and
+        magnify.
+      </div>
+    </div>
   )
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)

@@ -1,24 +1,22 @@
-import ReactDOM from 'react-dom/client'
-
-import { enableDebugTool, Model } from '@webspatial/react-sdk'
+import React from 'react'
+import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
-function App() {
+export default function BasicTransform() {
   const style = {
     width: '300px',
     height: '300px',
-    // '--xr-back': 100,
-    // transform: 'rotateX(30deg)',
     backgroundColor: 'green',
   }
   return (
-    <div>
-      hello basic-transform
-      <div enable-xr style={style} />
-      tail end
+    <div className="p-10 text-white">
+      <h1 className="text-2xl mb-4">Basic Transform</h1>
+      <div className="flex flex-col gap-4">
+        <div>hello basic-transform</div>
+        <div enable-xr style={style} className="rounded-lg shadow-xl" />
+        <div>tail end</div>
+      </div>
     </div>
   )
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)

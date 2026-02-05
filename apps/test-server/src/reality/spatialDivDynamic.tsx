@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
-function App() {
+export default function RealitySpatialDivDynamic() {
   const [posX, setPosX] = useState(0)
   const [rotOn, setRotOn] = useState(false)
   const animRef = useRef<number | null>(null)
@@ -24,10 +23,6 @@ function App() {
     return () => {}
   }, [rotOn])
 
-  const styleContainer: React.CSSProperties = {
-    enableXr: true,
-  }
-
   const styleCard: React.CSSProperties = {
     width: '240px',
     height: '160px',
@@ -43,33 +38,28 @@ function App() {
   }
 
   return (
-    <div style={styleContainer}>
-      <div className="pl-5 pt-2">
-        <h1 className="text-2xl text-black">Spatial Div Dynamic Demo</h1>
-        <div className="flex gap-2 my-3">
-          <button
-            className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
-            onClick={() => setPosX(x => (x === 0 ? 30 : 0))}
-          >
-            Toggle Position
-          </button>
-          <button
-            className="select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
-            onClick={() => setRotOn(s => !s)}
-          >
-            Toggle Rotation
-          </button>
-        </div>
+    <div className="p-10 text-white min-h-full">
+      <h1 className="text-2xl mb-4">Spatial Div Dynamic Demo</h1>
+      <div className="flex gap-2 mb-8 bg-[#1A1A1A] p-4 rounded-xl border border-gray-800">
+        <button
+          className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          onClick={() => setPosX(x => (x === 0 ? 30 : 0))}
+        >
+          Toggle Position
+        </button>
+        <button
+          className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          onClick={() => setRotOn(s => !s)}
+        >
+          Toggle Rotation
+        </button>
       </div>
-      <div enable-xr style={styleCard}>
-        Spatial Div
+
+      <div className="flex justify-center items-center h-64 border border-dashed border-gray-800 rounded-2xl">
+        <div enable-xr style={styleCard}>
+          Spatial Div
+        </div>
       </div>
     </div>
   )
 }
-
-const root = document.createElement('div')
-document.body.appendChild(root)
-ReactDOM.createRoot(root).render(<App />)
-document.documentElement.style.backgroundColor = 'transparent'
-document.body.style.backgroundColor = 'transparent'

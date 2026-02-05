@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   enableDebugTool,
@@ -18,7 +17,7 @@ const btnCls =
 
 enableDebugTool()
 
-function App() {
+export default function RealityTest() {
   const [logs, setLogs] = useState('')
 
   useEffect(() => {
@@ -70,7 +69,6 @@ function App() {
     return () => {}
   }, [boxRotationOn])
 
-  const entRef = useRef<EntityRef>(null)
   const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
   const [showBoxRed, setShowBoxRed] = useState(true)
@@ -80,61 +78,58 @@ function App() {
   const [showModelEntity, setShowModelEntity] = useState(true)
 
   return (
-    <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">reality test</h1>
+    <div className="p-4 overflow-auto h-full text-white">
+      <h1 className="text-2xl mb-4">Reality Test</h1>
 
-      <button
-        className={btnCls}
-        onClick={async () => {
-          setBoxPosition(prePos => ({ ...prePos, x: prePos.x === 0 ? 0.1 : 0 }))
-        }}
-      >
-        toggle red box position
-      </button>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <button
+          className={btnCls}
+          onClick={async () => {
+            setBoxPosition(prePos => ({
+              ...prePos,
+              x: prePos.x === 0 ? 0.1 : 0,
+            }))
+          }}
+        >
+          Toggle Red Box Position
+        </button>
 
-      <button
-        className={btnCls}
-        onClick={async () => {
-          setBoxRotationOn(prev => !prev)
-        }}
-      >
-        toggle box rotation
-      </button>
+        <button
+          className={btnCls}
+          onClick={async () => {
+            setBoxRotationOn(prev => !prev)
+          }}
+        >
+          Toggle Box Rotation
+        </button>
 
-      <button
-        className={btnCls}
-        onClick={() => {
-          setShowBoxRed(prev => !prev)
-        }}
-      >
-        toggle red box
-      </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            setShowBoxRed(prev => !prev)
+          }}
+        >
+          Toggle Red Box
+        </button>
+      </div>
 
-      <h1 className="text-2xl text-black"> emtpy test</h1>
-      <button
-        className={btnCls}
-        onClick={() => {
-          location.href = './empty.html'
-        }}
-      >
-        go empty
-      </button>
+      <div className="bg-black/40 p-4 rounded-lg mb-4">
+        <div className="text-sm font-bold mb-2">Console Logs</div>
+        <pre className="text-xs max-h-40 overflow-auto font-mono">{logs}</pre>
+      </div>
 
-      <div>
-        <div>console</div>
-        <p style={{ fontSize: '46px' }}>{logs}</p>
+      <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111]">
         <Reality
           id="testReality"
           style={{
-            width: '500px',
-            height: '800px',
+            width: '100%',
+            height: '600px',
             '--xr-depth': 100,
             '--xr-back': 200,
           }}
           ref={realityRef}
           onSpatialTap={async e => {
             console.log('tap reality', e, e.target, e.currentTarget)
-            // e.target not work as expected, use e.currentTarget instead
           }}
           onSpatialDrag={async e => {
             console.log('parent drag')
@@ -154,9 +149,7 @@ function App() {
           />
           <ModelAsset
             id="model"
-            src="http://localhost:5173/public/assets/vehicle-speedster.usdz"
-            // src="http://10.0.2.2:5173/public/assets/RocketToy1.usdz"
-            // src="http://10.0.2.2:5173/public/assets/vehicle-speedster.usdz"
+            src="/assets/vehicle-speedster.usdz"
             onLoad={() => {
               console.log('model load')
             }}
@@ -193,11 +186,6 @@ function App() {
                   splitFaces={true}
                   position={boxPosition}
                   rotation={boxRotation}
-                  // onSpatialTap={async e => {
-                  //   setShowModelEntity(pre => !pre)
-                  //   console.log('ent location', e.detail.location3D)
-                  //   // e.stopPropagation()
-                  // }}
                 ></BoxEntity>
               )}
             </Entity>
@@ -207,7 +195,6 @@ function App() {
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              // ref={entRef}
               onSpatialTap={async e => {
                 console.log('parent tap', e.detail.location3D)
               }}
@@ -222,40 +209,8 @@ function App() {
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
                 onSpatialTap={async e => {
-                  // console.log('🚀 ~ e:', e.target)
-                  console.log(
-                    'tap box',
-                    // await e.target.convertFromEntityToReality(
-                    //   'boxGreen',
-                    //   e.detail.location3D,
-                    // ),
-                    // await e.target.convertFromEntityToEntity(
-                    //   'boxGreen',
-                    //   'hehe',
-                    //   {
-                    //     x: 0,
-                    //     y: 0,
-                    //     z: 0,
-                    //   },
-                    // ),
-                  )
+                  console.log('tap box')
                   console.log('🚀 ~ e:', e.detail.location3D)
-                  // console.log(
-                  //   'tap box',
-                  //   await e.target.convertFromEntityToReality(
-                  //     'boxGreen',
-                  //     e.detail.location3D,
-                  //   ),
-                  //   await e.target.convertFromEntityToEntity(
-                  //     'boxGreen',
-                  //     'hehe',
-                  //     {
-                  //       x: 0,
-                  //       y: 0,
-                  //       z: 0,
-                  //     },
-                  //   ),
-                  // )
                 }}
                 onSpatialDragStart={async e => {
                   console.log('🚀 ~drag start e:', e.detail)
@@ -283,7 +238,6 @@ function App() {
                   scale={{ x: 0.2, y: 0.2, z: 0.2 }}
                   onSpatialTap={e => {
                     console.log('tap model', e.detail.location3D)
-                    // console.log(modelEntRef.current)
                   }}
                 />
               </Entity>
@@ -294,19 +248,3 @@ function App() {
     </div>
   )
 }
-
-// Initialize react
-var root = document.createElement('div')
-document.body.appendChild(root)
-ReactDOM.createRoot(root).render(
-  // todo: add strict mode to check destroy
-  <React.StrictMode>
-    <App />,
-  </React.StrictMode>,
-)
-document.documentElement.style.backgroundColor = 'transparent'
-document.body.style.backgroundColor = 'transparent'
-// Force page height to 100% to get centering to work
-document.documentElement.style.height = '100%'
-document.body.style.height = '100%'
-root.style.height = '100%'

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import {
   Reality,
   SceneGraph,
@@ -15,7 +14,7 @@ import {
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 
-function App() {
+export default function RealityDynamic3D() {
   const [boxPos, setBoxPos] = useState({ x: -0.22, y: 0.12, z: 0 })
   const [planePos, setPlanePos] = useState({ x: 0.22, y: -0.12, z: 0 })
   const [spherePos, setSpherePos] = useState({ x: 0.22, y: 0.12, z: 0 })
@@ -51,7 +50,6 @@ function App() {
       cancelAnimationFrame(boxAnimRef.current)
       boxAnimRef.current = null
     }
-    return () => {}
   }, [boxSpin])
 
   useEffect(() => {
@@ -65,7 +63,6 @@ function App() {
       cancelAnimationFrame(planeAnimRef.current)
       planeAnimRef.current = null
     }
-    return () => {}
   }, [planeSpin])
 
   useEffect(() => {
@@ -79,7 +76,6 @@ function App() {
       cancelAnimationFrame(sphereAnimRef.current)
       sphereAnimRef.current = null
     }
-    return () => {}
   }, [sphereSpin])
 
   useEffect(() => {
@@ -93,7 +89,6 @@ function App() {
       cancelAnimationFrame(coneAnimRef.current)
       coneAnimRef.current = null
     }
-    return () => {}
   }, [coneSpin])
 
   useEffect(() => {
@@ -107,23 +102,22 @@ function App() {
       cancelAnimationFrame(cylinderAnimRef.current)
       cylinderAnimRef.current = null
     }
-    return () => {}
   }, [cylinderSpin])
 
   return (
-    <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">Dynamic 3D Geometry Demo</h1>
-      <div className="flex flex-wrap gap-2 my-3">
+    <div className="p-10 text-white min-h-full">
+      <h1 className="text-2xl mb-4">Dynamic 3D Geometry Demo</h1>
+      <div className="flex flex-wrap gap-2 my-6 bg-[#1A1A1A] p-4 rounded-xl border border-gray-800">
         <button
           className={btnCls}
           onClick={() =>
             setBoxPos(p => ({ ...p, y: p.y === 0.12 ? 0.14 : 0.12 }))
           }
         >
-          Toggle Box Position
+          Toggle Box Pos
         </button>
         <button className={btnCls} onClick={() => setBoxSpin(s => !s)}>
-          Toggle Box Rotation
+          Toggle Box Rot
         </button>
         <button
           className={btnCls}
@@ -131,10 +125,10 @@ function App() {
             setPlanePos(p => ({ ...p, y: p.y === -0.12 ? -0.14 : -0.12 }))
           }
         >
-          Toggle Plane Position
+          Toggle Plane Pos
         </button>
         <button className={btnCls} onClick={() => setPlaneSpin(s => !s)}>
-          Toggle Plane Rotation
+          Toggle Plane Rot
         </button>
         <button
           className={btnCls}
@@ -142,99 +136,73 @@ function App() {
             setSpherePos(p => ({ ...p, y: p.y === 0.12 ? 0.14 : 0.12 }))
           }
         >
-          Toggle Sphere Position
+          Toggle Sphere Pos
         </button>
         <button className={btnCls} onClick={() => setSphereSpin(s => !s)}>
-          Toggle Sphere Rotation
-        </button>
-        <button
-          className={btnCls}
-          onClick={() =>
-            setConePos(p => ({ ...p, y: p.y === -0.12 ? -0.14 : -0.12 }))
-          }
-        >
-          Toggle Cone Position
-        </button>
-        <button className={btnCls} onClick={() => setConeSpin(s => !s)}>
-          Toggle Cone Rotation
-        </button>
-        <button
-          className={btnCls}
-          onClick={() =>
-            setCylinderPos(p => ({ ...p, y: p.y === -0.12 ? -0.14 : -0.12 }))
-          }
-        >
-          Toggle Cylinder Position
-        </button>
-        <button className={btnCls} onClick={() => setCylinderSpin(s => !s)}>
-          Toggle Cylinder Rotation
+          Toggle Sphere Rot
         </button>
       </div>
 
-      <Reality
-        style={{
-          width: '800px',
-          height: '500px',
-          '--xr-depth': 150,
-          '--xr-back': 100,
-        }}
-      >
-        <UnlitMaterial id="matRed" color="#ff0000" />
-        <UnlitMaterial id="matGreen" color="#00ff00" />
-        <UnlitMaterial id="matBlue" color="#0000ff" />
-        <UnlitMaterial id="matOrange" color="#ff8800" />
-        <UnlitMaterial id="matPurple" color="#9900ff" />
+      <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111]">
+        <Reality
+          style={{
+            width: '100%',
+            height: '600px',
+            '--xr-depth': 150,
+            '--xr-back': 100,
+          }}
+        >
+          <UnlitMaterial id="matRed" color="#ff0000" />
+          <UnlitMaterial id="matGreen" color="#00ff00" />
+          <UnlitMaterial id="matBlue" color="#0000ff" />
+          <UnlitMaterial id="matOrange" color="#ff8800" />
+          <UnlitMaterial id="matPurple" color="#9900ff" />
 
-        <SceneGraph>
-          <Entity
-            position={{ x: 0, y: 0, z: 0 }}
-            rotation={{ x: 0, y: 0, z: 0 }}
-            scale={{ x: 0.5, y: 0.5, z: 0.5 }}
-          >
-            <BoxEntity
-              width={0.18}
-              height={0.18}
-              depth={0.12}
-              materials={['matRed']}
-              position={boxPos}
-              rotation={boxRot}
-            />
-            <PlaneEntity
-              width={0.18}
-              height={0.12}
-              materials={['matGreen']}
-              position={planePos}
-              rotation={planeRot}
-            />
-            <SphereEntity
-              radius={0.08}
-              materials={['matBlue']}
-              position={spherePos}
-              rotation={sphereRot}
-            />
-            <ConeEntity
-              radius={0.08}
-              height={0.12}
-              materials={['matOrange']}
-              position={conePos}
-              rotation={coneRot}
-            />
-            <CylinderEntity
-              radius={0.08}
-              height={0.12}
-              materials={['matPurple']}
-              position={cylinderPos}
-              rotation={cylinderRot}
-            />
-          </Entity>
-        </SceneGraph>
-      </Reality>
+          <SceneGraph>
+            <Entity
+              position={{ x: 0, y: 0, z: 0 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 0.5, y: 0.5, z: 0.5 }}
+            >
+              <BoxEntity
+                width={0.18}
+                height={0.18}
+                depth={0.12}
+                materials={['matRed']}
+                position={boxPos}
+                rotation={boxRot}
+              />
+              <PlaneEntity
+                width={0.18}
+                height={0.12}
+                materials={['matGreen']}
+                position={planePos}
+                rotation={planeRot}
+              />
+              <SphereEntity
+                radius={0.08}
+                materials={['matBlue']}
+                position={spherePos}
+                rotation={sphereRot}
+              />
+              <ConeEntity
+                radius={0.08}
+                height={0.12}
+                materials={['matOrange']}
+                position={conePos}
+                rotation={coneRot}
+              />
+              <CylinderEntity
+                radius={0.08}
+                height={0.12}
+                materials={['matPurple']}
+                position={cylinderPos}
+                rotation={cylinderRot}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+      </div>
     </div>
   )
 }
-
-const root = document.createElement('div')
-document.body.appendChild(root)
-ReactDOM.createRoot(root).render(<App />)
-document.documentElement.style.backgroundColor = 'transparent'
-document.body.style.backgroundColor = 'transparent'

@@ -10,15 +10,9 @@ import { ReactSpringModel3DTest } from './ReactSpringModel3DTest'
 
 enableDebugTool()
 
-function App() {
+export default function AnimateTest() {
   return (
-    <div className="w-screen h-screen ">
-      <div className="text-blue   bg-base-200	bg-clip-border px-6 py-6  ">
-        <a href="#" onClick={() => history.go(-1)}>
-          Go Back
-        </a>
-      </div>
-
+    <div className="w-full h-full ">
       <div className="m-10">
         <PopmotionTest />
 
@@ -35,5 +29,3 @@ function App() {
     </div>
   )
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
