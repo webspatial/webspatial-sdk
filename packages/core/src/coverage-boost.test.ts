@@ -315,52 +315,52 @@ describe('platform adapters', () => {
     })
   })
 
-  // it('AndroidPlatform.callWebSpatialProtocol polls and returns injected SpatialId', async () => {
-  //   vi.useFakeTimers()
+  it('AndroidPlatform.callWebSpatialProtocol polls and returns injected SpatialId', async () => {
+    vi.useFakeTimers()
 
-  //   let canCount = 0
-  //   vi.doMock('./JSBCommand', () => {
-  //     return {
-  //       CheckWebViewCanCreateCommand: vi.fn().mockImplementation(() => ({
-  //         execute: vi.fn().mockImplementation(() => {
-  //           canCount += 1
-  //           return Promise.resolve({
-  //             success: true,
-  //             data: { can: canCount >= 2 },
-  //             errorCode: '',
-  //             errorMessage: '',
-  //           })
-  //         }),
-  //       })),
-  //     }
-  //   })
+    let canCount = 0
+    vi.doMock('./JSBCommand', () => {
+      return {
+        CheckWebViewCanCreateCommand: vi.fn().mockImplementation(() => ({
+          execute: vi.fn().mockImplementation(() => {
+            canCount += 1
+            return Promise.resolve({
+              success: true,
+              data: { can: canCount >= 2 },
+              errorCode: '',
+              errorMessage: '',
+            })
+          }),
+        })),
+      }
+    })
 
-  //   const windowProxy: any = {}
-  //   const openFn = vi.fn()
-  //   ;(window as any).open = vi.fn(() => windowProxy)
+    const windowProxy: any = {}
+    const openFn = vi.fn()
+    ;(window as any).open = vi.fn(() => windowProxy)
 
-  //   setTimeout(() => {
-  //     windowProxy.open = openFn
-  //   }, 20)
+    setTimeout(() => {
+      windowProxy.open = openFn
+    }, 20)
 
-  //   setTimeout(() => {
-  //     windowProxy.__SpatialId = 'spatial-1'
-  //   }, 40)
+    setTimeout(() => {
+      windowProxy.__SpatialId = 'spatial-1'
+    }, 40)
 
-  //   const { AndroidPlatform } = await import(
-  //     './platform-adapter/android/AndroidPlatform'
-  //   )
-  //   const platform = new AndroidPlatform()
-  //   const p = platform.callWebSpatialProtocol('open', 'x=1', '_blank', '')
+    const { AndroidPlatform } = await import(
+      './platform-adapter/android/AndroidPlatform'
+    )
+    const platform = new AndroidPlatform()
+    const p = platform.callWebSpatialProtocol('open', 'x=1', '_blank', '')
 
-  //   await vi.advanceTimersByTimeAsync(200)
+    await vi.advanceTimersByTimeAsync(200)
 
-  //   const result = await p
-  //   expect(result.success).toBe(true)
-  //   expect(result.data.id).toBe('spatial-1')
-  //   expect(result.data.windowProxy).toBe(windowProxy)
-  //   expect(openFn).toHaveBeenCalledWith('about:blank', '_self')
-  // })
+    const result = await p
+    expect(result.success).toBe(true)
+    expect(result.data.id).toBe('spatial-1')
+    expect(result.data.windowProxy).toBe(windowProxy)
+    expect(openFn).toHaveBeenCalledWith('about:blank', '_self')
+  })
 
   it('SSRPlatform returns successful no-op results', async () => {
     const { SSRPlatform } = await import('./platform-adapter/ssr/SSRPlatform')
