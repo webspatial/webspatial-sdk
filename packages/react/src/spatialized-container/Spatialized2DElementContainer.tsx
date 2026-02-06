@@ -99,32 +99,21 @@ function getJSXPortalInstance<P extends ElementType>(
   portalInstanceObject: PortalInstanceObject,
 ) {
   const { component: El, style: inStyle = {}, ...props } = inProps
-  const extraStyle: CSSProperties = {
-    visibility: 'visible',
-    position: 'relative',
-    top: '0px',
-    left: '0px',
-    margin: '0px',
-    marginLeft: '0px',
-    marginRight: '0px',
-    marginTop: '0px',
-    marginBottom: '0px',
-    borderRadius: '0px',
-    // overflow: '',
-    transform: 'none',
-  }
-
   const computedStyle = portalInstanceObject.computedStyle!
   const inheritedPortalStyle: CSSProperties =
     getInheritedStyleProps(computedStyle)
 
-  const style = {
+  const style: CSSProperties = {
     ...inStyle,
     ...inheritedPortalStyle,
-    ...extraStyle,
   }
 
-  return <El style={style} {...props} />
+  const className =
+    (props as any).className && String((props as any).className).length > 0
+      ? String((props as any).className) + ' xr-portal-content'
+      : 'xr-portal-content'
+
+  return <El style={style} {...props} className={className} />
 }
 
 function useSyncHeaderStyle(windowProxy: WindowProxy) {
