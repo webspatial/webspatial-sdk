@@ -1,0 +1,37 @@
+/* 
+ * visionOS design guideline 
+ * https://developer.apple.com/design/human-interface-guidelines/buttons#Platform-considerations
+ */
+button {
+  padding: 10px;
+}
+input { 
+  width: 5em; 
+  margin: 0 0.5em 
+}
+
+.coneModel {
+  display: block;
+  width: 800px;
+  --xr-depth: 100px;
+  --xr-back: 100px;
+}
+.coneModel, .coneModel img {
+  height: 200px;
+  width: 800px;
+  object-fit: contain;
+}
+.coneModel img {
+  object-fit: contain;
+}
+
+/* NumberInput component */
+.numberInput { 
+  margin: 0 1em 1em 0;
+  display: inline-block;
+}
+
+/* Toggle component */
+.toggle {
+  margin-right: 1em;
+}
