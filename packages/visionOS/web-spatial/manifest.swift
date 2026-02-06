@@ -5,7 +5,7 @@ var pwaManager = PWAManager()
 
 struct PWAManager: Codable {
     var isLocal: Bool = false
-    var start_url: String = "http://localhost:5173/src/static-3d-model"
+    var start_url: String = "http://localhost:5173/src/"
 
     var scope: String = ""
     var id: String = "com.webspatial.pico"
