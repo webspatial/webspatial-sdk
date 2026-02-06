@@ -121,7 +121,19 @@ function getJSXPortalInstance<P extends ElementType>(
     ...inheritedPortalStyle,
     ...extraStyle,
   }
-  ;(style as any).visibility = 'var(--xr-portal-visibility, visible)'
+  {
+    const hostDom = portalInstanceObject.dom as HTMLElement | undefined
+    const hasInlineVisibility =
+      !!hostDom &&
+      hostDom.style.visibility !== '' &&
+      hostDom.style.visibility !== undefined
+    if (!hasInlineVisibility) {
+      const computedVisibility = computedStyle.getPropertyValue('visibility')
+      if (computedVisibility) {
+        ;(style as any).visibility = computedVisibility
+      }
+    }
+  }
 
   return <El style={style} {...props} />
 }

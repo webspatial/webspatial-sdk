@@ -4,7 +4,6 @@ import React from 'react'
 
 const Host = styled.div<{ $hidden?: boolean }>`
   visibility: ${props => (props.$hidden ? 'hidden' : 'visible')};
-  --xr-portal-visibility: ${props => (props.$hidden ? 'hidden' : 'visible')};
   position: relative;
   margin: 8px;
   padding: 8px;
