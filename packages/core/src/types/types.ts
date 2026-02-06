@@ -357,9 +357,14 @@ export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 export type SpatialDragEndEvent = SpatialDragEvent
 
 export interface SpatialRotateEventDetail {
+  // TODO: should remove
   rotation: { vector: [number, number, number, number] }
-  startAnchor3D: Vec3
-  startLocation3D: Point3D
+  quaternion: {
+    x: number
+    y: number
+    z: number
+    w: number
+  }
 }
 
 export type SpatialRotateEvent = CustomEvent<SpatialRotateEventDetail>
@@ -368,9 +373,6 @@ export type SpatialRotateEndEvent = SpatialRotateEvent
 
 export interface SpatialMagnifyEventDetail {
   magnification: number
-  velocity: number
-  startAnchor3D: Vec3
-  startLocation3D: Point3D
 }
 
 export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>

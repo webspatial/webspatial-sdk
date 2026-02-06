@@ -143,18 +143,6 @@ function App() {
                 console.log('dragEnd', e.detail.translation3D)
                 logLine('dragEnd', e.detail.translation3D)
               }}
-              onSpatialRotateStart={e => {
-                if (!enabled) return
-                if (
-                  exclusive &&
-                  activeGestureRef.current &&
-                  activeGestureRef.current !== 'rotate'
-                )
-                  return
-                activeGestureRef.current = 'rotate'
-                rotateBaseRef.current = boxRot
-                logLine('rotateStart')
-              }}
               onSpatialRotate={e => {
                 if (!enabled) return
                 if (
@@ -163,7 +151,8 @@ function App() {
                   activeGestureRef.current !== 'rotate'
                 )
                   return
-                const [x, y, z, w] = e.detail.rotation.vector
+                console.log('quaternion', e.detail.quaternion)
+                const { x, y, z, w } = e.detail.quaternion
                 const roll = Math.atan2(
                   2 * (w * x + y * z),
                   1 - 2 * (x * x + y * y),
@@ -184,7 +173,7 @@ function App() {
                   y: rotateBaseRef.current.y + pitchDeg,
                   z: rotateBaseRef.current.z + yawDeg,
                 })
-                console.log('rotate', e.detail.rotation.vector, {
+                console.log('rotate', e.detail.quaternion, {
                   rollDeg,
                   pitchDeg,
                   yawDeg,
@@ -201,26 +190,9 @@ function App() {
                 )
                   return
                 if (exclusive) activeGestureRef.current = null
-                console.log('rotateEnd', e.detail.rotation.vector)
+                console.log('rotateEnd')
                 logLine('rotateEnd')
               }}
-              onSpatialMagnifyStart={e => {
-                if (!isAllow('scale')) return
-                if (!enabled) return
-                if (
-                  exclusive &&
-                  activeGestureRef.current &&
-                  activeGestureRef.current !== 'magnify'
-                )
-                  return
-                activeGestureRef.current = 'magnify'
-                scaleBaseRef.current = boxScale
-                logLine('magnifyStart', {
-                  magnification: e.detail.magnification,
-                  velocity: e.detail.velocity,
-                })
-              }}
-              // onSpatialMagnify={onScale}
               onSpatialMagnify={(e: any) => {
                 if (!isAllow('scale')) return
                 if (!enabled) return
@@ -253,7 +225,6 @@ function App() {
                 if (exclusive) activeGestureRef.current = null
                 logLine('magnifyEnd', {
                   magnification: e.detail.magnification,
-                  velocity: e.detail.velocity,
                 })
               }}
             />
