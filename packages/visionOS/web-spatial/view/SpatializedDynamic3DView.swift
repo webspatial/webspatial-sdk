@@ -117,26 +117,14 @@ struct SpatializedDynamic3DView: View {
                 if !isDrag {
                     let startEvent = WebSpatialDragStartGuestureEvent(
                         detail: .init(
-                            location3D: value.location3D,
-                            startLocation3D: value.startLocation3D,
-                            translation3D: value.translation3D,
-                            predictedEndTranslation3D: value.predictedEndTranslation3D,
-                            predictedEndLocation3D: value.predictedEndLocation3D,
-                            velocity: value.velocity
+                            startLocation3D: value.startLocation3D
                         )
                     )
                     spatialScene.sendWebMsg(entity.spatialId, startEvent)
                     isDrag = true
                 } else {
                     let gestureEvent = WebSpatialDragGuestureEvent(
-                        detail: .init(
-                            location3D: value.location3D,
-                            startLocation3D: value.startLocation3D,
-                            translation3D: value.translation3D,
-                            predictedEndTranslation3D: value.predictedEndTranslation3D,
-                            predictedEndLocation3D: value.predictedEndLocation3D,
-                            velocity: value.velocity
-                        )
+                        detail: .init(translation3D: value.translation3D)
                     )
                     spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
                 }
@@ -144,16 +132,7 @@ struct SpatializedDynamic3DView: View {
         }.onEnded { value in
             // Always forward drag end event to JS
             if let entity = value.entity as? SpatialEntity {
-                let gestureEvent = WebSpatialDragEndGuestureEvent(
-                    detail: .init(
-                        location3D: value.location3D,
-                        startLocation3D: value.startLocation3D,
-                        translation3D: value.translation3D,
-                        predictedEndTranslation3D: value.predictedEndTranslation3D,
-                        predictedEndLocation3D: value.predictedEndLocation3D,
-                        velocity: value.velocity
-                    )
-                )
+                let gestureEvent = WebSpatialDragEndGuestureEvent()
                 spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
             }
             isDrag = false

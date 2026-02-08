@@ -3,12 +3,18 @@ import SwiftUI
 // zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
 
+final class GestureFlags {
+    var isDrag = false
+}
+
 struct SpatializedElementView<Content: View>: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     var parentScrollOffset: Vec2
     var content: Content
+
+    @State private var gestureFlags = GestureFlags()
 
     init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
         self.parentScrollOffset = parentScrollOffset
@@ -61,32 +67,29 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDragging(_ event: DragGesture.Value) {
-        if spatializedElement.enableDragStartGesture || spatializedElement.enableDragGesture {
-            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
-                location3D: event.location3D,
-                startLocation3D: event.startLocation3D,
-                translation3D: event.translation3D,
-                predictedEndTranslation3D: event.predictedEndTranslation3D,
-                predictedEndLocation3D: event.predictedEndLocation3D,
-                velocity: event.velocity
+        if spatializedElement.enableDragStartGesture, !gestureFlags.isDrag {
+            let gestureEvent = WebSpatialDragStartGuestureEvent(detail: .init(
+                startLocation3D: event.startLocation3D
             ))
-//            print("onDragging \(event.translation3D)")
+
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
+
+        if spatializedElement.enableDragGesture {
+            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
+                translation3D: event.translation3D
+            ))
+
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
+
+        gestureFlags.isDrag = true
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
+        gestureFlags.isDrag = false
         if spatializedElement.enableDragEndGesture {
-            let gestureEvent = WebSpatialDragEndGuestureEvent(
-                detail: .init(
-                    location3D: event.location3D,
-                    startLocation3D: event.startLocation3D,
-                    translation3D: event.translation3D,
-                    predictedEndTranslation3D: event.predictedEndTranslation3D,
-                    predictedEndLocation3D: event.predictedEndLocation3D,
-                    velocity: event.velocity
-                ))
-//            print("onDragging \(event.translation3D)")
+            let gestureEvent = WebSpatialDragEndGuestureEvent()
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }

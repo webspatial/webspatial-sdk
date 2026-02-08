@@ -343,18 +343,21 @@ export interface SpatialTapEventDetail {
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
 
-export interface SpatialDragEventDetail {
-  location3D: Point3D
+export interface SpatialDragStartEventDetail {
   startLocation3D: Point3D
-  translation3D: Vec3
-  predictedEndTranslation3D: Vec3
-  predictedEndLocation3D: Point3D
-  velocity: Size
 }
+
+export interface SpatialDragEventDetail {
+  translation3D: Vec3
+}
+
+export interface SpatialDragEndEventDetail {}
+
+export type SpatialDragStartEvent = CustomEvent<SpatialDragStartEventDetail>
 
 export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
-export type SpatialDragEndEvent = SpatialDragEvent
+export type SpatialDragEndEvent = CustomEvent<SpatialDragEndEventDetail>
 
 export interface SpatialRotateEventDetail {
   rotation: { vector: [number, number, number, number] }

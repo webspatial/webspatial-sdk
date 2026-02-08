@@ -7,6 +7,7 @@ import {
   CubeInfo,
   SpatialDragEndEvent,
   SpatialDragEvent,
+  SpatialDragStartEvent,
   SpatializedElementProperties,
   SpatialMagnifyEndEvent,
   SpatialMagnifyEvent,
@@ -19,6 +20,7 @@ import {
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialDragStartMsg,
   SpatialMagnifyEndMsg,
   SpatialMagnifyMsg,
   SpatialRotateEndMsg,
@@ -116,6 +118,7 @@ export abstract class SpatializedElement extends SpatialObject {
       | CubeInfoMsg
       | TransformMsg
       | SpatialTapMsg
+      | SpatialDragStartMsg
       | SpatialDragMsg
       | SpatialDragEndMsg
       | SpatialRotateMsg
@@ -157,23 +160,19 @@ export abstract class SpatializedElement extends SpatialObject {
         (data as SpatialTapMsg).detail,
       )
       this._onSpatialTap?.(event)
+    } else if (type === SpatialWebMsgType.spatialdragstart) {
+      const dragStartEvent = createSpatialEvent(
+        SpatialWebMsgType.spatialdragstart,
+        (data as SpatialDragStartMsg).detail,
+      )
+      this._onSpatialDragStart?.(dragStartEvent)
     } else if (type === SpatialWebMsgType.spatialdrag) {
-      // Handle drag gestures, with special handling for drag start
-      if (!this._isDragging) {
-        const dragStartEvent = createSpatialEvent(
-          SpatialWebMsgType.spatialdragstart,
-          (data as SpatialDragMsg).detail,
-        )
-        this._onSpatialDragStart?.(dragStartEvent)
-      }
-      this._isDragging = true
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdrag,
         (data as SpatialDragMsg).detail,
       )
       this._onSpatialDrag?.(event)
     } else if (type === SpatialWebMsgType.spatialdragend) {
-      this._isDragging = false
       const event = createSpatialEvent(
         SpatialWebMsgType.spatialdragend,
         (data as SpatialDragEndMsg).detail,
@@ -232,9 +231,10 @@ export abstract class SpatializedElement extends SpatialObject {
     })
   }
 
-  private _isDragging = false
-  private _onSpatialDragStart?: (event: SpatialDragEvent) => void
-  set onSpatialDragStart(value: (event: SpatialDragEvent) => void | undefined) {
+  private _onSpatialDragStart?: (event: SpatialDragStartEvent) => void
+  set onSpatialDragStart(
+    value: (event: SpatialDragStartEvent) => void | undefined,
+  ) {
     this._onSpatialDragStart = value
     this.updateProperties({
       enableDragStartGesture: this._onSpatialDragStart !== undefined,
