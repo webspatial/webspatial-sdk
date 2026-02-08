@@ -192,7 +192,6 @@ function App() {
                 console.log('rotateEnd')
                 logLine('rotateEnd')
               }}
-              // onSpatialMagnify={onScale}
               onSpatialMagnify={(e: any) => {
                 if (!isAllow('scale')) return
                 if (!enabled) return

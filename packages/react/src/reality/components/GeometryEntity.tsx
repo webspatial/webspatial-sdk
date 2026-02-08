@@ -24,10 +24,8 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
-      // onSpatialRotateStart,
       onSpatialRotate,
       onSpatialRotateEnd,
-      // onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       // TODO: add other event handlers
@@ -50,10 +48,8 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
-      // onSpatialRotateStart,
       onSpatialRotate,
       onSpatialRotateEnd,
-      // onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
 
