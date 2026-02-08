@@ -44,25 +44,21 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
         if spatializedElement.enableRotateGesture || spatializedElement.enableRotateStartGesture {
-            let gestureEvent = WebSpatialRotateGuestureEvent(
-                detail: .init(
-                    rotation: event.rotation,
-                    startAnchor3D: event.startAnchor3D,
-                    startLocation3D: event.startLocation3D
-                ))
+            let quaternion = event.rotation.quaternion
+            let x = quaternion.imag.x
+            let y = quaternion.imag.y
+            let z = quaternion.imag.z
+            let w = quaternion.real
+            let detail = WebSpatialRotateGuestureEventDetail(quaternion: .init(x: x, y: y, z: z, w: w))
+
+            let gestureEvent = WebSpatialRotateGuestureEvent(detail: detail)
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
 
     private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
         if spatializedElement.enableRotateEndGesture {
-            let gestureEvent = WebSpatialRotateEndGuestureEvent(
-                detail: .init(
-                    rotation: event.rotation,
-                    startAnchor3D: event.startAnchor3D,
-                    startLocation3D: event.startLocation3D
-                ))
-            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialRotateEndGuestureEvent())
         }
     }
 
@@ -104,10 +100,7 @@ struct SpatializedElementView<Content: View>: View {
         if spatializedElement.enableMagnifyGesture || spatializedElement.enableMagnifyStartGesture {
             let gestureEvent = WebSpatialMagnifyGuestureEvent(
                 detail: .init(
-                    magnification: event.magnification,
-                    velocity: event.velocity,
-                    startLocation3D: event.startLocation3D,
-                    startAnchor3D: event.startAnchor3D
+                    magnification: event.magnification
                 ))
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
@@ -115,14 +108,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
         if spatializedElement.enableMagnifyEndGesture {
-            let gestureEvent = WebSpatialMagnifyEndGuestureEvent(
-                detail: .init(
-                    magnification: event.magnification,
-                    velocity: event.velocity,
-                    startLocation3D: event.startLocation3D,
-                    startAnchor3D: event.startAnchor3D
-                ))
-            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialMagnifyEndGuestureEvent())
         }
     }
 

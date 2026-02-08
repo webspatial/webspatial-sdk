@@ -16,6 +16,7 @@ import {
   ModelSpatialMagnifyEvent,
   ModelLoadEvent,
   ModelSpatialDragStartEvent,
+  ModelSpatialRotateEvent,
   // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
@@ -91,10 +92,13 @@ function ModelTest() {
     )
   }
 
-  const onSpatialRotate = (e: ModelSpatialRotateEndEvent) => {
+  const onSpatialRotate = (e: ModelSpatialRotateEvent) => {
     // console.log('model onSpatialRotateEnd:', e.detail.rotation)
-    const quaternion = new THREE.Quaternion().fromArray(
-      e.detail.rotation.vector,
+    const quaternion = new THREE.Quaternion(
+      e.detail.quaternion.x,
+      e.detail.quaternion.y,
+      e.detail.quaternion.z,
+      e.detail.quaternion.w,
     )
     const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
     const x = (euler.x * 180) / Math.PI

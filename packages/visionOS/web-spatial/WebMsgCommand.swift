@@ -7,10 +7,8 @@ enum WebSpatialGestureType: String, Encodable {
     case spatialdragstart
     case spatialdrag
     case spatialdragend
-    case spatialrotatestart
     case spatialrotate
     case spatialrotateend
-    case spatialmagnifystart
     case spatialmagnify
     case spatialmagnifyend
 }
@@ -24,10 +22,8 @@ enum SpatialWebMsgType: String, Encodable {
     case spatialdragstart
     case spatialdrag
     case spatialdragend
-    case spatialrotatestart
     case spatialrotate
     case spatialrotateend
-    case spatialmagnifystart
     case spatialmagnify
     case spatialmagnifyend
 
@@ -79,10 +75,15 @@ struct WebSpatialDragEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialdragend
 }
 
+struct Quaternion: Encodable {
+    let x: Double
+    let y: Double
+    let z: Double
+    let w: Double
+}
+
 struct WebSpatialRotateGuestureEventDetail: Encodable {
-    let rotation: Rotation3D
-    let startAnchor3D: UnitPoint3D
-    let startLocation3D: Point3D
+    let quaternion: Quaternion
 }
 
 struct WebSpatialRotateGuestureEvent: Encodable {
@@ -90,21 +91,12 @@ struct WebSpatialRotateGuestureEvent: Encodable {
     let detail: WebSpatialRotateGuestureEventDetail
 }
 
-struct WebSpatialRotateStartGuestureEvent: Encodable {
-    let type: SpatialWebMsgType = .spatialrotatestart
-    let detail: WebSpatialRotateGuestureEventDetail
-}
-
 struct WebSpatialRotateEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialrotateend
-    let detail: WebSpatialRotateGuestureEventDetail
 }
 
 struct WebSpatialMagnifyGuestureEventDetail: Encodable {
     let magnification: CGFloat
-    let velocity: CGFloat
-    let startLocation3D: Point3D
-    let startAnchor3D: UnitPoint3D
 }
 
 struct WebSpatialMagnifyGuestureEvent: Encodable {
@@ -112,14 +104,8 @@ struct WebSpatialMagnifyGuestureEvent: Encodable {
     let detail: WebSpatialMagnifyGuestureEventDetail
 }
 
-struct WebSpatialMagnifyStartGuestureEvent: Encodable {
-    let type: SpatialWebMsgType = .spatialmagnifystart
-    let detail: WebSpatialMagnifyGuestureEventDetail
-}
-
 struct WebSpatialMagnifyEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialmagnifyend
-    let detail: WebSpatialMagnifyGuestureEventDetail
 }
 
 struct ModelLoadSuccess: Encodable {

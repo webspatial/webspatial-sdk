@@ -120,8 +120,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             _enableTap = isEable
         case .spatialrotate:
             _enableRotate = isEable
-        case .spatialrotatestart:
-            _enableRotateStart = isEable
         case .spatialrotateend:
             _enableRotateEnd = isEable
         case .spatialdrag:
@@ -132,8 +130,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             _enableDragEnd = isEable
         case .spatialmagnify:
             _enableMagnify = isEable
-        case .spatialmagnifystart:
-            _enableMagnifyStart = isEable
         case .spatialmagnifyend:
             _enableMagnifyEnd = isEable
         default:

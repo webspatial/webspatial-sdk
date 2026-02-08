@@ -358,26 +358,29 @@ export type SpatialDragStartEvent = CustomEvent<SpatialDragStartEventDetail>
 export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = CustomEvent<SpatialDragEndEventDetail>
-
 export interface SpatialRotateEventDetail {
-  rotation: { vector: [number, number, number, number] }
-  startAnchor3D: Vec3
-  startLocation3D: Point3D
+  quaternion: {
+    x: number
+    y: number
+    z: number
+    w: number
+  }
 }
+
+export interface SpatialRotateEndEventDetail {}
 
 export type SpatialRotateEvent = CustomEvent<SpatialRotateEventDetail>
 
-export type SpatialRotateEndEvent = SpatialRotateEvent
+export type SpatialRotateEndEvent = CustomEvent<SpatialRotateEndEventDetail>
 
 export interface SpatialMagnifyEventDetail {
   magnification: number
-  velocity: number
-  startAnchor3D: Vec3
-  startLocation3D: Point3D
 }
+
+export interface SpatialMagnifyEndEventDetail {}
 
 export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
 
-export type SpatialMagnifyEndEvent = SpatialMagnifyEvent
+export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
