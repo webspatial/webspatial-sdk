@@ -43,7 +43,7 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
-        if spatializedElement.enableRotateGesture || spatializedElement.enableRotateStartGesture {
+        if spatializedElement.enableRotateGesture {
             let quaternion = event.rotation.quaternion
             let x = quaternion.imag.x
             let y = quaternion.imag.y
@@ -97,7 +97,7 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        if spatializedElement.enableMagnifyGesture || spatializedElement.enableMagnifyStartGesture {
+        if spatializedElement.enableMagnifyGesture {
             let gestureEvent = WebSpatialMagnifyGuestureEvent(
                 detail: .init(
                     magnification: event.magnification
