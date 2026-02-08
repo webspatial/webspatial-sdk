@@ -2,9 +2,14 @@ import { useRef, useState } from 'react'
 import './index.css'
 import {
   enableDebugTool,
+  SpatialDragStartEvent,
   SpatialDragEvent,
+  SpatialDragEndEvent,
   Model,
   SpatialMagnifyEvent,
+  ModelSpatialDragEvent,
+  ModelSpatialDragStartEvent,
+  ModelSpatialDragEndEvent,
 } from '@webspatial/react-sdk'
 import ReactDOM from 'react-dom/client'
 
@@ -27,11 +32,11 @@ function App() {
     transform: `translate3d(${tx}px, ${ty}px, ${tz}px) scale(${scale * magnification})`,
   }
 
-  const onSpatialDragStart = () => {
-    console.log('drag start')
+  const onSpatialDragStart = (evt: SpatialDragStartEvent) => {
+    console.log('drag start', evt.detail.startLocation3D)
   }
 
-  const onSpatialDrag = (evt: SpatialDragEvent) => {
+  const spatialDrag = (evt: SpatialDragEvent | ModelSpatialDragEvent) => {
     console.log(
       'drag move',
       evt.detail.translation3D.x,
@@ -52,26 +57,43 @@ function App() {
     console.log('evt.detail.translation3D', evt.detail.translation3D)
   }
 
-  console.log('tx, ty, tz', tx, ty, tz)
-
-  const onSpatialDragEnd = () => {
-    console.log('drag end')
+  const spatialDragEnd = () => {
     lastTranslation.current = { x: 0, y: 0, z: 0 }
   }
 
-  const onSpatialMagnifyStart = () => {
-    console.log('magnify start')
+  const onSpatialDrag = (evt: SpatialDragEvent) => {
+    spatialDrag(evt)
   }
 
-  const onSpatialMagnify = (evt: SpatialMagnifyEvent) => {
-    console.log('magnify move', evt.detail.magnification)
-    setMagnification(evt.detail.magnification)
+  const onSpatialDragEnd = () => {
+    spatialDragEnd()
   }
 
-  const onSpatialMagnifyEnd = () => {
-    console.log('magnify end')
-    setScale(scale * magnification)
-    setMagnification(1)
+  // const onSpatialMagnifyStart = () => {
+  //   console.log('magnify start')
+  // }
+
+  // const onSpatialMagnify = (evt: SpatialMagnifyEvent) => {
+  //   console.log('magnify move', evt.detail.magnification)
+  //   setMagnification(evt.detail.magnification)
+  // }
+
+  // const onSpatialMagnifyEnd = () => {
+  //   console.log('magnify end')
+  //   setScale(scale * magnification)
+  //   setMagnification(1)
+  // }
+
+  const onModelSpatialDragStart = (evt: ModelSpatialDragStartEvent) => {
+    console.log('model drag start', evt.detail.startLocation3D)
+  }
+
+  const onModelSpatialDrag = (evt: ModelSpatialDragEvent) => {
+    spatialDrag(evt)
+  }
+
+  const onModelSpatialDragEnd = (evt: ModelSpatialDragEndEvent) => {
+    spatialDragEnd()
   }
 
   const src =
@@ -86,12 +108,9 @@ function App() {
         onLoad={e => {
           console.log('dbg model onload')
         }}
-        onSpatialDragStart={onSpatialDragStart}
-        onSpatialDrag={onSpatialDrag}
-        onSpatialDragEnd={onSpatialDragEnd}
-        onSpatialMagnifyStart={onSpatialMagnifyStart}
-        onSpatialMagnify={onSpatialMagnify}
-        onSpatialMagnifyEnd={onSpatialMagnifyEnd}
+        onSpatialDragStart={onModelSpatialDragStart}
+        onSpatialDrag={onModelSpatialDrag}
+        onSpatialDragEnd={onModelSpatialDragEnd}
         onSpatialTap={() => {
           console.log('dbg model tap')
         }}
@@ -112,6 +131,24 @@ function App() {
       >
         hello wolrd
       </div>
+
+      <button
+        style={{
+          width: '200px',
+          height: '100px',
+          background: 'yellow',
+          fontSize: '30px',
+        }}
+        onClick={() => {
+          setTx(0)
+          setTy(0)
+          setTz(0)
+          setScale(1)
+          setMagnification(1)
+        }}
+      >
+        reset
+      </button>
     </div>
   )
 }

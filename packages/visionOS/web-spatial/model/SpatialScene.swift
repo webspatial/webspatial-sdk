@@ -39,7 +39,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     // Enum
-    public enum WindowStyle: String, Codable, CaseIterable {
+    enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
     }
@@ -51,7 +51,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var setLoadingWindowData = PassthroughSubject<XLoadingViewData, Never>()
 
     var url: String = "" // start_url
-    public var windowStyle: WindowStyle {
+    var windowStyle: WindowStyle {
         didSet {
             resetBackgroundMaterialOnWindowStyleChange(windowStyle)
         }
@@ -224,9 +224,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         SpatialApp.Instance.closeWindowGroup(self)
     }
 
-    public var sceneConfig: SceneOptions?
+    var sceneConfig: SceneOptions?
 
-    public func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
+    func moveToState(_ newState: SceneStateKind, _ sceneConfig: SceneOptions?) {
         print(" moveToState \(state) to \(newState) ")
 
         let oldState = state
@@ -248,7 +248,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         } else if oldState == .idle, newState == .visible {
             // SpatialApp opened SpatialScene
-        } else if oldState == .idle && newState == .willVisible {
+        } else if oldState == .idle, newState == .willVisible {
             // window.open with scene config
             SpatialApp.Instance.openWindowGroup(self, sceneConfig!)
         }
@@ -328,7 +328,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         ])
     }
 
-    public var didFailLoad = false
+    var didFailLoad = false
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
@@ -644,18 +644,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableDragEndGesture = command.enableDragEndGesture {
             spatializedElement.enableDragEndGesture = enableDragEndGesture
         }
-        if let enableRotateStartGesture = command.enableRotateStartGesture {
-            spatializedElement.enableRotateStartGesture = enableRotateStartGesture
-        }
+
         if let enableRotateGesture = command.enableRotateGesture {
             spatializedElement.enableRotateGesture = enableRotateGesture
         }
         if let enableRotateEndGesture = command.enableRotateEndGesture {
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
-        }
-
-        if let enableMagnifyStartGesture = command.enableMagnifyStartGesture {
-            spatializedElement.enableMagnifyStartGesture = enableMagnifyStartGesture
         }
 
         if let enableMagnifyGesture = command.enableMagnifyGesture {

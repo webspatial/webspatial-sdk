@@ -48,11 +48,9 @@ export type EntityEventHandler = {
   onSpatialDrag?: (event: SpatialDragEntityEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEntityEvent) => void
   // rotate
-  onSpatialRotateStart?: (event: SpatialRotateEntityEvent) => void
   onSpatialRotate?: (event: SpatialRotateEntityEvent) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEntityEvent) => void
   // magnify
-  onSpatialMagnifyStart?: (event: SpatialMagnifyEntityEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEntityEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEntityEvent) => void
 }
