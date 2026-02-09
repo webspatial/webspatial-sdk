@@ -189,7 +189,6 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     var enableDragEndGesture: Bool?
     var enableRotateGesture: Bool?
     var enableRotateEndGesture: Bool?
-    var enableMagnifyStartGesture: Bool?
     var enableMagnifyGesture: Bool?
     var enableMagnifyEndGesture: Bool?
     var enableTapGesture: Bool?

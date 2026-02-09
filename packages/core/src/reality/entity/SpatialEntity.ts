@@ -164,13 +164,7 @@ export class SpatialEntity extends SpatialObject {
       this.dispatchEvent(evt)
     }
     // rotate
-    else if (type === SpatialWebMsgType.spatialrotatestart) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialrotatestart,
-        (data as SpatialRotateMsg).detail,
-      )
-      this.dispatchEvent(evt)
-    } else if (type === SpatialWebMsgType.spatialrotate) {
+    else if (type === SpatialWebMsgType.spatialrotate) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialrotate,
         (data as SpatialRotateMsg).detail,
@@ -184,13 +178,7 @@ export class SpatialEntity extends SpatialObject {
       this.dispatchEvent(evt)
     }
     // magnify
-    else if (type === SpatialWebMsgType.spatialmagnifystart) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialmagnifystart,
-        (data as SpatialMagnifyMsg).detail,
-      )
-      this.dispatchEvent(evt)
-    } else if (type === SpatialWebMsgType.spatialmagnify) {
+    else if (type === SpatialWebMsgType.spatialmagnify) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialmagnify,
         (data as SpatialMagnifyMsg).detail,

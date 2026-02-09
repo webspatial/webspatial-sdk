@@ -76,10 +76,8 @@ export interface SpatializedElementProperties {
   enableDragStartGesture: boolean
   enableDragGesture: boolean
   enableDragEndGesture: boolean
-  enableRotateStartGesture: boolean
   enableRotateGesture: boolean
   enableRotateEndGesture: boolean
-  enableMagnifyStartGesture: boolean
   enableMagnifyGesture: boolean
   enableMagnifyEndGesture: boolean
 }
