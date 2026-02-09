@@ -21,12 +21,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Apply PR patch onto auto-test-package
+      - name: Apply PR changes onto auto-test-package (force override conflicting files)
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          PATCH_URL: ${{ github.event.pull_request.patch_url }}
+          PR_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           set -euo pipefail
           BASE_BRANCH="auto-test-package"
@@ -37,32 +37,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          curl -sSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github.v3.patch" \
-            "${PATCH_URL}" \
-            -o /tmp/pr.patch
-
-          if [ ! -s /tmp/pr.patch ]; then
-            echo "Empty PR patch. Nothing to sync."
-            exit 0
-          fi
-
-          if ! grep -q "^diff --git " /tmp/pr.patch; then
-            echo "Downloaded patch is not a git patch. First 20 lines:"
-            head -n 20 /tmp/pr.patch
-            exit 1
-          fi
-
+          # Fetch latest changes
           git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
+          git fetch origin "${PR_SHA}"
+
+          # Checkout base branch and create temporary branch
           git checkout "${BASE_BRANCH}"
           git checkout -b "ci/sync-pr-${PR_NUMBER}-to-${BASE_BRANCH}-${GITHUB_RUN_ID}"
 
-          git apply --index --3way --allow-empty \
-            --exclude="${EXCLUDE_1}" \
-            --exclude="${EXCLUDE_2}" \
-            --exclude="${EXCLUDE_3}" \
-            /tmp/pr.patch
+          # Get list of changed files in PR (excluding specified paths)
+          CHANGED_FILES=$(git diff --name-only "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No applicable changes after excludes. Nothing to sync."
+            exit 0
+          fi
+
+          echo "Applying changes from PR (force overriding conflicting files):"
+          echo "$CHANGED_FILES"
+
+          # Checkout each changed file from PR branch (force override)
+          echo "$CHANGED_FILES" | while read -r file; do
+            if [ -n "$file" ]; then
+              git checkout "${PR_SHA}" -- "$file"
+            fi
+          done
+
+          # Stage all changes
+          git add .
 
           if git diff --cached --quiet; then
             echo "No applicable changes after excludes. Nothing to sync."
