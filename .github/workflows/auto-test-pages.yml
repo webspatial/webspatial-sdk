@@ -3,7 +3,6 @@ name: AutoTest & Pages
 on:
   pull_request:
     branches:
-      - main
       - stable
   push:
     branches:
