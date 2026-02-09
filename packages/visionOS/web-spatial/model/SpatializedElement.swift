@@ -39,7 +39,7 @@ class SpatializedElement: SpatialObject {
     }
 
     enum CodingKeys: String, CodingKey {
-        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateGesture, enableRotateEndGesture, enableMagnifyGesture, enableMagnifyEndGesture
+        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragStartGesture, enableDragGesture, enableDragEndGesture, enableRotateGesture, enableRotateEndGesture, enableMagnifyGesture, enableMagnifyEndGesture
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -60,6 +60,7 @@ class SpatializedElement: SpatialObject {
         try container.encode(parent?.id, forKey: .parent)
         try container.encode(enableGesture, forKey: .enableGesture)
         try container.encode(enableTapGesture, forKey: .enableTapGesture)
+        try container.encode(enableDragStartGesture, forKey: .enableDragStartGesture)
         try container.encode(enableDragGesture, forKey: .enableDragGesture)
         try container.encode(enableDragEndGesture, forKey: .enableDragEndGesture)
         try container.encode(enableRotateGesture, forKey: .enableRotateGesture)
