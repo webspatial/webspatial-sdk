@@ -4,9 +4,7 @@ import {
   enableDebugTool,
   SpatialDragStartEvent,
   SpatialDragEvent,
-  SpatialDragEndEvent,
   Model,
-  SpatialMagnifyEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragStartEvent,
   ModelSpatialDragEndEvent,
@@ -68,21 +66,6 @@ function App() {
   const onSpatialDragEnd = () => {
     spatialDragEnd()
   }
-
-  // const onSpatialMagnifyStart = () => {
-  //   console.log('magnify start')
-  // }
-
-  // const onSpatialMagnify = (evt: SpatialMagnifyEvent) => {
-  //   console.log('magnify move', evt.detail.magnification)
-  //   setMagnification(evt.detail.magnification)
-  // }
-
-  // const onSpatialMagnifyEnd = () => {
-  //   console.log('magnify end')
-  //   setScale(scale * magnification)
-  //   setMagnification(1)
-  // }
 
   const onModelSpatialDragStart = (evt: ModelSpatialDragStartEvent) => {
     console.log('model drag start', evt.detail.startLocation3D)
