@@ -19,15 +19,11 @@ function App() {
   const [tz, setTz] = useState(0)
   const lastTranslation = useRef({ x: 0, y: 0, z: 0 })
 
-  const [scale, setScale] = useState(1)
-  const [magnification, setMagnification] = useState(1)
-
   const style = {
     width: '300px',
     height: '300px',
     '--xr-back': `${10}px`,
-    // transform: `translate3d(${tx}px, ${ty}px, ${tz}px)`,
-    transform: `translate3d(${tx}px, ${ty}px, ${tz}px) scale(${scale * magnification})`,
+    transform: `translate3d(${tx}px, ${ty}px, ${tz}px)`,
   }
 
   const onSpatialDragStart = (evt: SpatialDragStartEvent) => {
@@ -126,8 +122,6 @@ function App() {
           setTx(0)
           setTy(0)
           setTz(0)
-          setScale(1)
-          setMagnification(1)
         }}
       >
         reset
