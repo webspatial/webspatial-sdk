@@ -11,6 +11,13 @@ export interface Vec3 {
 
 export type Point3D = Vec3
 
+export interface Quaternion {
+  x: number
+  y: number
+  z: number
+  w: number
+}
+
 /**
  * Material type for SpatialDiv or HTML document.
  *
@@ -359,12 +366,7 @@ export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = CustomEvent<SpatialDragEndEventDetail>
 export interface SpatialRotateEventDetail {
-  quaternion: {
-    x: number
-    y: number
-    z: number
-    w: number
-  }
+  quaternion: Quaternion
 }
 
 export interface SpatialRotateEndEventDetail {}
