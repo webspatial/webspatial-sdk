@@ -99,11 +99,8 @@ function getJSXPortalInstance<P extends ElementType>(
   portalInstanceObject: PortalInstanceObject,
 ) {
   const { component: El, style: inStyle = {}, ...props } = inProps
-  const computedStyle = portalInstanceObject.computedStyle!
-  const inheritedPortalStyle: CSSProperties =
-    getInheritedStyleProps(computedStyle)
-
   const extraStyle: CSSProperties = {
+    visibility: 'visible',
     position: 'relative',
     top: '0px',
     left: '0px',
@@ -112,27 +109,19 @@ function getJSXPortalInstance<P extends ElementType>(
     marginRight: '0px',
     marginTop: '0px',
     marginBottom: '0px',
-    transform: 'none',
     borderRadius: '0px',
+    // overflow: '',
+    transform: 'none',
   }
 
-  const style: CSSProperties = {
+  const computedStyle = portalInstanceObject.computedStyle!
+  const inheritedPortalStyle: CSSProperties =
+    getInheritedStyleProps(computedStyle)
+
+  const style = {
     ...inStyle,
     ...inheritedPortalStyle,
     ...extraStyle,
-  }
-  {
-    const hostDom = portalInstanceObject.dom as HTMLElement | undefined
-    const hasInlineVisibility =
-      !!hostDom &&
-      hostDom.style.visibility !== '' &&
-      hostDom.style.visibility !== undefined
-    if (!hasInlineVisibility) {
-      const computedVisibility = computedStyle.getPropertyValue('visibility')
-      if (computedVisibility) {
-        ;(style as any).visibility = computedVisibility
-      }
-    }
   }
 
   return <El style={style} {...props} />

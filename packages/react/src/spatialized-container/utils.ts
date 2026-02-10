@@ -40,6 +40,7 @@ export function getInheritedStyleProps(
     'textAlign',
     'textIndent',
     'textTransform',
+    'visibility',
     // 'voiceFamily',
     // 'volume',
     'whiteSpace',
