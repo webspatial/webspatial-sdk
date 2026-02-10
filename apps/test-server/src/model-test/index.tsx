@@ -10,11 +10,13 @@ import {
   // ModelSpatialDragStartEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragEndEvent,
-  ModelSpatialRotateStartEvent,
+
   // ModelSpatialRotateEvent,
   ModelSpatialRotateEndEvent,
   ModelSpatialMagnifyEvent,
   ModelLoadEvent,
+  ModelSpatialDragStartEvent,
+  ModelSpatialRotateEvent,
   // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
@@ -69,11 +71,11 @@ function ModelTest() {
     )
   }
 
-  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
+  const onModelSpatialDragStart = (e: ModelSpatialDragStartEvent) => {
     dragTranslationRef.current = { x: 0, y: 0, z: 0 }
   }
 
-  const onSpatialDrag = (e: ModelSpatialDragEvent) => {
+  const onModelSpatialDrag = (e: ModelSpatialDragEvent) => {
     const delta = {
       x: e.detail.translation3D.x - dragTranslationRef.current.x,
       y: e.detail.translation3D.y - dragTranslationRef.current.y,
@@ -90,10 +92,13 @@ function ModelTest() {
     )
   }
 
-  const onSpatialRotate = (e: ModelSpatialRotateEndEvent) => {
+  const onSpatialRotate = (e: ModelSpatialRotateEvent) => {
     // console.log('model onSpatialRotateEnd:', e.detail.rotation)
-    const quaternion = new THREE.Quaternion().fromArray(
-      e.detail.rotation.vector,
+    const quaternion = new THREE.Quaternion(
+      e.detail.quaternion.x,
+      e.detail.quaternion.y,
+      e.detail.quaternion.z,
+      e.detail.quaternion.w,
     )
     const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
     const x = (euler.x * 180) / Math.PI
@@ -117,18 +122,18 @@ function ModelTest() {
     console.log('model onSpatialRotate:', (euler.z * 180) / Math.PI)
   }
 
-  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
-    console.log('model onSpatialRotateStart:', e.detail.rotation)
-    const quaternion = new THREE.Quaternion().fromArray(
-      e.detail.rotation.vector,
-    )
-    const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
-    rotateRef.current = {
-      x: (euler.x * 180) / Math.PI,
-      y: (euler.y * 180) / Math.PI,
-      z: (euler.z * 180) / Math.PI,
-    }
-  }
+  // const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
+  //   console.log('model onSpatialRotateStart:', e.detail.rotation)
+  //   const quaternion = new THREE.Quaternion().fromArray(
+  //     e.detail.rotation.vector,
+  //   )
+  //   const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
+  //   rotateRef.current = {
+  //     x: (euler.x * 180) / Math.PI,
+  //     y: (euler.y * 180) / Math.PI,
+  //     z: (euler.z * 180) / Math.PI,
+  //   }
+  // }
 
   const onSpatialMagnify = (e: ModelSpatialMagnifyEvent) => {
     console.log('model onSpatialMagnify:', e.detail.magnification)
@@ -152,10 +157,10 @@ function ModelTest() {
       style={style}
       src={src}
       onSpatialDragEnd={onSpatialDragEnd}
-      onSpatialDragStart={onSpatialDragStart}
+      onSpatialDragStart={onModelSpatialDragStart}
       onSpatialTap={onSpatialTap}
-      onSpatialDrag={onSpatialDrag}
-      onSpatialRotateStart={onSpatialRotateStart}
+      onSpatialDrag={onModelSpatialDrag}
+      // onSpatialRotateStart={onSpatialRotateStart}
       // onSpatialRotate={onSpatialRotate}
       onSpatialMagnify={onSpatialMagnify}
       // onLoad={onLoad}

@@ -17,11 +17,13 @@ import {
   // ModelSpatialDragStartEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragEndEvent,
-  ModelSpatialRotateStartEvent,
+  // ModelSpatialRotateStartEvent,
   // ModelSpatialRotateEvent,
   ModelSpatialRotateEndEvent,
   ModelSpatialMagnifyEvent,
   ModelLoadEvent,
+  ModelSpatialDragStartEvent,
+  SpatialDragEndEvent,
   // ModelSpatialMagnifyEndEvent,
   // toLocalSpace,
 } from '@webspatial/react-sdk'
@@ -61,7 +63,7 @@ function ModelTest() {
     )
   }
 
-  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
+  const onSpatialDragStart = (e: ModelSpatialDragStartEvent) => {
     console.log(
       'model onSpatialDragStart',
       e.isTrusted,
@@ -94,24 +96,6 @@ function ModelTest() {
     )
   }
 
-  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
-    console.log(
-      'model onSpatialRotateStart:',
-      e.detail,
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
-  }
-
-  const onSpatialMagnifyStart = (e: ModelSpatialMagnifyEvent) => {
-    console.log(
-      'model onSpatialMagnifyStart:',
-      e.detail,
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
-  }
-
   ;(window as any).refModel = refModel
 
   const onLoad = (event: ModelLoadEvent) => {
@@ -132,9 +116,7 @@ function ModelTest() {
         onSpatialDragStart={onSpatialDragStart}
         onSpatialTap={onSpatialTap}
         onSpatialDrag={onSpatialDrag}
-        onSpatialRotateStart={onSpatialRotateStart}
         onSpatialRotateEnd={onSpatialRotateEnd}
-        onSpatialMagnifyStart={onSpatialMagnifyStart}
         onLoad={onLoad}
         onError={onError}
       />
@@ -198,7 +180,7 @@ function App() {
     )
   }
 
-  const onSpatialDragEnd = (e: SpatialDragEvent) => {
+  const onSpatialDragEnd = (e: SpatialDragEndEvent) => {
     console.log(
       'child onSpatialDrag End:',
       e.isTrusted,

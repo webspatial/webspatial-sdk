@@ -1,16 +1,15 @@
 import { RefObject } from 'react'
 import { SpatialContainerRefProxy } from './useDomProxy'
 import {
+  SpatializedElementRef,
+  SpatialTapEvent,
+  SpatialDragStartEvent,
   SpatialDragEndEvent,
   SpatialDragEvent,
   SpatialRotateEvent,
-  SpatialTapEvent,
-  SpatializedElementRef,
   SpatialRotateEndEvent,
   SpatialMagnifyEndEvent,
   SpatialMagnifyEvent,
-  SpatialRotateStartEvent,
-  SpatialMagnifyStartEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -18,13 +17,11 @@ export interface SpatialEvents<
   T extends SpatializedElementRef = SpatializedElementRef,
 > {
   onSpatialTap?: (event: SpatialTapEvent<T>) => void
-  onSpatialDragStart?: (event: SpatialDragEvent<T>) => void
+  onSpatialDragStart?: (event: SpatialDragStartEvent<T>) => void
   onSpatialDrag?: (event: SpatialDragEvent<T>) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent<T>) => void
-  onSpatialRotateStart?: (event: SpatialRotateStartEvent<T>) => void
   onSpatialRotate?: (event: SpatialRotateEvent<T>) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEvent<T>) => void
-  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent<T>) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent<T>) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
@@ -102,30 +99,18 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
     currentTargetGetter,
   )
 
-  const onSpatialDragStart = createEventHandler<T, SpatialDragEvent<T>>(
+  const onSpatialDragStart = createEventHandler<T, SpatialDragStartEvent<T>>(
     spatialEvents.onSpatialDragStart,
     currentTargetGetter,
   )
-
-  const onSpatialRotateStart = createEventHandler<
-    T,
-    SpatialRotateStartEvent<T>
-  >(spatialEvents.onSpatialRotateStart, currentTargetGetter)
-
-  const onSpatialMagnifyStart = createEventHandler<
-    T,
-    SpatialMagnifyStartEvent<T>
-  >(spatialEvents.onSpatialMagnifyStart, currentTargetGetter)
 
   return {
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
-    onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
-    onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
   }
