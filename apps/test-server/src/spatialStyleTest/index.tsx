@@ -6,6 +6,7 @@ import { NestedComponent } from './NestedComponent'
 import { CubeComponent } from './CubeComponent'
 import { SimpleSpatialComponent } from './SimpleSpatialComponent'
 import { StyledTitleComponent } from './StyledTitleComponent'
+import { StyledVisibilityComponent } from './StyledVisibilityComponent'
 
 enableDebugTool()
 
@@ -20,6 +21,7 @@ function App() {
 
       <div enable-xr-monitor className="w-screen h-screen  ">
         <div className="flex flex-col">
+          <StyledVisibilityComponent />
           <SimpleSpatialComponent />
           <SpatialTagComponent />
           <StyledTitleComponent />
