@@ -14,13 +14,11 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
 
     private var _enableTap: Bool = false
     private var _enableRotate: Bool = false
-    private var _enableRotateStart: Bool = false
     private var _enableRotateEnd: Bool = false
     private var _enableDrag: Bool = false
     private var _enableDragStart: Bool = false
     private var _enableDragEnd: Bool = false
     private var _enableMagnify: Bool = false
-    private var _enableMagnifyStart: Bool = false
     private var _enableMagnifyEnd: Bool = false
 
     var rotation: simd_quatd = .init()
@@ -32,15 +30,15 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
 
     var enableRotate: Bool {
-        return _enableRotate || _enableRotateStart
+        return _enableRotate || _enableRotateEnd
     }
 
     var enableDrag: Bool {
-        return _enableDrag || _enableDragStart
+        return _enableDrag || _enableDragStart || _enableDragEnd
     }
 
     var enableMagnify: Bool {
-        return _enableMagnify || _enableMagnifyStart
+        return _enableMagnify || _enableMagnifyEnd
     }
 
     var enableRotateEnd: Bool {
@@ -56,7 +54,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
 
     var enableInteractive: Bool {
-        return enableTap || enableRotate || enableDrag || enableMagnify || enableRotateEnd || enableDragEnd || enableMagnifyEnd
+        return enableTap || enableRotate || enableDrag || enableMagnify
     }
 
     required init() {
@@ -120,8 +118,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             _enableTap = isEable
         case .spatialrotate:
             _enableRotate = isEable
-        case .spatialrotatestart:
-            _enableRotateStart = isEable
         case .spatialrotateend:
             _enableRotateEnd = isEable
         case .spatialdrag:
@@ -132,8 +128,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             _enableDragEnd = isEable
         case .spatialmagnify:
             _enableMagnify = isEable
-        case .spatialmagnifystart:
-            _enableMagnifyStart = isEable
         case .spatialmagnifyend:
             _enableMagnifyEnd = isEable
         default:
