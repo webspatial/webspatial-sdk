@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   Reality,
@@ -28,6 +28,7 @@ function App() {
   const scaleBaseRef = useRef(boxScale)
   const rotateBaseRef = useRef(boxRot)
   const activeGestureRef = useRef<null | 'drag' | 'rotate' | 'magnify'>(null)
+  const logRef = useRef<HTMLPreElement>(null)
 
   function logLine(...args: any[]) {
     const msg = args
@@ -35,6 +36,20 @@ function App() {
       .join(' ')
     setLogs(prev => (prev ? prev + '\n' : '') + msg)
   }
+
+  const allowed = 'rotate'
+
+  const isAllow = (type: 'drag' | 'scale' | 'rotate') => {
+    return true
+    return type === allowed
+  }
+
+  useEffect(() => {
+    const el = logRef.current
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [logs])
 
   return (
     <div className="pl-5 pt-2">
@@ -49,6 +64,14 @@ function App() {
         <button className={btnCls} onClick={() => setLogs('')}>
           Clear Log
         </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            location.reload()
+          }}
+        >
+          reload
+        </button>
       </div>
       <Reality
         style={{
@@ -61,7 +84,6 @@ function App() {
         <UnlitMaterial id="matGreen" color="#22cc66" />
         <SceneGraph>
           <Entity position={{ x: 0, y: 0, z: 0 }}>
-          
             <BoxEntity
               id="boxGreen"
               key={matId}
@@ -80,7 +102,12 @@ function App() {
               }}
               onSpatialDragStart={async e => {
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'drag'
+                )
+                  return
                 activeGestureRef.current = 'drag'
                 dragBaseRef.current = boxPos
                 console.log('dragStart', e.detail.translation3D)
@@ -88,7 +115,12 @@ function App() {
               }}
               onSpatialDrag={async e => {
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'drag'
+                )
+                  return
                 const t = e.detail.translation3D
                 const TRANSLATION_SCALE = 0.001
                 const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
@@ -101,25 +133,36 @@ function App() {
               }}
               onSpatialDragEnd={async e => {
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'drag') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'drag'
+                )
+                  return
                 if (exclusive) activeGestureRef.current = null
                 console.log('dragEnd', e.detail.translation3D)
                 logLine('dragEnd', e.detail.translation3D)
               }}
-              onSpatialRotateStart={e => {
-                if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
-                activeGestureRef.current = 'rotate'
-                rotateBaseRef.current = boxRot
-                logLine('rotateStart')
-              }}
               onSpatialRotate={e => {
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
-                const [x, y, z, w] = e.detail.rotation.vector
-                const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y))
-                const pitch = Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x))))
-                const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'rotate'
+                )
+                  return
+                const { x, y, z, w } = e.detail.quaternion
+                const roll = Math.atan2(
+                  2 * (w * x + y * z),
+                  1 - 2 * (x * x + y * y),
+                )
+                const pitch = Math.asin(
+                  Math.max(-1, Math.min(1, 2 * (w * y - z * x))),
+                )
+                const yaw = Math.atan2(
+                  2 * (w * z + x * y),
+                  1 - 2 * (y * y + z * z),
+                )
                 const toDeg = (r: number) => (r * 180) / Math.PI
                 const rollDeg = toDeg(roll)
                 const pitchDeg = toDeg(pitch)
@@ -129,27 +172,35 @@ function App() {
                   y: rotateBaseRef.current.y + pitchDeg,
                   z: rotateBaseRef.current.z + yawDeg,
                 })
+                console.log('rotate', e.detail.quaternion, {
+                  rollDeg,
+                  pitchDeg,
+                  yawDeg,
+                })
                 logLine('rotate', { rollDeg, pitchDeg, yawDeg })
               }}
               onSpatialRotateEnd={e => {
+                if (!isAllow('rotate')) return
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'rotate') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'rotate'
+                )
+                  return
                 if (exclusive) activeGestureRef.current = null
+                console.log('rotateEnd')
                 logLine('rotateEnd')
               }}
-              onSpatialMagnifyStart={e => {
+              onSpatialMagnify={(e: any) => {
+                if (!isAllow('scale')) return
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
-                activeGestureRef.current = 'magnify'
-                scaleBaseRef.current = boxScale
-                logLine('magnifyStart', {
-                  magnification: e.detail.magnification,
-                  velocity: e.detail.velocity,
-                })
-              }}
-              onSpatialMagnify={e => {
-                if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'magnify'
+                )
+                  return
                 const m = Math.max(0.3, Math.min(3, e.detail.magnification))
                 setBoxScale({
                   x: scaleBaseRef.current.x * m,
@@ -162,22 +213,45 @@ function App() {
                 })
               }}
               onSpatialMagnifyEnd={e => {
+                if (!isAllow('scale')) return
                 if (!enabled) return
-                if (exclusive && activeGestureRef.current && activeGestureRef.current !== 'magnify') return
+                if (
+                  exclusive &&
+                  activeGestureRef.current &&
+                  activeGestureRef.current !== 'magnify'
+                )
+                  return
                 if (exclusive) activeGestureRef.current = null
-                logLine('magnifyEnd', {
-                  magnification: e.detail.magnification,
-                  velocity: e.detail.velocity,
-                })
+                logLine('magnifyEnd')
               }}
-            /> 
+            />
           </Entity>
         </SceneGraph>
       </Reality>
 
-      <div className="mt-6">
+      <div
+        className="mt-6"
+        style={{
+          position: 'fixed',
+          right: 0,
+          top: 0,
+          height: '100vh',
+          width: '50vw',
+          overflowY: 'hidden',
+        }}
+      >
         <div className="text-gray-700">Console</div>
-        <pre style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }}>{logs}</pre>
+        <pre
+          ref={logRef}
+          style={{
+            fontSize: '16px',
+            whiteSpace: 'pre-wrap',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}
+        >
+          {logs}
+        </pre>
       </div>
     </div>
   )

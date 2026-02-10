@@ -5,6 +5,8 @@ import {
   SpatialTapEventDetail,
   SpatialRotateEventDetail,
   SpatialMagnifyEventDetail,
+  SpatialDragStartEventDetail,
+  SpatialDragEndEventDetail,
 } from './types/types'
 
 export enum SpatialWebMsgType {
@@ -16,10 +18,8 @@ export enum SpatialWebMsgType {
   spatialdragstart = 'spatialdragstart',
   spatialdrag = 'spatialdrag',
   spatialdragend = 'spatialdragend',
-  spatialrotatestart = 'spatialrotatestart',
   spatialrotate = 'spatialrotate',
   spatialrotateend = 'spatialrotateend',
-  spatialmagnifystart = 'spatialmagnifystart',
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 
@@ -57,6 +57,11 @@ export interface SpatialTapMsg {
   detail: SpatialTapEventDetail
 }
 
+export interface SpatialDragStartMsg {
+  type: SpatialWebMsgType.spatialdragstart
+  detail: SpatialDragStartEventDetail
+}
+
 export interface SpatialDragMsg {
   type: SpatialWebMsgType.spatialdrag
   detail: SpatialDragEventDetail
@@ -64,7 +69,7 @@ export interface SpatialDragMsg {
 
 export interface SpatialDragEndMsg {
   type: SpatialWebMsgType.spatialdragend
-  detail: SpatialDragEventDetail
+  detail: SpatialDragEndEventDetail
 }
 
 export interface SpatialRotateMsg {
