@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-
 export const routes = [
   { path: '/', label: 'Home' },
   { path: '/animate', label: 'Animations' },
@@ -25,6 +24,7 @@ export const routes = [
 
 export default function Sidebar() {
   const location = useLocation()
+  const items = routes
 
   return (
     <div className="w-64 h-screen bg-[#111111] border-r border-gray-800 flex flex-col">
@@ -35,7 +35,7 @@ export default function Sidebar() {
         <div className="text-xs text-gray-500 mt-1">Test Application</div>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {routes.map(route => (
+        {items.map(route => (
           <div key={route.path}>
             <Link
               to={route.path}

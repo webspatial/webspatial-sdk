@@ -2,13 +2,12 @@ import { useRef, useState } from 'react'
 import './index.css'
 import {
   enableDebugTool,
-  SpatialDragStartEvent,
-  SpatialDragEvent,
   Model,
   ModelSpatialDragEvent,
   ModelSpatialDragStartEvent,
   ModelSpatialDragEndEvent,
 } from '@webspatial/react-sdk'
+import { SpatialDragStartEvent, SpatialDragEvent } from '@webspatial/core-sdk'
 import ReactDOM from 'react-dom/client'
 
 enableDebugTool()
@@ -26,7 +25,7 @@ function App() {
     transform: `translate3d(${tx}px, ${ty}px, ${tz}px)`,
   }
 
-  const onSpatialDragStart = (evt: SpatialDragStartEvent) => {
+  const onSpatialDragStart = (evt: any) => {
     console.log('drag start', evt.detail.startLocation3D)
   }
 
@@ -63,7 +62,7 @@ function App() {
     spatialDragEnd()
   }
 
-  const onModelSpatialDragStart = (evt: ModelSpatialDragStartEvent) => {
+  const onModelSpatialDragStart = (evt: any) => {
     console.log('model drag start', evt.detail.startLocation3D)
   }
 

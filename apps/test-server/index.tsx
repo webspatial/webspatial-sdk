@@ -1,24 +1,10 @@
-import React, { Suspense, lazy } from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
+// Static route registry: add your test component here to expose it in the SPA
 
-// Lazy load components
-const AnimateTest = lazy(() => import('./src/animate/index'))
-const RealityTest = lazy(() => import('./src/reality/index'))
-const RealityDebug = lazy(() => import('./src/reality/debug'))
-const RealityDynamic3D = lazy(() => import('./src/reality/dynamic3d'))
-const RealityGestures = lazy(() => import('./src/reality/gestures'))
-const RealitySpatialDiv = lazy(() => import('./src/reality/spatialDivDynamic'))
-const BasicTransform = lazy(() => import('./src/basic-transform/index'))
-const ModelTest = lazy(() => import('./src/model-test/index'))
-const SpatialStyleTest = lazy(() => import('./src/spatialStyleTest/index'))
-const CanvasTest = lazy(() => import('./src/canvas-test/index'))
-const JSAPITest = lazy(() => import('./src/jsapi-test/index'))
-const SceneTest = lazy(() => import('./src/scene/index'))
-
-// Placeholder for other tests until refactored
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-10 text-white">
     <h1 className="text-2xl mb-4">{name}</h1>
@@ -27,6 +13,44 @@ const Placeholder = ({ name }: { name: string }) => (
     </p>
   </div>
 )
+
+// Simple static imports. To add a test, import it here and add a <Route>.
+import AnimateTest from './src/animate/index'
+import RealityTest from './src/reality/index'
+import RealityDebug from './src/reality/debug'
+import RealityDynamic3D from './src/reality/dynamic3d'
+import RealityGestures from './src/reality/gestures'
+import RealitySpatialDiv from './src/reality/spatialDivDynamic'
+import BasicTransform from './src/basic-transform/index'
+import ModelTest from './src/model-test/index'
+import SpatialStyleTest from './src/spatialStyleTest/index'
+import CanvasTest from './src/canvas-test/index'
+import JSAPITest from './src/jsapi-test/index'
+import SceneTest from './src/scene/index'
+
+class ErrorBoundary extends React.Component<
+  { children?: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true }
+  }
+  componentDidCatch(error: any, info: any) {}
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-300">Something went wrong.</div>
+        </div>
+      )
+    }
+    return this.props.children as any
+  }
+}
 
 function App() {
   return (
@@ -41,24 +65,32 @@ function App() {
               </div>
             }
           >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/animate" element={<AnimateTest />} />
-              <Route path="/reality" element={<RealityTest />} />
-              <Route path="/reality/debug" element={<RealityDebug />} />
-              <Route path="/reality/dynamic3d" element={<RealityDynamic3D />} />
-              <Route path="/reality/gestures" element={<RealityGestures />} />
-              <Route
-                path="/reality/spatial-div"
-                element={<RealitySpatialDiv />}
-              />
-              <Route path="/basic-transform" element={<BasicTransform />} />
-              <Route path="/model-test" element={<ModelTest />} />
-              <Route path="/spatialStyleTest" element={<SpatialStyleTest />} />
-              <Route path="/canvas-test" element={<CanvasTest />} />
-              <Route path="/jsapi-test" element={<JSAPITest />} />
-              <Route path="/scene" element={<SceneTest />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/animate" element={<AnimateTest />} />
+                <Route path="/reality" element={<RealityTest />} />
+                <Route path="/reality/debug" element={<RealityDebug />} />
+                <Route
+                  path="/reality/dynamic3d"
+                  element={<RealityDynamic3D />}
+                />
+                <Route path="/reality/gestures" element={<RealityGestures />} />
+                <Route
+                  path="/reality/spatial-div"
+                  element={<RealitySpatialDiv />}
+                />
+                <Route path="/basic-transform" element={<BasicTransform />} />
+                <Route path="/model-test" element={<ModelTest />} />
+                <Route
+                  path="/spatialStyleTest"
+                  element={<SpatialStyleTest />}
+                />
+                <Route path="/canvas-test" element={<CanvasTest />} />
+                <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route path="/scene" element={<SceneTest />} />
+              </Routes>
+            </ErrorBoundary>
           </Suspense>
         </main>
       </div>
