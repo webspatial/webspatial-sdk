@@ -28,12 +28,17 @@ import CanvasTest from './src/canvas-test/index'
 import JSAPITest from './src/jsapi-test/index'
 import SceneTest from './src/scene/index'
 
-function IframePage({ src }: { src: string }) {
+function IframePage({ src, background }: { src: string; background?: string }) {
   return (
     <div className="w-full h-full">
       <iframe
         src={src}
-        style={{ width: '100%', height: '100%', border: '0' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          border: '0',
+          background: background ?? 'transparent',
+        }}
         title={src}
       />
     </div>
@@ -213,7 +218,12 @@ function App() {
                 />
                 <Route
                   path="/static-3d-model"
-                  element={<IframePage src="/static-3d-model/index.html" />}
+                  element={
+                    <IframePage
+                      src="/static-3d-model/index.html"
+                      background="#fff"
+                    />
+                  }
                 />
                 <Route
                   path="/visible-test"
