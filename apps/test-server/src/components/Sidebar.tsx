@@ -66,6 +66,14 @@ export const routes = [
       { path: '/visible-test', label: 'Visible Test' },
     ],
   },
+  {
+    path: '/cleanup',
+    label: 'Cleanup',
+    children: [
+      { path: '/cleanup/spa', label: 'SPA' },
+      { path: '/cleanup/iframe', label: 'Iframe' },
+    ],
+  },
 ]
 
 export default function Sidebar() {

@@ -54,6 +54,7 @@ import SpatialConverter from './src/spatial-converter/index'
 import SpatialCorner from './src/spatialCorner/index'
 import Static3DModel from './src/static-3d-model/index'
 import VisibleTest from './src/visibleTest/index'
+import { CleanupSpa, CleanupIframe, CleanupModel } from './src/cleanup'
 
 const NavigateTo = ({ href, replace }: { href: string; replace?: boolean }) => {
   React.useEffect(() => {
@@ -188,6 +189,9 @@ function App() {
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
+                <Route path="/cleanup/spa" element={<CleanupSpa />} />
+                <Route path="/cleanup/model" element={<CleanupModel />} />
+                <Route path="/cleanup/iframe" element={<CleanupIframe />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>
