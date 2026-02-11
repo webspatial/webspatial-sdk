@@ -3,7 +3,6 @@ name: AutoTest & Pages
 on:
   pull_request:
     branches:
-      - main
       - stable
   push:
     branches:
@@ -46,13 +45,29 @@ jobs:
 
           git fetch origin "${PR_SHA}"
 
-          git diff --binary "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" > /tmp/pr.patch || true
-          if [ ! -s /tmp/pr.patch ]; then
+          # Get list of changed files (excluding specified paths)
+          CHANGED_FILES=$(git diff --name-only "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
             echo "No applicable changes to apply (after excludes)."
             exit 0
           fi
 
-          git apply --index --3way /tmp/pr.patch
+          # Checkout changed files from PR branch (force override)
+          echo "Applying changes from PR (force overriding conflicting files):"
+          echo "$CHANGED_FILES"
+
+          # Checkout each file individually to handle potential path issues
+          echo "$CHANGED_FILES" | while read -r file; do
+            if [ -n "$file" ]; then
+              git checkout "${PR_SHA}" -- "$file"
+            fi
+          done
+
+          # Stage all changes
+          git add .
+
+          # Commit changes
           git commit -m "ci: apply PR changes onto ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2}, ${EXCLUDE_3})"
 
       - name: Setup pnpm

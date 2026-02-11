@@ -1,6 +1,5 @@
 import React, { CSSProperties, useRef, useState } from 'react'
 import * as THREE from 'three'
-
 import {
   enableDebugTool,
   toSceneSpatial,
@@ -9,8 +8,8 @@ import {
   ModelSpatialTapEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragEndEvent,
-  ModelSpatialRotateStartEvent,
-  ModelSpatialRotateEndEvent,
+  ModelSpatialDragStartEvent,
+  ModelSpatialRotateEvent,
   ModelSpatialMagnifyEvent,
   ModelLoadEvent,
 } from '@webspatial/react-sdk'
@@ -18,18 +17,8 @@ import {
 enableDebugTool()
 
 function ModelTest() {
-  const dragTranslationRef = useRef({
-    x: 0,
-    y: 0,
-    z: 0,
-  })
-
-  const rotateRef = useRef({
-    x: 0,
-    y: 0,
-    z: 0,
-  })
-
+  const dragTranslationRef = useRef({ x: 0, y: 0, z: 0 })
+  const rotateRef = useRef({ x: 0, y: 0, z: 0 })
   const [scale, setScale] = useState(1)
 
   const style: CSSProperties = {
@@ -47,7 +36,6 @@ function ModelTest() {
   }
 
   const src = '/modelasset/cone.usdz'
-
   const refModel = useRef<ModelRef>(null)
 
   const onSpatialTap = (e: ModelSpatialTapEvent) => {
@@ -61,18 +49,17 @@ function ModelTest() {
     )
   }
 
-  const onSpatialDragStart = (e: ModelSpatialDragEvent) => {
+  const onModelSpatialDragStart = (e: ModelSpatialDragStartEvent) => {
     dragTranslationRef.current = { x: 0, y: 0, z: 0 }
   }
 
-  const onSpatialDrag = (e: ModelSpatialDragEvent) => {
+  const onModelSpatialDrag = (e: ModelSpatialDragEvent) => {
     const delta = {
       x: e.detail.translation3D.x - dragTranslationRef.current.x,
       y: e.detail.translation3D.y - dragTranslationRef.current.y,
       z: e.detail.translation3D.z - dragTranslationRef.current.z,
     }
     refModel.current?.entityTransform.translateSelf(delta.x, delta.y, delta.z)
-
     dragTranslationRef.current = e.detail.translation3D
   }
 
@@ -82,34 +69,19 @@ function ModelTest() {
     )
   }
 
-  const onSpatialRotate = (e: ModelSpatialRotateEndEvent) => {
-    const quaternion = new THREE.Quaternion().fromArray(
-      e.detail.rotation.vector,
+  const onSpatialRotate = (e: ModelSpatialRotateEvent) => {
+    const quaternion = new THREE.Quaternion(
+      e.detail.quaternion.x,
+      e.detail.quaternion.y,
+      e.detail.quaternion.z,
+      e.detail.quaternion.w,
     )
     const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
     const x = (euler.x * 180) / Math.PI
     const y = (euler.y * 180) / Math.PI
     const z = (euler.z * 180) / Math.PI
-
-    rotateRef.current = {
-      x: x,
-      y: y,
-      z: z,
-    }
-
+    rotateRef.current = { x, y, z }
     refModel.current?.entityTransform.rotateSelf(x, y, z)
-  }
-
-  const onSpatialRotateStart = (e: ModelSpatialRotateStartEvent) => {
-    const quaternion = new THREE.Quaternion().fromArray(
-      e.detail.rotation.vector,
-    )
-    const euler = new THREE.Euler().setFromQuaternion(quaternion, 'YXZ')
-    rotateRef.current = {
-      x: (euler.x * 180) / Math.PI,
-      y: (euler.y * 180) / Math.PI,
-      z: (euler.z * 180) / Math.PI,
-    }
   }
 
   const onSpatialMagnify = (e: ModelSpatialMagnifyEvent) => {
@@ -117,29 +89,20 @@ function ModelTest() {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <Model
-        enable-xr
-        ref={refModel}
-        style={style}
-        src={src}
-        onSpatialDragEnd={onSpatialDragEnd}
-        onSpatialDragStart={onSpatialDragStart}
-        onSpatialTap={onSpatialTap}
-        onSpatialDrag={onSpatialDrag}
-        onSpatialRotateStart={onSpatialRotateStart}
-        onSpatialMagnify={onSpatialMagnify}
-        onLoad={e => console.log('Model load success:', e)}
-        onError={e => console.error('Model load error:', e)}
-      >
-        <source src="/modelasset/cone.usdz" type="model/vnd.usdz+zip" />
-        <source src="/modelasset/cone.glb" type="model/gltf-binary" />
-        <source
-          src="/assets/vehicle-speedster.usdz"
-          type="model/vnd.usdz+zip"
-        />
-      </Model>
-    </div>
+    <Model
+      enable-xr
+      ref={refModel}
+      style={style}
+      src={src}
+      onSpatialDragEnd={onSpatialDragEnd}
+      onSpatialDragStart={onModelSpatialDragStart}
+      onSpatialTap={onSpatialTap}
+      onSpatialDrag={onModelSpatialDrag}
+      onSpatialRotate={onSpatialRotate}
+      onSpatialMagnify={onSpatialMagnify}
+      onLoad={e => console.log('Model load success:', e)}
+      onError={e => console.error('Model load error:', e)}
+    />
   )
 }
 

@@ -915,10 +915,8 @@ describe('PortalSpatializedContainer', () => {
     const onSpatialTap = vi.fn()
     const onSpatialDrag = vi.fn()
     const onSpatialDragEnd = vi.fn()
-    const onSpatialRotateStart = vi.fn()
     const onSpatialRotate = vi.fn()
     const onSpatialRotateEnd = vi.fn()
-    const onSpatialMagnifyStart = vi.fn()
     const onSpatialMagnify = vi.fn()
     const onSpatialMagnifyEnd = vi.fn()
     const onSpatialDragStart = vi.fn()
@@ -940,10 +938,8 @@ describe('PortalSpatializedContainer', () => {
             onSpatialDragStart,
             onSpatialDrag,
             onSpatialDragEnd,
-            onSpatialRotateStart,
             onSpatialRotate,
             onSpatialRotateEnd,
-            onSpatialMagnifyStart,
             onSpatialMagnify,
             onSpatialMagnifyEnd,
           } as any),
@@ -973,10 +969,8 @@ describe('PortalSpatializedContainer', () => {
     expect(spatializedElement.onSpatialDragStart).toBe(onSpatialDragStart)
     expect(spatializedElement.onSpatialDrag).toBe(onSpatialDrag)
     expect(spatializedElement.onSpatialDragEnd).toBe(onSpatialDragEnd)
-    expect(spatializedElement.onSpatialRotateStart).toBe(onSpatialRotateStart)
     expect(spatializedElement.onSpatialRotate).toBe(onSpatialRotate)
     expect(spatializedElement.onSpatialRotateEnd).toBe(onSpatialRotateEnd)
-    expect(spatializedElement.onSpatialMagnifyStart).toBe(onSpatialMagnifyStart)
     expect(spatializedElement.onSpatialMagnify).toBe(onSpatialMagnify)
     expect(spatializedElement.onSpatialMagnifyEnd).toBe(onSpatialMagnifyEnd)
 

@@ -26,10 +26,8 @@ class SpatializedElement: SpatialObject {
     var enableDragStartGesture: Bool = false
     var enableDragGesture: Bool = false
     var enableDragEndGesture: Bool = false
-    var enableRotateStartGesture: Bool = false
     var enableRotateGesture: Bool = false
     var enableRotateEndGesture: Bool = false
-    var enableMagnifyStartGesture: Bool = false
     var enableMagnifyGesture: Bool = false
     var enableMagnifyEndGesture: Bool = false
     var enableTapGesture: Bool = false
@@ -37,11 +35,11 @@ class SpatializedElement: SpatialObject {
     var defaultAlignment: DepthAlignment = .back
 
     var enableGesture: Bool {
-        return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateStartGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyStartGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
+        return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture
     }
 
     enum CodingKeys: String, CodingKey {
-        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragGesture, enableDragEndGesture, enableRotateStartGesture, enableRotateGesture, enableRotateEndGesture, enableMagnifyStartGesture, enableMagnifyGesture, enableMagnifyEndGesture
+        case clientX, clientY, width, height, depth, backOffset, transform, rotationAnchor, opacity, visible, scrollWithParent, zIndex, parent, enableGesture, enableTapGesture, enableDragStartGesture, enableDragGesture, enableDragEndGesture, enableRotateGesture, enableRotateEndGesture, enableMagnifyGesture, enableMagnifyEndGesture
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -62,12 +60,11 @@ class SpatializedElement: SpatialObject {
         try container.encode(parent?.id, forKey: .parent)
         try container.encode(enableGesture, forKey: .enableGesture)
         try container.encode(enableTapGesture, forKey: .enableTapGesture)
+        try container.encode(enableDragStartGesture, forKey: .enableDragStartGesture)
         try container.encode(enableDragGesture, forKey: .enableDragGesture)
         try container.encode(enableDragEndGesture, forKey: .enableDragEndGesture)
-        try container.encode(enableRotateStartGesture, forKey: .enableRotateStartGesture)
         try container.encode(enableRotateGesture, forKey: .enableRotateGesture)
         try container.encode(enableRotateEndGesture, forKey: .enableRotateEndGesture)
-        try container.encode(enableMagnifyStartGesture, forKey: .enableMagnifyStartGesture)
         try container.encode(enableMagnifyGesture, forKey: .enableMagnifyGesture)
         try container.encode(enableMagnifyEndGesture, forKey: .enableMagnifyEndGesture)
     }
