@@ -32,7 +32,9 @@ plugins.push(sassPlugin())
 
 var outdir = 'dist'
 var port = process.env.PORT ? Number(process.env.PORT) : 5173
-var liveReloadServerPort = 35729
+var liveReloadServerPort = process.env.LIVERELOAD_PORT
+  ? Number(process.env.LIVERELOAD_PORT)
+  : 35729
 
 const buildOptions = {
   entryPoints: entryPoints,
@@ -86,6 +88,20 @@ async function prepareDist() {
   html = html.replace(/href="\/dist\//g, 'href="/')
   fs.writeFileSync(path.join(outdir, 'index.html'), html)
   
+  // Copy all src/*.html to dist and fix script/href paths
+  const htmlFiles = await glob('./src/**/*.html')
+  for (const file of htmlFiles) {
+    const srcHtml = fs.readFileSync(file, 'utf8')
+    const fixedHtml = srcHtml
+      .replace(/src="\/dist\//g, 'src="/')
+      .replace(/href="\/dist\//g, 'href="/')
+    const rel = file.replace(/^src\//, '')
+    const dest = path.join(outdir, rel)
+    const destDir = path.dirname(dest)
+    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true })
+    fs.writeFileSync(dest, fixedHtml)
+  }
+  
   // Copy public folder contents directly to dist root or to /public
   // Most SPAs serve public folder contents from the root
   await copyPublicFolder('public', outdir)
@@ -124,14 +140,18 @@ if (isBuild) {
     console.log('HTTP server is running on http://localhost:' + port)
   })
 
-  var server = livereload.createServer({
-    port: liveReloadServerPort,
-    extraExts: ['ts', 'tsx'],
-    delay: 50,
-  })
-  var watchPaths = [path.resolve(outdir)]
-  watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
-  watchPaths.push('index.html')
-  server.watch(watchPaths)
+  try {
+    var server = livereload.createServer({
+      port: liveReloadServerPort,
+      extraExts: ['ts', 'tsx'],
+      delay: 50,
+    })
+    var watchPaths = [path.resolve(outdir)]
+    watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
+    watchPaths.push('index.html')
+    server.watch(watchPaths)
+  } catch (e) {
+    console.log('LiveReload disabled:', e?.code || e)
+  }
   console.log('esbuild ready!')
 }
