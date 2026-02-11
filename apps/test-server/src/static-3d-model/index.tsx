@@ -255,4 +255,4 @@ function Toggle({ label, setValue, step }: ToggleProps) {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+export default App

@@ -30,6 +30,8 @@ plugins.push(
 )
 plugins.push(sassPlugin())
 
+// No code transforms: tests render standalone via top-level navigation
+
 var outdir = 'dist'
 var port = process.env.PORT ? Number(process.env.PORT) : 5173
 var liveReloadServerPort = process.env.LIVERELOAD_PORT
@@ -95,6 +97,7 @@ async function prepareDist() {
     const fixedHtml = srcHtml
       .replace(/src="\/dist\//g, 'src="/')
       .replace(/href="\/dist\//g, 'href="/')
+      .replace(/dist\/src\//g, 'src/')
     const rel = file.replace(/^src\//, '')
     const dest = path.join(outdir, rel)
     const destDir = path.dirname(dest)

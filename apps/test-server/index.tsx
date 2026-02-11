@@ -27,22 +27,43 @@ import SpatialStyleTest from './src/spatialStyleTest/index'
 import CanvasTest from './src/canvas-test/index'
 import JSAPITest from './src/jsapi-test/index'
 import SceneTest from './src/scene/index'
+import SceneHook from './src/scene/hook'
+import SceneLoading from './src/scene/loading'
+import SceneVolume from './src/scene/volume'
+import SceneVolumeHook from './src/scene/volumeHook'
+import SceneXRApp from './src/scene/xrapp'
+import RealityEmpty from './src/reality/empty'
+import RealityGeometryEntity from './src/reality/geometryEntity'
+import RealityInteractable from './src/reality/interactable'
+import RealityIssue from './src/reality/issue'
+import RealityLow from './src/reality/low'
+import RealityNested from './src/reality/nested'
+import RealityTestIndex from './src/reality-test/index'
+import SpatialDragGesture from './src/spatial-drag-gesture/index'
+import SpatialGuesture from './src/spatial-guesture/index'
+import SpatialMagnifyGesture from './src/spatial-magnify-gesture/index'
+import SpatialRotationGesture from './src/spatial-rotation-gesture/index'
+import BackgroundMaterial from './src/backgroundmaterial/index'
+import FixedPositionTest from './src/FixedPositionTest/index'
+import AndroidBringup from './src/androidBringup/index'
+import DisplayTest from './src/displayTest/index'
+import MemoryStats from './src/memoryStats/index'
+import NestedFixPosition from './src/nestedfixposition/index'
+import NestedScroll from './src/nestedscroll/index'
+import SpatialConverter from './src/spatial-converter/index'
+import SpatialCorner from './src/spatialCorner/index'
+import Static3DModel from './src/static-3d-model/index'
+import VisibleTest from './src/visibleTest/index'
 
-function IframePage({ src, background }: { src: string; background?: string }) {
-  return (
-    <div className="w-full h-full">
-      <iframe
-        src={src}
-        style={{
-          width: '100%',
-          height: '100%',
-          border: '0',
-          background: background ?? 'transparent',
-        }}
-        title={src}
-      />
-    </div>
-  )
+const NavigateTo = ({ href, replace }: { href: string; replace?: boolean }) => {
+  React.useEffect(() => {
+    if (replace) {
+      window.location.replace(href)
+    } else {
+      window.location.assign(href)
+    }
+  }, [href, replace])
+  return null
 }
 
 class ErrorBoundary extends React.Component<
@@ -95,29 +116,17 @@ function App() {
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
                 <Route path="/scene" element={<SceneTest />} />
-                <Route
-                  path="/scene/hook"
-                  element={<IframePage src="/scene/hook.html" />}
-                />
-                <Route
-                  path="/scene/loading"
-                  element={<IframePage src="/scene/loading.html" />}
-                />
-                <Route
-                  path="/scene/volume"
-                  element={<IframePage src="/scene/volume.html" />}
-                />
+                <Route path="/scene/hook" element={<SceneHook />} />
+                <Route path="/scene/loading" element={<SceneLoading />} />
+                <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route
                   path="/scene/volume-hook"
-                  element={<IframePage src="/scene/volumeHook.html" />}
+                  element={<SceneVolumeHook />}
                 />
-                <Route
-                  path="/scene/xrapp"
-                  element={<IframePage src="/scene/xrapp.html" />}
-                />
+                <Route path="/scene/xrapp" element={<SceneXRApp />} />
                 <Route
                   path="/scene/nosdk"
-                  element={<IframePage src="/scene/nosdk.html" />}
+                  element={<Placeholder name="nosdk unmigrated" />}
                 />
                 <Route path="/reality" element={<RealityTest />} />
                 <Route path="/reality/debug" element={<RealityDebug />} />
@@ -130,105 +139,55 @@ function App() {
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
                 />
-                <Route
-                  path="/reality/empty"
-                  element={<IframePage src="/reality/empty.html" />}
-                />
+                <Route path="/reality/empty" element={<RealityEmpty />} />
                 <Route
                   path="/reality/geometry-entity"
-                  element={<IframePage src="/reality/geometryEntity.html" />}
+                  element={<RealityGeometryEntity />}
                 />
                 <Route
                   path="/reality/interactable"
-                  element={<IframePage src="/reality/interactable.html" />}
+                  element={<RealityInteractable />}
                 />
-                <Route
-                  path="/reality/issue"
-                  element={<IframePage src="/reality/issue.html" />}
-                />
-                <Route
-                  path="/reality/low"
-                  element={<IframePage src="/reality/low.html" />}
-                />
-                <Route
-                  path="/reality/nested"
-                  element={<IframePage src="/reality/nested.html" />}
-                />
-                <Route
-                  path="/reality-test"
-                  element={<IframePage src="/reality-test/index.html" />}
-                />
+                <Route path="/reality/issue" element={<RealityIssue />} />
+                <Route path="/reality/low" element={<RealityLow />} />
+                <Route path="/reality/nested" element={<RealityNested />} />
+                <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"
-                  element={
-                    <IframePage src="/spatial-drag-gesture/index.html" />
-                  }
+                  element={<SpatialDragGesture />}
                 />
-                <Route
-                  path="/spatial-guesture"
-                  element={<IframePage src="/spatial-guesture/index.html" />}
-                />
+                <Route path="/spatial-guesture" element={<SpatialGuesture />} />
                 <Route
                   path="/spatial-magnify-gesture"
-                  element={
-                    <IframePage src="/spatial-magnify-gesture/index.html" />
-                  }
+                  element={<SpatialMagnifyGesture />}
                 />
                 <Route
                   path="/spatial-rotation-gesture"
-                  element={
-                    <IframePage src="/spatial-rotation-gesture/index.html" />
-                  }
+                  element={<SpatialRotationGesture />}
                 />
                 <Route
                   path="/background-material"
-                  element={<IframePage src="/backgroundmaterial/index.html" />}
+                  element={<BackgroundMaterial />}
                 />
                 <Route
                   path="/fixed-position-test"
-                  element={<IframePage src="/FixedPositionTest/index.html" />}
+                  element={<FixedPositionTest />}
                 />
-                <Route
-                  path="/android-bringup"
-                  element={<IframePage src="/androidBringup/index.html" />}
-                />
-                <Route
-                  path="/display-test"
-                  element={<IframePage src="/displayTest/index.html" />}
-                />
-                <Route
-                  path="/memory-stats"
-                  element={<IframePage src="/memoryStats/index.html" />}
-                />
+                <Route path="/android-bringup" element={<AndroidBringup />} />
+                <Route path="/display-test" element={<DisplayTest />} />
+                <Route path="/memory-stats" element={<MemoryStats />} />
                 <Route
                   path="/nested-fix-position"
-                  element={<IframePage src="/nestedfixposition/index.html" />}
+                  element={<NestedFixPosition />}
                 />
-                <Route
-                  path="/nested-scroll"
-                  element={<IframePage src="/nestedscroll/index.html" />}
-                />
+                <Route path="/nested-scroll" element={<NestedScroll />} />
                 <Route
                   path="/spatial-converter"
-                  element={<IframePage src="/spatial-converter/index.html" />}
+                  element={<SpatialConverter />}
                 />
-                <Route
-                  path="/spatial-corner"
-                  element={<IframePage src="/spatialCorner/index.html" />}
-                />
-                <Route
-                  path="/static-3d-model"
-                  element={
-                    <IframePage
-                      src="/static-3d-model/index.html"
-                      background="#fff"
-                    />
-                  }
-                />
-                <Route
-                  path="/visible-test"
-                  element={<IframePage src="/visibleTest/index.html" />}
-                />
+                <Route path="/spatial-corner" element={<SpatialCorner />} />
+                <Route path="/static-3d-model" element={<Static3DModel />} />
+                <Route path="/visible-test" element={<VisibleTest />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>

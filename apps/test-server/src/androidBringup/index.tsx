@@ -95,20 +95,4 @@ function App() {
   )
 }
 
-// SpatialHelper.instance?.setBackgroundStyle(
-//   { material: { type: 'transparent' }, cornerRadius: 15 },
-//   '#00000000',
-// )
-
-// Initialize react
-var root = document.createElement('div')
-document.body.appendChild(root)
-ReactDOM.createRoot(root).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-// Force page height to 100% to get centering to work
-document.documentElement.style.height = '100%'
-document.body.style.height = '100%'
-root.style.height = '100%'
+export default App
