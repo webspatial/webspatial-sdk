@@ -10,6 +10,13 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 enableDebugTool()
 
 function App() {
+  useEffect(() => {
+    document.documentElement.style.setProperty('--spa-bg-color', 'transparent')
+    return () => {
+      document.documentElement.style.removeProperty('--spa-bg-color')
+    }
+  }, [])
+
   const materialVals = [
     'none',
     'transparent',
@@ -81,33 +88,30 @@ function App() {
                 transform: 'translateX(20px) rotateZ(20deg) ',
                 width: '200px',
                 height: '200px',
-                // opacity: 0.801,
-                // '--xr-background-material':
-                //   materialVals[materialIndexForSpatialDiv],
-                '--xr-background-material': 'transparent',
+                '--xr-background-material':
+                  materialVals[materialIndexForSpatialDiv],
               }}
             >
               this is the first spatialdiv
             </div>
 
-            {/* <div
+            <div
               onClick={() => {
-                console.log('dbg click spatialdiv')
+                console.log('dbg click spatialdiv 2')
                 setColor(v => (v === 'green' ? 'red' : 'green'))
               }}
               enable-xr
               style={{
                 '--xr-back': 70,
                 backgroundColor: color,
-
                 width: '200px',
                 height: '200px',
-                // opacity: 0.801,
-                '--xr-background-material': 'transparent',
+                '--xr-background-material':
+                  materialVals[materialIndexForSpatialDiv],
               }}
             >
               this is the second spatialdiv
-            </div> */}
+            </div>
           </div>
         </div>
       </div>

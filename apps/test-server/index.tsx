@@ -94,7 +94,10 @@ class ErrorBoundary extends React.Component<
 function App() {
   return (
     <Router>
-      <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
+      <div
+        className="flex h-screen text-white overflow-hidden"
+        style={{ backgroundColor: 'var(--spa-bg-color, #0A0A0A)' }}
+      >
         <Sidebar />
         <main className="flex-1 overflow-auto relative">
           <Suspense

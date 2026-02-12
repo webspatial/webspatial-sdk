@@ -45,6 +45,7 @@ const buildOptions = {
   minify: isBuild,
   sourcemap: !isBuild,
   jsx: 'automatic',
+    jsxImportSource: '@webspatial/react-sdk/jsx',
   plugins,
   define: {
     'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV ?? ''),
