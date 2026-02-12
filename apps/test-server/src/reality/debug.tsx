@@ -132,10 +132,6 @@ function App() {
             '--xr-back': 200,
           }}
           ref={realityRef}
-          onSpatialTap={async e => {
-            console.log('tap reality', e, e.target, e.currentTarget)
-            // e.target not work as expected, use e.currentTarget instead
-          }}
         >
           <UnlitMaterial
             id="matRed"
