@@ -35,7 +35,19 @@ export interface StandardSpatializedContainerProps
   [SpatialID]: string
 }
 
-export type RealityProps = React.ComponentPropsWithRef<'div'>
+type RealityForbiddenSpatialEventProps = {
+  onSpatialTap?: never
+  onSpatialDragStart?: never
+  onSpatialDrag?: never
+  onSpatialDragEnd?: never
+  onSpatialRotate?: never
+  onSpatialRotateEnd?: never
+  onSpatialMagnify?: never
+  onSpatialMagnifyEnd?: never
+}
+
+export type RealityProps = React.ComponentPropsWithRef<'div'> &
+  RealityForbiddenSpatialEventProps
 export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
   SpatialEventProps<T> &
     React.ComponentPropsWithoutRef<'div'> & {
