@@ -1,14 +1,13 @@
-import { type BackgroundMaterialType } from '@webspatial/core-sdk'
 import ReactDOM from 'react-dom/client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
 function App() {
-  const [divRow, setDivRow] = useState(10)
-  const [divCol, setDivCol] = useState(10)
+  const [divRow] = useState(10)
+  const [divCol] = useState(10)
 
   const z = 100
 
@@ -24,25 +23,29 @@ function App() {
         style={{
           width: '100%',
           height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          alignItems: 'center',
         }}
       >
         {[...Array(divRow)].map((_, rowIndex) => (
           <div
             key={rowIndex}
-            className="flex flex-row space-x-2 w-screen text-gray-900   text-center"
+            style={{ gap: '10px', width: 'fit-content' }}
+            className="flex flex-row text-gray-900 text-center"
           >
             {[...Array(divCol)].map((_, colIndex) => (
               <div
                 key={colIndex + rowIndex * divCol}
                 style={{
-                  width: '50px',
-                  height: '50px',
+                  width: '80px',
+                  height: '80px',
                   background: 'red',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
-                className="grow"
               >
                 <div
                   enable-xr
@@ -51,6 +54,11 @@ function App() {
                     width: '60%',
                     height: '60%',
                     background: 'blue',
+                    color: 'white',
+                    fontWeight: 700,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}
                 >
                   {`${rowIndex}, ${colIndex}`}
