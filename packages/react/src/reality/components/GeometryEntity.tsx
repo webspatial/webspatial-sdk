@@ -28,7 +28,6 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
-      // TODO: add other event handlers
       children,
       name,
       materials,
