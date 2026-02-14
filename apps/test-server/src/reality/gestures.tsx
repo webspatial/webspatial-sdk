@@ -110,8 +110,8 @@ function App() {
                   return
                 activeGestureRef.current = 'drag'
                 dragBaseRef.current = boxPos
-                console.log('dragStart', e.detail.translation3D)
-                logLine('dragStart', e.detail.translation3D)
+                console.log('dragStart', e.detail.startLocation3D)
+                logLine('dragStart', e.detail)
               }}
               onSpatialDrag={async e => {
                 if (!enabled) return
@@ -128,7 +128,7 @@ function App() {
                 const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
                 const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
                 setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
-                console.log('drag', t)
+                console.log('drag', t, e.detail)
                 logLine('drag', t)
               }}
               onSpatialDragEnd={async e => {
@@ -140,8 +140,8 @@ function App() {
                 )
                   return
                 if (exclusive) activeGestureRef.current = null
-                console.log('dragEnd', e.detail.translation3D)
-                logLine('dragEnd', e.detail.translation3D)
+                console.log('dragEnd')
+                logLine('dragEnd')
               }}
               onSpatialRotate={e => {
                 if (!enabled) return
@@ -192,7 +192,7 @@ function App() {
                 console.log('rotateEnd')
                 logLine('rotateEnd')
               }}
-              onSpatialMagnify={(e: any) => {
+              onSpatialMagnify={e => {
                 if (!isAllow('scale')) return
                 if (!enabled) return
                 if (
