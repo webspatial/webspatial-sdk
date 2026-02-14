@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react'
-import { EntityEventHandler, eventMap } from '../type'
+import {
+  EntityEventHandler,
+  eventMap,
+  SpatialDragStartEntityEvent,
+  SpatialTapEntityEvent,
+} from '../type'
 import { EntityRef } from './useEntityRef'
 import { SpatialEntity } from '@webspatial/core-sdk'
 
@@ -26,20 +31,26 @@ function createEventProxy(ev: any, instance: EntityRef) {
       if (prop === 'offsetX') {
         const type = (target as any).type
         if (type === 'spatialtap') {
-          return (target as any).detail?.location3D?.x ?? 0
+          return (target as SpatialTapEntityEvent).detail?.location3D?.x ?? 0
         }
         if (type === 'spatialdragstart') {
-          return (target as any).detail?.startLocation3D?.x ?? 0
+          return (
+            (target as SpatialDragStartEntityEvent).detail?.startLocation3D
+              ?.x ?? 0
+          )
         }
         return undefined
       }
       if (prop === 'offsetY') {
         const type = (target as any).type
         if (type === 'spatialtap') {
-          return (target as any).detail?.location3D?.y ?? 0
+          return (target as SpatialTapEntityEvent).detail?.location3D?.y ?? 0
         }
         if (type === 'spatialdragstart') {
-          return (target as any).detail?.startLocation3D?.y ?? 0
+          return (
+            (target as SpatialDragStartEntityEvent).detail?.startLocation3D
+              ?.y ?? 0
+          )
         }
         return undefined
       }

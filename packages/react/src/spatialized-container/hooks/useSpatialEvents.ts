@@ -92,9 +92,9 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialTap = createEventHandler<T, SpatialTapEvent<T>>(
     spatialEvents.onSpatialTap,
     currentTargetGetter,
-    (ev: any) => ev.detail?.location3D?.x,
-    (ev: any) => ev.detail?.location3D?.y,
-    (ev: any) => ev.detail?.location3D?.z,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.x,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.y,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.z,
   )
 
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
@@ -130,9 +130,9 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialDragStart = createEventHandler<T, SpatialDragStartEvent<T>>(
     spatialEvents.onSpatialDragStart,
     currentTargetGetter,
-    (ev: any) => ev.detail?.startLocation3D?.x,
-    (ev: any) => ev.detail?.startLocation3D?.y,
-    (ev: any) => ev.detail?.startLocation3D?.z,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.x,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.y,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.z,
   )
 
   return {
