@@ -124,11 +124,17 @@ type CurrentTarget<T extends SpatializedElementRef> = {
 
 export type SpatialTapEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialTapEvent & CurrentTarget<T>
+> = CoreSpatialTapEvent &
+  CurrentTarget<T> & {
+    readonly offsetX: number
+  }
 
 export type SpatialDragStartEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialDragStartEvent & CurrentTarget<T>
+> = CoreSpatialDragStartEvent &
+  CurrentTarget<T> & {
+    readonly offsetX: number
+  }
 
 export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,

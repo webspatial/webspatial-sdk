@@ -26,11 +26,14 @@ export interface SpatialEvents<
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-// Create a generic event proxy factory function
 function createEventProxy<
   T extends SpatializedElementRef,
   E extends { currentTarget: T },
->(event: E, currentTargetGetter: () => T): E {
+>(
+  event: E,
+  currentTargetGetter: () => T,
+  offsetXGetter?: (event: E) => number | undefined,
+): E {
   return new Proxy(event, {
     get(target, prop) {
       if (prop === 'currentTarget') {
@@ -39,22 +42,29 @@ function createEventProxy<
       if (prop === 'isTrusted') {
         return true
       }
+      if (prop === 'offsetX' && offsetXGetter) {
+        return offsetXGetter(target) ?? 0
+      }
       return Reflect.get(target, prop)
     },
   })
 }
 
-// Create an event handler factory function
 function createEventHandler<
   T extends SpatializedElementRef,
   E extends { currentTarget: T },
 >(
   handler: ((event: E) => void) | undefined,
   currentTargetGetter: () => T,
+  offsetXGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
-        const proxyEvent = createEventProxy<T, E>(event, currentTargetGetter)
+        const proxyEvent = createEventProxy<T, E>(
+          event,
+          currentTargetGetter,
+          offsetXGetter,
+        )
         handler(proxyEvent)
       }
     : undefined
@@ -67,6 +77,7 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialTap = createEventHandler<T, SpatialTapEvent<T>>(
     spatialEvents.onSpatialTap,
     currentTargetGetter,
+    (ev: any) => ev.detail?.location3D?.x,
   )
 
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
@@ -102,6 +113,7 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialDragStart = createEventHandler<T, SpatialDragStartEvent<T>>(
     spatialEvents.onSpatialDragStart,
     currentTargetGetter,
+    (ev: any) => ev.detail?.startLocation3D?.x,
   )
 
   return {

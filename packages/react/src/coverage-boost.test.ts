@@ -39,6 +39,8 @@ import { useMonitorDomChange } from './spatialized-container-monitor/useMonitorD
 import { useMonitorDocumentHeaderChange } from './spatialized-container-monitor/useMonitorDocumentHeaderChange'
 import { SpatialMonitor } from './spatialized-container-monitor/SpatialMonitor'
 import { withSpatialMonitor } from './spatialized-container-monitor/withSpatialMonitor'
+import { useEntityEvent } from './reality/hooks/useEntityEvent'
+import { EntityRef } from './reality/hooks/useEntityRef'
 
 if (!(globalThis as any).DOMPoint) {
   ;(globalThis as any).DOMPoint = class DOMPointPolyfill {
@@ -673,12 +675,13 @@ describe('Spatialized2DElementContainerFactory', () => {
 })
 
 describe('spatialized-container/hooks/useSpatialEvents', () => {
-  it('useSpatialEventsBase proxies currentTarget and isTrusted', () => {
+  it('SpatialTapEvent offsetX comes from detail.location3D.x', () => {
     const currentTarget = { tag: 'real' } as any
     const onSpatialTap = vi.fn((e: any) => {
       expect(e.currentTarget).toBe(currentTarget)
       expect(e.isTrusted).toBe(true)
       expect(e.type).toBe('tap')
+      expect(e.offsetX).toBe(12)
     })
 
     const events = useSpatialEventsBase(
@@ -689,8 +692,56 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
     events.onSpatialTap?.({
       type: 'tap',
       currentTarget: { tag: 'fake' },
+      detail: { location3D: { x: 12, y: 0, z: 0 } },
     } as any)
+
     expect(onSpatialTap).toHaveBeenCalledTimes(1)
+  })
+
+  it('SpatialDragStartEvent offsetX comes from detail.startLocation3D.x', () => {
+    const currentTarget = { tag: 'real' } as any
+    const onSpatialDragStart = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(currentTarget)
+      expect(e.isTrusted).toBe(true)
+      expect(e.type).toBe('dragstart')
+      expect(e.offsetX).toBe(5)
+    })
+
+    const events = useSpatialEventsBase(
+      { onSpatialDragStart } as any,
+      () => currentTarget,
+    )
+
+    events.onSpatialDragStart?.({
+      type: 'dragstart',
+      currentTarget: { tag: 'fake' },
+      detail: { startLocation3D: { x: 5, y: 0, z: 0 } },
+    } as any)
+
+    expect(onSpatialDragStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('Other spatial events do not expose offsetX', () => {
+    const currentTarget = { tag: 'real' } as any
+    const onSpatialDrag = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(currentTarget)
+      expect(e.isTrusted).toBe(true)
+      expect(e.type).toBe('drag')
+      expect((e as any).offsetX).toBeUndefined()
+    })
+
+    const events = useSpatialEventsBase(
+      { onSpatialDrag } as any,
+      () => currentTarget,
+    )
+
+    events.onSpatialDrag?.({
+      type: 'drag',
+      currentTarget: { tag: 'fake' },
+      detail: { translation3D: { x: 1, y: 2, z: 3 } },
+    } as any)
+
+    expect(onSpatialDrag).toHaveBeenCalledTimes(1)
   })
 
   it('useSpatialEventsWhenSpatializedContainerExist resolves target from container', () => {
@@ -721,6 +772,106 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
     expect(
       spatializedContainerObject.getSpatialContainerRefProxyBySpatialId,
     ).toHaveBeenCalledWith('sid')
+    expect(onSpatialDrag).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('reality/hooks/useEntityEvent', () => {
+  it('SpatialTapEntityEvent offsetX comes from detail.location3D.x', async () => {
+    const addEvent = vi.fn()
+    const removeEvent = vi.fn()
+    const fakeEntity = { addEvent, removeEvent } as any
+
+    const instance = new EntityRef(fakeEntity, null as any)
+
+    const onSpatialTap = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(instance)
+      expect(e.offsetX).toBe(7)
+    })
+
+    render(
+      React.createElement(useEntityEvent, { instance, onSpatialTap } as any),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const wrapped = addEvent.mock.calls.find(c => c[0] === 'spatialtap')?.[1]
+    expect(typeof wrapped).toBe('function')
+
+    wrapped({
+      type: 'spatialtap',
+      detail: { location3D: { x: 7, y: 0, z: 0 } },
+    })
+
+    expect(onSpatialTap).toHaveBeenCalledTimes(1)
+  })
+
+  it('SpatialDragStartEntityEvent offsetX comes from detail.startLocation3D.x', async () => {
+    const addEvent = vi.fn()
+    const removeEvent = vi.fn()
+    const fakeEntity = { addEvent, removeEvent } as any
+
+    const instance = new EntityRef(fakeEntity, null as any)
+
+    const onSpatialDragStart = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(instance)
+      expect(e.offsetX).toBe(4)
+    })
+
+    render(
+      React.createElement(useEntityEvent, {
+        instance,
+        onSpatialDragStart,
+      } as any),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const wrapped = addEvent.mock.calls.find(
+      c => c[0] === 'spatialdragstart',
+    )?.[1]
+    expect(typeof wrapped).toBe('function')
+
+    wrapped({
+      type: 'spatialdragstart',
+      detail: { startLocation3D: { x: 4, y: 0, z: 0 } },
+    })
+
+    expect(onSpatialDragStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('Other entity events do not expose offsetX', async () => {
+    const addEvent = vi.fn()
+    const removeEvent = vi.fn()
+    const fakeEntity = { addEvent, removeEvent } as any
+
+    const instance = new EntityRef(fakeEntity, null as any)
+
+    const onSpatialDrag = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(instance)
+      expect((e as any).offsetX).toBeUndefined()
+    })
+
+    render(
+      React.createElement(useEntityEvent, { instance, onSpatialDrag } as any),
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const wrapped = addEvent.mock.calls.find(c => c[0] === 'spatialdrag')?.[1]
+    expect(typeof wrapped).toBe('function')
+
+    wrapped({
+      type: 'spatialdrag',
+      detail: { translation3D: { x: 1, y: 2, z: 3 } },
+    })
+
     expect(onSpatialDrag).toHaveBeenCalledTimes(1)
   })
 })

@@ -20,6 +20,16 @@ function createEventProxy(ev: any, instance: EntityRef) {
         // Fallback: if origin not set, return current instance
         return instance
       }
+      if (prop === 'offsetX') {
+        const type = (target as any).type
+        if (type === 'spatialtap') {
+          return (target as any).detail?.location3D?.x ?? 0
+        }
+        if (type === 'spatialdragstart') {
+          return (target as any).detail?.startLocation3D?.x ?? 0
+        }
+        return undefined
+      }
       const val = (target as any)[prop]
       return typeof val === 'function' ? val.bind(target) : val
     },

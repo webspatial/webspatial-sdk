@@ -27,7 +27,7 @@ function App() {
   }
 
   const onSpatialDragStart = (evt: SpatialDragStartEvent) => {
-    console.log('drag start', evt.detail.startLocation3D)
+    console.log('drag start', evt.offsetX, evt.detail.startLocation3D)
   }
 
   const spatialDrag = (evt: SpatialDragEvent | ModelSpatialDragEvent) => {
@@ -64,7 +64,7 @@ function App() {
   }
 
   const onModelSpatialDragStart = (evt: ModelSpatialDragStartEvent) => {
-    console.log('model drag start', evt.detail.startLocation3D)
+    console.log('model drag start', evt.offsetX, evt.detail.startLocation3D)
   }
 
   const onModelSpatialDrag = (evt: ModelSpatialDragEvent) => {
