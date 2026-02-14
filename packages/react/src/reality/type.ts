@@ -23,13 +23,26 @@ type allTarget<T extends EntityRefShape> = {
 }
 // tap
 export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
-  CoreSpatialTapEvent & allTarget<T>
+  CoreSpatialTapEvent &
+    allTarget<T> & {
+      readonly offsetX: number
+      readonly offsetY: number
+      readonly offsetZ: number
+    }
+
 // drag
 export type SpatialDragStartEntityEvent<
   T extends EntityRefShape = EntityRefShape,
-> = CoreSpatialDragStartEvent & allTarget<T>
+> = CoreSpatialDragStartEvent &
+  allTarget<T> & {
+    readonly offsetX: number
+    readonly offsetY: number
+    readonly offsetZ: number
+  }
+
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialDragEvent & allTarget<T>
+
 export type SpatialDragEndEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialDragEndEvent & allTarget<T>
