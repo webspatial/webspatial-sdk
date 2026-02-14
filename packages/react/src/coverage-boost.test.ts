@@ -681,6 +681,7 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
       expect(e.currentTarget).toBe(currentTarget)
       expect(e.isTrusted).toBe(true)
       expect(e.type).toBe('tap')
+      expect(e.bubbles).toBe(false)
       expect(e.offsetX).toBe(12)
       expect(e.offsetY).toBe(9)
       expect(e.offsetZ).toBe(3)
@@ -706,6 +707,7 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
       expect(e.currentTarget).toBe(currentTarget)
       expect(e.isTrusted).toBe(true)
       expect(e.type).toBe('dragstart')
+      expect(e.bubbles).toBe(false)
       expect(e.offsetX).toBe(5)
       expect(e.offsetY).toBe(6)
       expect(e.offsetZ).toBe(7)
@@ -731,6 +733,7 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
       expect(e.currentTarget).toBe(currentTarget)
       expect(e.isTrusted).toBe(true)
       expect(e.type).toBe('drag')
+      expect(e.bubbles).toBe(false)
       expect((e as any).offsetX).toBeUndefined()
       expect((e as any).offsetY).toBeUndefined()
       expect((e as any).offsetZ).toBeUndefined()
@@ -792,6 +795,7 @@ describe('reality/hooks/useEntityEvent', () => {
 
     const onSpatialTap = vi.fn((e: any) => {
       expect(e.currentTarget).toBe(instance)
+      expect(e.bubbles).toBe(true)
       expect(e.offsetX).toBe(7)
       expect(e.offsetY).toBe(8)
       expect(e.offsetZ).toBe(9)
@@ -825,6 +829,7 @@ describe('reality/hooks/useEntityEvent', () => {
 
     const onSpatialDragStart = vi.fn((e: any) => {
       expect(e.currentTarget).toBe(instance)
+      expect(e.bubbles).toBe(true)
       expect(e.offsetX).toBe(4)
       expect(e.offsetY).toBe(2)
       expect(e.offsetZ).toBe(1)
@@ -863,6 +868,7 @@ describe('reality/hooks/useEntityEvent', () => {
 
     const onSpatialDrag = vi.fn((e: any) => {
       expect(e.currentTarget).toBe(instance)
+      expect(e.bubbles).toBe(true)
       expect((e as any).offsetX).toBeUndefined()
       expect((e as any).offsetY).toBeUndefined()
       expect((e as any).offsetZ).toBeUndefined()

@@ -20,6 +20,9 @@ function createEventProxy(ev: any, instance: EntityRef) {
         // Fallback: if origin not set, return current instance
         return instance
       }
+      if (prop === 'bubbles') {
+        return true
+      }
       if (prop === 'offsetX') {
         const type = (target as any).type
         if (type === 'spatialtap') {

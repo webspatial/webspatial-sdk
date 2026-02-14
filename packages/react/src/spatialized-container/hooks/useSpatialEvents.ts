@@ -44,6 +44,9 @@ function createEventProxy<
       if (prop === 'isTrusted') {
         return true
       }
+      if (prop === 'bubbles') {
+        return false
+      }
       if (prop === 'offsetX' && offsetXGetter) {
         return offsetXGetter(target) ?? 0
       }
