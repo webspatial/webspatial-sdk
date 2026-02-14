@@ -34,6 +34,7 @@ function createEventProxy<
   currentTargetGetter: () => T,
   offsetXGetter?: (event: E) => number | undefined,
   offsetYGetter?: (event: E) => number | undefined,
+  offsetZGetter?: (event: E) => number | undefined,
 ): E {
   return new Proxy(event, {
     get(target, prop) {
@@ -49,6 +50,9 @@ function createEventProxy<
       if (prop === 'offsetY' && offsetYGetter) {
         return offsetYGetter(target) ?? 0
       }
+      if (prop === 'offsetZ' && offsetZGetter) {
+        return offsetZGetter(target) ?? 0
+      }
       return Reflect.get(target, prop)
     },
   })
@@ -62,6 +66,7 @@ function createEventHandler<
   currentTargetGetter: () => T,
   offsetXGetter?: (event: E) => number | undefined,
   offsetYGetter?: (event: E) => number | undefined,
+  offsetZGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
@@ -70,6 +75,7 @@ function createEventHandler<
           currentTargetGetter,
           offsetXGetter,
           offsetYGetter,
+          offsetZGetter,
         )
         handler(proxyEvent)
       }
@@ -85,6 +91,7 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
     currentTargetGetter,
     (ev: any) => ev.detail?.location3D?.x,
     (ev: any) => ev.detail?.location3D?.y,
+    (ev: any) => ev.detail?.location3D?.z,
   )
 
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
@@ -122,6 +129,7 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
     currentTargetGetter,
     (ev: any) => ev.detail?.startLocation3D?.x,
     (ev: any) => ev.detail?.startLocation3D?.y,
+    (ev: any) => ev.detail?.startLocation3D?.z,
   )
 
   return {

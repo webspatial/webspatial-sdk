@@ -128,6 +128,7 @@ export type SpatialTapEvent<
   CurrentTarget<T> & {
     readonly offsetX: number
     readonly offsetY: number
+    readonly offsetZ: number
   }
 
 export type SpatialDragStartEvent<
@@ -136,6 +137,7 @@ export type SpatialDragStartEvent<
   CurrentTarget<T> & {
     readonly offsetX: number
     readonly offsetY: number
+    readonly offsetZ: number
   }
 
 export type SpatialDragEvent<
