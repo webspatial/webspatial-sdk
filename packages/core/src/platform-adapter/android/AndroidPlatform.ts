@@ -73,32 +73,37 @@ export class AndroidPlatform implements PlatformAbility {
     features?: string,
   ): Promise<CommandResult> {
     // Waiting for request to create spatial div
-    await new Promise(resolve => setTimeout(resolve, 16 * creatingElementCount))
-    // Count the current total number of created spatial div queues
-    creatingElementCount++
-    // Create a spatial div through JSB polling request
-    let canCreate = await new CheckWebViewCanCreateCommand().execute()
-    while (!canCreate.data.can) {
-      await new Promise(resolve => setTimeout(resolve, 16))
-      canCreate = await new CheckWebViewCanCreateCommand().execute()
-    }
-    // Request successful, call window.open
-    const { windowProxy } = this.openWindow(command, query, target, features)
-    // Polling waiting for windowProxy to convert into a real window object
-    while (!windowProxy?.open) {
-      await new Promise(resolve => setTimeout(resolve, 16))
-    }
-    // Make the page renderable through window.open
-    windowProxy?.open('about:blank', '_self')
-    // Polling to check if SpatialId injection is successful
-    while (!windowProxy?.__SpatialId) {
-      await new Promise(resolve => setTimeout(resolve, 16))
-    }
-    let spatialId = windowProxy?.__SpatialId
-    creatingElementCount--
-    return Promise.resolve(
-      CommandResultSuccess({ windowProxy: windowProxy, id: spatialId }),
-    )
+    return new Promise((resolve, reject) => {
+      const createdId = nextRequestId()
+      try {
+        let windowProxy: any = null
+        SpatialWebEvent.addEventReceiver(
+          createdId,
+          (result: { spatialId: string }) => {
+            console.log('createdId', createdId, result.spatialId)
+            resolve(
+              CommandResultSuccess({
+                windowProxy: windowProxy,
+                id: result.spatialId,
+              }),
+            )
+            SpatialWebEvent.removeEventReceiver(createdId)
+          },
+        )
+        windowProxy = this.openWindow(
+          command,
+          query,
+          target,
+          features,
+        ).windowProxy
+        windowProxy?.open(`about:blank?rid=${createdId}`, '_self')
+      } catch (error: unknown) {
+        console.error(`open window error: ${error}`)
+        const { code, message } = error as JSBError
+        SpatialWebEvent.removeEventReceiver(createdId)
+        resolve(CommandResultFailure(code, message))
+      }
+    })
   }
 
   callWebSpatialProtocolSync(
