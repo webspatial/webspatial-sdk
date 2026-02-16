@@ -56,17 +56,6 @@ import Static3DModel from './src/static-3d-model/index'
 import VisibleTest from './src/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/cleanup'
 
-const NavigateTo = ({ href, replace }: { href: string; replace?: boolean }) => {
-  React.useEffect(() => {
-    if (replace) {
-      window.location.replace(href)
-    } else {
-      window.location.assign(href)
-    }
-  }, [href, replace])
-  return null
-}
-
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
   { hasError: boolean }
