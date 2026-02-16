@@ -1,8 +1,14 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Model } from '@webspatial/react-sdk'
 
 export default function Home() {
   const header = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    document.documentElement.style.setProperty('--spa-bg-color', 'transparent')
+    return () => {
+      document.documentElement.style.removeProperty('--spa-bg-color')
+    }
+  }, [])
 
   return (
     <div className="container mx-auto px-4 pt-16 pb-20">
