@@ -128,12 +128,6 @@ export default function RealityTest() {
             '--xr-back': 200,
           }}
           ref={realityRef}
-          onSpatialTap={async e => {
-            console.log('tap reality', e, e.target, e.currentTarget)
-          }}
-          onSpatialDrag={async e => {
-            console.log('parent drag')
-          }}
         >
           <UnlitMaterial
             id="matRed"
