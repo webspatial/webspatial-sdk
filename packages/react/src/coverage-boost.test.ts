@@ -85,7 +85,7 @@ if (!(globalThis as any).DOMMatrix) {
 }
 
 if (!(globalThis as any).DOMMatrixReadOnly) {
-  ; (globalThis as any).DOMMatrixReadOnly = (globalThis as any).DOMMatrix
+  ;(globalThis as any).DOMMatrixReadOnly = (globalThis as any).DOMMatrix
 }
 
 describe('spatialized-container/utils', () => {

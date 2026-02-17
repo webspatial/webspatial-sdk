@@ -2,7 +2,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
 } from './types/types'
-import { SpatialSceneCreationOptionsInternal } from "./types/internal"
+import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import {
   AddSpatializedElementToSpatialScene,
   GetSpatialSceneState,
