@@ -19,6 +19,7 @@ export const routes = [
       { path: '/reality/low', label: 'Low' },
       { path: '/reality/nested', label: 'Nested' },
       { path: '/reality-test', label: 'Legacy Reality Test' },
+      { path: '/reality/attachments', label: 'Attachments' },
     ],
   },
   { path: '/basic-transform', label: 'Basic Transform' },
