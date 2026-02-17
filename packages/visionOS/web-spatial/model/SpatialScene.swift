@@ -741,18 +741,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let enableDragEndGesture = command.enableDragEndGesture {
             spatializedElement.enableDragEndGesture = enableDragEndGesture
         }
-        if let enableRotateStartGesture = command.enableRotateStartGesture {
-            spatializedElement.enableRotateStartGesture = enableRotateStartGesture
-        }
+
         if let enableRotateGesture = command.enableRotateGesture {
             spatializedElement.enableRotateGesture = enableRotateGesture
         }
         if let enableRotateEndGesture = command.enableRotateEndGesture {
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
-        }
-
-        if let enableMagnifyStartGesture = command.enableMagnifyStartGesture {
-            spatializedElement.enableMagnifyStartGesture = enableMagnifyStartGesture
         }
 
         if let enableMagnifyGesture = command.enableMagnifyGesture {
@@ -1139,6 +1133,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     func debugSpatialObjectKeys() -> [String] {
         return Array(spatialObjects.keys)
     }
+
     /*
      * End SpatialObjects management
      */

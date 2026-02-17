@@ -160,11 +160,8 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var enableDragStartGesture: Bool? { get }
     var enableDragGesture: Bool? { get }
     var enableDragEndGesture: Bool? { get }
-
-    var enableRotateStartGesture: Bool? { get }
     var enableRotateGesture: Bool? { get }
     var enableRotateEndGesture: Bool? { get }
-    var enableMagnifyStartGesture: Bool? { get }
     var enableMagnifyGesture: Bool? { get }
     var enableMagnifyEndGesture: Bool? { get }
     var enableTapGesture: Bool? { get }
@@ -189,10 +186,8 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     var enableDragStartGesture: Bool?
     var enableDragGesture: Bool?
     var enableDragEndGesture: Bool?
-    var enableRotateStartGesture: Bool?
     var enableRotateGesture: Bool?
     var enableRotateEndGesture: Bool?
-    var enableMagnifyStartGesture: Bool?
     var enableMagnifyGesture: Bool?
     var enableMagnifyEndGesture: Bool?
     var enableTapGesture: Bool?
@@ -225,10 +220,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     var enableDragStartGesture: Bool?
     let enableDragGesture: Bool?
     let enableDragEndGesture: Bool?
-    var enableRotateStartGesture: Bool?
     let enableRotateGesture: Bool?
     let enableRotateEndGesture: Bool?
-    var enableMagnifyStartGesture: Bool?
     let enableMagnifyGesture: Bool?
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?
@@ -256,10 +249,8 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     var enableDragStartGesture: Bool?
     let enableDragGesture: Bool?
     let enableDragEndGesture: Bool?
-    var enableRotateStartGesture: Bool?
     let enableRotateGesture: Bool?
     let enableRotateEndGesture: Bool?
-    var enableMagnifyStartGesture: Bool?
     let enableMagnifyGesture: Bool?
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?

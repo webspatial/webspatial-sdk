@@ -1,123 +1,231 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Model } from '@webspatial/react-sdk'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import Sidebar from './src/components/Sidebar'
+import Home from './src/pages/Home'
+// Static route registry: add your test component here to expose it in the SPA
 
-function App() {
-  let [_supported, setSupported] = useState(false)
-  var header = useRef<HTMLDivElement>(null)
+const Placeholder = ({ name }: { name: string }) => (
+  <div className="p-10 text-white">
+    <h1 className="text-2xl mb-4">{name}</h1>
+    <p className="text-gray-400">
+      This test is still being refactored into the SPA.
+    </p>
+  </div>
+)
 
-  return (
-    <div className={`min-h-screen text-white`}>
-      {/* Navigation */}
-      <nav className="fixed w-full bg-[#111111] z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <span className="text-xl font-bold">WebSpatial</span>
-            <a
-              href="https://github.com/webspatial/webspatial-sdk"
-              className="text-gray-300 hover:text-white"
-            >
-              Github
-            </a>
-          </div>
+// Simple static imports. To add a test, import it here and add a <Route>.
+import AnimateTest from './src/pages/animate/index'
+import RealityTest from './src/pages/reality/index'
+import RealityDebug from './src/pages/reality/debug'
+import RealityDynamic3D from './src/pages/reality/dynamic3d'
+import RealityGestures from './src/pages/reality/gestures'
+import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
+import BasicTransform from './src/pages/basic-transform/index'
+import ModelTest from './src/pages/model-test/index'
+import SpatialStyleTest from './src/pages/spatialStyleTest/index'
+import CanvasTest from './src/pages/canvas-test/index'
+import JSAPITest from './src/pages/jsapi-test/index'
+import SceneTest from './src/pages/scene/index'
+import SceneHook from './src/pages/scene/hook'
+import SceneLoading from './src/pages/scene/loading'
+import SceneVolume from './src/pages/scene/volume'
+import SceneVolumeHook from './src/pages/scene/volumeHook'
+import SceneXRApp from './src/pages/scene/xrapp'
+import RealityEmpty from './src/pages/reality/empty'
+import RealityGeometryEntity from './src/pages/reality/geometryEntity'
+import RealityInteractable from './src/pages/reality/interactable'
+import RealityIssue from './src/pages/reality/issue'
+import RealityLow from './src/pages/reality/low'
+import RealityNested from './src/pages/reality/nested'
+import RealityTestIndex from './src/pages/reality-test/index'
+import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
+import SpatialGuesture from './src/pages/spatial-guesture/index'
+import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
+import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
+import BackgroundMaterial from './src/pages/backgroundmaterial/index'
+import FixedPositionTest from './src/pages/FixedPositionTest/index'
+import AndroidBringup from './src/pages/androidBringup/index'
+import DisplayTest from './src/pages/displayTest/index'
+import MemoryStats from './src/pages/memoryStats/index'
+import NestedFixPosition from './src/pages/nestedfixposition/index'
+import NestedScroll from './src/pages/nestedscroll/index'
+import SpatialConverter from './src/pages/spatial-converter/index'
+import SpatialCorner from './src/pages/spatialCorner/index'
+import Static3DModel from './src/pages/static-3d-model/index'
+import VisibleTest from './src/pages/visibleTest/index'
+import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
+
+class ErrorBoundary extends React.Component<
+  { children?: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true }
+  }
+  componentDidCatch(error: any, info: any) {}
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-300">Something went wrong.</div>
         </div>
-      </nav>
-
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 pt-32 pb-20">
-        <div className="text-center max-w-4xl mx-auto">
-          <div ref={header}>
-            <div className="bg-[#222222] inline-block px-4 py-1 rounded-full mb-8">
-              <span className="text-sm">
-                ✨ WebSpatial Alpha is available now! ✨
-              </span>
-            </div>
-            <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-300 to-blue-500 text-transparent bg-clip-text">
-              Ship XR apps with WebSpatial
-            </h1>
-            <p className="text-xl text-gray-400 mb-8">
-              Build cross-platform XR apps with JavaScript, React, HTML, and CSS
-            </p>
-          </div>
-
-          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
-            {/* Window Header */}
-            <div className="bg-[#222222] px-4 py-3 flex items-center">
-              <div className="flex space-x-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
-              </div>
-              <div className="mx-auto text-gray-400 text-sm">Example.jsx</div>
-            </div>
-
-            {/* Window Content */}
-            <div className="p-6 text-left">
-              <pre className="text-sm text-gray-300">
-                <code>{`import { Model, SpatialDiv } from '@webspatial/react-sdk'
+      )
+    }
+    return this.props.children as any
+  }
+}
 
 function App() {
+  const outerClass = 'flex min-h-screen text-white'
+  const mainClass = 'flex-1 overflow-visible relative'
+
   return (
+    <Router>
       <div
-        enable-xr
-        style={{color: "blue", "--xr-back": 50}}>
-          <h1>3D UI on XR devices and embeded 3D models</h1>
-      </div>
-      
-      <Model>
-        <source
-          src="/assets/3DFile.usdz"
-          type="model/vnd.usdz+zip" />
-        <source
-          src="/assets/3DFile.glb"
-          type="model/gltf-binary" />
-      </Model>
-  )
-}`}</code>
-              </pre>
-            </div>
-          </div>
-          <div className="mt-16 rounded-xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl max-w-4xl mx-auto">
-            <div className="p-6 flex flex-col items-center space-y-8">
-              <div enable-xr style={{ color: 'blue-400', '--xr-back': 50 }}>
-                <h1 className="text-xl font-medium">
-                  3D UI on XR devices and embeded 3D models
-                </h1>
+        className={outerClass}
+        style={{ backgroundColor: 'var(--spa-bg-color, #0A0A0A)' }}
+      >
+        <Sidebar />
+        <main className={mainClass}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
-
-              <div className="w-64 h-64 bg-[#2A2A2A] rounded-lg p-4 flex items-center justify-center">
-                <Model style={{ width: '200px', height: '200px' }}>
-                  <source
-                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.usdz"
-                    type="model/vnd.usdz+zip"
-                  />
-                  <source
-                    src="https://raw.githubusercontent.com/webspatial/test-assets/main/kenney/arcade-machine-color.glb"
-                    type="model/gltf-binary"
-                  />
-                </Model>
-              </div>
-            </div>
-          </div>
-        </div>
+            }
+          >
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/animate" element={<AnimateTest />} />
+                <Route path="/basic-transform" element={<BasicTransform />} />
+                <Route path="/model-test" element={<ModelTest />} />
+                <Route
+                  path="/spatialStyleTest"
+                  element={<SpatialStyleTest />}
+                />
+                <Route path="/canvas-test" element={<CanvasTest />} />
+                <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route path="/scene" element={<SceneTest />} />
+                <Route path="/scene/hook" element={<SceneHook />} />
+                <Route path="/scene/loading" element={<SceneLoading />} />
+                <Route path="/scene/volume" element={<SceneVolume />} />
+                <Route
+                  path="/scene/volume-hook"
+                  element={<SceneVolumeHook />}
+                />
+                <Route path="/scene/xrapp" element={<SceneXRApp />} />
+                <Route
+                  path="/scene/nosdk"
+                  element={<Placeholder name="nosdk unmigrated" />}
+                />
+                <Route path="/reality" element={<RealityTest />} />
+                <Route path="/reality/debug" element={<RealityDebug />} />
+                <Route
+                  path="/reality/dynamic3d"
+                  element={<RealityDynamic3D />}
+                />
+                <Route path="/reality/gestures" element={<RealityGestures />} />
+                <Route
+                  path="/reality/spatial-div"
+                  element={<RealitySpatialDiv />}
+                />
+                <Route path="/reality/empty" element={<RealityEmpty />} />
+                <Route
+                  path="/reality/geometry-entity"
+                  element={<RealityGeometryEntity />}
+                />
+                <Route
+                  path="/reality/interactable"
+                  element={<RealityInteractable />}
+                />
+                <Route path="/reality/issue" element={<RealityIssue />} />
+                <Route path="/reality/low" element={<RealityLow />} />
+                <Route path="/reality/nested" element={<RealityNested />} />
+                <Route path="/reality-test" element={<RealityTestIndex />} />
+                <Route
+                  path="/spatial-drag-gesture"
+                  element={<SpatialDragGesture />}
+                />
+                <Route path="/spatial-guesture" element={<SpatialGuesture />} />
+                <Route
+                  path="/spatial-magnify-gesture"
+                  element={<SpatialMagnifyGesture />}
+                />
+                <Route
+                  path="/spatial-rotation-gesture"
+                  element={<SpatialRotationGesture />}
+                />
+                <Route
+                  path="/background-material"
+                  element={<BackgroundMaterial />}
+                />
+                <Route
+                  path="/fixed-position-test"
+                  element={<FixedPositionTest />}
+                />
+                <Route path="/android-bringup" element={<AndroidBringup />} />
+                <Route path="/display-test" element={<DisplayTest />} />
+                <Route path="/memory-stats" element={<MemoryStats />} />
+                <Route
+                  path="/nested-fix-position"
+                  element={<NestedFixPosition />}
+                />
+                <Route path="/nested-scroll" element={<NestedScroll />} />
+                <Route
+                  path="/spatial-converter"
+                  element={<SpatialConverter />}
+                />
+                <Route path="/spatial-corner" element={<SpatialCorner />} />
+                <Route path="/static-3d-model" element={<Static3DModel />} />
+                <Route path="/visible-test" element={<VisibleTest />} />
+                <Route path="/cleanup/spa" element={<CleanupSpa />} />
+                <Route path="/cleanup/model" element={<CleanupModel />} />
+                <Route path="/cleanup/iframe" element={<CleanupIframe />} />
+              </Routes>
+            </ErrorBoundary>
+          </Suspense>
+        </main>
       </div>
-    </div>
+    </Router>
   )
 }
 
-document.addEventListener('readystatechange', event => {
-  switch (document.readyState) {
-    case 'interactive':
-      // Initialize react
-      var root = document.createElement('div')
-      document.body.appendChild(root)
-      ReactDOM.createRoot(root).render(<App />)
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(registration => {
+        console.log('SW registered: ', registration)
+      })
+      .catch(registrationError => {
+        console.log('SW registration failed: ', registrationError)
+      })
+  })
+}
 
-      // Force page height to 100% to get centering to work
-      document.documentElement.style.height = '100%'
-      document.body.style.height = '100%'
-      root.style.height = '100%'
-
-      break
+const init = () => {
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    console.error('Root element not found')
+    return
   }
-})
+
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init)
+} else {
+  init()
+}

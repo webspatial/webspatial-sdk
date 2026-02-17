@@ -3,12 +3,18 @@ import SwiftUI
 // zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
 
+final class GestureFlags {
+    var isDrag = false
+}
+
 struct SpatializedElementView<Content: View>: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     var parentScrollOffset: Vec2
     var content: Content
+
+    @State private var gestureFlags = GestureFlags()
 
     init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
         self.parentScrollOffset = parentScrollOffset
@@ -17,7 +23,7 @@ struct SpatializedElementView<Content: View>: View {
 
     // Begin Interaction
     var gesture: some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 10)
             .onChanged(onDragging)
             .onEnded(onDraggingEnded)
             .simultaneously(with:
@@ -37,54 +43,49 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
-        if spatializedElement.enableRotateGesture || spatializedElement.enableRotateStartGesture {
-            let gestureEvent = WebSpatialRotateGuestureEvent(
-                detail: .init(
-                    rotation: event.rotation,
-                    startAnchor3D: event.startAnchor3D,
-                    startLocation3D: event.startLocation3D
-                ))
+        if spatializedElement.enableRotateGesture {
+            let quaternion = event.rotation.quaternion
+            let x = quaternion.imag.x
+            let y = quaternion.imag.y
+            let z = quaternion.imag.z
+            let w = quaternion.real
+            let detail = WebSpatialRotateGuestureEventDetail(quaternion: .init(x: x, y: y, z: z, w: w))
+
+            let gestureEvent = WebSpatialRotateGuestureEvent(detail: detail)
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
 
     private func onRotateGesture3DEnd(_ event: RotateGesture3D.Value) {
         if spatializedElement.enableRotateEndGesture {
-            let gestureEvent = WebSpatialRotateEndGuestureEvent(
-                detail: .init(
-                    rotation: event.rotation,
-                    startAnchor3D: event.startAnchor3D,
-                    startLocation3D: event.startLocation3D
-                ))
-            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialRotateEndGuestureEvent())
         }
     }
 
     private func onDragging(_ event: DragGesture.Value) {
-        if spatializedElement.enableDragStartGesture || spatializedElement.enableDragGesture {
-            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
-                location3D: event.location3D,
-                startLocation3D: event.startLocation3D,
-                translation3D: event.translation3D,
-                predictedEndTranslation3D: event.predictedEndTranslation3D,
-                predictedEndLocation3D: event.predictedEndLocation3D,
-                velocity: event.velocity
+        if spatializedElement.enableDragStartGesture, !gestureFlags.isDrag {
+            let gestureEvent = WebSpatialDragStartGuestureEvent(detail: .init(
+                startLocation3D: event.startLocation3D
             ))
+
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
+
+        if spatializedElement.enableDragGesture {
+            let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
+                translation3D: event.translation3D
+            ))
+
+            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+        }
+
+        gestureFlags.isDrag = true
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
+        gestureFlags.isDrag = false
         if spatializedElement.enableDragEndGesture {
-            let gestureEvent = WebSpatialDragEndGuestureEvent(
-                detail: .init(
-                    location3D: event.location3D,
-                    startLocation3D: event.startLocation3D,
-                    translation3D: event.translation3D,
-                    predictedEndTranslation3D: event.predictedEndTranslation3D,
-                    predictedEndLocation3D: event.predictedEndLocation3D,
-                    velocity: event.velocity
-                ))
+            let gestureEvent = WebSpatialDragEndGuestureEvent()
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
@@ -96,13 +97,10 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onMagnifyGesture(_ event: MagnifyGesture.Value) {
-        if spatializedElement.enableMagnifyGesture || spatializedElement.enableMagnifyStartGesture {
+        if spatializedElement.enableMagnifyGesture {
             let gestureEvent = WebSpatialMagnifyGuestureEvent(
                 detail: .init(
-                    magnification: event.magnification,
-                    velocity: event.velocity,
-                    startLocation3D: event.startLocation3D,
-                    startAnchor3D: event.startAnchor3D
+                    magnification: event.magnification
                 ))
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
@@ -110,14 +108,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onMagnifyGestureEnd(_ event: MagnifyGesture.Value) {
         if spatializedElement.enableMagnifyEndGesture {
-            let gestureEvent = WebSpatialMagnifyEndGuestureEvent(
-                detail: .init(
-                    magnification: event.magnification,
-                    velocity: event.velocity,
-                    startLocation3D: event.startLocation3D,
-                    startAnchor3D: event.startAnchor3D
-                ))
-            spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialMagnifyEndGuestureEvent())
         }
     }
 
@@ -145,9 +136,13 @@ struct SpatializedElementView<Content: View>: View {
         let z = translation.z + (spatializedElement.zIndex * zOrderBias)
         let smallOffset = z == 0.0 ? 0.0001 : 0
 
-        content.simultaneousGesture(enableGesture ? gesture : nil)
+        // when spatialdiv have regular/thick/thin material and alignment is back, there'll be a bug that clipping content
+        // so when spatializedElement is spatialdiv, .center alignment will be applied
+        let alignment = spatializedElement.defaultAlignment
+
+        content
             .frame(width: width, height: height)
-            .frame(depth: depth, alignment: .back)
+            .frame(depth: depth, alignment: alignment)
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
@@ -174,5 +169,6 @@ struct SpatializedElementView<Content: View>: View {
             .offset(z: spatializedElement.backOffset)
             .opacity(opacity)
             .hidden(!visible)
+            .simultaneousGesture(enableGesture ? gesture : nil)
     }
 }

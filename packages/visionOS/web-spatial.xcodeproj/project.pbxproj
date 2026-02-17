@@ -53,6 +53,7 @@
 			membershipExceptions = (
 				AttachmentManager.swift,
 				Dynamic3DManager.swift,
+				FileCoordinator.swift,
 				JSBManager.swift,
 				WKWebViewManager.swift,
 			);
