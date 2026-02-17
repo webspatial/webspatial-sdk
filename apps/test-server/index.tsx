@@ -196,8 +196,6 @@ function App() {
   )
 }
 
-// Service Worker Registration
-
 const init = () => {
   const rootElement = document.getElementById('root')
   if (!rootElement) {
