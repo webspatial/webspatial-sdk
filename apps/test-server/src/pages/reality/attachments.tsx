@@ -13,6 +13,25 @@ import {
 } from '@webspatial/react-sdk'
 
 function App() {
+  React.useEffect(() => {
+    const html = document.documentElement
+    const prevMaterial = html.style.getPropertyValue('--xr-background-material')
+    const prevSpaBg = html.style.getPropertyValue('--spa-bg-color')
+    html.style.setProperty('--xr-background-material', 'translucent')
+    html.style.setProperty('--spa-bg-color', 'transparent')
+    return () => {
+      if (prevMaterial) {
+        html.style.setProperty('--xr-background-material', prevMaterial)
+      } else {
+        html.style.removeProperty('--xr-background-material')
+      }
+      if (prevSpaBg) {
+        html.style.setProperty('--spa-bg-color', prevSpaBg)
+      } else {
+        html.style.removeProperty('--spa-bg-color')
+      }
+    }
+  }, [])
   const [tick, setTick] = React.useState(0)
   const [animating, setAnimating] = React.useState(false)
   const [t, setT] = React.useState(0)
@@ -137,11 +156,9 @@ function App() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    padding: '10px 12px',
-    borderRadius: 12,
-    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-    fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
+    gap: 8,
+    padding: '8px 10px',
+    borderRadius: 10,
   }
 
   const chip: React.CSSProperties = {
@@ -160,19 +177,17 @@ function App() {
   return (
     <div
       style={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
         background: 'transparent',
         ['--xr-background-material' as any]: 'translucent',
       }}
     >
       <button
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 12,
           left: 12,
           zIndex: 1000,
@@ -180,7 +195,7 @@ function App() {
           borderRadius: 8,
           border: '1px solid #ddd',
           background: '#fff',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+          color: '#111',
           cursor: 'pointer',
         }}
         onClick={() => setAnimating(a => !a)}
@@ -223,7 +238,7 @@ function App() {
               offset={offA}
               size={{ width: 280, height: 120 }}
             >
-              <div style={{ ...cardStyle, background: '#fff' }}>
+              <div style={{ ...cardStyle, background: '#fff', color: '#111' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>
                     Robot Walle
@@ -239,6 +254,7 @@ function App() {
                     borderRadius: 8,
                     border: '1px solid #ddd',
                     background: '#fff',
+                    color: '#111',
                     cursor: 'pointer',
                   }}
                   onClick={() => setBoxBlue(v => !v)}
@@ -265,7 +281,7 @@ function App() {
               offset={offB}
               size={{ width: 260, height: 110 }}
             >
-              <div style={{ ...cardStyle, background: '#fff' }}>
+              <div style={{ ...cardStyle, background: '#fff', color: '#111' }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>
                   Cylinder Pump
                 </div>
@@ -276,6 +292,7 @@ function App() {
                     borderRadius: 8,
                     border: '1px solid #ddd',
                     background: '#fff',
+                    color: '#111',
                     cursor: 'pointer',
                   }}
                   onClick={() => setCylRed(v => !v)}
@@ -301,7 +318,7 @@ function App() {
               offset={offC}
               size={{ width: 240, height: 110 }}
             >
-              <div style={{ ...cardStyle, background: '#fff' }}>
+              <div style={{ ...cardStyle, background: '#fff', color: '#111' }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>
                   Beacon
                 </div>
@@ -314,6 +331,7 @@ function App() {
                     borderRadius: 8,
                     border: '1px solid #ddd',
                     background: '#fff',
+                    color: '#111',
                     cursor: 'pointer',
                   }}
                   onClick={() => setSphereGreen(v => !v)}
@@ -340,7 +358,7 @@ function App() {
               offset={offD}
               size={{ width: 240, height: 110 }}
             >
-              <div style={{ ...cardStyle, background: '#fff' }}>
+              <div style={{ ...cardStyle, background: '#fff', color: '#111' }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>
                   Sensor Node
                 </div>
@@ -351,6 +369,7 @@ function App() {
                     borderRadius: 8,
                     border: '1px solid #ddd',
                     background: '#fff',
+                    color: '#111',
                     cursor: 'pointer',
                   }}
                   onClick={() => setConePurple(v => !v)}
@@ -373,7 +392,7 @@ function App() {
               offset={[0, 0.08, 0]}
               size={{ width: 240, height: 100 }}
             >
-              <div style={{ ...cardStyle, background: '#fff' }}>
+              <div style={{ ...cardStyle, background: '#fff', color: '#111' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>
                     Scene HUD
