@@ -79,9 +79,11 @@ export const routes = [
 export default function Sidebar() {
   const location = useLocation()
   const items = routes
+  const containerClass =
+    'w-64 h-screen sticky top-0 bg-[#111111] border-r border-gray-800 flex flex-col'
 
   return (
-    <div className="w-64 h-screen bg-[#111111] border-r border-gray-800 flex flex-col">
+    <div className={containerClass}>
       <div className="p-6 border-b border-gray-800">
         <Link to="/" className="text-xl font-bold text-blue-400">
           WebSpatial SDK

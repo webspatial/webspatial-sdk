@@ -81,14 +81,17 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
+  const outerClass = 'flex min-h-screen text-white'
+  const mainClass = 'flex-1 overflow-visible relative'
+
   return (
     <Router>
       <div
-        className="flex h-screen text-white overflow-hidden"
+        className={outerClass}
         style={{ backgroundColor: 'var(--spa-bg-color, #0A0A0A)' }}
       >
         <Sidebar />
-        <main className="flex-1 overflow-auto relative">
+        <main className={mainClass}>
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-full">
@@ -219,11 +222,6 @@ const init = () => {
       <App />
     </React.StrictMode>,
   )
-
-  // Force page height to 100%
-  document.documentElement.style.height = '100%'
-  document.body.style.height = '100%'
-  rootElement.style.height = '100%'
 }
 
 if (document.readyState === 'loading') {
