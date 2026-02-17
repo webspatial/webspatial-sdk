@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+#root,
+html,
+body {
+  color: #e5e7eb;
+}
+
+#root .text-black,
+#root .text-gray-900,
+#root .text-gray-950 {
+  color: #e5e7eb !important;
+}
