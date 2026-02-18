@@ -13,7 +13,7 @@
   ],
   "linked": [],
   "access": "public",
-  "baseBranch": "stable",
+  "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [],
   "privatePackages": { "version": true, "tag": false }
