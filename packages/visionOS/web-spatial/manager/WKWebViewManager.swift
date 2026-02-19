@@ -16,7 +16,9 @@ class WKWebViewManager {
         let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
         myConfig.userContentController = userContentController
         myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
-        myConfig.setURLSchemeHandler(CustomSchemeHandler(), forURLScheme: "ws-file")
+        if myConfig.urlSchemeHandler(forURLScheme: "ws-file") == nil {
+            myConfig.setURLSchemeHandler(CustomSchemeHandler(), forURLScheme: "ws-file")
+        }
         controller.webview = WKWebView(frame: .zero, configuration: myConfig)
         let configUA = myConfig.applicationNameForUserAgent ?? ""
         // change webview ua
