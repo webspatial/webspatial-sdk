@@ -1,7 +1,7 @@
 import SwiftUI
 @preconcurrency import WebKit
 
-class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply, WKUIDelegate, UIScrollViewDelegate, WKURLSchemeHandler {
+class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply, WKUIDelegate, UIScrollViewDelegate {
     weak var model: SpatialWebViewModel?
     var webview: WKWebView?
     private var isObserving = false
@@ -9,13 +9,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
     private var scorllUpdateInvoke: ((_ type: ScrollState, _ point: CGPoint) -> Void)?
-    private var webviewTitle: String? = nil
+    private var webviewTitle: String?
     private var firstLoad = true
     private var jsbManager = JSBManager()
-
-    override init() {
-        WKWebView.enableFileScheme() // ensure the handler is usable
-    }
 
     deinit {}
 
@@ -67,14 +63,14 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
         let deciside = navigationInvoke?(navigationAction.request.url!)
         if deciside == true {
-            if !firstLoad{
+            if !firstLoad {
                 webviewStateChangeInvoke?(.didUnload)
             }
             firstLoad = false
         }
         var needAllow = deciside ?? false
-        
-        if !needAllow{
+
+        if !needAllow {
             UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
         }
         decisionHandler(needAllow ? .allow : .cancel)
@@ -104,26 +100,6 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         jsbManager.handlerMessage(message.body as! String, replyHandler)
     }
 
-    // custom scheme request
-    func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
-        print("urlSchemeTask")
-        let url = urlSchemeTask.request.url
-        if url!.absoluteString.starts(with: "file://") {
-            let urlRequest = urlSchemeTask.request
-
-            let session = URLSession(configuration: URLSessionConfiguration.default)
-            let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in
-                guard let task = task as? WKURLSchemeTask else { return }
-
-                task.didReceive(response!)
-                task.didReceive(data!)
-                task.didFinish()
-            }
-            dataTask.resume()
-        }
-    }
-
-    func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
     func webView(_ webView: WKWebView, didStartProvisionalNavigation: WKNavigation!) {
         webviewStateChangeInvoke?(.didStartLoad)
     }
@@ -221,8 +197,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         scorllUpdateInvoke = nil
         model = nil
     }
-    
-    private var state:SpatialWebViewState?
+
+    private var state: SpatialWebViewState?
 
     func destroyView() {
         stopObserving()
@@ -236,15 +212,15 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             webviewStateChangeInvoke?(.didDestroyView)
         }
     }
-    
+
     private var isPageLoaded = false
-    
+
     private var jsQueue: [String] = []
-    
+
     private func enqueueJS(_ js: String) {
         jsQueue.append(js)
     }
-    
+
     private func flushJSQueue() {
         guard !jsQueue.isEmpty else { return }
         let combined = jsQueue.joined(separator: ";")
@@ -253,7 +229,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func callJS(_ js: String) {
-        if webview != nil && isPageLoaded {
+        if webview != nil, isPageLoaded {
             webview!.evaluateJavaScript(js)
         } else {
             enqueueJS(js)
@@ -267,34 +243,3 @@ enum ScrollState {
     case release
     case end
 }
-
-// extend webview to support file://
- @available(iOS 11.0, *)
- extension WKWebView {
-    /// WKWebView,  Support setting file scheme in configuration
-    public private(set) static var isEnableFileSupport = false
-    public static func enableFileScheme() {
-        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
-        if !isEnableFileSupport {
-            switchHandlesURLScheme()
-        }
-    }
-
-    private static func switchHandlesURLScheme() {
-        if
-            case let cls = WKWebView.self,
-            let m1 = class_getClassMethod(cls, NSSelectorFromString("handlesURLScheme:")),
-            let m2 = class_getClassMethod(cls, #selector(WKWebView.wrapHandles(urlScheme:)))
-        {
-            method_exchangeImplementations(m1, m2)
-            isEnableFileSupport = !isEnableFileSupport
-        }
-    }
-
-    /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
-    @objc private dynamic
-    static func wrapHandles(urlScheme: String) -> Bool {
-        if urlScheme == "file" { return false }
-        return wrapHandles(urlScheme: urlScheme)
-    }
- }

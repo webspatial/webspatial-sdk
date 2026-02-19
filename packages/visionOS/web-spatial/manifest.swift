@@ -42,13 +42,15 @@ struct PWAManager: Codable {
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
-        if !(urlType == "http" || urlType == "https") {
+        if !(urlType == "http" || urlType == "https" || urlType == "ws-file") {
             if scope == "" || scope == "/" {
                 scope = "./"
             }
-            let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
-            start_url = startUrl!.absoluteString
-            scope = URL(string: scope, relativeTo: startUrl)!.absoluteString
+            if scope.hasPrefix("/") {
+                scope.removeFirst()
+            }
+            start_url = "ws-file://static-web/" + start_url
+            scope = "ws-file://static-web/" + scope
             isLocal = true
         }
 
@@ -80,26 +82,18 @@ struct PWAManager: Codable {
     }
 
     func getLocalResourceURL(url: String) -> String {
-        let path = String(url.split(separator: "file://").first!.split(separator: "?").first!)
-        let newUrl = URL(string: url)
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: newUrl!.path) {
+        guard let comps = URLComponents(string: url) else { return url }
+        if let scheme = comps.scheme, scheme == "http" || scheme == "https" || scheme == "ws-file" {
             return url
         }
-        var resource: String = Bundle.main.url(forResource: newUrl?.path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
-        if resource == "" {
-            resource = Bundle.main.url(forResource: "static-web" + path, withExtension: "", subdirectory: "")?.absoluteString ?? ""
-        }
-        if resource == "" {
-            return url
-        }
-        if newUrl?.query() != nil {
-            resource += "?" + (newUrl?.query())!
-        }
-        if newUrl?.fragment() != nil {
-            resource += "#" + (newUrl?.fragment())!
-        }
-        return resource
+        var newComps = URLComponents()
+        newComps.scheme = "ws-file"
+        newComps.host = "static-web"
+        let path = comps.percentEncodedPath.isEmpty ? url : comps.percentEncodedPath
+        newComps.percentEncodedPath = path.hasPrefix("/") ? path : "/" + path
+        newComps.percentEncodedQuery = comps.percentEncodedQuery
+        newComps.fragment = comps.fragment
+        return newComps.string ?? url
     }
 
     func getVersion() -> String {
