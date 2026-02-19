@@ -81,14 +81,14 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  const outerClass = 'flex min-h-screen text-white'
+  const outerClass = 'flex min-h-screen'
   const mainClass = 'flex-1 overflow-visible relative'
 
   return (
     <Router>
       <div
         className={outerClass}
-        style={{ backgroundColor: 'var(--spa-bg-color, #0A0A0A)' }}
+        style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
       >
         <Sidebar />
         <main className={mainClass}>
