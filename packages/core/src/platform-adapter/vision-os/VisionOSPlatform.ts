@@ -4,7 +4,6 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 
-
 type JSBError = {
   message: string
 }
