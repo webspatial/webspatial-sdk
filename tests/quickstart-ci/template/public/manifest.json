@@ -1,0 +1,6 @@
+{
+  "name": "WebSpatial Test App",
+  "short_name": "WebSpatial",
+  "start_url": "./",
+  "display": "standalone"
+}

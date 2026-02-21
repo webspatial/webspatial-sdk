@@ -1,0 +1,24 @@
+html.is-spatial {
+  background-color: transparent;
+  --xr-background-material: translucent;
+  border-radius: 40px;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: system-ui, sans-serif;
+  color: white;
+}
+
+.my-spatial-card {
+  --xr-background-material: thick;
+  position: absolute;
+  --xr-back: 150; 
+  padding: 40px 60px;
+  border-radius: 20px;
+  text-align: center;
+}
