@@ -53,6 +53,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
             self._scrollOffset.y = point.y
         }
         spatialWebViewModel.scrollEnabled = false
+
+        defaultAlignment = .center
     }
 
     // Spatialized2DElement can hold a collection of SpatializedElement children

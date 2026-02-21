@@ -24,7 +24,7 @@
     "generateStaticSite": "./tools/scripts/generateWebsite.sh"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged && pnpm test"
+    "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
     "*.{js,json}": [

@@ -1,7 +1,9 @@
 import { Vec3 } from '@webspatial/core-sdk'
 import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
+import { SpatialDragStartEvent as CoreSpatialDragStartEvent } from '@webspatial/core-sdk'
 import { SpatialDragEvent as CoreSpatialDragEvent } from '@webspatial/core-sdk'
+import { SpatialDragEndEvent as CoreSpatialDragEndEvent } from '@webspatial/core-sdk'
 import { SpatialRotateEvent as CoreSpatialRotateEvent } from '@webspatial/core-sdk'
 import { SpatialRotateEndEvent as CoreSpatialRotateEndEvent } from '@webspatial/core-sdk'
 import { SpatialMagnifyEvent as CoreSpatialMagnifyEvent } from '@webspatial/core-sdk'
@@ -23,8 +25,14 @@ type allTarget<T extends EntityRefShape> = {
 export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialTapEvent & allTarget<T>
 // drag
+export type SpatialDragStartEntityEvent<
+  T extends EntityRefShape = EntityRefShape,
+> = CoreSpatialDragStartEvent & allTarget<T>
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialDragEvent & allTarget<T>
+export type SpatialDragEndEntityEvent<
+  T extends EntityRefShape = EntityRefShape,
+> = CoreSpatialDragEndEvent & allTarget<T>
 // rotate
 export type SpatialRotateEntityEvent<
   T extends EntityRefShape = EntityRefShape,
@@ -44,15 +52,13 @@ export type EntityEventHandler = {
   // tap
   onSpatialTap?: (event: SpatialTapEntityEvent) => void
   // drag
-  onSpatialDragStart?: (event: SpatialDragEntityEvent) => void
+  onSpatialDragStart?: (event: SpatialDragStartEntityEvent) => void
   onSpatialDrag?: (event: SpatialDragEntityEvent) => void
-  onSpatialDragEnd?: (event: SpatialDragEntityEvent) => void
+  onSpatialDragEnd?: (event: SpatialDragEndEntityEvent) => void
   // rotate
-  onSpatialRotateStart?: (event: SpatialRotateEntityEvent) => void
   onSpatialRotate?: (event: SpatialRotateEntityEvent) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEntityEvent) => void
   // magnify
-  onSpatialMagnifyStart?: (event: SpatialMagnifyEntityEvent) => void
   onSpatialMagnify?: (event: SpatialMagnifyEntityEvent) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEntityEvent) => void
 }

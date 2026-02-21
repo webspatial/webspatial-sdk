@@ -104,7 +104,7 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     this._onLoadFailureCallback = callback
   }
 
-  updateModelTransform(transform: DOMMatrix) {
+  updateModelTransform(transform: DOMMatrixReadOnly) {
     const modelTransform = Array.from(transform.toFloat64Array())
     this.updateProperties({ modelTransform })
   }

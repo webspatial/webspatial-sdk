@@ -14,13 +14,11 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private styleProxy?: CSSStyleDeclaration
 
   // extre ref props, used to add extra props to ref
-  private extraRefProps?:
-    | ((domProxy: T) => Record<string, () => any>)
-    | undefined
+  private extraRefProps?: ((domProxy: T) => Record<string, unknown>) | undefined
 
   constructor(
     ref: ForwardedRef<SpatializedElementRef<T>>,
-    extraRefProps?: (domProxy: T) => Record<string, () => any>,
+    extraRefProps?: (domProxy: T) => Record<string, unknown>,
   ) {
     this.ref = ref
     this.extraRefProps = extraRefProps
@@ -30,7 +28,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
     const self = this
 
     if (dom) {
-      let cacheExtraRefProps: Record<string, () => any> | undefined
+      let cacheExtraRefProps: Record<string, unknown> | undefined
       const domProxy = new Proxy<SpatializedElementRef<T>>(
         dom as SpatializedElementRef<T>,
         {
@@ -184,7 +182,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
               }
               const extraProps = cacheExtraRefProps
               if (extraProps.hasOwnProperty(prop)) {
-                return extraProps[prop]()
+                return extraProps[prop]
               }
             }
             const value = Reflect.get(target, prop)
@@ -223,6 +221,14 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
               if (self.transformVisibilityTaskContainerDom) {
                 self.transformVisibilityTaskContainerDom.className = value
               }
+            }
+
+            // check extraRefProps setter
+            if (typeof prop === 'string' && self.extraRefProps) {
+              if (!cacheExtraRefProps) {
+                cacheExtraRefProps = self.extraRefProps(domProxy)
+              }
+              cacheExtraRefProps[prop] = value
             }
 
             return Reflect.set(target, prop, value)
@@ -311,7 +317,7 @@ export function hijackGetComputedStyle() {
 
 export function useDomProxy<T extends SpatializedElementRef>(
   ref: ForwardedRef<T>,
-  extraRefProps?: (domProxy: T) => Record<string, () => any>,
+  extraRefProps?: (domProxy: T) => Record<string, unknown>,
 ) {
   const spatialContainerRefProxy = useRef<SpatialContainerRefProxy<T>>(
     new SpatialContainerRefProxy<T>(ref, extraRefProps),

@@ -1,0 +1,75 @@
+name: Sync PR Changes to auto-test-package
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+      - stable
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply PR changes onto auto-test-package (force override conflicting files)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+          BASE_BRANCH="auto-test-package"
+          EXCLUDE_1="packages/autoTest"
+          EXCLUDE_2="packages/core/src/platform-adapter/index.ts"
+          EXCLUDE_3=".github"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Fetch latest changes
+          git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
+          git fetch origin "${PR_SHA}"
+
+          # Checkout base branch and create temporary branch
+          git checkout "${BASE_BRANCH}"
+          git checkout -b "ci/sync-pr-${PR_NUMBER}-to-${BASE_BRANCH}-${GITHUB_RUN_ID}"
+
+          # Get list of changed files in PR (excluding specified paths)
+          CHANGED_FILES=$(git diff --name-only "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No applicable changes after excludes. Nothing to sync."
+            exit 0
+          fi
+
+          echo "Applying changes from PR (force overriding conflicting files):"
+          echo "$CHANGED_FILES"
+
+          # Checkout each changed file from PR branch (force override)
+          echo "$CHANGED_FILES" | while read -r file; do
+            if [ -n "$file" ]; then
+              git checkout "${PR_SHA}" -- "$file"
+            fi
+          done
+
+          # Stage all changes
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No applicable changes after excludes. Nothing to sync."
+            exit 0
+          fi
+
+          git commit -m "ci: sync PR #${PR_NUMBER} into ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2}, ${EXCLUDE_3})"
+          git push origin HEAD:"${BASE_BRANCH}"

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { EntityEventHandler, eventMap } from '../type'
 import { EntityRef } from './useEntityRef'
 import { SpatialEntity } from '@webspatial/core-sdk'
@@ -30,24 +30,35 @@ type Props = {
   instance: EntityRef
 } & EntityEventHandler
 export const useEntityEvent: React.FC<Props> = ({ instance, ...handlers }) => {
+  const eventsSetRef = useRef<Set<string>>(new Set())
+
   useEffect(() => {
     const entity = instance.entity
     if (!entity) return
 
-    const boundHandlers: (() => void)[] = []
-
     Object.entries(eventMap).forEach(([reactKey, spatialEvent]) => {
+      //  add/update handler
       const handlerFn = (handlers as any)[reactKey]
       if (!handlerFn) return
-
       const wrapped = (ev: any) => handlerFn(createEventProxy(ev, instance))
       entity.addEvent(spatialEvent as any, wrapped)
-      boundHandlers.push(() => entity.removeEvent(spatialEvent as any))
+      eventsSetRef.current.add(reactKey)
     })
-    return () => {
-      boundHandlers.forEach(unbind => unbind())
-    }
+    return () => {}
   }, [instance.entity, ...Object.values(handlers)])
+
+  useEffect(() => {
+    const entity = instance.entity
+    if (!entity) return
+
+    return () => {
+      // remove all
+      for (let x of eventsSetRef.current) {
+        entity.removeEvent(x as any)
+      }
+      eventsSetRef.current.clear()
+    }
+  }, [instance.entity])
 
   return null
 }

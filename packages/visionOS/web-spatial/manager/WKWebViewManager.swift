@@ -28,11 +28,19 @@ class WKWebViewManager {
         // TODO: get native api instead of PACKAGE_VERSION
         controller.webview!.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit\(webviewVersion)WebSpatial/\("PACKAGE_VERSION") SpatialID/\(spatialId!)"
         controller.webview!.uiDelegate = controller
-        controller.webview!.allowsBackForwardNavigationGestures = true
+        controller.webview!.allowsBackForwardNavigationGestures = false
         controller.webview!.isInspectable = true
         controller.webview!.allowsLinkPreview = true
         controller.webview!.navigationDelegate = controller
         controller.webview!.scrollView.delegate = controller
+
+        if let webview = controller.webview {
+//            webview.scrollView.isScrollEnabled = false
+            webview.scrollView.bounces = false
+            webview.scrollView.showsVerticalScrollIndicator = false
+            webview.scrollView.showsHorizontalScrollIndicator = false
+        }
+
         controller.startObserving()
         return controller.webview!
     }

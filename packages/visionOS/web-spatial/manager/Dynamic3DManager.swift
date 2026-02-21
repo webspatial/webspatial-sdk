@@ -75,8 +75,8 @@ class Dynamic3DManager {
             loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
             return
         }
-        var documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        documentsUrl.appendPathComponent(url.lastPathComponent)
+        // Use an immutable URL to avoid capturing a mutable var in concurrent code
+        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(url.lastPathComponent)
         let session = URLSession(configuration: URLSessionConfiguration.default)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -95,17 +95,15 @@ class Dynamic3DManager {
                 loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download location is nil"])))
                 return
             }
-            let fileManager = FileManager.default
-            do {
-                if fileManager.fileExists(atPath: documentsUrl.path) {
-                    try fileManager.removeItem(atPath: documentsUrl.path)
+            Task {
+                do {
+                    try await FileCoordinator.shared.moveReplacingIfExists(from: location, to: documentsUrl)
+                    print("load complete")
+                    loadComplete(.success(documentsUrl))
+                } catch {
+                    print("File operation error: \(error)")
+                    loadComplete(.failure(error))
                 }
-                try fileManager.moveItem(at: location, to: documentsUrl)
-                print("load complete")
-                loadComplete(.success(documentsUrl))
-            } catch {
-                print("File operation error: \(error)")
-                loadComplete(.failure(error))
             }
 
         })

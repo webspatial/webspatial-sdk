@@ -16,7 +16,18 @@ import {
 import { SpatializedElement } from '@webspatial/core-sdk'
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
-  function RealityBase({ children, ...props }, ref) {
+  function RealityBase({ children, ...inProps }, ref) {
+    const {
+      onSpatialTap,
+      onSpatialDragStart,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
+      ...props
+    } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
 
     const creationId = useRef(0)
