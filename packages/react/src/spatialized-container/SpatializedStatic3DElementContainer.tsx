@@ -24,10 +24,11 @@ function getAbsoluteURL(url?: string) {
   if (!url) {
     return ''
   }
-  if (url.startsWith('http') || url.startsWith('//')) {
+  try {
+    return new URL(url, document.baseURI).toString()
+  } catch {
     return url
   }
-  return window.location.origin + url
 }
 
 function createLoadEvent(
