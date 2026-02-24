@@ -52,7 +52,7 @@ function App() {
   const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotationOn, setBoxRotationOn] = useState(false)
-  const boxAnimationRef = useRef<any>()
+  const boxAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (boxRotationOn) {
       function doRotate(delta: number) {
@@ -77,7 +77,7 @@ function App() {
   const [planePosition, setPlanePosition] = useState({ x: 0, y: 0.2, z: 0 })
   const [planeRotation, setPlaneRotation] = useState({ x: 0, y: 0, z: 0 })
   const [planeRotationOn, setPlaneRotationOn] = useState(false)
-  const planeAnimationRef = useRef<any>()
+  const planeAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (planeRotationOn) {
       function doRotate(delta: number) {
@@ -102,7 +102,7 @@ function App() {
   const [spherePosition, setSpherePosition] = useState({ x: 0.2, y: 0, z: 0 })
   const [sphereRotation, setSphereRotation] = useState({ x: 0, y: 0, z: 0 })
   const [sphereRotationOn, setSphereRotationOn] = useState(false)
-  const sphereAnimationRef = useRef<any>()
+  const sphereAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (sphereRotationOn) {
       function doRotate(delta: number) {
@@ -127,7 +127,7 @@ function App() {
   const [conePosition, setConePosition] = useState({ x: 0.4, y: 0, z: 0 })
   const [coneRotation, setConeRotation] = useState({ x: 0, y: 0, z: 0 })
   const [coneRotationOn, setConeRotationOn] = useState(false)
-  const coneAnimationRef = useRef<any>()
+  const coneAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (coneRotationOn) {
       function doRotate(delta: number) {
@@ -156,7 +156,7 @@ function App() {
   })
   const [cylinderRotation, setCylinderRotation] = useState({ x: 0, y: 0, z: 0 })
   const [cylinderRotationOn, setCylinderRotationOn] = useState(false)
-  const cylinderAnimationRef = useRef<any>()
+  const cylinderAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (cylinderRotationOn) {
       function doRotate(delta: number) {

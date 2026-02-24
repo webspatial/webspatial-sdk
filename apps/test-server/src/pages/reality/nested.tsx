@@ -48,7 +48,7 @@ function App() {
   const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotationOn, setBoxRotationOn] = useState(false)
-  const boxAnimationRef = useRef<any>()
+  const boxAnimationRef = useRef<number>(null)
   useEffect(() => {
     if (boxRotationOn) {
       function doRotate(delta: number) {
