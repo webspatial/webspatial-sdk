@@ -51,8 +51,8 @@
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "peerDependencies": {
     "@webspatial/core-sdk": "workspace:*",
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
   },
   "peerDependenciesMeta": {
     "@webspatial/core-sdk": {
@@ -69,13 +69,13 @@
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.5.5",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/unist": "^3.0.2",
     "@vitest/coverage-v8": "^2.0.4",
-    "@vitejs/plugin-react": "^4.3.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "esbuild": "^0.23.1",
     "esbuild-plugin-d.ts": "^1.3.1",
     "esbuild-plugin-define": "^0.5.0",
