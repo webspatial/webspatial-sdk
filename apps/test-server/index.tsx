@@ -82,14 +82,14 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  const outerClass = 'flex min-h-screen text-white'
+  const outerClass = 'flex min-h-screen'
   const mainClass = 'flex-1 overflow-visible relative'
 
   return (
     <Router>
       <div
         className={outerClass}
-        style={{ backgroundColor: 'var(--spa-bg-color, #0A0A0A)' }}
+        style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
       >
         <Sidebar />
         <main className={mainClass}>
@@ -200,20 +200,6 @@ function App() {
       </div>
     </Router>
   )
-}
-
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then(registration => {
-        console.log('SW registered: ', registration)
-      })
-      .catch(registrationError => {
-        console.log('SW registration failed: ', registrationError)
-      })
-  })
 }
 
 const init = () => {

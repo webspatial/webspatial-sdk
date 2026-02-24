@@ -28,6 +28,13 @@ function App() {
 
   const borderRadius = `${topLeft}px ${topRight}px ${bottomRight}px ${bottomLeft}px`
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--spa-bg-color', 'transparent')
+    return () => {
+      document.documentElement.style.removeProperty('--spa-bg-color')
+    }
+  }, [])
+
   const toggleBackgroundMaterial = () => {
     const newIndex = (materialIndex + 1) % materialVals.length
     document.documentElement.style.setProperty(

@@ -129,7 +129,9 @@ describe('SpatialContainerRefProxy', () => {
   it('supports extra ref props', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref, () => ({
-      foo: () => 'bar',
+      get foo() {
+        return 'bar'
+      },
     }))
 
     const dom = document.createElement('div')

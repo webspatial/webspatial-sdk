@@ -24,10 +24,11 @@ function getAbsoluteURL(url?: string) {
   if (!url) {
     return ''
   }
-  if (url.startsWith('http') || url.startsWith('//')) {
+  try {
+    return new URL(url, document.baseURI).toString()
+  } catch {
     return url
   }
-  return window.location.origin + url
 }
 
 function createLoadEvent(
@@ -119,39 +120,13 @@ function SpatializedStatic3DElementContainerBase(
 ) {
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
-      const modelTransform = new DOMMatrix()
-      let needupdate = false
-      const triggerUpdate = () => {
-        const spatializedElement = (domProxy as any)
-          .__spatializedElement as SpatializedStatic3DElement
-        spatializedElement.updateModelTransform(modelTransform)
-        needupdate = false
-      }
-      const domMatrixProxy = new Proxy(modelTransform, {
-        get(target, prop, receiver) {
-          const value = Reflect.get(target, prop, receiver)
-          if (typeof value === 'function') {
-            return function (...args: any[]) {
-              requestAnimationFrame(triggerUpdate)
-              return value.apply(target, args)
-            }
-          } else {
-            return value
-          }
-        },
-        set(target, prop, value) {
-          const success = Reflect.set(target, prop, value)
-          if (!needupdate) {
-            needupdate = true
-            requestAnimationFrame(triggerUpdate)
-          }
-          return success
-        },
-      })
+      let modelTransform = new DOMMatrixReadOnly()
 
       return {
-        currentSrc: () => getAbsoluteURL(props.src),
-        ready: () => {
+        get currentSrc() {
+          return getAbsoluteURL(props.src)
+        },
+        get ready() {
           const spatializedElement = (domProxy as any)
             .__spatializedElement as SpatializedStatic3DElement
 
@@ -163,7 +138,15 @@ function SpatializedStatic3DElementContainerBase(
           })
           return promise
         },
-        entityTransform: () => domMatrixProxy,
+        get entityTransform() {
+          return modelTransform
+        },
+        set entityTransform(value: DOMMatrixReadOnly) {
+          modelTransform = value
+          const spatializedElement = (domProxy as any)
+            .__spatializedElement as SpatializedStatic3DElement
+          spatializedElement.updateModelTransform(modelTransform)
+        },
       }
     },
     [],
