@@ -89,9 +89,10 @@ function App() {
       <div
         className={outerClass}
         style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
+        enable-xr-monitor
       >
         <Sidebar />
-        <main className={mainClass} enable-xr-monitor>
+        <main className={mainClass}>
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-full">
