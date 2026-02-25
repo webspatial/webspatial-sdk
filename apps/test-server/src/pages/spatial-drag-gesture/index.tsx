@@ -6,9 +6,9 @@ import {
   ModelSpatialDragEvent,
   ModelSpatialDragStartEvent,
   ModelSpatialDragEndEvent,
+  SpatialDragEvent,
+  type SpatialDragStartEvent,
 } from '@webspatial/react-sdk'
-import { SpatialDragStartEvent, SpatialDragEvent } from '@webspatial/core-sdk'
-import ReactDOM from 'react-dom/client'
 
 enableDebugTool()
 
