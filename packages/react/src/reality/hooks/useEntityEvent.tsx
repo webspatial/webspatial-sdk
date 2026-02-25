@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react'
-import { EntityEventHandler, eventMap } from '../type'
+import {
+  EntityEventHandler,
+  eventMap,
+  SpatialDragStartEntityEvent,
+  SpatialTapEntityEvent,
+} from '../type'
 import { EntityRef } from './useEntityRef'
 import { SpatialEntity } from '@webspatial/core-sdk'
 
@@ -19,6 +24,45 @@ function createEventProxy(ev: any, instance: EntityRef) {
         }
         // Fallback: if origin not set, return current instance
         return instance
+      }
+      if (prop === 'bubbles') {
+        return true
+      }
+      if (prop === 'offsetX') {
+        const type = (target as any).type
+        if (type === 'spatialtap') {
+          return (target as SpatialTapEntityEvent).detail?.location3D?.x ?? 0
+        }
+        if (type === 'spatialdragstart') {
+          return (
+            (target as SpatialDragStartEntityEvent).detail?.startLocation3D
+              ?.x ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'offsetY') {
+        const type = (target as any).type
+        if (type === 'spatialtap') {
+          return (target as SpatialTapEntityEvent).detail?.location3D?.y ?? 0
+        }
+        if (type === 'spatialdragstart') {
+          return (
+            (target as SpatialDragStartEntityEvent).detail?.startLocation3D
+              ?.y ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'offsetZ') {
+        const type = (target as any).type
+        if (type === 'spatialtap') {
+          return (target as any).detail?.location3D?.z ?? 0
+        }
+        if (type === 'spatialdragstart') {
+          return (target as any).detail?.startLocation3D?.z ?? 0
+        }
+        return undefined
       }
       const val = (target as any)[prop]
       return typeof val === 'function' ? val.bind(target) : val
