@@ -73,7 +73,21 @@ if (!(globalThis as any).DOMMatrix) {
         (p.z ?? 0) + this.tz,
       )
     }
+
+    static fromMatrix(other: any) {
+      const m = new DOMMatrixPolyfill()
+      if (other) {
+        m.tx = other.tx || 0
+        m.ty = other.ty || 0
+        m.tz = other.tz || 0
+      }
+      return m
+    }
   }
+}
+
+if (!(globalThis as any).DOMMatrixReadOnly) {
+  ;(globalThis as any).DOMMatrixReadOnly = (globalThis as any).DOMMatrix
 }
 
 describe('spatialized-container/utils', () => {
@@ -1705,11 +1719,12 @@ describe('SpatializedStatic3DElementContainer', () => {
     expect(onError.mock.calls[0]?.[0].type).toBe('modelloadfailed')
     expect(onLoad.mock.calls[0]?.[0].target).toEqual({ tid: 1 })
 
-    expect(extra.currentSrc()).toBe(window.location.origin + '/m.glb')
-    await expect(extra.ready()).resolves.toMatchObject({ type: 'modelloaded' })
+    expect(extra.currentSrc).toBe(window.location.origin + '/m.glb')
+    await expect(extra.ready).resolves.toMatchObject({ type: 'modelloaded' })
 
-    const m = extra.entityTransform()
+    const m = extra.entityTransform
     ;(m as any).m11 = 2
+    extra.entityTransform = m
     expect(updateModelTransform).toHaveBeenCalledTimes(1)
     expect(updateModelTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
     expect((domProxy as any).entityTransform).toBeUndefined()
@@ -1772,7 +1787,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       await Promise.resolve()
     })
 
-    await expect(extra.ready()).rejects.toMatchObject({
+    await expect(extra.ready).rejects.toMatchObject({
       type: 'modelloadfailed',
     })
   })

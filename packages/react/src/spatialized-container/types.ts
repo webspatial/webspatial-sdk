@@ -65,7 +65,7 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps<T>,
   typeof SpatialID | 'onLoad' | 'onError'
 > & {
-  extraRefProps?: (domProxy: T) => Record<string, () => any>
+  extraRefProps?: (domProxy: T) => Record<string, unknown>
 }
 
 export type SpatializedContentProps<
@@ -115,7 +115,7 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
   ready: Promise<ModelLoadEvent>
-  entityTransform: DOMMatrix
+  entityTransform: DOMMatrixReadOnly
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {
