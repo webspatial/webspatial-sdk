@@ -6,7 +6,6 @@ import {
   SpatialMagnifyEvent,
   ModelSpatialMagnifyEvent,
 } from '@webspatial/react-sdk'
-import ReactDOM from 'react-dom/client'
 
 enableDebugTool()
 

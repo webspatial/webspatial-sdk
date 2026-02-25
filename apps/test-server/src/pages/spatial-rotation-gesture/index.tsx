@@ -4,9 +4,9 @@ import {
   enableDebugTool,
   Model,
   ModelSpatialRotateEvent,
+  SpatialRotateEndEvent,
+  SpatialRotateEvent,
 } from '@webspatial/react-sdk'
-import { SpatialRotateEndEvent, SpatialRotateEvent } from '@webspatial/core-sdk'
-import ReactDOM from 'react-dom/client'
 
 enableDebugTool()
 
