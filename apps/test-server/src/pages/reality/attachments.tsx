@@ -18,6 +18,7 @@ enableDebugTool()
 function App() {
   // Shared state: clicking the 2D button OR the 3D attachment both update this
   const [count, setCount] = useState(0)
+  const [clicked3D, setClicked3D] = useState(false)
 
   const [showAttachments, setShowAttachments] = useState(true)
   const [animating, setAnimating] = useState(false)
@@ -66,7 +67,7 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 style={{ '--xr-back': 100 } as any} className="text-2xl text-black">
+      <h1 className="text-2xl text-black">
         Attachment Test
       </h1>
 
@@ -95,8 +96,6 @@ function App() {
           style={{
             width: '600px',
             height: '600px',
-            '--xr-depth': 100,
-            '--xr-back': 200,
           }}
         >
           <UnlitMaterial
@@ -133,6 +132,19 @@ function App() {
                 padding: 8,
               }}
             >
+              <style>
+                {`
+                  .xr-hover-btn {
+                    transition: background-color 180ms ease-in-out, transform 120ms ease-in-out;
+                  }
+                  .xr-hover-btn:hover {
+                    background-color: #5a98ff !important;
+                  }
+                  .xr-hover-btn:active {
+                    transform: translateY(1px);
+                  }
+                `}
+              </style>
               <p
                 style={{
                   color: '#ffffff',
@@ -144,7 +156,11 @@ function App() {
                 Count: {count}
               </p>
               <button
-                onClick={() => setCount(c => c + 1)}
+                className="xr-hover-btn"
+                onClick={() => {
+                  setCount(c => c + 1)
+                  setClicked3D(true)
+                }}
                 style={{
                   marginTop: 6,
                   padding: '4px 12px',
@@ -156,7 +172,7 @@ function App() {
                   cursor: 'pointer',
                 }}
               >
-                +1 (3D button)
+                {clicked3D ? 'Clicked' : '+1 (3D button)'}
               </button>
             </div>
           </AttachmentAsset>
