@@ -4,11 +4,13 @@ import {
 } from '@webspatial/core-sdk'
 import { createContext, useContext } from 'react'
 import { ResourceRegistry } from '../utils'
+import { AttachmentRegistry } from './AttachmentContext'
 
 export type RealityContextValue = {
   session: SpatialSession
   reality: SpatializedDynamic3DElement
   resourceRegistry: ResourceRegistry
+  attachmentRegistry: AttachmentRegistry
 } | null
 export const RealityContext = createContext<RealityContextValue>(null)
 export const useRealityContext = () => useContext(RealityContext)

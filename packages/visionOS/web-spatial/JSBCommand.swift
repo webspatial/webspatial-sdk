@@ -338,3 +338,15 @@ struct FocusSceneCommand: CommandDataProtocol {
 struct GetSpatialSceneStateCommand: CommandDataProtocol {
     static let commandType = "GetSpatialSceneState"
 }
+
+struct UpdateAttachmentEntityCommand: CommandDataProtocol {
+    static let commandType = "UpdateAttachmentEntity"
+    let id: String
+    let position: [Float]?
+    let size: AttachmentSize?
+}
+
+struct AttachmentSize: Codable {
+    let width: Double
+    let height: Double
+}

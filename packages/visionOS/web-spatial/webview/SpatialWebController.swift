@@ -73,9 +73,12 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             firstLoad = false
         }
         var needAllow = deciside ?? false
-        
+
         if !needAllow{
-            UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+            // Don't attempt to open internal webspatial:// protocol URLs externally
+            if navigationAction.request.url?.scheme != "webspatial" {
+                UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+            }
         }
         decisionHandler(needAllow ? .allow : .cancel)
     }

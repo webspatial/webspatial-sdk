@@ -38,6 +38,7 @@ import RealityInteractable from './src/pages/reality/interactable'
 import RealityIssue from './src/pages/reality/issue'
 import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
+import RealityAttachments from './src/pages/reality/attachments'
 import RealityTestIndex from './src/pages/reality-test/index'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
@@ -134,6 +135,10 @@ function App() {
                 <Route
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
+                />
+                <Route
+                  path="/reality/attachments"
+                  element={<RealityAttachments />}
                 />
                 <Route path="/reality/empty" element={<RealityEmpty />} />
                 <Route
