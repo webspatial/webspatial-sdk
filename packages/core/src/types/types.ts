@@ -344,12 +344,14 @@ export class CubeInfo {
 
 export interface SpatialTapEventDetail {
   location3D: Point3D
+  globalLocation3D?: Point3D
 }
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
 
 export interface SpatialDragStartEventDetail {
   startLocation3D: Point3D
+  globalLocation3D?: Point3D
 }
 
 export interface SpatialDragEventDetail {
