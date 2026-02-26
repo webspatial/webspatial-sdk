@@ -55,6 +55,7 @@ import SpatialCorner from './src/pages/spatialCorner/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
+import UnitConvertTest from './src/pages/unitConvert'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -187,6 +188,7 @@ function App() {
                 <Route path="/cleanup/spa" element={<CleanupSpa />} />
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />
+                <Route path="/unit-convert" element={<UnitConvertTest />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>
