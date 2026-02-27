@@ -1,5 +1,26 @@
 # @webspatial/react-sdk
 
+## 2.0.0
+
+### Minor Changes
+
+- 8225a53: add offsetX for spatialDragStartGesture and spatialTapGesture
+- bdd9065: Change <Model> entityTransform type from DOMMatrix to DOMMatrixReadOnly
+
+### Patch Changes
+
+- 539e61f: fix entity drag gesture event type
+- 418d196: avoid xr-spatial-default overrid user's css setting
+- 5eed637: Fix relative Model src resolution when enable-xr by using URL with document.baseURI, ensuring correct absolute URLs with app base paths.
+- 2b80e53: remove Reality spatial gesture type
+- 7ffb18c: fix spatialdiv spatial gesture bug
+- Updated dependencies [539e61f]
+- Updated dependencies [f0ab8eb]
+- Updated dependencies [4359ba1]
+- Updated dependencies [2632112]
+- Updated dependencies [bdd9065]
+  - @webspatial/core-sdk@2.0.0
+
 ## 1.1.0
 
 ### Patch Changes

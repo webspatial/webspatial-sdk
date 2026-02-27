@@ -1,5 +1,15 @@
 # @webspatial/core-sdk
 
+## 2.0.0
+
+### Patch Changes
+
+- 539e61f: fix entity drag gesture event type
+- f0ab8eb: Maintain the original creation process of Spatialized2DElement on the Android platform and optimize the creation process of Spatialized2DElement on the new platform
+- 4359ba1: Reconstruct the creation process of Spatialized2dElement
+- 2632112: Optimize the creation process of SpatialDiv on Android
+- bdd9065: Change <Model> entityTransform type from DOMMatrix to DOMMatrixReadOnly
+
 ## 1.1.0
 
 ### Patch Changes
