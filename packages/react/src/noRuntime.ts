@@ -49,3 +49,8 @@ export class SpatialScene {}
 export function isSSREnv() {
   return false
 }
+
+export const PhysicalMetrics = {
+  point2physical: () => 0,
+  physical2point: () => 0,
+}
