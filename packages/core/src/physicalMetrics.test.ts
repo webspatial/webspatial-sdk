@@ -87,8 +87,8 @@ describe('physicalMetrics', () => {
     }
     window.dispatchEvent(new Event('physicalMetricsUpdate'))
     expect(cb).toHaveBeenCalledTimes(2)
-    expect(m.getValue().meterToPtScaled).toBe(700)
-    expect(m.getValue().meterToPtUnscaled).toBe(600)
+    expect(m.getValue().meterToPtScaled).toBe(500)
+    expect(m.getValue().meterToPtUnscaled).toBe(400)
     ;(window as any).__physicalMetrics = undefined
   })
 })
