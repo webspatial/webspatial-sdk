@@ -106,6 +106,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.sendWebEvent(id, msg)
     }
 
+    func onUpdatePhysicalMetrics(meterToPtUnscaled: Double, meterToPtScaled: Double) {
+        let js = """
+        window.__physicalMetrics = {
+            meterToPtUnscaled: \(meterToPtUnscaled),
+            meterToPtScaled: \(meterToPtScaled)
+        };
+        window.dispatchEvent(new Event('physicalMetricsUpdate'));
+        """
+        spatialWebViewModel.evaluateJS(js) { _ in }
+    }
+
     private func setupSpatialWebView() {
         setupJSBListeners()
         setupWebViewStateListener()
