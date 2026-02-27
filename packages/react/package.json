@@ -50,14 +50,10 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "peerDependencies": {
-    "@webspatial/core-sdk": "workspace:*",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
-    "@webspatial/core-sdk": {
-      "optional": false
-    },
     "react": {
       "optional": true
     },
