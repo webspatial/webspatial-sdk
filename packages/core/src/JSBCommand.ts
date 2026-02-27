@@ -21,6 +21,8 @@ import {
   SpatialModelEntityCreationOptions,
   SpatialEntityEventType,
   Vec3,
+  AttachmentEntityOptions,
+  AttachmentEntityUpdateOptions,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
@@ -616,6 +618,36 @@ export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
     return {
       url: this.url,
       config: this.config,
+    }
+  }
+}
+
+export class CreateAttachmentEntityCommand extends WebSpatialProtocolCommand {
+  commandType = 'createAttachment'
+  constructor(private options: AttachmentEntityOptions) {
+    super()
+  }
+  protected getParams() {
+    return {
+      parentEntityId: this.options.parentEntityId,
+      position: this.options.position ?? [0, 0, 0],
+      size: this.options.size,
+    }
+  }
+}
+
+export class UpdateAttachmentEntityCommand extends JSBCommand {
+  commandType = 'UpdateAttachmentEntity'
+  constructor(
+    private attachmentId: string,
+    private options: AttachmentEntityUpdateOptions,
+  ) {
+    super()
+  }
+  protected getParams() {
+    return {
+      id: this.attachmentId,
+      ...this.options,
     }
   }
 }

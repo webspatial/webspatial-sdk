@@ -101,13 +101,53 @@ struct SpatializedDynamic3DView: View {
     }
 
     var body: some View {
-        RealityView(make: { content in
+        RealityView(make: { content, attachments in
             let rootEntity = spatializedDynamic3DElement.getRoot()
             content.add(rootEntity)
+
+            // Add existing attachments on initial creation
+            for (_, info) in spatialScene.attachmentManager.attachments {
+                if let attachmentEntity = attachments.entity(for: info.id) {
+                    attachmentEntity.position = info.position
+                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                        parentEntity.addChild(attachmentEntity)
+                    } else {
+                        rootEntity.addChild(attachmentEntity)
+                    }
+                }
+            }
+        }, update: { _, attachments in
+            // Update attachment positions and parenting
+            for (_, info) in spatialScene.attachmentManager.attachments {
+                if let attachmentEntity = attachments.entity(for: info.id) {
+                    attachmentEntity.position = info.position
+                    // Re-parent if not already under the correct parent
+                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                        if attachmentEntity.parent != parentEntity {
+                            parentEntity.addChild(attachmentEntity)
+                        }
+                    }
+                }
+            }
+        }, attachments: {
+            ForEach(Array(spatialScene.attachmentManager.attachments.values)) { info in
+                Attachment(id: info.id) {
+                    info.webViewModel.getView()
+                        .frame(
+                            width: info.size.width,
+                            height: info.size.height
+                        )
+                }
+            }
         })
         .simultaneousGesture(spatialTapEvent)
         .simultaneousGesture(rotate3dEvent)
         .simultaneousGesture(dragEvent)
         .simultaneousGesture(magnifyEvent)
+    }
+
+    private func findSpatialEntity(_ spatialId: String) -> SpatialEntity? {
+        // Look up the SpatialEntity from the SpatialScene's spatial object registry
+        return spatialScene.findSpatialObject(spatialId)
     }
 }

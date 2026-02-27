@@ -38,6 +38,8 @@ let defaultSceneConfig = SceneOptions(
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
     var parent: (any ScrollAbleSpatialElementContainer)?
 
+    var attachmentManager = AttachmentManager()
+
     // Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
@@ -299,6 +301,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
         spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
 
+        spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
@@ -380,6 +384,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let host = url.host ?? ""
         if host == "createSpatialScene" {
             return handleWindowOpenCustom(url)
+        } else if host == "createAttachment" {
+            return handleCreateAttachment(url)
         } else {
             let spatialized2DElement: Spatialized2DElement = createSpatializedElement(
                 .Spatialized2DElement
@@ -388,12 +394,56 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    private func handleCreateAttachment(_ url: URL) -> WebViewElementInfo? {
+        guard let components = URLComponents(string: url.absoluteString),
+              let queryItems = components.queryItems
+        else {
+            print("❌ fail to parse attachment URL")
+            return nil
+        }
+
+        guard let parentEntityId = queryItems.first(where: { $0.name == "parentEntityId" })?.value else {
+            print("❌ missing parentEntityId for attachment")
+            return nil
+        }
+
+        // Parse position (JSON array like [0,0.1,0])
+        var position = SIMD3<Float>(0, 0, 0)
+        if let positionStr = queryItems.first(where: { $0.name == "position" })?.value?.removingPercentEncoding,
+           let positionData = positionStr.data(using: .utf8),
+           let positionArray = try? JSONDecoder().decode([Float].self, from: positionData),
+           positionArray.count >= 3
+        {
+            position = SIMD3<Float>(positionArray[0], positionArray[1], positionArray[2])
+        }
+
+        // Parse size (JSON object like {"width":100,"height":100})
+        var size = CGSize(width: 100, height: 100)
+        if let sizeStr = queryItems.first(where: { $0.name == "size" })?.value?.removingPercentEncoding,
+           let sizeData = sizeStr.data(using: .utf8),
+           let sizeObj = try? JSONDecoder().decode(AttachmentSize.self, from: sizeData)
+        {
+            size = CGSize(width: sizeObj.width, height: sizeObj.height)
+        }
+
+        let info = attachmentManager.create(
+            id: UUID().uuidString,
+            parentEntityId: parentEntityId,
+            position: position,
+            size: size
+        )
+
+        return WebViewElementInfo(id: info.id, element: info.webViewModel)
+    }
+
     private func onPageStartLoad() {
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+        // destroy all attachments
+        attachmentManager.destroyAll()
         backgroundMaterial = .None
     }
 
@@ -424,6 +474,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onDestroySpatialObjectCommand(command: DestroyCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        // Check if it's an attachment first
+        if attachmentManager.get(id: command.id) != nil {
+            attachmentManager.remove(id: command.id)
+            resolve(.success(nil))
+            return
+        }
         if let spatialObject: SpatialObject = findSpatialObject(command.id) {
             spatialObject.destroy()
             resolve(.success(nil))
@@ -1006,6 +1062,26 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(ConvertReply(id: command.entityId, position: point)))
     }
 
+    private func onUpdateAttachmentEntity(command: UpdateAttachmentEntityCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard attachmentManager.get(id: command.id) != nil else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
+            return
+        }
+
+        var newPosition: SIMD3<Float>? = nil
+        if let posArray = command.position, posArray.count >= 3 {
+            newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
+        }
+
+        var newSize: CGSize? = nil
+        if let sizeObj = command.size {
+            newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
+        }
+
+        attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+        resolve(.success(baseReplyData))
+    }
+
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {
         var spatialObject = object
         spatialObjects[spatialObject.spatialId] = spatialObject
@@ -1042,6 +1118,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
+        attachmentManager.destroyAll()
         spatialWebViewModel.destroy()
     }
 
