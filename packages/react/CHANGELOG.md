@@ -1,6 +1,6 @@
 # @webspatial/react-sdk
 
-## 2.0.0
+## 1.2.0
 
 ### Minor Changes
 
@@ -19,7 +19,7 @@
 - Updated dependencies [4359ba1]
 - Updated dependencies [2632112]
 - Updated dependencies [bdd9065]
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/core-sdk@1.2.0
 
 ## 1.1.0
 
