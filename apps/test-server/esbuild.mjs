@@ -2,12 +2,14 @@ import * as esbuild from 'esbuild'
 import { tailwindPlugin } from 'esbuild-plugin-tailwindcss'
 import glob from 'tiny-glob'
 import path from 'path'
+import fs from 'fs'
 import livereload from 'livereload'
 import { sassPlugin, postcssModules } from 'esbuild-sass-plugin'
 import { createServer } from 'http-server'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 
+const isBuild = process.argv.includes('--build')
 const packagesBasePath = '../../packages'
 
 const corePkg = require(`${packagesBasePath}/core/package.json`)
@@ -28,63 +30,130 @@ plugins.push(
 )
 plugins.push(sassPlugin())
 
+// No code transforms: tests render standalone via top-level navigation
+
 var outdir = 'dist'
 var port = process.env.PORT ? Number(process.env.PORT) : 5173
-var liveReloadServerPort = 35729
+var liveReloadServerPort = process.env.LIVERELOAD_PORT
+  ? Number(process.env.LIVERELOAD_PORT)
+  : 35729
 
-var ctx = await esbuild.context({
+const buildOptions = {
   entryPoints: entryPoints,
   outdir,
   bundle: true,
-  minify: false,
-  sourcemap: true,
-  jsx: 'automatic',
+  minify: isBuild,
+  sourcemap: !isBuild,
   plugins,
   define: {
     'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV ?? ''),
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
-  // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
-  banner: {
-    js: `
-        let liveReloadScript = document.createElement("script")
-        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
-        document.head.append(liveReloadScript)
-       `,
-  },
   // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
   alias: {
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
-    '@webspatial/react-sdk/jsx-runtime': path.resolve(  `${packagesBasePath}/react/src/jsx/jsx-runtime.ts` ),
+    '@webspatial/react-sdk/jsx-runtime': path.resolve(
+      `${packagesBasePath}/react/src/jsx/jsx-runtime.ts`,
+    ),
     '@webspatial/react-sdk': path.resolve(`${packagesBasePath}/react/src`),
     '@webspatial/core-sdk': path.resolve(`${packagesBasePath}/core/src`),
   },
-})
+}
 
-ctx.watch()
+async function copyPublicFolder(src, dest) {
+  if (!fs.existsSync(src)) return
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
+  
+  const entries = fs.readdirSync(src, { withFileTypes: true })
+  for (let entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      await copyPublicFolder(srcPath, destPath)
+    } else {
+      fs.copyFileSync(srcPath, destPath)
+    }
+  }
+}
 
-// Use http-server instead of ctx serve to avoid overhead delay of ~500ms
-const staticServer = createServer({
-  root: './', // Set the root directory
-  cache: -1, // Disable caching
-  port: port, // Define the port
-})
-staticServer.listen(port, () => {
-  console.log('HTTP server is running on http://localhost:' + port)
-})
+async function prepareDist() {
+  console.log('Preparing dist folder...')
+  if (!fs.existsSync(outdir)) fs.mkdirSync(outdir, { recursive: true })
+  
+  // Copy index.html and fix paths
+  let html = fs.readFileSync('index.html', 'utf8')
+  // Remove /dist prefix from paths because dist will be the root in production
+  html = html.replace(/src="\/dist\//g, 'src="/')
+  html = html.replace(/href="\/dist\//g, 'href="/')
+  fs.writeFileSync(path.join(outdir, 'index.html'), html)
+  
+  // Copy all src/*.html to dist and fix script/href paths
+  const htmlFiles = await glob('./src/**/*.html')
+  for (const file of htmlFiles) {
+    const srcHtml = fs.readFileSync(file, 'utf8')
+    const fixedHtml = srcHtml
+      .replace(/src="\/dist\//g, 'src="/')
+      .replace(/href="\/dist\//g, 'href="/')
+      .replace(/dist\/src\//g, 'src/')
+    const rel = file.replace(/^src\//, '')
+    const dest = path.join(outdir, rel)
+    const destDir = path.dirname(dest)
+    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true })
+    fs.writeFileSync(dest, fixedHtml)
+  }
+  
+  // Copy public folder contents directly to dist root or to /public
+  // Most SPAs serve public folder contents from the root
+  await copyPublicFolder('public', outdir)
+  console.log('Assets copied to dist.')
+}
 
-var server = livereload.createServer({
-  port: liveReloadServerPort,
-  extraExts: ['ts', 'tsx'],
-  delay: 50,
-})
-var watchPaths = [path.resolve(outdir)]
-watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
-// watchPaths = watchPaths.concat(await glob("./src/**/*.tsx"));
-// watchPaths = watchPaths.concat(await glob("./src/**/*.ts"));
-watchPaths.push('index.html')
-// watchPaths.push("index.tsx");
-server.watch(watchPaths)
-console.log('esbuild ready!')
+if (isBuild) {
+  console.log('Building for production...')
+  await esbuild.build(buildOptions)
+  await prepareDist()
+  console.log('Build complete!')
+  process.exit(0)
+} else {
+  var ctx = await esbuild.context({
+    ...buildOptions,
+    // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
+    banner: {
+      js: `
+        let liveReloadScript = document.createElement("script")
+        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
+        document.head.append(liveReloadScript)
+       `,
+    },
+  })
+
+  ctx.watch()
+  await prepareDist()
+
+  // Use http-server instead of ctx serve to avoid overhead delay of ~500ms
+  const staticServer = createServer({
+    root: './dist', // Serve from dist now to be consistent with production
+    cache: -1, // Disable caching
+    port: port, // Define the port
+  })
+  staticServer.listen(port, () => {
+    console.log('HTTP server is running on http://localhost:' + port)
+  })
+
+  try {
+    var server = livereload.createServer({
+      port: liveReloadServerPort,
+      extraExts: ['ts', 'tsx'],
+      delay: 50,
+    })
+    var watchPaths = [path.resolve(outdir)]
+    watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
+    watchPaths.push('index.html')
+    server.watch(watchPaths)
+  } catch (e) {
+    console.log('LiveReload disabled:', e?.code || e)
+  }
+  console.log('esbuild ready!')
+}

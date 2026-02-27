@@ -1,4 +1,7 @@
-import { SpatialBoxGeometryOptions, SpatialGeometryType } from '../../types/types'
+import {
+  SpatialBoxGeometryOptions,
+  SpatialGeometryType,
+} from '../../types/types'
 import { SpatialGeometry } from './SpatialGeometry'
 
 export class SpatialBoxGeometry extends SpatialGeometry {

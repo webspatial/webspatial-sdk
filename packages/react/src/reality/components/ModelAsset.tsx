@@ -25,11 +25,11 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
     const init = async () => {
-      const resolvedUrl = resolveAssetUrl(options.src)
-      const modelAssetPromise = session.createModelAsset({ url: resolvedUrl })
-      resourceRegistry.add(options.id, modelAssetPromise)
-
       try {
+        const resolvedUrl = resolveAssetUrl(options.src)
+        const modelAssetPromise = session.createModelAsset({ url: resolvedUrl })
+        resourceRegistry.add(options.id, modelAssetPromise)
+
         const mat = await modelAssetPromise
         if (controller.signal.aborted) {
           mat.destroy()

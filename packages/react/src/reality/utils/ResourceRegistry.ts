@@ -18,7 +18,9 @@ export class ResourceRegistry {
     const p = this.resources.get(id)
     if (p) {
       // Schedule destruction when the resource becomes available
-      p.then(spatialObj => spatialObj.destroy())
+      p.then(spatialObj => spatialObj.destroy()).catch(() => {
+        // swallow rejection to avoid unhandled promise errors during teardown
+      })
     }
     this.resources.delete(id)
   }
@@ -31,6 +33,12 @@ export class ResourceRegistry {
     this.resources.clear()
 
     // Best-effort destroy for all resolved and future-resolving resources
-    pending.forEach(promise => promise.then(spatialObj => spatialObj.destroy()))
+    pending.forEach(promise =>
+      promise
+        .then(spatialObj => spatialObj.destroy())
+        .catch(() => {
+          // swallow rejection to avoid unhandled promise errors during teardown
+        }),
+    )
   }
 }

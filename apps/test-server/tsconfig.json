@@ -20,6 +20,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@webspatial/core-sdk": ["../../packages/core/src"],
       "web-spatial": ["../npmLib/src"]
     }
   },

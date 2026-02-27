@@ -539,7 +539,7 @@ export class DestroyCommand extends JSBCommand {
 export class CheckWebViewCanCreateCommand extends JSBCommand {
   commandType = 'CheckWebViewCanCreate'
 
-  constructor(readonly id: string = "") {
+  constructor(readonly id: string = '') {
     super()
   }
 

@@ -80,7 +80,7 @@ export class SpatialSession {
    * This is a reference to the initScene function from scene-polyfill.
    */
   initScene = initScene
-  
+
   /**
    * Creates a new dynamic 3D element that can be manipulated at runtime.
    * Dynamic 3D elements allow for programmatic creation and modification of 3D content.
@@ -96,7 +96,7 @@ export class SpatialSession {
    * @param name Optional name for the entity
    * @returns Promise resolving to a new SpatialEntity instance
    */
-  createEntity(userData?: SpatialEntityUserData,): Promise<SpatialEntity> {
+  createEntity(userData?: SpatialEntityUserData): Promise<SpatialEntity> {
     return createSpatialEntity(userData)
   }
 
@@ -164,7 +164,7 @@ export class SpatialSession {
   createUnlitMaterial(options: SpatialUnlitMaterialOptions) {
     return createSpatialUnlitMaterial(options)
   }
-  
+
   /**
    * Creates a model asset with the specified configuration.
    * Model assets represent 3D model resources that can be used by entities.
@@ -181,7 +181,10 @@ export class SpatialSession {
    * @param options Configuration options for the spatial model entity
    * @returns Promise resolving to a new SpatialModelEntity instance
    */
-  createSpatialModelEntity(options: SpatialModelEntityCreationOptions, userData?: SpatialEntityUserData) {
+  createSpatialModelEntity(
+    options: SpatialModelEntityCreationOptions,
+    userData?: SpatialEntityUserData,
+  ) {
     return createSpatialModelEntity(options, userData)
   }
 }
