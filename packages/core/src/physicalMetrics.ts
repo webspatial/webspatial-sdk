@@ -23,6 +23,7 @@ function getWorldScalingCompensation(options?: ConvertOption) {
 }
 
 export function point2physical(point: number, options?: ConvertOption) {
+  updateValue()
   const compensation = getWorldScalingCompensation(options)
   if (compensation === 'unscaled') {
     return point / snapshot.meterToPtUnscaled
@@ -31,6 +32,7 @@ export function point2physical(point: number, options?: ConvertOption) {
 }
 
 export function physical2point(physical: number, options?: ConvertOption) {
+  updateValue()
   const compensation = getWorldScalingCompensation(options)
   if (compensation === 'unscaled') {
     return physical * snapshot.meterToPtUnscaled
@@ -55,12 +57,12 @@ function updateValue() {
 }
 
 export function getValue(): PhysicalMetricsValueShape {
+  updateValue()
   return snapshot
 }
 
 export function subscribe(cb: any) {
   const handler = () => {
-    updateValue()
     cb()
   }
   window.addEventListener('physicalMetricsUpdate', handler)
