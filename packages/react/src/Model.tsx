@@ -24,10 +24,8 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialDragStart,
       onSpatialDrag,
       onSpatialDragEnd,
-      onSpatialRotateStart,
       onSpatialRotate,
       onSpatialRotateEnd,
-      onSpatialMagnifyStart,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       ...modelProps

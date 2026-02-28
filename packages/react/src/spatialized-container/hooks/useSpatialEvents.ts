@@ -1,16 +1,15 @@
 import { RefObject } from 'react'
 import { SpatialContainerRefProxy } from './useDomProxy'
 import {
+  SpatializedElementRef,
+  SpatialTapEvent,
+  SpatialDragStartEvent,
   SpatialDragEndEvent,
   SpatialDragEvent,
   SpatialRotateEvent,
-  SpatialTapEvent,
-  SpatializedElementRef,
   SpatialRotateEndEvent,
   SpatialMagnifyEndEvent,
   SpatialMagnifyEvent,
-  SpatialRotateStartEvent,
-  SpatialMagnifyStartEvent,
 } from '../types'
 import { SpatializedContainerObject } from '../context/SpatializedContainerContext'
 
@@ -18,22 +17,25 @@ export interface SpatialEvents<
   T extends SpatializedElementRef = SpatializedElementRef,
 > {
   onSpatialTap?: (event: SpatialTapEvent<T>) => void
-  onSpatialDragStart?: (event: SpatialDragEvent<T>) => void
+  onSpatialDragStart?: (event: SpatialDragStartEvent<T>) => void
   onSpatialDrag?: (event: SpatialDragEvent<T>) => void
   onSpatialDragEnd?: (event: SpatialDragEndEvent<T>) => void
-  onSpatialRotateStart?: (event: SpatialRotateStartEvent<T>) => void
   onSpatialRotate?: (event: SpatialRotateEvent<T>) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEvent<T>) => void
-  onSpatialMagnifyStart?: (event: SpatialMagnifyStartEvent<T>) => void
   onSpatialMagnify?: (event: SpatialMagnifyEvent<T>) => void
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-// Create a generic event proxy factory function
 function createEventProxy<
   T extends SpatializedElementRef,
   E extends { currentTarget: T },
->(event: E, currentTargetGetter: () => T): E {
+>(
+  event: E,
+  currentTargetGetter: () => T,
+  offsetXGetter?: (event: E) => number | undefined,
+  offsetYGetter?: (event: E) => number | undefined,
+  offsetZGetter?: (event: E) => number | undefined,
+): E {
   return new Proxy(event, {
     get(target, prop) {
       if (prop === 'currentTarget') {
@@ -42,22 +44,42 @@ function createEventProxy<
       if (prop === 'isTrusted') {
         return true
       }
+      if (prop === 'bubbles') {
+        return false
+      }
+      if (prop === 'offsetX' && offsetXGetter) {
+        return offsetXGetter(target) ?? 0
+      }
+      if (prop === 'offsetY' && offsetYGetter) {
+        return offsetYGetter(target) ?? 0
+      }
+      if (prop === 'offsetZ' && offsetZGetter) {
+        return offsetZGetter(target) ?? 0
+      }
       return Reflect.get(target, prop)
     },
   })
 }
 
-// Create an event handler factory function
 function createEventHandler<
   T extends SpatializedElementRef,
   E extends { currentTarget: T },
 >(
   handler: ((event: E) => void) | undefined,
   currentTargetGetter: () => T,
+  offsetXGetter?: (event: E) => number | undefined,
+  offsetYGetter?: (event: E) => number | undefined,
+  offsetZGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
-        const proxyEvent = createEventProxy<T, E>(event, currentTargetGetter)
+        const proxyEvent = createEventProxy<T, E>(
+          event,
+          currentTargetGetter,
+          offsetXGetter,
+          offsetYGetter,
+          offsetZGetter,
+        )
         handler(proxyEvent)
       }
     : undefined
@@ -70,6 +92,9 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialTap = createEventHandler<T, SpatialTapEvent<T>>(
     spatialEvents.onSpatialTap,
     currentTargetGetter,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.x,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.y,
+    (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.z,
   )
 
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
@@ -102,30 +127,21 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
     currentTargetGetter,
   )
 
-  const onSpatialDragStart = createEventHandler<T, SpatialDragEvent<T>>(
+  const onSpatialDragStart = createEventHandler<T, SpatialDragStartEvent<T>>(
     spatialEvents.onSpatialDragStart,
     currentTargetGetter,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.x,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.y,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.z,
   )
-
-  const onSpatialRotateStart = createEventHandler<
-    T,
-    SpatialRotateStartEvent<T>
-  >(spatialEvents.onSpatialRotateStart, currentTargetGetter)
-
-  const onSpatialMagnifyStart = createEventHandler<
-    T,
-    SpatialMagnifyStartEvent<T>
-  >(spatialEvents.onSpatialMagnifyStart, currentTargetGetter)
 
   return {
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
-    onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
-    onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
   }

@@ -1,10 +1,11 @@
 {
   "name": "web-content",
   "private": true,
-  "version": "0.0.18",
+  "version": "0.0.19",
   "type": "module",
   "scripts": {
     "test": "tsc -p ./tsconfig.json",
+    "build": "node esbuild.mjs --build",
     "dev": "XR_ENV=avp node esbuild.mjs",
     "dev:web": "node esbuild.mjs",
     "start": "npm run dev",

@@ -28,6 +28,7 @@ node_modules
 coverage
 **/dist
 temp
+.vercel
 
 # test reports
 /packages/autoTest/reports/
