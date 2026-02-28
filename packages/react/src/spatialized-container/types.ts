@@ -65,7 +65,7 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   StandardSpatializedContainerProps & PortalSpatializedContainerProps<T>,
   typeof SpatialID | 'onLoad' | 'onError'
 > & {
-  extraRefProps?: (domProxy: T) => Record<string, unknown>
+  extraRefProps?: (domProxy: T) => Record<string, () => any>
 }
 
 export type SpatializedContentProps<
@@ -115,7 +115,7 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
   ready: Promise<ModelLoadEvent>
-  entityTransform: DOMMatrixReadOnly
+  entityTransform: DOMMatrix
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {
@@ -124,21 +124,11 @@ type CurrentTarget<T extends SpatializedElementRef> = {
 
 export type SpatialTapEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialTapEvent &
-  CurrentTarget<T> & {
-    readonly offsetX: number
-    readonly offsetY: number
-    readonly offsetZ: number
-  }
+> = CoreSpatialTapEvent & CurrentTarget<T>
 
 export type SpatialDragStartEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialDragStartEvent &
-  CurrentTarget<T> & {
-    readonly offsetX: number
-    readonly offsetY: number
-    readonly offsetZ: number
-  }
+> = CoreSpatialDragStartEvent & CurrentTarget<T>
 
 export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
