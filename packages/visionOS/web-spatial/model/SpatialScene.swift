@@ -84,6 +84,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var spatialWebViewModel: SpatialWebViewModel
 
+    private var meterToPtUnscaled: Double?
+    private var meterToPtScaled: Double?
+
     init(
         _ url: String,
         _ windowStyle: WindowStyle,
@@ -104,6 +107,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     // used to send message to spatial root webview
     func sendWebMsg(_ id: String, _ msg: Encodable) {
         spatialWebViewModel.sendWebEvent(id, msg)
+    }
+
+    func onUpdatePhysicalMetrics(meterToPtUnscaled: Double, meterToPtScaled: Double) {
+        self.meterToPtUnscaled = meterToPtUnscaled
+        self.meterToPtScaled = meterToPtScaled
+        var js = """
+        window.__physicalMetrics = {
+            meterToPtUnscaled: \(meterToPtUnscaled),
+            meterToPtScaled: \(meterToPtScaled)
+        };
+        window.dispatchEvent(new Event('physicalMetricsUpdate'));
+        """
+        spatialWebViewModel.getController().callJS(js)
     }
 
     private func setupSpatialWebView() {
@@ -343,6 +359,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didClose) {
             self.handleWindowClose()
+        }
+
+        spatialWebViewModel.addStateListener(.didReceive) {
+            if let meterToPtUnscaled = self.meterToPtUnscaled,
+               let meterToPtScaled = self.meterToPtScaled
+            {
+                self.onUpdatePhysicalMetrics(
+                    meterToPtUnscaled: meterToPtUnscaled,
+                    meterToPtScaled: meterToPtScaled
+                )
+            }
         }
 
         spatialWebViewModel.addStateListener(.didFailLoad) {
