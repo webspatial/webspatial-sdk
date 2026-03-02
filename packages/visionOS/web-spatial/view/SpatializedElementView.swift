@@ -1,3 +1,4 @@
+import CoreGraphics
 import SwiftUI
 
 // zIndex() have some bug, so use zOrderBias to simulate zIndex effect
@@ -5,6 +6,10 @@ let zOrderBias = 0.001
 
 final class GestureFlags {
     var isDrag = false
+}
+
+final class TransformHolder {
+    var transform: AffineTransform3D = .identity
 }
 
 struct SpatializedElementView<Content: View>: View {
@@ -15,6 +20,8 @@ struct SpatializedElementView<Content: View>: View {
     var content: Content
 
     @State private var gestureFlags = GestureFlags()
+    @State private var transformHolder = TransformHolder()
+    @State private var currentTransform: AffineTransform3D = .identity
 
     init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
         self.parentScrollOffset = parentScrollOffset
@@ -64,8 +71,13 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onDragging(_ event: DragGesture.Value) {
         if spatializedElement.enableDragStartGesture, !gestureFlags.isDrag {
+            let localPoint = SIMD4<Double>(event.startLocation3D.x, event.startLocation3D.y, event.startLocation3D.z, 1.0)
+            let transformedPoint = transformHolder.transform.matrix * localPoint
+            let globalPoint3D = Point3D(x: transformedPoint.x, y: transformedPoint.y, z: transformedPoint.z)
+
             let gestureEvent = WebSpatialDragStartGuestureEvent(detail: .init(
-                startLocation3D: event.startLocation3D
+                startLocation3D: event.startLocation3D,
+                globalLocation3D: globalPoint3D
             ))
 
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
@@ -92,7 +104,11 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
         if spatializedElement.enableTapGesture {
-            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: event.location3D)))
+            let localPoint = SIMD4<Double>(event.location3D.x, event.location3D.y, event.location3D.z, 1.0)
+            let transformedPoint = transformHolder.transform.matrix * localPoint
+            let globalPoint3D = Point3D(x: transformedPoint.x, y: transformedPoint.y, z: transformedPoint.z)
+
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: event.location3D, globalLocation3D: globalPoint3D)))
         }
     }
 
@@ -146,7 +162,9 @@ struct SpatializedElementView<Content: View>: View {
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 let rect3d = proxy.frame(in: .named("SpatialScene"))
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
-                return proxy.transform(in: .named("SpatialScene"))!
+                let transform = proxy.transform(in: .named("SpatialScene"))!
+                transformHolder.transform = transform
+                return transform
             } action: { _, new in
                 spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
             }

@@ -45,6 +45,8 @@ struct SpatiaizedContainerTransform: Encodable {
 
 struct WebSpatialTapGuestureEventDetail: Encodable {
     let location3D: Point3D
+    // Global scene location (maps to clientX/clientY/clientZ on the web side).
+    let globalLocation3D: Point3D?
 }
 
 // notify SpatializedElement/SpatialEntity tapped
@@ -55,6 +57,8 @@ struct WebSpatialTapGuestureEvent: Encodable {
 
 struct WebSpatialDragStartGuestureEventDetail: Encodable {
     let startLocation3D: Point3D
+    // Global scene location for the drag start point.
+    let globalLocation3D: Point3D?
 }
 
 struct WebSpatialDragStartGuestureEvent: Encodable {

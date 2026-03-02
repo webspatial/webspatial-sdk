@@ -35,6 +35,9 @@ function createEventProxy<
   offsetXGetter?: (event: E) => number | undefined,
   offsetYGetter?: (event: E) => number | undefined,
   offsetZGetter?: (event: E) => number | undefined,
+  clientXGetter?: (event: E) => number | undefined,
+  clientYGetter?: (event: E) => number | undefined,
+  clientZGetter?: (event: E) => number | undefined,
 ): E {
   return new Proxy(event, {
     get(target, prop) {
@@ -56,6 +59,15 @@ function createEventProxy<
       if (prop === 'offsetZ' && offsetZGetter) {
         return offsetZGetter(target) ?? 0
       }
+      if (prop === 'clientX' && clientXGetter) {
+        return clientXGetter(target) ?? 0
+      }
+      if (prop === 'clientY' && clientYGetter) {
+        return clientYGetter(target) ?? 0
+      }
+      if (prop === 'clientZ' && clientZGetter) {
+        return clientZGetter(target) ?? 0
+      }
       return Reflect.get(target, prop)
     },
   })
@@ -70,6 +82,9 @@ function createEventHandler<
   offsetXGetter?: (event: E) => number | undefined,
   offsetYGetter?: (event: E) => number | undefined,
   offsetZGetter?: (event: E) => number | undefined,
+  clientXGetter?: (event: E) => number | undefined,
+  clientYGetter?: (event: E) => number | undefined,
+  clientZGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
@@ -79,6 +94,9 @@ function createEventHandler<
           offsetXGetter,
           offsetYGetter,
           offsetZGetter,
+          clientXGetter,
+          clientYGetter,
+          clientZGetter,
         )
         handler(proxyEvent)
       }
@@ -92,11 +110,15 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialTap = createEventHandler<T, SpatialTapEvent<T>>(
     spatialEvents.onSpatialTap,
     currentTargetGetter,
+    // offsetX/Y/Z come from local coordinates
     (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.x,
     (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.y,
     (ev: SpatialTapEvent<T>) => ev.detail?.location3D?.z,
+    // clientX/Y/Z come from global scene coordinates
+    (ev: SpatialTapEvent<T>) => ev.detail?.globalLocation3D?.x,
+    (ev: SpatialTapEvent<T>) => ev.detail?.globalLocation3D?.y,
+    (ev: SpatialTapEvent<T>) => ev.detail?.globalLocation3D?.z,
   )
-
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
     spatialEvents.onSpatialDrag,
     currentTargetGetter,
@@ -133,6 +155,9 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
     (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.x,
     (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.y,
     (ev: SpatialDragStartEvent<T>) => ev.detail?.startLocation3D?.z,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.globalLocation3D?.x,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.globalLocation3D?.y,
+    (ev: SpatialDragStartEvent<T>) => ev.detail?.globalLocation3D?.z,
   )
 
   return {

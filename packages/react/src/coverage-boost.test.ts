@@ -741,6 +741,35 @@ describe('spatialized-container/hooks/useSpatialEvents', () => {
     expect(onSpatialDragStart).toHaveBeenCalledTimes(1)
   })
 
+  it('SpatialDragStartEvent clientX/clientY/clientZ come from detail.globalLocation3D.x/y/z', () => {
+    const currentTarget = { tag: 'real' } as any
+    const onSpatialDragStart = vi.fn((e: any) => {
+      expect(e.currentTarget).toBe(currentTarget)
+      expect(e.isTrusted).toBe(true)
+      expect(e.type).toBe('dragstart')
+      expect(e.bubbles).toBe(false)
+      expect(e.clientX).toBe(101)
+      expect(e.clientY).toBe(202)
+      expect(e.clientZ).toBe(303)
+    })
+
+    const events = useSpatialEventsBase(
+      { onSpatialDragStart } as any,
+      () => currentTarget,
+    )
+
+    events.onSpatialDragStart?.({
+      type: 'dragstart',
+      currentTarget: { tag: 'fake' },
+      detail: {
+        startLocation3D: { x: 5, y: 6, z: 7 },
+        globalLocation3D: { x: 101, y: 202, z: 303 },
+      },
+    } as any)
+
+    expect(onSpatialDragStart).toHaveBeenCalledTimes(1)
+  })
+
   it('Other spatial events do not expose offsetX/offsetY/offsetZ', () => {
     const currentTarget = { tag: 'real' } as any
     const onSpatialDrag = vi.fn((e: any) => {
