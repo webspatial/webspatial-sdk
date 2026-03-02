@@ -85,6 +85,8 @@ function App() {
           {animating ? 'Stop' : 'Start'} Animation
         </button>
 
+        {/* Host style is injected by default; no toggle needed */}
+
         {/* Two attachments with the same name are always present now */}
       </div>
 
@@ -143,8 +145,8 @@ function App() {
                 `}
               </style>
               <p
+                className="host-style-test"
                 style={{
-                  color: '#ffffff',
                   fontSize: 16,
                   fontWeight: 'bold',
                   margin: 0,
