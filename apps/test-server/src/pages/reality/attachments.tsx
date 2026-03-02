@@ -22,7 +22,6 @@ function App() {
 
   const [showAttachments, setShowAttachments] = useState(true)
   const [animating, setAnimating] = useState(false)
-  const [duplicateCounter, setDuplicateCounter] = useState(false)
   const [groupPosition, setGroupPosition] = useState({ x: 0, y: 0, z: 0 })
   const [groupRotation, setGroupRotation] = useState({ x: 0, y: 0, z: 0 })
   const animationRef = useRef<number | null>(null)
@@ -86,12 +85,7 @@ function App() {
           {animating ? 'Stop' : 'Start'} Animation
         </button>
 
-        <button
-          className={btnCls}
-          onClick={() => setDuplicateCounter(prev => !prev)}
-        >
-          {duplicateCounter ? 'Remove' : 'Add'} Second Counter Box
-        </button>
+        {/* Two attachments with the same name are always present now */}
       </div>
 
       <div>
@@ -235,24 +229,22 @@ function App() {
                 )}
               </Entity>
 
-              {/* Optional second box uses the same attachment name to verify 1→N rendering */}
-              {duplicateCounter && (
-                <Entity position={{ x: -0.35, y: 0, z: 0 }}>
-                  <BoxEntity
-                    width={0.1}
-                    height={0.1}
-                    depth={0.1}
-                    materials={['matRed']}
+              {/* Second box uses the same attachment name to verify 1→N rendering */}
+              <Entity position={{ x: -0.35, y: 0, z: 0 }}>
+                <BoxEntity
+                  width={0.1}
+                  height={0.1}
+                  depth={0.1}
+                  materials={['matRed']}
+                />
+                {showAttachments && (
+                  <AttachmentEntity
+                    attachment="counter-label"
+                    position={[0, 0.15, 0]}
+                    size={{ width: 160, height: 80 }}
                   />
-                  {showAttachments && (
-                    <AttachmentEntity
-                      attachment="counter-label"
-                      position={[0, 0.15, 0]}
-                      size={{ width: 160, height: 80 }}
-                    />
-                  )}
-                </Entity>
-              )}
+                )}
+              </Entity>
 
               <Entity position={{ x: 0, y: 0, z: 0 }}>
                 <SphereEntity radius={0.05} materials={['matGreen']} />
