@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import {
   EntityEventHandler,
   eventMap,
+  SpatialDragEntityEvent,
   SpatialDragStartEntityEvent,
   SpatialTapEntityEvent,
 } from '../type'
@@ -61,6 +62,33 @@ function createEventProxy(ev: any, instance: EntityRef) {
         }
         if (type === 'spatialdragstart') {
           return (target as any).detail?.startLocation3D?.z ?? 0
+        }
+        return undefined
+      }
+      if (prop === 'translationX') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.x ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'translationY') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.y ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'translationZ') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.z ?? 0
+          )
         }
         return undefined
       }

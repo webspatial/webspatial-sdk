@@ -41,7 +41,12 @@ export type SpatialDragStartEntityEvent<
   }
 
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
-  CoreSpatialDragEvent & allTarget<T>
+  CoreSpatialDragEvent &
+    allTarget<T> & {
+      readonly translationX: number
+      readonly translationY: number
+      readonly translationZ: number
+    }
 
 export type SpatialDragEndEntityEvent<
   T extends EntityRefShape = EntityRefShape,

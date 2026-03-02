@@ -38,6 +38,9 @@ function createEventProxy<
   clientXGetter?: (event: E) => number | undefined,
   clientYGetter?: (event: E) => number | undefined,
   clientZGetter?: (event: E) => number | undefined,
+  translationXGetter?: (event: E) => number | undefined,
+  translationYGetter?: (event: E) => number | undefined,
+  translationZGetter?: (event: E) => number | undefined,
 ): E {
   return new Proxy(event, {
     get(target, prop) {
@@ -68,6 +71,15 @@ function createEventProxy<
       if (prop === 'clientZ' && clientZGetter) {
         return clientZGetter(target) ?? 0
       }
+      if (prop === 'translationX' && translationXGetter) {
+        return translationXGetter(target) ?? 0
+      }
+      if (prop === 'translationY' && translationYGetter) {
+        return translationYGetter(target) ?? 0
+      }
+      if (prop === 'translationZ' && translationZGetter) {
+        return translationZGetter(target) ?? 0
+      }
       return Reflect.get(target, prop)
     },
   })
@@ -85,6 +97,9 @@ function createEventHandler<
   clientXGetter?: (event: E) => number | undefined,
   clientYGetter?: (event: E) => number | undefined,
   clientZGetter?: (event: E) => number | undefined,
+  translationXGetter?: (event: E) => number | undefined,
+  translationYGetter?: (event: E) => number | undefined,
+  translationZGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
@@ -97,6 +112,9 @@ function createEventHandler<
           clientXGetter,
           clientYGetter,
           clientZGetter,
+          translationXGetter,
+          translationYGetter,
+          translationZGetter,
         )
         handler(proxyEvent)
       }
@@ -122,6 +140,15 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
     spatialEvents.onSpatialDrag,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.x,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.y,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.z,
   )
 
   const onSpatialDragEnd = createEventHandler<T, SpatialDragEndEvent<T>>(

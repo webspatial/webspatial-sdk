@@ -148,7 +148,12 @@ export type SpatialDragStartEvent<
 
 export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialDragEvent & CurrentTarget<T>
+> = CoreSpatialDragEvent &
+  CurrentTarget<T> & {
+    readonly translationX: number
+    readonly translationY: number
+    readonly translationZ: number
+  }
 
 export type SpatialDragEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
