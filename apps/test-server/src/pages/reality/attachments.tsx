@@ -85,8 +85,6 @@ function App() {
           {animating ? 'Stop' : 'Start'} Animation
         </button>
 
-        {/* Host style is injected by default; no toggle needed */}
-
         {/* Two attachments with the same name are always present now */}
       </div>
 
@@ -173,6 +171,13 @@ function App() {
               >
                 {clicked3D ? 'Clicked' : '+1 (3D button)'}
               </button>
+
+              {/* Simple guard test: nesting Reality inside an Attachment should warn and render nothing */}
+              <div enable-xr>
+                <Reality style={{ width: '1px', height: '1px' }}>
+                  <div>Nested Reality</div>
+                </Reality>
+              </div>
             </div>
           </AttachmentAsset>
 

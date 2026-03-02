@@ -22,6 +22,7 @@ import {
 import { Spatialized2DElement } from '@webspatial/core-sdk'
 import { createPortal } from 'react-dom'
 import { getInheritedStyleProps, parseCornerRadius } from './utils'
+import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
 import {
   asyncLoadStyleToChildWindow,
   setOpenWindowStyle,
@@ -161,6 +162,14 @@ function Spatialized2DElementContainerBase<P extends ElementType>(
   props: Spatialized2DElementContainerProps<P>,
   ref: ForwardedRef<SpatializedDivElementRef>,
 ) {
+  const insideAttachment = useInsideAttachment()
+  if (insideAttachment) {
+    console.warn(
+      '[WebSpatial] SpatialDiv cannot be used inside AttachmentAsset. Rendering as plain HTML.',
+    )
+    const { component: El, ...rest } = props as any
+    return <El ref={ref as any} {...rest} />
+  }
   return (
     <SpatializedContainer<SpatializedElementRef>
       ref={ref as any}

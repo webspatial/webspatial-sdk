@@ -7,6 +7,7 @@ import React, {
 } from 'react'
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
 import { RealityContext, RealityContextValue } from '../context'
+import { useInsideAttachment } from '../context/InsideAttachmentContext'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
@@ -18,6 +19,13 @@ import { SpatializedElement } from '@webspatial/core-sdk'
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
+    const insideAttachment = useInsideAttachment()
+    if (insideAttachment) {
+      console.warn(
+        '[WebSpatial] Reality cannot be used inside AttachmentAsset.',
+      )
+      return null
+    }
     const {
       onSpatialTap,
       onSpatialDragStart,
@@ -86,7 +94,12 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
 
         cleanupReality()
 
-        ctxRef.current = { session, reality, resourceRegistry, attachmentRegistry }
+        ctxRef.current = {
+          session,
+          reality,
+          resourceRegistry,
+          attachmentRegistry,
+        }
         setIsReady(true)
         return reality as SpatializedElement
       } catch (err) {

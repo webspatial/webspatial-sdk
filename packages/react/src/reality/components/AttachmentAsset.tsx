@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRealityContext } from '../context'
+import { InsideAttachmentContext } from '../context/InsideAttachmentContext'
 
 type AttachmentAssetProps = {
   name: string
@@ -21,8 +22,8 @@ export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
 
   if (!containers.length) return null
   return (
-    <>
+    <InsideAttachmentContext.Provider value={true}>
       {containers.map((c, idx) => createPortal(children, c, `${name}-${idx}`))}
-    </>
+    </InsideAttachmentContext.Provider>
   )
 }
