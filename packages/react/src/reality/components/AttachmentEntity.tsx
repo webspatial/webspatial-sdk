@@ -6,6 +6,8 @@ import {
   syncParentHeadToChild,
 } from '../../utils/windowStyleSync'
 
+let instanceCounter = 0
+
 type AttachmentEntityProps = {
   attachment: string
   position?: [number, number, number]
@@ -21,6 +23,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const parent = useParentContext()
   const attachmentRef = useRef<Attachment | null>(null)
   const parentIdRef = useRef<string | null>(null)
+  const instanceIdRef = useRef(`att_${++instanceCounter}`)
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -67,7 +70,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         attachmentRef.current = att
         ctx.attachmentRegistry.addContainer(
           attachmentName,
-          att.id,
+          instanceIdRef.current,
           att.getContainer(),
         )
       } catch (error) {
@@ -81,7 +84,10 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       cancelled = true
       const att = attachmentRef.current
       if (att) {
-        ctx.attachmentRegistry.removeContainer(attachmentName, att.id)
+        ctx.attachmentRegistry.removeContainer(
+          attachmentName,
+          instanceIdRef.current,
+        )
         att.destroy()
         attachmentRef.current = null
       }
