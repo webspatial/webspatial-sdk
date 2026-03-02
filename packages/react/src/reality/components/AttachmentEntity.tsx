@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
+import {
+  setOpenWindowStyle,
+  syncParentHeadToChild,
+} from '../../utils/windowStyleSync'
 
 type AttachmentEntityProps = {
   attachment: string
@@ -38,6 +42,28 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           att.destroy()
           return
         }
+        // Initial style sync for attachment window
+        const windowProxy = att.getWindowProxy()
+        setOpenWindowStyle(windowProxy)
+        await syncParentHeadToChild(windowProxy)
+
+        // Ensure viewport meta
+        const viewport = windowProxy.document.querySelector(
+          'meta[name="viewport"]',
+        )
+        if (!viewport) {
+          const meta = windowProxy.document.createElement('meta')
+          meta.name = 'viewport'
+          meta.content =
+            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+          windowProxy.document.head.appendChild(meta)
+        }
+
+        // Ensure base href for relative URLs
+        const base = windowProxy.document.createElement('base')
+        base.href = document.baseURI
+        windowProxy.document.head.appendChild(base)
+
         attachmentRef.current = att
         ctx.attachmentRegistry.addContainer(
           attachmentName,
@@ -61,6 +87,18 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       }
     }
   }, [ctx, parent])
+
+  // Ongoing style sync when parent document head changes
+  useEffect(() => {
+    const att = attachmentRef.current
+    if (!att) return
+    const windowProxy = att.getWindowProxy()
+    const observer = new MutationObserver(() => {
+      syncParentHeadToChild(windowProxy)
+    })
+    observer.observe(document.head, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [attachmentRef.current])
 
   // Update position/size when they change
   useEffect(() => {

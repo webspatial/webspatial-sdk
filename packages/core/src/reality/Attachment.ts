@@ -41,9 +41,5 @@ export async function createAttachmentEntity(
     throw new Error('createAttachmentEntity failed: ' + result?.errorMessage)
   }
   const { id, windowProxy } = result.data!
-  // Set base href so relative URLs resolve correctly in the child webview
-  ;(windowProxy as any).document.head.innerHTML =
-    `<meta name="viewport" content="width=device-width, initial-scale=1">
-    <base href="${document.baseURI}">`
   return new Attachment(id, windowProxy, options)
 }
