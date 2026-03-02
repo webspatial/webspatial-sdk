@@ -21,8 +21,8 @@ function App() {
   }
 
   const onSpatialMagnify = (evt: SpatialMagnifyEvent) => {
-    console.log('magnify move', evt.detail.magnification)
-    setMagnification(evt.detail.magnification)
+    console.log('magnify move', evt.magnification)
+    setMagnification(evt.magnification)
   }
 
   const onSpatialMagnifyEnd = () => {
@@ -32,8 +32,8 @@ function App() {
   }
 
   const onSpatialMagnifyModel = (evt: ModelSpatialMagnifyEvent) => {
-    console.log('magnify move', evt.detail.magnification)
-    setMagnification(evt.detail.magnification)
+    console.log('magnify move', evt.magnification)
+    setMagnification(evt.magnification)
   }
 
   const onSpatialMagnifyEndModel = () => {

@@ -2,4 +2,8 @@
 '@webspatial/react-sdk': minor
 ---
 
-Expose `translationX`, `translationY`, and `translationZ` on `SpatialDragEvent` (and Entity drag events) to mirror `detail.translation3D`.
+Expose per-event convenience fields on Spatial Events to mirror `detail`:
+
+- `SpatialDragEvent.translationX/Y/Z` (from `detail.translation3D`)
+- `SpatialRotateEvent.quaternion` (from `detail.quaternion`)
+- `SpatialMagnifyEvent.magnification` (from `detail.magnification`)

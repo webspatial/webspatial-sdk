@@ -41,6 +41,10 @@ function createEventProxy<
   translationXGetter?: (event: E) => number | undefined,
   translationYGetter?: (event: E) => number | undefined,
   translationZGetter?: (event: E) => number | undefined,
+  quaternionGetter?: (
+    event: E,
+  ) => import('@webspatial/core-sdk').Quaternion | undefined,
+  magnificationGetter?: (event: E) => number | undefined,
 ): E {
   return new Proxy(event, {
     get(target, prop) {
@@ -80,6 +84,12 @@ function createEventProxy<
       if (prop === 'translationZ' && translationZGetter) {
         return translationZGetter(target) ?? 0
       }
+      if (prop === 'quaternion' && quaternionGetter) {
+        return quaternionGetter(target) ?? { x: 0, y: 0, z: 0, w: 1 }
+      }
+      if (prop === 'magnification' && magnificationGetter) {
+        return magnificationGetter(target) ?? 1
+      }
       return Reflect.get(target, prop)
     },
   })
@@ -100,6 +110,10 @@ function createEventHandler<
   translationXGetter?: (event: E) => number | undefined,
   translationYGetter?: (event: E) => number | undefined,
   translationZGetter?: (event: E) => number | undefined,
+  quaternionGetter?: (
+    event: E,
+  ) => import('@webspatial/core-sdk').Quaternion | undefined,
+  magnificationGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
@@ -115,6 +129,8 @@ function createEventHandler<
           translationXGetter,
           translationYGetter,
           translationZGetter,
+          quaternionGetter,
+          magnificationGetter,
         )
         handler(proxyEvent)
       }
@@ -159,6 +175,16 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialRotate = createEventHandler<T, SpatialRotateEvent<T>>(
     spatialEvents.onSpatialRotate,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialRotateEvent<T>) => ev.detail?.quaternion,
   )
 
   const onSpatialRotateEnd = createEventHandler<T, SpatialRotateEndEvent<T>>(
@@ -169,6 +195,17 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialMagnify = createEventHandler<T, SpatialMagnifyEvent<T>>(
     spatialEvents.onSpatialMagnify,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialMagnifyEvent<T>) => ev.detail?.magnification,
   )
 
   const onSpatialMagnifyEnd = createEventHandler<T, SpatialMagnifyEndEvent<T>>(
