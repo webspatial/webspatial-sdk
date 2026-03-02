@@ -39,7 +39,11 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           return
         }
         attachmentRef.current = att
-        ctx.attachmentRegistry.setContainer(attachmentName, att.getContainer())
+        ctx.attachmentRegistry.addContainer(
+          attachmentName,
+          att.id,
+          att.getContainer(),
+        )
       } catch (error) {
         console.error('[AttachmentEntity] init error:', error)
       }
@@ -49,11 +53,12 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
     return () => {
       cancelled = true
-      if (attachmentRef.current) {
-        attachmentRef.current.destroy()
+      const att = attachmentRef.current
+      if (att) {
+        ctx.attachmentRegistry.removeContainer(attachmentName, att.id)
+        att.destroy()
         attachmentRef.current = null
       }
-      ctx.attachmentRegistry.removeContainer(attachmentName)
     }
   }, [ctx, parent])
 
@@ -61,13 +66,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   useEffect(() => {
     if (!attachmentRef.current) return
     attachmentRef.current.update({ position, size })
-  }, [
-    position?.[0],
-    position?.[1],
-    position?.[2],
-    size?.width,
-    size?.height,
-  ])
+  }, [position?.[0], position?.[1], position?.[2], size?.width, size?.height])
 
   return null
 }

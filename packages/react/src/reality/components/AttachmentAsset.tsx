@@ -12,13 +12,17 @@ export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
   children,
 }) => {
   const ctx = useRealityContext()
-  const [container, setContainer] = useState<HTMLElement | null>(null)
+  const [containers, setContainers] = useState<HTMLElement[]>([])
 
   useEffect(() => {
     if (!ctx) return
-    return ctx.attachmentRegistry.onContainerChange(name, setContainer)
+    return ctx.attachmentRegistry.onContainersChange(name, setContainers)
   }, [ctx, name])
 
-  if (!container) return null
-  return createPortal(children, container)
+  if (!containers.length) return null
+  return (
+    <>
+      {containers.map((c, idx) => createPortal(children, c, `${name}-${idx}`))}
+    </>
+  )
 }

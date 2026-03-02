@@ -1,27 +1,37 @@
 import { createContext, useContext } from 'react'
 
-type ContainerChangeCallback = (container: HTMLElement | null) => void
+type ContainersChangeCallback = (containers: HTMLElement[]) => void
 
 export class AttachmentRegistry {
-  private containers = new Map<string, HTMLElement>()
-  private listeners = new Map<string, Set<ContainerChangeCallback>>()
+  // name → (instanceId → container)
+  private containers = new Map<string, Map<string, HTMLElement>>()
+  private listeners = new Map<string, Set<ContainersChangeCallback>>()
 
-  setContainer(name: string, container: HTMLElement) {
-    this.containers.set(name, container)
-    this.listeners.get(name)?.forEach(cb => cb(container))
+  addContainer(name: string, instanceId: string, container: HTMLElement) {
+    if (!this.containers.has(name)) {
+      this.containers.set(name, new Map())
+    }
+    this.containers.get(name)!.set(instanceId, container)
+    this.notifyListeners(name)
   }
 
-  getContainer(name: string): HTMLElement | undefined {
-    return this.containers.get(name)
+  removeContainer(name: string, instanceId: string) {
+    this.containers.get(name)?.delete(instanceId)
+    if (this.containers.get(name)?.size === 0) {
+      this.containers.delete(name)
+    }
+    this.notifyListeners(name)
   }
 
-  onContainerChange(
-    name: string,
-    cb: ContainerChangeCallback,
-  ): () => void {
-    const existing = this.containers.get(name)
-    if (existing) {
-      cb(existing)
+  getContainers(name: string): HTMLElement[] {
+    const map = this.containers.get(name)
+    return map ? Array.from(map.values()) : []
+  }
+
+  onContainersChange(name: string, cb: ContainersChangeCallback): () => void {
+    const current = this.getContainers(name)
+    if (current.length > 0) {
+      cb(current)
     }
     if (!this.listeners.has(name)) {
       this.listeners.set(name, new Set())
@@ -32,9 +42,9 @@ export class AttachmentRegistry {
     }
   }
 
-  removeContainer(name: string) {
-    this.containers.delete(name)
-    this.listeners.get(name)?.forEach(cb => cb(null))
+  private notifyListeners(name: string) {
+    const cs = this.getContainers(name)
+    this.listeners.get(name)?.forEach(cb => cb(cs))
   }
 
   destroy() {
