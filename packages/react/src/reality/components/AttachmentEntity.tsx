@@ -48,6 +48,10 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         // Initial style sync for attachment window
         const windowProxy = att.getWindowProxy()
         setOpenWindowStyle(windowProxy)
+        windowProxy.document.body.style.display = 'block'
+        windowProxy.document.body.style.minWidth = '100%'
+        windowProxy.document.body.style.maxWidth = '100%'
+        windowProxy.document.body.style.minHeight = '100%'
         await syncParentHeadToChild(windowProxy)
 
         // Ensure viewport meta

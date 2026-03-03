@@ -259,7 +259,7 @@ function App() {
                   <AttachmentEntity
                     attachment="sphere-label"
                     position={[0, 0.1, 0]}
-                    size={{ width: 100, height: 40 }}
+                    size={{ width: 100, height: 200 }}
                   />
                 )}
               </Entity>
