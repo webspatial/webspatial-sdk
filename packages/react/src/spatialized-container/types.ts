@@ -129,6 +129,9 @@ export type SpatialTapEvent<
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    readonly clientX: number
+    readonly clientY: number
+    readonly clientZ: number
   }
 
 export type SpatialDragStartEvent<
@@ -138,6 +141,9 @@ export type SpatialDragStartEvent<
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    readonly clientX: number
+    readonly clientY: number
+    readonly clientZ: number
   }
 
 export type SpatialDragEvent<

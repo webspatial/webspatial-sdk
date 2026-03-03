@@ -8,6 +8,8 @@ import {
   ModelSpatialDragEndEvent,
   SpatialDragEvent,
   type SpatialDragStartEvent,
+  ModelSpatialTapEvent,
+  SpatialTapEvent,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
@@ -63,7 +65,14 @@ function App() {
   }
 
   const onModelSpatialDragStart = (evt: ModelSpatialDragStartEvent) => {
-    console.log('model drag start', evt.offsetX, evt.detail.startLocation3D)
+    console.log(
+      'model drag start',
+      evt.offsetX,
+      evt.offsetY,
+      evt.clientX,
+      evt.clientY,
+      evt.clientZ,
+    )
   }
 
   const onModelSpatialDrag = (evt: ModelSpatialDragEvent) => {
@@ -89,8 +98,16 @@ function App() {
         onSpatialDragStart={onModelSpatialDragStart}
         onSpatialDrag={onModelSpatialDrag}
         onSpatialDragEnd={onModelSpatialDragEnd}
-        onSpatialTap={() => {
-          console.log('dbg model tap')
+        onSpatialTap={(evt: ModelSpatialTapEvent) => {
+          console.log(
+            'dbg model tap',
+            evt.clientX,
+            evt.clientY,
+            evt.clientZ,
+            evt.offsetX,
+            evt.offsetY,
+            evt.offsetZ,
+          )
         }}
       />
       <div
@@ -103,8 +120,16 @@ function App() {
         onClick={() => {
           console.log('dbg onClick')
         }}
-        onSpatialTap={() => {
-          console.log('dbg div tap')
+        onSpatialTap={(evt: SpatialTapEvent) => {
+          console.log(
+            'dbg div tap',
+            evt.clientX,
+            evt.clientY,
+            evt.clientZ,
+            evt.offsetX,
+            evt.offsetY,
+            evt.offsetZ,
+          )
         }}
       >
         hello wolrd
