@@ -4,9 +4,11 @@ on:
   pull_request:
     branches:
       - stable
+      - main
   push:
     branches:
-      - auto-test-package
+      - main
+      - stable
   workflow_dispatch:
 
 permissions:
@@ -24,51 +26,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Prepare auto-test-package with PR changes (exclude autoTest and platform adapter index)
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASE_BRANCH="auto-test-package"
-          PR_SHA="${{ github.event.pull_request.head.sha }}"
-          EXCLUDE_1="packages/autoTest"
-          EXCLUDE_2="packages/core/src/platform-adapter/index.ts"
-          EXCLUDE_3=".github"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git fetch origin "${BASE_BRANCH}:${BASE_BRANCH}"
-          git checkout "${BASE_BRANCH}"
-          git checkout -b "ci/autotest-premerge-${{ github.run_id }}"
-
-          git fetch origin "${PR_SHA}"
-
-          # Get list of changed files (excluding specified paths)
-          CHANGED_FILES=$(git diff --name-only "${BASE_BRANCH}...${PR_SHA}" -- . ":(exclude)${EXCLUDE_1}" ":(exclude)${EXCLUDE_2}" ":(exclude)${EXCLUDE_3}" || true)
-
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No applicable changes to apply (after excludes)."
-            exit 0
-          fi
-
-          # Checkout changed files from PR branch (force override)
-          echo "Applying changes from PR (force overriding conflicting files):"
-          echo "$CHANGED_FILES"
-
-          # Checkout each file individually to handle potential path issues
-          echo "$CHANGED_FILES" | while read -r file; do
-            if [ -n "$file" ]; then
-              git checkout "${PR_SHA}" -- "$file"
-            fi
-          done
-
-          # Stage all changes
-          git add .
-
-          # Commit changes
-          git commit -m "ci: apply PR changes onto ${BASE_BRANCH} (excluding ${EXCLUDE_1}, ${EXCLUDE_2}, ${EXCLUDE_3})"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
