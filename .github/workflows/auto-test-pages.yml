@@ -39,6 +39,15 @@ jobs:
       - name: Install autotest and build required packages
         run: pnpm -F autotest run setup-local
 
+      - name: Cache Puppeteer browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Chrome for Puppeteer
+        run: pnpm --filter autotest exec puppeteer browsers install chrome
+
       - name: Record START_TIME
         run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
