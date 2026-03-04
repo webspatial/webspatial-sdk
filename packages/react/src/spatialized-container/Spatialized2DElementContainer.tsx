@@ -168,7 +168,11 @@ function Spatialized2DElementContainerBase<P extends ElementType>(
       '[WebSpatial] SpatialDiv cannot be used inside AttachmentAsset. Rendering as plain HTML.',
     )
     return (
-      <div ref={ref as React.Ref<HTMLDivElement>} className={props.className} style={props.style}>
+      <div
+        ref={ref as React.Ref<HTMLDivElement>}
+        className={props.className}
+        style={props.style}
+      >
         {props.children}
       </div>
     )
