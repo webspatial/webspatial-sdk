@@ -11,6 +11,7 @@ import {
   SceneGraph,
   SphereEntity,
   UnlitMaterial,
+  Model,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
@@ -177,6 +178,11 @@ function App() {
                 <Reality style={{ width: '1px', height: '1px' }}>
                   <div>Nested Reality</div>
                 </Reality>
+              </div>
+
+              {/* Simple model guard check: should degrade to 2D <model> inside attachment */}
+              <div style={{ marginTop: 8 }}>
+                <Model enable-xr src="/assets/sample.usdz" style={{ width: 40, height: 20 }} />
               </div>
             </div>
           </AttachmentAsset>

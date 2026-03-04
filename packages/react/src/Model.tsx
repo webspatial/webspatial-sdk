@@ -5,6 +5,7 @@ import {
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
 import { withSSRSupported } from './ssr'
+import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
 
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -17,8 +18,15 @@ export type ModelRef = SpatializedStatic3DElementRef
 const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
+  const insideAttachment = useInsideAttachment()
   const { 'enable-xr': enableXR, ...restProps } = props
-  if (!enableXR || !spatial.runInSpatialWeb()) {
+  if (!enableXR || !spatial.runInSpatialWeb() || insideAttachment) {
+    if (enableXR && insideAttachment) {
+      // graceful degrade warn
+      console.warn(
+        '[WebSpatial] Model with enable-xr cannot be used inside AttachmentAsset. Rendering as plain <model>.',
+      )
+    }
     const {
       onSpatialTap,
       onSpatialDragStart,
