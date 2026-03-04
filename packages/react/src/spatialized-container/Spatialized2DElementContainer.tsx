@@ -167,14 +167,26 @@ function Spatialized2DElementContainerBase<P extends ElementType>(
     console.warn(
       '[WebSpatial] SpatialDiv cannot be used inside AttachmentAsset. Rendering as plain HTML.',
     )
+    // When rendering as plain HTML, strip spatial-only props to avoid React warnings
+    // and keep the rest of the DOM props intact.
+    const {
+      component: El,
+      children,
+      'enable-xr': _enableXR,
+      onSpatialTap: _onSpatialTap,
+      onSpatialDragStart: _onSpatialDragStart,
+      onSpatialDrag: _onSpatialDrag,
+      onSpatialDragEnd: _onSpatialDragEnd,
+      onSpatialRotate: _onSpatialRotate,
+      onSpatialRotateEnd: _onSpatialRotateEnd,
+      onSpatialMagnify: _onSpatialMagnify,
+      onSpatialMagnifyEnd: _onSpatialMagnifyEnd,
+      ...rest
+    } = props as any
     return (
-      <div
-        ref={ref as React.Ref<HTMLDivElement>}
-        className={props.className}
-        style={props.style}
-      >
-        {props.children}
-      </div>
+      <El ref={ref as any} {...rest}>
+        {children}
+      </El>
     )
   }
   return (

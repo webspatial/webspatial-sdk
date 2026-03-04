@@ -22,6 +22,16 @@ export function asyncLoadStyleToChildWindow(
   })
 }
 
+const WEBSPATIAL_SYNC_ATTR = 'data-webspatial-sync'
+
+function clearPreviousSyncedHead(childWindow: WindowProxy) {
+  // Remove nodes previously synced from the parent document.
+  // Without this, repeated syncs will append duplicates indefinitely.
+  const head = childWindow.document.head
+  const prev = head.querySelectorAll(`[${WEBSPATIAL_SYNC_ATTR}="1"]`)
+  prev.forEach(n => n.parentNode?.removeChild(n))
+}
+
 export function setOpenWindowStyle(openedWindow: WindowProxy) {
   openedWindow.document.documentElement.style.cssText +=
     document.documentElement.style.cssText
@@ -38,9 +48,14 @@ export function setOpenWindowStyle(openedWindow: WindowProxy) {
 }
 
 export async function syncParentHeadToChild(childWindow: WindowProxy) {
+  clearPreviousSyncedHead(childWindow)
   const styleLoadedPromises: Array<Promise<any>> = []
   for (let i = 0; i < document.head.children.length; i++) {
     const n = document.head.children[i].cloneNode(true) as any
+    // mark as synced so we can clean it up next time
+    if (n?.setAttribute) {
+      n.setAttribute(WEBSPATIAL_SYNC_ATTR, '1')
+    }
     if (
       n.nodeName === 'LINK' &&
       (n as HTMLLinkElement).rel === 'stylesheet' &&

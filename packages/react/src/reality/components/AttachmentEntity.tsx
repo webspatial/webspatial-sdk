@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import {
@@ -24,6 +24,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const attachmentRef = useRef<Attachment | null>(null)
   const parentIdRef = useRef<string | null>(null)
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
+  const attachmentNameRef = useRef(attachmentName)
+  const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -72,8 +74,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         windowProxy.document.head.appendChild(base)
 
         attachmentRef.current = att
+        setChildWindow(windowProxy)
         ctx.attachmentRegistry.addContainer(
-          attachmentName,
+          attachmentNameRef.current,
           instanceIdRef.current,
           att.getContainer(),
         )
@@ -89,26 +92,55 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       const att = attachmentRef.current
       if (att) {
         ctx.attachmentRegistry.removeContainer(
-          attachmentName,
+          attachmentNameRef.current,
           instanceIdRef.current,
         )
         att.destroy()
         attachmentRef.current = null
+        setChildWindow(null)
       }
     }
   }, [ctx, parent])
 
+  // If attachment name changes at runtime, migrate the container mapping
+  useEffect(() => {
+    if (!ctx) return
+    const att = attachmentRef.current
+    const prevName = attachmentNameRef.current
+    if (att && prevName !== attachmentName) {
+      ctx.attachmentRegistry.removeContainer(prevName, instanceIdRef.current)
+      ctx.attachmentRegistry.addContainer(
+        attachmentName,
+        instanceIdRef.current,
+        att.getContainer(),
+      )
+      attachmentNameRef.current = attachmentName
+    } else {
+      attachmentNameRef.current = attachmentName
+    }
+  }, [ctx, attachmentName])
+
   // Ongoing style sync when parent document head changes
   useEffect(() => {
-    const att = attachmentRef.current
-    if (!att) return
-    const windowProxy = att.getWindowProxy()
-    const observer = new MutationObserver(() => {
-      syncParentHeadToChild(windowProxy)
-    })
+    if (!childWindow) return
+    let timer: number | undefined
+    const scheduleSync = () => {
+      if (timer) window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        syncParentHeadToChild(childWindow)
+      }, 100)
+    }
+
+    // initial sync (in case head changes happened between create and observer attach)
+    scheduleSync()
+
+    const observer = new MutationObserver(scheduleSync)
     observer.observe(document.head, { childList: true, subtree: true })
-    return () => observer.disconnect()
-  }, [attachmentRef.current])
+    return () => {
+      if (timer) window.clearTimeout(timer)
+      observer.disconnect()
+    }
+  }, [childWindow])
 
   // Update position/size when they change
   useEffect(() => {

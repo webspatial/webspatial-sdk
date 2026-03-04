@@ -117,6 +117,7 @@ struct SpatializedDynamic3DView: View {
                 }
             }
         }, update: { _, attachments in
+            let rootEntity = spatializedDynamic3DElement.getRoot()
             // Update attachment positions and parenting
             for (_, info) in spatialScene.attachmentManager.attachments {
                 if let attachmentEntity = attachments.entity(for: info.id) {
@@ -125,6 +126,11 @@ struct SpatializedDynamic3DView: View {
                     if let parentEntity = findSpatialEntity(info.parentEntityId) {
                         if attachmentEntity.parent != parentEntity {
                             parentEntity.addChild(attachmentEntity)
+                        }
+                    } else {
+                        // Parent entity might have been destroyed; fall back to root.
+                        if attachmentEntity.parent != rootEntity {
+                            rootEntity.addChild(attachmentEntity)
                         }
                     }
                 }
