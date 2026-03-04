@@ -1,4 +1,4 @@
-import { Vec3 } from '@webspatial/core-sdk'
+import type { Quaternion, Vec3 } from '@webspatial/core-sdk'
 import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 import { SpatialDragStartEvent as CoreSpatialDragStartEvent } from '@webspatial/core-sdk'
@@ -41,7 +41,12 @@ export type SpatialDragStartEntityEvent<
   }
 
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
-  CoreSpatialDragEvent & allTarget<T>
+  CoreSpatialDragEvent &
+    allTarget<T> & {
+      readonly translationX: number
+      readonly translationY: number
+      readonly translationZ: number
+    }
 
 export type SpatialDragEndEntityEvent<
   T extends EntityRefShape = EntityRefShape,
@@ -49,14 +54,20 @@ export type SpatialDragEndEntityEvent<
 // rotate
 export type SpatialRotateEntityEvent<
   T extends EntityRefShape = EntityRefShape,
-> = CoreSpatialRotateEvent & allTarget<T>
+> = CoreSpatialRotateEvent &
+  allTarget<T> & {
+    readonly quaternion: Quaternion
+  }
 export type SpatialRotateEndEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialRotateEndEvent & allTarget<T>
 // magnify
 export type SpatialMagnifyEntityEvent<
   T extends EntityRefShape = EntityRefShape,
-> = CoreSpatialMagnifyEvent & allTarget<T>
+> = CoreSpatialMagnifyEvent &
+  allTarget<T> & {
+    readonly magnification: number
+  }
 export type SpatialMagnifyEndEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialMagnifyEndEvent & allTarget<T>

@@ -38,6 +38,13 @@ function createEventProxy<
   clientXGetter?: (event: E) => number | undefined,
   clientYGetter?: (event: E) => number | undefined,
   clientZGetter?: (event: E) => number | undefined,
+  translationXGetter?: (event: E) => number | undefined,
+  translationYGetter?: (event: E) => number | undefined,
+  translationZGetter?: (event: E) => number | undefined,
+  quaternionGetter?: (
+    event: E,
+  ) => import('@webspatial/core-sdk').Quaternion | undefined,
+  magnificationGetter?: (event: E) => number | undefined,
 ): E {
   return new Proxy(event, {
     get(target, prop) {
@@ -68,6 +75,21 @@ function createEventProxy<
       if (prop === 'clientZ' && clientZGetter) {
         return clientZGetter(target) ?? 0
       }
+      if (prop === 'translationX' && translationXGetter) {
+        return translationXGetter(target) ?? 0
+      }
+      if (prop === 'translationY' && translationYGetter) {
+        return translationYGetter(target) ?? 0
+      }
+      if (prop === 'translationZ' && translationZGetter) {
+        return translationZGetter(target) ?? 0
+      }
+      if (prop === 'quaternion' && quaternionGetter) {
+        return quaternionGetter(target) ?? { x: 0, y: 0, z: 0, w: 1 }
+      }
+      if (prop === 'magnification' && magnificationGetter) {
+        return magnificationGetter(target) ?? 1
+      }
       return Reflect.get(target, prop)
     },
   })
@@ -85,6 +107,13 @@ function createEventHandler<
   clientXGetter?: (event: E) => number | undefined,
   clientYGetter?: (event: E) => number | undefined,
   clientZGetter?: (event: E) => number | undefined,
+  translationXGetter?: (event: E) => number | undefined,
+  translationYGetter?: (event: E) => number | undefined,
+  translationZGetter?: (event: E) => number | undefined,
+  quaternionGetter?: (
+    event: E,
+  ) => import('@webspatial/core-sdk').Quaternion | undefined,
+  magnificationGetter?: (event: E) => number | undefined,
 ): ((event: E) => void) | undefined {
   return handler
     ? (event: E) => {
@@ -97,6 +126,11 @@ function createEventHandler<
           clientXGetter,
           clientYGetter,
           clientZGetter,
+          translationXGetter,
+          translationYGetter,
+          translationZGetter,
+          quaternionGetter,
+          magnificationGetter,
         )
         handler(proxyEvent)
       }
@@ -122,6 +156,15 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialDrag = createEventHandler<T, SpatialDragEvent<T>>(
     spatialEvents.onSpatialDrag,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.x,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.y,
+    (ev: SpatialDragEvent<T>) => ev.detail?.translation3D?.z,
   )
 
   const onSpatialDragEnd = createEventHandler<T, SpatialDragEndEvent<T>>(
@@ -132,6 +175,16 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialRotate = createEventHandler<T, SpatialRotateEvent<T>>(
     spatialEvents.onSpatialRotate,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialRotateEvent<T>) => ev.detail?.quaternion,
   )
 
   const onSpatialRotateEnd = createEventHandler<T, SpatialRotateEndEvent<T>>(
@@ -142,6 +195,17 @@ export function useSpatialEventsBase<T extends SpatializedElementRef>(
   const onSpatialMagnify = createEventHandler<T, SpatialMagnifyEvent<T>>(
     spatialEvents.onSpatialMagnify,
     currentTargetGetter,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    (ev: SpatialMagnifyEvent<T>) => ev.detail?.magnification,
   )
 
   const onSpatialMagnifyEnd = createEventHandler<T, SpatialMagnifyEndEvent<T>>(
