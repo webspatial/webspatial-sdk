@@ -18,7 +18,7 @@ export class Attachment extends SpatialObject {
   }
 
   getContainer(): HTMLElement {
-    return (this.windowProxy as any).document.body
+    return (this.windowProxy as Window).document.body
   }
 
   getWindowProxy(): WindowProxy {

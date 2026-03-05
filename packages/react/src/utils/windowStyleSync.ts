@@ -49,23 +49,22 @@ export function setOpenWindowStyle(openedWindow: WindowProxy) {
 
 export async function syncParentHeadToChild(childWindow: WindowProxy) {
   clearPreviousSyncedHead(childWindow)
-  const styleLoadedPromises: Array<Promise<any>> = []
+  const styleLoadedPromises: Promise<boolean>[] = []
   for (let i = 0; i < document.head.children.length; i++) {
-    const n = document.head.children[i].cloneNode(true) as any
-    // mark as synced so we can clean it up next time
-    if (n?.setAttribute) {
-      n.setAttribute(WEBSPATIAL_SYNC_ATTR, '1')
+    const node = document.head.children[i].cloneNode(true)
+    if (node instanceof Element) {
+      // mark as synced so we can clean it up next time
+      node.setAttribute(WEBSPATIAL_SYNC_ATTR, '1')
     }
     if (
-      n.nodeName === 'LINK' &&
-      (n as HTMLLinkElement).rel === 'stylesheet' &&
-      (n as HTMLLinkElement).href
+      node instanceof HTMLLinkElement &&
+      node.rel === 'stylesheet' &&
+      node.href
     ) {
-      styleLoadedPromises.push(
-        asyncLoadStyleToChildWindow(childWindow, n as HTMLLinkElement),
-      )
+      styleLoadedPromises.push(asyncLoadStyleToChildWindow(childWindow, node))
     } else {
-      childWindow.document.head.appendChild(n)
+      // node is a generic Node; append as-is
+      childWindow.document.head.appendChild(node)
     }
   }
 

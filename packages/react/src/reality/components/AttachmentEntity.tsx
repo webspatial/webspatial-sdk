@@ -50,6 +50,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         // Initial style sync for attachment window
         const windowProxy = att.getWindowProxy()
         setOpenWindowStyle(windowProxy)
+        // WebView environments can apply unexpected default styles to the body elmt
+        // Explicitly set these to ensure the attachment fills its container consistently.
         windowProxy.document.body.style.display = 'block'
         windowProxy.document.body.style.minWidth = '100%'
         windowProxy.document.body.style.maxWidth = '100%'
@@ -124,6 +126,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   useEffect(() => {
     if (!childWindow) return
     let timer: number | undefined
+    // Debounce rapid successive head mutations to avoid redundant style syncs
     const scheduleSync = () => {
       if (timer) window.clearTimeout(timer)
       timer = window.setTimeout(() => {

@@ -30,25 +30,29 @@ function DegradedContainer<T extends SpatializedElementRef>({
 }: SpatializedContainerProps<T> & {
   innerRef: ForwardedRef<SpatializedElementRef<T>>
 }) {
+  type DegradedProps = SpatializedContainerProps<T> & {
+    'enable-xr'?: unknown
+    sizingMode?: unknown
+  }
   const {
     component: Component,
     children,
-    'enable-xr': _enableXR,
-    onSpatialTap: _1,
-    onSpatialDragStart: _2,
-    onSpatialDrag: _3,
-    onSpatialDragEnd: _4,
-    onSpatialRotate: _5,
-    onSpatialRotateEnd: _6,
-    onSpatialMagnify: _7,
-    onSpatialMagnifyEnd: _8,
+    ['enable-xr']: _enableXR,
+    onSpatialTap: _onSpatialTap,
+    onSpatialDragStart: _onSpatialDragStart,
+    onSpatialDrag: _onSpatialDrag,
+    onSpatialDragEnd: _onSpatialDragEnd,
+    onSpatialRotate: _onSpatialRotate,
+    onSpatialRotateEnd: _onSpatialRotateEnd,
+    onSpatialMagnify: _onSpatialMagnify,
+    onSpatialMagnifyEnd: _onSpatialMagnifyEnd,
     spatializedContent: _content,
     createSpatializedElement: _create,
     getExtraSpatializedElementProperties: _getExtra,
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
     ...restProps
-  } = inprops as any
+  } = inprops as DegradedProps
   return (
     <Component ref={innerRef} {...restProps}>
       {children}

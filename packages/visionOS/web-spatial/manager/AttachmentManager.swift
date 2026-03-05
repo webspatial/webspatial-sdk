@@ -17,6 +17,14 @@ struct AttachmentInfo: Identifiable, Equatable {
 class AttachmentManager {
     var attachments: [String: AttachmentInfo] = [:]
 
+    // TODO: AttachmentManager.remove() dispatches destroy() asynchronously while
+    // SwiftUI tears down the outgoing SpatialWebView from the RealityView's
+    // ForEach. Both happen on the main queue but ordering isn't guaranteed — if
+    // destroy() nils the controller before SwiftUI finishes teardown,
+    // getController() re-creates it with only `model` set, missing the four
+    // callback registrations from init(url:). Refactor to give attachments a
+    // dedicated view path (e.g. AttachmentWebView) that doesn't depend on
+    // SpatialWebViewModel's lazy re-init.
     func create(
         id: String,
         parentEntityId: String,
