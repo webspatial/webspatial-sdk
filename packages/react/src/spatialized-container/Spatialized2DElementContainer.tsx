@@ -22,13 +22,6 @@ import {
 import { Spatialized2DElement } from '@webspatial/core-sdk'
 import { createPortal } from 'react-dom'
 import { getInheritedStyleProps, parseCornerRadius } from './utils'
-import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
-import {
-  asyncLoadStyleToChildWindow,
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../utils/windowStyleSync'
-
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
@@ -65,20 +58,6 @@ function getJSXPortalInstance<P extends ElementType>(
   return <El style={style} {...props} />
 }
 
-function useSyncHeaderStyle(windowProxy: WindowProxy) {
-  useEffect(() => {
-    // sync parent head to child when document header style changed
-    const headObserver = new MutationObserver(_ => {
-      syncParentHeadToChild(windowProxy)
-    })
-
-    headObserver.observe(document.head, { childList: true, subtree: true })
-    return () => {
-      headObserver.disconnect()
-    }
-  }, [])
-}
-
 function useSyncDocumentTitle(
   windowProxy: WindowProxy,
   spatializedElement: Spatialized2DElement,
@@ -98,8 +77,6 @@ function SpatializedContent<P extends ElementType>(
   const { spatializedElement, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
-
-  useSyncHeaderStyle(windowProxy)
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
@@ -138,23 +115,6 @@ function getExtraSpatializedElementProperties(
 
 async function createSpatializedElement() {
   const spatializedElement = await getSession()!.createSpatialized2DElement()
-  const windowProxy = spatializedElement.windowProxy
-  setOpenWindowStyle(windowProxy)
-  await syncParentHeadToChild(windowProxy)
-
-  const viewport = windowProxy.document.querySelector('meta[name="viewport"]')
-  if (viewport) {
-    viewport?.setAttribute(
-      'content',
-      ` initial-scale=1.0, maximum-scale=1.0, user-scalable=no`,
-    )
-  } else {
-    const meta = windowProxy.document.createElement('meta')
-    meta.name = 'viewport'
-    meta.content = 'initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-    windowProxy.document.head.appendChild(meta)
-  }
-
   return spatializedElement
 }
 
@@ -162,33 +122,6 @@ function Spatialized2DElementContainerBase<P extends ElementType>(
   props: Spatialized2DElementContainerProps<P>,
   ref: ForwardedRef<SpatializedDivElementRef>,
 ) {
-  const insideAttachment = useInsideAttachment()
-  if (insideAttachment) {
-    console.warn(
-      '[WebSpatial] SpatialDiv cannot be used inside AttachmentAsset. Rendering as plain HTML.',
-    )
-    // When rendering as plain HTML, strip spatial-only props to avoid React warnings
-    // and keep the rest of the DOM props intact.
-    const {
-      component: El,
-      children,
-      'enable-xr': _enableXR,
-      onSpatialTap: _onSpatialTap,
-      onSpatialDragStart: _onSpatialDragStart,
-      onSpatialDrag: _onSpatialDrag,
-      onSpatialDragEnd: _onSpatialDragEnd,
-      onSpatialRotate: _onSpatialRotate,
-      onSpatialRotateEnd: _onSpatialRotateEnd,
-      onSpatialMagnify: _onSpatialMagnify,
-      onSpatialMagnifyEnd: _onSpatialMagnifyEnd,
-      ...rest
-    } = props as any
-    return (
-      <El ref={ref as any} {...rest}>
-        {children}
-      </El>
-    )
-  }
   return (
     <SpatializedContainer<SpatializedElementRef>
       ref={ref as any}

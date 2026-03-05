@@ -76,6 +76,10 @@ class SpatialWebViewModel {
     }
 
     func getController() -> SpatialWebController {
+        if controller == nil {
+            controller = SpatialWebController()
+            controller!.model = self
+        }
         return controller!
     }
 

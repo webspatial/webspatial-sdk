@@ -20,13 +20,10 @@ const spatial = new Spatial()
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const insideAttachment = useInsideAttachment()
   const { 'enable-xr': enableXR, ...restProps } = props
+  // Model must handle insideAttachment itself because
+  // SpatializedStatic3DElementContainer passes component="div" to the base,
+  // but the correct degraded element for a Model is a <model> tag, not a <div>.
   if (!enableXR || !spatial.runInSpatialWeb() || insideAttachment) {
-    if (enableXR && insideAttachment) {
-      // graceful degrade warn
-      console.warn(
-        '[WebSpatial] Model with enable-xr cannot be used inside AttachmentAsset. Rendering as plain <model>.',
-      )
-    }
     const {
       onSpatialTap,
       onSpatialDragStart,
@@ -38,7 +35,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialMagnifyEnd,
       ...modelProps
     } = restProps
-    // map to VisionOS26 model tag
+    // map to VisionOS26 model tag outside attachments
     // @ts-ignore
     return <model ref={ref} {...modelProps} />
   }

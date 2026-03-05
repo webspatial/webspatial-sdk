@@ -1,296 +1,430 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
+import React from 'react'
 import {
   AttachmentAsset,
   AttachmentEntity,
   BoxEntity,
-  CylinderEntity,
   enableDebugTool,
   Entity,
   Reality,
   SceneGraph,
-  SphereEntity,
   UnlitMaterial,
   Model,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
-function App() {
-  // Shared state: clicking the 2D button OR the 3D attachment both update this
-  const [count, setCount] = useState(0)
-  const [clicked3D, setClicked3D] = useState(false)
+const attachmentDivStyle = {
+  '--xr-back': 66,
+}
 
-  const [showAttachments, setShowAttachments] = useState(true)
-  const [animating, setAnimating] = useState(false)
-  const [groupPosition, setGroupPosition] = useState({ x: 0, y: 0, z: 0 })
-  const [groupRotation, setGroupRotation] = useState({ x: 0, y: 0, z: 0 })
-  const animationRef = useRef<number | null>(null)
-  const startTimeRef = useRef<number>(0)
-
-  useEffect(() => {
-    if (animating) {
-      startTimeRef.current = performance.now()
-      const animate = () => {
-        const elapsed = (performance.now() - startTimeRef.current) / 1000
-        setGroupPosition({
-          x: Math.sin(elapsed) * 0.15,
-          y: Math.sin(elapsed * 1.5) * 0.05,
-          z: 0,
-        })
-        setGroupRotation({
-          x: 0,
-          y: elapsed * 0.5,
-          z: Math.sin(elapsed * 0.7) * 0.3,
-        })
-        animationRef.current = requestAnimationFrame(animate)
-      }
-      animationRef.current = requestAnimationFrame(animate)
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
-      }
-      setGroupPosition({ x: 0, y: 0, z: 0 })
-      setGroupRotation({ x: 0, y: 0, z: 0 })
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
-      }
-    }
-  }, [animating])
-
-  const btnCls =
-    'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
-
+function TestCase({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
-    <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">Attachment Test</h1>
+    <div className="border border-gray-300 p-4 rounded mb-8">
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      {children}
+    </div>
+  )
+}
 
-      <div className="flex gap-3 mt-4">
-        <button className={btnCls} onClick={() => setCount(c => c + 1)}>
-          Count: {count} (2D button)
-        </button>
+function TestBasicAttachment() {
+  return (
+    <TestCase title="1. Basic Attachment">
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid black' }}
+      >
+        <UnlitMaterial id="matBasic" color="#ff0000" />
+        <AttachmentAsset name="basic-attachment">
+          <div
+            style={{
+              background: 'black',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p>Basic Attachment Content</p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matBasic']}
+            />
+            <AttachmentEntity
+              attachment="basic-attachment"
+              position={[0, 0.1, 0]}
+              size={{ width: 200, height: 100 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
 
-        <button
-          className={btnCls}
-          onClick={() => setShowAttachments(prev => !prev)}
-        >
-          {showAttachments ? 'Hide' : 'Show'} Attachments
-        </button>
-
-        <button className={btnCls} onClick={() => setAnimating(prev => !prev)}>
-          {animating ? 'Stop' : 'Start'} Animation
-        </button>
-
-        {/* Two attachments with the same name are always present now */}
-      </div>
-
-      <div>
-        <Reality
-          style={{
-            width: '600px',
-            height: '600px',
-          }}
-        >
-          <UnlitMaterial
-            id="matRed"
-            color="#ff0000"
-            transparent={true}
-            opacity={0.5}
-          />
-          <UnlitMaterial
-            id="matGreen"
-            color="#00ff00"
-            transparent={true}
-            opacity={0.5}
-          />
-          <UnlitMaterial
-            id="matBlue"
-            color="#0000ff"
-            transparent={true}
-            opacity={0.5}
-          />
-
-          {/* Attachment content shares React state with the main page */}
-          <AttachmentAsset name="counter-label">
+function TestNestedRealityInSpatialDiv() {
+  return (
+    <TestCase title="2. Attachment inside SpatialDiv > Reality">
+      <p className="text-sm text-gray-600 mb-2">
+        Testing that AttachmentEntity works normally when Reality is nested
+        inside a SpatialDiv.
+      </p>
+      <div
+        enable-xr
+        style={{
+          ...attachmentDivStyle,
+          width: '400px',
+          height: '400px',
+          border: '1px solid blue',
+        }}
+      >
+        <Reality style={{ width: '100%', height: '100%' }}>
+          <UnlitMaterial id="matDiv" color="#0000ff" />
+          <AttachmentAsset name="nested-spatialdiv-attachment">
             <div
               style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                borderRadius: 12,
-                padding: 8,
+                background: 'rgba(0,0,100,0.8)',
+                color: 'white',
+                padding: 10,
+                borderRadius: 8,
               }}
             >
-              <style>
-                {`
-                  .xr-hover-btn {
-                    transition: background-color 180ms ease-in-out, transform 120ms ease-in-out;
-                  }
-                  .xr-hover-btn:hover {
-                    background-color: #5a98ff !important;
-                  }
-                  .xr-hover-btn:active {
-                    transform: translateY(1px);
-                  }
-                `}
-              </style>
-              <p
-                className="host-style-test"
-                style={{
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  margin: 0,
-                }}
-              >
-                Count: {count}
-              </p>
-              <button
-                className="xr-hover-btn"
-                onClick={() => {
-                  setCount(c => c + 1)
-                  setClicked3D(true)
-                }}
-                style={{
-                  marginTop: 6,
-                  padding: '4px 12px',
-                  fontSize: 12,
-                  borderRadius: 8,
-                  border: 'none',
-                  backgroundColor: '#4488ff',
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                {clicked3D ? 'Clicked' : '+1 (3D button)'}
-              </button>
-
-              {/* Simple guard test: nesting Reality inside an Attachment should warn and render nothing */}
-              <div enable-xr>
-                <Reality style={{ width: '1px', height: '1px' }}>
-                  <div>Nested Reality</div>
-                </Reality>
-              </div>
-
-              {/* Simple model guard check: should degrade to 2D <model> inside attachment */}
-              <div style={{ marginTop: 8 }}>
-                <Model
-                  enable-xr
-                  src="/assets/sample.usdz"
-                  style={{ width: 40, height: 20 }}
-                />
-              </div>
+              <p>Attachment inside SpatialDiv</p>
             </div>
           </AttachmentAsset>
-
-          <AttachmentAsset name="sphere-label">
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                borderRadius: 12,
-              }}
-            >
-              <p style={{ color: '#66ff66', fontSize: 14, margin: 0 }}>
-                Sphere
-              </p>
-            </div>
-          </AttachmentAsset>
-
-          <AttachmentAsset name="cylinder-label">
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                borderRadius: 12,
-              }}
-            >
-              <p style={{ color: '#6666ff', fontSize: 14, margin: 0 }}>
-                Cylinder
-              </p>
-            </div>
-          </AttachmentAsset>
-
           <SceneGraph>
-            <Entity position={groupPosition} rotation={groupRotation}>
-              {/* Box with shared-state counter attachment */}
-              <Entity position={{ x: -0.2, y: 0, z: 0 }}>
-                <BoxEntity
-                  width={0.1}
-                  height={0.1}
-                  depth={0.1}
-                  materials={['matRed']}
-                />
-                {showAttachments && (
-                  <AttachmentEntity
-                    attachment="counter-label"
-                    position={[0, 0.15, 0]}
-                    size={{ width: 160, height: 80 }}
-                  />
-                )}
-              </Entity>
-
-              {/* Second box uses the same attachment name to verify 1→N rendering */}
-              <Entity position={{ x: -0.35, y: 0, z: 0 }}>
-                <BoxEntity
-                  width={0.1}
-                  height={0.1}
-                  depth={0.1}
-                  materials={['matRed']}
-                />
-                {showAttachments && (
-                  <AttachmentEntity
-                    attachment="counter-label"
-                    position={[0, 0.15, 0]}
-                    size={{ width: 160, height: 80 }}
-                  />
-                )}
-              </Entity>
-
-              <Entity position={{ x: 0, y: 0, z: 0 }}>
-                <SphereEntity radius={0.05} materials={['matGreen']} />
-                {showAttachments && (
-                  <AttachmentEntity
-                    attachment="sphere-label"
-                    position={[0, 0.1, 0]}
-                    size={{ width: 100, height: 200 }}
-                  />
-                )}
-              </Entity>
-
-              <Entity position={{ x: 0.2, y: 0, z: 0 }}>
-                <CylinderEntity
-                  radius={0.05}
-                  height={0.1}
-                  materials={['matBlue']}
-                />
-                {showAttachments && (
-                  <AttachmentEntity
-                    attachment="cylinder-label"
-                    position={[0, 0.12, 0]}
-                    size={{ width: 100, height: 40 }}
-                  />
-                )}
-              </Entity>
+            <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+              <BoxEntity
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                materials={['matDiv']}
+              />
+              <AttachmentEntity
+                attachment="nested-spatialdiv-attachment"
+                position={[0, 0.1, 0]}
+                size={{ width: 220, height: 100 }}
+              />
             </Entity>
           </SceneGraph>
         </Reality>
+      </div>
+    </TestCase>
+  )
+}
+
+function TestModelFallback() {
+  return (
+    <TestCase title="3. Model Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        Models nested inside an AttachmentAsset should degrade to 2D models
+        gracefully.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid green' }}
+      >
+        {/* <p> Testing html</p>
+        <Model
+          // enable-xr
+          src="/modelasset/cone.usdz"
+          style={{ width: 100, height: 100, background: '#fff' }}
+        /> */}
+        <AttachmentAsset name="model-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(0,100,0,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <p className="mb-2">Model Fallback below:</p>
+            <div style={{ background: '#fff', padding: 10, borderRadius: 8 }}>
+              <Model
+                enable-xr
+                src="/modelasset/cone.usdz"
+                style={{ width: 150, height: 150, display: 'block' }}
+              />
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0 }}>
+            <AttachmentEntity
+              attachment="model-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 300, height: 250 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestRealityFallback() {
+  return (
+    <TestCase title="4. Reality Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        Reality nested inside an AttachmentAsset should warn and render nothing.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid red' }}
+      >
+        <AttachmentAsset name="reality-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(100,0,0,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p className="mb-2">Nested Reality below:</p>
+            <div enable-xr>
+              <Reality
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  border: '1px solid white',
+                }}
+              >
+                <div style={{ color: 'white' }}>Should not render in 3D</div>
+              </Reality>
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0 }}>
+            <AttachmentEntity
+              attachment="reality-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 250, height: 200 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestSpatialDivFallback() {
+  return (
+    <TestCase title="5. SpatialDiv Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        SpatialDiv nested inside an AttachmentAsset should degrade safely into
+        the attachment.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid purple' }}
+      >
+        <AttachmentAsset name="spatialdiv-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(50,0,100,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p className="mb-2">SpatialDiv Fallback below:</p>
+            <div
+              enable-xr
+              style={{
+                background: '#fff',
+                color: '#000',
+                padding: 10,
+                borderRadius: 8,
+                width: 100,
+                height: 100,
+              }}
+            >
+              <span>Spatial Content</span>
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <AttachmentEntity
+              attachment="spatialdiv-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 250, height: 200 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestSharedAttachmentState() {
+  const [count, setCount] = React.useState(0)
+
+  return (
+    <TestCase title="6. Shared State — Multiple AttachmentEntities referencing same AttachmentAsset">
+      <p className="text-sm text-gray-600 mb-2">
+        Two AttachmentEntities reference the same "shared-counter" asset.
+        Clicking +1 in either portal should update the count in both, proving
+        React state is shared across instances.
+      </p>
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid orange' }}
+      >
+        <UnlitMaterial id="matSharedA" color="#ff8800" />
+        <UnlitMaterial id="matSharedB" color="#ffaa00" />
+
+        <AttachmentAsset name="shared-counter">
+          <div
+            style={{
+              background: 'rgba(80,40,0,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 14 }}>Count: {count}</p>
+            <button
+              onClick={() => setCount(c => c + 1)}
+              style={{
+                padding: '4px 12px',
+                borderRadius: 6,
+                border: 'none',
+                background: '#ff8800',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: 12,
+              }}
+            >
+              +1
+            </button>
+          </div>
+        </AttachmentAsset>
+
+        <SceneGraph>
+          {/* First entity — left box */}
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matSharedA']}
+            />
+            <AttachmentEntity
+              attachment="shared-counter"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+
+          {/* Second entity — right box, same attachment name */}
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matSharedB']}
+            />
+            <AttachmentEntity
+              attachment="shared-counter"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+
+      {/* Host-page mirror — proves the same React state drives both portals and the 2D page */}
+      <p className="text-sm text-gray-500 mt-2">
+        Host page count mirror: <strong>{count}</strong> — should always match
+        both portals.
+      </p>
+    </TestCase>
+  )
+}
+
+function TestAttachmentAnimation() {
+  const [y, setY] = React.useState(0)
+
+  React.useEffect(() => {
+    let raf: number
+    const animate = () => {
+      setY(Math.sin(Date.now() / 800) * 0.08)
+      raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  return (
+    <TestCase title="7. Attachment Follows Animated Entity">
+      <p className="text-sm text-gray-600 mb-2">
+        Attachment should follow its parent entity as it animates up and down.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid teal' }}
+      >
+        <UnlitMaterial id="matAnim" color="#00aaaa" />
+        <AttachmentAsset name="anim-attachment">
+          <div
+            style={{
+              background: 'rgba(0,80,80,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 14 }}>Following parent</p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matAnim']}
+            />
+            <AttachmentEntity
+              attachment="anim-attachment"
+              position={[0, 0.12, 0]}
+              size={{ width: 180, height: 60 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function App() {
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Attachment Tests</h1>
+
+      <div className="flex flex-wrap gap-8">
+        <TestBasicAttachment />
+        <TestNestedRealityInSpatialDiv />
+        <TestModelFallback />
+        <TestRealityFallback />
+        <TestSpatialDivFallback />
+        <TestSharedAttachmentState />
+        <TestAttachmentAnimation />
       </div>
     </div>
   )

@@ -12,6 +12,7 @@ import { PortalInstanceContext } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
 import { useDomProxy } from './hooks/useDomProxy'
+import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
 import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
@@ -22,25 +23,39 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
   const isWebSpatialEnv = getSession() !== null
-  if (!isWebSpatialEnv) {
+  const insideAttachment = useInsideAttachment()
+
+  if (!isWebSpatialEnv || insideAttachment) {
+    if (insideAttachment) {
+      console.warn(
+        `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
+      )
+    }
     const {
       component: Component,
-      spatializedContent,
-      createSpatializedElement,
-      getExtraSpatializedElementProperties,
-      onSpatialTap,
-      onSpatialDragStart,
-      onSpatialDrag,
-      onSpatialDragEnd,
-      onSpatialRotate,
-      onSpatialRotateEnd,
-      onSpatialMagnify,
-      onSpatialMagnifyEnd,
-      extraRefProps,
+      children,
+      'enable-xr': _enableXR,
+      onSpatialTap: _1,
+      onSpatialDragStart: _2,
+      onSpatialDrag: _3,
+      onSpatialDragEnd: _4,
+      onSpatialRotate: _5,
+      onSpatialRotateEnd: _6,
+      onSpatialMagnify: _7,
+      onSpatialMagnifyEnd: _8,
+      spatializedContent: _content,
+      createSpatializedElement: _create,
+      getExtraSpatializedElementProperties: _getExtra,
+      extraRefProps: _extraRef,
+      sizingMode: _sizingMode,
       ...restProps
-    } = inprops
-    // make sure SpatializedContainer can work on web env
-    return <Component ref={ref} {...restProps} />
+    } = inprops as any
+    // make sure SpatializedContainer can work on web env / degraded env
+    return (
+      <Component ref={ref} {...restProps}>
+        {children}
+      </Component>
+    )
   }
 
   const layer = useContext(SpatialLayerContext) + 1
