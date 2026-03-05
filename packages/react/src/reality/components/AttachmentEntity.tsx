@@ -21,8 +21,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
-  const attachmentRef = useRef<Attachment>(null)
-  const parentIdRef = useRef<string>(null)
+  // React 18 types require `| null` for mutable refs; useRef<T>(null) without it returns readonly RefObject.
+  const attachmentRef = useRef<Attachment | null>(null)
+  const parentIdRef = useRef<string | null>(null)
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
