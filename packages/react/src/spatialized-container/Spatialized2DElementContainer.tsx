@@ -160,6 +160,9 @@ function getExtraSpatializedElementProperties(
 
 async function createSpatializedElement() {
   const spatializedElement = await getSession()!.createSpatialized2DElement()
+  const windowProxy = spatializedElement.windowProxy
+  setOpenWindowStyle(windowProxy)
+  await syncParentHeadToChild(windowProxy)
   return spatializedElement
 }
 
