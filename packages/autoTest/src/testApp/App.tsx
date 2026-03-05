@@ -229,6 +229,15 @@ function App() {
           Test DOM style and class operations
         </p>
       </Link>
+      <Link
+        to="/materialApiTest"
+        className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-black hover:bg-opacity-40 transition-all"
+      >
+        <h2 className="text-xl font-bold mb-2">Material API Test</h2>
+        <p className="text-sm opacity-80">
+          Test Material api and class operations
+        </p>
+      </Link>
 
       {/* Spatial Elements Container */}
       <div
