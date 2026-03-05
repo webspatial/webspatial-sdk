@@ -122,30 +122,113 @@ function SpatializedStatic3DElementContainerBase(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
 
+      const rawDom = ((domProxy as any).__raw as any) || (domProxy as any)
+      const WAIT_PROMISE_KEY = '__webspatial_wait_spatialized_static3d_element'
+      const WAIT_RESOLVE_KEY =
+        '__webspatial_wait_spatialized_static3d_element_resolve'
+      const WAIT_CURRENT_KEY =
+        '__webspatial_spatialized_static3d_element_current'
+
+      const getSpatializedElementSync =
+        (): SpatializedStatic3DElement | null => {
+          return (
+            ((rawDom as any)
+              .__spatializedElement as SpatializedStatic3DElement) ||
+            ((domProxy as any)
+              .__spatializedElement as SpatializedStatic3DElement) ||
+            null
+          )
+        }
+
+      const ensureSpatializedElement =
+        (): Promise<SpatializedStatic3DElement> => {
+          const existing = getSpatializedElementSync()
+          if (existing) {
+            return Promise.resolve(existing)
+          }
+
+          if ((rawDom as any)[WAIT_PROMISE_KEY]) {
+            return (rawDom as any)[WAIT_PROMISE_KEY]
+          }
+
+          let resolveFn: ((el: SpatializedStatic3DElement) => void) | undefined
+          const promise = new Promise<SpatializedStatic3DElement>(resolve => {
+            resolveFn = resolve
+          })
+          ;(rawDom as any)[WAIT_PROMISE_KEY] = promise
+          ;(rawDom as any)[WAIT_RESOLVE_KEY] = resolveFn
+
+          const resolveIfReady = (el: any) => {
+            if (!el) {
+              return
+            }
+            ;(rawDom as any)[WAIT_CURRENT_KEY] = el
+            const r = (rawDom as any)[WAIT_RESOLVE_KEY] as
+              | ((e: SpatializedStatic3DElement) => void)
+              | undefined
+            if (r) {
+              ;(rawDom as any)[WAIT_RESOLVE_KEY] = undefined
+              r(el)
+            }
+          }
+
+          try {
+            const desc = Object.getOwnPropertyDescriptor(
+              rawDom,
+              '__spatializedElement',
+            )
+            if (!desc || desc.configurable) {
+              // Use an accessor so that Object.assign(dom, { __spatializedElement }) triggers the setter.
+              Object.defineProperty(rawDom, '__spatializedElement', {
+                configurable: true,
+                enumerable: true,
+                get() {
+                  return (rawDom as any)[WAIT_CURRENT_KEY]
+                },
+                set(v) {
+                  resolveIfReady(v)
+                },
+              })
+            }
+          } catch {
+            // Fallback to rAF polling (should be rare).
+            const poll = () => {
+              const el = getSpatializedElementSync()
+              if (el) {
+                resolveIfReady(el)
+                return
+              }
+              requestAnimationFrame(poll)
+            }
+            requestAnimationFrame(poll)
+          }
+
+          return promise
+        }
+
       return {
         get currentSrc() {
           return getAbsoluteURL(props.src)
         },
         get ready() {
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
-
-          const promise = spatializedElement.ready.then((success: boolean) => {
-            if (success) {
-              return createLoadSuccessEvent(() => domProxy)
-            }
-            throw createLoadFailureEvent(() => domProxy)
-          })
-          return promise
+          return ensureSpatializedElement()
+            .then(el => el.ready)
+            .then((success: boolean) => {
+              if (success) {
+                return createLoadSuccessEvent(() => domProxy)
+              }
+              throw createLoadFailureEvent(() => domProxy)
+            })
         },
         get entityTransform() {
           return modelTransform
         },
         set entityTransform(value: DOMMatrixReadOnly) {
           modelTransform = value
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
-          spatializedElement.updateModelTransform(modelTransform)
+          // Defer update until the spatialized element is attached.
+          void ensureSpatializedElement().then(el => {
+            el.updateModelTransform(modelTransform)
+          })
         },
       }
     },

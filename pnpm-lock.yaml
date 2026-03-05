@@ -324,10 +324,6 @@ importers:
         version: 5.7.3
 
   packages/react:
-    dependencies:
-      '@webspatial/core-sdk':
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.4.8
@@ -353,6 +349,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.0.4
         version: 2.1.9(vitest@2.1.9(@types/node@22.15.2)(jsdom@24.1.3)(lightningcss@1.29.3)(sass-embedded@1.87.0)(sass@1.87.0)(terser@5.39.0))
+      '@webspatial/core-sdk':
+        specifier: workspace:*
+        version: link:../core
       esbuild:
         specifier: '>=0.25.0'
         version: 0.25.3

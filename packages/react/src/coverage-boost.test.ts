@@ -1725,9 +1725,90 @@ describe('SpatializedStatic3DElementContainer', () => {
     const m = extra.entityTransform
     ;(m as any).m11 = 2
     extra.entityTransform = m
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
     expect(updateModelTransform).toHaveBeenCalledTimes(1)
     expect(updateModelTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
     expect((domProxy as any).entityTransform).toBeUndefined()
+    ;(globalThis as any).requestAnimationFrame = originalRAF
+  })
+
+  it('does not crash when ready/entityTransform accessed before __spatializedElement is attached', async () => {
+    vi.resetModules()
+
+    const updateModelTransform = vi.fn()
+    const spatializedStatic3DElement: any = {
+      updateProperties: vi.fn(),
+      updateModelTransform,
+      ready: Promise.resolve(true),
+    }
+    const createSpatializedStatic3DElement = vi
+      .fn()
+      .mockResolvedValue(spatializedStatic3DElement)
+
+    vi.doMock('./utils', () => {
+      return {
+        getSession: () => ({ createSpatializedStatic3DElement }),
+        enableDebugTool: vi.fn(),
+      }
+    })
+
+    const originalRAF = (globalThis as any).requestAnimationFrame
+    ;(globalThis as any).requestAnimationFrame = (cb: any) => {
+      cb()
+      return 0
+    }
+
+    let extra: any
+    let rawDom: any
+    vi.doMock('./spatialized-container/SpatializedContainer', () => {
+      const React = require('react')
+      function MockSpatializedContainer(props: any) {
+        rawDom = {}
+        const domProxy = { __raw: rawDom }
+        // Build extra ref props before __spatializedElement is attached.
+        extra = props.extraRefProps(domProxy)
+
+        React.useEffect(() => {
+          Promise.resolve(props.createSpatializedElement()).then((el: any) => {
+            Object.assign(rawDom, { __spatializedElement: el })
+          })
+        }, [])
+
+        return React.createElement('div')
+      }
+      return { SpatializedContainer: MockSpatializedContainer }
+    })
+
+    const { SpatializedStatic3DElementContainer } = await import(
+      './spatialized-container/SpatializedStatic3DElementContainer'
+    )
+
+    render(
+      React.createElement(SpatializedStatic3DElementContainer as any, {
+        src: '/m.glb',
+      }),
+    )
+
+    // Access / set before __spatializedElement is attached (should not throw).
+    const m = extra.entityTransform
+    extra.entityTransform = m
+    const readyPromise = extra.ready
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    await expect(readyPromise).resolves.toMatchObject({ type: 'modelloaded' })
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(updateModelTransform).toHaveBeenCalledTimes(1)
     ;(globalThis as any).requestAnimationFrame = originalRAF
   })
 
