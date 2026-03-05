@@ -29,7 +29,7 @@ The React content to render inside the attachment. This can be any valid React J
 
 - `<AttachmentAsset>` must be a direct child of `<Reality>`, placed **outside** `<SceneGraph>`.
 - If no `<AttachmentEntity>` has registered for the given `name`, the asset renders nothing.
-- Multiple `<AttachmentEntity>` components with the same `attachment` name will each receive a portal of the same children — true 1→N fan-out.
+- Multiple `<AttachmentEntity>` components with the same `attachment` name will each receive a portal of the same children.
 - Spatial components (`<SpatialDiv>`, `<Reality>`, `<Model>`) inside an `<AttachmentAsset>` will gracefully degrade to plain HTML with a console warning. Attachments are 2D surfaces only.
 
 ## `<AttachmentEntity>`
@@ -74,168 +74,11 @@ The following components detect when they are rendered inside an `<AttachmentAss
 
 | Component | Behavior Inside Attachment |
 |-----------|---------------------------|
-| `<Reality>` | Returns `null` with a console warning. Prevents infinite recursion. |
+| `<Reality>` | Returns `null` with a console warning.  |
 | `<SpatialDiv>` / `SpatializedContainer` | Renders as plain HTML (strips spatial props). Layout and Tailwind still work. |
 | `<Model>` | Renders as a plain `<model>` tag without spatialization. |
 
-## Examples
 
-### Basic Attachment
-
-```tsx
-import { Reality, SceneGraph, Entity, BoxEntity, AttachmentAsset, AttachmentEntity } from '@webspatial/react-sdk'
-
-function MyScene() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <Reality>
-      <AttachmentAsset name="counter">
-        <div style={{ padding: 12, background: 'rgba(0,0,0,0.7)', borderRadius: 8 }}>
-          <span style={{ color: 'white' }}>Count: {count}</span>
-          <button onClick={() => setCount(c => c + 1)}>+1</button>
-        </div>
-      </AttachmentAsset>
-
-      <SceneGraph>
-        <Entity position={{ x: 0, y: 0, z: 0 }}>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['mat']} />
-          <AttachmentEntity
-            attachment="counter"
-            position={[0, 0.15, 0]}
-            size={{ width: 160, height: 80 }}
-          />
-        </Entity>
-      </SceneGraph>
-    </Reality>
-  )
-}
-```
-
-### 1→N: Same Content on Multiple Entities
-
-One `<AttachmentAsset>` rendered on two different boxes. Both show the same React UI with shared state.
-
-```tsx
-function MultiAttachScene() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <Reality>
-      <AttachmentAsset name="label">
-        <div style={{ color: 'white' }}>Count: {count}</div>
-        <button onClick={() => setCount(c => c + 1)}>+1</button>
-      </AttachmentAsset>
-
-      <SceneGraph>
-        <Entity position={{ x: -0.2, y: 0, z: 0 }}>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['red']} />
-          <AttachmentEntity attachment="label" position={[0, 0.15, 0]} size={{ width: 140, height: 60 }} />
-        </Entity>
-
-        <Entity position={{ x: 0.2, y: 0, z: 0 }}>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['blue']} />
-          <AttachmentEntity attachment="label" position={[0, 0.15, 0]} size={{ width: 140, height: 60 }} />
-        </Entity>
-      </SceneGraph>
-    </Reality>
-  )
-}
-```
-
-### Animated Entity with Attachment
-
-Attachments follow their parent entity's transform. If the entity is animated, the attachment moves with it.
-
-```tsx
-function AnimatedAttachment() {
-  const [y, setY] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setY(prev => Math.sin(Date.now() / 1000) * 0.1)
-    }, 16)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <Reality>
-      <AttachmentAsset name="floating-label">
-        <div style={{ color: '#66ff66', fontSize: 14 }}>I follow the box</div>
-      </AttachmentAsset>
-
-      <SceneGraph>
-        <Entity position={{ x: 0, y, z: 0 }}>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['mat']} />
-          <AttachmentEntity
-            attachment="floating-label"
-            position={[0, 0.12, 0]}
-            size={{ width: 200, height: 40 }}
-          />
-        </Entity>
-      </SceneGraph>
-    </Reality>
-  )
-}
-```
-
-### Conditional Show/Hide
-
-Toggle attachment visibility by conditionally rendering the `<AttachmentEntity>`.
-
-```tsx
-function ToggleAttachment() {
-  const [show, setShow] = useState(true)
-
-  return (
-    <Reality>
-      <AttachmentAsset name="info">
-        <div style={{ color: 'white', padding: 8 }}>Info panel</div>
-      </AttachmentAsset>
-
-      <SceneGraph>
-        <Entity>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['mat']}
-            onSpatialTap={() => setShow(s => !s)} />
-          {show && (
-            <AttachmentEntity
-              attachment="info"
-              position={[0, 0.15, 0]}
-              size={{ width: 120, height: 40 }}
-            />
-          )}
-        </Entity>
-      </SceneGraph>
-    </Reality>
-  )
-}
-```
-
-### Using Global CSS / Tailwind
-
-Host page styles are synced into attachment webviews automatically.
-
-```tsx
-// index.css
-// .badge { background: #4f46e5; color: white; padding: 4px 12px; border-radius: 999px; }
-
-function StyledAttachment() {
-  return (
-    <Reality>
-      <AttachmentAsset name="badge">
-        <span className="badge">Spatial Badge</span>
-      </AttachmentAsset>
-
-      <SceneGraph>
-        <Entity>
-          <BoxEntity width={0.1} height={0.1} depth={0.1} materials={['mat']} />
-          <AttachmentEntity attachment="badge" position={[0, 0.12, 0]} size={{ width: 140, height: 30 }} />
-        </Entity>
-      </SceneGraph>
-    </Reality>
-  )
-}
-```
 
 ## Technical Summary
 
@@ -252,14 +95,8 @@ function StyledAttachment() {
 
 | Feature | visionOS |
 | --- | --- |
-| `<AttachmentAsset>` | ✅ WebSpatial 1.2 |
-| `<AttachmentEntity>` | ✅ WebSpatial 1.2 |
-| 1→N (multiple entities per asset) | ✅ WebSpatial 1.2 |
-| Global style sync | ✅ WebSpatial 1.2 |
-| HMR style sync | ✅ WebSpatial 1.2 |
-| Runtime position/size updates | ✅ WebSpatial 1.2 |
-| Runtime attachment name migration | ✅ WebSpatial 1.2 |
-| Nesting guards (SpatialDiv/Reality/Model) | ✅ WebSpatial 1.2 |
+| `<AttachmentAsset>` |  WebSpatial April |
+| `<AttachmentEntity>` | WebSpatial April |
 
 ### Not Supported
 
@@ -269,7 +106,6 @@ function StyledAttachment() {
 | Nested `<SpatialDiv>` inside attachments | Degrades to plain HTML |
 | 3D content inside attachments | Not supported — 2D surfaces only |
 | Billboard / camera-facing policy | Not in this PR |
-| Android XR / PICO | Not yet implemented |
 
 ## High-Level Architecture
 
@@ -303,10 +139,7 @@ Attachment creation uses `window.open("webspatial://createAttachment?...")` inst
 
 ## Known Limitations
 
-- **Portal keys use positional index** — If attachments in the middle of the registry unmount, remaining portals may unnecessarily remount. Low impact in practice since containers are added/removed at boundaries.
 - **No error recovery on creation failure** — If native webview creation fails, the attachment silently doesn't appear. No retry mechanism.
-- **Stylesheet load failures are silent** — `asyncLoadStyleToChildWindow` resolves with `false` on error rather than surfacing the failure.
-- **Native `inspect()` doesn't cover attachments** — `onInspect` handler doesn't check `attachmentManager`, so `attachment.inspect()` from JS returns an error.
 - **No unit tests for AttachmentRegistry** — The registry has non-trivial edge cases (late subscribers, last-container removal) without dedicated test coverage.
 
 ## Follow-Up: WebView Lifecycle Redesign
