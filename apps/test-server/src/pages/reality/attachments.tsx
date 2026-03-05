@@ -412,6 +412,93 @@ function TestAttachmentAnimation() {
   )
 }
 
+function TestNestedAttachmentSwap() {
+  const [parentAttachment, setParentAttachment] = React.useState('hud')
+  const [childAttachment, setChildAttachment] = React.useState('hudChild')
+
+  return (
+    <TestCase title="8. Nested Attachment Swap (QA Reproduction)">
+      <div className="mb-4 flex gap-4">
+        <button
+          className="bg-blue-500 text-white p-2 rounded"
+          onClick={() =>
+            setParentAttachment(parentAttachment === 'hud' ? 'hudChild' : 'hud')
+          }
+        >
+          Toggle Parent (Current: {parentAttachment})
+        </button>
+        <button
+          className="bg-green-500 text-white p-2 rounded"
+          onClick={() =>
+            setChildAttachment(childAttachment === 'hud' ? 'hudChild' : 'hud')
+          }
+        >
+          Toggle Child (Current: {childAttachment})
+        </button>
+      </div>
+
+      <Reality
+        style={{ width: '500px', height: '500px', border: '1px solid black' }}
+      >
+        <UnlitMaterial id="matParent" color="#4444ff" />
+        <UnlitMaterial id="matChild" color="#44ff44" />
+
+        {/* Asset 1: HUD */}
+        <AttachmentAsset name="hud">
+          <div style={{ background: 'blue', color: 'white', padding: 10 }}>
+            <strong>HUD ASSET</strong>
+          </div>
+        </AttachmentAsset>
+
+        {/* Asset 2: HUD Child */}
+        <AttachmentAsset name="hudChild">
+          <div style={{ background: 'green', color: 'white', padding: 10 }}>
+            <strong>HUD CHILD ASSET</strong>
+          </div>
+        </AttachmentAsset>
+
+        <SceneGraph>
+          {/* Parent Box */}
+          <Entity position={{ x: 0, y: 0, z: 0 }}>
+            <BoxEntity
+              width={0.2}
+              height={0.2}
+              depth={0.2}
+              materials={['matParent']}
+            />
+            <AttachmentEntity
+              attachment={parentAttachment}
+              position={[0, 0.2, 0]}
+              size={{ width: 150, height: 50 }}
+            />
+
+            {/* Nested Child Box */}
+            <Entity position={{ x: 0.3, y: 0, z: 0 }}>
+              <BoxEntity
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                materials={['matChild']}
+              />
+              <AttachmentEntity
+                attachment={childAttachment}
+                position={[0, 0.15, 0]}
+                size={{ width: 150, height: 50 }}
+              />
+            </Entity>
+          </Entity>
+        </SceneGraph>
+      </Reality>
+
+      <p className="mt-2 text-sm text-gray-600">
+        <strong>Validation:</strong> Change Parent to "hudChild". Then change
+        Child to "hud". If the Parent jumps back to "hud" automatically, the bug
+        is confirmed.
+      </p>
+    </TestCase>
+  )
+}
+
 function App() {
   return (
     <div className="p-8">
@@ -425,6 +512,7 @@ function App() {
         <TestSpatialDivFallback />
         <TestSharedAttachmentState />
         <TestAttachmentAnimation />
+        <TestNestedAttachmentSwap />
       </div>
     </div>
   )
