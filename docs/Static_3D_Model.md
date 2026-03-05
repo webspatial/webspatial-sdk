@@ -1,4 +1,4 @@
-# Static 3D Model
+# Model
 
 ## Overview
 The `<Model>`component handles loading 3D assets, managing playback of embedded animations, and responding to spatial user interactions.
@@ -33,9 +33,8 @@ A Boolean attribute; if `true`, the animation will automatically seek back to th
 `stagemode`
 
 Controls the built-in user interaction mode for the model.
-
-- **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
-- `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. Dragging in the horizontal axis will spin the model on its heading, and a vertical movement will pitch it up and down to see the top and bottom
+  - **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
+  - `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
 
 ## Events
 
@@ -236,7 +235,8 @@ function LongScrollPage() {
 | onError | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
 | autoplay | WebSpatial April | ⍺2.1 |
 | loop | WebSpatial April | ⍺2.1 |
-| stagemode | WebSpatial April | ⍺2.1 |
+| `<source>` | WebSpatial April | ⍺2.1 |
+| stagemode | WebSpatial May | β2.0 |
 | poster | WebSpatial May | β2.0 |
 | loading | WebSpatial June | β2.1 |
 
@@ -280,8 +280,6 @@ The implementation will touch four key areas of the WebSpatial SDK.
 ## Feature Implementation Details
 
 ### 4. Animation Playback and Control
-
-This feature set brings the `<Model>` element in line with the W3C `<model-element>` proposal and standard media elements like `<video>`, providing developers with declarative attributes and imperative APIs to manage animations embedded within 3D models.
 
 #### 4.1. React SDK (`@webspatial/react-sdk`)
 
