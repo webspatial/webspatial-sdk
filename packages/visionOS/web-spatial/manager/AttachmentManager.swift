@@ -51,7 +51,9 @@ class AttachmentManager {
 
     func remove(id: String) {
         if let info = attachments.removeValue(forKey: id) {
-            info.webViewModel.destroy()
+            DispatchQueue.main.async {
+                info.webViewModel.destroy()
+            }
         }
     }
 
@@ -60,9 +62,12 @@ class AttachmentManager {
     }
 
     func destroyAll() {
-        for (_, info) in attachments {
-            info.webViewModel.destroy()
-        }
+        let toDestroy = Array(attachments.values)
         attachments.removeAll()
+        DispatchQueue.main.async {
+            for info in toDestroy {
+                info.webViewModel.destroy()
+            }
+        }
     }
 }
