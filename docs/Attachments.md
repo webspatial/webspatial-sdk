@@ -150,6 +150,6 @@ The recommended follow-up is to create a dedicated `AttachmentWebView: UIViewRep
 
 ## References
 
-- [RealityKit ViewAttachments](https://developer.apple.com/documentation/realitykit/primitives-in-realitykit#Add-attachments)
+- [RealityKit ViewAttachments](https://developer.apple.com/documentation/realitykit/attachment)
 - [React createPortal](https://react.dev/reference/react-dom/createPortal)
 - [WebSpatial Architecture — Intro to WebSpatial](https://webspatial.dev)
