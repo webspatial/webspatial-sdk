@@ -50,8 +50,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         // Initial style sync for attachment window
         const windowProxy = att.getWindowProxy()
         setOpenWindowStyle(windowProxy)
-        // WebView environments can apply unexpected default styles to the body elmt
-        // Explicitly set these to ensure the attachment fills its container consistently.
+        // setOpenWindowStyle() above applies SpatialDiv defaults (inline-block, fit-content)
+        // which shrink the body to its content. Attachments need the opposite — the body
+        // must fill the RealityKit attachment frame — so override to block/100%.
         windowProxy.document.body.style.display = 'block'
         windowProxy.document.body.style.minWidth = '100%'
         windowProxy.document.body.style.maxWidth = '100%'
