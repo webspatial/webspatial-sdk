@@ -499,6 +499,78 @@ function TestNestedAttachmentSwap() {
   )
 }
 
+function TestLastDefinitionWins() {
+  return (
+    <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset name">
+      <p className="text-sm text-gray-600 mb-2">
+        Only the second asset with the same name should render.
+      </p>
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid #555' }}
+      >
+        <UnlitMaterial id="matLWLeft" color="#5555ff" />
+        <UnlitMaterial id="matLWRight" color="#55ff55" />
+
+        <AttachmentAsset name="dup-asset">
+          <div
+            style={{
+              background: 'rgba(180,0,0,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              fontWeight: 700,
+            }}
+          >
+            FIRST
+          </div>
+        </AttachmentAsset>
+        <AttachmentAsset name="dup-asset">
+          <div
+            style={{
+              background: 'rgba(0,150,0,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              fontWeight: 700,
+            }}
+          >
+            SECOND
+          </div>
+        </AttachmentAsset>
+
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matLWLeft']}
+            />
+            <AttachmentEntity
+              attachment="dup-asset"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matLWRight']}
+            />
+            <AttachmentEntity
+              attachment="dup-asset"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function App() {
   return (
     <div className="p-8">
@@ -513,6 +585,7 @@ function App() {
         <TestSharedAttachmentState />
         <TestAttachmentAnimation />
         <TestNestedAttachmentSwap />
+        <TestLastDefinitionWins />
       </div>
     </div>
   )

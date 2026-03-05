@@ -5,7 +5,7 @@ type ContainersChangeCallback = (containers: HTMLElement[]) => void
 export class AttachmentRegistry {
   // name → (instanceId → container)
   private containers = new Map<string, Map<string, HTMLElement>>()
-  private listeners = new Map<string, Set<ContainersChangeCallback>>()
+  private listeners = new Map<string, ContainersChangeCallback>()
 
   addContainer(name: string, instanceId: string, container: HTMLElement) {
     if (!this.containers.has(name)) {
@@ -33,18 +33,19 @@ export class AttachmentRegistry {
     if (current.length > 0) {
       cb(current)
     }
-    if (!this.listeners.has(name)) {
-      this.listeners.set(name, new Set())
-    }
-    this.listeners.get(name)!.add(cb)
+    const prev = this.listeners.get(name)
+    if (prev) prev([])
+    this.listeners.set(name, cb)
     return () => {
-      this.listeners.get(name)?.delete(cb)
+      if (this.listeners.get(name) === cb) {
+        this.listeners.delete(name)
+      }
     }
   }
 
   private notifyListeners(name: string) {
     const cs = this.getContainers(name)
-    this.listeners.get(name)?.forEach(cb => cb(cs))
+    this.listeners.get(name)?.(cs)
   }
 
   destroy() {
