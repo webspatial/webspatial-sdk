@@ -18,6 +18,44 @@ import {
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 import { withSSRSupported } from '../ssr'
+
+/**
+ * Degraded fallback: strips spatial-only props and renders plain HTML.
+ * This is a separate component so that SpatializedContainerBase never
+ * has to conditionally skip its hooks.
+ */
+function DegradedContainer<T extends SpatializedElementRef>({
+  innerRef,
+  ...inprops
+}: SpatializedContainerProps<T> & {
+  innerRef: ForwardedRef<SpatializedElementRef<T>>
+}) {
+  const {
+    component: Component,
+    children,
+    'enable-xr': _enableXR,
+    onSpatialTap: _1,
+    onSpatialDragStart: _2,
+    onSpatialDrag: _3,
+    onSpatialDragEnd: _4,
+    onSpatialRotate: _5,
+    onSpatialRotateEnd: _6,
+    onSpatialMagnify: _7,
+    onSpatialMagnifyEnd: _8,
+    spatializedContent: _content,
+    createSpatializedElement: _create,
+    getExtraSpatializedElementProperties: _getExtra,
+    extraRefProps: _extraRef,
+    sizingMode: _sizingMode,
+    ...restProps
+  } = inprops as any
+  return (
+    <Component ref={innerRef} {...restProps}>
+      {children}
+    </Component>
+  )
+}
+
 export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
   ref: ForwardedRef<SpatializedElementRef<T>>,
@@ -31,31 +69,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
       )
     }
-    const {
-      component: Component,
-      children,
-      'enable-xr': _enableXR,
-      onSpatialTap: _1,
-      onSpatialDragStart: _2,
-      onSpatialDrag: _3,
-      onSpatialDragEnd: _4,
-      onSpatialRotate: _5,
-      onSpatialRotateEnd: _6,
-      onSpatialMagnify: _7,
-      onSpatialMagnifyEnd: _8,
-      spatializedContent: _content,
-      createSpatializedElement: _create,
-      getExtraSpatializedElementProperties: _getExtra,
-      extraRefProps: _extraRef,
-      sizingMode: _sizingMode,
-      ...restProps
-    } = inprops as any
-    // make sure SpatializedContainer can work on web env / degraded env
-    return (
-      <Component ref={ref} {...restProps}>
-        {children}
-      </Component>
-    )
+    return <DegradedContainer {...inprops} innerRef={ref} />
   }
 
   const layer = useContext(SpatialLayerContext) + 1
