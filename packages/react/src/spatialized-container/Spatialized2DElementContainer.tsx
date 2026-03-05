@@ -22,6 +22,10 @@ import {
 import { Spatialized2DElement } from '@webspatial/core-sdk'
 import { createPortal } from 'react-dom'
 import { getInheritedStyleProps, parseCornerRadius } from './utils'
+import {
+  setOpenWindowStyle,
+  syncParentHeadToChild,
+} from '../utils/windowStyleSync'
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
@@ -71,12 +75,53 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
+function useSyncHeaderStyle(windowProxy: WindowProxy) {
+  useEffect(() => {
+    const headObserver = new MutationObserver(_ => {
+      syncParentHeadToChild(windowProxy)
+    })
+    headObserver.observe(document.head, { childList: true, subtree: true })
+    return () => {
+      headObserver.disconnect()
+    }
+  }, [])
+}
+
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
   const { spatializedElement, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
+
+  useSyncHeaderStyle(windowProxy)
+  useEffect(() => {
+    setOpenWindowStyle(windowProxy)
+    if (!windowProxy.document.querySelector('meta[name="viewport"]')) {
+      const meta = windowProxy.document.createElement('meta')
+      meta.name = 'viewport'
+      meta.content =
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+      windowProxy.document.head.appendChild(meta)
+    }
+    const base = windowProxy.document.createElement('base')
+    base.href = document.baseURI
+    windowProxy.document.head.appendChild(base)
+    try {
+      const head = windowProxy.document.head
+      const prev = head.querySelectorAll('[data-webspatial-sync="1"]')
+      prev.forEach(n => n.parentNode?.removeChild(n))
+      for (let i = 0; i < document.head.children.length; i++) {
+        const n = document.head.children[i].cloneNode(true) as any
+        if ((n as any)?.setAttribute) {
+          ;(n as any).setAttribute('data-webspatial-sync', '1')
+        }
+        head.appendChild(n)
+      }
+      windowProxy.document.documentElement.className =
+        document.documentElement.className
+    } catch {}
+  }, [windowProxy])
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)

@@ -25,7 +25,7 @@ class AttachmentManager {
     ) -> AttachmentInfo {
         let webViewModel = SpatialWebViewModel(url: nil)
         webViewModel.setBackgroundTransparent(true)
-        webViewModel.scrollEnabled = false
+        // webViewModel.scrollEnabled = false
 
         let info = AttachmentInfo(
             id: id,
