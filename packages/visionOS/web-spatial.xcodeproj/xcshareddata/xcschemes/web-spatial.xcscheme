@@ -36,7 +36,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "2B2F1D792BEBFAAD006897EE"
-               BuildableName = "WebSpatial.xctest"
+               BuildableName = "WebSpatialTests.xctest"
                BlueprintName = "web-spatialTests"
                ReferencedContainer = "container:web-spatial.xcodeproj">
             </BuildableReference>

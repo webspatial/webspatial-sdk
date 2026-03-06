@@ -447,6 +447,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         backgroundMaterial = .None
     }
 
+    // Some SPA navigations (history back/forward) do not trigger a full WKNavigation
+    // lifecycle. SpatialNavView calls this before navigation actions to ensure
+    // previously-created spatial objects are cleaned up.
+    func resetForNavigation() {
+        onPageStartLoad()
+    }
+
     private func onGetSpatialSceneState(
         command: GetSpatialSceneStateCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
