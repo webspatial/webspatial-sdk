@@ -2,3 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Host-driven style expected to reflect inside attachment windows */
+.host-style-test {
+  color: #66ff66 !important;
+}
