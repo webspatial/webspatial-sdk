@@ -117,6 +117,36 @@ function createEventProxy(ev: any, instance: EntityRef) {
         }
         return undefined
       }
+      if (prop === 'clientX') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.x ?? 0
+          )
+        }
+
+        return undefined
+      }
+      if (prop === 'clientY') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.y ?? 0
+          )
+        }
+
+        return undefined
+      }
+      if (prop === 'clientZ') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.z ?? 0
+          )
+        }
+
+        return undefined
+      }
       const val = (target as any)[prop]
       return typeof val === 'function' ? val.bind(target) : val
     },
