@@ -33,6 +33,9 @@ struct SpatialWebView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: SpatialWebController) {
-//        print("dismantleUIView", coordinator.model?.id)
+        // SwiftUI may tear down the WKWebView without the owning model explicitly calling
+        // `SpatialWebViewModel.destroy()`. Always perform a best-effort cleanup here to
+        // avoid leaving orphaned WKWebView instances visible to Safari's inspector.
+        coordinator.destroyView(uiView)
     }
 }

@@ -195,9 +195,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         isObserving = true
     }
 
-    func stopObserving() {
+    func stopObserving(webView: WKWebView? = nil) {
         guard isObserving else { return }
-        webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        (webView ?? webview)?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
         isObserving = false
     }
 
@@ -229,16 +229,55 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var state: SpatialWebViewState?
 
     func destroyView() {
-        stopObserving()
-        if webview != nil {
-            webview?.stopLoading()
-            webview?.configuration.userContentController.removeScriptMessageHandler(forName: "bridge")
-            webview?.uiDelegate = nil
-            webview?.navigationDelegate = nil
-            webview?.scrollView.delegate = nil
+        guard let webview else { return }
+        destroyView(webview)
+    }
+
+    /// Tear down a WKWebView instance, even if `self.webview` has already been nulled.
+    ///
+    /// This is intentionally called from SwiftUI's `dismantleUIView` to avoid leaving
+    /// orphaned WKWebView instances visible in Safari's Inspectable WebViews list.
+    func destroyView(_ webView: WKWebView) {
+        stopObserving(webView: webView)
+        Self.teardownWebView(webView)
+
+        if webview === webView {
             webview = nil
-            webviewStateChangeInvoke?(.didDestroyView)
         }
+
+        isPageLoaded = false
+        jsQueue.removeAll()
+        firstLoad = true
+        webviewStateChangeInvoke?(.didDestroyView)
+    }
+
+    private static func teardownWebView(_ webView: WKWebView) {
+        // Stop loads as early as possible.
+        webView.stopLoading()
+
+        // Remove from Safari's inspectable list ASAP (visionOS mirrors iOS availability).
+        if #available(iOS 16.4, *) {
+            webView.isInspectable = false
+        }
+
+        // Break delegate chains.
+        webView.uiDelegate = nil
+        webView.navigationDelegate = nil
+        webView.scrollView.delegate = nil
+
+        // Remove JS bridge handlers/scripts to avoid WKUserContentController retaining cycles.
+        let ucc = webView.configuration.userContentController
+        if #available(iOS 14.0, *) {
+            ucc.removeScriptMessageHandler(forName: "bridge", contentWorld: .page)
+        }
+        ucc.removeScriptMessageHandler(forName: "bridge")
+        ucc.removeAllUserScripts()
+
+        // Clear page content to encourage earlier teardown.
+        webView.loadHTMLString("", baseURL: nil)
+
+        // Ensure it is detached from any view hierarchy.
+        webView.removeFromSuperview()
     }
 
     private var isPageLoaded = false
