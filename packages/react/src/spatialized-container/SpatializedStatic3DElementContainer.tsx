@@ -138,10 +138,11 @@ function SpatializedStatic3DElementContainerBase(
           return getAbsoluteURL(props.src)
         },
         get ready(): Promise<ModelLoadEvent> {
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
 
-          const promise = spatializedElement.ready.then((success: boolean) => {
+          const promise = spatializedElement?.ready.then((success: boolean) => {
             if (success) {
               return createLoadSuccessEvent(() => domProxy)
             }
@@ -154,9 +155,10 @@ function SpatializedStatic3DElementContainerBase(
         },
         set entityTransform(value: DOMMatrixReadOnly) {
           modelTransform = value
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
-          spatializedElement.updateModelTransform(modelTransform)
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          spatializedElement?.updateModelTransform(modelTransform)
         },
       }
     },
