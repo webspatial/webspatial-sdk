@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## 1.2.1
+
+### Patch Changes
+
+- fd29643: Fix a crash when accessing `ready`/`entityTransform` on static 3D models before the underlying spatialized element is attached.
+  - @webspatial/core-sdk@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes
