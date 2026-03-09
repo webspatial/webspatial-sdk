@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import {
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../../utils/windowStyleSync'
+  yieldToMainThread,
+  setupChildWindow,
+} from '../../utils/childWindowSetup'
+import { useHeadSync } from '../../utils/useHeadSync'
 
 let instanceCounter = 0
 
@@ -27,6 +28,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
+  // Keep the attachment child window's head in sync with the parent (debounced).
+  useHeadSync(childWindow)
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -39,6 +42,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
     const init = async () => {
       try {
+        // Yield so multiple attachments don't call window.open() in one flush.
+        await yieldToMainThread()
         const att = await ctx.session.createAttachmentEntity({
           parentEntityId: parentId,
           position: position ?? [0, 0, 0],
@@ -48,34 +53,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           att.destroy()
           return
         }
-        // Initial style sync for attachment window
         const windowProxy = att.getWindowProxy()
-        setOpenWindowStyle(windowProxy)
-        // setOpenWindowStyle() above applies SpatialDiv defaults (inline-block, fit-content)
-        // which shrink the body to its content. Attachments need the opposite — the body
-        // must fill the RealityKit attachment frame — so override to block/100%.
-        windowProxy.document.body.style.display = 'block'
-        windowProxy.document.body.style.minWidth = '100%'
-        windowProxy.document.body.style.maxWidth = '100%'
-        windowProxy.document.body.style.minHeight = '100%'
-        await syncParentHeadToChild(windowProxy)
-
-        // Ensure viewport meta
-        const viewport = windowProxy.document.querySelector(
-          'meta[name="viewport"]',
-        )
-        if (!viewport) {
-          const meta = windowProxy.document.createElement('meta')
-          meta.name = 'viewport'
-          meta.content =
-            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-          windowProxy.document.head.appendChild(meta)
-        }
-
-        // Ensure base href for relative URLs
-        const base = windowProxy.document.createElement('base')
-        base.href = document.baseURI
-        windowProxy.document.head.appendChild(base)
+        // Shared child-window setup; ensures body fill + head/viewport/base tags.
+        await setupChildWindow(windowProxy, 'attachment')
 
         attachmentRef.current = att
         setChildWindow(windowProxy)
@@ -124,28 +104,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     }
   }, [ctx, attachmentName])
 
-  // Ongoing style sync when parent document head changes
-  useEffect(() => {
-    if (!childWindow) return
-    let timer: number | undefined
-    // Debounce rapid successive head mutations to avoid redundant style syncs
-    const scheduleSync = () => {
-      if (timer) window.clearTimeout(timer)
-      timer = window.setTimeout(() => {
-        syncParentHeadToChild(childWindow)
-      }, 100)
-    }
-
-    // initial sync (in case head changes happened between create and observer attach)
-    scheduleSync()
-
-    const observer = new MutationObserver(scheduleSync)
-    observer.observe(document.head, { childList: true, subtree: true })
-    return () => {
-      if (timer) window.clearTimeout(timer)
-      observer.disconnect()
-    }
-  }, [childWindow])
+  // Debounce rapid successive head mutations to avoid redundant style syncs
 
   // Update position/size when they change
   useEffect(() => {
