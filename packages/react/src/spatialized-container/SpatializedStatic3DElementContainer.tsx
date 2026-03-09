@@ -134,10 +134,10 @@ function SpatializedStatic3DElementContainerBase(
       let modelTransform = new DOMMatrixReadOnly()
 
       return {
-        get currentSrc() {
+        get currentSrc(): string {
           return getAbsoluteURL(props.src)
         },
-        get ready() {
+        get ready(): Promise<ModelLoadEvent> {
           const spatializedElement = (domProxy as any)
             .__spatializedElement as SpatializedStatic3DElement
 
@@ -149,7 +149,7 @@ function SpatializedStatic3DElementContainerBase(
           })
           return promise
         },
-        get entityTransform() {
+        get entityTransform(): DOMMatrixReadOnly {
           return modelTransform
         },
         set entityTransform(value: DOMMatrixReadOnly) {

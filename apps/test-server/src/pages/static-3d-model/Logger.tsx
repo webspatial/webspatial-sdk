@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useLogger(initialLog = '') {
   const [logs, setLogs] = useState(initialLog)
-  const logLine = (...args: any[]) => {
-    const msg = args
-      .map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a)))
-      .join(' ')
-    setLogs(prev => (prev ? prev + '\n' : '') + msg)
-  }
+  const logLine = useCallback(
+    (...args: any[]) => {
+      const msg = args
+        .map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a)))
+        .join(' ')
+      setLogs(prev => (prev ? prev + '\n' : '') + msg)
+    },
+    [setLogs],
+  )
   const clearLog = () => setLogs('')
 
   return [logs, logLine, clearLog] as const
