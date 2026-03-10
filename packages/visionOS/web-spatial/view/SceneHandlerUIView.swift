@@ -62,7 +62,6 @@ struct SceneHandlerUIView: View {
                     .removeDuplicates(by: { abs($0.0 - $1.0) < 0.01 && abs($0.1 - $1.1) < 0.01 })
                     .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
                     .sink { scaled, unscaled in
-//                        print("debounced:meterToPtScaled:\(scaled), meterToPtUnscaled:\(unscaled)")
                         spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
                     }
                     .store(in: &cancellables)
