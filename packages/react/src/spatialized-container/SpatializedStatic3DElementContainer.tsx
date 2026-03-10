@@ -5,8 +5,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
-  useImperativeHandle,
   useRef,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
@@ -117,8 +115,19 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
+  const resolveRef = useRef<
+    ((el: SpatializedStatic3DElement) => void) | null
+  >(null)
+  const elementPromiseRef = useRef<Promise<SpatializedStatic3DElement>>(
+    new Promise<SpatializedStatic3DElement>((resolve) => {
+      resolveRef.current = resolve
+    }),
+  )
+
   const createSpatializedElement = useCallback(async () => {
-    return await getSession()!.createSpatializedStatic3DElement()
+    const element = await getSession()!.createSpatializedStatic3DElement()
+    resolveRef.current?.(element)
+    return element
   }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
@@ -129,17 +138,14 @@ function SpatializedStatic3DElementContainerBase(
           return getAbsoluteURL(props.src)
         },
         get ready(): Promise<ModelLoadEvent> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
-
-          const promise = spatializedElement?.ready.then((success: boolean) => {
-            if (success) {
-              return createLoadSuccessEvent(() => domProxy)
-            }
-            throw createLoadFailureEvent(() => domProxy)
+          return elementPromiseRef.current.then((spatializedElement: SpatializedStatic3DElement) => {
+            return spatializedElement.ready.then((success: boolean) => {
+              if (success) {
+                return createLoadSuccessEvent(() => domProxy)
+              }
+              throw createLoadFailureEvent(() => domProxy)
+            })
           })
-          return promise
         },
         get entityTransform(): DOMMatrixReadOnly {
           return modelTransform
