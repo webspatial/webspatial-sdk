@@ -120,7 +120,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             meterToPtUnscaled: \(meterToPtUnscaled),
             meterToPtScaled: \(meterToPtScaled)
         };
-        window.dispatchEvent(new Event('physicalMetricsUpdate'));
+        window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'));
         """
         spatialWebViewModel.getController().callJS(js)
     }

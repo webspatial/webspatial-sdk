@@ -10,7 +10,7 @@ type ConvertOption = { worldScalingCompensation: WorldScalingCompensation }
 // Fallback calibration: 1 meter ≈ 1360 pt for both scaled and unscaled modes.
 // This baseline ensures pointToPhysical(1360) === 1 and physicalToPoint(1) === 1360
 // until native physical metrics are injected into window.__webspatialsdk__.physicalMetrics
-// and a 'physicalMetricsUpdate' event updates the snapshot at runtime.
+// and a 'WebSpatialPhysicalMetricsUpdate' event updates the snapshot at runtime.
 let snapshot: PhysicalMetricsValueShape = {
   meterToPtUnscaled: 1360,
   meterToPtScaled: 1360,
@@ -92,8 +92,8 @@ export function subscribe(cb: () => void) {
   const handler = () => {
     cb()
   }
-  window.addEventListener('physicalMetricsUpdate', handler)
+  window.addEventListener('WebSpatialPhysicalMetricsUpdate', handler)
   return () => {
-    window.removeEventListener('physicalMetricsUpdate', handler)
+    window.removeEventListener('WebSpatialPhysicalMetricsUpdate', handler)
   }
 }
