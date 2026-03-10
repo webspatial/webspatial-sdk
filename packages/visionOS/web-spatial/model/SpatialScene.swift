@@ -115,7 +115,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         self.meterToPtUnscaled = meterToPtUnscaled
         self.meterToPtScaled = meterToPtScaled
         var js = """
-        window.__physicalMetrics = {
+        window.__webspatialsdk__ = window.__webspatialsdk__ || {};
+        window.__webspatialsdk__.physicalMetrics = {
             meterToPtUnscaled: \(meterToPtUnscaled),
             meterToPtScaled: \(meterToPtScaled)
         };

@@ -1,15 +1,9 @@
-type PhysicalMetricsValueShape = {
+export type PhysicalMetricsValueShape = {
   meterToPtUnscaled: number
   meterToPtScaled: number
 }
 
 type WorldScalingCompensation = 'unscaled' | 'scaled'
-
-declare global {
-  interface Window {
-    __physicalMetrics?: PhysicalMetricsValueShape
-  }
-}
 
 type ConvertOption = { worldScalingCompensation: WorldScalingCompensation }
 
@@ -43,7 +37,7 @@ export function physical2point(physical: number, options?: ConvertOption) {
 function updateValue() {
   // ssr protected
   if (typeof window === 'undefined') return
-  const src = window.__physicalMetrics
+  const src = window.__webspatialsdk__?.physicalMetrics
   if (!src) return
   const next = {
     meterToPtScaled: src.meterToPtScaled ?? snapshot.meterToPtScaled,
