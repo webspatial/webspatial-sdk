@@ -59,8 +59,6 @@ struct SceneHandlerUIView: View {
             .onAppear {
                 // Combine both subjects to update metrics together
                 Publishers.CombineLatest(scaledSubject, unscaledSubject)
-                    .removeDuplicates(by: { abs($0.0 - $1.0) < 0.01 && abs($0.1 - $1.1) < 0.01 })
-                    .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
                     .sink { scaled, unscaled in
                         spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
                     }
