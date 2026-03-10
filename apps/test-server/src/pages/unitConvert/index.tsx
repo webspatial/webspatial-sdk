@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene, enableDebugTool } from '@webspatial/react-sdk'
-import { usePhysicalMetrics } from '@webspatial/react-sdk'
+import { useMetrics } from '@webspatial/react-sdk'
 enableDebugTool()
 
 const btnCls =
@@ -14,7 +14,7 @@ const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
 
 export default function UnitConvertTest() {
-  const { point2physical, physical2point } = usePhysicalMetrics()
+  const { pointToPhysical, physicalToPoint } = useMetrics()
   const [logs, setLogs] = useState('')
 
   function startlog(str: string) {
@@ -47,8 +47,8 @@ export default function UnitConvertTest() {
           </h2>
 
           <pre className="text-xs bg-black/40 p-4 rounded-lg h-40 overflow-auto font-mono">
-            physical2point(1):{physical2point(1)} <br />
-            point2physical(1):{point2physical(1)}
+            physicalToPoint(1):{physicalToPoint(1)} <br />
+            pointToPhysical(1):{pointToPhysical(1)}
           </pre>
 
           <h2 className="text-lg font-bold mb-4 border-b border-gray-800 pb-2">
@@ -56,10 +56,11 @@ export default function UnitConvertTest() {
           </h2>
 
           <pre className="text-xs bg-black/40 p-4 rounded-lg h-40 overflow-auto font-mono">
-            physical2point(1):
-            {physical2point(1, { worldScalingCompensation: 'unscaled' })} <br />
-            point2physical(1):
-            {point2physical(1, { worldScalingCompensation: 'unscaled' })}
+            physicalToPoint(1):
+            {physicalToPoint(1, { worldScalingCompensation: 'unscaled' })}{' '}
+            <br />
+            pointToPhysical(1):
+            {pointToPhysical(1, { worldScalingCompensation: 'unscaled' })}
           </pre>
           <button
             className="btn btn-primary"
