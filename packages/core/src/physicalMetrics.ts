@@ -20,6 +20,13 @@ function getWorldScalingCompensation(options?: ConvertOption) {
   return options?.worldScalingCompensation ?? 'scaled' // default to scaled
 }
 
+/**
+ * Converts scene points (pt) to physical meters (m).
+ *
+ * @param point Points value to convert.
+ * @param options Optional conversion options to select world scaling compensation.
+ * @returns Physical length in meters.
+ */
 export function pointToPhysical(point: number, options?: ConvertOption) {
   updateValue()
   const compensation = getWorldScalingCompensation(options)
@@ -29,6 +36,13 @@ export function pointToPhysical(point: number, options?: ConvertOption) {
   return point / snapshot.meterToPtScaled
 }
 
+/**
+ * Converts physical meters (m) to scene points (pt).
+ *
+ * @param physical Physical length in meters to convert.
+ * @param options Optional conversion options to select world scaling compensation.
+ * @returns Points length in the scene.
+ */
 export function physicalToPoint(physical: number, options?: ConvertOption) {
   updateValue()
   const compensation = getWorldScalingCompensation(options)
@@ -56,11 +70,22 @@ function updateValue() {
   }
 }
 
+/**
+ * Returns the current physical metrics used for conversions.
+ *
+ * @returns The current metrics snapshot `{ meterToPtUnscaled, meterToPtScaled }`.
+ */
 export function getValue(): PhysicalMetricsValueShape {
   updateValue()
   return snapshot
 }
 
+/**
+ * Subscribes to physical metrics changes.
+ *
+ * @param cb Callback invoked when metrics update is detected.
+ * @returns Unsubscribe function to remove the listener.
+ */
 export function subscribe(cb: () => void) {
   // ssr protected
   if (typeof window === 'undefined') return () => {}
