@@ -13,6 +13,8 @@ import {
   UpdateSpatializedElementTransform,
   Inspect,
   DestroyCommand,
+  AddSpatializedElementToSpatialized2DElement,
+  GetSpatialSceneStateCommand,
 } from '../types/JSBCommand'
 import JSBManager from '../manager/JSBManager'
 import { SpatializedElement } from '../model/SpatializedElement'
@@ -742,6 +744,67 @@ export class PuppeteerRunner {
         //   spatializedElement,
         // )
         callback({ success: true })
+      },
+    )
+
+    this.jsbManager.registerWithData(
+      AddSpatializedElementToSpatialized2DElement,
+      (data, callback) => {
+        console.log(
+          'Handling AddSpatializedElementToSpatialized2DElement:',
+          data,
+        )
+
+        const spatialized2DElementId = data.id
+        const targetSpatializedElementId = data.spatializedElementId
+        const scene = this.webSpatial?.getCurrentScene()
+        if (!scene) {
+          callback({ success: false, error: 'No current scene' })
+          return
+        }
+
+        const spatialized2DElement = scene.findSpatialObject(
+          spatialized2DElementId,
+        ) as any
+        if (!spatialized2DElement) {
+          callback({
+            success: false,
+            error:
+              'invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!',
+          })
+          return
+        }
+
+        const targetSpatializedElement = scene.findSpatialObject(
+          targetSpatializedElementId,
+        )
+        if (!targetSpatializedElement) {
+          callback({
+            success: false,
+            error:
+              'invalid AddSpatializedElementToSpatialized2DElement target spatial object id not exsit!',
+          })
+          return
+        }
+
+        targetSpatializedElement.setParent(spatialized2DElement)
+        scene.handleAddSpatializedElementToSpatialized2DElement(data)
+
+        callback({ success: true, data: baseReplyData })
+      },
+    )
+
+    this.jsbManager.registerWithoutData(
+      GetSpatialSceneStateCommand,
+      callback => {
+        const state = this.webSpatial?.getCurrentScene()?.state
+        callback({
+          success: true,
+          data: {
+            type: 'state',
+            name: state || 'unknown',
+          },
+        })
       },
     )
 

@@ -4,7 +4,7 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 
-// 添加window扩展接口
+// add window interface for JSB call
 declare global {
   interface Window {
     __handleJSBMessage: (message: string) => any
@@ -24,7 +24,7 @@ type JSBError = {
 console.log('PuppeteerPlatform')
 
 export class PuppeteerPlatform implements PlatformAbility {
-  // 存储iframe实例
+  // store iframe instance
   private iframeRegistry: Map<string, HTMLIFrameElement> = new Map()
 
   constructor() {}
@@ -32,7 +32,7 @@ export class PuppeteerPlatform implements PlatformAbility {
   callJSB(cmd: string, msg: string): Promise<CommandResult> {
     return new Promise(resolve => {
       try {
-        // 检查__handleJSBMessage是否存在
+        // check __handleJSBMessage exist
         if (window.__handleJSBMessage) {
           try {
             console.log(` core-sdk Puppeteer Platform: callJSB: ${cmd}::${msg}`)
@@ -45,7 +45,7 @@ export class PuppeteerPlatform implements PlatformAbility {
             resolve(CommandResultFailure('500', 'JSB execution error'))
           }
         } else {
-          // 如果不存在，返回默认结果
+          // if not exist, return default result
           resolve(CommandResultSuccess('ok'))
         }
       } catch (error: unknown) {
@@ -58,7 +58,7 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 同步创建Spatialized2DElement到Puppeteer Runner
+   * Synchronously create Spatialized2DElement to Puppeteer Runner
    */
   private createSpatializedElementSync(
     spatialId: string,
@@ -68,10 +68,10 @@ export class PuppeteerPlatform implements PlatformAbility {
       console.log(
         `[Puppeteer Platform] Creating spatialized element sync with id: ${spatialId}, url: ${webspatialUrl}`,
       )
-      // 直接调用Puppeteer Runner的方法来创建元素
+      // directly call Puppeteer Runner method to create element
       const win = window as any
       if (win.__handleJSBMessage) {
-        // 使用更简洁的格式，确保JSBManager能正确使用我们传递的spatialId
+        // use simpler format to ensure JSBManager can correctly use our passed spatialId
         const createCommand = {
           id: spatialId,
           url: webspatialUrl,
@@ -131,7 +131,7 @@ export class PuppeteerPlatform implements PlatformAbility {
     features?: string,
   ): CommandResult {
     try {
-      // 创建完整的webspatial URL
+      // create complete webspatial URL
       const webspatialUrl = `webspatial://${command}${query ? `?${query}` : ''}`
       console.log(`Calling webspatial protocol sync: ${webspatialUrl}`)
 
@@ -161,10 +161,10 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 创建基于iframe的窗口
+   * Synchronously create iframe-based window
    */
   private createIframeWindow(url: string, target?: string, features?: string) {
-    // 创建iframe元素
+    // create iframe element
     const iframe = document.createElement('iframe')
 
     // 设置iframe属性

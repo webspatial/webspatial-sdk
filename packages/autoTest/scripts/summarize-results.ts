@@ -88,12 +88,16 @@ async function sendSummaryToLark(
   const finishTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
   const branchName = process.env.BRANCH_NAME || 'Default Branch Name'
   const startTime = process.env.START_TIME || 'Default Start Time'
+  const successEnv = (process.env.SUCCESS || '').toLowerCase()
+  const isSuccess = successEnv === 'true' || successEnv === '1'
+  const executeStatus = isSuccess ? 'Success' : 'Fail'
+  const headerTemplate = isSuccess ? 'green' : 'red'
 
   const card = JSON.stringify(
     {
       config: { wide_screen_mode: true },
       header: {
-        template: 'green',
+        template: headerTemplate,
         title: {
           tag: 'plain_text',
           content: '[XR-Foundation]CI Test Complete',
@@ -114,7 +118,7 @@ async function sendSummaryToLark(
               is_short: true,
               text: {
                 tag: 'lark_md',
-                content: '**Execute Status：[Success]**',
+                content: `**Execute Status：[${executeStatus}]**`,
               },
             },
             { is_short: true, text: { tag: 'lark_md', content: '' } },
@@ -219,18 +223,20 @@ async function sendSummaryToLark(
   await botCardMsgSendToGroup(card)
 }
 
-function main() {
+async function main() {
   const jsonPath = findReportJson()
   if (!jsonPath) {
     console.log('Test summary: no report json found')
-    process.exit(0)
+    await sendSummaryToLark(0, 0, 0)
+    return
   }
   const raw = fs.readFileSync(jsonPath, 'utf8')
   const data = JSON.parse(raw)
   const stats = data && data.stats ? data.stats : data.results?.stats
   if (!stats) {
     console.log('Test summary: report has no stats')
-    process.exit(0)
+    await sendSummaryToLark(0, 0, 0)
+    return
   }
   const passed = Number(stats.passes || 0)
   const failed = Number(stats.failures || 0)
@@ -239,7 +245,7 @@ function main() {
   console.log(summary)
   const outDir = path.dirname(jsonPath)
   fs.writeFileSync(path.join(outDir, 'summary.txt'), summary + '\n', 'utf8')
-  sendSummaryToLark(passed, failed, pending)
+  await sendSummaryToLark(passed, failed, pending)
 }
 
 main()

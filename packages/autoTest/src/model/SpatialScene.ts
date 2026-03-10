@@ -287,9 +287,7 @@ export class SpatialScene
   /**
    * Handle add-child command
    */
-  private handleAddSpatializedElementToSpatialized2DElement(
-    command: any,
-  ): void {
+  handleAddSpatializedElementToSpatialized2DElement(command: any): void {
     const { parentId, childId } = command
     const parent = this._spatialObjects[parentId] as Spatialized2DElement
     const child = this._spatialObjects[childId] as SpatializedElement
