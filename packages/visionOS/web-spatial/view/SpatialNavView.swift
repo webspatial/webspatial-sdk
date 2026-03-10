@@ -21,6 +21,7 @@ struct NavDivider: View {
     }
 }
 
+
 struct NavButton: View {
     var action: () -> Void
     var children: Image
@@ -54,18 +55,21 @@ struct NavButton: View {
     }
 }
 
+
 struct SpatialNavView: View {
     static let navHeight: CGFloat = SpatialScene.navHeight
     static let minWidth: CGFloat = 400
     var spatialScene: SpatialScene
-    var model: SpatialWebViewModel? {
-        return spatialScene.spatialWebViewModel
+    var model:SpatialWebViewModel? {
+        get {
+            return spatialScene.spatialWebViewModel
+        }
     }
-
     var url: String {
-        return spatialScene.url
+        get {
+            return spatialScene.url
+        }
     }
-
     @State var navWidth: CGFloat = 0
     @State private var showCopyTip = false
     @State private var contentHeight: CGFloat = 60
@@ -77,40 +81,40 @@ struct SpatialNavView: View {
     @State private var showNav: Double = 0
     @State private var showUrl: Double = 0
     @Namespace var hoverNamespace
-
-    func checkButtonState() {
+    
+    func checkButtonState(){
         canGoBack = model!.getController().webview!.canGoBack
         canGoForward = model!.getController().webview!.canGoForward
     }
-
+    
     func goBack() {
         spatialScene.resetForNavigation()
         model?.getController().webview?.goBack()
     }
-
+    
     func goForward() {
         spatialScene.resetForNavigation()
         model?.getController().webview?.goForward()
     }
-
+    
     func reload() {
         spatialScene.resetForNavigation()
         model?.getController().webview?.reload()
     }
-
+    
     func navigateToURL(url: URL) {
         spatialScene.resetForNavigation()
         model?.load(url.absoluteString)
     }
-
+    
     func getURL() -> URL? {
         return model?.getController().webview?.url
     }
-
+    
     @State var canGoBack: Bool = false
-
+    
     @State var canGoForward: Bool = false
-
+    
     var navHoverGroup: HoverEffectGroup {
         HoverEffectGroup(hoverNamespace)
     }
@@ -126,15 +130,13 @@ struct SpatialNavView: View {
                             action: { self.goBack()
                             },
                             children: Image("arrow_left"),
-                            clearBackGround: true
-                        )
+                            clearBackGround: true)
                         .disabled(!(self.canGoBack))
                         NavButton(
                             action: { self.goForward()
                             },
                             children: Image("arrow_right"),
-                            clearBackGround: true
-                        )
+                            clearBackGround: true)
                         .disabled(!(self.canGoBack))
                         NavButton(action: { self.reload() }, children: Image("refresh"), clearBackGround: true)
                         NavDivider()
@@ -158,14 +160,12 @@ struct SpatialNavView: View {
                     NavButton(
                         action: { self.goBack()
                         },
-                        children: Image("arrow_left")
-                    )
+                        children: Image("arrow_left"))
                     .disabled(!(self.canGoBack))
                     NavButton(
                         action: { self.goForward()
                         },
-                        children: Image("arrow_right")
-                    )
+                        children: Image("arrow_right"))
                     .disabled(!(self.canGoBack))
                     NavButton(action: { self.reload() }, children: Image("refresh"))
                     NavDivider()
@@ -191,14 +191,14 @@ struct SpatialNavView: View {
                         self.getURL()?.absoluteString ?? ""
                     )
                 )
-                .lineLimit(1)
-                .textSelection(.enabled)
-                .padding(12)
-                .frame(minWidth: 200)
-                .frame(maxWidth: 500)
-                .frame(height: 44)
-                .background(.black)
-                .cornerRadius(100)
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .frame(minWidth: 200)
+                    .frame(maxWidth: 500)
+                    .frame(height: 44)
+                    .background(.black)
+                    .cornerRadius(100)
                 NavButton(action: {
                     UIPasteboard.general.string = self.getURL()?.absoluteString ?? ""
                     showCopyTip = true
@@ -208,22 +208,21 @@ struct SpatialNavView: View {
                     withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
                 }, children: Image("copy"))
                 NavButton(
-                    action: {
-                        print("open browser")
-                        UIApplication.shared
-                            .open(
-                                URL(
-                                    string: url.count > 0 ? url : (
-                                        self.getURL()?.absoluteString ?? ""
-                                    )
-                                )!,
-                                options: [:],
-                                completionHandler: nil
-                            )
-                        withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
-                    },
-                    children: Image("browser")
+action: {
+                    print("open browser")
+                    UIApplication.shared
+        .open(
+            URL(
+                string: url.count > 0 ? url : (
+                    self.getURL()?.absoluteString ?? ""
                 )
+            )!,
+            options: [:],
+            completionHandler: nil
+        )
+                    withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 }
+                },
+ children: Image("browser"))
                 NavButton(action: { withAnimation(.easeInOut(duration: 0.5)) { showUrl = 0; showNav = 1 } }, children: Image("close"))
             }
             .popover(isPresented: $showCopyTip) {
@@ -237,8 +236,8 @@ struct SpatialNavView: View {
             .cornerRadius(100)
             .opacity(showUrl)
         }
-        .onAppear {
-            model?.addStateListener(.didFinishLoad) {
+        .onAppear(){
+            model?.addStateListener(.didFinishLoad){
                 self.checkButtonState()
             }
         }
