@@ -41,6 +41,8 @@ export function physical2point(physical: number, options?: ConvertOption) {
 }
 
 function updateValue() {
+  // ssr protected
+  if (typeof window === 'undefined') return
   const src = window.__physicalMetrics
   if (!src) return
   const next = {
@@ -61,7 +63,9 @@ export function getValue(): PhysicalMetricsValueShape {
   return snapshot
 }
 
-export function subscribe(cb: any) {
+export function subscribe(cb: () => void) {
+  // ssr protected
+  if (typeof window === 'undefined') return () => {}
   const handler = () => {
     cb()
   }
