@@ -18,7 +18,6 @@ function App() {
     if (current === null) return
     current.entityTransform = cb(DOMMatrix.fromMatrix(current.entityTransform))
   }
-  const [loadCount, setLoadCount] = useState(0)
   const [logs, logLine, clearLog] = useLogger()
 
   const [translateX, setTranslateX] = useState(0)
@@ -40,66 +39,66 @@ function App() {
   }, [modelRef.current, logLine])
 
   return (
-    <div>
-      <h1>Static 3D model test</h1>
+    <div className="prose max-w-none">
       <section>
-        <h3>CSS Transform</h3>
-        <p>
-          <Input
+        <h3 className="m-0">CSS Transform</h3>
+        <p className="p-0 m-0">
+          <NumberInput
             label="translateX"
             value={translateX}
             setValue={setTranslateX}
             step={10}
           />
-          <Input
+          <NumberInput
             label="translateY"
             value={translateY}
             setValue={setTranslateY}
             step={10}
           />
-          <Input
+          <NumberInput
             label="translateZ"
             value={translateZ}
             setValue={setTranslateZ}
             step={10}
           />
-          <Input
+          <NumberInput
             label="rotateX"
             value={rotateX}
             setValue={setRotateX}
             step={5}
           />
-          <Input
+          <NumberInput
             label="rotateY"
             value={rotateY}
             setValue={setRotateY}
             step={5}
           />
-          <Input
+          <NumberInput
             label="rotateZ"
             value={rotateZ}
             setValue={setRotateZ}
             step={5}
           />
-          <Input
+          <NumberInput
             label="scaleX"
             value={scaleX}
             setValue={setScaleX}
             step={0.1}
           />
-          <Input
+          <NumberInput
             label="scaleY"
             value={scaleY}
             setValue={setScaleY}
             step={0.1}
           />
-          <Input
+          <NumberInput
             label="scaleZ"
             value={scaleZ}
             setValue={setScaleZ}
             step={0.1}
           />
           <button
+            className="btn btn-error btn-outline btn-sm"
             onClick={e => {
               setTranslateX(0)
               setTranslateY(0)
@@ -117,8 +116,8 @@ function App() {
         </p>
       </section>
       <section>
-        <h3>Entity Transform</h3>
-        <p>
+        <h3 className="m-0">Entity Transform</h3>
+        <p className="p-0">
           <Toggle
             label="translateX"
             step={10}
@@ -165,6 +164,7 @@ function App() {
             setValue={val => entityTransform(e => e.scale(1, 1, 1 + val))}
           />
           <button
+            className="btn btn-error btn-outline btn-sm"
             onClick={e => {
               const resetCSS = `translate3d(0, 0, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0)`
               entityTransform(e => e.setMatrixValue(resetCSS))
@@ -176,21 +176,22 @@ function App() {
       </section>
 
       <Model
+        className="block"
         src={'/modelasset/cone.usdz'}
         enable-xr
         style={{
-          width: '800px',
           height: '200px',
           '--xr-depth': '100px',
           '--xr-back': '100px',
           transform: `translate3d(${translateX}px, ${translateY}px, ${translateZ}px) scale3d(${scaleX}, ${scaleY}, ${scaleZ}) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
         }}
         ref={modelRef}
-        onError={e => logLine(`Model load error`)}
-        onLoad={e => {
+        onError={e =>
+          logLine(`Model load error ${modelRef?.current?.currentSrc}`)
+        }
+        onLoad={e =>
           logLine(`Model load success ${modelRef?.current?.currentSrc}`)
-          setLoadCount(loadCount + 1)
-        }}
+        }
         onSpatialTap={e => {
           logLine(
             'model onSpatialTap',
@@ -214,8 +215,12 @@ function App() {
           )
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}
-      />
-      <p>{loadCount}</p>
+      >
+        <img
+          src="/modelasset/cone.png"
+          className="w-full h-[200px] object-contain"
+        />
+      </Model>
       <Logger logs={logs} clearLog={clearLog} />
     </div>
   )
@@ -227,19 +232,24 @@ type InputProps = {
   value: number
   setValue: (val: number) => void
 }
-function Input({ label, value, setValue, step }: InputProps) {
+function NumberInput({ label, value, setValue, step }: InputProps) {
   return (
-    <label>
-      {label}:
+    <span className="m-1 inline-block">
+      <label>{label}:</label>
+      <button className="btn btn-sm" onClick={() => setValue(value - step)}>
+        -
+      </button>
       <input
+        className="input input-sm input-bordered w-16"
         type="number"
         step={step}
         value={value}
-        size={5}
         onChange={e => setValue(parseFloat(e.currentTarget.value))}
-        style={{ width: '3em', margin: '0 1em 0 0.5em' }}
-      />{' '}
-    </label>
+      />
+      <button className="btn btn-sm" onClick={() => setValue(value + step)}>
+        +
+      </button>{' '}
+    </span>
   )
 }
 
@@ -250,10 +260,14 @@ type ToggleProps = {
 }
 function Toggle({ label, setValue, step }: ToggleProps) {
   return (
-    <span style={{ marginRight: '1em' }}>
+    <span className="m-1 inline-block">
+      <button className="btn btn-sm" onClick={e => setValue(-step)}>
+        -
+      </button>
       <label>{label}</label>
-      <button onClick={e => setValue(-step)}>-</button>{' '}
-      <button onClick={e => setValue(step)}>+</button>{' '}
+      <button className="btn btn-sm" onClick={e => setValue(step)}>
+        +
+      </button>{' '}
     </span>
   )
 }
