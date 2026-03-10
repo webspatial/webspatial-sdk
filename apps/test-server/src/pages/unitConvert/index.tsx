@@ -64,7 +64,9 @@ export default function UnitConvertTest() {
           <button
             className="btn btn-primary"
             onClick={() => {
-              window.__physicalMetrics = {
+              ;(window as any).__webspatialsdk__ =
+                (window as any).__webspatialsdk__ || {}
+              ;(window as any).__webspatialsdk__.physicalMetrics = {
                 meterToPtScaled: 1360,
                 meterToPtUnscaled: 1500 + ((Math.random() * 100) >> 0),
               }
