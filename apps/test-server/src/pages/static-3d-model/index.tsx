@@ -6,7 +6,7 @@ import {
   Model,
   ModelRef,
 } from '@webspatial/react-sdk'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLogger, Logger } from './Logger'
 
 enableDebugTool()
@@ -34,6 +34,10 @@ function App() {
   const [scaleZ, setScaleZ] = useState(1)
 
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
+
+  useEffect(() => {
+    modelRef.current?.ready.then(() => logLine('ref.current.ready success'))
+  }, [modelRef.current, logLine])
 
   return (
     <div>

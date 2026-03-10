@@ -33,10 +33,10 @@ function App() {
 
   const spatialDrag = (evt: SpatialDragEvent | ModelSpatialDragEvent) => {
     console.log(
-      'drag move',
-      evt.detail.translation3D.x,
-      evt.detail.translation3D.y,
-      evt.detail.translation3D.z,
+      'drag translationXYZ (proxy)',
+      evt.translationX,
+      evt.translationY,
+      evt.translationZ,
     )
     const deltaX = evt.detail.translation3D.x - lastTranslation.current.x
     lastTranslation.current.x = evt.detail.translation3D.x

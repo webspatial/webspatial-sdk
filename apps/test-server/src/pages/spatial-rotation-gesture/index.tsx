@@ -112,7 +112,7 @@ function App() {
   }
 
   const spatialRotate = (evt: ModelSpatialRotateEvent | SpatialRotateEvent) => {
-    const newTotalQuat = evt.detail.quaternion
+    const newTotalQuat = evt.quaternion
     console.log('dbg spatialRotate', newTotalQuat)
     setTotalQuat(newTotalQuat)
   }
@@ -139,7 +139,9 @@ function App() {
     spatialRotateEnd()
   }
 
-  const src = '/public/modelasset/cone.usdz'
+  const src =
+    'https://utzmqao3qthjebc2.public.blob.vercel-storage.com/saeukkang.usdz'
+  // '/public/modelasset/cone.usdz'
   // 'https://utzmqao3qthjebc2.public.blob.vercel-storage.com/saeukkang.usdz'
 
   return (

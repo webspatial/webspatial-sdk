@@ -15,6 +15,7 @@ import {
 } from '@webspatial/core-sdk'
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
+export type { Quaternion } from '@webspatial/core-sdk'
 
 // SpatialEvents
 type SpatialEventProps<T extends SpatializedElementRef> = {
@@ -148,7 +149,12 @@ export type SpatialDragStartEvent<
 
 export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialDragEvent & CurrentTarget<T>
+> = CoreSpatialDragEvent &
+  CurrentTarget<T> & {
+    readonly translationX: number
+    readonly translationY: number
+    readonly translationZ: number
+  }
 
 export type SpatialDragEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
@@ -156,7 +162,10 @@ export type SpatialDragEndEvent<
 
 export type SpatialRotateEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialRotateEvent & CurrentTarget<T>
+> = CoreSpatialRotateEvent &
+  CurrentTarget<T> & {
+    readonly quaternion: import('@webspatial/core-sdk').Quaternion
+  }
 
 export type SpatialRotateEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
@@ -164,7 +173,10 @@ export type SpatialRotateEndEvent<
 
 export type SpatialMagnifyEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
-> = CoreSpatialMagnifyEvent & CurrentTarget<T>
+> = CoreSpatialMagnifyEvent &
+  CurrentTarget<T> & {
+    readonly magnification: number
+  }
 
 export type SpatialMagnifyEndEvent<
   T extends SpatializedElementRef = SpatializedElementRef,

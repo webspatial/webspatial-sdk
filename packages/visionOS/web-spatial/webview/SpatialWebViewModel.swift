@@ -76,6 +76,12 @@ class SpatialWebViewModel {
     }
 
     func getController() -> SpatialWebController {
+        // See TODO in AttachmentManager — async destroy() during SwiftUI teardown
+        // can nil the controller while the view is still being removed.
+        if controller == nil {
+            controller = SpatialWebController()
+            controller!.model = self
+        }
         return controller!
     }
 
