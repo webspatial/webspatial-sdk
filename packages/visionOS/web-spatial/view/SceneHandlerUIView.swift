@@ -47,11 +47,11 @@ struct SceneHandlerUIView: View {
     }
 
     var body: some View {
-        let meter2ptScaled = converter.worldScalingCompensation(.scaled).convert(
+        let meterToPtScaled = converter.worldScalingCompensation(.scaled).convert(
             1,
             from: .meters
         )
-        let meter2ptUnscaled = converter.worldScalingCompensation(.unscaled).convert(
+        let meterToPtUnscaled = converter.worldScalingCompensation(.unscaled).convert(
             1,
             from: .meters
         )
@@ -62,19 +62,19 @@ struct SceneHandlerUIView: View {
                     .removeDuplicates(by: { abs($0.0 - $1.0) < 0.01 && abs($0.1 - $1.1) < 0.01 })
                     .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
                     .sink { scaled, unscaled in
-//                        print("debounced:meter2ptScaled:\(scaled), meter2ptUnscaled:\(unscaled)")
+//                        print("debounced:meterToPtScaled:\(scaled), meterToPtUnscaled:\(unscaled)")
                         spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
                     }
                     .store(in: &cancellables)
 
                 // Seed subjects with current values to start the pipeline
-                scaledSubject.send(meter2ptScaled)
-                unscaledSubject.send(meter2ptUnscaled)
+                scaledSubject.send(meterToPtScaled)
+                unscaledSubject.send(meterToPtUnscaled)
             }
-            .onChange(of: meter2ptScaled) { _, newValue in
+            .onChange(of: meterToPtScaled) { _, newValue in
                 scaledSubject.send(newValue)
             }
-            .onChange(of: meter2ptUnscaled) { _, newValue in
+            .onChange(of: meterToPtUnscaled) { _, newValue in
                 unscaledSubject.send(newValue)
             }.onAppear {
                 // window scene only resize logic
