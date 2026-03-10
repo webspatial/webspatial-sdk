@@ -51,6 +51,11 @@ export function isSSREnv() {
 }
 
 export const PhysicalMetrics = {
-  point2physical: () => 0,
-  physical2point: () => 0,
+  point2physical: () => 1360,
+  physical2point: () => 1360,
+  getValue: () => ({
+    point2physical: 1360,
+    physical2point: 1360,
+  }),
+  subscribe: (cb: any) => {},
 }
