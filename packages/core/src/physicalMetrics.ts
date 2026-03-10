@@ -7,6 +7,10 @@ type WorldScalingCompensation = 'unscaled' | 'scaled'
 
 type ConvertOption = { worldScalingCompensation: WorldScalingCompensation }
 
+// Fallback calibration: 1 meter ≈ 1360 pt for both scaled and unscaled modes.
+// This baseline ensures pointToPhysical(1360) === 1 and physicalToPoint(1) === 1360
+// until native physical metrics are injected into window.__webspatialsdk__.physicalMetrics
+// and a 'physicalMetricsUpdate' event updates the snapshot at runtime.
 let snapshot: PhysicalMetricsValueShape = {
   meterToPtUnscaled: 1360,
   meterToPtScaled: 1360,
@@ -16,7 +20,7 @@ function getWorldScalingCompensation(options?: ConvertOption) {
   return options?.worldScalingCompensation ?? 'scaled' // default to scaled
 }
 
-export function point2physical(point: number, options?: ConvertOption) {
+export function pointToPhysical(point: number, options?: ConvertOption) {
   updateValue()
   const compensation = getWorldScalingCompensation(options)
   if (compensation === 'unscaled') {
@@ -25,7 +29,7 @@ export function point2physical(point: number, options?: ConvertOption) {
   return point / snapshot.meterToPtScaled
 }
 
-export function physical2point(physical: number, options?: ConvertOption) {
+export function physicalToPoint(physical: number, options?: ConvertOption) {
   updateValue()
   const compensation = getWorldScalingCompensation(options)
   if (compensation === 'unscaled') {

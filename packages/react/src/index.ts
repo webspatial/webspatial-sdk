@@ -7,7 +7,7 @@ export * from './spatialized-container-monitor'
 export * from './reality'
 export * from './Model'
 export { SSRProvider } from './ssr'
-export { usePhysicalMetrics } from './usePhysicalMetrics'
+export { useMetrics } from './useMetrics'
 
 export const version = __WEBSPATIAL_REACT_SDK_VERSION__
 

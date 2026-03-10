@@ -7,20 +7,20 @@ async function loadModule() {
 
 describe('physicalMetrics', () => {
   test('default scaled conversion', async () => {
-    const { point2physical, physical2point, getValue } = await loadModule()
+    const { pointToPhysical, physicalToPoint, getValue } = await loadModule()
     const v = getValue()
     expect(v.meterToPtScaled).toBe(1360)
     expect(v.meterToPtUnscaled).toBe(1360)
-    expect(point2physical(1360)).toBe(1)
-    expect(physical2point(1)).toBe(1360)
+    expect(pointToPhysical(1360)).toBe(1)
+    expect(physicalToPoint(1)).toBe(1360)
   })
 
   test('unscaled compensation uses unscaled metrics', async () => {
-    const { point2physical, physical2point } = await loadModule()
-    expect(point2physical(1360, { worldScalingCompensation: 'unscaled' })).toBe(
-      1,
-    )
-    expect(physical2point(1, { worldScalingCompensation: 'unscaled' })).toBe(
+    const { pointToPhysical, physicalToPoint } = await loadModule()
+    expect(
+      pointToPhysical(1360, { worldScalingCompensation: 'unscaled' }),
+    ).toBe(1)
+    expect(physicalToPoint(1, { worldScalingCompensation: 'unscaled' })).toBe(
       1360,
     )
   })
@@ -38,9 +38,9 @@ describe('physicalMetrics', () => {
     const v = m.getValue()
     expect(v.meterToPtScaled).toBe(2000)
     expect(v.meterToPtUnscaled).toBe(1500)
-    expect(m.point2physical(2000)).toBe(1)
+    expect(m.pointToPhysical(2000)).toBe(1)
     expect(
-      m.point2physical(1500, { worldScalingCompensation: 'unscaled' }),
+      m.pointToPhysical(1500, { worldScalingCompensation: 'unscaled' }),
     ).toBe(1)
     unsubscribe()
     ;(window as any).__webspatialsdk__ = undefined
@@ -55,8 +55,8 @@ describe('physicalMetrics', () => {
     window.dispatchEvent(new Event('physicalMetricsUpdate'))
     expect(m.getValue().meterToPtScaled).toBe(1000)
     expect(m.getValue().meterToPtUnscaled).toBe(1360)
-    expect(m.point2physical(1000)).toBe(1)
-    expect(m.physical2point(1, { worldScalingCompensation: 'unscaled' })).toBe(
+    expect(m.pointToPhysical(1000)).toBe(1)
+    expect(m.physicalToPoint(1, { worldScalingCompensation: 'unscaled' })).toBe(
       1360,
     )
     unsubscribe()
