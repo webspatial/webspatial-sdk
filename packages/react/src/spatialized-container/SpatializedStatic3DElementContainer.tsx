@@ -117,18 +117,9 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
-  const containerRef = useRef<SpatializedStatic3DElementRef>(null)
-  const [elementCreated, setElementCreated] = useState(false)
-  useImperativeHandle<
-    SpatializedStatic3DElementRef | null,
-    SpatializedStatic3DElementRef | null
-  >(ref, () => (elementCreated ? containerRef.current : null), [elementCreated])
-
   const createSpatializedElement = useCallback(async () => {
-    const element = await getSession()!.createSpatializedStatic3DElement()
-    setElementCreated(true)
-    return element
-  }, [setElementCreated])
+    return await getSession()!.createSpatializedStatic3DElement()
+  }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
@@ -167,7 +158,7 @@ function SpatializedStatic3DElementContainerBase(
 
   return (
     <SpatializedContainer<SpatializedStatic3DElementRef>
-      ref={containerRef}
+      ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
       spatializedContent={SpatializedContent}
