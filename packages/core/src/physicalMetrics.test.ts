@@ -34,7 +34,7 @@ describe('physicalMetrics', () => {
       },
     }
     const unsubscribe = m.subscribe(() => {})
-    window.dispatchEvent(new Event('physicalMetricsUpdate'))
+    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
     const v = m.getValue()
     expect(v.meterToPtScaled).toBe(2000)
     expect(v.meterToPtUnscaled).toBe(1500)
@@ -52,7 +52,7 @@ describe('physicalMetrics', () => {
       physicalMetrics: { meterToPtScaled: 1000 },
     }
     const unsubscribe = m.subscribe(() => {})
-    window.dispatchEvent(new Event('physicalMetricsUpdate'))
+    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
     expect(m.getValue().meterToPtScaled).toBe(1000)
     expect(m.getValue().meterToPtUnscaled).toBe(1360)
     expect(m.pointToPhysical(1000)).toBe(1)
@@ -73,7 +73,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 800,
       },
     }
-    window.dispatchEvent(new Event('physicalMetricsUpdate'))
+    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
     expect(cb).toHaveBeenCalledTimes(1)
     expect(m.getValue().meterToPtScaled).toBe(900)
     expect(m.getValue().meterToPtUnscaled).toBe(800)
@@ -83,7 +83,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 600,
       },
     }
-    window.dispatchEvent(new Event('physicalMetricsUpdate'))
+    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
     expect(cb).toHaveBeenCalledTimes(2)
     expect(m.getValue().meterToPtScaled).toBe(700)
     expect(m.getValue().meterToPtUnscaled).toBe(600)
@@ -95,7 +95,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 400,
       },
     }
-    window.dispatchEvent(new Event('physicalMetricsUpdate'))
+    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
     expect(cb).toHaveBeenCalledTimes(2)
     expect(m.getValue().meterToPtScaled).toBe(500)
     expect(m.getValue().meterToPtUnscaled).toBe(400)

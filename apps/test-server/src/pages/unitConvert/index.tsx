@@ -71,7 +71,7 @@ export default function UnitConvertTest() {
                 meterToPtScaled: 1360,
                 meterToPtUnscaled: 1500 + ((Math.random() * 100) >> 0),
               }
-              window.dispatchEvent(new Event('physicalMetricsUpdate'))
+              window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
             }}
           >
             trigger random update
