@@ -1,4 +1,3 @@
-import Combine
 import SwiftUI
 
 struct SceneHandlerUIView: View {
@@ -12,9 +11,8 @@ struct SceneHandlerUIView: View {
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.physicalMetrics) private var converter
-    @State private var cancellables = Set<AnyCancellable>()
-    @State private var scaledSubject = PassthroughSubject<Double, Never>()
-    @State private var unscaledSubject = PassthroughSubject<Double, Never>()
+    @State private var latestScaled: Double?
+    @State private var latestUnscaled: Double?
 
     private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
         sceneDelegate.window?.windowScene?
@@ -46,6 +44,12 @@ struct SceneHandlerUIView: View {
         }
     }
 
+    private func updatePhysicalMetricsIfReady() {
+        if let scaled = latestScaled, let unscaled = latestUnscaled {
+            spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
+        }
+    }
+
     var body: some View {
         let meterToPtScaled = converter.worldScalingCompensation(.scaled).convert(
             1,
@@ -57,24 +61,18 @@ struct SceneHandlerUIView: View {
         )
         VStack {}
             .onAppear {
-                // Combine both subjects to update metrics together
-                Publishers.CombineLatest(scaledSubject, unscaledSubject)
-                    .sink { scaled, unscaled in
-                        spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
-                    }
-                    .store(in: &cancellables)
-
-                // Seed subjects with current values to start the pipeline
-                scaledSubject.send(meterToPtScaled)
-                unscaledSubject.send(meterToPtUnscaled)
+                latestScaled = meterToPtScaled
+                latestUnscaled = meterToPtUnscaled
+                updatePhysicalMetricsIfReady()
             }
             .onChange(of: meterToPtScaled) { _, newValue in
-                scaledSubject.send(newValue)
+                latestScaled = newValue
+                updatePhysicalMetricsIfReady()
             }
             .onChange(of: meterToPtUnscaled) { _, newValue in
-                unscaledSubject.send(newValue)
+                latestUnscaled = newValue
+                updatePhysicalMetricsIfReady()
             }.onAppear {
-                // window scene only resize logic
                 guard spatialScene.windowStyle == .window else {
                     return
                 }
@@ -89,7 +87,6 @@ struct SceneHandlerUIView: View {
             }
             .onDisappear {
                 print("onScene Disappear")
-                cancellables.removeAll()
                 spatialScene.destroy()
             }
             .onReceive(spatialScene.openWindowData) { sceneID in
