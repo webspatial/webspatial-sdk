@@ -17,8 +17,8 @@ function App() {
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
   useEffect(() => {
-    modelRef.current?.ready.then(() => logLine('ref.current.ready success'))
-  }, [modelRef.current, logLine])
+    modelRef.current!.ready.then(() => logLine('ref.current.ready success'))
+  }, [logLine])
 
   return (
     <div className="prose max-w-none">
