@@ -30,7 +30,7 @@ export async function createSpatializedStatic3DElement(
     throw new Error('createSpatializedStatic3DElement failed')
   } else {
     const { id } = result.data
-    return new SpatializedStatic3DElement(id)
+    return new SpatializedStatic3DElement(id, modelURL)
   }
 }
 
