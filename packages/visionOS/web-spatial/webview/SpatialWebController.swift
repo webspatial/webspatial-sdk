@@ -62,8 +62,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         }
     }
 
-    // navigation request
-    // SpatialDiv/forcestyle/normal web link protocol
+    /// navigation request
+    /// SpatialDiv/forcestyle/normal web link protocol
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
         let deciside = navigationInvoke?(navigationAction.request.url!)
         if deciside == true {
@@ -84,7 +84,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         decisionHandler(needAllow ? .allow : .cancel)
     }
 
-    // open window request
+    /// open window request
     func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,
@@ -99,7 +99,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         return nil
     }
 
-    // invoke jsb
+    /// invoke jsb
     func userContentController(
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void
@@ -108,7 +108,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         jsbManager.handlerMessage(message.body as! String, replyHandler)
     }
 
-    // custom scheme request
+    /// custom scheme request
     func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
         print("urlSchemeTask")
         let url = urlSchemeTask.request.url
@@ -272,13 +272,13 @@ enum ScrollState {
     case end
 }
 
-// extend webview to support file://
+/// extend webview to support file://
 @available(iOS 11.0, *)
 extension WKWebView {
     /// WKWebView,  Support setting file scheme in configuration
     public private(set) static var isEnableFileSupport = false
     public static func enableFileScheme() {
-        /// This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
+        // This method supports adapting supported files through Configuration, but cannot be cancelled (Configuration is immutable).
         if !isEnableFileSupport {
             switchHandlesURLScheme()
         }
