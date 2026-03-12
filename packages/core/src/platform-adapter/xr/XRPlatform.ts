@@ -85,13 +85,24 @@ export class XRPlatform implements PlatformAbility {
             SpatialWebEvent.removeEventReceiver(createdId)
           },
         )
+        // Include rid in the initial URL so native receives both
+        // metadata AND rid in a single navigation.
+        const queryWithRid = query
+          ? `${query}&rid=${createdId}`
+          : `rid=${createdId}`
         windowProxy = this.openWindow(
           command,
-          query,
+          queryWithRid,
           target,
           features,
         ).windowProxy
-        windowProxy?.open(`about:blank?rid=${createdId}`, '_self')
+        // Also include metadata in the about:blank URL. The webspatial://
+        // URL is often consumed by PICO's auto-created tab before native
+        // listeners register. about:blank is ALWAYS seen reliably.
+        const blankQuery = query
+          ? `rid=${createdId}&${query}`
+          : `rid=${createdId}`
+        windowProxy?.open(`about:blank?${blankQuery}`, '_self')
       } catch (error: unknown) {
         console.error(`open window error: ${error}`)
         const { code, message } = error as JSBError

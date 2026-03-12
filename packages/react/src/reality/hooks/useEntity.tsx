@@ -24,16 +24,6 @@ export const useEntity = ({
   rotation,
   scale,
   onSpatialTap,
-  onSpatialDragStart,
-  onSpatialDrag,
-  onSpatialDragEnd,
-  // onSpatialRotateStart,
-  onSpatialRotate,
-  onSpatialRotateEnd,
-  // onSpatialMagnifyStart,
-  onSpatialMagnify,
-  onSpatialMagnifyEnd,
-  // TODO: add other event handlers
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -42,8 +32,21 @@ export const useEntity = ({
 
   const forceUpdate = useForceUpdate()
 
+  // Deferred cleanup timer for StrictMode safety.
+  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     if (!ctx) return
+
+    // Cancel any pending cleanup from StrictMode's fake unmount
+    if (cleanupTimerRef.current !== null) {
+      clearTimeout(cleanupTimerRef.current)
+      cleanupTimerRef.current = null
+    }
+
+    // Already created (StrictMode remount) — skip
+    if (instanceRef.current.entity) return
+
     const controller = new AbortController()
 
     const init = async () => {
@@ -73,7 +76,11 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
-      instanceRef.current?.destroy()
+      // Defer cleanup so StrictMode's immediate remount can cancel it.
+      cleanupTimerRef.current = setTimeout(() => {
+        cleanupTimerRef.current = null
+        instanceRef.current?.destroy()
+      }, 0)
     }
   }, [ctx, parent])
 
@@ -84,15 +91,7 @@ export const useEntity = ({
   useEntityEvent({
     instance: instanceRef.current,
     onSpatialTap,
-    onSpatialDragStart,
-    onSpatialDrag,
-    onSpatialDragEnd,
-    // onSpatialRotateStart,
-    onSpatialRotate,
-    onSpatialRotateEnd,
-    // onSpatialMagnifyStart,
-    onSpatialMagnify,
-    onSpatialMagnifyEnd,
+    // TODO: add other event handlers
   })
 
   return instanceRef.current.entity
