@@ -94,6 +94,7 @@ export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
   modelTransform?: number[]
+  autoplay?: boolean
 }
 
 export interface SpatialSceneCreationOptions {

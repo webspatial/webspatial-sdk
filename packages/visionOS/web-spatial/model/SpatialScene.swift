@@ -569,6 +569,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.modelTransform = affineTransform3D
         }
 
+        if let autoplay = command.autoplay {
+            spatializedElement.autoplay = autoplay
+        }
+
         resolve(.success(baseReplyData))
     }
 
