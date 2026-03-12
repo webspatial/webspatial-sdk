@@ -344,12 +344,14 @@ export class CubeInfo {
 
 export interface SpatialTapEventDetail {
   location3D: Point3D
+  globalLocation3D?: Point3D
 }
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
 
 export interface SpatialDragStartEventDetail {
   startLocation3D: Point3D
+  globalLocation3D?: Point3D
 }
 
 export interface SpatialDragEventDetail {
@@ -384,3 +386,14 @@ export type SpatialMagnifyEvent = CustomEvent<SpatialMagnifyEventDetail>
 export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
+
+export interface AttachmentEntityOptions {
+  parentEntityId: string
+  position?: [number, number, number]
+  size: { width: number; height: number }
+}
+
+export interface AttachmentEntityUpdateOptions {
+  position?: [number, number, number]
+  size?: { width: number; height: number }
+}

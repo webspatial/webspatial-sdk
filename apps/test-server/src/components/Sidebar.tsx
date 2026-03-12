@@ -12,6 +12,7 @@ export const routes = [
       { path: '/reality/dynamic3d', label: 'Dynamic 3D' },
       { path: '/reality/gestures', label: 'Gestures' },
       { path: '/reality/spatial-div', label: 'Spatial Div Dynamic' },
+      { path: '/reality/attachments', label: 'Attachments' },
       { path: '/reality/empty', label: 'Empty' },
       { path: '/reality/geometry-entity', label: 'Geometry Entity' },
       { path: '/reality/interactable', label: 'Interactable' },

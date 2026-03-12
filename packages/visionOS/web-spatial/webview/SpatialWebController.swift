@@ -9,7 +9,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
     private var scorllUpdateInvoke: ((_ type: ScrollState, _ point: CGPoint) -> Void)?
-    private var webviewTitle: String? = nil
+    private var webviewTitle: String?
     private var firstLoad = true
     private var jsbManager = JSBManager()
 
@@ -67,15 +67,19 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Swift.Void) {
         let deciside = navigationInvoke?(navigationAction.request.url!)
         if deciside == true {
-            if !firstLoad{
+            if !firstLoad {
                 webviewStateChangeInvoke?(.didUnload)
             }
             firstLoad = false
         }
         var needAllow = deciside ?? false
-        
-        if !needAllow{
-            UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+
+        if !needAllow {
+            // webspatial:// is an internal scheme for in-app routing between main and attachment windows.
+            // Only open non-webspatial URLs externally via the system.
+            if navigationAction.request.url?.scheme != "webspatial" {
+                UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+            }
         }
         decisionHandler(needAllow ? .allow : .cancel)
     }
@@ -221,8 +225,8 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         scorllUpdateInvoke = nil
         model = nil
     }
-    
-    private var state:SpatialWebViewState?
+
+    private var state: SpatialWebViewState?
 
     func destroyView() {
         stopObserving()
@@ -236,15 +240,15 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             webviewStateChangeInvoke?(.didDestroyView)
         }
     }
-    
+
     private var isPageLoaded = false
-    
+
     private var jsQueue: [String] = []
-    
+
     private func enqueueJS(_ js: String) {
         jsQueue.append(js)
     }
-    
+
     private func flushJSQueue() {
         guard !jsQueue.isEmpty else { return }
         let combined = jsQueue.joined(separator: ";")
@@ -253,7 +257,7 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func callJS(_ js: String) {
-        if webview != nil && isPageLoaded {
+        if webview != nil, isPageLoaded {
             webview!.evaluateJavaScript(js)
         } else {
             enqueueJS(js)
@@ -269,8 +273,8 @@ enum ScrollState {
 }
 
 // extend webview to support file://
- @available(iOS 11.0, *)
- extension WKWebView {
+@available(iOS 11.0, *)
+extension WKWebView {
     /// WKWebView,  Support setting file scheme in configuration
     public private(set) static var isEnableFileSupport = false
     public static func enableFileScheme() {
@@ -292,9 +296,8 @@ enum ScrollState {
     }
 
     /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
-    @objc private dynamic
-    static func wrapHandles(urlScheme: String) -> Bool {
+    @objc private dynamic static func wrapHandles(urlScheme: String) -> Bool {
         if urlScheme == "file" { return false }
         return wrapHandles(urlScheme: urlScheme)
     }
- }
+}

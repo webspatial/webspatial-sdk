@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react'
 import {
   EntityEventHandler,
   eventMap,
+  SpatialDragEntityEvent,
+  SpatialMagnifyEntityEvent,
+  SpatialRotateEntityEvent,
   SpatialDragStartEntityEvent,
   SpatialTapEntityEvent,
 } from '../type'
@@ -62,6 +65,86 @@ function createEventProxy(ev: any, instance: EntityRef) {
         if (type === 'spatialdragstart') {
           return (target as any).detail?.startLocation3D?.z ?? 0
         }
+        return undefined
+      }
+      if (prop === 'translationX') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.x ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'translationY') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.y ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'translationZ') {
+        const type = (target as any).type
+        if (type === 'spatialdrag') {
+          return (
+            (target as SpatialDragEntityEvent).detail?.translation3D?.z ?? 0
+          )
+        }
+        return undefined
+      }
+      if (prop === 'quaternion') {
+        const type = (target as any).type
+        if (type === 'spatialrotate') {
+          return (
+            (target as SpatialRotateEntityEvent).detail?.quaternion ?? {
+              x: 0,
+              y: 0,
+              z: 0,
+              w: 1,
+            }
+          )
+        }
+        return undefined
+      }
+      if (prop === 'magnification') {
+        const type = (target as any).type
+        if (type === 'spatialmagnify') {
+          return (
+            (target as SpatialMagnifyEntityEvent).detail?.magnification ?? 1
+          )
+        }
+        return undefined
+      }
+      if (prop === 'clientX') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.x ?? 0
+          )
+        }
+
+        return undefined
+      }
+      if (prop === 'clientY') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.y ?? 0
+          )
+        }
+
+        return undefined
+      }
+      if (prop === 'clientZ') {
+        const type = (target as any).type
+        if (type === 'spatialtap' || type === 'spatialdragstart') {
+          return (
+            (target as SpatialTapEntityEvent).detail?.globalLocation3D?.z ?? 0
+          )
+        }
+
         return undefined
       }
       const val = (target as any)[prop]

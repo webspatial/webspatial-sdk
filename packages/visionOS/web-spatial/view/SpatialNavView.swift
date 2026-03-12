@@ -88,18 +88,22 @@ struct SpatialNavView: View {
     }
     
     func goBack() {
+        spatialScene.resetForNavigation()
         model?.getController().webview?.goBack()
     }
     
     func goForward() {
+        spatialScene.resetForNavigation()
         model?.getController().webview?.goForward()
     }
     
     func reload() {
+        spatialScene.resetForNavigation()
         model?.getController().webview?.reload()
     }
     
     func navigateToURL(url: URL) {
+        spatialScene.resetForNavigation()
         model?.load(url.absoluteString)
     }
     
