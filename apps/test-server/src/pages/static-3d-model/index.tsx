@@ -26,8 +26,10 @@ function App() {
       <EntityTransform model={modelRef} />
       <Model
         className="block"
-        src="/modelasset/cone.usdz"
+        src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+        // src="/modelasset/cone.usdz"
         enable-xr
+        autoplay
         style={{
           height: '200px',
           '--xr-depth': '100px',

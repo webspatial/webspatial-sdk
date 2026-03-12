@@ -33,6 +33,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      autoplay: _autoplay,
       ...modelProps
     } = restProps
     // map to VisionOS26 model tag outside attachments
