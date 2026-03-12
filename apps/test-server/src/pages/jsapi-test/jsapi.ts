@@ -169,7 +169,7 @@ export async function testAddMultipleSpatializedStatic3DElement(
     const spatialScene = session.getSpatialScene()
 
     const spatializedStatic3DElementA: SpatializedStatic3DElement =
-      await session.createSpatializedStatic3DElement()
+      await session.createSpatializedStatic3DElement('/modelasset/cone.usdz')
     await spatializedStatic3DElementA.updateProperties({
       name: 'ModelA',
       width: 200,
@@ -188,7 +188,7 @@ export async function testAddMultipleSpatializedStatic3DElement(
 
     // create
     const spatializedStatic3DElementB: SpatializedStatic3DElement =
-      await session.createSpatializedStatic3DElement()
+      await session.createSpatializedStatic3DElement('/modelasset/cone.usdz')
     await spatializedStatic3DElementB.updateProperties({
       name: 'ModelB',
       width: 200,

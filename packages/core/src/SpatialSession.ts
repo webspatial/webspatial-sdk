@@ -72,7 +72,7 @@ export class SpatialSession {
    * @returns Promise resolving to a new SpatializedStatic3DElement instance
    */
   createSpatializedStatic3DElement(
-    modelURL: string = '',
+    modelURL: string,
   ): Promise<SpatializedStatic3DElement> {
     return createSpatializedStatic3DElement(modelURL)
   }
@@ -196,7 +196,9 @@ export class SpatialSession {
    * @param options Configuration options including parent entity ID, position, and size
    * @returns Promise resolving to a new Attachment instance
    */
-  createAttachmentEntity(options: AttachmentEntityOptions): Promise<Attachment> {
+  createAttachmentEntity(
+    options: AttachmentEntityOptions,
+  ): Promise<Attachment> {
     return createAttachmentEntity(options)
   }
 }
