@@ -1,5 +1,6 @@
 import { SpatialSession } from './SpatialSession'
 import { SpatialWebEvent } from './SpatialWebEvent'
+import { isInIframe, warnIfIframe } from './iframe-guard'
 
 /**
  * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr.
@@ -27,6 +28,11 @@ export class Spatial {
    * @returns True if running in a spatial web environment, false otherwise
    */
   runInSpatialWeb() {
+    // Issue #970: block initialization inside iframes to prevent resource leaks
+    if (isInIframe()) {
+      warnIfIframe()
+      return false
+    }
     if (navigator.userAgent.indexOf('WebSpatial/') > 0) {
       return true
     }
