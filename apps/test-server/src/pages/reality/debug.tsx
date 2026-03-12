@@ -69,7 +69,7 @@ export default function RealityDebug() {
   const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotationOn, setBoxRotationOn] = useState(false)
-  const boxAnimationRef = useRef<number>(null)
+  const boxAnimationRef = useRef<any>()
 
   useEffect(() => {
     if (boxRotationOn) {

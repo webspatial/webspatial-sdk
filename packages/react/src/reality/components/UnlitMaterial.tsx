@@ -10,7 +10,7 @@ type Props = {
 } & SpatialUnlitMaterialOptions
 export const UnlitMaterial: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
-  const materialRef = useRef<SpatialUnlitMaterial>(undefined)
+  const materialRef = useRef<SpatialUnlitMaterial>()
   useEffect(() => {
     if (!ctx) return
     const { session, reality, resourceRegistry } = ctx
