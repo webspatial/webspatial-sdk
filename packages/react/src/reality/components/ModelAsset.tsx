@@ -19,7 +19,7 @@ const resolveAssetUrl = (url: string): string => {
 
 export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   const ctx = useRealityContext()
-  const materialRef = useRef<SpatialModelAsset>(undefined)
+  const materialRef = useRef<SpatialModelAsset>()
   useEffect(() => {
     const controller = new AbortController()
     if (!ctx) return

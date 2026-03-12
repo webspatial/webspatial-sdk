@@ -40,8 +40,8 @@ function App() {
     })
   }
 
-  const entityRef = useRef<SpatialEntity>(null)
-  const animationRef = useRef<number>(null)
+  const entityRef = useRef<SpatialEntity>()
+  const animationRef = useRef<any>()
   const rotationRef = useRef<number>(0)
 
   const [isAnimationOn, setIsAnimationOn] = useState(false)
