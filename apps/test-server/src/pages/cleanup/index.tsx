@@ -63,10 +63,16 @@ export function CleanupModel() {
 }
 
 export function CleanupIframe() {
-  const iframeSrc = `https://webspatial-hackathon.vercel.app/`
+  // Use a same-origin local route so the updated SDK's iframe guard is exercised.
+  // The SDK detects iframe context and falls back to degraded (non-spatial) mode.
+  const iframeSrc = `${window.location.origin}/#/static-3d-model`
   return (
     <div className="p-6">
       <h2 className="text-xl mb-4">Static Model within Iframe</h2>
+      <p style={{ color: '#888', fontSize: '14px', marginBottom: '12px' }}>
+        WebSpatial should be disabled inside this iframe (degraded mode). No 3D
+        models should render spatially.
+      </p>
       <iframe
         title="cleanup-iframe"
         src={iframeSrc}
