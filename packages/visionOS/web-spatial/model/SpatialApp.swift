@@ -3,10 +3,10 @@ import SwiftUI
 
 let logger = Logger()
 
-// To load a local path, remove http:// eg.  "static-web/"
+/// To load a local path, remove http:// eg.  "static-web/"
 let nativeAPIVersion = pwaManager.getVersion()
 
-// start URL
+/// start URL
 let startURL = pwaManager.start_url
 
 let DefaultPlainWindowContainerSize = CGSize(width: 1280, height: 720)
@@ -37,7 +37,6 @@ struct Size: Codable {
     var depth: Double?
 }
 
-
 extension SceneOptions {
     init(_ options: XSceneOptionsJSB) {
         defaultSize = Size(
@@ -47,7 +46,7 @@ extension SceneOptions {
         )
         windowResizability = decodeWindowResizability(nil)
         resizeRange = options.resizability
-        /// volume only
+        // volume only
         worldScaling = options.worldScaling?.toSDK ?? .automatic
         worldAlignment = options.worldAlignment?.toSDK ?? .automatic
         baseplateVisibility = options.baseplateVisibility?.toSDK ?? .automatic
@@ -56,31 +55,44 @@ extension SceneOptions {
 
 func decodeWindowResizability(_ windowResizability: String?) -> WindowResizability {
     switch windowResizability {
-        case "automatic":
-            return .automatic
-        case "contentSize":
-            return .contentSize
-        case "contentMinSize":
-            return .contentMinSize
-        default:
-            return .automatic
+    case "automatic":
+        return .automatic
+    case "contentSize":
+        return .contentSize
+    case "contentMinSize":
+        return .contentMinSize
+    default:
+        return .automatic
     }
 }
 
 @Observable
 class SpatialApp {
     private var scenes = [String: SpatialScene]()
-    
-    // delegate properties to pwaManager
-    var name: String { pwaManager.name }
-    var scope: String { pwaManager.scope }
-    var displayMode: PWADisplayMode { pwaManager.display }
-    var version: String { pwaManager.getVersion() }
-    var startURL: String { pwaManager.start_url }
-    
-    // used to cache scene config
-    private var sceneOptions: SceneOptions
 
+    /// delegate properties to pwaManager
+    var name: String {
+        pwaManager.name
+    }
+
+    var scope: String {
+        pwaManager.scope
+    }
+
+    var displayMode: PWADisplayMode {
+        pwaManager.display
+    }
+
+    var version: String {
+        pwaManager.getVersion()
+    }
+
+    var startURL: String {
+        pwaManager.start_url
+    }
+
+    /// used to cache scene config
+    private var sceneOptions: SceneOptions
 
     static let Instance: SpatialApp = .init()
 
@@ -90,14 +102,12 @@ class SpatialApp {
 
         Logger.initLogger()
 
-        sceneOptions = SceneOptions(pwaManager.mainScene);
-        
-        print("plainSceneOptions",sceneOptions)
-        
+        sceneOptions = SceneOptions(pwaManager.mainScene)
+
+        print("plainSceneOptions", sceneOptions)
+
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
     }
-    
-
 
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {
         var scene = SpatialScene(url, style, state, sceneOptions)
@@ -105,15 +115,14 @@ class SpatialApp {
         scene
             .on(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
 
-        
         return scene
     }
-    
+
     private func onSceneDestroyed(_ object: Any, _ data: Any) {
         var spatialObject = object as! SpatialObject
         spatialObject
             .off(event: SpatialObject.Events.Destroyed.rawValue, listener: onSceneDestroyed)
-        
+
         scenes.removeValue(forKey: spatialObject.id)
     }
 
@@ -121,63 +130,58 @@ class SpatialApp {
         return scenes[id]
     }
 
-    
     func getSceneOptions() -> SceneOptions {
         return sceneOptions
     }
-    
-    func getSceneOptions(_ sceneId:String) -> SceneOptions? {
+
+    func getSceneOptions(_ sceneId: String) -> SceneOptions? {
         let spatialScene = getScene(sceneId)
         return spatialScene?.sceneConfig
     }
-    
-    
-    // used form window.open logic
-    public func openWindowGroup(
+
+    /// used form window.open logic
+    func openWindowGroup(
         _ targetSpatialScene: SpatialScene,
         _ sceneData: SceneOptions
     ) {
         if let activeScene = firstActiveScene {
             // cache scene config
             sceneOptions = sceneData
-                        
-            DispatchQueue.main.async() {
+
+            DispatchQueue.main.async {
                 activeScene.openWindowData.send(targetSpatialScene.id)
             }
-
         }
     }
-    
-    public func closeWindowGroup(_ targetSpatialScene: SpatialScene) {
+
+    func closeWindowGroup(_ targetSpatialScene: SpatialScene) {
         if let activeScene = firstActiveScene {
             activeScene.closeWindowData
                 .send(targetSpatialScene.id)
         }
     }
-    
-    // used form window.open logic with loading ui
-    public func openLoadingUI(_ targetSpatialScene: SpatialScene,_ open: Bool) {
+
+    /// used form window.open logic with loading ui
+    func openLoadingUI(_ targetSpatialScene: SpatialScene, _ open: Bool) {
         let lwgdata = XLoadingViewData(
             sceneID: targetSpatialScene.id,
             method: open ? .show : .hide,
             windowStyle: nil
         )
-        
+
         if let activeScene = firstActiveScene {
             activeScene.setLoadingWindowData.send(lwgdata)
         }
     }
-    
+
     private var firstActiveScene: SpatialScene? {
-        get {
-            let activeKV = scenes.first() { kv in
-                kv.value.state == .visible
-            }
-            return (activeKV?.value)
+        let activeKV = scenes.first { kv in
+            kv.value.state == .visible
         }
+        return (activeKV?.value)
     }
-    
-    public func focusScene(_ targetSpatialScene: SpatialScene) {
+
+    func focusScene(_ targetSpatialScene: SpatialScene) {
         // only work when fully visible
         if targetSpatialScene.state != .visible {
             return
