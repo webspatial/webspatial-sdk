@@ -26,7 +26,8 @@ function App() {
       <EntityTransform model={modelRef} />
       <Model
         className="block"
-        src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+        src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
+        // src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
         // src="/modelasset/cone.usdz"
         enable-xr
         autoplay
