@@ -79,12 +79,26 @@ jobs:
 
 
       - name: Send summary to Lark with page URL
-        run: pnpm --filter autotest run post-test
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          if ! command -v pnpm >/dev/null 2>&1; then
+            corepack enable >/dev/null 2>&1 || true
+            corepack prepare pnpm@10.32.0 --activate >/dev/null 2>&1 || true
+          fi
+          pnpm --filter autotest run post-test
+          code=$?
+          if [ $code -ne 0 ]; then
+            pnpm -F autotest install --no-frozen-lockfile || true
+            pnpm --filter autotest run post-test || true
+          fi
         env:
           WEBSITE_URL: ${{ env.WEBSITE_URL }}
           BRANCH_NAME: ${{ env.BRANCH_NAME }}
           START_TIME: ${{ env.START_TIME }}
           GITHUB_WORKFLOW_URL: ${{ env.GITHUB_WORKFLOW_URL }}
+          SUCCESS: ${{ job.status == 'success' }}
           APP_ID: ${{ secrets.APP_ID }}
           APP_SECRET: ${{ secrets.APP_SECRET }}
           RECEIVE_ID_PRIVATE: ${{ secrets.RECEIVE_ID_PRIVATE }}

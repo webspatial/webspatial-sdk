@@ -232,6 +232,10 @@ function MaterialApiTest() {
     removeStyleAttribute()
     // document.documentElement.style.setProperty('--xr-background-material', 'none');  // not working
     // document.documentElement.style.removeProperty('--xr-background-material')  // not working
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      'none',
+    )
     document.documentElement.style['--xr-background-material'] = 'none'
   }
 
@@ -245,6 +249,10 @@ function MaterialApiTest() {
     removeStyleAttributeParent()
     // document.documentElement.style.setProperty('--xr-background-material', 'none');  // not working
     // document.documentElement.style.removeProperty('--xr-background-material')  // not working
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      'none',
+    )
     document.documentElement.style['--xr-background-material'] = 'none'
   }
 
@@ -253,6 +261,10 @@ function MaterialApiTest() {
     //   '--xr-background-material',
     //   selectedHtmlMaterial,
     // )
+    document.documentElement.style.setProperty(
+      '--xr-background-material',
+      selectedHtmlMaterial,
+    )
     document.documentElement.style['--xr-background-material'] =
       selectedHtmlMaterial
     // document.documentElement.style['background-color'] = 'transparent'
@@ -340,6 +352,7 @@ function MaterialApiTest() {
                 value={selectedRefMaterial}
                 onChange={e => setSelectedRefMaterial(e.target.value)}
                 className="w-full p-2 rounded-md"
+                data-testid="ref-material-select"
               >
                 <option value="none">none Material</option>
                 <option value="translucent">translucent Material</option>
@@ -351,6 +364,7 @@ function MaterialApiTest() {
               <button
                 onClick={applyRefMaterial}
                 className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                data-testid="ref-material-apply"
               >
                 Apply Material
               </button>
@@ -407,6 +421,7 @@ function MaterialApiTest() {
               <select
                 onChange={e => setSelectedInlineMaterial(e.target.value)}
                 className="w-full p-2 rounded-md"
+                data-testid="inline-material-select-child"
               >
                 <option value="none">none Material</option>
                 <option value="translucent">translucent Material</option>
@@ -418,6 +433,7 @@ function MaterialApiTest() {
               <button
                 onClick={applyInlineStyleMaterial}
                 className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                data-testid="inline-material-apply-child"
               >
                 Apply Material
               </button>
@@ -494,6 +510,7 @@ function MaterialApiTest() {
                 value={selectedRefMaterialParent}
                 onChange={e => setSelectedRefMaterialParent(e.target.value)}
                 className="w-full p-2 rounded-md"
+                data-testid="ref-material-select-parent"
               >
                 <option value="none">none Material</option>
                 <option value="translucent">translucent Material</option>
@@ -505,6 +522,7 @@ function MaterialApiTest() {
               <button
                 onClick={applyRefMaterialParent}
                 className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                data-testid="ref-material-apply-parent"
               >
                 Apply Material
               </button>
@@ -529,6 +547,7 @@ function MaterialApiTest() {
                   setSelectedClassNameMaterialParent(e.target.value)
                 }
                 className="w-full p-2 rounded-md"
+                data-testid="class-material-select-parent"
               >
                 <option value="none">none Material</option>
                 <option value="default">Glass Material</option>
@@ -540,6 +559,7 @@ function MaterialApiTest() {
               <button
                 onClick={applyClassNameMaterialParent}
                 className="mt-2 w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                data-testid="class-material-apply-parent"
               >
                 Apply Material
               </button>
