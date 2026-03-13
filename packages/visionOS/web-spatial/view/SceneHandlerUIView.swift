@@ -10,6 +10,9 @@ struct SceneHandlerUIView: View {
     @State var spatialScene: SpatialScene
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.physicalMetrics) private var converter
+    @State private var latestScaled: Double?
+    @State private var latestUnscaled: Double?
 
     private func setResizibility(resizingRestrictions: UIWindowScene.ResizingRestrictions) {
         sceneDelegate.window?.windowScene?
@@ -41,10 +44,35 @@ struct SceneHandlerUIView: View {
         }
     }
 
+    private func updatePhysicalMetricsIfReady() {
+        if let scaled = latestScaled, let unscaled = latestUnscaled {
+            spatialScene.onUpdatePhysicalMetrics(meterToPtUnscaled: unscaled, meterToPtScaled: scaled)
+        }
+    }
+
     var body: some View {
+        let meterToPtScaled = converter.worldScalingCompensation(.scaled).convert(
+            1,
+            from: .meters
+        )
+        let meterToPtUnscaled = converter.worldScalingCompensation(.unscaled).convert(
+            1,
+            from: .meters
+        )
         VStack {}
             .onAppear {
-                // window scene only resize logic
+                latestScaled = meterToPtScaled
+                latestUnscaled = meterToPtUnscaled
+                updatePhysicalMetricsIfReady()
+            }
+            .onChange(of: meterToPtScaled) { _, newValue in
+                latestScaled = newValue
+                updatePhysicalMetricsIfReady()
+            }
+            .onChange(of: meterToPtUnscaled) { _, newValue in
+                latestUnscaled = newValue
+                updatePhysicalMetricsIfReady()
+            }.onAppear {
                 guard spatialScene.windowStyle == .window else {
                     return
                 }
