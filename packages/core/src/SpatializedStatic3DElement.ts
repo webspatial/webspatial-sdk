@@ -66,6 +66,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (properties.autoplay !== undefined) {
       this._autoplay = properties.autoplay
     }
+    if (properties.loop !== undefined) {
+      this._loop = properties.loop
+    }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
       properties,
@@ -102,6 +105,18 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   get autoplay(): boolean {
     return this._autoplay
+  }
+
+  /**
+   * Whether the model animation should loop continuously.
+   */
+  private _loop: boolean = false
+
+  /**
+   * Returns whether loop is enabled for this element.
+   */
+  get loop(): boolean {
+    return this._loop
   }
 
   /**

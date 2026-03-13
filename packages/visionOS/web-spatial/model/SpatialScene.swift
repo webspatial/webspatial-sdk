@@ -569,6 +569,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.autoplay = autoplay
         }
 
+        if let loop = command.loop {
+            spatializedElement.loop = loop
+        }
+
         resolve(.success(baseReplyData))
     }
 
