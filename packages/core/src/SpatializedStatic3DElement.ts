@@ -52,6 +52,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
         this.ready = this.createReadyPromise()
       }
     }
+    if (properties.autoplay !== undefined) {
+      this._autoplay = properties.autoplay
+    }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
       properties,
@@ -76,6 +79,18 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data as any)
     }
+  }
+
+  /**
+   * Whether the model should automatically play its first animation on load.
+   */
+  private _autoplay: boolean = false
+
+  /**
+   * Returns whether autoplay is enabled for this element.
+   */
+  get autoplay(): boolean {
+    return this._autoplay
   }
 
   /**
