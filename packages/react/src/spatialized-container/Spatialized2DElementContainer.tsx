@@ -22,10 +22,8 @@ import {
 import { Spatialized2DElement } from '@webspatial/core-sdk'
 import { createPortal } from 'react-dom'
 import { getInheritedStyleProps, parseCornerRadius } from './utils'
-import {
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../utils/windowStyleSync'
+import { setupChildWindow } from '../utils/childWindowSetup'
+import { useHeadSync } from '../utils/useHeadSync'
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
@@ -75,18 +73,6 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
-function useSyncHeaderStyle(windowProxy: WindowProxy) {
-  useEffect(() => {
-    const headObserver = new MutationObserver(_ => {
-      syncParentHeadToChild(windowProxy)
-    })
-    headObserver.observe(document.head, { childList: true, subtree: true })
-    return () => {
-      headObserver.disconnect()
-    }
-  }, [])
-}
-
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
@@ -94,7 +80,8 @@ function SpatializedContent<P extends ElementType>(
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const windowProxy = spatialized2DElement.windowProxy
 
-  useSyncHeaderStyle(windowProxy)
+  // Mirror parent head changes into the SpatialDiv child window (debounced).
+  useHeadSync(windowProxy)
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
@@ -134,21 +121,8 @@ function getExtraSpatializedElementProperties(
 async function createSpatializedElement() {
   const spatializedElement = await getSession()!.createSpatialized2DElement()
   const windowProxy = spatializedElement.windowProxy
-  setOpenWindowStyle(windowProxy)
-  await syncParentHeadToChild(windowProxy)
-
-  const viewport = windowProxy.document.querySelector('meta[name="viewport"]')
-  if (viewport) {
-    viewport?.setAttribute(
-      'content',
-      ' initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
-    )
-  } else {
-    const meta = windowProxy.document.createElement('meta')
-    meta.name = 'viewport'
-    meta.content = 'initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-    windowProxy.document.head.appendChild(meta)
-  }
+  // Shared child-window setup (styles + head + viewport).
+  await setupChildWindow(windowProxy, 'div')
 
   return spatializedElement
 }
