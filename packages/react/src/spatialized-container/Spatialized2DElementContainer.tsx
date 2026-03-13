@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import React, {
   CSSProperties,
   ElementType,
@@ -6,8 +7,15 @@ import React, {
   useContext,
   useEffect,
 } from 'react'
-import { SpatializedContainer } from './SpatializedContainer'
-import { getSession } from '../utils'
+
+import { Spatialized2DElement } from '@webspatial/core-sdk'
+
+import {
+  setOpenWindowStyle,
+  syncParentHeadToChild,
+} from '../utils/windowStyleSync'
+import { useSyncHeadStyles } from '../utils/use-sync-head-styles'
+import { getInheritedStyleProps, parseCornerRadius } from './utils'
 import {
   SpatialCustomStyleVars,
   Spatialized2DElementContainerProps,
@@ -15,17 +23,12 @@ import {
   SpatializedContentProps,
   SpatializedDivElementRef,
 } from './types'
+import { SpatializedContainer } from './SpatializedContainer'
 import {
   PortalInstanceContext,
   PortalInstanceObject,
 } from './context/PortalInstanceContext'
-import { Spatialized2DElement } from '@webspatial/core-sdk'
-import { createPortal } from 'react-dom'
-import { getInheritedStyleProps, parseCornerRadius } from './utils'
-import {
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../utils/windowStyleSync'
+import { getSession } from '../utils'
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
@@ -75,26 +78,17 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
-function useSyncHeaderStyle(windowProxy: WindowProxy) {
-  useEffect(() => {
-    const headObserver = new MutationObserver(_ => {
-      syncParentHeadToChild(windowProxy)
-    })
-    headObserver.observe(document.head, { childList: true, subtree: true })
-    return () => {
-      headObserver.disconnect()
-    }
-  }, [])
-}
-
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
   const { spatializedElement, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
-  const windowProxy = spatialized2DElement.windowProxy
+  const { windowProxy } = spatialized2DElement
 
-  useSyncHeaderStyle(windowProxy)
+  useSyncHeadStyles(windowProxy, {
+    delayMs: 100,
+    subtree: false,
+  })
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
@@ -133,7 +127,7 @@ function getExtraSpatializedElementProperties(
 
 async function createSpatializedElement() {
   const spatializedElement = await getSession()!.createSpatialized2DElement()
-  const windowProxy = spatializedElement.windowProxy
+  const { windowProxy } = spatializedElement
   setOpenWindowStyle(windowProxy)
   await syncParentHeadToChild(windowProxy)
 

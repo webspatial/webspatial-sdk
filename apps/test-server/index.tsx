@@ -56,6 +56,7 @@ import SpatialCorner from './src/pages/spatialCorner/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
+import HeadStyleSyncPage from './src/pages/head-style-sync/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -189,6 +190,10 @@ function App() {
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
+                <Route
+                  path="/head-style-sync"
+                  element={<HeadStyleSyncPage />}
+                />
                 <Route path="/cleanup/spa" element={<CleanupSpa />} />
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />

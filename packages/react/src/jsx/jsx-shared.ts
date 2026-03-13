@@ -35,7 +35,7 @@ export function replaceToSpatialPrimitiveType(
     return withSpatialized2DElementContainer(type)
   }
 
-  if (propsObject && propsObject.className) {
+  if (propsObject && typeof propsObject.className === 'string') {
     const originalClassNames = propsObject.className.split(' ')
     const idx = originalClassNames.indexOf(classFlag)
     if (idx !== -1) {
