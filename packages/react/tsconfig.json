@@ -27,5 +27,9 @@
     }
   },
   "include": ["src/index.ts", "esbuild.mjs", "src/types/*.d.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../core/tsconfig.json"
+    }
+  ]
 }
