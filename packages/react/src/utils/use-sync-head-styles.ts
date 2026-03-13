@@ -8,7 +8,8 @@ interface Options {
   immediate?: boolean
 }
 
-function defaultShouldSync(mutations: MutationRecord[]) {
+function defaultShouldSync(mutations?: MutationRecord[] | null) {
+  if (!Array.isArray(mutations) || mutations.length === 0) return false
   for (const mutation of mutations) {
     const nodes: Node[] = [
       ...Array.from(mutation.addedNodes),
