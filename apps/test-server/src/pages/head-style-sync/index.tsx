@@ -59,7 +59,7 @@ function HeadSyncProbe() {
         baselineCountRef.current = links.length
         setBaselineHref(first.href)
         setMessage(
-          '已捕获基准 stylesheet link。现在可以点击上方按钮进行压力测试。',
+          'Baseline stylesheet link captured. You can run the stress test now.',
         )
         setStatus('pass')
         window.clearInterval(timer)
@@ -69,7 +69,7 @@ function HeadSyncProbe() {
       if (Date.now() - startedAt > 5000) {
         setStatus('fail')
         setMessage(
-          '超时：未在 SpatialDiv 子窗口 head 中观察到被同步的 stylesheet links。',
+          'Timed out: no synced stylesheet links were observed in the SpatialDiv child window head.',
         )
         window.clearInterval(timer)
       }
@@ -93,7 +93,7 @@ function HeadSyncProbe() {
       if (!baseline.isConnected) {
         setStatus('fail')
         setMessage(
-          'FAIL：基准 stylesheet link 被移除/替换（可能发生了重复注入或全量重建）。',
+          'FAIL: the baseline stylesheet link was removed/replaced (possible duplicate injection or full rebuild).',
         )
         return
       }
@@ -101,7 +101,7 @@ function HeadSyncProbe() {
       if (links.length > baselineCount) {
         setStatus('fail')
         setMessage(
-          `FAIL：被同步的 stylesheet link 数量增长（${baselineCount} -> ${links.length}），疑似重复注入。`,
+          `FAIL: synced stylesheet link count increased (${baselineCount} -> ${links.length}), likely duplicate injection.`,
         )
         return
       }
@@ -205,10 +205,10 @@ export default function HeadStyleSyncPage() {
     <div className="p-10 text-white min-h-full">
       <h1 className="text-2xl mb-2">Head Style Sync</h1>
       <p className="text-sm text-gray-400 mb-6 max-w-3xl">
-        这个页面用于验证 <code>&lt;div enable-xr&gt;</code>
-        （SpatialDiv）路径：当宿主页面的 <code>&lt;head&gt;</code>{' '}
-        发生频繁变化时，SpatialDiv 子窗口内被同步的 stylesheet{' '}
-        <code>&lt;link&gt;</code> 不会被重复注入或被替换。
+        This page validates the <code>&lt;div enable-xr&gt;</code> (SpatialDiv)
+        path: when the host page <code>&lt;head&gt;</code> changes frequently,
+        synced stylesheet <code>&lt;link&gt;</code> elements in the SpatialDiv
+        child window should not be duplicated or replaced.
       </p>
 
       <div className="mb-4 flex gap-3 flex-wrap">
