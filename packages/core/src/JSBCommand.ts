@@ -19,7 +19,6 @@ import {
   SpatialEntityProperties,
   ModelAssetOptions,
   SpatialModelEntityCreationOptions,
-  SpatialEntityEventType,
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
@@ -68,7 +67,7 @@ export class UpdateEntityEventCommand extends JSBCommand {
 
   constructor(
     public entity: SpatialEntity,
-    public type: SpatialEntityEventType,
+    public type: string,
     public isEnable: boolean,
   ) {
     super()
@@ -89,7 +88,7 @@ export class UpdateEntityEventsCommand extends JSBCommand {
   // let entityId:String
   constructor(
     public entity: SpatialEntity,
-    public types: Record<SpatialEntityEventType, boolean>,
+    public types: Record<string, boolean>,
   ) {
     super()
   }

@@ -5,7 +5,6 @@ import {
   SetParentForEntityCommand,
 } from './../../JSBCommand'
 import {
-  SpatialEntityEventType,
   SpatialEntityOrReality,
   SpatialEntityUserData,
   Vec3,
@@ -27,6 +26,8 @@ import {
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialDragStartMsg,
+  SpatialMagnifyEndMsg,
   SpatialMagnifyMsg,
   SpatialRotateEndMsg,
   SpatialRotateMsg,
@@ -91,7 +92,7 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
 
-  async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {
+  async addEvent(type: string, callback: (data: any) => void) {
     if (this.events[type]) {
       // replace if exist
       this.events[type] = callback
@@ -105,7 +106,7 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
-  async removeEvent(eventName: SpatialEntityEventType) {
+  async removeEvent(eventName: string) {
     if (this.events[eventName]) {
       delete this.events[eventName]
       try {
@@ -116,20 +117,20 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
-  async updateEntityEvent(
-    eventName: SpatialEntityEventType,
-    isEnable: boolean,
-  ) {
+  async updateEntityEvent(eventName: string, isEnable: boolean) {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (
     data: // | CubeInfoMsg
     // | TransformMsg
     | SpatialTapMsg
-      // | SpatialDragMsg
-      // | SpatialDragEndMsg
-      // | SpatialRotateMsg
-      // | SpatialRotateEndMsg
+      | SpatialDragStartMsg
+      | SpatialDragMsg
+      | SpatialDragEndMsg
+      | SpatialMagnifyMsg
+      | SpatialMagnifyEndMsg
+      | SpatialRotateMsg
+      | SpatialRotateEndMsg
       | ObjectDestroyMsg,
   ) => {
     // console.log('SpatialEntityEvent', data)
@@ -139,27 +140,21 @@ export class SpatialEntity extends SpatialObject {
     }
     // tap
     else if (type === SpatialWebMsgType.spatialtap) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialtap,
-        (data as SpatialTapMsg).detail,
-      )
+      const evt = createSpatialEvent(SpatialWebMsgType.spatialtap, data.detail)
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdragstart) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialdragstart,
-        (data as SpatialDragMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdrag) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialdrag,
-        (data as SpatialDragMsg).detail,
-      )
+      const evt = createSpatialEvent(SpatialWebMsgType.spatialdrag, data.detail)
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdragend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialdragend,
-        (data as SpatialDragEndMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
@@ -167,13 +162,13 @@ export class SpatialEntity extends SpatialObject {
     else if (type === SpatialWebMsgType.spatialrotate) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialrotate,
-        (data as SpatialRotateMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialrotateend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialrotateend,
-        (data as SpatialRotateEndMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
@@ -181,13 +176,13 @@ export class SpatialEntity extends SpatialObject {
     else if (type === SpatialWebMsgType.spatialmagnify) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialmagnify,
-        (data as SpatialMagnifyMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialmagnifyend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialmagnifyend,
-        (data as SpatialMagnifyMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
