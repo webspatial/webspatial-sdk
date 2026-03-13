@@ -140,27 +140,19 @@ export default function RealityGestures() {
                     if (exclusive) activeGestureRef.current = null
                     logLine('dragEnd', e.detail.translation3D)
                   }}
-                  onSpatialRotateStart={e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'rotate'
-                    )
-                      return
-                    activeGestureRef.current = 'rotate'
-                    rotateBaseRef.current = boxRot
-                    logLine('rotateStart')
-                  }}
                   onSpatialRotate={e => {
                     if (!enabled) return
+                    logLine('rotate', e.quaternion)
                     if (
                       exclusive &&
                       activeGestureRef.current &&
                       activeGestureRef.current !== 'rotate'
-                    )
+                    ) {
                       return
-                    const [x, y, z, w] = e.detail.rotation.vector
+                    }
+                    activeGestureRef.current = 'rotate'
+                    rotateBaseRef.current = boxRot
+                    const { x, y, z, w } = e.quaternion
                     const roll = Math.atan2(
                       2 * (w * x + y * z),
                       1 - 2 * (x * x + y * y),
@@ -190,24 +182,11 @@ export default function RealityGestures() {
                       exclusive &&
                       activeGestureRef.current &&
                       activeGestureRef.current !== 'rotate'
-                    )
+                    ) {
                       return
+                    }
                     if (exclusive) activeGestureRef.current = null
                     logLine('rotateEnd')
-                  }}
-                  onSpatialMagnifyStart={e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'magnify'
-                    )
-                      return
-                    activeGestureRef.current = 'magnify'
-                    scaleBaseRef.current = boxScale
-                    logLine('magnifyStart', {
-                      magnification: e.detail.magnification,
-                    })
                   }}
                   onSpatialMagnify={e => {
                     if (!enabled) return
@@ -215,8 +194,11 @@ export default function RealityGestures() {
                       exclusive &&
                       activeGestureRef.current &&
                       activeGestureRef.current !== 'magnify'
-                    )
+                    ) {
                       return
+                    }
+                    activeGestureRef.current = 'magnify'
+                    scaleBaseRef.current = boxScale
                     const m = Math.max(0.3, Math.min(3, e.detail.magnification))
                     setBoxScale({
                       x: scaleBaseRef.current.x * m,
