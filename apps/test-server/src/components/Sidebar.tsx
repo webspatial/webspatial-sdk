@@ -54,6 +54,7 @@ export const routes = [
     path: '/background-material',
     label: 'Misc',
     children: [
+      { path: '/head-style-sync', label: 'SpatialDiv Head Sync' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/android-bringup', label: 'Android Bringup' },
