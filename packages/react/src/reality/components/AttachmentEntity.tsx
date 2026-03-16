@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-
 import { Attachment } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
