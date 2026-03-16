@@ -4,7 +4,7 @@ import SwiftUI
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
-    var modelTransform: AffineTransform3D = AffineTransform3D.identity
+    var modelTransform: AffineTransform3D = .identity
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type

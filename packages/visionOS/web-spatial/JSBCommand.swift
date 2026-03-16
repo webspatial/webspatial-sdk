@@ -197,8 +197,8 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let material: BackgroundMaterial?
     let cornerRadius: CornerRadius?
 
-    // this value is used by previous WebSpatial code, keep it here only for Compatibility consideration
-    // may delete it when we think it's not needed
+    /// this value is used by previous WebSpatial code, keep it here only for Compatibility consideration
+    /// may delete it when we think it's not needed
     let scrollEdgeInsetsMarginRight: Double?
 }
 
@@ -269,7 +269,7 @@ struct AddSpatializedElementToSpatialized2DElement: SpatialObjectCommand {
     let spatializedElementId: String
 }
 
-// incomming JSB data
+/// incomming JSB data
 struct XSceneOptionsJSB: Codable {
     let defaultSize: Size?
     let type: SpatialScene.WindowStyle?

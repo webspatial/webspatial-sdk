@@ -22,26 +22,22 @@ struct WebSpatialApp: App {
     @State var app = SpatialApp.Instance
 
     func getDefaultSize() -> CGSize {
-        let ans = CGSize(
+        return CGSize(
             width: app
                 .getSceneOptions().defaultSize!.width,
             height: app
                 .getSceneOptions().defaultSize!.height
         )
-
-        return ans
     }
 
     func getDefaultSize3D() -> Size3D {
-        let ans = Size3D(
+        return Size3D(
             width: app
                 .getSceneOptions().defaultSize!.width,
             height: app
                 .getSceneOptions().defaultSize!.height,
             depth: app.getSceneOptions().defaultSize!.depth ?? 0
         )
-
-        return ans
     }
 
     var body: some Scene {
@@ -74,13 +70,17 @@ struct WebSpatialApp: App {
             SpatialSceneView(spatialScene: spatialScene!)
                 .frame(
                     minWidth: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.minWidth),
+                        app.getSceneOptions(windowData)?.resizeRange?.minWidth
+                    ),
                     maxWidth: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.maxWidth),
+                        app.getSceneOptions(windowData)?.resizeRange?.maxWidth
+                    ),
                     minHeight: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.minHeight),
+                        app.getSceneOptions(windowData)?.resizeRange?.minHeight
+                    ),
                     maxHeight: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.maxHeight)
+                        app.getSceneOptions(windowData)?.resizeRange?.maxHeight
+                    )
                 )
         }
         defaultValue: {

@@ -1,6 +1,5 @@
-import XCTest
-
 @testable import WebSpatial
+import XCTest
 
 final class NavigationCleanupTests: XCTestCase {
     func test_resetForNavigation_destroysSceneSpatialObjectsAndAttachments() {

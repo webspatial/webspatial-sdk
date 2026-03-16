@@ -159,7 +159,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         transform.rotation = simd_quatf(ix: Float(rotation.imag.x), iy: Float(rotation.imag.y), iz: Float(rotation.imag.z), r: Float(rotation.real))
     }
 
-    // Encodable
+    /// Encodable
     enum CodingKeys: String, CodingKey {
         case id, name, isDestroyed, children, components
     }
@@ -173,7 +173,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         try container.encode(spatialComponents, forKey: .components)
     }
 
-    // Equatable
+    /// Equatable
     static func == (lhs: SpatialEntity, rhs: SpatialEntity) -> Bool {
         return lhs.spatialId == rhs.spatialId
     }

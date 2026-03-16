@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-// Access window (https://stackoverflow.com/questions/60359808/how-to-access-own-window-within-swiftui-view/60359809#60359809)
+/// Access window (https://stackoverflow.com/questions/60359808/how-to-access-own-window-within-swiftui-view/60359809#60359809)
 class SceneDelegate: NSObject, ObservableObject, UIWindowSceneDelegate {
     var window: UIWindow? // << contract of `UIWindowSceneDelegate`
 
@@ -11,7 +11,7 @@ class SceneDelegate: NSObject, ObservableObject, UIWindowSceneDelegate {
         window?.overrideUserInterfaceStyle = .light
     }
 
-    // do memory cleanup after scene removed, otherwise windowContainer cannot destroy content after being dismissed
+    /// do memory cleanup after scene removed, otherwise windowContainer cannot destroy content after being dismissed
     func sceneDidDisconnect(_ scene: UIScene) {
         window = nil
     }
