@@ -1,3 +1,4 @@
+import { isInIframe, warnIfIframe } from '../iframe-guard'
 import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
 import { SSRPlatform } from './ssr/SSRPlatform'
@@ -28,6 +29,11 @@ function isVersionGreater(a: number[] | null, b: number[]): boolean {
 
 export function createPlatform(): PlatformAbility {
   if (isSSREnv()) {
+    return new SSRPlatform()
+  }
+  // Issue #970: return no-op platform inside iframes to block all native bridge commands
+  if (isInIframe()) {
+    warnIfIframe()
     return new SSRPlatform()
   }
   const userAgent = window.navigator.userAgent

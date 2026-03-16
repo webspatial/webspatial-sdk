@@ -14,10 +14,17 @@ export * from './types/global.d'
 import { injectSceneHook } from './scene-polyfill'
 import { isSSREnv } from './ssr-polyfill'
 import { spatialWindowPolyfill } from './spatial-window-polyfill'
+import { isInIframe } from './iframe-guard'
 
 export { isSSREnv }
+export { isInIframe } from './iframe-guard'
 
-if (!isSSREnv() && navigator.userAgent.indexOf('WebSpatial/') > 0) {
+// Issue #970: skip polyfills inside iframes to prevent resource leaks
+if (
+  !isSSREnv() &&
+  !isInIframe() &&
+  navigator.userAgent.indexOf('WebSpatial/') > 0
+) {
   injectSceneHook()
   spatialWindowPolyfill()
 }
