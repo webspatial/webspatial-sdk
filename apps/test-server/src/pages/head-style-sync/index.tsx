@@ -1,28 +1,26 @@
-import {useRef, useCallback, useState} from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
 function HeadSyncProbe() {
-  const rootRef = React.useRef<HTMLDivElement | null>(null)
-  const getTargetDocument = React.useCallback(() => {
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const getTargetDocument = useCallback(() => {
     return rootRef.current?.ownerDocument ?? null
   }, [])
 
-  const [status, setStatus] = React.useState<'pending' | 'pass' | 'fail'>(
-    'pending',
-  )
-  const [message, setMessage] = React.useState<string>('')
-  const baselineLinkRef = React.useRef<HTMLLinkElement | null>(null)
-  const baselineCountRef = React.useRef<number>(0)
-  const [baselineHref, setBaselineHref] = React.useState<string>('')
-  const [currentInfo, setCurrentInfo] = React.useState<{
+  const [status, setStatus] = useState<'pending' | 'pass' | 'fail'>('pending')
+  const [message, setMessage] = useState<string>('')
+  const baselineLinkRef = useRef<HTMLLinkElement | null>(null)
+  const baselineCountRef = useRef<number>(0)
+  const [baselineHref, setBaselineHref] = useState<string>('')
+  const [currentInfo, setCurrentInfo] = useState<{
     linkCount: number
     firstHref: string
     baselineConnected: boolean
   }>({ linkCount: 0, firstHref: '', baselineConnected: false })
 
-  const collect = React.useCallback(() => {
+  const collect = useCallback(() => {
     const targetDocument = getTargetDocument()
     if (!targetDocument) {
       setCurrentInfo({ linkCount: 0, firstHref: '', baselineConnected: false })
@@ -48,7 +46,7 @@ function HeadSyncProbe() {
   }, [])
 
   // Capture a baseline synced stylesheet link node.
-  React.useEffect(() => {
+  useEffect(() => {
     const startedAt = Date.now()
     const timer = window.setInterval(() => {
       const { links, first } = collect()
@@ -81,7 +79,7 @@ function HeadSyncProbe() {
   }, [collect])
 
   // Watch head changes and ensure synced stylesheet links are not replaced.
-  React.useEffect(() => {
+  useEffect(() => {
     if (!baselineLinkRef.current) return
 
     const check = () => {
@@ -169,10 +167,10 @@ function HeadSyncProbe() {
 }
 
 export default function HeadStyleSyncPage() {
-  const [running, setRunning] = React.useState(false)
-  const [runCount, setRunCount] = React.useState(0)
+  const [running, setRunning] = useState(false)
+  const [runCount, setRunCount] = useState(0)
 
-  const mutateHostHeadOnce = React.useCallback(() => {
+  const mutateHostHeadOnce = useCallback(() => {
     const id = 'webspatial-head-sync-test-style'
     const prev = document.getElementById(id)
     if (prev) prev.parentNode?.removeChild(prev)
@@ -183,7 +181,7 @@ export default function HeadStyleSyncPage() {
     document.head.appendChild(style)
   }, [])
 
-  const runStress = React.useCallback(async () => {
+  const runStress = useCallback(async () => {
     if (running) return
     setRunning(true)
     setRunCount(0)

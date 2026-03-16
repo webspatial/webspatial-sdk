@@ -6,7 +6,7 @@ import {
   setOpenWindowStyle,
   syncParentHeadToChild,
 } from '../../utils/windowStyleSync'
-import { useSyncHeadStyles } from '../../utils/use-sync-head-styles'
+import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
@@ -126,7 +126,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     }
   }, [ctx, attachmentName])
 
-  useSyncHeadStyles(childWindow, { delayMs: 100, subtree: false })
+  useSyncHeadStyles(childWindow, { subtree: false })
 
   // Update position/size when they change
   useEffect(() => {

@@ -14,7 +14,7 @@ import {
   setOpenWindowStyle,
   syncParentHeadToChild,
 } from '../utils/windowStyleSync'
-import { useSyncHeadStyles } from '../utils/use-sync-head-styles'
+import { useSyncHeadStyles } from '../utils/useSyncHeadStyles'
 import { getInheritedStyleProps, parseCornerRadius } from './utils'
 import {
   SpatialCustomStyleVars,
@@ -86,7 +86,6 @@ function SpatializedContent<P extends ElementType>(
   const { windowProxy } = spatialized2DElement
 
   useSyncHeadStyles(windowProxy, {
-    delayMs: 100,
     subtree: false,
   })
 

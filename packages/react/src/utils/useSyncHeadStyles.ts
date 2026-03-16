@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { syncParentHeadToChild } from './windowStyleSync'
 
 interface Options {
-  delayMs?: number
   subtree?: boolean
   immediate?: boolean
 }
@@ -32,7 +31,7 @@ export function useSyncHeadStyles(
   childWindow: WindowProxy | null | undefined,
   options?: Options,
 ) {
-  const delayMs = options?.delayMs ?? 100
+  const delayMs = 100
   const subtree = options?.subtree ?? false
   const immediate = options?.immediate ?? true
 

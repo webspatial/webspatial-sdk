@@ -1,12 +1,12 @@
 export function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
-  n: HTMLLinkElement,
+  link: HTMLLinkElement,
   isCurrent: () => boolean,
 ): Promise<boolean> {
   return new Promise(resolve => {
-    const { href } = n
+    const { href } = link
     const sep = href.includes('?') ? '&' : '?'
-    n.href = `${href}${sep}uniqueURL=${Math.random()}`
+    link.href = `${href}${sep}uniqueURL=${Math.random()}`
 
     let finished = false
     const finish = (ok: boolean) => {
@@ -15,12 +15,14 @@ export function asyncLoadStyleToChildWindow(
       resolve(ok)
     }
 
-    n.onerror = () => {
+    // need to wait for some time to make sure the style is loaded
+    // otherwise, the style may not be applied
+    link.onerror = () => {
       finish(false)
     }
-    n.onload = () => {
+    link.onload = () => {
       if (!isCurrent()) {
-        n.parentNode?.removeChild(n)
+        link.parentNode?.removeChild(link)
         finish(false)
         return
       }
@@ -32,7 +34,7 @@ export function asyncLoadStyleToChildWindow(
         finish(false)
         return
       }
-      childWindow.document.head.appendChild(n)
+      childWindow.document.head.appendChild(link)
     }, 50)
   })
 }
