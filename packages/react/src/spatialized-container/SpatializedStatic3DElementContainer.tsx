@@ -5,8 +5,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
-  useImperativeHandle,
   useRef,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
@@ -117,18 +115,13 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
-  const containerRef = useRef<SpatializedStatic3DElementRef>(null)
-  const [elementCreated, setElementCreated] = useState(false)
-  useImperativeHandle<
-    SpatializedStatic3DElementRef | null,
-    SpatializedStatic3DElementRef | null
-  >(ref, () => (elementCreated ? containerRef.current : null), [elementCreated])
+  const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
-  const createSpatializedElement = useCallback(async () => {
-    const element = await getSession()!.createSpatializedStatic3DElement()
-    setElementCreated(true)
-    return element
-  }, [setElementCreated])
+  const createSpatializedElement = useCallback(() => {
+    const url = getAbsoluteURL(props.src)
+    promiseRef.current = getSession()!.createSpatializedStatic3DElement(url)
+    return promiseRef.current
+  }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
@@ -138,25 +131,22 @@ function SpatializedStatic3DElementContainerBase(
           return getAbsoluteURL(props.src)
         },
         get ready(): Promise<ModelLoadEvent> {
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
-
-          const promise = spatializedElement.ready.then((success: boolean) => {
-            if (success) {
-              return createLoadSuccessEvent(() => domProxy)
-            }
-            throw createLoadFailureEvent(() => domProxy)
-          })
-          return promise
+          return promiseRef
+            .current!.then(spatializedElement => spatializedElement.ready)
+            .then(success => {
+              if (success) return createLoadSuccessEvent(() => domProxy)
+              throw createLoadFailureEvent(() => domProxy)
+            })
         },
         get entityTransform(): DOMMatrixReadOnly {
           return modelTransform
         },
         set entityTransform(value: DOMMatrixReadOnly) {
           modelTransform = value
-          const spatializedElement = (domProxy as any)
-            .__spatializedElement as SpatializedStatic3DElement
-          spatializedElement.updateModelTransform(modelTransform)
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          spatializedElement?.updateModelTransform(modelTransform)
         },
       }
     },
@@ -165,7 +155,7 @@ function SpatializedStatic3DElementContainerBase(
 
   return (
     <SpatializedContainer<SpatializedStatic3DElementRef>
-      ref={containerRef}
+      ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
       spatializedContent={SpatializedContent}
