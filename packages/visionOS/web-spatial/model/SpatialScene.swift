@@ -40,7 +40,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var attachmentManager = AttachmentManager()
 
-    // Enum
+    /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
@@ -68,15 +68,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum SceneStateKind: String {
-        // default value
+        /// default value
         case idle
-        // when SpatialScene is loading
+        /// when SpatialScene is loading
         case pending
-        // when SpatialScen will visible after some time
+        /// when SpatialScen will visible after some time
         case willVisible
-        // when SpatialScen load Succesfully
+        /// when SpatialScen load Succesfully
         case visible
-        // when SpatialScen Failed to load
+        /// when SpatialScen Failed to load
         case fail
     }
 
@@ -103,7 +103,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         moveToState(state, sceneOptions)
     }
 
-    // used to send message to spatial root webview
+    /// used to send message to spatial root webview
     func sendWebMsg(_ id: String, _ msg: Encodable) {
         spatialWebViewModel.sendWebEvent(id, msg)
     }
@@ -447,6 +447,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         backgroundMaterial = .None
     }
 
+    /// Some SPA navigations (history back/forward) do not trigger a full WKNavigation
+    /// lifecycle. SpatialNavView calls this before navigation actions to ensure
+    /// previously-created spatial objects are cleaned up.
+    func resetForNavigation() {
+        onPageStartLoad()
+    }
+
     private func onGetSpatialSceneState(
         command: GetSpatialSceneStateCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
@@ -754,21 +761,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * Begin Implement SpatializedElementContainer Protocol
      */
 
-    // SpatialScene can hold a collection of SpatializedElement children
+    /// SpatialScene can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func addChild(_ spatializedElement: SpatializedElement) {
         children[spatializedElement.id] = spatializedElement
     }
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
         children.removeValue(forKey: spatializedElement.id)
     }
 
     func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        let typedChildren = children.filter {
+        return children.filter {
             switch type {
             case .Spatialized2DElement:
                 return $0.value is Spatialized2DElement
@@ -778,7 +785,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 return $0.value is SpatializedDynamic3DElement
             }
         }
-        return typedChildren
     }
 
     func getChildren() -> [String: SpatializedElement] {
@@ -789,7 +795,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * End Implement SpatializedElementContainer Protocol
      */
 
-    /*
+    /**
      * Begin Implement SpatialScrollAble Protocol
      */
     let scrollPageEnabled: Bool = true
@@ -845,7 +851,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * Begin SpatialObjects management
      */
 
-    // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
+    /// Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var spatialObjects = [String: any SpatialObjectProtocol]()
 
     func createSpatializedElement<T: SpatializedElement>(_ type: SpatializedElementType) -> T {

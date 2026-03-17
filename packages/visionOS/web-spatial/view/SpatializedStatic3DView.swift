@@ -8,7 +8,7 @@ struct SpatializedStatic3DView: View {
     private var spatializedStatic3DElement: SpatializedStatic3DElement {
         return spatializedElement as! SpatializedStatic3DElement
     }
-    
+
     func onLoadSuccess() {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
     }
@@ -17,7 +17,6 @@ struct SpatializedStatic3DView: View {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
     }
 
-    @ViewBuilder
     var body: some View {
         let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
@@ -27,14 +26,13 @@ struct SpatializedStatic3DView: View {
         let x = translation.x
         let y = translation.y
         let z = translation.z
-        
+
         let enableGesture = spatializedElement.enableGesture
         if let url = URL(string: spatializedStatic3DElement.modelURL) {
             Model3D(url: url) { newPhase in
                 switch newPhase {
                 case .empty:
                     ProgressView()
-
                 case let .success(resolvedModel3D):
                     resolvedModel3D
                         .resizable(true)
@@ -42,11 +40,11 @@ struct SpatializedStatic3DView: View {
                             nil,
                             contentMode: .fit
                         )
-                        .if(!depth.isZero){ view in view.scaledToFit3D()}
+                        .if(!depth.isZero) { view in view.scaledToFit3D() }
                         .onAppear {
                             self.onLoadSuccess()
                         }
-                        .if(enableGesture) { view in view.hoverEffect()}
+                        .if(enableGesture) { view in view.hoverEffect() }
                 case .failure:
                     Text("").onAppear {
                         self.onLoadFailure()

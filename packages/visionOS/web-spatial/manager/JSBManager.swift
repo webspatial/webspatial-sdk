@@ -123,8 +123,7 @@ class JSBManager {
         if cmdContent == nil {
             return nil
         }
-        let concreteData = try decoder.decode(type.self, from: cmdContent!.data(using: .utf8)!)
-        return concreteData
+        return try decoder.decode(type.self, from: cmdContent!.data(using: .utf8)!)
     }
 
     private func typeof(for key: String) -> CommandDataProtocol.Type? {

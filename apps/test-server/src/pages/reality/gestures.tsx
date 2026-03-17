@@ -84,6 +84,8 @@ export default function RealityGestures() {
                   onSpatialTap={async e => {
                     if (!enabled) return
                     logLine('tap box', e.detail.location3D)
+                    logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+                    logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
                   }}
                   onSpatialDragStart={async e => {
                     if (!enabled) return
@@ -95,7 +97,19 @@ export default function RealityGestures() {
                       return
                     activeGestureRef.current = 'drag'
                     dragBaseRef.current = boxPos
-                    logLine('dragStart', e.detail.translation3D)
+                    logLine('dragStart', e.detail.startLocation3D)
+                    logLine(
+                      'dragStart offsetX/Y/Z',
+                      e.offsetX,
+                      e.offsetY,
+                      e.offsetZ,
+                    )
+                    logLine(
+                      'dragStart clientX/Y/Z',
+                      e.clientX,
+                      e.clientY,
+                      e.clientZ,
+                    )
                   }}
                   onSpatialDrag={async e => {
                     if (!enabled) return

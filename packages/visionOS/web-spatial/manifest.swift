@@ -66,7 +66,7 @@ struct PWAManager: Codable {
         return url.starts(with: scope)
     }
 
-    // web+spatial://test
+    /// web+spatial://test
     func checkInDeeplink(url: String) -> String {
         var linkUrl: String = url
         for item in protocol_handlers {

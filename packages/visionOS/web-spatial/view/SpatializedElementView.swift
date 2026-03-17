@@ -1,7 +1,7 @@
 import CoreGraphics
 import SwiftUI
 
-// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
+/// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
 
 final class GestureFlags {
@@ -28,7 +28,7 @@ struct SpatializedElementView<Content: View>: View {
         self.content = content()
     }
 
-    // Begin Interaction
+    /// Begin Interaction
     var gesture: some Gesture {
         DragGesture(minimumDistance: 10)
             .onChanged(onDragging)
@@ -36,17 +36,14 @@ struct SpatializedElementView<Content: View>: View {
             .simultaneously(with:
                 RotateGesture3D()
                     .onChanged(onRotateGesture3D)
-                    .onEnded(onRotateGesture3DEnd)
-            )
+                    .onEnded(onRotateGesture3DEnd))
             .simultaneously(with:
                 MagnifyGesture()
                     .onChanged(onMagnifyGesture)
-                    .onEnded(onMagnifyGestureEnd)
-            )
+                    .onEnded(onMagnifyGestureEnd))
             .simultaneously(with:
                 SpatialTapGesture(count: 1)
-                    .onEnded(onTapEnded)
-            )
+                    .onEnded(onTapEnded))
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
@@ -117,7 +114,8 @@ struct SpatializedElementView<Content: View>: View {
             let gestureEvent = WebSpatialMagnifyGuestureEvent(
                 detail: .init(
                     magnification: event.magnification
-                ))
+                )
+            )
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
@@ -130,7 +128,6 @@ struct SpatializedElementView<Content: View>: View {
 
     // End Interaction
 
-    @ViewBuilder
     var body: some View {
         let transform = spatializedElement.transform
         let translation = transform.translation
