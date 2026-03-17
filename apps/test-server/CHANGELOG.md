@@ -1,5 +1,24 @@
 # web-content
 
+## 0.0.21
+
+### Patch Changes
+
+- ef447d2: Fixed Model ref.current to be stable after initial render
+
+  Changes to ref cannot be observed since React doesn't re-render
+  on ref changes. So ref.current.ready Promise needs to be stable and
+  immediately available. It should resolve after the 3D model has rendered
+
+- Updated dependencies [93fe590]
+- Updated dependencies [118b8e6]
+- Updated dependencies [1405681]
+- Updated dependencies [ef447d2]
+- Updated dependencies [4f86f47]
+- Updated dependencies [f207e1a]
+  - @webspatial/core-sdk@2.0.0
+  - @webspatial/react-sdk@2.0.0
+
 ## 0.0.20
 
 ### Patch Changes

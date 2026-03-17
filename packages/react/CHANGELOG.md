@@ -1,5 +1,51 @@
 # @webspatial/react-sdk
 
+## 2.0.0
+
+### Minor Changes
+
+- 93fe590: Add attachments support across React, Core SDK, and visionOS runtime, plus navigation guard and demo.
+
+  - React API
+    - New <AttachmentAsset name="..."> to declare attachment UI outside <SceneGraph>.
+    - New <AttachmentEntity attachment="..." position size /> to place the declared UI in 3D under a parent entity.
+    - Attachment content is rendered via createPortal so it shares React state with the main app.
+  - Core SDK
+    - Attachment types and SpatialSession.createAttachmentEntity(...).
+    - Create/update/destroy commands: webspatial://createAttachment, UpdateAttachmentEntity, DestroyCommand.
+    - Attachment wrapper with getContainer(), update(), destroy().
+  - visionOS (AVP runtime)
+    - Native AttachmentManager with a child WKWebView per attachment.
+    - SpatialScene intercepts webspatial://createAttachment, handles update/destroy, and cleans up on reload/destroy.
+    - SpatializedDynamic3DView renders attachments via RealityView(..., attachments:) and parents them under the correct SpatialEntity.
+  - Navigation fix
+    - Prevent internal webspatial:// URLs from being forwarded to UIApplication.shared.open(...).
+  - Test page
+    - /reality/attachments demo page: hide/show, animation (attachments follow parent), shared React state.
+  - Notes
+    - Attachments are 2D UI surfaces only (no nested <Reality> / 3D APIs inside attachments).
+    - No billboard/camera-facing policy in this PR.
+
+- 4f86f47: Expose per-event convenience fields on Spatial Events to mirror `detail`:
+
+  - `SpatialDragEvent.translationX/Y/Z` (from `detail.translation3D`)
+  - `SpatialRotateEvent.quaternion` (from `detail.quaternion`)
+  - `SpatialMagnifyEvent.magnification` (from `detail.magnification`)
+
+### Patch Changes
+
+- 118b8e6: Fix a crash when accessing `ready`/`entityTransform` on static 3D models before the underlying spatialized element is attached.
+- ef447d2: Fixed Model ref.current to be stable after initial render
+
+  Changes to ref cannot be observed since React doesn't re-render
+  on ref changes. So ref.current.ready Promise needs to be stable and
+  immediately available. It should resolve after the 3D model has rendered
+
+- f207e1a: Fix head style synchronization for spatial windows (SpatialDiv/attachments) to avoid duplicated or stale stylesheet injection during rapid host `<head>` updates.
+- Updated dependencies [93fe590]
+- Updated dependencies [1405681]
+  - @webspatial/core-sdk@2.0.0
+
 ## 1.2.1
 
 ### Patch Changes
