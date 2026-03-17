@@ -4,19 +4,74 @@ const e2w = await convertCoordinate(position, { from: elementOrEntity, to: windo
 const w2e = await convertCoordinate(position, { from: window, to: elementOrEntity })
  * 
  */
+import { ConvertCoordinateCommand } from '@webspatial/core-sdk'
 import type { Vec3 } from '@webspatial/core-sdk'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
+import { getSession } from './getSession'
+import { SpatialID } from '../spatialized-container/SpatialID'
 
 type CoordinateConvertible =
   | Window
   | SpatializedElementRef<any>
   | EntityRef
   | ModelRef
-export function convertCoordinate(
+
+function resolveId(target: CoordinateConvertible): string | null {
+  // window -> current spatial scene id which is empty string
+  if (typeof window !== 'undefined' && target === window) {
+    const scene = getSession()?.getSpatialScene()
+    return scene?.id ?? ''
+  }
+
+  // EntityRef -> underlying SpatialEntity.id
+  const maybeEntity = target as EntityRef
+  if (
+    maybeEntity &&
+    typeof maybeEntity === 'object' &&
+    'entity' in maybeEntity
+  ) {
+    return maybeEntity.entity?.id ?? null
+  }
+
+  // SpatializedElementRef / ModelRef -> DOM proxy to underlying SpatializedElement.id
+  const dom: any = (target as any)?.__raw ?? (target as any)
+  if (dom && typeof dom === 'object') {
+    const spatializedElement =
+      dom.__spatializedElement ?? dom.__innerSpatializedElement?.()
+    if (spatializedElement && spatializedElement.id) {
+      return spatializedElement.id as string
+    }
+    // fallback: try spatial id attribute (not guaranteed to map directly to native id)
+    const sid =
+      typeof dom.getAttribute === 'function'
+        ? dom.getAttribute(SpatialID)
+        : null
+    if (sid) {
+      // do not return sid as native id; without mapping to resource it will not resolve on native side
+      return null
+    }
+  }
+
+  return null
+}
+
+export async function convertCoordinate(
   position: Vec3,
   { from, to }: { from: CoordinateConvertible; to: CoordinateConvertible },
-) {
-  return position
+): Promise<Vec3> {
+  try {
+    const fromId = resolveId(from)
+    const toId = resolveId(to)
+    if (fromId === null || toId === null) {
+      return position
+    }
+
+    const cmd = new ConvertCoordinateCommand(position, fromId, toId)
+    const ret = await cmd.execute()
+    return ret?.data ?? position
+  } catch {
+    return position
+  }
 }
