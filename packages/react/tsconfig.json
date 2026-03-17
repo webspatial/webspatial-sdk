@@ -26,6 +26,6 @@
       "@webspatial/core-sdk": ["../core/src"]
     }
   },
-  "include": ["src/index.ts", "esbuild.mjs", "src/types/*.d.ts"],
+  "include": ["src", "esbuild.mjs"],
   "references": []
 }
