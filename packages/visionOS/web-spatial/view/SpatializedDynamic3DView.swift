@@ -16,10 +16,21 @@ struct SpatializedDynamic3DView: View {
         SpatialTapGesture(count: 1).targetedToAnyEntity()
             .onEnded { value in
                 if let entity = value.entity as? SpatialEntity {
-                    spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
+                    // Convert local gesture coordinates into world (global) coordinates via RealityKit.
+                    let globalLocation3D = entity.convert(position: SIMD3<Float>(Float(value.location3D.x), Float(value.location3D.y), Float(value.location3D.z)), to: nil)
+                    let globalPoint3D = Point3D(x: Double(globalLocation3D.x), y: Double(globalLocation3D.y), z: Double(globalLocation3D.z))
+
+                    spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D, globalLocation3D: globalPoint3D)))
                 } else {
                     if let spatialEntity = SpatialEntity.findNearestParent(entity: value.entity) {
-                        spatialScene.sendWebMsg(spatialEntity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D)))
+                        // Convert using the hit entity's coordinate space, then forward to the nearest SpatialEntity.
+                        let globalLocation3D = value.entity.convert(
+                            position: SIMD3<Float>(Float(value.location3D.x), Float(value.location3D.y), Float(value.location3D.z)),
+                            to: nil
+                        )
+                        let globalPoint3D = Point3D(x: Double(globalLocation3D.x), y: Double(globalLocation3D.y), z: Double(globalLocation3D.z))
+
+                        spatialScene.sendWebMsg(spatialEntity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D, globalLocation3D: globalPoint3D)))
                     }
                 }
             }
@@ -76,9 +87,16 @@ struct SpatializedDynamic3DView: View {
             // Always forward drag gesture events to JS
             if let entity = value.entity as? SpatialEntity {
                 if !isDrag {
+                    let globalStartLocation3D = value.entity.convert(
+                        position: SIMD3<Float>(Float(value.startLocation3D.x), Float(value.startLocation3D.y), Float(value.startLocation3D.z)),
+                        to: nil
+                    )
+                    let globalStartPoint3D = Point3D(x: Double(globalStartLocation3D.x), y: Double(globalStartLocation3D.y), z: Double(globalStartLocation3D.z))
+
                     let startEvent = WebSpatialDragStartGuestureEvent(
                         detail: .init(
-                            startLocation3D: value.startLocation3D
+                            startLocation3D: value.startLocation3D,
+                            globalLocation3D: globalStartPoint3D
                         )
                     )
                     spatialScene.sendWebMsg(entity.spatialId, startEvent)
@@ -101,13 +119,59 @@ struct SpatializedDynamic3DView: View {
     }
 
     var body: some View {
-        RealityView(make: { content in
+        RealityView(make: { content, attachments in
             let rootEntity = spatializedDynamic3DElement.getRoot()
             content.add(rootEntity)
+
+            // Add existing attachments on initial creation
+            for (_, info) in spatialScene.attachmentManager.attachments {
+                if let attachmentEntity = attachments.entity(for: info.id) {
+                    attachmentEntity.position = info.position
+                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                        parentEntity.addChild(attachmentEntity)
+                    } else {
+                        rootEntity.addChild(attachmentEntity)
+                    }
+                }
+            }
+        }, update: { _, attachments in
+            let rootEntity = spatializedDynamic3DElement.getRoot()
+            // Update attachment positions and parenting
+            for (_, info) in spatialScene.attachmentManager.attachments {
+                if let attachmentEntity = attachments.entity(for: info.id) {
+                    attachmentEntity.position = info.position
+                    // Re-parent if not already under the correct parent
+                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                        if attachmentEntity.parent != parentEntity {
+                            parentEntity.addChild(attachmentEntity)
+                        }
+                    } else {
+                        // Parent entity might have been destroyed; fall back to root.
+                        if attachmentEntity.parent != rootEntity {
+                            rootEntity.addChild(attachmentEntity)
+                        }
+                    }
+                }
+            }
+        }, attachments: {
+            ForEach(Array(spatialScene.attachmentManager.attachments.values)) { info in
+                Attachment(id: info.id) {
+                    info.webViewModel.getView()
+                        .frame(
+                            width: info.size.width,
+                            height: info.size.height
+                        )
+                }
+            }
         })
         .simultaneousGesture(spatialTapEvent)
         .simultaneousGesture(rotate3dEvent)
         .simultaneousGesture(dragEvent)
         .simultaneousGesture(magnifyEvent)
+    }
+
+    private func findSpatialEntity(_ spatialId: String) -> SpatialEntity? {
+        // Look up the SpatialEntity from the SpatialScene's spatial object registry
+        return spatialScene.findSpatialObject(spatialId)
     }
 }

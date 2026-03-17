@@ -57,15 +57,15 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         defaultAlignment = .center
     }
 
-    // Spatialized2DElement can hold a collection of SpatializedElement children
+    /// Spatialized2DElement can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func addChild(_ spatializedElement: SpatializedElement) {
         children[spatializedElement.id] = spatializedElement
     }
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
         children.removeValue(forKey: spatializedElement.id)
     }
@@ -75,7 +75,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        let typedChildren = children.filter {
+        return children.filter {
             switch type {
             case .Spatialized2DElement:
                 return $0.value is Spatialized2DElement
@@ -85,7 +85,6 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
                 return $0.value is SpatializedDynamic3DElement
             }
         }
-        return typedChildren
     }
 
     func loadHtml(_ html: String) {

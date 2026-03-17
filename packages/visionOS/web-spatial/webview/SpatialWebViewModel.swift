@@ -76,6 +76,12 @@ class SpatialWebViewModel {
     }
 
     func getController() -> SpatialWebController {
+        // See TODO in AttachmentManager — async destroy() during SwiftUI teardown
+        // can nil the controller while the view is still being removed.
+        if controller == nil {
+            controller = SpatialWebController()
+            controller!.model = self
+        }
         return controller!
     }
 
@@ -103,8 +109,8 @@ class SpatialWebViewModel {
         controller?.setWebViewTitle(title)
     }
 
-    // events
-    // navigation event
+    /// events
+    /// navigation event
     func addNavigationListener(protocal: String, event: @escaping (_ data: URL) -> Bool) {
         navigationList[protocal] = event
     }
@@ -113,7 +119,7 @@ class SpatialWebViewModel {
         navigationList = [:]
     }
 
-    // open window event
+    /// open window event
     func addOpenWindowListener(protocal: String, _ event: @escaping (_ data: URL) -> WebViewElementInfo?) {
         openWindowList[protocal] = event
     }
@@ -122,7 +128,7 @@ class SpatialWebViewModel {
         openWindowList = [:]
     }
 
-    // jsb event
+    /// jsb event
     func addJSBListener<T: CommandDataProtocol>(_ dataClass: T.Type, _ event: @escaping (T, @escaping JSBManager.ResolveHandler<Encodable>) -> Void) {
         controller?.registeJSBHandler(dataClass, event)
     }
@@ -143,7 +149,7 @@ class SpatialWebViewModel {
         controller?.mockJSB(command)
     }
 
-    // webview state event
+    /// webview state event
     func addStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) {
         stateChangeListeners.append(event)
     }
@@ -176,7 +182,7 @@ class SpatialWebViewModel {
         stateListeners[state] = nil
     }
 
-    // scroll update event
+    /// scroll update event
     func addScrollUpdateListener(_ event: @escaping (_ type: ScrollState, _ point: CGPoint) -> Void) {
         scrollUpdateListeners.append(event)
     }
@@ -199,7 +205,7 @@ class SpatialWebViewModel {
         removeAllScrollUpdateListener()
     }
 
-    // invokes
+    /// invokes
     private func onNavigationInvoke(_ url: URL) -> Bool {
         var matchProtocol = false
         for key in navigationList.keys {

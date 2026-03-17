@@ -6,6 +6,7 @@ import {
   createSpatializedDynamic3DElement,
 } from './SpatializedElementCreator'
 import { createSpatializedStatic3DElement } from './SpatializedElementCreator'
+import { Attachment, createAttachmentEntity } from './reality/Attachment'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import {
   ModelComponentOptions,
@@ -20,6 +21,7 @@ import {
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
   SpatialEntityUserData,
+  AttachmentEntityOptions,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
@@ -70,7 +72,7 @@ export class SpatialSession {
    * @returns Promise resolving to a new SpatializedStatic3DElement instance
    */
   createSpatializedStatic3DElement(
-    modelURL: string = '',
+    modelURL: string,
   ): Promise<SpatializedStatic3DElement> {
     return createSpatializedStatic3DElement(modelURL)
   }
@@ -186,5 +188,17 @@ export class SpatialSession {
     userData?: SpatialEntityUserData,
   ) {
     return createSpatialModelEntity(options, userData)
+  }
+
+  /**
+   * Creates an attachment entity that renders 2D HTML content as a child
+   * of a 3D entity in the scene graph.
+   * @param options Configuration options including parent entity ID, position, and size
+   * @returns Promise resolving to a new Attachment instance
+   */
+  createAttachmentEntity(
+    options: AttachmentEntityOptions,
+  ): Promise<Attachment> {
+    return createAttachmentEntity(options)
   }
 }

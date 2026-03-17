@@ -30,14 +30,14 @@ enum SpatialWebMsgType: String, Encodable {
     case objectdestroy
 }
 
-// notify Spatialized3DElement Container Cube, used for ref.current.getBoundingClientCube()
+/// notify Spatialized3DElement Container Cube, used for ref.current.getBoundingClientCube()
 struct SpatiaizedContainerClientCube: Encodable {
     let type: SpatialWebMsgType = .cubeInfo
     let origin: Point3D
     let size: Size3D
 }
 
-// notify Spatialized3DElement Container Transform to SpatialScene, used for ref.current.convertToSpatialScene()
+/// notify Spatialized3DElement Container Transform to SpatialScene, used for ref.current.convertToSpatialScene()
 struct SpatiaizedContainerTransform: Encodable {
     let type: SpatialWebMsgType = .transform
     let detail: AffineTransform3D
@@ -45,9 +45,11 @@ struct SpatiaizedContainerTransform: Encodable {
 
 struct WebSpatialTapGuestureEventDetail: Encodable {
     let location3D: Point3D
+    /// Global scene location (maps to clientX/clientY/clientZ on the web side).
+    let globalLocation3D: Point3D?
 }
 
-// notify SpatializedElement/SpatialEntity tapped
+/// notify SpatializedElement/SpatialEntity tapped
 struct WebSpatialTapGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialtap
     let detail: WebSpatialTapGuestureEventDetail
@@ -55,6 +57,8 @@ struct WebSpatialTapGuestureEvent: Encodable {
 
 struct WebSpatialDragStartGuestureEventDetail: Encodable {
     let startLocation3D: Point3D
+    /// Global scene location for the drag start point.
+    let globalLocation3D: Point3D?
 }
 
 struct WebSpatialDragStartGuestureEvent: Encodable {

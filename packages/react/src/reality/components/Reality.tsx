@@ -7,8 +7,10 @@ import React, {
 } from 'react'
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
 import { RealityContext, RealityContextValue } from '../context'
+import { useInsideAttachment } from '../context/InsideAttachmentContext'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
+import { AttachmentRegistry } from '../context/AttachmentContext'
 import {
   RealityProps,
   SpatializedElementRef,
@@ -17,6 +19,13 @@ import { SpatializedElement } from '@webspatial/core-sdk'
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
+    const insideAttachment = useInsideAttachment()
+    if (insideAttachment) {
+      console.warn(
+        '[WebSpatial] Reality cannot be used inside AttachmentAsset.',
+      )
+      return null
+    }
     const {
       onSpatialTap,
       onSpatialDragStart,
@@ -35,6 +44,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     const [isReady, setIsReady] = useState(false)
 
     const cleanupReality = useCallback(() => {
+      ctxRef.current?.attachmentRegistry.destroy()
       ctxRef.current?.resourceRegistry.destroy()
       ctxRef.current?.reality.destroy()
       ctxRef.current = null
@@ -51,9 +61,11 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     const createReality = useCallback(async () => {
       const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
+      const attachmentRegistry = new AttachmentRegistry()
       const session = await getSession()
       if (!session) {
         resourceRegistry.destroy()
+        attachmentRegistry.destroy()
         return null
       }
 
@@ -63,6 +75,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
 
       if (isCancelled()) {
         resourceRegistry.destroy()
+        attachmentRegistry.destroy()
         reality.destroy()
         return null
       }
@@ -74,18 +87,25 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
 
         if (!result.success || isCancelled()) {
           resourceRegistry.destroy()
+          attachmentRegistry.destroy()
           reality.destroy()
           return null
         }
 
         cleanupReality()
 
-        ctxRef.current = { session, reality, resourceRegistry }
+        ctxRef.current = {
+          session,
+          reality,
+          resourceRegistry,
+          attachmentRegistry,
+        }
         setIsReady(true)
         return reality as SpatializedElement
       } catch (err) {
         console.error('[createReality] failed', err)
         resourceRegistry.destroy()
+        attachmentRegistry.destroy()
         reality.destroy()
         return null
       }

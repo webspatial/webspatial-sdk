@@ -12,6 +12,7 @@ export const routes = [
       { path: '/reality/dynamic3d', label: 'Dynamic 3D' },
       { path: '/reality/gestures', label: 'Gestures' },
       { path: '/reality/spatial-div', label: 'Spatial Div Dynamic' },
+      { path: '/reality/attachments', label: 'Attachments' },
       { path: '/reality/empty', label: 'Empty' },
       { path: '/reality/geometry-entity', label: 'Geometry Entity' },
       { path: '/reality/interactable', label: 'Interactable' },
@@ -53,6 +54,7 @@ export const routes = [
     path: '/background-material',
     label: 'Misc',
     children: [
+      { path: '/head-style-sync', label: 'SpatialDiv Head Sync' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/android-bringup', label: 'Android Bringup' },

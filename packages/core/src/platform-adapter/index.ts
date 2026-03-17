@@ -32,7 +32,11 @@ export function createPlatform(): PlatformAbility {
   }
   const userAgent = window.navigator.userAgent
   const webSpatialVersion = getWebSpatialVersion(userAgent)
-  if (
+  if (window.navigator.userAgent.includes('Puppeteer')) {
+    const PuppeteerPlatform =
+      require('./puppeteer/PuppeteerPlatform').PuppeteerPlatform
+    return new PuppeteerPlatform()
+  } else if (
     userAgent.includes('PicoWebApp') &&
     isVersionGreater(webSpatialVersion, [0, 0, 1])
   ) {

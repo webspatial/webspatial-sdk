@@ -3,7 +3,7 @@ import SwiftUI
 
 @Observable
 class SpatialModelResource: SpatialObject {
-    var _resource: Entity? = nil
+    var _resource: Entity?
     var resource: Entity? {
         _resource
     }

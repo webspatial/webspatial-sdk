@@ -12,35 +12,68 @@ import { PortalInstanceContext } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
 import { useDomProxy } from './hooks/useDomProxy'
+import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
 import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 import { withSSRSupported } from '../ssr'
+
+/**
+ * Degraded fallback: strips spatial-only props and renders plain HTML.
+ * This is a separate component so that SpatializedContainerBase never
+ * has to conditionally skip its hooks.
+ */
+function DegradedContainer<T extends SpatializedElementRef>({
+  innerRef,
+  ...inprops
+}: SpatializedContainerProps<T> & {
+  innerRef: ForwardedRef<SpatializedElementRef<T>>
+}) {
+  type DegradedProps = SpatializedContainerProps<T> & {
+    'enable-xr'?: unknown
+    sizingMode?: unknown
+  }
+  const {
+    component: Component,
+    children,
+    ['enable-xr']: _enableXR,
+    onSpatialTap: _onSpatialTap,
+    onSpatialDragStart: _onSpatialDragStart,
+    onSpatialDrag: _onSpatialDrag,
+    onSpatialDragEnd: _onSpatialDragEnd,
+    onSpatialRotate: _onSpatialRotate,
+    onSpatialRotateEnd: _onSpatialRotateEnd,
+    onSpatialMagnify: _onSpatialMagnify,
+    onSpatialMagnifyEnd: _onSpatialMagnifyEnd,
+    spatializedContent: _content,
+    createSpatializedElement: _create,
+    getExtraSpatializedElementProperties: _getExtra,
+    extraRefProps: _extraRef,
+    sizingMode: _sizingMode,
+    ...restProps
+  } = inprops as DegradedProps
+  return (
+    <Component ref={innerRef} {...restProps}>
+      {children}
+    </Component>
+  )
+}
+
 export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
   const isWebSpatialEnv = getSession() !== null
-  if (!isWebSpatialEnv) {
-    const {
-      component: Component,
-      spatializedContent,
-      createSpatializedElement,
-      getExtraSpatializedElementProperties,
-      onSpatialTap,
-      onSpatialDragStart,
-      onSpatialDrag,
-      onSpatialDragEnd,
-      onSpatialRotate,
-      onSpatialRotateEnd,
-      onSpatialMagnify,
-      onSpatialMagnifyEnd,
-      extraRefProps,
-      ...restProps
-    } = inprops
-    // make sure SpatializedContainer can work on web env
-    return <Component ref={ref} {...restProps} />
+  const insideAttachment = useInsideAttachment()
+
+  if (!isWebSpatialEnv || insideAttachment) {
+    if (insideAttachment) {
+      console.warn(
+        `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
+      )
+    }
+    return <DegradedContainer {...inprops} innerRef={ref} />
   }
 
   const layer = useContext(SpatialLayerContext) + 1

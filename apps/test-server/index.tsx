@@ -38,6 +38,7 @@ import RealityInteractable from './src/pages/reality/interactable'
 import RealityIssue from './src/pages/reality/issue'
 import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
+import RealityAttachments from './src/pages/reality/attachments'
 import RealityTestIndex from './src/pages/reality-test/index'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
@@ -55,6 +56,7 @@ import SpatialCorner from './src/pages/spatialCorner/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
+import HeadStyleSyncPage from './src/pages/head-style-sync/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -135,6 +137,10 @@ function App() {
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
                 />
+                <Route
+                  path="/reality/attachments"
+                  element={<RealityAttachments />}
+                />
                 <Route path="/reality/empty" element={<RealityEmpty />} />
                 <Route
                   path="/reality/geometry-entity"
@@ -184,6 +190,10 @@ function App() {
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
+                <Route
+                  path="/head-style-sync"
+                  element={<HeadStyleSyncPage />}
+                />
                 <Route path="/cleanup/spa" element={<CleanupSpa />} />
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />
