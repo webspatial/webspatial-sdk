@@ -32,20 +32,8 @@ export const useEntity = ({
 
   const forceUpdate = useForceUpdate()
 
-  // Deferred cleanup timer for StrictMode safety.
-  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   useEffect(() => {
     if (!ctx) return
-
-    // Cancel any pending cleanup from StrictMode's fake unmount
-    if (cleanupTimerRef.current !== null) {
-      clearTimeout(cleanupTimerRef.current)
-      cleanupTimerRef.current = null
-    }
-
-    // Already created (StrictMode remount) — skip
-    if (instanceRef.current.entity) return
 
     const controller = new AbortController()
 
@@ -76,11 +64,7 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
-      // Defer cleanup so StrictMode's immediate remount can cancel it.
-      cleanupTimerRef.current = setTimeout(() => {
-        cleanupTimerRef.current = null
-        instanceRef.current?.destroy()
-      }, 0)
+      instanceRef.current?.destroy()
     }
   }, [ctx, parent])
 

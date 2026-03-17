@@ -43,13 +43,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
 
     const [isReady, setIsReady] = useState(false)
 
-    // Ref for deferred cleanup timer. React 18 StrictMode unmounts and
-    // remounts synchronously in the same microtask. By deferring cleanup
-    // to setTimeout(0), the remount cancels it before it fires. This
-    // prevents destroying the native Reality (and all child entities/
-    // attachments) during StrictMode's fake unmount/remount cycle.
-    const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
     const cleanupReality = useCallback(() => {
       ctxRef.current?.attachmentRegistry.destroy()
       ctxRef.current?.resourceRegistry.destroy()
@@ -59,31 +52,13 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     }, [])
 
     useEffect(() => {
-      // Cancel any pending cleanup from StrictMode's fake unmount
-      if (cleanupTimerRef.current !== null) {
-        clearTimeout(cleanupTimerRef.current)
-        cleanupTimerRef.current = null
-      }
-
       return () => {
         creationId.current++
-        // Defer cleanup so StrictMode's immediate remount can cancel it.
-        // On real unmount, the timer fires and destroys everything.
-        // On StrictMode fake unmount, the remount above clears the timer.
-        cleanupTimerRef.current = setTimeout(() => {
-          cleanupTimerRef.current = null
-          cleanupReality()
-        }, 0)
+        cleanupReality()
       }
     }, [cleanupReality])
 
     const createReality = useCallback(async () => {
-      // If we already have a valid context (StrictMode remount),
-      // return the existing reality instead of creating a new one.
-      if (ctxRef.current) {
-        return ctxRef.current.reality as SpatializedElement
-      }
-
       const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
       const attachmentRegistry = new AttachmentRegistry()

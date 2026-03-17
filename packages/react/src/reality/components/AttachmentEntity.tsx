@@ -27,25 +27,10 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
 
-  // Ref for deferred cleanup timer. React 18 StrictMode unmounts and
-  // remounts synchronously in the same microtask. By deferring destroy()
-  // to setTimeout(0), the remount cancels it before it fires. This
-  // prevents destroying the native PICO engine during StrictMode's
-  // fake unmount/remount cycle — creating a second engine after
-  // destroying the first corrupts PICO's internal FragmentWindowAndroid.
-  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   // Create the attachment when the parent entity is ready
   useEffect(() => {
     if (!ctx || !parent) return
 
-    // Cancel any pending cleanup from StrictMode's fake unmount
-    if (cleanupTimerRef.current !== null) {
-      clearTimeout(cleanupTimerRef.current)
-      cleanupTimerRef.current = null
-    }
-
-    // Already created (StrictMode remount) — skip
     if (attachmentRef.current) return
 
     const parentId = parent.id
@@ -109,22 +94,16 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
     return () => {
       cancelled = true
-      // Defer cleanup so StrictMode's immediate remount can cancel it.
-      // On real unmount, the timer fires and destroys the attachment.
-      // On StrictMode fake unmount, the remount above clears the timer.
-      cleanupTimerRef.current = setTimeout(() => {
-        cleanupTimerRef.current = null
-        const att = attachmentRef.current
-        if (att) {
-          ctx.attachmentRegistry.removeContainer(
-            attachmentNameRef.current,
-            instanceIdRef.current,
-          )
-          att.destroy()
-          attachmentRef.current = null
-          setChildWindow(null)
-        }
-      }, 0)
+      const att = attachmentRef.current
+      if (att) {
+        ctx.attachmentRegistry.removeContainer(
+          attachmentNameRef.current,
+          instanceIdRef.current,
+        )
+        att.destroy()
+        attachmentRef.current = null
+        setChildWindow(null)
+      }
     }
   }, [ctx, parent])
 
