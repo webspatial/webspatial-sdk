@@ -8,7 +8,6 @@ export function useSpatializedElement(
 ) {
   const [spatializedElement, setSpatializedElement] =
     useState<SpatializedElement>()
-
   const elementRef = useRef<SpatializedElement | undefined>(undefined)
 
   useEffect(() => {
