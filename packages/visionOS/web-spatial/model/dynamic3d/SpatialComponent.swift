@@ -47,7 +47,7 @@ class SpatialModelComponent: SpatialComponent {
     private(set) var mesh: Geometry?
 
     init(mesh: Geometry, mats: [SpatialMaterial]) {
-        self.spatialMaterials = mats
+        spatialMaterials = mats
         self.mesh = mesh
         super.init(.ModelComponent)
         var materials: [any RealityKit.Material] = []

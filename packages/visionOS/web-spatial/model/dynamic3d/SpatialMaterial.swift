@@ -28,10 +28,10 @@ class SpatialUnlitMaterial: SpatialMaterial {
     private(set) var currentOpacity: Float
 
     init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1) {
-        self.currentColor = UIColor(Color(hex: color))
-        self.currentTexture = texture
-        self.currentTransparent = transparent
-        self.currentOpacity = opacity
+        currentColor = UIColor(Color(hex: color))
+        currentTexture = texture
+        currentTransparent = transparent
+        currentOpacity = opacity
         super.init(.UnlitMaterial)
         var mat = UnlitMaterial()
         mat.color = .init(tint: currentColor, texture: texture != nil ? .init(texture!) : nil)

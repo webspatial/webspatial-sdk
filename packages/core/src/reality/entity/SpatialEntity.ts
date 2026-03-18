@@ -128,8 +128,8 @@ export class SpatialEntity extends SpatialObject {
   }
   private onReceiveEvent = (
     data: // | CubeInfoMsg
-      // | TransformMsg
-      | SpatialTapMsg
+    // | TransformMsg
+    | SpatialTapMsg
       // | SpatialDragMsg
       // | SpatialDragEndMsg
       // | SpatialRotateMsg
