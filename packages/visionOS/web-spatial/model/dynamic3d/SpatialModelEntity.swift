@@ -15,6 +15,21 @@ class SpatialModelEntity: SpatialEntity {
         super.init()
     }
 
+    func setMaterials(_ materials: [SpatialMaterial]) {
+        func applyMaterials(to entity: Entity) {
+            if var modelComp = entity.components[ModelComponent.self] {
+                modelComp.materials = materials.compactMap { $0.resource }
+                entity.components.set(modelComp)
+            }
+            for child in entity.children {
+                applyMaterials(to: child)
+            }
+        }
+        if let modelEntity = modelEntity {
+            applyMaterials(to: modelEntity)
+        }
+    }
+
     override func onDestroy() {
         super.onDestroy()
         if let modelEntity = modelEntity {

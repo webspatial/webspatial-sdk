@@ -321,6 +321,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(InitializeAttachmentCommand.self, onInitializeAttachment)
         spatialWebViewModel.addJSBListener(ConvertCoordinate.self, onConvertCoordinate)
 
+        spatialWebViewModel.addJSBListener(UpdateUnlitMaterialProperties.self, onUpdateUnlitMaterialProperties)
+        spatialWebViewModel.addJSBListener(RemoveComponentFromEntity.self, onRemoveComponentFromEntity)
+        spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
+
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -1193,6 +1197,50 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
         }
         attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
+            return
+        }
+        material.updateProperties(color: command.color, transparent: command.transparent, opacity: command.opacity)
+        // Re-apply material to any ModelComponent that references it
+        for (_, obj) in spatialObjects {
+            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(command.id) {
+                comp.refreshMaterials()
+            }
+        }
+        resolve(.success(baseReplyData))
+    }
+
+    private func onRemoveComponentFromEntity(command: RemoveComponentFromEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialEntity,
+              let component = spatialObjects[command.componentId] as? SpatialComponent
+        else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Remove component failed")))
+            return
+        }
+        entity.removeComponent(component)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onSetMaterialsOnEntity(command: SetMaterialsOnEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialModelEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelEntity \(command.entityId) not found")))
+            return
+        }
+        var materials: [SpatialMaterial] = []
+        for mid in command.materialIds {
+            if let material = spatialObjects[mid] as? SpatialMaterial {
+                materials.append(material)
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(mid) not found")))
+                return
+            }
+        }
+        entity.setMaterials(materials)
         resolve(.success(baseReplyData))
     }
 

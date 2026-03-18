@@ -22,14 +22,36 @@ class SpatialMaterial: SpatialObject {
 
 @Observable
 class SpatialUnlitMaterial: SpatialMaterial {
-    let color: UIColor
+    private(set) var currentColor: UIColor
+    private(set) var currentTexture: TextureResource?
+    private(set) var currentTransparent: Bool
+    private(set) var currentOpacity: Float
 
     init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1) {
-        self.color = UIColor(Color(hex: color))
+        self.currentColor = UIColor(Color(hex: color))
+        self.currentTexture = texture
+        self.currentTransparent = transparent
+        self.currentOpacity = opacity
         super.init(.UnlitMaterial)
         var mat = UnlitMaterial()
-        mat.color = .init(tint: UIColor(Color(hex: color)), texture: texture != nil ? .init(texture!) : nil)
+        mat.color = .init(tint: currentColor, texture: texture != nil ? .init(texture!) : nil)
         mat.blending = transparent ? .transparent(opacity: .init(scale: opacity)) : .opaque
+        _resource = mat
+    }
+
+    func updateProperties(color: String?, transparent: Bool?, opacity: Float?) {
+        if let color = color {
+            currentColor = UIColor(Color(hex: color))
+        }
+        if let transparent = transparent {
+            currentTransparent = transparent
+        }
+        if let opacity = opacity {
+            currentOpacity = opacity
+        }
+        var mat = UnlitMaterial()
+        mat.color = .init(tint: currentColor, texture: currentTexture != nil ? .init(currentTexture!) : nil)
+        mat.blending = currentTransparent ? .transparent(opacity: .init(scale: currentOpacity)) : .opaque
         _resource = mat
     }
 }
