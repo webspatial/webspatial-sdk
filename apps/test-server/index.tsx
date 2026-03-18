@@ -39,6 +39,7 @@ import RealityIssue from './src/pages/reality/issue'
 import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
+import RealityEntityTreeOps from './src/pages/reality/entityTreeOps'
 import RealityTestIndex from './src/pages/reality-test/index'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
@@ -153,6 +154,10 @@ function App() {
                 <Route path="/reality/issue" element={<RealityIssue />} />
                 <Route path="/reality/low" element={<RealityLow />} />
                 <Route path="/reality/nested" element={<RealityNested />} />
+                <Route
+                  path="/reality/entity-tree-ops"
+                  element={<RealityEntityTreeOps />}
+                />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"
