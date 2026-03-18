@@ -53,6 +53,8 @@ import NestedFixPosition from './src/pages/nestedfixposition/index'
 import NestedScroll from './src/pages/nestedscroll/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
+import GeometryVerify from './src/pages/geometry-verify/index'
+import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
@@ -188,6 +190,8 @@ function App() {
                   element={<SpatialConverter />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
+                <Route path="/geometry-verify" element={<GeometryVerify />} />
+                <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route
