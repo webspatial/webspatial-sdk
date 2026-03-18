@@ -1,9 +1,15 @@
 import Foundation
 import SwiftUI
 
+struct ModelSource: Equatable {
+    let src: String
+    let type: String?
+}
+
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
+    var sources: [ModelSource] = []
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false

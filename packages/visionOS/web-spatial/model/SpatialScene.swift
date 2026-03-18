@@ -581,6 +581,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         updateSpatializedElementProperties(spatializedElement, command)
 
+        if let sources = command.sources {
+            spatializedElement.sources = sources.map {
+                ModelSource(src: $0.src, type: $0.type)
+            }
+        }
+
         if let modelURL = command.modelURL {
             spatializedElement.modelURL = modelURL
         }
