@@ -91,6 +91,7 @@ function App() {
       <div
         className={outerClass}
         style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
+        enable-xr-monitor
       >
         <Sidebar />
         <main className={mainClass}>
