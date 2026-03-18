@@ -339,6 +339,14 @@ struct GetSpatialSceneStateCommand: CommandDataProtocol {
     static let commandType = "GetSpatialSceneState"
 }
 
+struct InitializeAttachmentCommand: CommandDataProtocol {
+    static let commandType = "InitializeAttachment"
+    let id: String
+    let parentEntityId: String
+    let position: [Float]?
+    let size: AttachmentSize?
+}
+
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     static let commandType = "UpdateAttachmentEntity"
     let id: String

@@ -628,7 +628,21 @@ export class CreateAttachmentEntityCommand extends WebSpatialProtocolCommand {
     super()
   }
   protected getParams() {
+    return {} // No metadata — just trigger engine/webview creation
+  }
+}
+
+export class InitializeAttachmentCommand extends JSBCommand {
+  commandType = 'InitializeAttachment'
+  constructor(
+    private attachmentId: string,
+    private options: AttachmentEntityOptions,
+  ) {
+    super()
+  }
+  protected getParams() {
     return {
+      id: this.attachmentId,
       parentEntityId: this.options.parentEntityId,
       position: this.options.position ?? [0, 0, 0],
       size: this.options.size,
