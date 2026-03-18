@@ -43,13 +43,39 @@ class SpatialComponent: SpatialObject {
 
 @Observable
 class SpatialModelComponent: SpatialComponent {
+    private(set) var spatialMaterials: [SpatialMaterial] = []
+    private(set) var mesh: Geometry?
+
     init(mesh: Geometry, mats: [SpatialMaterial]) {
+        spatialMaterials = mats
+        self.mesh = mesh
         super.init(.ModelComponent)
         var materials: [any RealityKit.Material] = []
         for item in mats {
             materials.append(item.resource!)
         }
         _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
+    }
+
+    /// Rebuild the ModelComponent with current material resources (called after material properties change)
+    func refreshMaterials() {
+        guard let mesh = mesh else { return }
+        var materials: [any RealityKit.Material] = []
+        for item in spatialMaterials {
+            if let res = item.resource {
+                materials.append(res)
+            }
+        }
+        _resource = ModelComponent(mesh: mesh.resource!, materials: materials)
+        if let entity = _entity {
+            entity.components.set(_resource!)
+            entity.generateCollisionShapes(recursive: true)
+        }
+    }
+
+    /// Check if this component uses the given material
+    func usesMaterial(_ materialId: String) -> Bool {
+        return spatialMaterials.contains { $0.id == materialId }
     }
 
     override func addToEntity(entity: SpatialEntity) {
@@ -64,6 +90,8 @@ class SpatialModelComponent: SpatialComponent {
 
     override func onDestroy() {
         _resource = nil
+        spatialMaterials = []
+        mesh = nil
     }
 }
 

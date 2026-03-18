@@ -11,6 +11,7 @@ import { EntityRefShape, useEntity } from '../hooks'
 type BaseEntityProps = EntityProps &
   EntityEventHandler & {
     children?: React.ReactNode
+    recreateKey?: string
     createEntity: (
       ctx: RealityContextValue,
       signal: AbortSignal,
@@ -18,11 +19,12 @@ type BaseEntityProps = EntityProps &
   }
 
 export const BaseEntity = forwardRef<EntityRefShape, BaseEntityProps>(
-  ({ children, createEntity, ...rest }, ref) => {
+  ({ children, createEntity, recreateKey, ...rest }, ref) => {
     const ctx = useRealityContext()
     const entity = useEntity({
       ...rest,
       ref,
+      recreateKey,
       createEntity: (signal: AbortSignal) => createEntity(ctx, signal),
     })
 
