@@ -70,6 +70,14 @@ struct SpatializedStatic3DView: View {
                     ProgressView()
                 }
             }
+            .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
+                guard isComplete == true,
+                      spatializedStatic3DElement.loop,
+                      let asset,
+                      let animation = asset.availableAnimations.first else { return }
+                asset.selectedAnimation = animation
+                asset.animationPlaybackController?.resume()
+            }
             .task(id: spatializedStatic3DElement.modelURL) {
                 guard let url = URL(string: spatializedStatic3DElement.modelURL) else { return }
                 do {
