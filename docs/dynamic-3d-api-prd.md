@@ -1,6 +1,5 @@
-# Dynamic 3D API — Developer Spec
+# Dynamic 3D API — Spec
 
-Minimal, spec-style reference for the WebSpatial Dynamic 3D API: concepts, components, and usage.
 
 ---
 
