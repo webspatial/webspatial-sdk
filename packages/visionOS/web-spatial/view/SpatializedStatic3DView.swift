@@ -12,6 +12,17 @@ struct SpatializedStatic3DView: View {
         return spatializedElement as! SpatializedStatic3DElement
     }
 
+    /// Ordered list of sources to attempt, prioritizing USDZ when available.
+    private var orderedSources: [ModelSource] {
+        let sources = spatializedStatic3DElement.sources
+        guard !sources.isEmpty else { return [] }
+
+        let usdzType = "model/vnd.usdz+zip"
+        let usdz = sources.filter { $0.type == usdzType }
+        let rest = sources.filter { $0.type != usdzType }
+        return usdz + rest
+    }
+
     func onLoadSuccess() {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
     }
@@ -35,6 +46,27 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
+    /// Attempts to load from each source in order, returning the first success.
+    private func loadFromSources(_ sources: [ModelSource]) async -> Model3DAsset? {
+        for source in sources {
+            guard let url = URL(string: source.src) else { continue }
+            do {
+                return try await loadAsset(from: url)
+            } catch {
+                continue
+            }
+        }
+        return nil
+    }
+
+    /// Task ID that changes when either the primary URL or the sources array changes.
+    private var sourceTaskId: String {
+        let sourcesKey = spatializedStatic3DElement.sources
+            .map { $0.src }
+            .joined(separator: "|")
+        return "\(spatializedStatic3DElement.modelURL)|\(sourcesKey)"
+    }
+
     var body: some View {
         let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
@@ -46,7 +78,8 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if URL(string: spatializedStatic3DElement.modelURL) != nil {
+        let hasValidSource = URL(string: spatializedStatic3DElement.modelURL) != nil || !spatializedStatic3DElement.sources.isEmpty
+        if hasValidSource {
             Group {
                 if let asset {
                     Model3D(asset: asset) { resolvedModel3D in
@@ -78,20 +111,38 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
-            .task(id: spatializedStatic3DElement.modelURL) {
-                guard let url = URL(string: spatializedStatic3DElement.modelURL) else { return }
-                do {
-                    let loaded = try await loadAsset(from: url)
-                    if spatializedStatic3DElement.autoplay {
-                        if let firstAnimation = loaded.availableAnimations.first {
+            .task(id: sourceTaskId) {
+                let sources = orderedSources
+                if sources.isEmpty {
+                    // Fallback: single modelURL with no sources array
+                    guard let url = URL(string: spatializedStatic3DElement.modelURL) else { return }
+                    do {
+                        let loaded = try await loadAsset(from: url)
+                        if spatializedStatic3DElement.autoplay,
+                           let firstAnimation = loaded.availableAnimations.first
+                        {
                             loaded.selectedAnimation = firstAnimation
                         }
+                        self.asset = loaded
+                        self.loadFailed = false
+                    } catch {
+                        self.asset = nil
+                        self.loadFailed = true
                     }
-                    self.asset = loaded
-                    self.loadFailed = false
-                } catch {
-                    self.asset = nil
-                    self.loadFailed = true
+                } else {
+                    // Sequential fallback through sources
+                    if let loaded = await loadFromSources(sources) {
+                        if spatializedStatic3DElement.autoplay,
+                           let firstAnimation = loaded.availableAnimations.first
+                        {
+                            loaded.selectedAnimation = firstAnimation
+                        }
+                        self.asset = loaded
+                        self.loadFailed = false
+                    } else {
+                        self.asset = nil
+                        self.loadFailed = true
+                    }
                 }
             }
             .scaleEffect(

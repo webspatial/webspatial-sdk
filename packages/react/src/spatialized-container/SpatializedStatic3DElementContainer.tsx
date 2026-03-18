@@ -1,6 +1,9 @@
 import {
+  Children,
   ForwardedRef,
   forwardRef,
+  isValidElement,
+  ReactElement,
   useCallback,
   useContext,
   useEffect,
@@ -15,7 +18,7 @@ import {
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
-import { SpatializedStatic3DElement } from '@webspatial/core-sdk'
+import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -63,8 +66,27 @@ function createLoadSuccessEvent(
   return createLoadEvent('modelloaded', targetGetter)
 }
 
+function collectSources(children: React.ReactNode): ModelSource[] {
+  const sources: ModelSource[] = []
+  Children.forEach(children, child => {
+    if (
+      isValidElement(child) &&
+      (child as ReactElement<{ src?: string; type?: string }>).type === 'source'
+    ) {
+      const { src, type } = (
+        child as ReactElement<{ src?: string; type?: string }>
+      ).props
+      if (src) {
+        sources.push({ src: getAbsoluteURL(src), type })
+      }
+    }
+  })
+  return sources
+}
+
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
-  const { src, spatializedElement, onLoad, onError, autoplay, loop } = props
+  const { src, children, spatializedElement, onLoad, onError, autoplay, loop } =
+    props
   const spatializedStatic3DElement =
     spatializedElement as SpatializedStatic3DElement
 
@@ -73,16 +95,27 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   )!
 
   const currentSrc: string = useMemo(() => getAbsoluteURL(src), [src])
+  const childSources = useMemo(() => collectSources(children), [children])
+
+  const sources: ModelSource[] = useMemo(() => {
+    const result: ModelSource[] = []
+    if (currentSrc) {
+      result.push({ src: currentSrc })
+    }
+    result.push(...childSources)
+    return result
+  }, [currentSrc, childSources])
 
   useEffect(() => {
-    if (src) {
+    if (sources.length > 0) {
       spatializedStatic3DElement.updateProperties({
-        modelURL: currentSrc,
+        modelURL: sources[0].src,
+        sources,
         autoplay,
         loop,
       })
     }
-  }, [currentSrc, autoplay, loop])
+  }, [JSON.stringify(sources), autoplay, loop])
 
   useEffect(() => {
     if (onLoad) {

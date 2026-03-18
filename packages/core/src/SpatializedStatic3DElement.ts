@@ -1,6 +1,9 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { SpatializedElement } from './SpatializedElement'
-import { SpatializedStatic3DElementProperties } from './types/types'
+import {
+  ModelSource,
+  SpatializedStatic3DElementProperties,
+} from './types/types'
 import { SpatialWebMsgType } from './WebMsgCommand'
 
 /**
@@ -33,6 +36,11 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   private modelURL: string
 
   /**
+   * Caches the last sources array to detect changes.
+   */
+  private sources?: ModelSource[]
+
+  /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
@@ -59,11 +67,23 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   async updateProperties(
     properties: Partial<SpatializedStatic3DElementProperties>,
   ) {
+    let needsReadyReset = false
     if (properties.modelURL !== undefined) {
       if (this.modelURL !== properties.modelURL) {
         this.modelURL = properties.modelURL
-        this.ready = this.createReadyPromise()
+        needsReadyReset = true
       }
+    }
+    if (properties.sources !== undefined) {
+      const prevJson = JSON.stringify(this.sources)
+      const nextJson = JSON.stringify(properties.sources)
+      if (prevJson !== nextJson) {
+        this.sources = properties.sources
+        needsReadyReset = true
+      }
+    }
+    if (needsReadyReset) {
+      this.ready = this.createReadyPromise()
     }
     if (properties.autoplay !== undefined) {
       this._autoplay = properties.autoplay
