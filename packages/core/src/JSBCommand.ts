@@ -2,6 +2,7 @@ import { createPlatform } from './platform-adapter'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialComponent } from './reality/component/SpatialComponent'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
+import { SpatialMaterial } from './reality/material/SpatialMaterial'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
@@ -384,6 +385,38 @@ export class AddComponentToEntityCommand extends JSBCommand {
     }
   }
   commandType = 'AddComponentToEntity'
+}
+
+export class RemoveComponentFromEntityCommand extends JSBCommand {
+  constructor(
+    public entity: SpatialEntity,
+    public comp: SpatialComponent,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entity.id,
+      componentId: this.comp.id,
+    }
+  }
+  commandType = 'RemoveComponentFromEntity'
+}
+
+export class SetMaterialsOnEntityCommand extends JSBCommand {
+  constructor(
+    public entityId: string,
+    public materials: SpatialMaterial[],
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      entityId: this.entityId,
+      materialIds: this.materials.map(m => m.id),
+    }
+  }
+  commandType = 'SetMaterialsOnEntity'
 }
 
 export class AddEntityToDynamic3DCommand extends JSBCommand {

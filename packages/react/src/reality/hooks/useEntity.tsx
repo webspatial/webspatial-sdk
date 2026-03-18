@@ -14,6 +14,7 @@ import {
 
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
+  recreateKey?: string
 } & EntityProps &
   EntityEventHandler & { ref: ForwardedRef<EntityRefShape> }
 
@@ -35,6 +36,7 @@ export const useEntity = ({
   onSpatialMagnifyEnd,
   // TODO: add other event handlers
   createEntity,
+  recreateKey,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
@@ -50,6 +52,12 @@ export const useEntity = ({
       try {
         const ent = await createEntity(controller.signal)
         if (!ent) return
+        if (controller.signal.aborted) {
+          ent.destroy()
+          return
+        }
+        // Apply transform before adding to scene so it never flashes at default scale
+        await ent.updateTransform({ position, rotation, scale })
         if (controller.signal.aborted) {
           ent.destroy()
           return
@@ -75,7 +83,7 @@ export const useEntity = ({
       controller.abort()
       instanceRef.current?.destroy()
     }
-  }, [ctx, parent])
+  }, [ctx, parent, recreateKey])
 
   useEntityId({ id, entity: instanceRef.current.entity })
   useEntityTransform(instanceRef.current.entity, { position, rotation, scale })

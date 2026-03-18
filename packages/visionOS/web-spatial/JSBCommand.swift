@@ -138,6 +138,26 @@ protocol SpatialObjectCommand: CommandDataProtocol {
     var id: String { get }
 }
 
+struct UpdateUnlitMaterialProperties: CommandDataProtocol {
+    static let commandType: String = "UpdateUnlitMaterialProperties"
+    let id: String
+    let color: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct RemoveComponentFromEntity: CommandDataProtocol {
+    static let commandType: String = "RemoveComponentFromEntity"
+    let entityId: String
+    let componentId: String
+}
+
+struct SetMaterialsOnEntity: CommandDataProtocol {
+    static let commandType: String = "SetMaterialsOnEntity"
+    let entityId: String
+    let materialIds: [String]
+}
+
 struct DestroyCommand: CommandDataProtocol {
     static let commandType: String = "Destroy"
     var id: String
