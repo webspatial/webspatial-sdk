@@ -26,6 +26,7 @@ function App() {
         // src="/modelasset/cone.usdz"
         enable-xr
         autoPlay
+        loop
         style={{
           height: '200px',
           '--xr-depth': '100px',
