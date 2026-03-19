@@ -391,6 +391,7 @@ export interface AttachmentEntityOptions {
   parentEntityId: string
   position?: [number, number, number]
   size: { width: number; height: number }
+  ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {

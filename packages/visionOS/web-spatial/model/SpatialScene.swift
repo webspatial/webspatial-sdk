@@ -425,6 +425,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             height: command.size?.height ?? 100
         )
 
+        let ownerId = command.ownerViewId
+        if spatialObjects[ownerId] == nil {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ownerViewId must belong to the current scene for attachment \(command.id)")))
+            return
+        }
         attachmentManager.create(
             id: command.id,
             parentEntityId: command.parentEntityId,
@@ -442,7 +447,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        // destroy all attachments
         attachmentManager.destroyAll()
         backgroundMaterial = .None
     }
@@ -1073,17 +1077,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
             return
         }
-
         var newPosition: SIMD3<Float>? = nil
         if let posArray = command.position, posArray.count >= 3 {
             newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
-
         var newSize: CGSize? = nil
         if let sizeObj = command.size {
             newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
         }
-
         attachmentManager.update(id: command.id, position: newPosition, size: newSize)
         resolve(.success(baseReplyData))
     }

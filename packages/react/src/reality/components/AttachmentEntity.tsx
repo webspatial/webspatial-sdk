@@ -43,6 +43,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           parentEntityId: parentId,
           position: position ?? [0, 0, 0],
           size,
+          ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
           att.destroy()
