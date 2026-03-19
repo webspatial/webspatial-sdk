@@ -186,6 +186,24 @@ function SpatializedStatic3DElementContainerBase(
             | undefined
           spatializedElement?.updateModelTransform(modelTransform)
         },
+        async play(): Promise<void> {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          await spatializedElement?.play()
+        },
+        async pause(): Promise<void> {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          await spatializedElement?.pause()
+        },
+        get paused(): boolean {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.paused ?? true
+        },
       }
     },
     [],

@@ -1743,6 +1743,9 @@ describe('SpatializedStatic3DElementContainer', () => {
 
     expect(updateProperties).toHaveBeenCalledWith({
       modelURL: window.location.origin + '/m.glb',
+      sources: [{ src: window.location.origin + '/m.glb' }],
+      autoplay: undefined,
+      loop: undefined,
     })
 
     spatializedStatic3DElement.onLoadCallback?.()

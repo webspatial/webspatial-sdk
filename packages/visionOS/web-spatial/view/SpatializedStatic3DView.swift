@@ -92,6 +92,28 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
+            .onChange(of: spatializedStatic3DElement.animationPaused) { _, paused in
+                guard let asset,
+                      let controller = asset.animationPlaybackController else { return }
+                // Ensure an animation is selected before resuming
+                if !paused, asset.selectedAnimation == nil,
+                   let firstAnimation = asset.availableAnimations.first
+                {
+                    asset.selectedAnimation = firstAnimation
+                }
+                if paused {
+                    controller.pause()
+                } else {
+                    controller.resume()
+                }
+                let duration = asset.availableAnimations.first?.definition.duration ?? 0
+                spatialScene.sendWebMsg(
+                    spatializedElement.id,
+                    AnimationStateChangeEvent(
+                        detail: AnimationStateChangeDetail(paused: paused, duration: duration)
+                    )
+                )
+            }
             .task(id: spatializedStatic3DElement.allSources) {
                 // Sequential fallback through sources
                 if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
@@ -99,6 +121,7 @@ struct SpatializedStatic3DView: View {
                        let firstAnimation = loaded.availableAnimations.first
                     {
                         loaded.selectedAnimation = firstAnimation
+                        spatializedStatic3DElement.animationPaused = false
                     }
                     self.asset = loaded
                     self.loadFailed = false
