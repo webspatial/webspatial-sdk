@@ -77,7 +77,7 @@ export default function CoordConvertTest() {
   }, [rotOn])
 
   async function handleConvertAtoB() {
-    const pos = { x: 0.1, y: 0.2, z: 0.3 }
+    const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
     const ret = await convertCoordinate(pos, {
       from: fromEntityRef.current as any,
       to: toEntityRef.current as any,
@@ -85,20 +85,43 @@ export default function CoordConvertTest() {
     log('A->B result:', ret)
   }
   async function handleConvertBtoA() {
-    const pos = { x: 0.4, y: 0.5, z: 0.6 }
+    const pos = toPosition
     const ret = await convertCoordinate(pos, {
       from: toEntityRef.current as any,
       to: fromEntityRef.current as any,
     })
     log('B->A result:', ret)
   }
+  // convert A position to B, then convert back to A
+  async function handleConvertAtoBThenA() {
+    const original = fromPosition
+    const toPos = await convertCoordinate(original, {
+      from: fromEntityRef.current as any,
+      to: toEntityRef.current as any,
+    })
+    const backPos = await convertCoordinate(toPos, {
+      from: toEntityRef.current as any,
+      to: fromEntityRef.current as any,
+    })
+    // log round-trip difference
+    const diff = {
+      x: (backPos.x ?? 0) - (original.x ?? 0),
+      y: (backPos.y ?? 0) - (original.y ?? 0),
+      z: (backPos.z ?? 0) - (original.z ?? 0),
+    }
+    log('A->B:', toPos)
+    log('A->B->A:', backPos, 'diff:', diff)
+  }
   async function handleConvertAtoWindow() {
-    const pos = { x: 0.1, y: 0.1, z: 0.1 }
+    const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
     const ret = await convertCoordinate(pos, {
       from: fromEntityRef.current as any,
       to: window as any,
     })
     log('A->window result:', ret)
+  }
+  function handleClearLogs() {
+    setLogs('')
   }
 
   return (
@@ -106,6 +129,9 @@ export default function CoordConvertTest() {
       <h1 className="text-2xl mb-4">Coord Convert Test</h1>
 
       <div className="flex gap-2 mb-4 flex-wrap">
+        <button className={btnCls} onClick={handleClearLogs}>
+          Clear Logs
+        </button>
         <button
           className={btnCls}
           onClick={() =>
@@ -219,6 +245,9 @@ export default function CoordConvertTest() {
         </button>
         <button className={btnCls} onClick={handleConvertBtoA}>
           convertCoordinate B→A
+        </button>
+        <button className={btnCls} onClick={handleConvertAtoBThenA}>
+          convertCoordinate A→B→A
         </button>
         <button className={btnCls} onClick={handleConvertAtoWindow}>
           convertCoordinate A→window
