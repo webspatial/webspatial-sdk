@@ -1,7 +1,23 @@
 # Model
 
 ## Overview
+
 The `<Model>`component handles loading 3D assets, managing playback of embedded animations, and responding to spatial user interactions.
+
+## Try it
+
+```jsx
+function Example() {
+  const style = { height: '200px', '--xr-depth': '100px' };
+  return (
+    <Model enable-xr autoplay loop style={style}>
+      <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
+      <source src="/modelasset/vehicle.glb" type="model/gltf-binary" />
+      <img src="/modelasset/vehicle.png" />
+    </Model>
+  )
+}
+```
 
 ## Attributes
 
@@ -90,7 +106,7 @@ read-only string returning the URL to the loaded resource.
 
 `ready`
 
-Resolved when the model's source file has been loaded and processed. The Promise is rejected if the source file is unable to be fetched, or if the file cannot be interpreted as a valid `<model>` asset.
+Resolved when the model's source file has been loaded and processed. The Promise is rejected if the source file is unable to be fetched, or if the file cannot be interpreted as a valid 3D model asset.
 
 `entityTransform`
 
@@ -128,8 +144,19 @@ A method that attempts to play a model's animation, if present. It returns a `Pr
 
 A method that attempts to pause the playback of a model's animation. If the model is already paused this method will have no effect.
 
+## `<source>` Model source element
+
+The <source> HTML element specifies one or more media resources for the <Model> element. It is a void element, which means that it has no content and does not require a closing tag. Browsers don't all support the same 3D model formats; you can provide multiple sources and the browser will then use the first one it understands. The browser attempts to load each source sequentially, if a source fails the next source is attempted. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
+
+`src`
+
+The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
+
+`type`
+
+Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
+
 ## Usage Notes
-- **Multiple source elements:** Browsers don't all support the same 3D model formats; you can provide multiple sources inside nested <source> elements, and the browser will then use the first one it understands. When using <source> elements, the browser attempts to load each source sequentially. If a source fails (e.g., due to an invalid URL or unsupported format), the next source is attempted, and so on. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
 
 - **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an ***orbit*** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Native gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
 
@@ -138,10 +165,10 @@ A method that attempts to pause the playback of a model's animation. If the mode
 
 A basic model embed using the `src` attribute.
 
-```javascript
+```jsx
 import { Model } from '@webspatial/react-sdk';
 
-function MyScene() { return (<Model src="/modelasset/Duck.glb" />); }
+function MyScene() { return (<Model src="/modelasset/Duck.glb" enable-xr/>); }
 ```
 
 ### Multiple `<source>` elements
@@ -152,7 +179,7 @@ import { Model } from '@webspatial/react-sdk';
 
 function MyScene() {
   return (
-    <Model>
+    <Model enable-xr>
       <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
       <source src="/modelasset/vehicle.glb" type="model/gltf-binary" />
     </Model>
@@ -164,11 +191,11 @@ function MyScene() {
 
 Display a poster while the model is loading.
 
-```javascript
+```jsx
 import { Model } from '@webspatial/react-sdk';
 
 function MyScene() {
-  return <Model src="/MaterialsVariantsShoe.glb" poster="/shoe-poster.png" />;
+  return <Model src="/MaterialsVariantsShoe.glb" poster="/shoe-poster.png"  enable-xr/>;
 }
 ```
 
@@ -180,7 +207,7 @@ Automatically play a model's animation in a loop.
 import { Model } from '@webspatial/react-sdk';
 
 function AnimatedModel() {
-  return <Model src="/animated-robot.glb" autoplay loop />;
+  return <Model src="/animated-robot.glb" autoplay loop enable-xr/>;
 }
 ```
 
@@ -192,7 +219,7 @@ Enable built-in drag-to-rotate functionality.
 import { Model } from '@webspatial/react-sdk';
 
 function OrbitingDuck() {
-  return <Model src="/modelasset/Duck.glb" stagemode="orbit" />;
+  return <Model src="/modelasset/Duck.glb" stagemode="orbit" enable-xr/>;
 }
 ```
 
@@ -207,7 +234,7 @@ function LongScrollPage() {
   return (
     <div>
       {/* ... a lot of content ... */}
-      <Model loading="lazy" src="/modelasset/cone.glb" />
+      <Model loading="lazy" src="/modelasset/cone.glb" enable-xr />
     </div>
   );
 }

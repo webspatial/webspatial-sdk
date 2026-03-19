@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
+
 import { useRealityContext, useParentContext } from '../context'
-import {
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../../utils/windowStyleSync'
+import { setOpenWindowStyle } from '../../utils/windowStyleSync'
+import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
@@ -21,7 +20,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
-  // React 18 types require `| null` for mutable refs; useRef<T>(null) without it returns readonly RefObject.
   const attachmentRef = useRef<Attachment | null>(null)
   const parentIdRef = useRef<string | null>(null)
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
@@ -31,6 +29,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   // Create the attachment when the parent entity is ready
   useEffect(() => {
     if (!ctx || !parent) return
+
+    if (attachmentRef.current) return
 
     const parentId = parent.id
     parentIdRef.current = parentId
@@ -58,7 +58,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         windowProxy.document.body.style.minWidth = '100%'
         windowProxy.document.body.style.maxWidth = '100%'
         windowProxy.document.body.style.minHeight = '100%'
-        await syncParentHeadToChild(windowProxy)
 
         // Ensure viewport meta
         const viewport = windowProxy.document.querySelector(
@@ -124,28 +123,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     }
   }, [ctx, attachmentName])
 
-  // Ongoing style sync when parent document head changes
-  useEffect(() => {
-    if (!childWindow) return
-    let timer: number | undefined
-    // Debounce rapid successive head mutations to avoid redundant style syncs
-    const scheduleSync = () => {
-      if (timer) window.clearTimeout(timer)
-      timer = window.setTimeout(() => {
-        syncParentHeadToChild(childWindow)
-      }, 100)
-    }
-
-    // initial sync (in case head changes happened between create and observer attach)
-    scheduleSync()
-
-    const observer = new MutationObserver(scheduleSync)
-    observer.observe(document.head, { childList: true, subtree: true })
-    return () => {
-      if (timer) window.clearTimeout(timer)
-      observer.disconnect()
-    }
-  }, [childWindow])
+  useSyncHeadStyles(childWindow, { subtree: false })
 
   // Update position/size when they change
   useEffect(() => {

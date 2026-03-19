@@ -13,6 +13,7 @@
 		2B06AEE42E4C1AE8000327E9 /* manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC12E4C1AE8000327E9 /* manifest.swift */; };
 		2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */; };
 		2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */; };
+		2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */; };
 		2B2F1D692BEBFAAA006897EE /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 2B2F1D682BEBFAAA006897EE /* RealityKitContent */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
@@ -37,6 +38,7 @@
 		2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialObject.swift; sourceTree = "<group>"; };
 		2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSpatialApp.swift; sourceTree = "<group>"; };
 		2B06AEC42E4C1AE8000327E9 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCleanupTests.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -157,9 +159,18 @@
 			isa = PBXGroup;
 			children = (
 				2B2F1D652BEBFAAA006897EE /* web-spatial */,
+				2B1008A32F0B000800000003 /* web-spatialTests */,
 				2B2F1D662BEBFAAA006897EE /* Packages */,
 				2B2F1D642BEBFAAA006897EE /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		2B1008A32F0B000800000003 /* web-spatialTests */ = {
+			isa = PBXGroup;
+			children = (
+				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+			);
+			path = "web-spatialTests";
 			sourceTree = "<group>";
 		};
 		2B2F1D642BEBFAAA006897EE /* Products */ = {
@@ -335,6 +346,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

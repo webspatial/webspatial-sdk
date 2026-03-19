@@ -40,7 +40,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var attachmentManager = AttachmentManager()
 
-    // Enum
+    /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
         case volume
@@ -68,15 +68,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum SceneStateKind: String {
-        // default value
+        /// default value
         case idle
-        // when SpatialScene is loading
+        /// when SpatialScene is loading
         case pending
-        // when SpatialScen will visible after some time
+        /// when SpatialScen will visible after some time
         case willVisible
-        // when SpatialScen load Succesfully
+        /// when SpatialScen load Succesfully
         case visible
-        // when SpatialScen Failed to load
+        /// when SpatialScen Failed to load
         case fail
     }
 
@@ -103,7 +103,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         moveToState(state, sceneOptions)
     }
 
-    // used to send message to spatial root webview
+    /// used to send message to spatial root webview
     func sendWebMsg(_ id: String, _ msg: Encodable) {
         spatialWebViewModel.sendWebEvent(id, msg)
     }
@@ -300,7 +300,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertFromEntityToEntity.self, onConvertFromEntityToEntity)
         spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
         spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
-
+        spatialWebViewModel.addJSBListener(InitializeAttachmentCommand.self, onInitializeAttachment)
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -394,46 +394,46 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // Temporary storage for webview models awaiting JSB initialization
+    private var pendingAttachmentWebViewModels = [String: SpatialWebViewModel]()
+
     private func handleCreateAttachment(_ url: URL) -> WebViewElementInfo? {
-        guard let components = URLComponents(string: url.absoluteString),
-              let queryItems = components.queryItems
-        else {
-            print("❌ fail to parse attachment URL")
-            return nil
+        // Just create a bare webview — metadata arrives via InitializeAttachment JSB
+        let id = UUID().uuidString
+        let webViewModel = SpatialWebViewModel(url: nil)
+        webViewModel.setBackgroundTransparent(true)
+        pendingAttachmentWebViewModels[id] = webViewModel
+        return WebViewElementInfo(id: id, element: webViewModel)
+    }
+
+    private func onInitializeAttachment(
+        command: InitializeAttachmentCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let webViewModel = pendingAttachmentWebViewModels.removeValue(forKey: command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "No pending attachment for \(command.id)")))
+            return
         }
 
-        guard let parentEntityId = queryItems.first(where: { $0.name == "parentEntityId" })?.value else {
-            print("❌ missing parentEntityId for attachment")
-            return nil
-        }
-
-        // Parse position (JSON array like [0,0.1,0])
         var position = SIMD3<Float>(0, 0, 0)
-        if let positionStr = queryItems.first(where: { $0.name == "position" })?.value?.removingPercentEncoding,
-           let positionData = positionStr.data(using: .utf8),
-           let positionArray = try? JSONDecoder().decode([Float].self, from: positionData),
-           positionArray.count >= 3
-        {
-            position = SIMD3<Float>(positionArray[0], positionArray[1], positionArray[2])
+        if let posArray = command.position, posArray.count >= 3 {
+            position = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
 
-        // Parse size (JSON object like {"width":100,"height":100})
-        var size = CGSize(width: 100, height: 100)
-        if let sizeStr = queryItems.first(where: { $0.name == "size" })?.value?.removingPercentEncoding,
-           let sizeData = sizeStr.data(using: .utf8),
-           let sizeObj = try? JSONDecoder().decode(AttachmentSize.self, from: sizeData)
-        {
-            size = CGSize(width: sizeObj.width, height: sizeObj.height)
-        }
-
-        let info = attachmentManager.create(
-            id: UUID().uuidString,
-            parentEntityId: parentEntityId,
-            position: position,
-            size: size
+        let size = CGSize(
+            width: command.size?.width ?? 100,
+            height: command.size?.height ?? 100
         )
 
-        return WebViewElementInfo(id: info.id, element: info.webViewModel)
+        attachmentManager.create(
+            id: command.id,
+            parentEntityId: command.parentEntityId,
+            position: position,
+            size: size,
+            webViewModel: webViewModel
+        )
+
+        resolve(.success(baseReplyData))
     }
 
     private func onPageStartLoad() {
@@ -445,6 +445,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // destroy all attachments
         attachmentManager.destroyAll()
         backgroundMaterial = .None
+    }
+
+    /// Some SPA navigations (history back/forward) do not trigger a full WKNavigation
+    /// lifecycle. SpatialNavView calls this before navigation actions to ensure
+    /// previously-created spatial objects are cleaned up.
+    func resetForNavigation() {
+        onPageStartLoad()
     }
 
     private func onGetSpatialSceneState(
@@ -754,21 +761,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * Begin Implement SpatializedElementContainer Protocol
      */
 
-    // SpatialScene can hold a collection of SpatializedElement children
+    /// SpatialScene can hold a collection of SpatializedElement children
     private var children = [String: SpatializedElement]()
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func addChild(_ spatializedElement: SpatializedElement) {
         children[spatializedElement.id] = spatializedElement
     }
 
-    // Called by SpatializedElement.setParent
+    /// Called by SpatializedElement.setParent
     func removeChild(_ spatializedElement: SpatializedElement) {
         children.removeValue(forKey: spatializedElement.id)
     }
 
     func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        let typedChildren = children.filter {
+        return children.filter {
             switch type {
             case .Spatialized2DElement:
                 return $0.value is Spatialized2DElement
@@ -778,7 +785,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 return $0.value is SpatializedDynamic3DElement
             }
         }
-        return typedChildren
     }
 
     func getChildren() -> [String: SpatializedElement] {
@@ -789,7 +795,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * End Implement SpatializedElementContainer Protocol
      */
 
-    /*
+    /**
      * Begin Implement SpatialScrollAble Protocol
      */
     let scrollPageEnabled: Bool = true
@@ -845,7 +851,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      * Begin SpatialObjects management
      */
 
-    // Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
+    /// Resources that will be destroyed when this webpage is destoryed or if it is navigated away from
     private var spatialObjects = [String: any SpatialObjectProtocol]()
 
     func createSpatializedElement<T: SpatializedElement>(_ type: SpatializedElementType) -> T {

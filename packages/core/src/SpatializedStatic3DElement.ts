@@ -10,6 +10,17 @@ import { SpatialWebMsgType } from './WebMsgCommand'
  */
 export class SpatializedStatic3DElement extends SpatializedElement {
   /**
+   * Creates a new spatialized static 3D element with the specified ID and URL.
+   * Registers the element to receive spatial events.
+   * @param id Unique identifier for this element
+   * @param modelURL URL of the 3D model
+   */
+  constructor(id: string, modelURL: string) {
+    super(id)
+    this.modelURL = modelURL
+  }
+
+  /**
    * Promise resolver for the ready state.
    * Used to resolve the ready promise when the model is loaded.
    */
@@ -19,13 +30,15 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Caches the last model URL to detect changes.
    * Used to reset the ready promise when the model URL changes.
    */
-  private modelURL: string = ''
+  private modelURL: string
 
   /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
   private createReadyPromise() {
+    // If there's an existing promise reject it before it's replaced
+    this._readyResolve?.(false)
     return new Promise<boolean>(resolve => {
       this._readyResolve = resolve
     })
