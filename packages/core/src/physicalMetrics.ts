@@ -1,3 +1,4 @@
+import { SpatialWebEvent } from './SpatialWebEvent'
 export type PhysicalMetricsValueShape = {
   meterToPtUnscaled: number
   meterToPtScaled: number
@@ -92,8 +93,9 @@ export function subscribe(cb: () => void) {
   const handler = () => {
     cb()
   }
-  window.addEventListener('WebSpatialPhysicalMetricsUpdate', handler)
+  // receive metrics update from native via SpatialWebEvent, id: "window"
+  SpatialWebEvent.addEventReceiver('window', handler)
   return () => {
-    window.removeEventListener('WebSpatialPhysicalMetricsUpdate', handler)
+    SpatialWebEvent.removeEventReceiver('window')
   }
 }

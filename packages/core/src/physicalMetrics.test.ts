@@ -27,6 +27,8 @@ describe('physicalMetrics', () => {
 
   test('updateValue applies window metrics', async () => {
     const m = await loadModule()
+    const { SpatialWebEvent } = await import('./SpatialWebEvent')
+    SpatialWebEvent.init()
     ;(window as any).__webspatialsdk__ = {
       physicalMetrics: {
         meterToPtScaled: 2000,
@@ -34,7 +36,7 @@ describe('physicalMetrics', () => {
       },
     }
     const unsubscribe = m.subscribe(() => {})
-    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
+    window.__SpatialWebEvent({ id: 'window', data: {} })
     const v = m.getValue()
     expect(v.meterToPtScaled).toBe(2000)
     expect(v.meterToPtUnscaled).toBe(1500)
@@ -48,11 +50,13 @@ describe('physicalMetrics', () => {
 
   test('updateValue applies partial metrics', async () => {
     const m = await loadModule()
+    const { SpatialWebEvent } = await import('./SpatialWebEvent')
+    SpatialWebEvent.init()
     ;(window as any).__webspatialsdk__ = {
       physicalMetrics: { meterToPtScaled: 1000 },
     }
     const unsubscribe = m.subscribe(() => {})
-    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
+    window.__SpatialWebEvent({ id: 'window', data: {} })
     expect(m.getValue().meterToPtScaled).toBe(1000)
     expect(m.getValue().meterToPtUnscaled).toBe(1360)
     expect(m.pointToPhysical(1000)).toBe(1)
@@ -65,6 +69,8 @@ describe('physicalMetrics', () => {
 
   test('subscribe listens to event and supports unsubscribe', async () => {
     const m = await loadModule()
+    const { SpatialWebEvent } = await import('./SpatialWebEvent')
+    SpatialWebEvent.init()
     const cb = vi.fn()
     const unsubscribe = m.subscribe(cb)
     ;(window as any).__webspatialsdk__ = {
@@ -73,7 +79,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 800,
       },
     }
-    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
+    window.__SpatialWebEvent({ id: 'window', data: {} })
     expect(cb).toHaveBeenCalledTimes(1)
     expect(m.getValue().meterToPtScaled).toBe(900)
     expect(m.getValue().meterToPtUnscaled).toBe(800)
@@ -83,7 +89,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 600,
       },
     }
-    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
+    window.__SpatialWebEvent({ id: 'window', data: {} })
     expect(cb).toHaveBeenCalledTimes(2)
     expect(m.getValue().meterToPtScaled).toBe(700)
     expect(m.getValue().meterToPtUnscaled).toBe(600)
@@ -95,7 +101,7 @@ describe('physicalMetrics', () => {
         meterToPtUnscaled: 400,
       },
     }
-    window.dispatchEvent(new Event('WebSpatialPhysicalMetricsUpdate'))
+    window.__SpatialWebEvent({ id: 'window', data: {} })
     expect(cb).toHaveBeenCalledTimes(2)
     expect(m.getValue().meterToPtScaled).toBe(500)
     expect(m.getValue().meterToPtUnscaled).toBe(400)
