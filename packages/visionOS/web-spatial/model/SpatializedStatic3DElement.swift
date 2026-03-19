@@ -13,6 +13,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
+    var animationPaused: Bool = true
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type
