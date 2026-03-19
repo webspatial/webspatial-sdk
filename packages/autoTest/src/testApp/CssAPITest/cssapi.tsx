@@ -1,7 +1,19 @@
-// @ts-nocheck
 import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import styled from 'styled-components'
 import './CssApi.css'
+
+type CSSVarStyle = Record<`--${string}`, string | number>
+type InlineStyle = Pick<
+  CSSProperties,
+  | 'borderRadius'
+  | 'opacity'
+  | 'transform'
+  | 'transformOrigin'
+  | 'display'
+  | 'visibility'
+  | 'contentVisibility'
+> &
+  CSSVarStyle
 
 const StyledElement = styled.div<{
   opacity: number
@@ -41,22 +53,24 @@ function CSSApiTest() {
   const [xrBack, setXrBack] = useState(200)
   const [backgroundMaterial, setBackgroundMaterial] = useState(' ')
   const [transformOrigin, setTransformOrigin] = useState('left top')
-  const [display, setDisplay] = useState('')
-  const [visibility, setVisibility] = useState('')
-  const [contentVisibility, setContentVisibility] = useState('visible')
-  const [style, setStyle] = useState<CSSProperties>({
+  const [display, setDisplay] = useState<'' | 'none' | 'block'>('')
+  const [visibility, setVisibility] = useState<'' | 'visible' | 'hidden'>('')
+  const [contentVisibility, setContentVisibility] = useState<
+    '' | 'visible' | 'hidden' | 'auto'
+  >('visible')
+  const [style, setStyle] = useState<InlineStyle>({
     borderRadius: 40,
     opacity: opacity,
     '--xr-back': xrBack,
     transform: `translateX(${translateX}px) rotateZ(${rotateZ}deg)`,
     transformOrigin: transformOrigin,
-    display: display,
-    visibility: visibility,
-    contentVisibility: contentVisibility,
+    display: display || undefined,
+    visibility: visibility || undefined,
+    contentVisibility: contentVisibility || undefined,
     '--xr-depth': 100,
-  } as CSSProperties)
+  })
 
-  const boxStyles = {
+  const boxStyles: CSSVarStyle = {
     '--box-opacity': opacity,
     '--box-translate-x': `${translateX}px`,
     '--box-rotate-z': `${rotateZ}deg`,
@@ -89,14 +103,14 @@ function CSSApiTest() {
   const applyInlineStyleXrBack = () => {
     setStyle({
       ...style,
-      '--xr-back': `${xrBack}`,
+      '--xr-back': xrBack,
     })
   }
 
   const applyInlineStyleBackground = () => {
     setStyle({
       ...style,
-      '--xr-background-material': `${backgroundMaterial}`,
+      '--xr-background-material': backgroundMaterial,
     })
   }
 
@@ -111,41 +125,59 @@ function CSSApiTest() {
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const selectedDisplay = event.target.value
-    setDisplay(selectedDisplay)
-    setStyle({
-      ...style,
-      display: selectedDisplay,
-    })
+    const nextDisplay =
+      selectedDisplay === 'none' || selectedDisplay === 'block'
+        ? selectedDisplay
+        : ''
+    setDisplay(nextDisplay)
+    setStyle(prev => ({
+      ...prev,
+      display: nextDisplay || undefined,
+    }))
   }
 
   const applyInlineStyleVisibility = (
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const selectedVisibility = event.target.value
-    setVisibility(selectedVisibility)
-    setStyle({
-      ...style,
-      visibility: selectedVisibility,
-    })
+    const nextVisibility =
+      selectedVisibility === 'visible' || selectedVisibility === 'hidden'
+        ? selectedVisibility
+        : ''
+    setVisibility(nextVisibility)
+    setStyle(prev => ({
+      ...prev,
+      visibility: nextVisibility || undefined,
+    }))
   }
 
   const applyInlineStyleContentVisibility = (
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const selectedContentVisibility = event.target.value
-    setContentVisibility(selectedContentVisibility)
-    console.log('ref.current.checkVisibility()' + ref.current.checkVisibility())
-    setStyle({
-      ...style,
-      contentVisibility: selectedContentVisibility,
-    })
+    const nextContentVisibility =
+      selectedContentVisibility === 'visible' ||
+      selectedContentVisibility === 'hidden' ||
+      selectedContentVisibility === 'auto'
+        ? selectedContentVisibility
+        : ''
+    setContentVisibility(nextContentVisibility)
+    if (ref.current?.checkVisibility) {
+      console.log(
+        'ref.current.checkVisibility()' + ref.current.checkVisibility(),
+      )
+    }
+    setStyle(prev => ({
+      ...prev,
+      contentVisibility: nextContentVisibility || undefined,
+    }))
   }
 
   const removeInlineStyleContentVisibility = () => {
-    setVisibility('')
+    setContentVisibility('')
     setStyle({
       ...style,
-      contentVisibility: '',
+      contentVisibility: undefined,
     })
   }
 
@@ -153,7 +185,7 @@ function CSSApiTest() {
     setDisplay('')
     setStyle({
       ...style,
-      display: '',
+      display: undefined,
     })
   }
 
@@ -161,7 +193,7 @@ function CSSApiTest() {
     setVisibility('')
     setStyle({
       ...style,
-      visibility: '',
+      visibility: undefined,
     })
   }
 
@@ -835,7 +867,7 @@ function CSSApiTest() {
           {styleMode == 'In-line style' ? (
             <div className="w-64 h-32 rounded-lg flex items-center justify-center text-white">
               In-line style state ref.checkVisibility:{' '}
-              {ref.current?.checkVisibility()}
+              {ref.current?.checkVisibility?.() ?? ''}
               ref.getAttribute: {ref.current?.getAttribute('class')}
             </div>
           ) : styleMode == 'Css module' ? (
@@ -854,6 +886,7 @@ function CSSApiTest() {
               xrBack={xrBack}
               backgroundMaterial={backgroundMaterial}
               transformOrigin={transformOrigin}
+              contentVisibility={contentVisibility}
             >
               styled Component
             </StyledElement>

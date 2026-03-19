@@ -770,7 +770,7 @@ export class PuppeteerRunner {
           callback({
             success: false,
             error:
-              'invalid AddSpatializedElementToSpatialized2DElement spatial object id not exsit!',
+              'invalid AddSpatializedElementToSpatialized2DElement spatial object id does not exsit!',
           })
           return
         }

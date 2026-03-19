@@ -96,9 +96,9 @@ export class PuppeteerPlatform implements PlatformAbility {
     )
     return new Promise(resolve => {
       try {
-        // 创建完整的webspatial URL
+        // create complete webspatial URL
         const webspatialUrl = `webspatial://${command}${query ? `?${query}` : ''}`
-        // 使用iframe创建新窗口
+        // use iframe to create new window
         const { spatialId, iframe, windowProxy } = this.createIframeWindow(
           webspatialUrl,
           target,
@@ -112,7 +112,7 @@ export class PuppeteerPlatform implements PlatformAbility {
         console.log(
           `[Puppeteer Platform] iframe created with spatialId: ${spatialId}`,
         )
-        // 注册iframe
+        // store iframe instance
         this.iframeRegistry.set(spatialId, iframe)
         resolve(CommandResultSuccess({ windowProxy, id: spatialId }))
       } catch (error) {
@@ -147,7 +147,7 @@ export class PuppeteerPlatform implements PlatformAbility {
         this.createSpatializedElementSync(spatialId, webspatialUrl)
       }
 
-      // 注册iframe
+      // store iframe instance
       this.iframeRegistry.set(spatialId, iframe)
 
       return CommandResultSuccess({ windowProxy, id: spatialId })
@@ -167,21 +167,21 @@ export class PuppeteerPlatform implements PlatformAbility {
     // create iframe element
     const iframe = document.createElement('iframe')
 
-    // 设置iframe属性
+    // set iframe attributes
     iframe.style.border = 'none'
-    iframe.style.display = 'none' // 初始隐藏
+    iframe.style.display = 'none'
     iframe.style.width = '100%'
     iframe.style.height = '100%'
 
-    // 生成唯一的spatialId
+    // set iframe id
     const spatialId = this.generateUUID()
     iframe.spatialId = spatialId
     iframe.id = `spatial-iframe-${spatialId}`
 
-    // 解析features参数
+    // parse features parameter
     const featuresObj = this.parseFeatures(features || '')
 
-    // 根据features设置iframe样式
+    // set iframe styles based on features
     if (featuresObj.width) {
       iframe.style.width = featuresObj.width
     }
@@ -197,36 +197,36 @@ export class PuppeteerPlatform implements PlatformAbility {
       iframe.style.position = 'absolute'
     }
 
-    // 添加iframe到DOM
+    // add iframe to DOM
     document.body.appendChild(iframe)
 
-    // 创建增强的windowProxy模拟对象
+    // create enhanced windowProxy object
     const windowProxy = this.createEnhancedWindowProxy(iframe, url, spatialId)
 
-    // 设置iframe的src
+    // set iframe src
     iframe.src = 'about:blank'
 
     console.log(
       `PuppeteerPlatform created iframe window with spatialId: ${spatialId}, URL: ${url}`,
     )
 
-    // 初始化iframe内容
+    // initialize iframe content
     this.initializeIframeContent(iframe, url, spatialId)
 
     return { spatialId, iframe, windowProxy }
   }
 
   /**
-   * 创建增强的windowProxy对象
+   * create enhanced windowProxy object
    */
   private createEnhancedWindowProxy(
     iframe: HTMLIFrameElement,
     url: string,
     spatialId: string,
   ) {
-    // 创建增强的windowProxy模拟对象
+    // create enhanced windowProxy object
     return {
-      // 基本属性
+      // basic properties
       location: {
         href: url,
         toString: () => url,
@@ -240,25 +240,25 @@ export class PuppeteerPlatform implements PlatformAbility {
         userAgent: `Mozilla/5.0 (WebKit) SpatialId/${spatialId}`,
       },
 
-      // 方法
+      // methods
       close: () => {
         console.log(`Closing iframe with spatialId: ${spatialId}`)
         iframe.remove()
         this.iframeRegistry.delete(spatialId)
       },
 
-      // 文档访问
+      // document access
       document: iframe.contentDocument || ({} as Document),
       contentWindow: iframe.contentWindow || ({} as Window),
 
-      // 添加消息通信方法
+      // add message communication method
       postMessage: (message: any, targetOrigin?: string) => {
         if (iframe.contentWindow) {
           iframe.contentWindow.postMessage(message, targetOrigin || '*')
         }
       },
 
-      // 添加事件监听方法
+      // add event listener method
       addEventListener: (
         type: string,
         listener: EventListenerOrEventListenerObject,
@@ -277,11 +277,11 @@ export class PuppeteerPlatform implements PlatformAbility {
         }
       },
 
-      // 执行JavaScript
+      // execute JavaScript
       executeScript: (code: string): any => {
         if (iframe.contentWindow) {
           try {
-            // 使用类型断言和更安全的方式执行脚本
+            // use type assertion and safer way to execute script
             const win = iframe.contentWindow as any
             return win.eval(code)
           } catch (error) {
@@ -295,16 +295,16 @@ export class PuppeteerPlatform implements PlatformAbility {
         return null
       },
 
-      // 获取iframe引用
+      // get iframe reference
       getIframe: () => iframe,
 
-      // 获取spatialId
+      // get spatialId
       getSpatialId: () => spatialId,
     }
   }
 
   /**
-   * 初始化iframe内容
+   * initialize iframe content
    */
   private initializeIframeContent(
     iframe: HTMLIFrameElement,
@@ -312,20 +312,20 @@ export class PuppeteerPlatform implements PlatformAbility {
     spatialId: string,
   ): void {
     try {
-      // 等待iframe加载完成
+      // wait for iframe to load
       iframe.onload = () => {
         try {
-          // 设置iframe内容
+          // set iframe content
           const iframeContent = `
-            // 注入通信脚本
+            // inject communication script
             window.webSpatialId = '${spatialId}';
             window.SpatialId = '${spatialId}';
             
-            // 重写window.open以支持webspatial协议
+            // override window.open to support webspatial protocol
             const originalOpen = window.open;
             window.open = function(url, target, features) {
               if (url && url.startsWith('webspatial://')) {
-                // 通过windowProxy处理webspatial协议
+                // handle webspatial protocol through windowProxy
                 const windowProxy = new Proxy({}, {
                   get: function(target, prop) {
                     if (prop === 'toString') {
@@ -339,33 +339,33 @@ export class PuppeteerPlatform implements PlatformAbility {
               return originalOpen.call(window, url, target, features);
             };
             
-            // 设置navigator.userAgent以识别webspatial环境
+            // set navigator.userAgent to identify webspatial environment
             Object.defineProperty(navigator, 'userAgent', {
               value: 'WebSpatial/1.0 ' + navigator.userAgent,
               configurable: true
             });
             
-            // 发送加载完成消息
+            // send loaded message
             window.parent.postMessage({
               type: 'iframe_loaded',
               spatialId: '${spatialId}',
               url: '${url}'
             }, '${window.location.origin}');
             
-            // 设置消息处理器
+            // set message handler
             window.addEventListener('message', (event) => {
               if (event.origin !== window.parent.location.origin) return;
               
               const data = event.data;
               if (data && data.type === 'webspatial_command') {
-                // 处理来自父窗口的命令
+                // handle command from parent window
                 console.log('Received command in iframe from parent:', data.command);
-                // 这里可以添加命令处理逻辑
+                // add command handling logic here
               }
             });
           `
 
-          // 使用document.write代替eval，更安全且符合类型定义
+          // use document.write instead of eval for security and type compliance
           const doc = iframe.contentDocument
           if (doc) {
             doc.open()
@@ -400,7 +400,7 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 解析features字符串为对象
+   * parse features string to object
    */
   private parseFeatures(features: string): Record<string, string> {
     const result: Record<string, string> = {}
@@ -417,7 +417,7 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 发送消息到指定spatialId的iframe
+   * send message to iframe with specified spatialId
    */
   public sendMessageToIframe(spatialId: string, message: any): boolean {
     const iframe = this.iframeRegistry.get(spatialId)
@@ -429,7 +429,7 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 获取所有活跃的iframe
+   * get all active iframes
    */
   public getAllActiveIframes(): Array<{
     spatialId: string
@@ -445,10 +445,10 @@ export class PuppeteerPlatform implements PlatformAbility {
   }
 
   /**
-   * 清理资源
+   * dispose all active iframes
    */
   public dispose(): void {
-    // 关闭所有iframe
+    // close all iframes
     this.iframeRegistry.forEach((iframe, spatialId) => {
       console.log(`Disposing iframe with spatialId: ${spatialId}`)
       iframe.remove()
@@ -456,7 +456,7 @@ export class PuppeteerPlatform implements PlatformAbility {
     this.iframeRegistry.clear()
   }
 
-  // 生成UUID函数
+  // generate UUID function
   private generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
       /[xy]/g,
