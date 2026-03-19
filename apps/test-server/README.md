@@ -8,6 +8,7 @@ This app hosts test pages under `apps/test-server/src`.
 2. **Register Route:** In `index.tsx`, import your component and add `<Route path="/<test-name>" element={<YourNewTest />} />`.
 3. **Add Sidebar Link:** In `src/components/Sidebar.tsx`, add `{ path: '/<test-name>', label: 'Your Test' }` to the `routes` array.
 
+
 ## Running
 
 - `npm run testServer` (root): Start dev server.
