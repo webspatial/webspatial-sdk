@@ -345,6 +345,7 @@ struct InitializeAttachmentCommand: CommandDataProtocol {
     let parentEntityId: String
     let position: [Float]?
     let size: AttachmentSize?
+    let ownerViewId: String
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {

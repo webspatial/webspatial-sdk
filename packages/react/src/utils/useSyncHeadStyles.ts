@@ -34,6 +34,7 @@ export function useSyncHeadStyles(
   const delayMs = 100
   const subtree = options?.subtree ?? false
   const immediate = options?.immediate ?? true
+  // always observe by default
 
   useEffect(() => {
     if (!childWindow) return

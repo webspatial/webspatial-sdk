@@ -646,6 +646,7 @@ export class InitializeAttachmentCommand extends JSBCommand {
       parentEntityId: this.options.parentEntityId,
       position: this.options.position ?? [0, 0, 0],
       size: this.options.size,
+      ownerViewId: this.options.ownerViewId,
     }
   }
 }

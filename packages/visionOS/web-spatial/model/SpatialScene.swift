@@ -406,6 +406,24 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         return WebViewElementInfo(id: id, element: webViewModel)
     }
 
+    private var forwardedAttachmentOwners = [String: String]()
+
+    fileprivate func registerAttachmentFromExternal(
+        id: String,
+        parentEntityId: String,
+        position: SIMD3<Float>,
+        size: CGSize,
+        webViewModel: SpatialWebViewModel
+    ) {
+        attachmentManager.create(
+            id: id,
+            parentEntityId: parentEntityId,
+            position: position,
+            size: size,
+            webViewModel: webViewModel
+        )
+    }
+
     private func onInitializeAttachment(
         command: InitializeAttachmentCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
@@ -425,13 +443,35 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             height: command.size?.height ?? 100
         )
 
-        attachmentManager.create(
-            id: command.id,
-            parentEntityId: command.parentEntityId,
-            position: position,
-            size: size,
-            webViewModel: webViewModel
-        )
+        let ownerId = command.ownerViewId
+        // ownerViewId refers to a Spatialized element (e.g., the Reality view), not a scene id.
+        // Resolve the scene that contains this object id.
+        if SpatialObject.get(ownerId) == nil {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Invalid ownerViewId \(ownerId) for attachment \(command.id)")))
+            return
+        }
+        if spatialObjects[ownerId] == nil {
+            guard let targetScene = SpatialApp.Instance.findSceneBySpatialObjectId(ownerId) else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Owner object \(ownerId) not found in any scene for attachment \(command.id)")))
+                return
+            }
+            targetScene.registerAttachmentFromExternal(
+                id: command.id,
+                parentEntityId: command.parentEntityId,
+                position: position,
+                size: size,
+                webViewModel: webViewModel
+            )
+            forwardedAttachmentOwners[command.id] = targetScene.id
+        } else {
+            attachmentManager.create(
+                id: command.id,
+                parentEntityId: command.parentEntityId,
+                position: position,
+                size: size,
+                webViewModel: webViewModel
+            )
+        }
 
         resolve(.success(baseReplyData))
     }
@@ -442,8 +482,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        // destroy all attachments
         attachmentManager.destroyAll()
+        forwardedAttachmentOwners.removeAll()
         backgroundMaterial = .None
     }
 
@@ -1069,21 +1109,36 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onUpdateAttachmentEntity(command: UpdateAttachmentEntityCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        guard attachmentManager.get(id: command.id) != nil else {
-            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
-            return
+        if attachmentManager.get(id: command.id) == nil {
+            // Attempt to forward to owning scene if previously forwarded
+            if let ownerId = forwardedAttachmentOwners[command.id],
+               let targetScene = SpatialApp.Instance.getScene(ownerId),
+               targetScene.attachmentManager.get(id: command.id) != nil
+            {
+                var newPosition: SIMD3<Float>? = nil
+                if let posArray = command.position, posArray.count >= 3 {
+                    newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
+                }
+                var newSize: CGSize? = nil
+                if let sizeObj = command.size {
+                    newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
+                }
+                targetScene.attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+                resolve(.success(baseReplyData))
+                return
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
+                return
+            }
         }
-
         var newPosition: SIMD3<Float>? = nil
         if let posArray = command.position, posArray.count >= 3 {
             newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
-
         var newSize: CGSize? = nil
         if let sizeObj = command.size {
             newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
         }
-
         attachmentManager.update(id: command.id, position: newPosition, size: newSize)
         resolve(.success(baseReplyData))
     }
