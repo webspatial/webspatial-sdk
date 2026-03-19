@@ -130,16 +130,6 @@ class SpatialApp {
         return scenes[id]
     }
 
-    /// Find the scene that currently owns the spatial object with the given id
-    func findSceneBySpatialObjectId(_ objectId: String) -> SpatialScene? {
-        for (_, scene) in scenes {
-            if let _: SpatialObject = scene.findSpatialObject(objectId) {
-                return scene
-            }
-        }
-        return nil
-    }
-
     func getSceneOptions() -> SceneOptions {
         return sceneOptions
     }
