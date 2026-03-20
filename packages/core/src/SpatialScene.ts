@@ -48,8 +48,9 @@ export class SpatialScene extends SpatialObject {
         toId,
       ).execute()
       return (ret as any)?.data ?? position
-    } catch {
-      return position
+    } catch (error) {
+      console.warn('SpatialScene.convertCoordinate error:', error)
+      throw error
     }
   }
 

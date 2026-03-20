@@ -62,7 +62,8 @@ export async function convertCoordinate(
     if (!spatialScene) return position
     const ret = await spatialScene.convertCoordinate(position, fromId, toId)
     return ret ?? position
-  } catch {
+  } catch (error) {
+    console.warn('convertCoordinate error:', error)
     return position
   }
 }
