@@ -17,7 +17,7 @@ type CoordinateConvertible =
   | EntityRef
   | ModelRef
 
-function resolveId(target: CoordinateConvertible): string | null {
+function resolveSpatialObjectId(target: CoordinateConvertible): string | null {
   // window -> current spatial scene id which is empty string
   if (typeof window !== 'undefined' && target === window) {
     const scene = getSession()?.getSpatialScene()
@@ -42,15 +42,6 @@ function resolveId(target: CoordinateConvertible): string | null {
     if (spatializedElement && spatializedElement.id) {
       return spatializedElement.id as string
     }
-    // fallback: try spatial id attribute (not guaranteed to map directly to native id)
-    const sid =
-      typeof dom.getAttribute === 'function'
-        ? dom.getAttribute(SpatialID)
-        : null
-    if (sid) {
-      // do not return sid as native id; without mapping to resource it will not resolve on native side
-      return null
-    }
   }
 
   return null
@@ -61,8 +52,8 @@ export async function convertCoordinate(
   { from, to }: { from: CoordinateConvertible; to: CoordinateConvertible },
 ): Promise<Vec3> {
   try {
-    const fromId = resolveId(from)
-    const toId = resolveId(to)
+    const fromId = resolveSpatialObjectId(from)
+    const toId = resolveSpatialObjectId(to)
     if (fromId === null || toId === null) {
       return position
     }
