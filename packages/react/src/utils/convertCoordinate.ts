@@ -55,6 +55,9 @@ export async function convertCoordinate(
     const fromId = resolveSpatialObjectId(from)
     const toId = resolveSpatialObjectId(to)
     if (fromId === null || toId === null) {
+      console.warn(
+        'convertCoordinate error: from or to is not a valid coordinate convertible',
+      )
       return position
     }
 
