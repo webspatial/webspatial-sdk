@@ -4,7 +4,6 @@ const e2w = await convertCoordinate(position, { from: elementOrEntity, to: windo
 const w2e = await convertCoordinate(position, { from: window, to: elementOrEntity })
  * 
  */
-import { ConvertCoordinateCommand } from '@webspatial/core-sdk'
 import type { Vec3 } from '@webspatial/core-sdk'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
@@ -68,9 +67,10 @@ export async function convertCoordinate(
       return position
     }
 
-    const cmd = new ConvertCoordinateCommand(position, fromId, toId)
-    const ret = await cmd.execute()
-    return ret?.data ?? position
+    const spatialScene = getSession()?.getSpatialScene()
+    if (!spatialScene) return position
+    const ret = await spatialScene.convertCoordinate(position, fromId, toId)
+    return ret ?? position
   } catch {
     return position
   }
