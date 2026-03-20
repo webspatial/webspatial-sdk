@@ -1,5 +1,5 @@
 ---
-'@webspatial/react-sdk': patch
+'@webspatial/react-sdk': minor
 ---
 
 add createElement for old jsx transform

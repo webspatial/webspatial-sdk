@@ -72,7 +72,7 @@ export function jsxDEV(
 }
 
 export function createElement(...args: Parameters<typeof reactCreateElement>) {
-  const [type, props, ..rest] = args
-  const newType = replaceToSpatialPrimitiveType(type, props)
+  const [type, props, ...rest] = args
+  const newType = replaceToSpatialPrimitiveType(type as any, props)
   return reactCreateElement(newType, props, ...rest)
 }
