@@ -14,6 +14,17 @@ struct SpatializedStatic3DView: View {
 
     func onLoadSuccess() {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
+        // Report duration after load so the web layer can read it
+        let duration = asset?.animationPlaybackController?.duration ?? 0
+        spatialScene.sendWebMsg(
+            spatializedElement.id,
+            AnimationStateChangeEvent(
+                detail: AnimationStateChangeDetail(
+                    paused: spatializedStatic3DElement.animationPaused,
+                    duration: duration
+                )
+            )
+        )
     }
 
     func onLoadFailure() {
@@ -106,6 +117,7 @@ struct SpatializedStatic3DView: View {
                 } else {
                     controller.resume()
                 }
+                controller.speed = Float(spatializedStatic3DElement.playbackRate)
                 let duration = asset.availableAnimations.first?.definition.duration ?? 0
                 spatialScene.sendWebMsg(
                     spatializedElement.id,
@@ -114,6 +126,11 @@ struct SpatializedStatic3DView: View {
                     )
                 )
             }
+            .onChange(of: spatializedStatic3DElement.playbackRate) { _, rate in
+                guard let asset,
+                      let controller = asset.animationPlaybackController else { return }
+                controller.speed = Float(rate)
+            }
             .task(id: spatializedStatic3DElement.allSources) {
                 // Sequential fallback through sources
                 if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
@@ -121,6 +138,7 @@ struct SpatializedStatic3DView: View {
                        let firstAnimation = loaded.availableAnimations.first
                     {
                         loaded.selectedAnimation = firstAnimation
+                        loaded.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
                         spatializedStatic3DElement.animationPaused = false
                     }
                     self.asset = loaded
