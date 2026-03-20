@@ -14,6 +14,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var autoplay: Bool = false
     var loop: Bool = false
     var animationPaused: Bool = true
+    var playbackRate: Double = 1.0
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type

@@ -203,6 +203,26 @@ function SpatializedStatic3DElementContainerBase(
             | undefined
           return spatializedElement?.paused ?? true
         },
+        get duration(): number {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.duration ?? 0
+        },
+        get playbackRate(): number {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.playbackRate ?? 1
+        },
+        set playbackRate(value: number) {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          if (spatializedElement) {
+            spatializedElement.playbackRate = value
+          }
+        },
       }
     },
     [],
