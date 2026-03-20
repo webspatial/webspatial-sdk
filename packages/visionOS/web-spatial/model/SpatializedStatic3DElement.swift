@@ -16,6 +16,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var autoplay: Bool = false
     var loop: Bool = false
     var animationPaused: Bool = true
+    var playbackRate: Double = 1.0
     var allSources: [ModelSource] {
         let usdz = sources.filter { $0.type == USDZ_MIME_TYPE }
         let rest = sources.filter { $0.type != USDZ_MIME_TYPE }

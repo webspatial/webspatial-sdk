@@ -20,9 +20,9 @@ export type LoggerProps = { logs: String; clearLog: () => void }
 export function Logger({ logs, clearLog }: LoggerProps) {
   return (
     <section>
-      <h2>Console</h2>
+      <h2 className="m-0">Console</h2>
       <button onClick={clearLog}>Clear Log</button>
-      <pre>{logs}</pre>
+      <pre className="m-0">{logs}</pre>
     </section>
   )
 }

@@ -79,7 +79,7 @@ function App() {
           className="w-full h-[200px] object-contain"
         />
       </Model>
-      <section className="playbackControls">
+      <section className="playbackControls mt-5">
         <button
           className="btn btn-success m-1"
           onClick={() => modelRef.current?.play()}
