@@ -120,6 +120,42 @@ export default function CoordConvertTest() {
     })
     log('A->window result:', ret)
   }
+  async function handleMoveBToA() {
+    const fromRef = fromEntityRef.current as any
+    const toRef = toEntityRef.current as any
+    if (!fromRef || !toRef) {
+      log('Move B to A failed: refs not ready')
+      return
+    }
+    const target = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      { from: fromRef, to: toRef },
+    )
+    setToPosition({
+      x: target.x ?? 0,
+      y: target.y ?? 0,
+      z: target.z ?? 0,
+    })
+    log('Move B to A target:', target)
+  }
+  async function handleMoveAToB() {
+    const fromRef = fromEntityRef.current as any
+    const toRef = toEntityRef.current as any
+    if (!fromRef || !toRef) {
+      log('Move A to B failed: refs not ready')
+      return
+    }
+    const target = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      { from: toRef, to: fromRef },
+    )
+    setFromPosition({
+      x: target.x ?? 0,
+      y: target.y ?? 0,
+      z: target.z ?? 0,
+    })
+    log('Move A to B target:', target)
+  }
   function handleClearLogs() {
     setLogs('')
   }
@@ -251,6 +287,12 @@ export default function CoordConvertTest() {
         </button>
         <button className={btnCls} onClick={handleConvertAtoWindow}>
           convertCoordinate A→window
+        </button>
+        <button className={btnCls} onClick={handleMoveAToB}>
+          Move A to B
+        </button>
+        <button className={btnCls} onClick={handleMoveBToA}>
+          Move B to A
         </button>
       </div>
       <div className="bg-black/40 p-4 rounded-lg mt-4">
