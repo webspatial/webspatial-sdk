@@ -41,6 +41,7 @@ export default function RealityEntityTreeOps() {
     ['matRed'],
     ['matGreen'],
     ['matBlue'],
+    ['matDynamic'],
     undefined,
   ]
 
@@ -73,7 +74,9 @@ export default function RealityEntityTreeOps() {
       <h1 className="text-2xl mb-2">Entity Tree Ops Test</h1>
       <p className="text-gray-400 text-sm mb-6">
         Tests: recreateKey, GeometryEntity dynamic geometry/materials,
-        ModelEntity materials, UnlitMaterial updateProperties.
+        ModelEntity materials, UnlitMaterial updateProperties. Cycle model
+        materials to matDynamic, then toggle dynamic color: the model override
+        should update without changing the materials array.
       </p>
 
       <div className="flex flex-wrap gap-2 my-6 bg-[#1A1A1A] p-4 rounded-xl border border-gray-800">

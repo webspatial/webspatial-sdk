@@ -1206,10 +1206,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
         material.updateProperties(color: command.color, transparent: command.transparent, opacity: command.opacity)
-        // Re-apply material to any ModelComponent that references it
+        // Re-apply material to any ModelComponent or ModelEntity override that references it
         for (_, obj) in spatialObjects {
             if let comp = obj as? SpatialModelComponent, comp.usesMaterial(command.id) {
                 comp.refreshMaterials()
+            } else if let modelEntity = obj as? SpatialModelEntity, modelEntity.usesMaterial(command.id) {
+                modelEntity.refreshMaterials()
             }
         }
         resolve(.success(baseReplyData))

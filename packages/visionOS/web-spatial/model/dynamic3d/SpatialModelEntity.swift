@@ -4,6 +4,9 @@ import SwiftUI
 @Observable
 class SpatialModelEntity: SpatialEntity {
     private var modelEntity: Entity?
+    /// Retained so `UpdateUnlitMaterialProperties` can re-apply current `SpatialMaterial.resource` after native material updates.
+    private(set) var overrideSpatialMaterials: [SpatialMaterial] = []
+
     required init(_ modelResource: SpatialModelResource, _ _name: String = "") {
         super.init(_name)
         modelEntity = modelResource.resource
@@ -16,18 +19,31 @@ class SpatialModelEntity: SpatialEntity {
     }
 
     func setMaterials(_ materials: [SpatialMaterial]) {
+        overrideSpatialMaterials = materials
+        applyOverrideMaterials()
+    }
+
+    /// Re-apply stored override materials using each `SpatialMaterial`'s current `resource` (e.g. after unlit property updates).
+    func refreshMaterials() {
+        applyOverrideMaterials()
+    }
+
+    func usesMaterial(_ materialId: String) -> Bool {
+        overrideSpatialMaterials.contains { $0.id == materialId }
+    }
+
+    private func applyOverrideMaterials() {
+        guard let modelEntity = modelEntity else { return }
         func applyMaterials(to entity: Entity) {
             if var modelComp = entity.components[ModelComponent.self] {
-                modelComp.materials = materials.compactMap { $0.resource }
+                modelComp.materials = overrideSpatialMaterials.compactMap { $0.resource }
                 entity.components.set(modelComp)
             }
             for child in entity.children {
                 applyMaterials(to: child)
             }
         }
-        if let modelEntity = modelEntity {
-            applyMaterials(to: modelEntity)
-        }
+        applyMaterials(to: modelEntity)
     }
 
     override func onDestroy() {
@@ -36,6 +52,7 @@ class SpatialModelEntity: SpatialEntity {
             removeChild(modelEntity)
         }
         modelEntity = nil
+        overrideSpatialMaterials = []
     }
 
     enum CodingKeys: String, CodingKey {
