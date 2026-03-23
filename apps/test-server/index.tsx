@@ -39,7 +39,7 @@ import RealityIssue from './src/pages/reality/issue'
 import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
-import RealityEntityTreeOps from './src/pages/reality/entityTreeOps'
+import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
 import RealityTestIndex from './src/pages/reality-test/index'
 import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
@@ -182,8 +182,8 @@ function App() {
                 />
                 <Route path="/reality/aliases" element={<RealityAliases />} />
                 <Route
-                  path="/reality/entity-tree-ops"
-                  element={<RealityEntityTreeOps />}
+                  path="/reality/dynamicAssets"
+                  element={<RealityDynamicAssets />}
                 />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route

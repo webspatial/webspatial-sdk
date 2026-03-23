@@ -30,7 +30,7 @@ export const routes = [
         path: '/reality/model-spatial-div-convert',
         label: 'Model/Div Convert',
       },
-      { path: '/reality/entity-tree-ops', label: 'Entity Tree Ops' },
+      { path: '/reality/dynamicAssets', label: 'DynamicAssets' },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },

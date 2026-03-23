@@ -9,12 +9,12 @@ import {
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 
-// Simple test page for entity tree ops:
+// Simple test page for testing dynamic assets:
 // - recreateKey (removes/recreates BoxEntity)
 // - BoxEntity dynamic geometry and materials
 // - ModelEntity materials (setMaterials)
 // - UnlitMaterial live property update
-export default function RealityEntityTreeOps() {
+export default function RealityDynamicAssets() {
   // Re-keying an entity forces it to be unmounted/mounted in the scene
   const [entityKey, setEntityKey] = useState(0)
 
@@ -100,7 +100,7 @@ export default function RealityEntityTreeOps() {
 
   return (
     <div>
-      <h2>Entity Tree Ops Test</h2>
+      <h2>Dynamic Assets Test</h2>
       <div style={{ marginBottom: 16 }}>
         <button style={btnStyle} onClick={handleRecreateKey}>
           Recreate keyed box (key={entityKey})
