@@ -168,7 +168,7 @@ export const useEntityEvent: React.FC<Props> = ({ instance, ...handlers }) => {
       const handlerFn = (handlers as any)[reactKey]
       if (!handlerFn) return
       const wrapped = (ev: any) => handlerFn(createEventProxy(ev, instance))
-      entity.addEvent(spatialEvent as any, wrapped)
+      entity.addEvent(spatialEvent, wrapped)
       eventsSetRef.current.add(reactKey)
     })
     return () => {}
