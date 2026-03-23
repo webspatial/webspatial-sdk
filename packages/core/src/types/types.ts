@@ -115,6 +115,16 @@ export interface SpatialSceneCreationOptions {
   baseplateVisibility?: BaseplateVisibilityType
 }
 
+export type SpatialEntityEventType =
+  | 'spatialtap'
+  | 'spatialdragstart'
+  | 'spatialdrag'
+  | 'spatialdragend'
+  | 'spatialrotate'
+  | 'spatialrotateend'
+  | 'spatialmagnify'
+  | 'spatialmagnifyend'
+
 export const BaseplateVisibilityValues = [
   'automatic',
   'visible',

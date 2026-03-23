@@ -5,6 +5,7 @@ import {
   SetParentForEntityCommand,
 } from './../../JSBCommand'
 import {
+  SpatialEntityEventType,
   SpatialEntityOrReality,
   SpatialEntityUserData,
   Vec3,
@@ -92,7 +93,7 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityPropertiesCommand(this, properties).execute()
   }
 
-  async addEvent(type: string, callback: (data: any) => void) {
+  async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {
     if (this.events[type]) {
       // replace if exist
       this.events[type] = callback
@@ -106,7 +107,7 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
-  async removeEvent(eventName: string) {
+  async removeEvent(eventName: SpatialEntityEventType) {
     if (this.events[eventName]) {
       delete this.events[eventName]
       try {
@@ -117,7 +118,10 @@ export class SpatialEntity extends SpatialObject {
     }
   }
 
-  async updateEntityEvent(eventName: string, isEnable: boolean) {
+  async updateEntityEvent(
+    eventName: SpatialEntityEventType,
+    isEnable: boolean,
+  ) {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (
