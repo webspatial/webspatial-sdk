@@ -49,3 +49,17 @@ export class SpatialScene {}
 export function isSSREnv() {
   return false
 }
+
+export const PhysicalMetrics = {
+  pointToPhysical: (point: number, options?: any) => {
+    return point / 1360
+  },
+  physicalToPoint: (physical: number, options?: any) => {
+    return physical * 1360
+  },
+  getValue: () => ({
+    meterToPtUnscaled: 1360,
+    meterToPtScaled: 1360,
+  }),
+  subscribe: (cb: any) => {},
+}

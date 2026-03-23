@@ -1,3 +1,5 @@
+import type { PhysicalMetricsValueShape } from '../physicalMetrics'
+
 declare global {
   declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
@@ -28,6 +30,7 @@ declare global {
       'natvie-version'?: string
       'react-sdk-version'?: string
       'core-sdk-version'?: string
+      physicalMetrics?: PhysicalMetricsValueShape
     }
 
     innerDepth: number
