@@ -6,9 +6,9 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var isLocal: Bool = false
 
-    var start_url: String = "http://localhost:5173"
+    var start_url: String = "http://localhost:5173/#/geometry-verify"
 
-//    var start_url: String = "http://localhost:5173/webspatial/avp/materialApiTest"
+    // var start_url: String = "http://localhost:5173/#/spatial-drag-gesture"
 
     var scope: String = ""
     var id: String = "com.webspatial.pico"

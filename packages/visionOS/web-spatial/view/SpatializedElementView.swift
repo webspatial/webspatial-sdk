@@ -1,15 +1,9 @@
 import CoreGraphics
 import SwiftUI
 
-/// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
-let zOrderBias = 0.001
-
-final class GestureFlags {
+final class GestureState {
     var isDrag = false
-}
-
-final class TransformHolder {
-    var transform: AffineTransform3D = .identity
+    var proxyTransform: AffineTransform3D = .identity
 }
 
 struct SpatializedElementView<Content: View>: View {
@@ -19,9 +13,7 @@ struct SpatializedElementView<Content: View>: View {
     var parentScrollOffset: Vec2
     var content: Content
 
-    @State private var gestureFlags = GestureFlags()
-    @State private var transformHolder = TransformHolder()
-    @State private var currentTransform: AffineTransform3D = .identity
+    @State private var gestureState = GestureState()
 
     init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
         self.parentScrollOffset = parentScrollOffset
@@ -67,16 +59,18 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDragging(_ event: DragGesture.Value) {
-        if spatializedElement.enableDragStartGesture, !gestureFlags.isDrag {
-            let localPoint = SIMD4<Double>(event.startLocation3D.x, event.startLocation3D.y, event.startLocation3D.z, 1.0)
-            let transformedPoint = transformHolder.transform.matrix * localPoint
-            let globalPoint3D = Point3D(x: transformedPoint.x, y: transformedPoint.y, z: transformedPoint.z)
-
+        if spatializedElement.enableDragStartGesture, !gestureState.isDrag {
+            let frameZ = localFrameOffsetZ()
+            let startLocal = Point3D(
+                x: event.startLocation3D.x,
+                y: event.startLocation3D.y,
+                z: event.startLocation3D.z - frameZ
+            )
+            let globalPoint3D = localToScene(event.startLocation3D)
             let gestureEvent = WebSpatialDragStartGuestureEvent(detail: .init(
-                startLocation3D: event.startLocation3D,
+                startLocation3D: startLocal,
                 globalLocation3D: globalPoint3D
             ))
-
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
 
@@ -88,24 +82,40 @@ struct SpatializedElementView<Content: View>: View {
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
 
-        gestureFlags.isDrag = true
+        gestureState.isDrag = true
     }
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
-        gestureFlags.isDrag = false
+        gestureState.isDrag = false
         if spatializedElement.enableDragEndGesture {
             let gestureEvent = WebSpatialDragEndGuestureEvent()
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
         }
     }
 
+    /// Z offset that defines the local coordinate system (front face = z=0).
+    /// Only backOffset and zIndex*bias; excludes translation.z (CSS translateZ is visual-only).
+    private func localFrameOffsetZ() -> Double {
+        (spatializedElement.zIndex * zOrderBias) + spatializedElement.backOffset
+    }
+
+    /// Maps a point in the gesture's local coordinate system to SpatialScene.
+    private func localToScene(_ localPoint: Point3D) -> Point3D {
+        let p = SIMD4<Double>(localPoint.x, localPoint.y, localPoint.z, 1.0)
+        let scene = gestureState.proxyTransform.matrix * p
+        return Point3D(x: scene.x, y: scene.y, z: scene.z)
+    }
+
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
         if spatializedElement.enableTapGesture {
-            let localPoint = SIMD4<Double>(event.location3D.x, event.location3D.y, event.location3D.z, 1.0)
-            let transformedPoint = transformHolder.transform.matrix * localPoint
-            let globalPoint3D = Point3D(x: transformedPoint.x, y: transformedPoint.y, z: transformedPoint.z)
-
-            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: event.location3D, globalLocation3D: globalPoint3D)))
+            let frameZ = localFrameOffsetZ()
+            let localPoint3D = Point3D(
+                x: event.location3D.x,
+                y: event.location3D.y,
+                z: event.location3D.z - frameZ
+            )
+            let globalPoint3D = localToScene(event.location3D)
+            spatialScene.sendWebMsg(spatializedElement.id, WebSpatialTapGuestureEvent(detail: .init(location3D: localPoint3D, globalLocation3D: globalPoint3D)))
         }
     }
 
@@ -130,9 +140,6 @@ struct SpatializedElementView<Content: View>: View {
 
     var body: some View {
         let transform = spatializedElement.transform
-        let translation = transform.translation
-        let scale = transform.scale
-        let rotation = transform.rotation!
 
         let width = spatializedElement.width
         let height = spatializedElement.height
@@ -146,8 +153,17 @@ struct SpatializedElementView<Content: View>: View {
         let visible = spatializedElement.visible
         let enableGesture = spatializedElement.enableGesture
 
-        let z = translation.z + (spatializedElement.zIndex * zOrderBias)
-        let smallOffset = z == 0.0 ? 0.0001 : 0
+        let frameOffsetZ = localFrameOffsetZ()
+        let smallOffset = abs(frameOffsetZ) < 0.0001 ? 0.0001 : 0
+
+        // Wrap CSS transform with anchor (CSS transform-origin) since
+        // transform3DEffect does not support anchor. Preserves the original
+        // CSS transform order (e.g. rotateX(90deg) translateZ(100px)).
+        let ax = width * anchor.x
+        let ay = height * anchor.y
+        let toAnchor = AffineTransform3D(translation: Vector3D(x: -ax, y: -ay, z: 0))
+        let fromAnchor = AffineTransform3D(translation: Vector3D(x: ax, y: ay, z: 0))
+        let anchoredTransform = fromAnchor.concatenating(transform).concatenating(toAnchor)
 
         // when spatialdiv have regular/thick/thin material and alignment is back, there'll be a bug that clipping content
         // so when spatializedElement is spatialdiv, .center alignment will be applied
@@ -156,34 +172,26 @@ struct SpatializedElementView<Content: View>: View {
         content
             .frame(width: width, height: height)
             .frame(depth: depth, alignment: alignment)
-            .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
-                let rect3d = proxy.frame(in: .named("SpatialScene"))
-                spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerClientCube(origin: rect3d.origin, size: rect3d.size))
-                let transform = proxy.transform(in: .named("SpatialScene"))!
-                transformHolder.transform = transform
-                return transform
-            } action: { _, new in
-                spatialScene.sendWebMsg(spatializedElement.id, SpatiaizedContainerTransform(detail: new))
-            }
             .frame(depth: 0, alignment: .back)
             // use .offset(smallVal) to workaround for glassEffect not working and small width/height spatialDiv not working
             .offset(z: smallOffset)
-            .scaleEffect(
-                x: scale.width,
-                y: scale.height,
-                z: scale.depth,
-                anchor: anchor
-            )
-            .rotation3DEffect(
-                rotation,
-                anchor: anchor
-            )
-            .offset(x: translation.x, y: translation.y)
-            .offset(z: z)
+            // Full CSS transform matrix with anchor baked in. Preserves transform
+            // composition order; CSS translateZ participates in rotation direction.
+            .transform3DEffect(anchoredTransform)
+            // backOffset + zIndex: always along parent Z, independent of CSS transform.
+            .offset(z: frameOffsetZ)
+            // Gesture before .position(): event.location3D is in the element's local space
+            // (top-left origin), and does not include visual transforms.
+            .simultaneousGesture(enableGesture ? gesture : nil)
+            .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
+                proxy.transform(in: .named("SpatialScene"))!
+            } action: { new in
+                gestureState.proxyTransform = new
+                spatializedElement.proxySceneTransform = new
+            }
+
             .position(x: centerX + width / 2, y: centerY + height / 2)
-            .offset(z: spatializedElement.backOffset)
             .opacity(opacity)
             .hidden(!visible)
-            .simultaneousGesture(enableGesture ? gesture : nil)
     }
 }
