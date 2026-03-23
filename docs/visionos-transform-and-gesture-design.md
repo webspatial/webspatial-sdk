@@ -21,6 +21,8 @@ content
   .position(x, y)                          // CSS layout position
 ```
 
+![View Modifier Chain (SwiftUI)](imgs/01-flowchart-view-modifier-chain.png)
+
 Key ordering rules:
 - **CSS transform** (`.transform3DEffect`) is applied **before** `--xr-back` offset.
 - **`--xr-back`** (`.offset(z: frameOffsetZ)`) is applied **after** CSS transform,
@@ -60,6 +62,8 @@ This implements the standard CSS transform-origin formula:
 T(+anchor) · M · T(-anchor)
 ```
 
+![Anchored transform-origin composition](imgs/02-infographic-anchored-transform-origin.png)
+
 where `a.concatenating(b)` means "apply `b` first, then `a`", so:
 - `toAnchor` (T(−anchor)) is applied first — shift origin to anchor
 - `transform` (M) is applied — the full CSS transform matrix
@@ -89,6 +93,8 @@ rotation. This matches the product design: the element first gets its CSS visual
 transform applied, then is pushed back along the parent Z axis.
 
 ## Gesture Coordinate Semantics
+
+![Gesture coordinate semantics (local vs scene)](imgs/03-flowchart-gesture-coordinate-semantics.png)
 
 ### `location3D` (element-local)
 
@@ -136,6 +142,8 @@ directly to the raw event point, producing the same result with less computation
 no dependency on `frameOffsetZ` staleness.
 
 ## `proxyTransform` and `sceneTransform`
+
+![proxyTransform vs sceneTransform](imgs/04-framework-proxy-vs-scene-transform.png)
 
 ### `proxyTransform` (View layer)
 
@@ -199,6 +207,8 @@ coordinate conversion between two SpatialDivs, avoiding the overhead of continuo
 pushing transform data to the web side.
 
 ## Test Pages
+
+![Test pages coverage summary](imgs/05-infographic-test-pages-coverage.png)
 
 ### geometry-verify
 
