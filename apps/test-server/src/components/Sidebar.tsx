@@ -19,6 +19,7 @@ export const routes = [
       { path: '/reality/issue', label: 'Issue' },
       { path: '/reality/low', label: 'Low' },
       { path: '/reality/nested', label: 'Nested' },
+      { path: '/reality/coordConvertTest', label: 'Coord Convert Test' },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },

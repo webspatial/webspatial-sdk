@@ -122,6 +122,7 @@ struct SpatializedDynamic3DView: View {
         RealityView(make: { content, attachments in
             let rootEntity = spatializedDynamic3DElement.getRoot()
             content.add(rootEntity)
+            spatializedDynamic3DElement.setViewContent(content)
 
             // Add existing attachments on initial creation
             for (_, info) in spatialScene.attachmentManager.attachments {
@@ -168,6 +169,9 @@ struct SpatializedDynamic3DView: View {
         .simultaneousGesture(rotate3dEvent)
         .simultaneousGesture(dragEvent)
         .simultaneousGesture(magnifyEvent)
+        .onDisappear {
+            spatializedDynamic3DElement.setViewContent(nil)
+        }
     }
 
     private func findSpatialEntity(_ spatialId: String) -> SpatialEntity? {

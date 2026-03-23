@@ -1,8 +1,11 @@
+import _RealityKit_SwiftUI
 import Foundation
+import RealityKit
 
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
     private var rootEntity = SpatialEntity()
+    private var viewContent: RealityViewContent? = nil
 
     func getRoot() -> SpatialEntity {
         return rootEntity
@@ -14,6 +17,14 @@ class SpatializedDynamic3DElement: SpatializedElement {
 
     func removeEntity(_ entity: SpatialEntity) {
         rootEntity.removeChild(entity)
+    }
+
+    func getViewContent() -> RealityViewContent? {
+        return viewContent
+    }
+
+    func setViewContent(_ content: RealityViewContent?) {
+        viewContent = content
     }
 
     enum CodingKeys: String, CodingKey {
@@ -28,6 +39,7 @@ class SpatializedDynamic3DElement: SpatializedElement {
     }
 
     override func onDestroy() {
+        viewContent = nil
         rootEntity.destroy()
         super.onDestroy()
     }

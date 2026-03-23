@@ -155,6 +155,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2B1008A32F0B000800000003 /* web-spatialTests */ = {
+			isa = PBXGroup;
+			children = (
+				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+			);
+			path = "web-spatialTests";
+			sourceTree = "<group>";
+		};
 		2B2F1D5A2BEBFAAA006897EE = {
 			isa = PBXGroup;
 			children = (
@@ -163,14 +171,6 @@
 				2B2F1D662BEBFAAA006897EE /* Packages */,
 				2B2F1D642BEBFAAA006897EE /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		2B1008A32F0B000800000003 /* web-spatialTests */ = {
-			isa = PBXGroup;
-			children = (
-				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
-			);
-			path = "web-spatialTests";
 			sourceTree = "<group>";
 		};
 		2B2F1D642BEBFAAA006897EE /* Products */ = {
