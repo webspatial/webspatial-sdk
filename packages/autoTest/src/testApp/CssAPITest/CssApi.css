@@ -5,7 +5,7 @@
   --box-rotate-z: 0deg;
   --box-transformOrigin: left top;
   --box-visibility: visible;
-  --box-display: ;
+  --box-display: flex;
   --box-xr-back: 0;
   --box-xr-background-material: ;
   --box-contentVisibility: visible;

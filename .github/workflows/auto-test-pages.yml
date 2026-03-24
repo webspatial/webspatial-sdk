@@ -21,6 +21,10 @@ jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      START_TIME: ${{ replace(replace(github.run_started_at, 'T', ' '), 'Z', '') }}
+      GITHUB_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,20 +52,6 @@ jobs:
       - name: Install Chrome for Puppeteer
         run: pnpm --filter autotest exec puppeteer browsers install chrome
 
-      - name: Record START_TIME
-        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      - name: Set BRANCH_NAME
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
-          else
-            echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
-          fi
-
-      - name: Set GITHUB_WORKFLOW_URL
-        run: echo "GITHUB_WORKFLOW_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
-
       - name: Run mocha in autoTest package
         continue-on-error: true
         run: pnpm --filter autotest run test
@@ -73,8 +63,11 @@ jobs:
         with:
           name: autotest-report
           path: packages/autoTest/reports
+          if-no-files-found: ignore
 
       - name: Construct artifact download URL
+        if: always()
+        continue-on-error: true
         run: echo "WEBSITE_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_report.outputs.artifact-id }}" >> $GITHUB_ENV
 
 
