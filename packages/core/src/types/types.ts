@@ -115,6 +115,16 @@ export interface SpatialSceneCreationOptions {
   baseplateVisibility?: BaseplateVisibilityType
 }
 
+export type SpatialEntityEventType =
+  | 'spatialtap'
+  | 'spatialdragstart'
+  | 'spatialdrag'
+  | 'spatialdragend'
+  | 'spatialrotate'
+  | 'spatialrotateend'
+  | 'spatialmagnify'
+  | 'spatialmagnifyend'
+
 export const BaseplateVisibilityValues = [
   'automatic',
   'visible',
@@ -185,8 +195,6 @@ export interface SpatialEntityProperties {
   rotation: Vec3
   scale: Vec3
 }
-
-export type SpatialEntityEventType = 'spatialtap' //| 'drag' | 'rotate' | 'scale'
 
 export type SpatialGeometryType =
   | 'BoxGeometry'
@@ -391,6 +399,7 @@ export interface AttachmentEntityOptions {
   parentEntityId: string
   position?: [number, number, number]
   size: { width: number; height: number }
+  ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {

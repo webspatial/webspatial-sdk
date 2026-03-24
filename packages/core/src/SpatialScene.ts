@@ -1,6 +1,7 @@
 import {
   SpatialSceneCreationOptions,
   SpatialSceneProperties,
+  Vec3,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import {
@@ -9,6 +10,7 @@ import {
   UpdateSceneConfig,
   UpdateSpatialSceneProperties,
 } from './JSBCommand'
+import { ConvertCoordinateCommand } from './JSBCommand'
 
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
@@ -32,6 +34,24 @@ export class SpatialScene extends SpatialObject {
       instance = new SpatialScene('')
     }
     return instance
+  }
+
+  async convertCoordinate(
+    position: Vec3,
+    fromId: string,
+    toId: string,
+  ): Promise<Vec3> {
+    try {
+      const ret = await new ConvertCoordinateCommand(
+        position,
+        fromId,
+        toId,
+      ).execute()
+      return (ret as any)?.data ?? position
+    } catch (error) {
+      console.warn('SpatialScene.convertCoordinate error:', error)
+      throw error
+    }
   }
 
   /**

@@ -8,6 +8,8 @@ export * from './reality'
 export * from './Model'
 export { SSRProvider } from './ssr'
 export { useMetrics } from './useMetrics'
+export { createElement } from './jsx/jsx-shared'
+export { convertCoordinate } from './utils/convertCoordinate'
 
 export const version = __WEBSPATIAL_REACT_SDK_VERSION__
 
