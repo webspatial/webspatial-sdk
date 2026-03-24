@@ -298,6 +298,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(UpdateSpatializedStatic3DElementProperties.self, onUpdateSpatializedStatic3DElementProperties)
 
+        spatialWebViewModel.addJSBListener(PlayAnimationCommand.self, onPlayAnimation)
+        spatialWebViewModel.addJSBListener(PauseAnimationCommand.self, onPauseAnimation)
+
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
@@ -614,6 +617,24 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.loop = loop
         }
 
+        resolve(.success(baseReplyData))
+    }
+
+    private func onPlayAnimation(command: PlayAnimationCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid PlayAnimation: spatial object id does not exist")))
+            return
+        }
+        spatializedElement.animationPaused = false
+        resolve(.success(baseReplyData))
+    }
+
+    private func onPauseAnimation(command: PauseAnimationCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid PauseAnimation: spatial object id does not exist")))
+            return
+        }
+        spatializedElement.animationPaused = true
         resolve(.success(baseReplyData))
     }
 

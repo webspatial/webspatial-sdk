@@ -235,6 +235,22 @@ export class UpdateSpatializedElementTransform extends SpatializedElementCommand
   }
 }
 
+export class PlayAnimationCommand extends SpatializedElementCommand {
+  commandType = 'PlayAnimation'
+
+  protected getExtraParams() {
+    return undefined
+  }
+}
+
+export class PauseAnimationCommand extends SpatializedElementCommand {
+  commandType = 'PauseAnimation'
+
+  protected getExtraParams() {
+    return undefined
+  }
+}
+
 export class UpdateSpatializedStatic3DElementProperties extends SpatializedElementCommand {
   properties: Partial<SpatializedStatic3DElementProperties>
   commandType = 'UpdateSpatializedStatic3DElementProperties'

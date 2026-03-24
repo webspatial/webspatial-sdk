@@ -27,6 +27,8 @@ enum SpatialWebMsgType: String, Encodable {
     case spatialmagnify
     case spatialmagnifyend
 
+    case animationstatechange
+
     case objectdestroy
 }
 
@@ -110,6 +112,16 @@ struct WebSpatialMagnifyGuestureEvent: Encodable {
 
 struct WebSpatialMagnifyEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialmagnifyend
+}
+
+struct AnimationStateChangeDetail: Encodable {
+    let paused: Bool
+    let duration: Double
+}
+
+struct AnimationStateChangeEvent: Encodable {
+    let type: SpatialWebMsgType = .animationstatechange
+    let detail: AnimationStateChangeDetail
 }
 
 struct ModelLoadSuccess: Encodable {

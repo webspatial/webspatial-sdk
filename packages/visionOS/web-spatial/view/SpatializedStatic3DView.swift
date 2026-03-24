@@ -20,6 +20,14 @@ struct SpatializedStatic3DView: View {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
     }
 
+    private func sendAnimationStateChange(paused: Bool) {
+        let duration = asset?.availableAnimations.first?.definition.duration ?? 0
+        let event = AnimationStateChangeEvent(
+            detail: AnimationStateChangeDetail(paused: paused, duration: duration)
+        )
+        spatialScene.sendWebMsg(spatializedElement.id, event)
+    }
+
     /// Downloads a remote model file and loads it as a Model3DAsset.
     /// Model3DAsset(url:) requires a local file URL, so remote
     /// resources must be downloaded first.
@@ -85,12 +93,31 @@ struct SpatializedStatic3DView: View {
                 }
             }
             .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
-                guard isComplete == true,
-                      spatializedStatic3DElement.loop,
-                      let asset,
-                      let animation = asset.availableAnimations.first else { return }
-                asset.selectedAnimation = animation
-                asset.animationPlaybackController?.resume()
+                guard isComplete == true else { return }
+                if spatializedStatic3DElement.loop,
+                   let asset,
+                   let animation = asset.availableAnimations.first {
+                    asset.selectedAnimation = animation
+                    asset.animationPlaybackController?.resume()
+                } else {
+                    spatializedStatic3DElement.animationPaused = true
+                    sendAnimationStateChange(paused: true)
+                }
+            }
+            .onChange(of: spatializedStatic3DElement.animationPaused) { _, paused in
+                guard let asset,
+                      let controller = asset.animationPlaybackController else { return }
+                if paused {
+                    controller.pause()
+                    sendAnimationStateChange(paused: true)
+                } else {
+                    if asset.selectedAnimation == nil,
+                       let firstAnimation = asset.availableAnimations.first {
+                        asset.selectedAnimation = firstAnimation
+                    }
+                    controller.resume()
+                    sendAnimationStateChange(paused: false)
+                }
             }
             .task(id: spatializedStatic3DElement.allSources) {
                 // Sequential fallback through sources
@@ -99,6 +126,7 @@ struct SpatializedStatic3DView: View {
                        let firstAnimation = loaded.availableAnimations.first
                     {
                         loaded.selectedAnimation = firstAnimation
+                        spatializedStatic3DElement.animationPaused = false
                     }
                     self.asset = loaded
                     self.loadFailed = false

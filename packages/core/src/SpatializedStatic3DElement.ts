@@ -1,4 +1,8 @@
-import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
+import {
+  UpdateSpatializedStatic3DElementProperties,
+  PlayAnimationCommand,
+  PauseAnimationCommand,
+} from './JSBCommand'
 import { SpatializedElement } from './SpatializedElement'
 import {
   ModelSource,
@@ -111,6 +115,20 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       // Handle model loading failure
       this._onLoadFailureCallback?.()
       this._readyResolve?.(false)
+    } else if (data.type === SpatialWebMsgType.animationstatechange) {
+      const detail = (data as any).detail as {
+        paused: boolean
+        duration: number
+      }
+      this._paused = detail.paused
+      this._duration = detail.duration
+      if (!detail.paused) {
+        this._playResolve?.()
+        this._playResolve = undefined
+      } else {
+        this._pauseResolve?.()
+        this._pauseResolve = undefined
+      }
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data as any)
@@ -139,6 +157,59 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   get loop(): boolean {
     return this._loop
+  }
+
+  /**
+   * Whether the animation is currently paused.
+   */
+  private _paused: boolean = true
+
+  /**
+   * Returns whether the animation is currently paused.
+   */
+  get paused(): boolean {
+    return this._paused
+  }
+
+  /**
+   * Total duration of the current animation in seconds.
+   */
+  private _duration: number = 0
+
+  /**
+   * Returns the total duration of the current animation in seconds.
+   */
+  get duration(): number {
+    return this._duration
+  }
+
+  /**
+   * Resolver for the pending play command promise.
+   */
+  private _playResolve?: () => void
+
+  /**
+   * Resolver for the pending pause command promise.
+   */
+  private _pauseResolve?: () => void
+
+  /**
+   * Starts or resumes animation playback.
+   * The returned promise resolves when the animation actually starts playing.
+   */
+  async play(): Promise<void> {
+    const stateChanged = new Promise<void>(resolve => {
+      this._playResolve = resolve
+    })
+    await new PlayAnimationCommand(this).execute()
+    return stateChanged
+  }
+
+  /**
+   * Pauses animation playback.
+   */
+  pause(): void {
+    new PauseAnimationCommand(this).execute()
   }
 
   /**

@@ -217,6 +217,16 @@ struct ModelSourceJSB: Codable {
     let type: String?
 }
 
+struct PlayAnimationCommand: SpatialObjectCommand {
+    static let commandType: String = "PlayAnimation"
+    let id: String
+}
+
+struct PauseAnimationCommand: SpatialObjectCommand {
+    static let commandType: String = "PauseAnimation"
+    let id: String
+}
+
 struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
