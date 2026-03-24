@@ -7,6 +7,7 @@ export * from './spatialized-container-monitor'
 export * from './reality'
 export * from './Model'
 export { SSRProvider } from './ssr'
+export { useMetrics } from './useMetrics'
 export { createElement } from './jsx/jsx-shared'
 export { convertCoordinate } from './utils/convertCoordinate'
 

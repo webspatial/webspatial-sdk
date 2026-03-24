@@ -59,6 +59,7 @@ import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
+import UnitConvertTest from './src/pages/unitConvert'
 import CoordConvertTest from './src/pages/reality/coordConvertTest'
 
 class ErrorBoundary extends React.Component<
@@ -206,6 +207,7 @@ function App() {
                 <Route path="/cleanup/spa" element={<CleanupSpa />} />
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />
+                <Route path="/unit-convert" element={<UnitConvertTest />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>
