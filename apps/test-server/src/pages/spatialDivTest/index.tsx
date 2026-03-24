@@ -1,15 +1,21 @@
-import ReactDOM from 'react-dom/client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
 function App() {
-  const [divRow] = useState(10)
-  const [divCol] = useState(10)
+  const [divRow] = useState(3)
+  const [divCol] = useState(3)
 
   const z = 100
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--spa-bg-color', 'transparent')
+    return () => {
+      document.documentElement.style.removeProperty('--spa-bg-color')
+    }
+  }, [])
 
   return (
     <>
@@ -39,9 +45,9 @@ function App() {
               <div
                 key={colIndex + rowIndex * divCol}
                 style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'red',
+                  width: '100px',
+                  height: '100px',
+                  // background: 'red',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -51,9 +57,9 @@ function App() {
                   enable-xr
                   style={{
                     '--xr-back': z + '',
+                    '--xr-background-material': 'thin',
                     width: '60%',
                     height: '60%',
-                    background: 'blue',
                     color: 'white',
                     fontWeight: 700,
                     display: 'flex',
@@ -72,4 +78,4 @@ function App() {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+export default App

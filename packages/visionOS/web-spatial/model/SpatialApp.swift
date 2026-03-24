@@ -4,7 +4,7 @@ import SwiftUI
 let logger = Logger()
 
 /// To load a local path, remove http:// eg.  "static-web/"
-let nativeAPIVersion = pwaManager.getVersion()
+let nativeAPIVersion = pwaManager.getShellVersion()
 
 /// start URL
 let startURL = pwaManager.start_url
@@ -84,7 +84,7 @@ class SpatialApp {
     }
 
     var version: String {
-        pwaManager.getVersion()
+        pwaManager.getShellVersion()
     }
 
     var startURL: String {
