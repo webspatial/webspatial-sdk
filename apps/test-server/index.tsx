@@ -40,6 +40,7 @@ import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityTestIndex from './src/pages/reality-test/index'
+import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
 import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
@@ -161,6 +162,7 @@ function App() {
                   path="/reality/coordConvertTest"
                   element={<CoordConvertTest />}
                 />
+                <Route path="/reality/aliases" element={<RealityAliases />} />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"

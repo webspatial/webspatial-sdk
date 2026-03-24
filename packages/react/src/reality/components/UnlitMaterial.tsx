@@ -4,11 +4,15 @@ import {
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
-type Props = {
+export type UnlitMaterialProps = {
   children?: React.ReactNode
   id: string // user id
 } & SpatialUnlitMaterialOptions
-export const UnlitMaterial: React.FC<Props> = ({ children, ...options }) => {
+
+export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
+  children,
+  ...options
+}) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialUnlitMaterial>()
   useEffect(() => {
