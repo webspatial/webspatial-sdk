@@ -45,6 +45,7 @@ import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
 import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
 import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
+import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
 import AndroidBringup from './src/pages/androidBringup/index'
@@ -177,6 +178,10 @@ function App() {
                 <Route
                   path="/spatial-rotation-gesture"
                   element={<SpatialRotationGesture />}
+                />
+                <Route
+                  path="/spatial-rotate-axis-constraint"
+                  element={<SpatialRotateAxisConstraint />}
                 />
                 <Route
                   path="/background-material"

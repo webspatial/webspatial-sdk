@@ -30,6 +30,7 @@ export {
   type ModelSpatialMagnifyEvent,
   type ModelSpatialMagnifyEndEvent,
   type ModelLoadEvent,
+  type SpatialEventOptions,
 } from './types'
 
 export { toSceneSpatial, toLocalSpace } from './transform-utils'

@@ -1102,7 +1102,9 @@ describe('PortalSpatializedContainer', () => {
       return { PortalInstanceContext, PortalInstanceObject }
     })
 
-    const spatializedElement: any = {}
+    const spatializedElement: any = {
+      updateProperties: vi.fn().mockResolvedValue(undefined),
+    }
     vi.doMock('./spatialized-container/hooks/useSpatializedElement', () => {
       return { useSpatializedElement: () => spatializedElement }
     })
@@ -1185,6 +1187,9 @@ describe('PortalSpatializedContainer', () => {
     expect(spatializedElement.onSpatialRotateEnd).toBe(onSpatialRotateEnd)
     expect(spatializedElement.onSpatialMagnify).toBe(onSpatialMagnify)
     expect(spatializedElement.onSpatialMagnifyEnd).toBe(onSpatialMagnifyEnd)
+    expect(spatializedElement.updateProperties).toHaveBeenCalledWith({
+      rotateConstrainedToAxis: { x: 0, y: 0, z: 0 },
+    })
 
     r.unmount()
     expect(initCalls).toEqual(['p1'])

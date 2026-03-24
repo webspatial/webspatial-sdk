@@ -49,6 +49,10 @@ export const routes = [
     children: [
       { path: '/spatial-drag-gesture', label: 'Drag' },
       { path: '/spatial-rotation-gesture', label: 'Rotate' },
+      {
+        path: '/spatial-rotate-axis-constraint',
+        label: 'Rotate axis constraint',
+      },
       { path: '/spatial-magnify-gesture', label: 'Magnify' },
       { path: '/spatial-guesture', label: 'Event Propagation' },
     ],
