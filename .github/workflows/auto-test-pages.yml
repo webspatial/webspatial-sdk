@@ -23,7 +23,6 @@ jobs:
     timeout-minutes: 20
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-      START_TIME: ${{ github.run_started_at }}
       GITHUB_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout repository
@@ -39,6 +38,9 @@ jobs:
         with:
           node-version: 'latest'
           cache: 'pnpm'
+
+      - name: Record START_TIME
+        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
       - name: Install autotest and build required packages
         run: pnpm -F autotest run setup-local
