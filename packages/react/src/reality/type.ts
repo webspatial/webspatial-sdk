@@ -101,11 +101,9 @@ export const eventMap = {
   onSpatialDrag: 'spatialdrag',
   onSpatialDragEnd: 'spatialdragend',
   // rotate
-  onSpatialRotateStart: 'spatialrotatestart',
   onSpatialRotate: 'spatialrotate',
   onSpatialRotateEnd: 'spatialrotateend',
   // magnify
-  onSpatialMagnifyStart: 'spatialmagnifystart',
   onSpatialMagnify: 'spatialmagnify',
   onSpatialMagnifyEnd: 'spatialmagnifyend',
 } as const

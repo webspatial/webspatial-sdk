@@ -27,13 +27,10 @@ export const useEntity = ({
   onSpatialDragStart,
   onSpatialDrag,
   onSpatialDragEnd,
-  // onSpatialRotateStart,
   onSpatialRotate,
   onSpatialRotateEnd,
-  // onSpatialMagnifyStart,
   onSpatialMagnify,
   onSpatialMagnifyEnd,
-  // TODO: add other event handlers
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -44,6 +41,7 @@ export const useEntity = ({
 
   useEffect(() => {
     if (!ctx) return
+
     const controller = new AbortController()
 
     const init = async () => {
@@ -87,10 +85,8 @@ export const useEntity = ({
     onSpatialDragStart,
     onSpatialDrag,
     onSpatialDragEnd,
-    // onSpatialRotateStart,
     onSpatialRotate,
     onSpatialRotateEnd,
-    // onSpatialMagnifyStart,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
   })

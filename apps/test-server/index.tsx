@@ -53,10 +53,13 @@ import NestedFixPosition from './src/pages/nestedfixposition/index'
 import NestedScroll from './src/pages/nestedscroll/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
+import GeometryVerify from './src/pages/geometry-verify/index'
+import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
+import CoordConvertTest from './src/pages/reality/coordConvertTest'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -153,6 +156,10 @@ function App() {
                 <Route path="/reality/issue" element={<RealityIssue />} />
                 <Route path="/reality/low" element={<RealityLow />} />
                 <Route path="/reality/nested" element={<RealityNested />} />
+                <Route
+                  path="/reality/coordConvertTest"
+                  element={<CoordConvertTest />}
+                />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"
@@ -188,6 +195,8 @@ function App() {
                   element={<SpatialConverter />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
+                <Route path="/geometry-verify" element={<GeometryVerify />} />
+                <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route

@@ -502,6 +502,24 @@ export class ConvertFromSceneToEntityCommand extends JSBCommand {
   commandType = 'ConvertFromSceneToEntity'
 }
 
+export class ConvertCoordinateCommand extends JSBCommand {
+  constructor(
+    public position: Vec3,
+    public fromId: string,
+    public toId: string,
+  ) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return {
+      position: this.position,
+      fromId: this.fromId,
+      toId: this.toId,
+    }
+  }
+  commandType = 'ConvertCoordinate'
+}
+
 export class CreateTextureResourceCommand extends JSBCommand {
   constructor(private url: string) {
     super()
@@ -628,10 +646,25 @@ export class CreateAttachmentEntityCommand extends WebSpatialProtocolCommand {
     super()
   }
   protected getParams() {
+    return {} // No metadata — just trigger engine/webview creation
+  }
+}
+
+export class InitializeAttachmentCommand extends JSBCommand {
+  commandType = 'InitializeAttachment'
+  constructor(
+    private attachmentId: string,
+    private options: AttachmentEntityOptions,
+  ) {
+    super()
+  }
+  protected getParams() {
     return {
+      id: this.attachmentId,
       parentEntityId: this.options.parentEntityId,
       position: this.options.position ?? [0, 0, 0],
       size: this.options.size,
+      ownerViewId: this.options.ownerViewId,
     }
   }
 }

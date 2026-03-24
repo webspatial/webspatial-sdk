@@ -129,6 +129,13 @@ struct ConvertFromSceneToEntity: CommandDataProtocol {
     let position: Vec3
 }
 
+struct ConvertCoordinate: CommandDataProtocol {
+    static let commandType: String = "ConvertCoordinate"
+    let position: Vec3
+    let fromId: String
+    let toId: String
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
@@ -337,6 +344,15 @@ struct FocusSceneCommand: CommandDataProtocol {
 
 struct GetSpatialSceneStateCommand: CommandDataProtocol {
     static let commandType = "GetSpatialSceneState"
+}
+
+struct InitializeAttachmentCommand: CommandDataProtocol {
+    static let commandType = "InitializeAttachment"
+    let id: String
+    let parentEntityId: String
+    let position: [Float]?
+    let size: AttachmentSize?
+    let ownerViewId: String
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {

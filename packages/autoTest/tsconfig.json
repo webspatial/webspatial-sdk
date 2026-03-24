@@ -20,5 +20,5 @@
     },
     "types": ["mocha", "node", "chai"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "scripts"]
 }
