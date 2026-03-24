@@ -224,7 +224,7 @@ export class SpatialEntity extends SpatialObject {
     }
     this.events[evt.type]?.(evt)
     if (evt.bubbles && !evt.cancelBubble) {
-      if (this.parent && this.parent instanceof SpatialEntity) {
+      if (this.parent) {
         this.parent.dispatchEvent(evt)
       }
     }

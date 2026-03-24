@@ -14,6 +14,7 @@ import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
 import { EntityEventHandler } from '../type'
+import { useRealityEvents } from '../hooks'
 
 export type RealityProps = React.ComponentPropsWithRef<'div'> &
   EntityEventHandler
@@ -113,6 +114,18 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     }, [cleanupReality])
 
     const content = useCallback(() => <></>, [])
+
+    useRealityEvents({
+      instance: ctxRef.current?.reality ?? null,
+      onSpatialTap,
+      onSpatialDragStart,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
+    })
 
     return (
       <RealityContext.Provider value={ctxRef.current}>

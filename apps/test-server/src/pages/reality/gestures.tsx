@@ -73,6 +73,7 @@ export default function RealityGestures() {
             }}
             onSpatialTap={async e => {
               if (!enabled) return
+              console.log('onSpatialTap', e.target, e.currentTarget)
               logLine('tap box', e.detail.location3D)
               logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
               logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
