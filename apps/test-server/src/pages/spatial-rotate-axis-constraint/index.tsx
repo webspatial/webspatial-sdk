@@ -80,6 +80,48 @@ function axisAlignment(
   )
 }
 
+/** Quaternion to CSS matrix3d (column-major), same as spatial-rotation-gesture. */
+function quatToCssMatrix3d(quat: Quat, precision = 6): string {
+  const [x, y, z, w] = [quat.x, quat.y, quat.z, quat.w] as const
+  const n = Math.sqrt(x ** 2 + y ** 2 + z ** 2 + w ** 2)
+  if (n < 1e-12) {
+    return quatToCssMatrix3d({ x: 0, y: 0, z: 0, w: 1 }, precision)
+  }
+  const nx = x / n
+  const ny = y / n
+  const nz = z / n
+  const nw = w / n
+  const m00 = 1 - 2 * ny ** 2 - 2 * nz ** 2
+  const m01 = 2 * nx * ny - 2 * nz * nw
+  const m02 = 2 * nx * nz + 2 * ny * nw
+  const m10 = 2 * nx * ny + 2 * nz * nw
+  const m11 = 1 - 2 * nx ** 2 - 2 * nz ** 2
+  const m12 = 2 * ny * nz - 2 * nx * nw
+  const m20 = 2 * nx * nz - 2 * ny * nw
+  const m21 = 2 * ny * nz + 2 * nx * nw
+  const m22 = 1 - 2 * nx ** 2 - 2 * ny ** 2
+  const matrix = [
+    m00,
+    m10,
+    m20,
+    0,
+    m01,
+    m11,
+    m21,
+    0,
+    m02,
+    m12,
+    m22,
+    0,
+    0,
+    0,
+    0,
+    1,
+  ]
+  const fixed = matrix.map(v => Number(v.toFixed(precision)))
+  return `matrix3d(${fixed.join(',')})`
+}
+
 type ScenarioId =
   | 'omit'
   | 'zero'
@@ -176,6 +218,18 @@ function useRotateTrace() {
   const [lastQuat, setLastQuat] = useState<Quat | null>(null)
   const prevRef = useRef<Quat | null>(null)
   const [lastAlign, setLastAlign] = useState<number | null>(null)
+  const [totalQuat, setTotalQuat] = useState<Quat>({
+    x: 0,
+    y: 0,
+    z: 0,
+    w: 1,
+  })
+  const [baseTransform, setBaseTransform] = useState('')
+
+  const visualTransform = useMemo(() => {
+    const parts = [baseTransform, quatToCssMatrix3d(totalQuat)].filter(Boolean)
+    return parts.join(' ')
+  }, [baseTransform, totalQuat])
 
   const onRotate = useCallback(
     (
@@ -183,6 +237,7 @@ function useRotateTrace() {
       expectedAxis: [number, number, number] | undefined,
     ) => {
       const q = quatNormalize(evt.quaternion)
+      setTotalQuat(q)
       setLastQuat(q)
       const prev = prevRef.current
       prevRef.current = q
@@ -197,13 +252,30 @@ function useRotateTrace() {
     [],
   )
 
+  const onRotateEnd = useCallback(() => {
+    setTotalQuat(current => {
+      const baked = quatToCssMatrix3d(current)
+      setBaseTransform(v => (v ? `${v} ${baked}` : baked))
+      return { x: 0, y: 0, z: 0, w: 1 }
+    })
+  }, [])
+
   const resetTrace = useCallback(() => {
     prevRef.current = null
     setLastQuat(null)
     setLastAlign(null)
+    setTotalQuat({ x: 0, y: 0, z: 0, w: 1 })
+    setBaseTransform('')
   }, [])
 
-  return { lastQuat, lastAlign, onRotate, resetTrace }
+  return {
+    lastQuat,
+    lastAlign,
+    onRotate,
+    onRotateEnd,
+    resetTrace,
+    visualTransform,
+  }
 }
 
 export default function SpatialRotateAxisConstraintPage() {
@@ -221,7 +293,7 @@ export default function SpatialRotateAxisConstraintPage() {
   const modelSrc =
     'https://utzmqao3qthjebc2.public.blob.vercel-storage.com/saeukkang.usdz'
 
-  const cardStyle: React.CSSProperties = {
+  const cardStyleBase: React.CSSProperties = {
     width: '220px',
     height: '140px',
     backgroundColor: '#1e3a5f',
@@ -235,6 +307,7 @@ export default function SpatialRotateAxisConstraintPage() {
     fontSize: '14px',
     textAlign: 'center',
     padding: '8px',
+    transformStyle: 'preserve-3d',
   }
 
   return (
@@ -247,8 +320,9 @@ export default function SpatialRotateAxisConstraintPage() {
         </code>{' '}
         on a SpatialDiv (<code className="text-cyan-300">enable-xr</code>) and a{' '}
         <code className="text-cyan-300">Model</code>. Use visionOS / AVP to
-        verify gesture feel; this page logs quaternions and checks incremental
-        rotation axis alignment where an axis is expected.
+        verify gesture feel; CSS{' '}
+        <code className="text-cyan-300">transform</code> mirrors gesture
+        rotation (same pattern as the Rotate test page).
       </p>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
@@ -312,12 +386,19 @@ export default function SpatialRotateAxisConstraintPage() {
           <p className="text-xs text-gray-500 mb-2">
             JSX intrinsic element with spatialEventOptions
           </p>
-          <div className="flex justify-center items-center min-h-[200px] border border-dashed border-gray-700 rounded-2xl p-4">
+          <div
+            className="flex justify-center items-center min-h-[200px] border border-dashed border-gray-700 rounded-2xl p-4"
+            style={{ perspective: '800px' }}
+          >
             <div
               enable-xr
-              style={cardStyle}
+              style={{
+                ...cardStyleBase,
+                transform: divTrace.visualTransform,
+              }}
               spatialEventOptions={spatialEventOptions}
               onSpatialRotate={e => divTrace.onRotate(e, scenario.expectedAxis)}
+              onSpatialRotateEnd={divTrace.onRotateEnd}
             >
               {'<div enable-xr>'}
             </div>
@@ -334,7 +415,10 @@ export default function SpatialRotateAxisConstraintPage() {
           <p className="text-xs text-gray-500 mb-2">
             {'<Model> with spatialEventOptions'}
           </p>
-          <div className="flex justify-center items-center min-h-[200px] border border-dashed border-gray-700 rounded-2xl p-4">
+          <div
+            className="flex justify-center items-center min-h-[200px] border border-dashed border-gray-700 rounded-2xl p-4"
+            style={{ perspective: '800px' }}
+          >
             <Model
               src={modelSrc}
               enable-xr
@@ -342,11 +426,14 @@ export default function SpatialRotateAxisConstraintPage() {
                 width: '220px',
                 height: '220px',
                 '--xr-back': `${120}px` as unknown as number,
+                transform: modelTrace.visualTransform,
+                transformStyle: 'preserve-3d',
               }}
               spatialEventOptions={spatialEventOptions}
               onSpatialRotate={e =>
                 modelTrace.onRotate(e, scenario.expectedAxis)
               }
+              onSpatialRotateEnd={modelTrace.onRotateEnd}
             />
           </div>
           <Telemetry
