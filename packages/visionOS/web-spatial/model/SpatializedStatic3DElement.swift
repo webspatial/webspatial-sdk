@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+private let USDZ_MIME_TYPE = "model/vnd.usdz+zip"
+
 struct ModelSource: Equatable {
     let src: String
     let type: String?
@@ -13,6 +15,11 @@ class SpatializedStatic3DElement: SpatializedElement {
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
+    var allSources: [ModelSource] {
+        let usdz = sources.filter { $0.type == USDZ_MIME_TYPE }
+        let rest = sources.filter { $0.type != USDZ_MIME_TYPE }
+        return [ModelSource(src: modelURL, type: nil)] + usdz + rest
+    }
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type
