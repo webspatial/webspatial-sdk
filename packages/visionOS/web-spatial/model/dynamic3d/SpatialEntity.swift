@@ -138,9 +138,15 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             if !components.has(InputTargetComponent.self) {
                 components.set(InputTargetComponent())
             }
+            if !components.has(HoverEffectComponent.self) {
+                components.set(HoverEffectComponent())
+            }
         } else {
             if components.has(InputTargetComponent.self) {
                 components.remove(InputTargetComponent.self)
+            }
+            if components.has(HoverEffectComponent.self) {
+                components.remove(HoverEffectComponent.self)
             }
         }
     }
