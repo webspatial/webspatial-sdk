@@ -722,6 +722,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
         }
 
+        if let rotateConstrainedToAxis = command.rotateConstrainedToAxis {
+            spatializedElement.rotateConstrainedToAxis = rotateConstrainedToAxis
+        }
+
         if let enableMagnifyGesture = command.enableMagnifyGesture {
             spatializedElement.enableMagnifyGesture = enableMagnifyGesture
         }

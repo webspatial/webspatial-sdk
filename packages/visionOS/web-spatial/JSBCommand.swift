@@ -173,6 +173,7 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var enableMagnifyGesture: Bool? { get }
     var enableMagnifyEndGesture: Bool? { get }
     var enableTapGesture: Bool? { get }
+    var rotateConstrainedToAxis: Vec3? { get }
 }
 
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
@@ -199,6 +200,8 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     var enableMagnifyGesture: Bool?
     var enableMagnifyEndGesture: Bool?
     var enableTapGesture: Bool?
+
+    let rotateConstrainedToAxis: Vec3?
 
     let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
@@ -234,6 +237,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?
 
+    let rotateConstrainedToAxis: Vec3?
+
     let modelURL: String?
     let modelTransform: [Double]?
 }
@@ -262,6 +267,8 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     let enableMagnifyGesture: Bool?
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?
+
+    let rotateConstrainedToAxis: Vec3?
 }
 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {

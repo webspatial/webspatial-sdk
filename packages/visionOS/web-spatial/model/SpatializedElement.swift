@@ -35,6 +35,9 @@ class SpatializedElement: SpatialObject {
     var enableMagnifyEndGesture: Bool = false
     var enableTapGesture: Bool = false
 
+    /// When non-nil and non-zero length, rotate gesture is constrained to this axis (world space).
+    var rotateConstrainedToAxis: Vec3?
+
     var defaultAlignment: DepthAlignment = .back
 
     /// Raw layout→scene transform from onGeometryChange3D proxy.

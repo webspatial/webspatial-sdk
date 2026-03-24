@@ -37,7 +37,7 @@ struct SpatializedDynamic3DView: View {
     }
 
     var rotate3dEvent: some Gesture {
-        RotateGesture3D().targetedToAnyEntity().onChanged { value in
+        makeRotateGesture3D().targetedToAnyEntity().onChanged { value in
             // Always forward rotate gesture events to JS
             if let entity = value.entity as? SpatialEntity {
                 let gestureEvent = WebSpatialRotateGuestureEvent(
@@ -60,6 +60,21 @@ struct SpatializedDynamic3DView: View {
             }
             isRotate = false
         }
+    }
+
+    private func makeRotateGesture3D() -> RotateGesture3D {
+        guard let raw = spatializedElement.rotateConstrainedToAxis else {
+            return RotateGesture3D()
+        }
+        let dx = Double(raw.x)
+        let dy = Double(raw.y)
+        let dz = Double(raw.z)
+        let len = (dx * dx + dy * dy + dz * dz).squareRoot()
+        if len < 1e-9 {
+            return RotateGesture3D()
+        }
+        let axis = RotationAxis3D(x: dx / len, y: dy / len, z: dz / len)
+        return RotateGesture3D(constrainedToAxis: axis)
     }
 
     var magnifyEvent: some Gesture {

@@ -8,6 +8,7 @@ import {
   SpatialRotateEndEvent,
   SpatialMagnifyEvent,
   SpatialMagnifyEndEvent,
+  SpatialEventOptions,
   //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
 
@@ -117,6 +118,7 @@ export namespace WebSpatialJSX {
       onSpatialRotateEnd?: (e: SpatialRotateEndEvent) => void
       onSpatialMagnify?: (e: SpatialMagnifyEvent) => void
       onSpatialMagnifyEnd?: (e: SpatialMagnifyEndEvent) => void
+      spatialEventOptions?: SpatialEventOptions
     }
   }
 }

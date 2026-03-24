@@ -80,6 +80,11 @@ export interface SpatializedElementProperties {
   enableRotateEndGesture: boolean
   enableMagnifyGesture: boolean
   enableMagnifyEndGesture: boolean
+  /**
+   * Optional world-space axis for spatial rotate gesture. Omitted or zero vector
+   * means unconstrained rotation (platform default).
+   */
+  rotateConstrainedToAxis?: Vec3
 }
 
 export interface Spatialized2DElementProperties

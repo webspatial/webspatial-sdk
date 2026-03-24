@@ -26,7 +26,7 @@ struct SpatializedElementView<Content: View>: View {
             .onChanged(onDragging)
             .onEnded(onDraggingEnded)
             .simultaneously(with:
-                RotateGesture3D()
+                makeRotateGesture3D()
                     .onChanged(onRotateGesture3D)
                     .onEnded(onRotateGesture3DEnd))
             .simultaneously(with:
@@ -36,6 +36,21 @@ struct SpatializedElementView<Content: View>: View {
             .simultaneously(with:
                 SpatialTapGesture(count: 1)
                     .onEnded(onTapEnded))
+    }
+
+    private func makeRotateGesture3D() -> RotateGesture3D {
+        guard let raw = spatializedElement.rotateConstrainedToAxis else {
+            return RotateGesture3D()
+        }
+        let dx = Double(raw.x)
+        let dy = Double(raw.y)
+        let dz = Double(raw.z)
+        let len = (dx * dx + dy * dy + dz * dz).squareRoot()
+        if len < 1e-9 {
+            return RotateGesture3D()
+        }
+        let axis = RotationAxis3D(x: dx / len, y: dy / len, z: dz / len)
+        return RotateGesture3D(constrainedToAxis: axis)
     }
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {

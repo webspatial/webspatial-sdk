@@ -12,10 +12,19 @@ import {
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent,
   SpatializedStatic3DElement,
+  type Vec3,
 } from '@webspatial/core-sdk'
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 export type { Quaternion } from '@webspatial/core-sdk'
+
+/** Options for spatial pointer/gesture behavior (not DOM attributes). */
+export type SpatialEventOptions = {
+  /**
+   * Direction vector for rotate gesture constraint. `[0, 0, 0]` or omit = unconstrained.
+   */
+  constrainedToAxis?: Vec3 | readonly [number, number, number]
+}
 
 // SpatialEvents
 type SpatialEventProps<T extends SpatializedElementRef> = {
@@ -58,6 +67,7 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
       getExtraSpatializedElementProperties?: (
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
+      spatialEventOptions?: SpatialEventOptions
 
       [SpatialID]: string
     }
@@ -80,6 +90,7 @@ export type Spatialized2DElementContainerProps<P extends ElementType> =
   SpatialEventProps<SpatializedElementRef> &
     React.ComponentPropsWithRef<'div'> & {
       component: P
+      spatialEventOptions?: SpatialEventOptions
     }
 
 export type SpatializedStatic3DContainerProps =
@@ -88,6 +99,7 @@ export type SpatializedStatic3DContainerProps =
       src?: string
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
+      spatialEventOptions?: SpatialEventOptions
     }
 
 export type SpatializedStatic3DContentProps = {
