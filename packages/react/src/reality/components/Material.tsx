@@ -1,9 +1,7 @@
 import React from 'react'
-import { UnlitMaterial } from './UnlitMaterial'
+import { UnlitMaterial, UnlitMaterialProps } from './UnlitMaterial'
 
-type UnlitProps = React.ComponentProps<typeof UnlitMaterial>
-
-export type MaterialProps = { type: 'unlit' } & UnlitProps
+export type MaterialProps = { type: 'unlit' } & UnlitMaterialProps
 
 export const Material: React.FC<MaterialProps> = props => {
   if (props.type === 'unlit') {
