@@ -1,5 +1,6 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
+import { createElement as reactCreateElement } from 'react'
 import {
   withSpatialMonitor,
   withSpatialized2DElementContainer,
@@ -68,4 +69,10 @@ export function jsxDEV(
 ) {
   type = replaceToSpatialPrimitiveType(type, props)
   return _jsxDEV(type, props, key, isStatic, source, self)
+}
+
+export function createElement(...args: Parameters<typeof reactCreateElement>) {
+  const [type, props, ...rest] = args
+  const newType = replaceToSpatialPrimitiveType(type as any, props)
+  return reactCreateElement(newType, props, ...rest)
 }
