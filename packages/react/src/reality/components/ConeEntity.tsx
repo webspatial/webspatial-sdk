@@ -1,15 +1,14 @@
 import React, { forwardRef } from 'react'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape } from '../hooks'
 import { SpatialConeGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type ConeEntityProps = EntityProps &
-  EntityEventHandler & {
-    children?: React.ReactNode
-    materials?: string[]
-  } & SpatialConeGeometryOptions
+type ConeEntityProps = EntityProps & {
+  children?: React.ReactNode
+  materials?: string[]
+} & SpatialConeGeometryOptions
 
 export const ConeEntity = forwardRef<EntityRefShape, ConeEntityProps>(
   ({ children, ...props }, ref) => {

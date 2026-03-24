@@ -1,11 +1,11 @@
 import React, { forwardRef } from 'react'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape } from '../hooks'
 import { BaseEntity } from './BaseEntity'
 
-type Props = EntityProps & { model: string } & EntityEventHandler & {
-    children?: React.ReactNode
-  }
+type Props = EntityProps & { model: string } & {
+  children?: React.ReactNode
+}
 
 export const ModelEntity = forwardRef<EntityRefShape, Props>(
   ({ id, model, children, name, ...rest }, ref) => {

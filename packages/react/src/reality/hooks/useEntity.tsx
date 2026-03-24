@@ -1,11 +1,10 @@
 import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
-import { EntityEventHandler, EntityProps } from '../type'
+import { EntityProps } from '../type'
 import {
   EntityRefShape,
   EntityRef,
-  useEntityEvent,
   useEntityId,
   useEntityRef,
   useEntityTransform,
@@ -14,8 +13,7 @@ import {
 
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
-} & EntityProps &
-  EntityEventHandler & { ref: ForwardedRef<EntityRefShape> }
+} & EntityProps & { ref: ForwardedRef<EntityRefShape> }
 
 export const useEntity = ({
   ref,
@@ -24,14 +22,6 @@ export const useEntity = ({
   rotation,
   scale,
   enableInput,
-  onSpatialTap,
-  onSpatialDragStart,
-  onSpatialDrag,
-  onSpatialDragEnd,
-  onSpatialRotate,
-  onSpatialRotateEnd,
-  onSpatialMagnify,
-  onSpatialMagnifyEnd,
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -87,18 +77,6 @@ export const useEntity = ({
       ent.enableInput = !!enableInput
     }
   }, [instanceRef.current.entity, enableInput])
-
-  useEntityEvent({
-    instance: instanceRef.current,
-    onSpatialTap,
-    onSpatialDragStart,
-    onSpatialDrag,
-    onSpatialDragEnd,
-    onSpatialRotate,
-    onSpatialRotateEnd,
-    onSpatialMagnify,
-    onSpatialMagnifyEnd,
-  })
 
   return instanceRef.current.entity
 }

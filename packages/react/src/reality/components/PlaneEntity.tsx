@@ -1,15 +1,14 @@
 import React, { forwardRef } from 'react'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape } from '../hooks'
 import { SpatialPlaneGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type PlaneEntityProps = EntityProps &
-  EntityEventHandler & {
-    children?: React.ReactNode
-    materials?: string[]
-  } & SpatialPlaneGeometryOptions
+type PlaneEntityProps = EntityProps & {
+  children?: React.ReactNode
+  materials?: string[]
+} & SpatialPlaneGeometryOptions
 
 export const PlaneEntity = forwardRef<EntityRefShape, PlaneEntityProps>(
   ({ children, ...props }, ref) => {
