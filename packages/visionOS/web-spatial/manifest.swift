@@ -38,7 +38,8 @@ struct PWAManager: Codable {
         baseplateVisibility: nil
     )
     var useMainScene: Bool = true
-    private var version: String = "PACKAGE_VERSION"
+    private var shellVersion: String = "WS_SHELL_VERSION"
+    private var sdkVersion: String = "WS_SDK_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -102,8 +103,12 @@ struct PWAManager: Codable {
         return resource
     }
 
-    func getVersion() -> String {
-        return version
+    func getShellVersion() -> String {
+        return shellVersion
+    }
+
+    func getSdkVersion() -> String {
+        return sdkVersion
     }
 }
 

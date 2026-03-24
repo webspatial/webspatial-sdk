@@ -28,7 +28,9 @@ struct PWAManager: Codable {
         worldAlignment: .WorldAlignment,
         baseplateVisibility: .BaseplateVisibility
     )
-    private var version: String = "PACKAGE_VERSION"
+    var useMainScene: Bool = true
+    private var shellVersion: String = "WS_SHELL_VERSION"
+    private var sdkVersion: String = "WS_SDK_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -38,7 +40,7 @@ struct PWAManager: Codable {
             }
             let startUrl = Bundle.main.url(forResource: start_url, withExtension: "", subdirectory: "")
             start_url = startUrl!.absoluteString
-            scope = URL(string: (scope.starts(with: "/") ? "." : "./") + scope, relativeTo: Bundle.main.executableURL)!.absoluteString
+            scope = URL(string: scope, relativeTo: startUrl)!.absoluteString
             isLocal = true
         }
 
@@ -92,8 +94,12 @@ struct PWAManager: Codable {
         return resource
     }
     
-    func getVersion() -> String {
-        return version
+    func getShellVersion() -> String {
+        return shellVersion
+    }
+    
+    func getSdkVersion() -> String {
+        return sdkVersion
     }
 }
 
