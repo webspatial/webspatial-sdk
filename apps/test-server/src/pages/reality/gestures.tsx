@@ -15,6 +15,7 @@ export default function RealityGestures() {
   const [logs, setLogs] = useState<string>('')
   const [enabled, setEnabled] = useState<boolean>(true)
   const [exclusive, setExclusive] = useState<boolean>(false)
+  const [inputEnabled, setInputEnabled] = useState<boolean>(true)
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0, z: 0 })
   const [boxRot, setBoxRot] = useState<{ x: number; y: number; z: number }>({
     x: 0,
@@ -56,6 +57,9 @@ export default function RealityGestures() {
         <button className={btnCls} onClick={() => setLogs('')}>
           Clear Log
         </button>
+        <button className={btnCls} onClick={() => setInputEnabled(v => !v)}>
+          {inputEnabled ? 'Disable' : 'Enable'} InputTarget
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -66,6 +70,135 @@ export default function RealityGestures() {
               height: '500px',
               '--xr-depth': 150,
               '--xr-back': 100,
+            }}
+            onSpatialTap={async e => {
+              if (!enabled) return
+              logLine('tap box', e.detail.location3D)
+              logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+            }}
+            onSpatialDragStart={async e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'drag'
+              )
+                return
+              activeGestureRef.current = 'drag'
+              dragBaseRef.current = boxPos
+              logLine('dragStart', e.detail.startLocation3D)
+              logLine('dragStart offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              logLine('dragStart clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+            }}
+            onSpatialDrag={async e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'drag'
+              )
+                return
+              const t = e.detail.translation3D
+              const TRANSLATION_SCALE = 0.001
+              const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
+              const ny = dragBaseRef.current.y - t.y * TRANSLATION_SCALE
+              const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
+              const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
+              setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
+              logLine('drag', t)
+            }}
+            onSpatialDragEnd={async e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'drag'
+              )
+                return
+              if (exclusive) activeGestureRef.current = null
+              logLine('dragEnd', e.detail.translation3D)
+            }}
+            onSpatialRotate={e => {
+              if (!enabled) return
+              logLine('rotate', e.quaternion)
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'rotate'
+              ) {
+                return
+              }
+              activeGestureRef.current = 'rotate'
+              rotateBaseRef.current = boxRot
+              const { x, y, z, w } = e.quaternion
+              const roll = Math.atan2(
+                2 * (w * x + y * z),
+                1 - 2 * (x * x + y * y),
+              )
+              const pitch = Math.asin(
+                Math.max(-1, Math.min(1, 2 * (w * y - z * x))),
+              )
+              const yaw = Math.atan2(
+                2 * (w * z + x * y),
+                1 - 2 * (y * y + z * z),
+              )
+              const toDeg = (r: number) => (r * 180) / Math.PI
+              setBoxRot({
+                x: rotateBaseRef.current.x + toDeg(roll),
+                y: rotateBaseRef.current.y + toDeg(pitch),
+                z: rotateBaseRef.current.z + toDeg(yaw),
+              })
+              logLine('rotate', {
+                roll: toDeg(roll),
+                pitch: toDeg(pitch),
+                yaw: toDeg(yaw),
+              })
+            }}
+            onSpatialRotateEnd={e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'rotate'
+              ) {
+                return
+              }
+              if (exclusive) activeGestureRef.current = null
+              logLine('rotateEnd')
+            }}
+            onSpatialMagnify={e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'magnify'
+              ) {
+                return
+              }
+              activeGestureRef.current = 'magnify'
+              scaleBaseRef.current = boxScale
+              const m = Math.max(0.3, Math.min(3, e.detail.magnification))
+              setBoxScale({
+                x: scaleBaseRef.current.x * m,
+                y: scaleBaseRef.current.y * m,
+                z: scaleBaseRef.current.z * m,
+              })
+              logLine('magnify', {
+                magnification: e.detail.magnification,
+                clamped: m,
+              })
+            }}
+            onSpatialMagnifyEnd={e => {
+              if (!enabled) return
+              if (
+                exclusive &&
+                activeGestureRef.current &&
+                activeGestureRef.current !== 'magnify'
+              )
+                return
+              if (exclusive) activeGestureRef.current = null
+              logLine('magnifyEnd')
             }}
           >
             <UnlitMaterial id="matGreen" color="#22cc66" />
@@ -81,146 +214,7 @@ export default function RealityGestures() {
                   rotation={boxRot}
                   scale={boxScale}
                   materials={['matGreen']}
-                  onSpatialTap={async e => {
-                    if (!enabled) return
-                    logLine('tap box', e.detail.location3D)
-                    logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
-                    logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
-                  }}
-                  onSpatialDragStart={async e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'drag'
-                    )
-                      return
-                    activeGestureRef.current = 'drag'
-                    dragBaseRef.current = boxPos
-                    logLine('dragStart', e.detail.startLocation3D)
-                    logLine(
-                      'dragStart offsetX/Y/Z',
-                      e.offsetX,
-                      e.offsetY,
-                      e.offsetZ,
-                    )
-                    logLine(
-                      'dragStart clientX/Y/Z',
-                      e.clientX,
-                      e.clientY,
-                      e.clientZ,
-                    )
-                  }}
-                  onSpatialDrag={async e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'drag'
-                    )
-                      return
-                    const t = e.detail.translation3D
-                    const TRANSLATION_SCALE = 0.001
-                    const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
-                    const ny = dragBaseRef.current.y - t.y * TRANSLATION_SCALE
-                    const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
-                    const clamp = (v: number) =>
-                      Math.max(-0.5, Math.min(0.5, v))
-                    setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
-                    logLine('drag', t)
-                  }}
-                  onSpatialDragEnd={async e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'drag'
-                    )
-                      return
-                    if (exclusive) activeGestureRef.current = null
-                    logLine('dragEnd', e.detail.translation3D)
-                  }}
-                  onSpatialRotate={e => {
-                    if (!enabled) return
-                    logLine('rotate', e.quaternion)
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'rotate'
-                    ) {
-                      return
-                    }
-                    activeGestureRef.current = 'rotate'
-                    rotateBaseRef.current = boxRot
-                    const { x, y, z, w } = e.quaternion
-                    const roll = Math.atan2(
-                      2 * (w * x + y * z),
-                      1 - 2 * (x * x + y * y),
-                    )
-                    const pitch = Math.asin(
-                      Math.max(-1, Math.min(1, 2 * (w * y - z * x))),
-                    )
-                    const yaw = Math.atan2(
-                      2 * (w * z + x * y),
-                      1 - 2 * (y * y + z * z),
-                    )
-                    const toDeg = (r: number) => (r * 180) / Math.PI
-                    setBoxRot({
-                      x: rotateBaseRef.current.x + toDeg(roll),
-                      y: rotateBaseRef.current.y + toDeg(pitch),
-                      z: rotateBaseRef.current.z + toDeg(yaw),
-                    })
-                    logLine('rotate', {
-                      roll: toDeg(roll),
-                      pitch: toDeg(pitch),
-                      yaw: toDeg(yaw),
-                    })
-                  }}
-                  onSpatialRotateEnd={e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'rotate'
-                    ) {
-                      return
-                    }
-                    if (exclusive) activeGestureRef.current = null
-                    logLine('rotateEnd')
-                  }}
-                  onSpatialMagnify={e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'magnify'
-                    ) {
-                      return
-                    }
-                    activeGestureRef.current = 'magnify'
-                    scaleBaseRef.current = boxScale
-                    const m = Math.max(0.3, Math.min(3, e.detail.magnification))
-                    setBoxScale({
-                      x: scaleBaseRef.current.x * m,
-                      y: scaleBaseRef.current.y * m,
-                      z: scaleBaseRef.current.z * m,
-                    })
-                    logLine('magnify', {
-                      magnification: e.detail.magnification,
-                      clamped: m,
-                    })
-                  }}
-                  onSpatialMagnifyEnd={e => {
-                    if (!enabled) return
-                    if (
-                      exclusive &&
-                      activeGestureRef.current &&
-                      activeGestureRef.current !== 'magnify'
-                    )
-                      return
-                    if (exclusive) activeGestureRef.current = null
-                    logLine('magnifyEnd')
-                  }}
+                  enableInput={inputEnabled}
                 />
               </Entity>
             </SceneGraph>

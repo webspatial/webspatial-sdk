@@ -15,6 +15,7 @@ export type EntityProps = {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
+  enableInput?: boolean
 }
 
 type allTarget<T extends EntityRefShape> = {

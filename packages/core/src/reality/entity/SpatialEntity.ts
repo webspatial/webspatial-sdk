@@ -45,6 +45,31 @@ export class SpatialEntity extends SpatialObject {
   events: Record<string, (data: any) => void> = {}
   children: SpatialEntity[] = []
   parent: SpatialEntityOrReality | null = null
+  private _enableInput: boolean = false
+
+  get enableInput(): boolean {
+    return this._enableInput
+  }
+
+  set enableInput(value: boolean) {
+    // Why enabling only 'spatialtap' makes the entity interactive:
+    // - On the native (Swift/RealityKit) side, SpatialEntity.updateGesture(type, isEnable)
+    //   toggles per-gesture flags. Then enableInteractive = enableTap || enableRotate || enableDrag || enableMagnify.
+    // - As soon as any gesture (e.g., 'spatialtap') is enabled, enableInteractive becomes true and
+    //   InputTargetComponent is attached, making the entity targetable by targetedToAnyEntity().
+    // - The view layer forwards hit gestures to the web, so enabling 'spatialtap' is sufficient to
+    //   make the entity targetable; enable additional gestures only when needed.
+    if (this._enableInput === value) return
+    this._enableInput = value
+    void this.updateEntityEvent('spatialtap', value).catch(err => {
+      console.error('enableInput updateEntityEvent failed', 'spatialtap', err)
+      // Roll back local flag if the native toggle fails to keep web/native states consistent.
+      // Otherwise, the web side would think the entity is interactive while RealityKit is not.
+      if (this._enableInput === value) {
+        this._enableInput = !value
+      }
+    })
+  }
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,

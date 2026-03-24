@@ -23,6 +23,7 @@ export const useEntity = ({
   position,
   rotation,
   scale,
+  enableInput,
   onSpatialTap,
   onSpatialDragStart,
   onSpatialDrag,
@@ -78,6 +79,14 @@ export const useEntity = ({
   useEntityId({ id, entity: instanceRef.current.entity })
   useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
   useEntityRef(ref, instanceRef.current)
+
+  useEffect(() => {
+    const ent = instanceRef.current.entity
+    if (!ent) return
+    if (enableInput !== undefined) {
+      ent.enableInput = !!enableInput
+    }
+  }, [instanceRef.current.entity, enableInput])
 
   useEntityEvent({
     instance: instanceRef.current,
