@@ -272,6 +272,17 @@ function DynamicTest() {
             bottom: 0,
             zIndex: 1,
           }}
+          // Use Reality-level tap to toggle bar height instead of entity handlers
+          onSpatialTap={e => {
+            const y = e.clientY ?? 0
+            // Tap near the upper toggle -> high bars
+            if (y > 0.1) {
+              setIsLowHeight(false)
+            } else if (y < 0.05) {
+              // Tap near the lower toggle -> low bars
+              setIsLowHeight(true)
+            }
+          }}
         >
           {materialList.map(material => (
             <UnlitMaterial
@@ -300,10 +311,6 @@ function DynamicTest() {
               position={{ x: -0.3, y: 0.2, z: 0.4 }}
               materials={['high']}
               cornerRadius={boxSize.cornerRadius}
-              onSpatialTap={() => {
-                console.log('click high box')
-                setIsLowHeight(false)
-              }}
             />
             <BoxEntity
               width={boxSize.width * 2}
@@ -312,10 +319,6 @@ function DynamicTest() {
               position={{ x: -0.3, y: -0.05, z: 0.4 }}
               materials={['low']}
               cornerRadius={boxSize.cornerRadius}
-              onSpatialTap={() => {
-                console.log('click low box')
-                setIsLowHeight(true)
-              }}
             />
             {entityList.map(entity => (
               <BoxEntity

@@ -11,11 +11,12 @@ import { useInsideAttachment } from '../context/InsideAttachmentContext'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
-import {
-  RealityProps,
-  SpatializedElementRef,
-} from '../../spatialized-container/types'
+import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
+import { EntityEventHandler } from '../type'
+
+export type RealityProps = React.ComponentPropsWithRef<'div'> &
+  EntityEventHandler
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {

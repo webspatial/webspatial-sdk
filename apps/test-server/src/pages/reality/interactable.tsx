@@ -63,6 +63,12 @@ function App() {
             '--xr-back': 200,
           }}
           ref={realityRef}
+          // Add spatial events on Reality to preserve sample behavior after removing entity handlers
+          onSpatialTap={e => {
+            log('tap', e.detail.location3D)
+            log('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+            log('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -90,20 +96,8 @@ function App() {
           />
           <SceneGraph>
             {/* case 1  parent enables tap, C inherits interactable via A */}
-            <Entity
-              id="A"
-              onSpatialTap={e => {
-                log('tap A')
-                console.log('tap A', e)
-              }}
-            >
-              <Entity
-                id="B"
-                onSpatialTap={e => {
-                  log('tap B')
-                  console.log('tap B', e)
-                }}
-              >
+            <Entity id="A">
+              <Entity id="B">
                 <BoxEntity width={0.1} height={0.1} depth={0.1} />
               </Entity>
             </Entity>
@@ -116,19 +110,10 @@ function App() {
                 width={0.1}
                 height={0.1}
                 depth={0.1}
-                onSpatialTap={e => {
-                  log('tap C')
-                  console.log('tap C', e)
-                }}
               />
             </Entity>
             {/* nested */}
-            <Entity
-              onSpatialTap={e => {
-                log('tap ' + e.target.id)
-                console.log('tap', e.target.id)
-              }}
-            >
+            <Entity>
               <Entity>
                 <BoxEntity
                   id="D1"

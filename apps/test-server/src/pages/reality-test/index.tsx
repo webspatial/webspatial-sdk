@@ -4,7 +4,6 @@ import {
   BoxEntity,
   Reality,
   SceneGraph,
-  SpatialTapEntityEvent,
   UnlitMaterial,
   enableDebugTool,
 } from '@webspatial/react-sdk'
@@ -51,16 +50,6 @@ function App() {
     console.log('start game')
     setIsPlayGame(true)
     frameRef.current = 0
-  }
-
-  const onTapLeft = async (e: SpatialTapEntityEvent) => {
-    console.log('tap left', e.target.id)
-    findAndRemoveNearestEntity('left')
-  }
-
-  const onTapRight = async (e: SpatialTapEntityEvent) => {
-    console.log('tap right', e.target.id)
-    findAndRemoveNearestEntity('right')
   }
 
   const findAndRemoveNearestEntity = (side: 'left' | 'right') => {
@@ -214,6 +203,17 @@ function App() {
               width: '100vw',
               height: '100vh',
             }}
+            // Route taps by X position instead of entity-level handlers
+            onSpatialTap={e => {
+              const x = e.clientX ?? 0
+              if (x < 0) {
+                // left area
+                findAndRemoveNearestEntity('left')
+              } else {
+                // right area
+                findAndRemoveNearestEntity('right')
+              }
+            }}
           >
             <UnlitMaterial id={material.right} color="#ff0000" />
             <UnlitMaterial id={material.left} color="#00ff00" />
@@ -225,7 +225,6 @@ function App() {
                 cornerRadius={boxSize.cornerRadius}
                 materials={[material.right]}
                 position={{ x: 0.2, y: 0, z: 0.4 }}
-                onSpatialTap={onTapRight}
               />
               <BoxEntity
                 width={boxSize.width}
@@ -234,7 +233,6 @@ function App() {
                 cornerRadius={boxSize.cornerRadius}
                 materials={[material.left]}
                 position={{ x: -0.2, y: 0, z: 0.4 }}
-                onSpatialTap={onTapLeft}
               />
               {entityList.map((entityInfo, index) => (
                 <BoxEntity
