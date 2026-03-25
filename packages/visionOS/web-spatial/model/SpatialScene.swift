@@ -1111,11 +1111,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     /// fromId/toId can reference either the scene (window) or an entity.
     /// Step 1: Convert position to window coordinates (view global, px)
     ///   - If from is window (scene), position is already in view global (px). Go to Step 2.
+    ///   - If from is 2d frame(SpatializedElement), position is in view local (px).
+    ///     - view local → window (view global, px) using SpatializedElement.convertToScene
     ///   - If from is an entity, position is in reality entity local (meters):
     ///     - entity local → reality world (scene)
     ///     - reality world → window (view global, px)
     /// Step 2: Convert window coordinates (view global, px) to target output
     ///   - If to is window, output directly.
+    ///   - If to is 2d frame(SpatializedElement), output in view local (px).
+    ///     - window (view global, px) → view local using SpatializedElement.convertFromScene
     ///   - If to is an entity, output in reality entity local (meters):
     ///     - window (view global, px) → reality world (scene)
     ///     - reality world → reality entity local (meters)
@@ -1126,7 +1130,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         let input = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
         let fromEntity = spatialObjects[command.fromId] as? SpatialEntity
+        let from2dFrame = spatialObjects[command.fromId] as? SpatializedElement
         let toEntity = spatialObjects[command.toId] as? SpatialEntity
+        let to2dFrame = spatialObjects[command.toId] as? SpatializedElement
 
         var globalPx: Point3D
         if isSceneId(command.fromId) {
@@ -1138,6 +1144,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 return
             }
             globalPx = content.convert(point: world, from: .scene, to: .global)
+        } else if let from2dFrame {
+            let localPoint = SIMD3<Double>(Double(input.x), Double(input.y), Double(input.z))
+            let scenePoint = from2dFrame.convertToScene(localPoint)
+            globalPx = Point3D(x: scenePoint.x, y: scenePoint.y, z: scenePoint.z)
         } else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Invalid fromId")))
             return
@@ -1155,6 +1165,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let world = content.convert(globalPx, from: .global, to: .scene)
             let local = toEntity.convert(position: world, from: nil)
             let ret = Vec3(x: CGFloat(local.x), y: CGFloat(local.y), z: CGFloat(local.z))
+            resolve(.success(ret))
+            return
+        } else if let to2dFrame {
+            let scenePoint = SIMD3<Double>(globalPx.x, globalPx.y, globalPx.z)
+            let localPoint = to2dFrame.convertFromScene(scenePoint)
+            let ret = Vec3(x: CGFloat(localPoint.x), y: CGFloat(localPoint.y), z: CGFloat(localPoint.z))
             resolve(.success(ret))
             return
         } else {
