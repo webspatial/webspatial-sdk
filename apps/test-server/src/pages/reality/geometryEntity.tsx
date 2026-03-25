@@ -303,6 +303,13 @@ function App() {
             '--xr-back': 200,
           }}
           ref={realityRef}
+          // Add spatial events on Reality to preserve sample behavior after removing entity handlers
+          onSpatialTap={e => {
+            // Basic tap log with both local and global positions
+            log('tap', e.detail.location3D)
+            log('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+            log('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -365,10 +372,6 @@ function App() {
                 splitFaces={true}
                 position={boxPosition}
                 rotation={boxRotation}
-                onSpatialTap={async e => {
-                  setShowModelEntity(pre => !pre)
-                  console.log('ent parent', entRef.current?.entity?.parent)
-                }}
               ></BoxEntity>
               <SphereEntity
                 id="sphereGreen"

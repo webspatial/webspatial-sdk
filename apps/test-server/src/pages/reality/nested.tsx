@@ -160,6 +160,15 @@ function App() {
               height: '400px',
               '--xr-depth': 100,
             }}
+            // Add spatial events on Reality to preserve sample behavior after removing entity handlers
+            onSpatialTap={e => {
+              log('tap', e.detail.location3D)
+              // Toggle model visibility similar to previous entity-level tap handler
+              // Use a simple heuristic: taps near center control the model
+              if (Math.abs(e.clientX ?? 0) < 0.1) {
+                setShowModelEntity(prev => !prev)
+              }
+            }}
           >
             <UnlitMaterial id="matRed" color="#ff0000" />
             <UnlitMaterial id="matGreen" color="#00ff00" />
@@ -179,22 +188,6 @@ function App() {
                   materials={['matRed']}
                   position={boxPosition}
                   rotation={boxRotation}
-                  onSpatialTap={async e => {
-                    console.log('tap box', e.detail.location3D)
-                    const pos = await myRef.current?.convertFromEntityToEntity(
-                      'boxGreen',
-                      'boxRed',
-                      e.detail.location3D,
-                    )
-                    console.log('🚀 ~ pos:', pos)
-                    const pos2 =
-                      await myRef.current?.convertFromEntityToReality(
-                        'boxGreen',
-                        e.detail.location3D,
-                      )
-                    console.log('🚀 ~ pos2:', pos2)
-                    setShowModelEntity(p => !p)
-                  }}
                 ></BoxEntity>
               </Entity>
               <Entity
@@ -212,38 +205,11 @@ function App() {
                   materials={['matGreen']}
                   position={{ x: 0, y: 0, z: 0 }}
                   rotation={boxRotation}
-                  onSpatialTap={async e => {
-                    // console.log('tap box', e.detail.location3D)
-                    // const pos = await myRef.current?.convertFromEntityToEntity(
-                    //   'boxGreen',
-                    //   'boxRed',
-                    //   e.detail.location3D,
-                    // )
-                    // console.log('🚀 ~ pos:', pos)
-                    // const pos2 = await myRef.current?.convertFromEntityToScene(
-                    //   'boxGreen',
-                    //   e.detail.location3D,
-                    // )
-                    // console.log('🚀 ~ pos2:', pos2)
-                    // setShowModelEntity(p => !p)
-                    const ans = await (
-                      window as any
-                    )?.inspectCurrentSpatialScene()
-                    console.log('🚀 ~ ans:', ans)
-
-                    setShowModelEntity(p => !p)
-                  }}
                 ></BoxEntity>
               </Entity>
 
               {showModelEntity && (
-                <ModelEntity
-                  model="model"
-                  rotation={boxRotation}
-                  onSpatialTap={e => {
-                    console.log('tap model', e.detail.location3D)
-                  }}
-                />
+                <ModelEntity model="model" rotation={boxRotation} />
               )}
             </SceneGraph>
           </Reality>

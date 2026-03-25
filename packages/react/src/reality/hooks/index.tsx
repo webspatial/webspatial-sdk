@@ -1,5 +1,6 @@
 export * from './useEntityTransform'
 export * from './useEntityEvent'
+export * from './useRealityEvents'
 export * from './useEntityId'
 export * from './useEntity'
 export * from './useEntityRef'
