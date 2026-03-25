@@ -69,7 +69,10 @@ export default function RealityGestures() {
           className={btnCls}
           onClick={() => {
             if (realityRef.current) {
-              logLine('Reality clientDepth:', realityRef.current.clientDepth)
+              logLine(
+                'Reality xrClientDepth:',
+                realityRef.current.xrClientDepth,
+              )
             } else {
               logLine('Reality ref is null')
             }
