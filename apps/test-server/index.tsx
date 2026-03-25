@@ -97,7 +97,7 @@ function App() {
     <Router>
       <div
         className={outerClass}
-        style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
+        style={{ backgroundColor: 'var(--spa-bg-color)' }}
       >
         <Sidebar />
         <main className={mainClass}>
