@@ -26,6 +26,10 @@ export const routes = [
         path: '/reality/entity-spatial-div-convert',
         label: 'Entity/Div Convert',
       },
+      {
+        path: '/reality/model-spatial-div-convert',
+        label: 'Model/Div Convert',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },
