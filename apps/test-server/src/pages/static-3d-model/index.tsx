@@ -26,8 +26,6 @@ function App() {
       <EntityTransform model={modelRef} />
       <Model
         className="block"
-        src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
-        // src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
         // src="/modelasset/cone.usdz"
         enable-xr
         autoplay
@@ -39,12 +37,8 @@ function App() {
           transform,
         }}
         ref={modelRef}
-        onError={e =>
-          logLine(`Model load error ${modelRef.current?.currentSrc}`)
-        }
-        onLoad={e =>
-          logLine(`Model load success ${modelRef.current?.currentSrc}`)
-        }
+        onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${modelRef.current?.currentSrc}`)}
         onSpatialTap={e => {
           logLine(
             'model onSpatialTap',
@@ -71,6 +65,15 @@ function App() {
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}
       >
+        <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <source
+          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+          type="model/vnd.usdz+zip"
+        />
         <img
           src="/modelasset/cone.png"
           className="w-full h-[200px] object-contain"

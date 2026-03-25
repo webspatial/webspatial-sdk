@@ -212,6 +212,11 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let scrollEdgeInsetsMarginRight: Double?
 }
 
+struct ModelSourceJSB: Codable {
+    let src: String
+    let type: String?
+}
+
 struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
@@ -240,6 +245,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let rotateConstrainedToAxis: Vec3?
 
     let modelURL: String?
+    let sources: [ModelSourceJSB]?
     let modelTransform: [Double]?
     let autoplay: Bool?
     let loop: Bool?
