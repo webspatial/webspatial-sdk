@@ -59,105 +59,119 @@ struct SpatializedStatic3DView: View {
         return nil
     }
 
+    @ViewBuilder
+    private var modelContent: some View {
+        if let asset {
+            Model3D(asset: asset) { resolvedModel3D in
+                resolvedModel3D
+                    .resizable(true)
+                    .aspectRatio(
+                        nil,
+                        contentMode: .fit
+                    )
+                    .if(!spatializedElement.depth.isZero) { view in view.scaledToFit3D() }
+                    .onAppear {
+                        self.onLoadSuccess()
+                    }
+                    .if(spatializedElement.enableGesture) { view in view.hoverEffect() }
+            }
+        } else if loadFailed {
+            Text("").onAppear {
+                self.onLoadFailure()
+            }
+        } else {
+            ProgressView()
+        }
+    }
+
+    private func handleAnimationComplete(_ isComplete: Bool?) {
+        guard isComplete == true,
+              spatializedStatic3DElement.loop,
+              let asset,
+              let animation = asset.availableAnimations.first else { return }
+        asset.selectedAnimation = animation
+        asset.animationPlaybackController?.resume()
+    }
+
+    private func handlePausedChange(_ paused: Bool) {
+        guard let asset,
+              let controller = asset.animationPlaybackController else { return }
+        // Ensure an animation is selected before resuming
+        if !paused, asset.selectedAnimation == nil,
+           let firstAnimation = asset.availableAnimations.first
+        {
+            asset.selectedAnimation = firstAnimation
+        }
+        if paused {
+            controller.pause()
+        } else {
+            controller.resume()
+        }
+        controller.speed = Float(spatializedStatic3DElement.playbackRate)
+        let duration = asset.animationPlaybackController?.duration ?? 0
+        spatialScene.sendWebMsg(
+            spatializedElement.id,
+            AnimationStateChangeEvent(
+                detail: AnimationStateChangeDetail(paused: paused, duration: duration)
+            )
+        )
+    }
+
+    private func handlePlaybackRateChange(_ rate: Double) {
+        guard let asset,
+              let controller = asset.animationPlaybackController else { return }
+        controller.speed = Float(rate)
+    }
+
+    private func loadSources() async {
+        // Sequential fallback through sources
+        if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
+            if spatializedStatic3DElement.autoplay,
+               let firstAnimation = loaded.availableAnimations.first
+            {
+                loaded.selectedAnimation = firstAnimation
+                loaded.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
+                spatializedStatic3DElement.animationPaused = false
+            }
+            asset = loaded
+            loadFailed = false
+        } else {
+            asset = nil
+            loadFailed = true
+        }
+    }
+
     var body: some View {
-        let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation!
-        let x = translation.x
-        let y = translation.y
-        let z = translation.z
 
-        let enableGesture = spatializedElement.enableGesture
         let hasValidSource = URL(string: spatializedStatic3DElement.modelURL) != nil || !spatializedStatic3DElement.sources.isEmpty
         if hasValidSource {
-            Group {
-                if let asset {
-                    Model3D(asset: asset) { resolvedModel3D in
-                        resolvedModel3D
-                            .resizable(true)
-                            .aspectRatio(
-                                nil,
-                                contentMode: .fit
-                            )
-                            .if(!depth.isZero) { view in view.scaledToFit3D() }
-                            .onAppear {
-                                self.onLoadSuccess()
-                            }
-                            .if(enableGesture) { view in view.hoverEffect() }
-                    }
-                } else if loadFailed {
-                    Text("").onAppear {
-                        self.onLoadFailure()
-                    }
-                } else {
-                    ProgressView()
+            modelContent
+                .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
+                    handleAnimationComplete(isComplete)
                 }
-            }
-            .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
-                guard isComplete == true,
-                      spatializedStatic3DElement.loop,
-                      let asset,
-                      let animation = asset.availableAnimations.first else { return }
-                asset.selectedAnimation = animation
-                asset.animationPlaybackController?.resume()
-            }
-            .onChange(of: spatializedStatic3DElement.animationPaused) { _, paused in
-                guard let asset,
-                      let controller = asset.animationPlaybackController else { return }
-                // Ensure an animation is selected before resuming
-                if !paused, asset.selectedAnimation == nil,
-                   let firstAnimation = asset.availableAnimations.first
-                {
-                    asset.selectedAnimation = firstAnimation
+                .onChange(of: spatializedStatic3DElement.animationPaused) { _, paused in
+                    handlePausedChange(paused)
                 }
-                if paused {
-                    controller.pause()
-                } else {
-                    controller.resume()
+                .onChange(of: spatializedStatic3DElement.playbackRate) { _, rate in
+                    handlePlaybackRateChange(rate)
                 }
-                controller.speed = Float(spatializedStatic3DElement.playbackRate)
-                let duration = asset.availableAnimations.first?.definition.duration ?? 0
-                spatialScene.sendWebMsg(
-                    spatializedElement.id,
-                    AnimationStateChangeEvent(
-                        detail: AnimationStateChangeDetail(paused: paused, duration: duration)
-                    )
+                .task(id: spatializedStatic3DElement.allSources) {
+                    await loadSources()
+                }
+                .scaleEffect(
+                    x: scale.width,
+                    y: scale.height,
+                    z: scale.depth
                 )
-            }
-            .onChange(of: spatializedStatic3DElement.playbackRate) { _, rate in
-                guard let asset,
-                      let controller = asset.animationPlaybackController else { return }
-                controller.speed = Float(rate)
-            }
-            .task(id: spatializedStatic3DElement.allSources) {
-                // Sequential fallback through sources
-                if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
-                    if spatializedStatic3DElement.autoplay,
-                       let firstAnimation = loaded.availableAnimations.first
-                    {
-                        loaded.selectedAnimation = firstAnimation
-                        loaded.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
-                        spatializedStatic3DElement.animationPaused = false
-                    }
-                    self.asset = loaded
-                    self.loadFailed = false
-                } else {
-                    self.asset = nil
-                    self.loadFailed = true
-                }
-            }
-            .scaleEffect(
-                x: scale.width,
-                y: scale.height,
-                z: scale.depth
-            )
-            .rotation3DEffect(
-                rotation
-            )
-            .offset(x: x, y: y)
-            .offset(z: z)
+                .rotation3DEffect(
+                    rotation
+                )
+                .offset(x: translation.x, y: translation.y)
+                .offset(z: translation.z)
         } else {
             EmptyView()
         }
