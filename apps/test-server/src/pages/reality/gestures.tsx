@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Reality,
@@ -6,6 +5,7 @@ import {
   Entity,
   BoxEntity,
   UnlitMaterial,
+  SpatializedElementRef,
 } from '@webspatial/react-sdk'
 
 const btnCls =
@@ -30,6 +30,7 @@ export default function RealityGestures() {
   const rotateBaseRef = useRef(boxRot)
   const activeGestureRef = useRef<null | 'drag' | 'rotate' | 'magnify'>(null)
   const logRef = useRef<HTMLPreElement>(null)
+  const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
   function logLine(...args: any[]) {
     const msg = args
@@ -63,6 +64,18 @@ export default function RealityGestures() {
         </button>
         <button className={btnCls} onClick={() => setRedInputEnabled(v => !v)}>
           {redInputEnabled ? 'Disable' : 'Enable'} Red Input
+        </button>
+        <button
+          className={btnCls}
+          onClick={() => {
+            if (realityRef.current) {
+              logLine('Reality clientDepth:', realityRef.current.clientDepth)
+            } else {
+              logLine('Reality ref is null')
+            }
+          }}
+        >
+          Log clientDepth
         </button>
       </div>
 
@@ -98,6 +111,7 @@ export default function RealityGestures() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111]">
           <Reality
+            ref={realityRef}
             style={{
               width: '100%',
               height: '500px',
@@ -151,7 +165,7 @@ export default function RealityGestures() {
               )
                 return
               if (exclusive) activeGestureRef.current = null
-              logLine('dragEnd', e.detail.translation3D)
+              logLine('dragEnd')
             }}
             onSpatialRotate={e => {
               if (!enabled || e.target?.id !== 'boxGreen') return
