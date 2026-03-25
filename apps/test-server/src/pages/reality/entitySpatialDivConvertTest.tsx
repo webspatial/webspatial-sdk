@@ -8,6 +8,7 @@ import {
   SpatializedElementRef,
   UnlitMaterial,
   convertCoordinate,
+  useMetrics,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
@@ -16,6 +17,8 @@ const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 
 export default function EntitySpatialDivConvertTest() {
+  const { pointToPhysical } = useMetrics()
+
   const [logs, setLogs] = useState('')
   const logsRef = useRef<HTMLPreElement>(null)
 
@@ -185,9 +188,9 @@ export default function EntitySpatialDivConvertTest() {
               <BoxEntity
                 ref={entityARef}
                 name="entityA"
-                width={0.1}
-                height={0.1}
-                depth={0.1}
+                width={pointToPhysical(120)}
+                height={pointToPhysical(120)}
+                depth={pointToPhysical(120)}
                 materials={['matRed']}
                 position={entityAPos}
               />
