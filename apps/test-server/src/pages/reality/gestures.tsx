@@ -16,6 +16,7 @@ export default function RealityGestures() {
   const [enabled, setEnabled] = useState<boolean>(true)
   const [exclusive, setExclusive] = useState<boolean>(false)
   const [inputEnabled, setInputEnabled] = useState<boolean>(true)
+  const [redInputEnabled, setRedInputEnabled] = useState<boolean>(false)
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0, z: 0 })
   const [boxRot, setBoxRot] = useState<{ x: number; y: number; z: number }>({
     x: 0,
@@ -58,8 +59,40 @@ export default function RealityGestures() {
           Clear Log
         </button>
         <button className={btnCls} onClick={() => setInputEnabled(v => !v)}>
-          {inputEnabled ? 'Disable' : 'Enable'} InputTarget
+          {inputEnabled ? 'Disable' : 'Enable'} Green Input
         </button>
+        <button className={btnCls} onClick={() => setRedInputEnabled(v => !v)}>
+          {redInputEnabled ? 'Disable' : 'Enable'} Red Input
+        </button>
+      </div>
+
+      <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/50 rounded-lg flex gap-6 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#22cc66]"></span>
+          <span className="text-gray-300">Green Box:</span>
+          <span
+            className={
+              inputEnabled
+                ? 'text-green-400 font-bold'
+                : 'text-red-400 font-bold'
+            }
+          >
+            {inputEnabled ? 'ENABLED' : 'DISABLED'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#ff0000]"></span>
+          <span className="text-gray-300">Red Box:</span>
+          <span
+            className={
+              redInputEnabled
+                ? 'text-green-400 font-bold'
+                : 'text-red-400 font-bold'
+            }
+          >
+            {redInputEnabled ? 'ENABLED' : 'DISABLED'}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -72,14 +105,14 @@ export default function RealityGestures() {
               '--xr-back': 100,
             }}
             onSpatialTap={async e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               console.log('onSpatialTap', e.target, e.currentTarget)
               logLine('tap box', e.detail.location3D)
               logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
               logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
             }}
             onSpatialDragStart={async e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -93,7 +126,7 @@ export default function RealityGestures() {
               logLine('dragStart clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
             }}
             onSpatialDrag={async e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -110,7 +143,7 @@ export default function RealityGestures() {
               logLine('drag', t)
             }}
             onSpatialDragEnd={async e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -121,7 +154,7 @@ export default function RealityGestures() {
               logLine('dragEnd', e.detail.translation3D)
             }}
             onSpatialRotate={e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               logLine('rotate', e.quaternion)
               if (
                 exclusive &&
@@ -157,7 +190,7 @@ export default function RealityGestures() {
               })
             }}
             onSpatialRotateEnd={e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -169,7 +202,7 @@ export default function RealityGestures() {
               logLine('rotateEnd')
             }}
             onSpatialMagnify={e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -191,7 +224,7 @@ export default function RealityGestures() {
               })
             }}
             onSpatialMagnifyEnd={e => {
-              if (!enabled) return
+              if (!enabled || e.target?.id !== 'boxGreen') return
               if (
                 exclusive &&
                 activeGestureRef.current &&
@@ -202,9 +235,22 @@ export default function RealityGestures() {
               logLine('magnifyEnd')
             }}
           >
+            <UnlitMaterial id="matRed" color="#ff0000" />
             <UnlitMaterial id="matGreen" color="#22cc66" />
             <SceneGraph>
               <Entity position={{ x: 0, y: 0, z: 0 }}>
+                <BoxEntity
+                  id="boxRed"
+                  width={0.1}
+                  height={0.1}
+                  depth={0.05}
+                  cornerRadius={0.5}
+                  position={{ ...boxPos, z: boxPos.z + 0.15 }}
+                  rotation={boxRot}
+                  scale={boxScale}
+                  materials={['matRed']}
+                  enableInput={redInputEnabled}
+                />
                 <BoxEntity
                   id="boxGreen"
                   width={0.2}
