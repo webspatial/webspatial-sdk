@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, CSSProperties } from 'react'
 import styled from 'styled-components'
 import './CssApi.css'
 
-type CSSVarStyle = Record<`--${string}`, string | number>
+type CSSVarStyle = Record<`--${string}`, string | number | undefined>
 type InlineStyle = Pick<
   CSSProperties,
   | 'borderRadius'
@@ -75,11 +75,11 @@ function CSSApiTest() {
     '--box-translate-x': `${translateX}px`,
     '--box-rotate-z': `${rotateZ}deg`,
     '--box-transformOrigin': transformOrigin,
-    '--box-visibility': visibility,
-    '--box-display': display,
+    '--box-visibility': visibility || undefined,
+    '--box-display': display || undefined,
     '--box-xr-back': xrBack,
     '--box-xr-background-material': backgroundMaterial,
-    '--box-contentVisibility': contentVisibility,
+    '--box-contentVisibility': contentVisibility || undefined,
   }
 
   const [elementState, setElementState] = useState({
@@ -341,8 +341,8 @@ function CSSApiTest() {
         ref.current.style.getPropertyValue('transform-Origin')
       console.log('Get transform value:', currentTransformOrigin)
       updateElementState(ref)
-      setTransformOrigin('left center')
     }
+    setTransformOrigin('50% 50%')
   }
 
   const [zIndex, setZIndex] = useState(0)
@@ -500,12 +500,14 @@ function CSSApiTest() {
                 enable-xr
                 style={boxStyles}
                 className="testElement w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white   "
+                data-testid="css-inline-style-target"
               >
                 Test CSS Module
               </div>
             ) : (
               <StyledElement
                 className="w-32 h-32 bg-gradient-to-r bg-opacity-15 bg-red-200/30  rounded-lg flex items-center justify-center text-white   "
+                data-testid="css-inline-style-target"
                 enable-xr
                 opacity={opacity}
                 display={display}
@@ -842,6 +844,7 @@ function CSSApiTest() {
             <select
               value={styleMode}
               onChange={e => setStyleMode(e.target.value)}
+              data-testid="css-style-mode-select"
             >
               <option value="In-line style">In-line style</option>
               <option value="Css module">Css module</option>
