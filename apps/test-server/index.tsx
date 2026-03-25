@@ -63,6 +63,7 @@ import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
 import UnitConvertTest from './src/pages/unitConvert'
 import CoordConvertTest from './src/pages/reality/coordConvertTest'
+import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
 
 class ErrorBoundary extends React.Component<
@@ -163,6 +164,10 @@ function App() {
                 <Route
                   path="/reality/coordConvertTest"
                   element={<CoordConvertTest />}
+                />
+                <Route
+                  path="/reality/spatial-div-coord"
+                  element={<SpatialDivCoordTest />}
                 />
                 <Route path="/reality/aliases" element={<RealityAliases />} />
                 <Route path="/reality-test" element={<RealityTestIndex />} />

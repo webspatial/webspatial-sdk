@@ -21,6 +21,7 @@ export const routes = [
       { path: '/reality/nested', label: 'Nested' },
       { path: '/reality/aliases', label: 'Aliases & Material' },
       { path: '/reality/coordConvertTest', label: 'Coord Convert Test' },
+      { path: '/reality/spatial-div-coord', label: 'Spatial Div Coord' },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BoxEntity,
   enableDebugTool,
@@ -39,10 +40,12 @@ export default function CoordConvertTest() {
     setLogs(pre => {
       let ans = pre + '\n'
       for (let i = 0; i < args.length; i++) {
-        if (typeof args[i] === 'object') {
-          ans += JSON.stringify(args[i])
+        const item = args[i]
+        if (typeof item === 'object' && item !== null) {
+          // Use JSON.stringify's replacer array to fix the order of all keys
+          ans += JSON.stringify(item, Object.keys(item).sort())
         } else {
-          ans += args[i]
+          ans += item
         }
       }
       return ans
@@ -75,38 +78,6 @@ export default function CoordConvertTest() {
     }
     return () => {}
   }, [rotOn])
-
-  // 2D SpatialDiv setup
-  const aDivRef = useRef<HTMLDivElement>(null)
-  const [bTranslate] = useState({ x: 240, y: 120, z: 0 })
-  const [aTranslate, setATranslate] = useState({ x: 40, y: 40, z: 0 })
-  const bDivRef = useRef<HTMLDivElement>(null)
-
-  async function handleMove2DAtoB() {
-    const aEl = aDivRef.current as any
-    const bEl = bDivRef.current as any
-    if (!aEl || !bEl) {
-      log('2D Move A to B failed: refs not ready')
-      return
-    }
-    // aInB = Position of A's origin in B's local (px) coordinate system (relative displacement)
-    const aInB = await convertCoordinate(
-      { x: 0, y: 0, z: 0 },
-      { from: aEl, to: bEl },
-    )
-    // Use relative displacement directly: move A in the opposite direction to align A's origin with B's origin
-    setATranslate(prev => ({
-      x: (prev.x ?? 0) - (aInB.x ?? 0),
-      y: (prev.y ?? 0) - (aInB.y ?? 0),
-      z: (prev.z ?? 0) - (aInB.z ?? 0),
-    }))
-    log('2D A->B delta (aEl→bEl relative displacement):', aInB)
-  }
-
-  function handleResetA2D() {
-    // Reset A to its initial position
-    setATranslate({ x: 40, y: 40, z: 0 })
-  }
 
   async function handleConvertAtoB() {
     const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
@@ -194,7 +165,15 @@ export default function CoordConvertTest() {
 
   return (
     <div className="p-4 overflow-auto h-full text-white">
-      <h1 className="text-2xl mb-4">Coord Convert Test</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl">Coord Convert Test</h1>
+        <Link
+          to="/reality/spatial-div-coord"
+          className="text-blue-400 hover:underline text-sm"
+        >
+          Go to 2D SpatialDiv Coord Test →
+        </Link>
+      </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
         <button className={btnCls} onClick={handleClearLogs}>
@@ -304,67 +283,6 @@ export default function CoordConvertTest() {
               </Entity>
             </SceneGraph>
           </Reality>
-        </div>
-      </div>
-
-      {/* 2D SpatialDiv Section */}
-      <div className="mt-6">
-        <div className="text-sm font-bold mb-2">2D SpatialDiv (A / B)</div>
-        <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111] p-4">
-          <div className="relative" style={{ width: '100%', height: '240px' }}>
-            <div
-              id="spatialA"
-              ref={aDivRef}
-              enable-xr
-              style={{
-                position: 'absolute',
-                left: aTranslate.x,
-                top: aTranslate.y,
-                width: '180px',
-                height: '120px',
-                backgroundColor: '#ff0000',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                '--xr-back': 120,
-                '--xr-background-material': 'thin',
-              }}
-            >
-              A
-            </div>
-            <div
-              id="spatialB"
-              ref={bDivRef}
-              enable-xr
-              style={{
-                position: 'absolute',
-                left: bTranslate.x,
-                top: bTranslate.y,
-                width: '180px',
-                height: '120px',
-                backgroundColor: '#0000ff',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                '--xr-back': 120,
-                '--xr-background-material': 'thin',
-              }}
-            >
-              B
-            </div>
-          </div>
-          <div className="flex gap-2 mt-4 flex-wrap">
-            <button className={btnCls} onClick={handleMove2DAtoB}>
-              Move2DAtoB
-            </button>
-            <button className={btnCls} onClick={handleResetA2D}>
-              Reset A
-            </button>
-          </div>
         </div>
       </div>
 
