@@ -157,7 +157,7 @@ export default function SpatialDivCoordTest() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                '--xr-back': 120,
+                '--xr-back': 121,
                 '--xr-background-material': 'thin',
               }}
             >
