@@ -122,9 +122,6 @@ describe('PortalInstanceObject', () => {
     )
 
     expect((dom as any).__spatializedElement).toBe(spatializedElement)
-    expect(typeof (dom as any).__getBoundingClientRect).toBe('function')
-    expect(typeof (dom as any).__toSceneSpace).toBe('function')
-    expect(typeof (dom as any).__toLocalSpace).toBe('function')
     expect(typeof (dom as any).__innerSpatializedElement).toBe('function')
   })
 

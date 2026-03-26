@@ -8,7 +8,6 @@ import {
   SpatialTransformVisibility,
 } from '../types'
 import { getSession } from '../../utils'
-import { convertDOMRectToSceneSpace } from '../transform-utils'
 
 type DomRect = {
   x: number
@@ -142,44 +141,9 @@ export class PortalInstanceObject {
 
     this.updateSpatializedElementProperties()
 
-    // attach __getBoundingClientCube to dom
-    const __getBoundingClientCube = () => {
-      return this.spatializedElement?.cubeInfo
-    }
-    const __getBoundingClientRect = () => {
-      if (!this.spatializedElement?.transform) {
-        return null
-      }
-
-      const domRect = new DOMRect(
-        0,
-        0,
-        this.domRect?.width,
-        this.domRect?.height,
-      )
-      return convertDOMRectToSceneSpace(
-        domRect,
-        this.spatializedElement?.transform as DOMMatrix,
-      )
-    }
-    const __toSceneSpace = (point: Point3D): DOMPoint => {
-      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
-        this.spatializedElement?.transform,
-      )
-    }
-    const __toLocalSpace = (point: Point3D): DOMPoint => {
-      return new DOMPoint(point.x, point.y, point.z).matrixTransform(
-        this.spatializedElement?.transformInv,
-      )
-    }
-
     const __innerSpatializedElement = () => this.spatializedElement
 
     Object.assign(dom, {
-      __getBoundingClientCube,
-      __getBoundingClientRect,
-      __toSceneSpace,
-      __toLocalSpace,
       __innerSpatializedElement,
     })
   }

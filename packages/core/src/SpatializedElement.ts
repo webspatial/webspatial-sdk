@@ -16,7 +16,6 @@ import {
   SpatialTapEvent,
 } from './types/types'
 import {
-  CubeInfoMsg,
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
@@ -27,7 +26,6 @@ import {
   SpatialRotateMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
-  TransformMsg,
 } from './WebMsgCommand'
 
 /**
@@ -115,8 +113,6 @@ export abstract class SpatializedElement extends SpatialObject {
    */
   protected onReceiveEvent(
     data:
-      | CubeInfoMsg
-      | TransformMsg
       | SpatialTapMsg
       | SpatialDragStartMsg
       | SpatialDragMsg
@@ -128,31 +124,6 @@ export abstract class SpatializedElement extends SpatialObject {
     const { type } = data
     if (type === SpatialWebMsgType.objectdestroy) {
       this.isDestroyed = true
-    } else if (type === SpatialWebMsgType.cubeInfo) {
-      // Handle cube info updates (bounding box information)
-      const cubeInfoMsg = data as CubeInfoMsg
-      this._cubeInfo = new CubeInfo(cubeInfoMsg.size, cubeInfoMsg.origin)
-    } else if (type === SpatialWebMsgType.transform) {
-      // Handle transformation matrix updates
-      this._transform = new DOMMatrix([
-        data.detail.column0[0],
-        data.detail.column0[1],
-        data.detail.column0[2],
-        0,
-        data.detail.column1[0],
-        data.detail.column1[1],
-        data.detail.column1[2],
-        0,
-        data.detail.column2[0],
-        data.detail.column2[1],
-        data.detail.column2[2],
-        0,
-        data.detail.column3[0],
-        data.detail.column3[1],
-        data.detail.column3[2],
-        1,
-      ])
-      this._transformInv = this._transform.inverse()
     } else if (type === SpatialWebMsgType.spatialtap) {
       // Handle tap gestures
       const event = createSpatialEvent(

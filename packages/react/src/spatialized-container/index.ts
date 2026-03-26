@@ -33,8 +33,6 @@ export {
   type SpatialEventOptions,
 } from './types'
 
-export { toSceneSpatial, toLocalSpace } from './transform-utils'
-
 export function initPolyfill() {
   hijackGetComputedStyle()
   injectSpatialDefaultStyle()
