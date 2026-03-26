@@ -39,7 +39,7 @@ declare global {
 
   interface HTMLElement {
     offsetBack: number
-    clientDepth: number
+    xrClientDepth: number
     getBoundingClientCube: () => CubeInfo | undefined
   }
 }
