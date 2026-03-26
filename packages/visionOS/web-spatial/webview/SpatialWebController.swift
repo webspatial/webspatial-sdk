@@ -113,7 +113,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         print("urlSchemeTask")
         let url = urlSchemeTask.request.url
         if url!.absoluteString.starts(with: "file://") {
-            let urlRequest = urlSchemeTask.request
+            let resource: String = pwaManager.getLocalResourceURL(url: url!.absoluteString)
+            var urlRequest = urlSchemeTask.request
+            if resource != "" {
+                urlRequest = URLRequest(url: URL(string: resource)!)
+            } else {
+                return
+            }
 
             let session = URLSession(configuration: URLSessionConfiguration.default)
             let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in
