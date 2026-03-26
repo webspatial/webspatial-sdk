@@ -797,7 +797,7 @@ function DomApiTest() {
               ref.scrollTop: ${ref.current.scrollTop}, ref.scrollLeft: ${ref.current.scrollLeft}
               ref.clientTop: ${ref.current.clientTop}, ref.clientLeft: ${ref.current.clientLeft}
               ref.previousElementSibling: ${ref.current.previousElementSibling}, ref.offsetParent: ${ref.current.offsetParent?.tagName}
-              ref.offsetBack: ${ref.current.offsetBack}
+              ref.xrOffsetBack: ${ref.current.xrOffsetBack}
               ref.checkVisibility: ${ref.current.checkVisibility()}
 ref.getBoundingClientRect: ${JSON.stringify(ref.current.getBoundingClientRect())}
               ref.getAttribute('style'): ${ref.current.getAttribute('style')}
