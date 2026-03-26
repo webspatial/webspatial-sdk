@@ -23,7 +23,6 @@ import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
 import {
-  CubeInfoMsg,
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
@@ -34,7 +33,6 @@ import {
   SpatialRotateMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
-  TransformMsg,
 } from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
@@ -150,9 +148,8 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (
-    data: // | CubeInfoMsg
-    // | TransformMsg
-    | SpatialTapMsg
+    data:
+      | SpatialTapMsg
       | SpatialDragStartMsg
       | SpatialDragMsg
       | SpatialDragEndMsg

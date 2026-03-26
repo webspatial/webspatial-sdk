@@ -42,12 +42,6 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             if (prop === 'xrOffsetBack') {
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
             }
-            if (prop === 'getBoundingClientRect') {
-              return (dom as any).__getBoundingClientRect
-            }
-            if (prop === 'getBoundingClientCube') {
-              return (dom as any).__getBoundingClientCube
-            }
             if (prop === 'style') {
               if (!self.styleProxy) {
                 self.styleProxy = new Proxy<CSSStyleDeclaration>(target.style, {

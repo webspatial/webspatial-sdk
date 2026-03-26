@@ -9,7 +9,6 @@ import {
   // SpatialMagnifyEndEvent,
   SpatializedElementRef,
   // SpatialMagnifyEvent,
-  toSceneSpatial,
   // SpatialDragEndEvent,
   Model,
   ModelRef,
@@ -24,8 +23,6 @@ import {
   ModelLoadEvent,
   ModelSpatialDragStartEvent,
   SpatialDragEndEvent,
-  // ModelSpatialMagnifyEndEvent,
-  // toLocalSpace,
 } from '@webspatial/react-sdk'
 import { CSSProperties, useRef } from 'react'
 
@@ -55,55 +52,35 @@ function ModelTest() {
   const onSpatialTap = (e: ModelSpatialTapEvent) => {
     console.log(
       'model onSpatialTap',
-      e.currentTarget.getBoundingClientCube(),
-      e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
-      toSceneSpatial(e.detail.location3D, e.currentTarget),
       e.currentTarget.currentSrc,
     )
   }
 
   const onSpatialDragStart = (e: ModelSpatialDragStartEvent) => {
-    console.log(
-      'model onSpatialDragStart',
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('model onSpatialDragStart', e.isTrusted)
   }
 
   const onSpatialDrag = (e: ModelSpatialDragEvent) => {
-    console.log(
-      'model onSpatialDrag',
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('model onSpatialDrag', e.isTrusted)
   }
 
   const onSpatialDragEnd = (e: ModelSpatialDragEndEvent) => {
-    console.log(
-      'model onSpatialDragEnd',
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('model onSpatialDragEnd', e.isTrusted)
   }
 
   const onSpatialRotateEnd = (e: ModelSpatialRotateEndEvent) => {
-    console.log(
-      'model onSpatialRotateEnd:',
-      e.detail,
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('model onSpatialRotateEnd:', e.detail, e.isTrusted)
   }
 
   ;(window as any).refModel = refModel
 
   const onLoad = (event: ModelLoadEvent) => {
-    console.log('model onLoad', event, event.target.getBoundingClientCube())
+    console.log('model onLoad', event)
   }
 
   const onError = (event: ModelLoadEvent) => {
-    console.log('model onError', event, event.target.getBoundingClientCube())
+    console.log('model onError', event)
   }
 
   return (
@@ -169,23 +146,15 @@ function App() {
   ;(window as any).refChild = refChild
 
   const onSpatialTap = (e: SpatialTapEvent) => {
-    console.log('child:', e.isTrusted, e.currentTarget.getBoundingClientCube())
+    console.log('child:', e.isTrusted)
   }
 
   const onSpatialDrag = (e: SpatialDragEvent) => {
-    console.log(
-      'child onSpatialDrag:',
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('child onSpatialDrag:', e.isTrusted)
   }
 
   const onSpatialDragEnd = (e: SpatialDragEndEvent) => {
-    console.log(
-      'child onSpatialDrag End:',
-      e.isTrusted,
-      e.currentTarget.getBoundingClientCube(),
-    )
+    console.log('child onSpatialDrag End:', e.isTrusted)
   }
 
   return (

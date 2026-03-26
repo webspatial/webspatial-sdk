@@ -434,49 +434,6 @@ describe('SpatializedElement', () => {
     })
   })
 
-  it('handles transform and cubeInfo events and updates internal state', async () => {
-    const { SpatialWebEvent } = await import('./SpatialWebEvent')
-    const { SpatialWebMsgType } = await import('./WebMsgCommand')
-    const { SpatializedElement } = await import('./SpatializedElement')
-
-    SpatialWebEvent.init()
-
-    class TestElement extends SpatializedElement {
-      updateProperties = vi.fn().mockResolvedValue({
-        success: true,
-        data: undefined,
-        errorCode: '',
-        errorMessage: '',
-      })
-    }
-
-    const e = new TestElement('el2')
-    window.__SpatialWebEvent({
-      id: 'el2',
-      data: {
-        type: SpatialWebMsgType.cubeInfo,
-        size: { width: 1, height: 2, depth: 3 },
-        origin: { x: 4, y: 5, z: 6 },
-      },
-    })
-    expect(e.cubeInfo?.front).toBe(9)
-
-    window.__SpatialWebEvent({
-      id: 'el2',
-      data: {
-        type: SpatialWebMsgType.transform,
-        detail: {
-          column0: [1, 0, 0],
-          column1: [0, 1, 0],
-          column2: [0, 0, 1],
-          column3: [10, 20, 30],
-        },
-      },
-    })
-    expect(e.transform).toBeDefined()
-    expect(e.transformInv).toBeDefined()
-  })
-
   it('updates flags via gesture handler setters and updates transform via JSB', async () => {
     const { SpatialWebEvent } = await import('./SpatialWebEvent')
     const { SpatializedElement } = await import('./SpatializedElement')

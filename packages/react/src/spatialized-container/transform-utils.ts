@@ -1,19 +1,3 @@
-import { Point3D, SpatializedElementRef } from './types'
-
-export function toSceneSpatial(
-  point: Point3D,
-  spatializedElement: SpatializedElementRef,
-): DOMPoint {
-  return (spatializedElement as any).__toSceneSpace(point)
-}
-
-export function toLocalSpace(
-  point: Point3D,
-  spatializedElement: SpatializedElementRef,
-): DOMPoint {
-  return (spatializedElement as any).__toLocalSpace(point)
-}
-
 export function convertDOMRectToSceneSpace(
   originalRect: DOMRect,
   matrix: DOMMatrix,
