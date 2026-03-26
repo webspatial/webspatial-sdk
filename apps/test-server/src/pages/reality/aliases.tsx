@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import {
   Reality,
-  SceneGraph,
+  World,
   Entity,
   Box,
   Plane,
@@ -66,7 +66,7 @@ export default function RealityAliases() {
           <Material type="unlit" id="matOrange" color="#ff9f0a" />
           <Material type="unlit" id="matPurple" color="#bf5af2" />
 
-          <SceneGraph>
+          <World>
             <Entity
               position={{ x: 0, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
@@ -109,7 +109,7 @@ export default function RealityAliases() {
                 rotation={{ x: 0, y: 0, z: rot }}
               />
             </Entity>
-          </SceneGraph>
+          </World>
         </Reality>
       </div>
     </div>
