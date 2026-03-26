@@ -40,8 +40,8 @@ export function createPlatform(): PlatformAbility {
     userAgent.includes('PicoWebApp') &&
     isVersionGreater(webSpatialVersion, [0, 0, 1])
   ) {
-    const XRPlatform = require('./xr/XRPlatform').XRPlatform
-    return new XRPlatform()
+    const SwanPlatform = require('./swan/SwanPlatform').SwanPlatform
+    return new SwanPlatform()
   } else if (userAgent.includes('Android') || userAgent.includes('Linux')) {
     const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
     return new AndroidPlatform()

@@ -76,6 +76,24 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
+      if (url.includes('createSpatialized2DElement')) {
+        if (typeof webSpatial !== 'undefined' && webSpatial.genToken) {
+          const token = webSpatial.genToken()
+          const host = window.location.host
+          const protocol = window.location.protocol
+          const finalURL =
+            protocol +
+            '//' +
+            host +
+            '/' +
+            token +
+            '/?command=createSpatialized2DElement'
+          const rid = new URL(url).searchParams.get('rid')
+          const final = new URL(finalURL)
+          if (rid) final.searchParams.set('rid', rid)
+          return this.originalOpen(final.toString(), target, features)
+        }
+      }
       return this.originalOpen(url, target, features)
     }
 

@@ -23,9 +23,9 @@ function nextRequestId() {
   return `rId_${requestId}`
 }
 
-export class XRPlatform implements PlatformAbility {
+export class SwanPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
-    // android JS Bridge interface only support sync invoking
+    // swan JS Bridge interface only support sync invoking
     // in order to implement promise API, register every request by requestId and remove when resolve/reject.
     return new Promise((resolve, reject) => {
       try {
@@ -54,7 +54,7 @@ export class XRPlatform implements PlatformAbility {
           }
         }
       } catch (error: unknown) {
-        console.error(`XRPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
+        console.error(`SwanPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
         const { code, message } = error as JSBError
         resolve(CommandResultFailure(code, message))
       }
@@ -75,7 +75,6 @@ export class XRPlatform implements PlatformAbility {
         SpatialWebEvent.addEventReceiver(
           createdId,
           (result: { spatialId: string }) => {
-            console.log('createdId', createdId, result.spatialId)
             resolve(
               CommandResultSuccess({
                 windowProxy: windowProxy,
@@ -87,13 +86,11 @@ export class XRPlatform implements PlatformAbility {
         )
         windowProxy = this.openWindow(
           command,
-          query,
+          'rid=' + createdId,
           target,
           features,
         ).windowProxy
-        windowProxy?.open(`about:blank?rid=${createdId}`, '_self')
       } catch (error: unknown) {
-        console.error(`open window error: ${error}`)
         const { code, message } = error as JSBError
         SpatialWebEvent.removeEventReceiver(createdId)
         resolve(CommandResultFailure(code, message))
