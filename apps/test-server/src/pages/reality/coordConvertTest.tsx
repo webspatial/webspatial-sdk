@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BoxEntity,
   enableDebugTool,
@@ -39,10 +40,12 @@ export default function CoordConvertTest() {
     setLogs(pre => {
       let ans = pre + '\n'
       for (let i = 0; i < args.length; i++) {
-        if (typeof args[i] === 'object') {
-          ans += JSON.stringify(args[i])
+        const item = args[i]
+        if (typeof item === 'object' && item !== null) {
+          // Use JSON.stringify's replacer array to fix the order of all keys
+          ans += JSON.stringify(item, Object.keys(item).sort())
         } else {
-          ans += args[i]
+          ans += item
         }
       }
       return ans
@@ -77,19 +80,23 @@ export default function CoordConvertTest() {
   }, [rotOn])
 
   async function handleConvertAtoB() {
-    const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
-    const ret = await convertCoordinate(pos, {
-      from: fromEntityRef.current as any,
-      to: toEntityRef.current as any,
-    })
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: fromEntityRef.current as any,
+        to: toEntityRef.current as any,
+      },
+    )
     log('A->B result:', ret)
   }
   async function handleConvertBtoA() {
-    const pos = toPosition
-    const ret = await convertCoordinate(pos, {
-      from: toEntityRef.current as any,
-      to: fromEntityRef.current as any,
-    })
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: toEntityRef.current as any,
+        to: fromEntityRef.current as any,
+      },
+    )
     log('B->A result:', ret)
   }
   // convert A position to B, then convert back to A
@@ -156,17 +163,32 @@ export default function CoordConvertTest() {
     })
     log('Move A to B target:', target)
   }
+  function handleResetPositions() {
+    setFromPosition({ x: 0, y: 0, z: 0 })
+    setToPosition({ x: 0, y: 0, z: 0 })
+  }
   function handleClearLogs() {
     setLogs('')
   }
 
   return (
     <div className="p-4 overflow-auto h-full text-white">
-      <h1 className="text-2xl mb-4">Coord Convert Test</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl">Coord Convert Test</h1>
+        <Link
+          to="/reality/spatial-div-coord"
+          className="text-blue-400 hover:underline text-sm"
+        >
+          Go to 2D SpatialDiv Coord Test →
+        </Link>
+      </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
         <button className={btnCls} onClick={handleClearLogs}>
           Clear Logs
+        </button>
+        <button className={btnCls} onClick={handleResetPositions}>
+          Reset A/B Position
         </button>
         <button
           className={btnCls}
