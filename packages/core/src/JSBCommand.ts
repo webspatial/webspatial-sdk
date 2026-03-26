@@ -23,6 +23,7 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  ModelSource,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
@@ -288,13 +289,17 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
 export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   commandType = 'CreateSpatializedStatic3DElement'
 
-  constructor(readonly modelURL: string) {
+  constructor(
+    readonly modelURL?: string,
+    readonly sources?: ModelSource[],
+  ) {
     super()
     this.modelURL = modelURL
+    this.sources = sources
   }
 
   protected getParams() {
-    return { modelURL: this.modelURL }
+    return { modelURL: this.modelURL, sources: this.sources }
   }
 }
 

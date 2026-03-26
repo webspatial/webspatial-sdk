@@ -17,10 +17,12 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Registers the element to receive spatial events.
    * @param id Unique identifier for this element
    * @param modelURL URL of the 3D model
+   * @param sources Optional fallback model sources
    */
-  constructor(id: string, modelURL: string) {
+  constructor(id: string, modelURL: string = '', sources?: ModelSource[]) {
     super(id)
     this.modelURL = modelURL
+    this.sources = sources
   }
 
   /**

@@ -3,7 +3,7 @@ import SwiftUI
 
 private let USDZ_MIME_TYPE = "model/vnd.usdz+zip"
 
-struct ModelSource: Equatable {
+struct ModelSource: Codable, Equatable {
     let src: String
     let type: String?
 }

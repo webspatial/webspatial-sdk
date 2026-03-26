@@ -14,7 +14,8 @@ struct AddSpatializedElementToSpatialScene: CommandDataProtocol {
 
 struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedStatic3DElement"
-    let modelURL: String
+    let modelURL: String?
+    let sources: [ModelSource]?
 }
 
 struct CreateSpatializedDynamic3DElement: CommandDataProtocol {
@@ -212,11 +213,6 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     let scrollEdgeInsetsMarginRight: Double?
 }
 
-struct ModelSourceJSB: Codable {
-    let src: String
-    let type: String?
-}
-
 struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties {
     static let commandType: String = "UpdateSpatializedStatic3DElementProperties"
     let id: String
@@ -245,7 +241,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let rotateConstrainedToAxis: Vec3?
 
     let modelURL: String?
-    let sources: [ModelSourceJSB]?
+    let sources: [ModelSource]?
     let modelTransform: [Double]?
     let autoplay: Bool?
     let loop: Bool?

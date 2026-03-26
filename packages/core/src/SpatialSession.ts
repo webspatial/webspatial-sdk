@@ -22,6 +22,7 @@ import {
   SpatialUnlitMaterialOptions,
   SpatialEntityUserData,
   AttachmentEntityOptions,
+  ModelSource,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
@@ -72,9 +73,10 @@ export class SpatialSession {
    * @returns Promise resolving to a new SpatializedStatic3DElement instance
    */
   createSpatializedStatic3DElement(
-    modelURL: string,
+    modelURL?: string,
+    sources?: ModelSource[],
   ): Promise<SpatializedStatic3DElement> {
-    return createSpatializedStatic3DElement(modelURL)
+    return createSpatializedStatic3DElement(modelURL, sources)
   }
 
   /**
