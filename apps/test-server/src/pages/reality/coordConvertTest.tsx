@@ -80,19 +80,23 @@ export default function CoordConvertTest() {
   }, [rotOn])
 
   async function handleConvertAtoB() {
-    const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
-    const ret = await convertCoordinate(pos, {
-      from: fromEntityRef.current as any,
-      to: toEntityRef.current as any,
-    })
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: fromEntityRef.current as any,
+        to: toEntityRef.current as any,
+      },
+    )
     log('A->B result:', ret)
   }
   async function handleConvertBtoA() {
-    const pos = toPosition
-    const ret = await convertCoordinate(pos, {
-      from: toEntityRef.current as any,
-      to: fromEntityRef.current as any,
-    })
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: toEntityRef.current as any,
+        to: fromEntityRef.current as any,
+      },
+    )
     log('B->A result:', ret)
   }
   // convert A position to B, then convert back to A
@@ -159,6 +163,10 @@ export default function CoordConvertTest() {
     })
     log('Move A to B target:', target)
   }
+  function handleResetPositions() {
+    setFromPosition({ x: 0, y: 0, z: 0 })
+    setToPosition({ x: 0, y: 0, z: 0 })
+  }
   function handleClearLogs() {
     setLogs('')
   }
@@ -178,6 +186,9 @@ export default function CoordConvertTest() {
       <div className="flex gap-2 mb-4 flex-wrap">
         <button className={btnCls} onClick={handleClearLogs}>
           Clear Logs
+        </button>
+        <button className={btnCls} onClick={handleResetPositions}>
+          Reset A/B Position
         </button>
         <button
           className={btnCls}
