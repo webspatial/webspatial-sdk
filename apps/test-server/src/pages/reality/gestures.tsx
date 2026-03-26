@@ -78,7 +78,7 @@ export default function RealityGestures() {
             }
           }}
         >
-          Log clientDepth
+          Log xrClientDepth
         </button>
       </div>
 
