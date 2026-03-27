@@ -13,8 +13,8 @@ type Props = EntityProps & {
   model: string
   materials?: string[]
 } & EntityEventHandler & {
-  children?: React.ReactNode
-}
+    children?: React.ReactNode
+  }
 
 export const ModelEntity = forwardRef<EntityRefShape, Props>(
   ({ id, model, children, name, materials, ...rest }, ref) => {
@@ -22,22 +22,22 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)
     const lastMaterialsRef = useRef<string[] | undefined>(undefined)
 
-    // Dynamic material override
+    // Dynamic material override (including clearing: props may go from ids to undefined / [])
     useEffect(() => {
-      if (!ctx || !entityRef.current || !materials) return
-      if (shallowEqualArray(lastMaterialsRef.current, materials)) return
-      lastMaterialsRef.current = materials
+      if (!ctx || !entityRef.current) return
+      const next = materials ?? []
+      const prev = lastMaterialsRef.current ?? []
+      if (shallowEqualArray(prev, next)) return
+      lastMaterialsRef.current = next
 
       const apply = async () => {
         try {
           const materialList: SpatialMaterial[] = (
             await Promise.all(
-              materials.map(mid =>
-                ctx.resourceRegistry.get<SpatialMaterial>(mid),
-              ),
+              next.map(mid => ctx.resourceRegistry.get<SpatialMaterial>(mid)),
             )
           ).filter(Boolean)
-          if (entityRef.current && materialList.length > 0) {
+          if (entityRef.current) {
             await entityRef.current.setMaterials(materialList)
           }
         } catch (error) {
@@ -69,7 +69,7 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
             )
             entityRef.current = ent as CoreSpatialModelEntity
 
-            // Apply initial materials if specified
+            // Apply initial materials if specified; always record baseline for later clears.
             if (materials && materials.length > 0) {
               const materialList: SpatialMaterial[] = (
                 await Promise.all(
@@ -81,8 +81,8 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
               if (materialList.length > 0 && !signal.aborted) {
                 await ent.setMaterials(materialList)
               }
-              lastMaterialsRef.current = materials
             }
+            lastMaterialsRef.current = materials ?? []
 
             return ent
           } catch (error) {
