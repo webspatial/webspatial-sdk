@@ -1,15 +1,12 @@
 # @webspatial/react-sdk
 
-## 2.0.0
+## 1.4.0
 
-### Major Changes
+### Minor Changes
 
 - 945856b: add enableInput for Entity
   move reality events definition from specific Entity to top-level Reality
 - 0def1ef: Remove deprecated spatial measurement APIs: getBoundingClientRect, getBoundingClientCube, toSceneSpatial, toLocalSpace and their internal message types (CubeInfoMsg, TransformMsg)
-
-### Minor Changes
-
 - 58e1f69: Attachment init flow and lifecycle cleanup.
 
   - **Core**
@@ -54,7 +51,7 @@
 - Updated dependencies [0def1ef]
 - Updated dependencies [8f8c50a]
 - Updated dependencies [931f236]
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/core-sdk@1.4.0
 
 ## 1.3.0
 
@@ -100,7 +97,7 @@
 - f207e1a: Fix head style synchronization for spatial windows (SpatialDiv/attachments) to avoid duplicated or stale stylesheet injection during rapid host `<head>` updates.
 - Updated dependencies [93fe590]
 - Updated dependencies [1405681]
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/core-sdk@1.4.0
 
 ## 1.2.1
 

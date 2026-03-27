@@ -19,9 +19,9 @@
 - Updated dependencies [8f8c50a]
 - Updated dependencies [931fb2d]
 - Updated dependencies [931f236]
-  - @webspatial/core-sdk@2.0.0
-  - @webspatial/react-sdk@2.0.0
-  - @webspatial/builder@2.0.0
+  - @webspatial/core-sdk@1.4.0
+  - @webspatial/react-sdk@1.4.0
+  - @webspatial/builder@1.4.0
 
 ## 0.0.20
 
@@ -33,9 +33,9 @@
 - Updated dependencies [ef447d2]
 - Updated dependencies [4f86f47]
 - Updated dependencies [f207e1a]
-  - @webspatial/core-sdk@2.0.0
-  - @webspatial/react-sdk@2.0.0
-  - @webspatial/builder@2.0.0
+  - @webspatial/core-sdk@1.4.0
+  - @webspatial/react-sdk@1.4.0
+  - @webspatial/builder@1.4.0
 
 ## 0.0.19
 
@@ -60,9 +60,9 @@
 - Updated dependencies [7ffb18c]
 - Updated dependencies [8225a53]
 - Updated dependencies [bdd9065]
-  - @webspatial/react-sdk@2.0.0
-  - @webspatial/core-sdk@2.0.0
-  - @webspatial/builder@2.0.0
+  - @webspatial/react-sdk@1.4.0
+  - @webspatial/core-sdk@1.4.0
+  - @webspatial/builder@1.4.0
 
 ## 0.0.17
 

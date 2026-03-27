@@ -1,13 +1,10 @@
 # @webspatial/platform-avp
 
-## 2.0.0
-
-### Major Changes
-
-- 56e98c8: rename innerDepth to xrInnerDepth and outerDepth to xrOuterDepth
+## 1.4.0
 
 ### Minor Changes
 
+- 56e98c8: rename innerDepth to xrInnerDepth and outerDepth to xrOuterDepth
 - 58e1f69: Attachment init flow and lifecycle cleanup.
 
   - **Core**

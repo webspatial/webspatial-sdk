@@ -1,16 +1,13 @@
 # @webspatial/core-sdk
 
-## 2.0.0
+## 1.4.0
 
-### Major Changes
+### Minor Changes
 
 - 945856b: add enableInput for Entity
   move reality events definition from specific Entity to top-level Reality
 - 56e98c8: rename innerDepth to xrInnerDepth and outerDepth to xrOuterDepth
 - 0def1ef: Remove deprecated spatial measurement APIs: getBoundingClientRect, getBoundingClientCube, toSceneSpatial, toLocalSpace and their internal message types (CubeInfoMsg, TransformMsg)
-
-### Minor Changes
-
 - 58e1f69: Attachment init flow and lifecycle cleanup.
 
   - **Core**
