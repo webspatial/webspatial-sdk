@@ -1,5 +1,58 @@
 # @webspatial/react-sdk
 
+## 1.4.0
+
+### Minor Changes
+
+- 945856b: add enableInput for Entity
+  move reality events definition from specific Entity to top-level Reality
+- 0def1ef: Remove deprecated spatial measurement APIs: getBoundingClientRect, getBoundingClientCube, toSceneSpatial, toLocalSpace and their internal message types (CubeInfoMsg, TransformMsg)
+- 58e1f69: Attachment init flow and lifecycle cleanup.
+
+  - **Core**
+    - Split attachment creation into `CreateAttachmentEntityCommand` (window/engine) and `InitializeAttachmentCommand` (send id, parent, position, size over JSB so native initializes after window exists).
+    - `createAttachmentEntity()` now runs both; native receives full options via init command.
+  - **React**
+    - `AttachmentEntity`: inline head-style sync via `MutationObserver` on `document.head`; direct cleanup on unmount (no StrictMode-only logic).
+    - `useEntity`: forwards all entity event handlers (tap, drag, rotate, magnify) to `useEntityEvent`.
+    - `useSpatializedElement`: ref-based cleanup so elements are destroyed correctly on unmount.
+    - Removed React 18 StrictMode–specific deferred cleanup from Reality, useEntity, AttachmentEntity, useSpatializedElement.
+  - **visionOS**
+    - Attachment manager and JSB handling updated for init command and consolidated window creation.
+
+- 087fa12: react-sdk:support convertCoordinate
+- 98fd429: react-sdk support pointToPhysical,physicalToPoint API from useMetrics() hook
+- 0019cdf: export World as alternative API to SceneGraph
+- 63e44d8: react-sdk export new API for 3D Entity and Material
+- ee8a650: add createElement for old jsx transform
+- 8f8c50a: Spatial rotate axis constraint for spatialized elements.
+
+  - **Core**
+    - `SpatializedElementProperties` adds optional `rotateConstrainedToAxis` (Vec3) on partial updates to native.
+  - **React**
+    - `spatialEventOptions={{ constrainedToAxis: Vec3 | [number, number, number] }}` on spatialized containers and JSX intrinsics (`enable-xr`); omit or `[0,0,0]` means unconstrained.
+    - `PortalSpatializedContainer` syncs axis via `updateProperties`; `Model` / degraded paths strip `spatialEventOptions` from DOM.
+  - **visionOS**
+    - `RotateGesture3D(constrainedToAxis:)` when axis is non-zero; world-space axis, normalized on native.
+
+- 931fb2d: rename clientDepth to xrClientDepth
+
+### Patch Changes
+
+- 931f236: rename offsetBack to xrOffsetBack for naming consistency
+- Updated dependencies [58e1f69]
+- Updated dependencies [8c50a0f]
+- Updated dependencies [087fa12]
+- Updated dependencies [dabb15f]
+- Updated dependencies [945856b]
+- Updated dependencies [56e98c8]
+- Updated dependencies [98fd429]
+- Updated dependencies [2f2a3a8]
+- Updated dependencies [0def1ef]
+- Updated dependencies [8f8c50a]
+- Updated dependencies [931f236]
+  - @webspatial/core-sdk@1.4.0
+
 ## 1.3.0
 
 ### Minor Changes
@@ -44,7 +97,7 @@
 - f207e1a: Fix head style synchronization for spatial windows (SpatialDiv/attachments) to avoid duplicated or stale stylesheet injection during rapid host `<head>` updates.
 - Updated dependencies [93fe590]
 - Updated dependencies [1405681]
-  - @webspatial/core-sdk@2.0.0
+  - @webspatial/core-sdk@1.4.0
 
 ## 1.2.1
 
