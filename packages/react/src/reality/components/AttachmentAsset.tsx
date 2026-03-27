@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRealityContext } from '../context'
+import type { ContainerEntry } from '../context/AttachmentContext'
 import { InsideAttachmentContext } from '../context/InsideAttachmentContext'
 
 type AttachmentAssetProps = {
@@ -13,7 +14,7 @@ export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
   children,
 }) => {
   const ctx = useRealityContext()
-  const [containers, setContainers] = useState<HTMLElement[]>([])
+  const [containers, setContainers] = useState<ContainerEntry[]>([])
 
   useEffect(() => {
     if (!ctx) return
@@ -23,7 +24,9 @@ export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
   if (!containers.length) return null
   return (
     <InsideAttachmentContext.Provider value={true}>
-      {containers.map((c, idx) => createPortal(children, c, `${name}-${idx}`))}
+      {containers.map(({ instanceId, container }) =>
+        createPortal(children, container, instanceId),
+      )}
     </InsideAttachmentContext.Provider>
   )
 }

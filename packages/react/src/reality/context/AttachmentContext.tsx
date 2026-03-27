@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react'
 
-type ContainersChangeCallback = (containers: HTMLElement[]) => void
+export type ContainerEntry = { instanceId: string; container: HTMLElement }
+
+type ContainersChangeCallback = (containers: ContainerEntry[]) => void
 
 export class AttachmentRegistry {
   // name → (instanceId → container)
@@ -23,9 +25,13 @@ export class AttachmentRegistry {
     this.notifyListeners(name)
   }
 
-  getContainers(name: string): HTMLElement[] {
+  getContainers(name: string): ContainerEntry[] {
     const map = this.containers.get(name)
-    return map ? Array.from(map.values()) : []
+    if (!map) return []
+    return Array.from(map, ([instanceId, container]) => ({
+      instanceId,
+      container,
+    }))
   }
 
   onContainersChange(name: string, cb: ContainersChangeCallback): () => void {
