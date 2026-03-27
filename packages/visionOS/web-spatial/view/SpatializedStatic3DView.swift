@@ -28,7 +28,11 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if let url = URL(string: spatializedStatic3DElement.modelURL) {
+        let rawModelURL = spatializedStatic3DElement.modelURL
+        let modelURL = rawModelURL.hasPrefix("file://")
+            ? pwaManager.getLocalResourceURL(url: rawModelURL)
+            : rawModelURL
+        if let url = URL(string: modelURL) {
             Model3D(url: url) { newPhase in
                 switch newPhase {
                 case .empty:
