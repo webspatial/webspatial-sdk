@@ -1,5 +1,20 @@
 # @webspatial/builder
 
+## 2.0.0
+
+### Patch Changes
+
+- dabb15f: Update UA injection logic in VisionOS and add WSAppShell version number
+- Updated dependencies [58e1f69]
+- Updated dependencies [087fa12]
+- Updated dependencies [dabb15f]
+- Updated dependencies [56e98c8]
+- Updated dependencies [98fd429]
+- Updated dependencies [8676fc5]
+- Updated dependencies [8f8c50a]
+- Updated dependencies [696506e]
+  - @webspatial/platform-visionos@2.0.0
+
 ## 1.3.0
 
 ### Patch Changes

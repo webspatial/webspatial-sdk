@@ -1,5 +1,27 @@
 # web-content
 
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [58e1f69]
+- Updated dependencies [8c50a0f]
+- Updated dependencies [087fa12]
+- Updated dependencies [dabb15f]
+- Updated dependencies [945856b]
+- Updated dependencies [56e98c8]
+- Updated dependencies [98fd429]
+- Updated dependencies [0019cdf]
+- Updated dependencies [63e44d8]
+- Updated dependencies [2f2a3a8]
+- Updated dependencies [ee8a650]
+- Updated dependencies [0def1ef]
+- Updated dependencies [8f8c50a]
+- Updated dependencies [931fb2d]
+- Updated dependencies [931f236]
+  - @webspatial/core-sdk@2.0.0
+  - @webspatial/react-sdk@2.0.0
+
 ## 0.0.21
 
 ### Patch Changes
