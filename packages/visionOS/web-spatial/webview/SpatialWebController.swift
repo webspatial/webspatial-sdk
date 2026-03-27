@@ -116,9 +116,15 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             let resource: String = pwaManager.getLocalResourceURL(url: url!.absoluteString)
             var urlRequest = urlSchemeTask.request
             if resource != "" {
-                urlRequest = URLRequest(url: URL(string: resource)!)
+                if let resourceUrl = URL(string: resource) {
+    urlRequest = URLRequest(url: resourceUrl)
+} else {
+    // Handle the error appropriately
+}
             } else {
-                return
+                let error = NSError(domain: "LocalResourceError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local resource not found"])
+    urlSchemeTask.didFailWithError(error)
+    return
             }
 
             let session = URLSession(configuration: URLSessionConfiguration.default)
