@@ -33,8 +33,8 @@ declare global {
       physicalMetrics?: PhysicalMetricsValueShape
     }
 
-    innerDepth: number
-    outerDepth: number
+    xrInnerDepth: number
+    xrOuterDepth: number
   }
 
   interface HTMLElement {
