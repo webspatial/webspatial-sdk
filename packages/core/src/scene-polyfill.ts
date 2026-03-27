@@ -77,8 +77,8 @@ class SceneManager {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
       if (url.includes('createSpatialized2DElement')) {
-        if (typeof webSpatial !== 'undefined' && webSpatial.genToken) {
-          const token = webSpatial.genToken()
+        const token = window.webSpatial?.genToken?.()
+        if (token) {
           const host = window.location.host
           const protocol = window.location.protocol
           const finalURL =
