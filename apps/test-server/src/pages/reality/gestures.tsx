@@ -170,6 +170,7 @@ export default function RealityGestures() {
               if (exclusive) activeGestureRef.current = null
               logLine('dragEnd')
             }}
+            spatialEventOptions={{ constrainedToAxis: [0, 0, 0] }}
             onSpatialRotate={e => {
               if (!enabled || e.target?.id !== 'boxGreen') return
               logLine('rotate', e.quaternion)
