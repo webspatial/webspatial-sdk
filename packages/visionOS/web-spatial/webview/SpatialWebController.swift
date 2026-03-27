@@ -117,14 +117,16 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
             var urlRequest = urlSchemeTask.request
             if resource != "" {
                 if let resourceUrl = URL(string: resource) {
-    urlRequest = URLRequest(url: resourceUrl)
-} else {
-    // Handle the error appropriately
-}
+                    urlRequest = URLRequest(url: resourceUrl)
+                } else {
+                    let error = NSError(domain: "LocalResourceError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local file resource mapping failed"])
+                    urlSchemeTask.didFailWithError(error)
+                    return
+                }
             } else {
                 let error = NSError(domain: "LocalResourceError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local resource not found"])
-    urlSchemeTask.didFailWithError(error)
-    return
+                urlSchemeTask.didFailWithError(error)
+                return
             }
 
             let session = URLSession(configuration: URLSessionConfiguration.default)
