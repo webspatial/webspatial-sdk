@@ -1,3 +1,5 @@
+import type { PhysicalMetricsValueShape } from '../physicalMetrics'
+
 declare global {
   declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
@@ -28,16 +30,16 @@ declare global {
       'natvie-version'?: string
       'react-sdk-version'?: string
       'core-sdk-version'?: string
+      physicalMetrics?: PhysicalMetricsValueShape
     }
 
-    innerDepth: number
-    outerDepth: number
+    xrInnerDepth: number
+    xrOuterDepth: number
   }
 
   interface HTMLElement {
-    offsetBack: number
-    clientDepth: number
-    getBoundingClientCube: () => CubeInfo | undefined
+    xrOffsetBack: number
+    xrClientDepth: number
   }
 }
 

@@ -36,17 +36,11 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             if (prop === '__raw') {
               return target
             }
-            if (prop === 'clientDepth') {
+            if (prop === 'xrClientDepth') {
               return target.style.getPropertyValue(SpatialCustomStyleVars.depth)
             }
-            if (prop === 'offsetBack') {
+            if (prop === 'xrOffsetBack') {
               return target.style.getPropertyValue(SpatialCustomStyleVars.back)
-            }
-            if (prop === 'getBoundingClientRect') {
-              return (dom as any).__getBoundingClientRect
-            }
-            if (prop === 'getBoundingClientCube') {
-              return (dom as any).__getBoundingClientCube
             }
             if (prop === 'style') {
               if (!self.styleProxy) {

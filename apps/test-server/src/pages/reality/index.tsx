@@ -128,6 +128,43 @@ export default function RealityTest() {
             '--xr-back': 200,
           }}
           ref={realityRef}
+          // Allow spatial events on Reality in sample to keep previous behavior
+          onSpatialTap={e => {
+            // Log basic tap info
+            log('tap', e.detail.location3D)
+            log('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+            log('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+            // Heuristic routing by X position to mimic previous per-entity logs:
+            // - left side ~ boxRed subtree
+            // - right side ~ boxGreen subtree
+            // - near center ~ model entity
+            const x = e.clientX ?? 0
+            if (Math.abs(x) < 0.08) {
+              log('tap model')
+            } else if (x < 0) {
+              log('tap child') // previous left entity parent handler
+            } else {
+              log('tap box') // previous right box handler
+              log('parent tap') // mimic parent entity tap bubbling
+            }
+          }}
+          // Allow spatial events on Reality in sample to keep previous behavior
+          onSpatialDragStart={e => {
+            // Only treat drags on the right side as the green box interactions
+            if ((e.clientX ?? 0) >= 0) {
+              log('dragStart', e.detail.startLocation3D)
+              log('dragStart offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              log('dragStart clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+            }
+          }}
+          // Allow spatial events on Reality in sample to keep previous behavior
+          onSpatialDrag={e => {
+            log('drag', e.detail.translation3D)
+          }}
+          // Allow spatial events on Reality in sample to keep previous behavior
+          onSpatialDragEnd={e => {
+            log('dragEnd')
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -161,9 +198,6 @@ export default function RealityTest() {
               position={{ x: -0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              onSpatialTap={async e => {
-                console.log('tap child', e.detail.location3D)
-              }}
             >
               {showBoxRed && (
                 <BoxEntity
@@ -194,9 +228,6 @@ export default function RealityTest() {
               position={{ x: 0.2, y: 0, z: 0 }}
               rotation={{ x: 0, y: 0, z: 0 }}
               scale={{ x: 1, y: 1, z: 1 }}
-              onSpatialTap={async e => {
-                console.log('parent tap', e.detail.location3D)
-              }}
             >
               <BoxEntity
                 id="boxGreen"
@@ -207,27 +238,10 @@ export default function RealityTest() {
                 materials={['matGreen']}
                 position={{ x: 0, y: 0, z: 0 }}
                 rotation={boxRotation}
-                onSpatialTap={async e => {
-                  console.log('tap box')
-                  console.log('🚀 ~ e:', e.detail.location3D)
-                }}
-                onSpatialDragStart={async e => {
-                  console.log('🚀 ~drag start e:', e.detail)
-                }}
-                onSpatialDrag={async e => {
-                  console.log('🚀 ~drag e:', e.detail)
-                }}
-                onSpatialDragEnd={async e => {
-                  console.log('🚀 ~drag end e:', e.detail)
-                }}
               ></BoxEntity>
             </Entity>
             {showModelEntity && (
-              <Entity
-                onSpatialTap={e => {
-                  console.log('tap model parent', e.detail.location3D)
-                }}
-              >
+              <Entity>
                 <ModelEntity
                   id="modelEnt"
                   name="modelEntName"
@@ -235,9 +249,6 @@ export default function RealityTest() {
                   ref={modelEntRef}
                   rotation={boxRotation}
                   scale={{ x: 0.2, y: 0.2, z: 0.2 }}
-                  onSpatialTap={e => {
-                    console.log('tap model', e.detail.location3D)
-                  }}
                 />
               </Entity>
             )}

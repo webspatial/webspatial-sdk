@@ -129,6 +129,13 @@ struct ConvertFromSceneToEntity: CommandDataProtocol {
     let position: Vec3
 }
 
+struct ConvertCoordinate: CommandDataProtocol {
+    static let commandType: String = "ConvertCoordinate"
+    let position: Vec3
+    let fromId: String
+    let toId: String
+}
+
 struct InspectCommand: CommandDataProtocol {
     static let commandType: String = "Inspect"
     var id: String?
@@ -166,6 +173,7 @@ protocol SpatializedElementProperties: SpatialObjectCommand {
     var enableMagnifyGesture: Bool? { get }
     var enableMagnifyEndGesture: Bool? { get }
     var enableTapGesture: Bool? { get }
+    var rotateConstrainedToAxis: Vec3? { get }
 }
 
 struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
@@ -192,6 +200,8 @@ struct UpdateSpatialized2DElementProperties: SpatializedElementProperties {
     var enableMagnifyGesture: Bool?
     var enableMagnifyEndGesture: Bool?
     var enableTapGesture: Bool?
+
+    let rotateConstrainedToAxis: Vec3?
 
     let scrollPageEnabled: Bool?
     let material: BackgroundMaterial?
@@ -227,6 +237,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?
 
+    let rotateConstrainedToAxis: Vec3?
+
     let modelURL: String?
     let modelTransform: [Double]?
 }
@@ -255,6 +267,8 @@ struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties
     let enableMagnifyGesture: Bool?
     let enableMagnifyEndGesture: Bool?
     let enableTapGesture: Bool?
+
+    let rotateConstrainedToAxis: Vec3?
 }
 
 struct UpdateSpatializedElementTransform: SpatialObjectCommand {
@@ -337,6 +351,15 @@ struct FocusSceneCommand: CommandDataProtocol {
 
 struct GetSpatialSceneStateCommand: CommandDataProtocol {
     static let commandType = "GetSpatialSceneState"
+}
+
+struct InitializeAttachmentCommand: CommandDataProtocol {
+    static let commandType = "InitializeAttachment"
+    let id: String
+    let parentEntityId: String
+    let position: [Float]?
+    let size: AttachmentSize?
+    let ownerViewId: String
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {

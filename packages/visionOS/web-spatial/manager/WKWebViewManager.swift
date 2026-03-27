@@ -8,8 +8,8 @@ class WKWebViewManager {
 
     func create(controller: SpatialWebController, configuration: WKWebViewConfiguration? = nil, spatialId: String? = "") -> WKWebView {
         let userContentController = WKUserContentController()
-        // TODO: get native api instead of PACKAGE_VERSION
-        let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = 'PACKAGE_VERSION';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        // TODO: get native api instead of using the injected WS_SDK_VERSION placeholder
+        let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = 'WS_SDK_VERSION';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userContentController.addUserScript(userScript)
 //        userContentController.add(controller, name: "bridge")
         userContentController.addScriptMessageHandler(controller, contentWorld: .page, name: "bridge")
@@ -25,8 +25,8 @@ class WKWebViewManager {
         // change webview ua
         let ua = controller.webview!.value(forKey: "userAgent") as? String ?? ""
         let webviewVersion = ua.split(separator: configUA)[0].split(separator: "AppleWebKit")[1]
-        // TODO: get native api instead of PACKAGE_VERSION
-        controller.webview!.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit\(webviewVersion)WebSpatial/\("PACKAGE_VERSION") SpatialID/\(spatialId!)"
+        // TODO: get native api instead of relying on injected shell/sdk versions
+        controller.webview!.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit\(webviewVersion)WSAppShell/\(pwaManager.getShellVersion()) WebSpatial/\(pwaManager.getSdkVersion()) SpatialID/\(spatialId!)"
         controller.webview!.uiDelegate = controller
         controller.webview!.allowsBackForwardNavigationGestures = false
         controller.webview!.isInspectable = true

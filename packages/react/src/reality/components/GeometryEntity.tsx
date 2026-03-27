@@ -1,17 +1,16 @@
 import React, { forwardRef } from 'react'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape } from '../hooks'
 import { SpatialMaterial, SpatialGeometry } from '@webspatial/core-sdk'
 import { AbortResourceManager } from '../utils'
 import { BaseEntity } from './BaseEntity'
 
-type GeometryEntityProps = EntityProps &
-  EntityEventHandler & {
-    children?: React.ReactNode
-    materials?: string[]
-    geometryOptions: any
-    createGeometry: (options: any) => Promise<SpatialGeometry>
-  }
+type GeometryEntityProps = EntityProps & {
+  children?: React.ReactNode
+  materials?: string[]
+  geometryOptions: any
+  createGeometry: (options: any) => Promise<SpatialGeometry>
+}
 
 export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
   (

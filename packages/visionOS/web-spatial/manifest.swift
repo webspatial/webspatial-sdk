@@ -6,9 +6,9 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var isLocal: Bool = false
 
-    var start_url: String = "http://localhost:5173"
+    var start_url: String = "http://localhost:5173/#/geometry-verify"
 
-//    var start_url: String = "http://localhost:5173/webspatial/avp/materialApiTest"
+    // var start_url: String = "http://localhost:5173/#/spatial-drag-gesture"
 
     var scope: String = ""
     var id: String = "com.webspatial.pico"
@@ -38,7 +38,8 @@ struct PWAManager: Codable {
         baseplateVisibility: nil
     )
     var useMainScene: Bool = true
-    private var version: String = "PACKAGE_VERSION"
+    private var shellVersion: String = "WS_SHELL_VERSION"
+    private var sdkVersion: String = "WS_SDK_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -102,8 +103,12 @@ struct PWAManager: Codable {
         return resource
     }
 
-    func getVersion() -> String {
-        return version
+    func getShellVersion() -> String {
+        return shellVersion
+    }
+
+    func getSdkVersion() -> String {
+        return sdkVersion
     }
 }
 

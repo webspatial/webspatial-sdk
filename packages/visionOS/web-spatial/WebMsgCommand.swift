@@ -14,8 +14,6 @@ enum WebSpatialGestureType: String, Encodable {
 }
 
 enum SpatialWebMsgType: String, Encodable {
-    case cubeInfo
-    case transform
     case modelloaded
     case modelloadfailed
     case spatialtap
@@ -28,19 +26,6 @@ enum SpatialWebMsgType: String, Encodable {
     case spatialmagnifyend
 
     case objectdestroy
-}
-
-/// notify Spatialized3DElement Container Cube, used for ref.current.getBoundingClientCube()
-struct SpatiaizedContainerClientCube: Encodable {
-    let type: SpatialWebMsgType = .cubeInfo
-    let origin: Point3D
-    let size: Size3D
-}
-
-/// notify Spatialized3DElement Container Transform to SpatialScene, used for ref.current.convertToSpatialScene()
-struct SpatiaizedContainerTransform: Encodable {
-    let type: SpatialWebMsgType = .transform
-    let detail: AffineTransform3D
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {

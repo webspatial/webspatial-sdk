@@ -40,10 +40,12 @@ import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityTestIndex from './src/pages/reality-test/index'
+import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
 import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
 import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
+import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
 import AndroidBringup from './src/pages/androidBringup/index'
@@ -53,10 +55,18 @@ import NestedFixPosition from './src/pages/nestedfixposition/index'
 import NestedScroll from './src/pages/nestedscroll/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
+import GeometryVerify from './src/pages/geometry-verify/index'
+import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
+import UnitConvertTest from './src/pages/unitConvert'
+import CoordConvertTest from './src/pages/reality/coordConvertTest'
+import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
+import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivConvertTest'
+import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
+import SpatialDivTest from './src/pages/spatialDivTest/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -90,7 +100,7 @@ function App() {
     <Router>
       <div
         className={outerClass}
-        style={{ backgroundColor: 'var(--spa-bg-color, #ffffff)' }}
+        style={{ backgroundColor: 'var(--spa-bg-color)' }}
       >
         <Sidebar />
         <main className={mainClass}>
@@ -153,6 +163,23 @@ function App() {
                 <Route path="/reality/issue" element={<RealityIssue />} />
                 <Route path="/reality/low" element={<RealityLow />} />
                 <Route path="/reality/nested" element={<RealityNested />} />
+                <Route
+                  path="/reality/coordConvertTest"
+                  element={<CoordConvertTest />}
+                />
+                <Route
+                  path="/reality/spatial-div-coord"
+                  element={<SpatialDivCoordTest />}
+                />
+                <Route
+                  path="/reality/entity-spatial-div-convert"
+                  element={<EntitySpatialDivConvertTest />}
+                />
+                <Route
+                  path="/reality/model-spatial-div-convert"
+                  element={<ModelSpatialDivConvertTest />}
+                />
+                <Route path="/reality/aliases" element={<RealityAliases />} />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"
@@ -166,6 +193,10 @@ function App() {
                 <Route
                   path="/spatial-rotation-gesture"
                   element={<SpatialRotationGesture />}
+                />
+                <Route
+                  path="/spatial-rotate-axis-constraint"
+                  element={<SpatialRotateAxisConstraint />}
                 />
                 <Route
                   path="/background-material"
@@ -187,7 +218,10 @@ function App() {
                   path="/spatial-converter"
                   element={<SpatialConverter />}
                 />
+                <Route path="/spatial-div-test" element={<SpatialDivTest />} />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
+                <Route path="/geometry-verify" element={<GeometryVerify />} />
+                <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route
@@ -197,6 +231,7 @@ function App() {
                 <Route path="/cleanup/spa" element={<CleanupSpa />} />
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />
+                <Route path="/unit-convert" element={<UnitConvertTest />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>

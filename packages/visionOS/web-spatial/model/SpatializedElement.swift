@@ -2,6 +2,9 @@ import Foundation
 import RealityKit
 import SwiftUI
 
+/// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
+let zOrderBias = 0.001
+
 enum SpatializedElementType: String, Codable {
     case Spatialized2DElement
     case SpatializedStatic3DElement
@@ -32,7 +35,44 @@ class SpatializedElement: SpatialObject {
     var enableMagnifyEndGesture: Bool = false
     var enableTapGesture: Bool = false
 
+    /// When non-nil and non-zero length, rotate gesture is constrained to this axis (world space).
+    var rotateConstrainedToAxis: Vec3?
+
     var defaultAlignment: DepthAlignment = .back
+
+    /// Raw layout→scene transform from onGeometryChange3D proxy.
+    /// Does NOT include backOffset or zIndex offset.
+    /// Updated by SpatializedElementView whenever layout changes.
+    var proxySceneTransform: AffineTransform3D = .identity
+
+    /// Full local→scene transform accounting for --xr-back and zIndex.
+    /// Computed on-the-fly so backOffset/zIndex changes are always reflected.
+    var sceneTransform: AffineTransform3D {
+        let frameZ = (zIndex * zOrderBias) + backOffset
+        let localZ = AffineTransform3D(translation: Vector3D(x: 0, y: 0, z: frameZ))
+        return proxySceneTransform.concatenating(localZ)
+    }
+
+    /// Converts a point from this element's local coordinate system to scene space.
+    func convertToScene(_ localPoint: SIMD3<Double>) -> SIMD3<Double> {
+        let p = SIMD4<Double>(localPoint.x, localPoint.y, localPoint.z, 1.0)
+        let scene = sceneTransform.matrix * p
+        return SIMD3<Double>(scene.x, scene.y, scene.z)
+    }
+
+    /// Converts a point from scene space to this element's local coordinate system.
+    func convertFromScene(_ scenePoint: SIMD3<Double>) -> SIMD3<Double> {
+        let inv = sceneTransform.inverse!
+        let p = SIMD4<Double>(scenePoint.x, scenePoint.y, scenePoint.z, 1.0)
+        let local = inv.matrix * p
+        return SIMD3<Double>(local.x, local.y, local.z)
+    }
+
+    /// Converts a point from this element's local space to another element's local space.
+    func convert(_ localPoint: SIMD3<Double>, to target: SpatializedElement) -> SIMD3<Double> {
+        let scenePoint = convertToScene(localPoint)
+        return target.convertFromScene(scenePoint)
+    }
 
     var enableGesture: Bool {
         return enableDragStartGesture || enableDragGesture || enableDragEndGesture || enableRotateGesture || enableRotateEndGesture || enableMagnifyGesture || enableMagnifyEndGesture || enableTapGesture

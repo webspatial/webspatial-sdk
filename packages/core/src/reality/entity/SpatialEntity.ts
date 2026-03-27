@@ -23,16 +23,16 @@ import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
 import {
-  CubeInfoMsg,
   ObjectDestroyMsg,
   SpatialDragEndMsg,
   SpatialDragMsg,
+  SpatialDragStartMsg,
+  SpatialMagnifyEndMsg,
   SpatialMagnifyMsg,
   SpatialRotateEndMsg,
   SpatialRotateMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
-  TransformMsg,
 } from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
@@ -43,6 +43,31 @@ export class SpatialEntity extends SpatialObject {
   events: Record<string, (data: any) => void> = {}
   children: SpatialEntity[] = []
   parent: SpatialEntityOrReality | null = null
+  private _enableInput: boolean = false
+
+  get enableInput(): boolean {
+    return this._enableInput
+  }
+
+  set enableInput(value: boolean) {
+    // Why enabling only 'spatialtap' makes the entity interactive:
+    // - On the native (Swift/RealityKit) side, SpatialEntity.updateGesture(type, isEnable)
+    //   toggles per-gesture flags. Then enableInteractive = enableTap || enableRotate || enableDrag || enableMagnify.
+    // - As soon as any gesture (e.g., 'spatialtap') is enabled, enableInteractive becomes true and
+    //   InputTargetComponent is attached, making the entity targetable by targetedToAnyEntity().
+    // - The view layer forwards hit gestures to the web, so enabling 'spatialtap' is sufficient to
+    //   make the entity targetable; enable additional gestures only when needed.
+    if (this._enableInput === value) return
+    this._enableInput = value
+    void this.updateEntityEvent('spatialtap', value).catch(err => {
+      console.error('enableInput updateEntityEvent failed', 'spatialtap', err)
+      // Roll back local flag if the native toggle fails to keep web/native states consistent.
+      // Otherwise, the web side would think the entity is interactive while RealityKit is not.
+      if (this._enableInput === value) {
+        this._enableInput = !value
+      }
+    })
+  }
   constructor(
     id: string,
     public userData?: SpatialEntityUserData,
@@ -123,13 +148,15 @@ export class SpatialEntity extends SpatialObject {
     return new UpdateEntityEventCommand(this, eventName, isEnable).execute()
   }
   private onReceiveEvent = (
-    data: // | CubeInfoMsg
-    // | TransformMsg
-    | SpatialTapMsg
-      // | SpatialDragMsg
-      // | SpatialDragEndMsg
-      // | SpatialRotateMsg
-      // | SpatialRotateEndMsg
+    data:
+      | SpatialTapMsg
+      | SpatialDragStartMsg
+      | SpatialDragMsg
+      | SpatialDragEndMsg
+      | SpatialMagnifyMsg
+      | SpatialMagnifyEndMsg
+      | SpatialRotateMsg
+      | SpatialRotateEndMsg
       | ObjectDestroyMsg,
   ) => {
     // console.log('SpatialEntityEvent', data)
@@ -139,27 +166,21 @@ export class SpatialEntity extends SpatialObject {
     }
     // tap
     else if (type === SpatialWebMsgType.spatialtap) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialtap,
-        (data as SpatialTapMsg).detail,
-      )
+      const evt = createSpatialEvent(SpatialWebMsgType.spatialtap, data.detail)
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdragstart) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialdragstart,
-        (data as SpatialDragMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdrag) {
-      const evt = createSpatialEvent(
-        SpatialWebMsgType.spatialdrag,
-        (data as SpatialDragMsg).detail,
-      )
+      const evt = createSpatialEvent(SpatialWebMsgType.spatialdrag, data.detail)
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialdragend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialdragend,
-        (data as SpatialDragEndMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
@@ -167,13 +188,13 @@ export class SpatialEntity extends SpatialObject {
     else if (type === SpatialWebMsgType.spatialrotate) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialrotate,
-        (data as SpatialRotateMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialrotateend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialrotateend,
-        (data as SpatialRotateEndMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
@@ -181,13 +202,13 @@ export class SpatialEntity extends SpatialObject {
     else if (type === SpatialWebMsgType.spatialmagnify) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialmagnify,
-        (data as SpatialMagnifyMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     } else if (type === SpatialWebMsgType.spatialmagnifyend) {
       const evt = createSpatialEvent(
         SpatialWebMsgType.spatialmagnifyend,
-        (data as SpatialMagnifyMsg).detail,
+        data.detail,
       )
       this.dispatchEvent(evt)
     }
@@ -200,7 +221,7 @@ export class SpatialEntity extends SpatialObject {
     }
     this.events[evt.type]?.(evt)
     if (evt.bubbles && !evt.cancelBubble) {
-      if (this.parent && this.parent instanceof SpatialEntity) {
+      if (this.parent) {
         this.parent.dispatchEvent(evt)
       }
     }

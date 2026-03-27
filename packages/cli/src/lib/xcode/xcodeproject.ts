@@ -11,6 +11,7 @@ import { loadJsonFromDisk } from '../resource/load'
 import { ImageHelper } from '../resource/imageHelper'
 import { manifestSwiftTemplate } from './manifestSwiftTemplate'
 import { SpatialSceneType } from '../utils/sceneUtils'
+import { getInstalledPackageVersion } from '../utils/utils'
 const xcode = require('xcode')
 const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -310,8 +311,17 @@ export default class XcodeProject {
     const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
     let manifestSwift = manifestSwiftTemplate
     manifestSwift = manifestSwift.replace(
-      'PACKAGE_VERSION',
+      'WS_SHELL_VERSION',
       packageJson.version ?? '0.0.0',
+    )
+    manifestSwift = manifestSwift.replace(
+      'WS_SDK_VERSION',
+      getInstalledPackageVersion('@webspatial/core-sdk') ?? '0.0.0',
+    )
+    console.log(
+      'versions:',
+      packageJson.version,
+      getInstalledPackageVersion('@webspatial/core-sdk'),
     )
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)

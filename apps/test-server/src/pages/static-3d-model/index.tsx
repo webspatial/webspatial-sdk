@@ -1,11 +1,6 @@
 import ReactDOM from 'react-dom/client'
 
-import {
-  enableDebugTool,
-  toSceneSpatial,
-  Model,
-  ModelRef,
-} from '@webspatial/react-sdk'
+import { enableDebugTool, Model, ModelRef } from '@webspatial/react-sdk'
 import { useEffect, useRef, useState, RefObject } from 'react'
 import { useLogger, Logger } from './Logger'
 
@@ -17,7 +12,7 @@ function App() {
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
   useEffect(() => {
-    modelRef.current!.ready.then(() => logLine('ref.current.ready success'))
+    modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
 
   return (
@@ -42,11 +37,7 @@ function App() {
           logLine(`Model load success ${modelRef.current?.currentSrc}`)
         }
         onSpatialTap={e => {
-          logLine(
-            'model onSpatialTap',
-            e.currentTarget.getBoundingClientCube(),
-            e.detail.location3D,
-          )
+          logLine('model onSpatialTap', e.detail.location3D)
         }}
         onSpatialDragStart={e => setDragTranslation({ x: 0, y: 0, z: 0 })}
         onSpatialDrag={e => {

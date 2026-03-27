@@ -32,7 +32,10 @@ function App() {
 
   function logDepth() {
     //@ts-ignore
-    log('innerDepth:' + window.innerDepth, 'outerDepth:' + window.outerDepth)
+    log(
+      'xrInnerDepth:' + window.xrInnerDepth,
+      'xrOuterDepth:' + window.xrOuterDepth,
+    )
     //@ts-ignore
     log('outerHeight:' + window.outerHeight)
   }

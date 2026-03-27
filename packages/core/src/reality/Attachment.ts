@@ -2,6 +2,7 @@ import { SpatialObject } from '../SpatialObject'
 import {
   CreateAttachmentEntityCommand,
   UpdateAttachmentEntityCommand,
+  InitializeAttachmentCommand,
 } from '../JSBCommand'
 import {
   AttachmentEntityOptions,
@@ -41,5 +42,6 @@ export async function createAttachmentEntity(
     throw new Error('createAttachmentEntity failed: ' + result?.errorMessage)
   }
   const { id, windowProxy } = result.data!
+  await new InitializeAttachmentCommand(id, options).execute()
   return new Attachment(id, windowProxy, options)
 }

@@ -4,8 +4,6 @@ import {
   SpatialDragEvent,
   SpatialDragStartEvent,
   SpatialTapEvent,
-  toLocalSpace,
-  toSceneSpatial,
 } from '@webspatial/react-sdk'
 import {
   SpatialDragEndEvent,
@@ -410,12 +408,7 @@ function DomApiTest() {
 
   const onSpatialTap = (event: SpatialTapEvent) => {
     console.log('onSpatialTap', event.target)
-    const point = event.detail.location3D
-    const spatialPoint = toSceneSpatial(point, event.currentTarget)
-    const localSpace = toLocalSpace({ x: 0, y: 0, z: 0 }, event.currentTarget)
-    console.log('point： ', point)
-    console.log('spatialPoint： ', spatialPoint)
-    console.log('localSpace： ', localSpace)
+    console.log('point： ', event.detail.location3D)
   }
 
   const onSpatialDrag = (event: SpatialDragEvent) => {
@@ -797,7 +790,7 @@ function DomApiTest() {
               ref.scrollTop: ${ref.current.scrollTop}, ref.scrollLeft: ${ref.current.scrollLeft}
               ref.clientTop: ${ref.current.clientTop}, ref.clientLeft: ${ref.current.clientLeft}
               ref.previousElementSibling: ${ref.current.previousElementSibling}, ref.offsetParent: ${ref.current.offsetParent?.tagName}
-              ref.offsetBack: ${ref.current.offsetBack}
+              ref.xrOffsetBack: ${ref.current.xrOffsetBack}
               ref.checkVisibility: ${ref.current.checkVisibility()}
 ref.getBoundingClientRect: ${JSON.stringify(ref.current.getBoundingClientRect())}
               ref.getAttribute('style'): ${ref.current.getAttribute('style')}

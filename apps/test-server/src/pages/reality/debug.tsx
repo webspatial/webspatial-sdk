@@ -124,6 +124,12 @@ export default function RealityDebug() {
             '--xr-back': 200,
           }}
           ref={realityRef}
+          // Add spatial events on Reality to preserve sample behavior after removing entity handlers
+          onSpatialTap={e => {
+            log('tap', e.detail.location3D)
+            log('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+            log('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+          }}
         >
           <UnlitMaterial
             id="matRed"
@@ -155,9 +161,6 @@ export default function RealityDebug() {
                   materials={['matRed']}
                   position={boxPosition}
                   rotation={boxRotation}
-                  onSpatialTap={async e => {
-                    setShowModelEntity(pre => !pre)
-                  }}
                 ></BoxEntity>
               </Entity>
             )}

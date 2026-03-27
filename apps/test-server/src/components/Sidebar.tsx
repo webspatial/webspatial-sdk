@@ -19,6 +19,17 @@ export const routes = [
       { path: '/reality/issue', label: 'Issue' },
       { path: '/reality/low', label: 'Low' },
       { path: '/reality/nested', label: 'Nested' },
+      { path: '/reality/aliases', label: 'Aliases & Material' },
+      { path: '/reality/coordConvertTest', label: 'Coord Convert Test' },
+      { path: '/reality/spatial-div-coord', label: 'Spatial Div Coord' },
+      {
+        path: '/reality/entity-spatial-div-convert',
+        label: 'Entity/Div Convert',
+      },
+      {
+        path: '/reality/model-spatial-div-convert',
+        label: 'Model/Div Convert',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },
@@ -27,6 +38,7 @@ export const routes = [
   { path: '/spatialStyleTest', label: 'Spatial Style' },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },
+  { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',
     label: 'Scene',
@@ -46,6 +58,10 @@ export const routes = [
     children: [
       { path: '/spatial-drag-gesture', label: 'Drag' },
       { path: '/spatial-rotation-gesture', label: 'Rotate' },
+      {
+        path: '/spatial-rotate-axis-constraint',
+        label: 'Rotate axis constraint',
+      },
       { path: '/spatial-magnify-gesture', label: 'Magnify' },
       { path: '/spatial-guesture', label: 'Event Propagation' },
     ],
@@ -55,6 +71,7 @@ export const routes = [
     label: 'Misc',
     children: [
       { path: '/head-style-sync', label: 'SpatialDiv Head Sync' },
+      { path: '/spatial-div-test', label: 'SpatialDiv Test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/android-bringup', label: 'Android Bringup' },
@@ -64,6 +81,8 @@ export const routes = [
       { path: '/nested-scroll', label: 'Nested Scroll' },
       { path: '/spatial-converter', label: 'Spatial Converter' },
       { path: '/spatial-corner', label: 'Spatial Corner' },
+      { path: '/geometry-verify', label: 'Geometry Verify' },
+      { path: '/transform-verify', label: 'Transform Verify' },
       { path: '/static-3d-model', label: 'Static 3D Model' },
       { path: '/visible-test', label: 'Visible Test' },
     ],

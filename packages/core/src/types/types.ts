@@ -80,6 +80,11 @@ export interface SpatializedElementProperties {
   enableRotateEndGesture: boolean
   enableMagnifyGesture: boolean
   enableMagnifyEndGesture: boolean
+  /**
+   * Optional world-space axis for spatial rotate gesture. Omitted or zero vector
+   * means unconstrained rotation (platform default).
+   */
+  rotateConstrainedToAxis?: Vec3
 }
 
 export interface Spatialized2DElementProperties
@@ -114,6 +119,16 @@ export interface SpatialSceneCreationOptions {
 
   baseplateVisibility?: BaseplateVisibilityType
 }
+
+export type SpatialEntityEventType =
+  | 'spatialtap'
+  | 'spatialdragstart'
+  | 'spatialdrag'
+  | 'spatialdragend'
+  | 'spatialrotate'
+  | 'spatialrotateend'
+  | 'spatialmagnify'
+  | 'spatialmagnifyend'
 
 export const BaseplateVisibilityValues = [
   'automatic',
@@ -185,8 +200,6 @@ export interface SpatialEntityProperties {
   rotation: Vec3
   scale: Vec3
 }
-
-export type SpatialEntityEventType = 'spatialtap' //| 'drag' | 'rotate' | 'scale'
 
 export type SpatialGeometryType =
   | 'BoxGeometry'
@@ -391,6 +404,7 @@ export interface AttachmentEntityOptions {
   parentEntityId: string
   position?: [number, number, number]
   size: { width: number; height: number }
+  ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {

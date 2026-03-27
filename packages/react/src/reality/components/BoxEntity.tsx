@@ -1,15 +1,14 @@
 import React, { forwardRef } from 'react'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape } from '../hooks'
 import { SpatialBoxGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type BoxEntityProps = EntityProps &
-  EntityEventHandler & {
-    children?: React.ReactNode
-    materials?: string[]
-  } & SpatialBoxGeometryOptions
+type BoxEntityProps = EntityProps & {
+  children?: React.ReactNode
+  materials?: string[]
+} & SpatialBoxGeometryOptions
 
 export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
   ({ children, ...props }, ref) => {

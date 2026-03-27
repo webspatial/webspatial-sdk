@@ -113,7 +113,21 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         print("urlSchemeTask")
         let url = urlSchemeTask.request.url
         if url!.absoluteString.starts(with: "file://") {
-            let urlRequest = urlSchemeTask.request
+            let resource: String = pwaManager.getLocalResourceURL(url: url!.absoluteString)
+            var urlRequest = urlSchemeTask.request
+            if resource != "" {
+                if let resourceUrl = URL(string: resource) {
+                    urlRequest = URLRequest(url: resourceUrl)
+                } else {
+                    let error = NSError(domain: "LocalResourceError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local file resource mapping failed"])
+                    urlSchemeTask.didFailWithError(error)
+                    return
+                }
+            } else {
+                let error = NSError(domain: "LocalResourceError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local resource not found"])
+                urlSchemeTask.didFailWithError(error)
+                return
+            }
 
             let session = URLSession(configuration: URLSessionConfiguration.default)
             let dataTask = session.dataTask(with: urlRequest) { [task = urlSchemeTask as AnyObject] data, response, _ in

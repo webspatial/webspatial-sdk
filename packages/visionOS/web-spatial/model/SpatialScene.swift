@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import RealityKit
 import simd
 import SwiftUI
 
@@ -86,6 +87,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var spatialWebViewModel: SpatialWebViewModel
 
+    private var meterToPtUnscaled: Double?
+    private var meterToPtScaled: Double?
+
     init(
         _ url: String,
         _ windowStyle: WindowStyle,
@@ -106,6 +110,20 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     /// used to send message to spatial root webview
     func sendWebMsg(_ id: String, _ msg: Encodable) {
         spatialWebViewModel.sendWebEvent(id, msg)
+    }
+
+    func onUpdatePhysicalMetrics(meterToPtUnscaled: Double, meterToPtScaled: Double) {
+        self.meterToPtUnscaled = meterToPtUnscaled
+        self.meterToPtScaled = meterToPtScaled
+        let js = """
+        window.__webspatialsdk__ = window.__webspatialsdk__ || {};
+        window.__webspatialsdk__.physicalMetrics = {
+            meterToPtUnscaled: \(meterToPtUnscaled),
+            meterToPtScaled: \(meterToPtScaled)
+        };
+        """
+        spatialWebViewModel.getController().callJS(js)
+        sendWebMsg("window", "")
     }
 
     private func setupSpatialWebView() {
@@ -300,6 +318,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertFromEntityToEntity.self, onConvertFromEntityToEntity)
         spatialWebViewModel.addJSBListener(ConvertFromEntityToScene.self, onConvertFromEntityToScene)
         spatialWebViewModel.addJSBListener(ConvertFromSceneToEntity.self, onConvertFromSceneToEntity)
+        spatialWebViewModel.addJSBListener(InitializeAttachmentCommand.self, onInitializeAttachment)
+        spatialWebViewModel.addJSBListener(ConvertCoordinate.self, onConvertCoordinate)
 
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
 
@@ -326,8 +346,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         // write through
         spatialWebViewModel.updateWindowKV([
-            "innerDepth": depth,
-            "outerDepth": depth,
+            "xrInnerDepth": depth,
+            "xrOuterDepth": depth,
             "outerHeight": height + SpatialScene.navHeight,
         ])
     }
@@ -347,6 +367,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didClose) {
             self.handleWindowClose()
+        }
+
+        spatialWebViewModel.addStateListener(.didReceive) {
+            if let meterToPtUnscaled = self.meterToPtUnscaled,
+               let meterToPtScaled = self.meterToPtScaled
+            {
+                self.onUpdatePhysicalMetrics(
+                    meterToPtUnscaled: meterToPtUnscaled,
+                    meterToPtScaled: meterToPtScaled
+                )
+            }
         }
 
         spatialWebViewModel.addStateListener(.didFailLoad) {
@@ -394,46 +425,51 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // Temporary storage for webview models awaiting JSB initialization
+    private var pendingAttachmentWebViewModels = [String: SpatialWebViewModel]()
+
     private func handleCreateAttachment(_ url: URL) -> WebViewElementInfo? {
-        guard let components = URLComponents(string: url.absoluteString),
-              let queryItems = components.queryItems
-        else {
-            print("❌ fail to parse attachment URL")
-            return nil
+        // Just create a bare webview — metadata arrives via InitializeAttachment JSB
+        let id = UUID().uuidString
+        let webViewModel = SpatialWebViewModel(url: nil)
+        webViewModel.setBackgroundTransparent(true)
+        pendingAttachmentWebViewModels[id] = webViewModel
+        return WebViewElementInfo(id: id, element: webViewModel)
+    }
+
+    private func onInitializeAttachment(
+        command: InitializeAttachmentCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let webViewModel = pendingAttachmentWebViewModels.removeValue(forKey: command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "No pending attachment for \(command.id)")))
+            return
         }
 
-        guard let parentEntityId = queryItems.first(where: { $0.name == "parentEntityId" })?.value else {
-            print("❌ missing parentEntityId for attachment")
-            return nil
-        }
-
-        // Parse position (JSON array like [0,0.1,0])
         var position = SIMD3<Float>(0, 0, 0)
-        if let positionStr = queryItems.first(where: { $0.name == "position" })?.value?.removingPercentEncoding,
-           let positionData = positionStr.data(using: .utf8),
-           let positionArray = try? JSONDecoder().decode([Float].self, from: positionData),
-           positionArray.count >= 3
-        {
-            position = SIMD3<Float>(positionArray[0], positionArray[1], positionArray[2])
+        if let posArray = command.position, posArray.count >= 3 {
+            position = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
 
-        // Parse size (JSON object like {"width":100,"height":100})
-        var size = CGSize(width: 100, height: 100)
-        if let sizeStr = queryItems.first(where: { $0.name == "size" })?.value?.removingPercentEncoding,
-           let sizeData = sizeStr.data(using: .utf8),
-           let sizeObj = try? JSONDecoder().decode(AttachmentSize.self, from: sizeData)
-        {
-            size = CGSize(width: sizeObj.width, height: sizeObj.height)
-        }
-
-        let info = attachmentManager.create(
-            id: UUID().uuidString,
-            parentEntityId: parentEntityId,
-            position: position,
-            size: size
+        let size = CGSize(
+            width: command.size?.width ?? 100,
+            height: command.size?.height ?? 100
         )
 
-        return WebViewElementInfo(id: info.id, element: info.webViewModel)
+        let ownerId = command.ownerViewId
+        if spatialObjects[ownerId] == nil {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ownerViewId must belong to the current scene for attachment \(command.id)")))
+            return
+        }
+        attachmentManager.create(
+            id: command.id,
+            parentEntityId: command.parentEntityId,
+            position: position,
+            size: size,
+            webViewModel: webViewModel
+        )
+
+        resolve(.success(baseReplyData))
     }
 
     private func onPageStartLoad() {
@@ -442,7 +478,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
         }
-        // destroy all attachments
         attachmentManager.destroyAll()
         backgroundMaterial = .None
     }
@@ -713,6 +748,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         if let enableRotateEndGesture = command.enableRotateEndGesture {
             spatializedElement.enableRotateEndGesture = enableRotateEndGesture
+        }
+
+        if let rotateConstrainedToAxis = command.rotateConstrainedToAxis {
+            spatializedElement.rotateConstrainedToAxis = rotateConstrainedToAxis
         }
 
         if let enableMagnifyGesture = command.enableMagnifyGesture {
@@ -1068,22 +1107,91 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(ConvertReply(id: command.entityId, position: point)))
     }
 
+    /// Input: command.position, command.fromId, command.toId
+    /// fromId/toId can reference either the scene (window) or an entity.
+    /// Step 1: Convert position to window coordinates (view global, px)
+    ///   - If from is window (scene), position is already in view global (px). Go to Step 2.
+    ///   - If from is 2d frame(SpatializedElement), position is in view local (px).
+    ///     - view local → window (view global, px) using SpatializedElement.convertToScene
+    ///   - If from is an entity, position is in reality entity local (meters):
+    ///     - entity local → reality world (scene)
+    ///     - reality world → window (view global, px)
+    /// Step 2: Convert window coordinates (view global, px) to target output
+    ///   - If to is window, output directly.
+    ///   - If to is 2d frame(SpatializedElement), output in view local (px).
+    ///     - window (view global, px) → view local using SpatializedElement.convertFromScene
+    ///   - If to is an entity, output in reality entity local (meters):
+    ///     - window (view global, px) → reality world (scene)
+    ///     - reality world → reality entity local (meters)
+
+    private func onConvertCoordinate(command: ConvertCoordinate, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        func isSceneId(_ id: String) -> Bool {
+            return id.isEmpty
+        }
+        let input = SIMD3<Float>(Float(command.position.x), Float(command.position.y), Float(command.position.z))
+        let fromEntity = spatialObjects[command.fromId] as? SpatialEntity
+        let from2dFrame = spatialObjects[command.fromId] as? SpatializedElement
+        let toEntity = spatialObjects[command.toId] as? SpatialEntity
+        let to2dFrame = spatialObjects[command.toId] as? SpatializedElement
+
+        var globalPx: Point3D
+        if isSceneId(command.fromId) {
+            globalPx = Point3D(x: Double(input.x), y: Double(input.y), z: Double(input.z))
+        } else if let fromEntity {
+            let world = fromEntity.convert(position: input, to: nil)
+            guard let content = findSpatializedDynamic3DElement(containingEntityId: fromEntity.spatialId)?.getViewContent() else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "RealityView content unavailable for conversion")))
+                return
+            }
+            globalPx = content.convert(point: world, from: .scene, to: .global)
+        } else if let from2dFrame {
+            let localPoint = SIMD3<Double>(Double(input.x), Double(input.y), Double(input.z))
+            let scenePoint = from2dFrame.convertToScene(localPoint)
+            globalPx = Point3D(x: scenePoint.x, y: scenePoint.y, z: scenePoint.z)
+        } else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Invalid fromId")))
+            return
+        }
+
+        if isSceneId(command.toId) {
+            let result = Vec3(x: CGFloat(globalPx.x), y: CGFloat(globalPx.y), z: CGFloat(globalPx.z))
+            resolve(.success(result))
+            return
+        } else if let toEntity {
+            guard let content = findSpatializedDynamic3DElement(containingEntityId: toEntity.spatialId)?.getViewContent() else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "RealityView content unavailable for conversion")))
+                return
+            }
+            let world = content.convert(globalPx, from: .global, to: .scene)
+            let local = toEntity.convert(position: world, from: nil)
+            let ret = Vec3(x: CGFloat(local.x), y: CGFloat(local.y), z: CGFloat(local.z))
+            resolve(.success(ret))
+            return
+        } else if let to2dFrame {
+            let scenePoint = SIMD3<Double>(globalPx.x, globalPx.y, globalPx.z)
+            let localPoint = to2dFrame.convertFromScene(scenePoint)
+            let ret = Vec3(x: CGFloat(localPoint.x), y: CGFloat(localPoint.y), z: CGFloat(localPoint.z))
+            resolve(.success(ret))
+            return
+        } else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Invalid toId")))
+            return
+        }
+    }
+
     private func onUpdateAttachmentEntity(command: UpdateAttachmentEntityCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard attachmentManager.get(id: command.id) != nil else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
             return
         }
-
         var newPosition: SIMD3<Float>? = nil
         if let posArray = command.position, posArray.count >= 3 {
             newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
-
         var newSize: CGSize? = nil
         if let sizeObj = command.size {
             newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
         }
-
         attachmentManager.update(id: command.id, position: newPosition, size: newSize)
         resolve(.success(baseReplyData))
     }
@@ -1109,6 +1217,32 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         // notify web side, spatialObject is destroyed
         sendWebMsg(spatialObject.spatialId, SpatialObjectDestroiedEvent())
+    }
+
+    /// Find the dynamic 3D container (SpatializedDynamic3DElement) that contains the entity by ID.
+    /// - Parameter entityId: The entity's spatialId.
+    /// - Returns: The container if the entity is a descendant of the container's root; otherwise nil.
+    private func findSpatializedDynamic3DElement(containingEntityId entityId: String) -> SpatializedDynamic3DElement? {
+        guard let entity = spatialObjects[entityId] as? SpatialEntity else {
+            return nil
+        }
+
+        for (_, object) in spatialObjects {
+            guard let dynamic3dElement = object as? SpatializedDynamic3DElement else {
+                continue
+            }
+
+            let root = dynamic3dElement.getRoot()
+            var current: Entity? = entity
+            while let node = current {
+                if node === root {
+                    return dynamic3dElement
+                }
+                current = node.parent
+            }
+        }
+
+        return nil
     }
 
     func findSpatialObject<T: SpatialObjectProtocol>(_ id: String) -> T? {

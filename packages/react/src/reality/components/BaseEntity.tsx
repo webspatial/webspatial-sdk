@@ -5,17 +5,16 @@ import {
   RealityContextValue,
   useRealityContext,
 } from '../context'
-import { EntityProps, EntityEventHandler } from '../type'
+import { EntityProps } from '../type'
 import { EntityRefShape, useEntity } from '../hooks'
 
-type BaseEntityProps = EntityProps &
-  EntityEventHandler & {
-    children?: React.ReactNode
-    createEntity: (
-      ctx: RealityContextValue,
-      signal: AbortSignal,
-    ) => Promise<SpatialEntity>
-  }
+type BaseEntityProps = EntityProps & {
+  children?: React.ReactNode
+  createEntity: (
+    ctx: RealityContextValue,
+    signal: AbortSignal,
+  ) => Promise<SpatialEntity>
+}
 
 export const BaseEntity = forwardRef<EntityRefShape, BaseEntityProps>(
   ({ children, createEntity, ...rest }, ref) => {

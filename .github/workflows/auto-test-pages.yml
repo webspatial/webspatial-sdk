@@ -21,6 +21,9 @@ jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      GITHUB_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,6 +39,9 @@ jobs:
           node-version: 'latest'
           cache: 'pnpm'
 
+      - name: Record START_TIME
+        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
       - name: Install autotest and build required packages
         run: pnpm -F autotest run setup-local
 
@@ -48,20 +54,6 @@ jobs:
       - name: Install Chrome for Puppeteer
         run: pnpm --filter autotest exec puppeteer browsers install chrome
 
-      - name: Record START_TIME
-        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      - name: Set BRANCH_NAME
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
-          else
-            echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
-          fi
-
-      - name: Set GITHUB_WORKFLOW_URL
-        run: echo "GITHUB_WORKFLOW_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
-
       - name: Run mocha in autoTest package
         continue-on-error: true
         run: pnpm --filter autotest run test
@@ -73,18 +65,35 @@ jobs:
         with:
           name: autotest-report
           path: packages/autoTest/reports
+          if-no-files-found: ignore
 
       - name: Construct artifact download URL
+        if: always()
+        continue-on-error: true
         run: echo "WEBSITE_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_report.outputs.artifact-id }}" >> $GITHUB_ENV
 
 
       - name: Send summary to Lark with page URL
-        run: pnpm --filter autotest run post-test
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          if ! command -v pnpm >/dev/null 2>&1; then
+            corepack enable >/dev/null 2>&1 || true
+            corepack prepare pnpm@10.32.0 --activate >/dev/null 2>&1 || true
+          fi
+          pnpm --filter autotest run post-test
+          code=$?
+          if [ $code -ne 0 ]; then
+            pnpm -F autotest install --no-frozen-lockfile || true
+            pnpm --filter autotest run post-test || true
+          fi
         env:
           WEBSITE_URL: ${{ env.WEBSITE_URL }}
           BRANCH_NAME: ${{ env.BRANCH_NAME }}
           START_TIME: ${{ env.START_TIME }}
           GITHUB_WORKFLOW_URL: ${{ env.GITHUB_WORKFLOW_URL }}
+          SUCCESS: ${{ job.status == 'success' }}
           APP_ID: ${{ secrets.APP_ID }}
           APP_SECRET: ${{ secrets.APP_SECRET }}
           RECEIVE_ID_PRIVATE: ${{ secrets.RECEIVE_ID_PRIVATE }}

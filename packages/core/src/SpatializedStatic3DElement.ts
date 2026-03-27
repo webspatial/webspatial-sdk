@@ -37,6 +37,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
   private createReadyPromise() {
+    // If there's an existing promise reject it before it's replaced
+    this._readyResolve?.(false)
     return new Promise<boolean>(resolve => {
       this._readyResolve = resolve
     })

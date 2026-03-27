@@ -9,7 +9,7 @@ struct AttachmentInfo: Identifiable, Equatable {
     var webViewModel: SpatialWebViewModel
 
     static func == (lhs: AttachmentInfo, rhs: AttachmentInfo) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }
 
@@ -29,9 +29,9 @@ class AttachmentManager {
         id: String,
         parentEntityId: String,
         position: SIMD3<Float>,
-        size: CGSize
+        size: CGSize,
+        webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
-        let webViewModel = SpatialWebViewModel(url: nil)
         webViewModel.setBackgroundTransparent(true)
         // webViewModel.scrollEnabled = false
 
@@ -48,12 +48,14 @@ class AttachmentManager {
 
     func update(id: String, position: SIMD3<Float>?, size: CGSize?) {
         guard var info = attachments[id] else { return }
+
         if let position = position {
             info.position = position
         }
         if let size = size {
             info.size = size
         }
+
         attachments[id] = info
     }
 
@@ -66,12 +68,13 @@ class AttachmentManager {
     }
 
     func get(id: String) -> AttachmentInfo? {
-        return attachments[id]
+        attachments[id]
     }
 
     func destroyAll() {
         let toDestroy = Array(attachments.values)
         attachments.removeAll()
+
         DispatchQueue.main.async {
             for info in toDestroy {
                 info.webViewModel.destroy()

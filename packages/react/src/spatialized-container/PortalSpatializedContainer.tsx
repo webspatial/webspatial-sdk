@@ -3,7 +3,30 @@ import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import { PortalSpatializedContainerProps, SpatializedElementRef } from './types'
+import {
+  PortalSpatializedContainerProps,
+  SpatialEventOptions,
+  SpatializedElementRef,
+} from './types'
+import type { Vec3 } from '@webspatial/core-sdk'
+
+function constrainedAxisToVec3(
+  input: SpatialEventOptions['constrainedToAxis'] | undefined,
+): Vec3 {
+  if (input == null) return { x: 0, y: 0, z: 0 }
+  if (Array.isArray(input)) {
+    return { x: input[0] ?? 0, y: input[1] ?? 0, z: input[2] ?? 0 }
+  }
+  const v = input as Vec3
+  return { x: v.x, y: v.y, z: v.z }
+}
+
+function constrainedAxisKey(
+  input: SpatialEventOptions['constrainedToAxis'] | undefined,
+): string {
+  const v = constrainedAxisToVec3(input)
+  return `${v.x},${v.y},${v.z}`
+}
 
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
@@ -67,6 +90,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     onSpatialRotateEnd,
     onSpatialMagnify,
     onSpatialMagnifyEnd,
+    spatialEventOptions,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -160,6 +184,16 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
       spatializedElement.onSpatialDragStart = onSpatialDragStart
     }
   }, [spatializedElement, onSpatialDragStart])
+
+  const rotateConstraintKey = constrainedAxisKey(
+    spatialEventOptions?.constrainedToAxis,
+  )
+
+  useEffect(() => {
+    if (!spatializedElement) return
+    const axis = constrainedAxisToVec3(spatialEventOptions?.constrainedToAxis)
+    void spatializedElement.updateProperties({ rotateConstrainedToAxis: axis })
+  }, [spatializedElement, rotateConstraintKey])
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>

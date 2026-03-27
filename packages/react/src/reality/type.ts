@@ -8,6 +8,7 @@ import { SpatialRotateEvent as CoreSpatialRotateEvent } from '@webspatial/core-s
 import { SpatialRotateEndEvent as CoreSpatialRotateEndEvent } from '@webspatial/core-sdk'
 import { SpatialMagnifyEvent as CoreSpatialMagnifyEvent } from '@webspatial/core-sdk'
 import { SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent } from '@webspatial/core-sdk'
+import { SpatialEventOptions } from '..'
 
 export type EntityProps = {
   id?: string
@@ -15,6 +16,7 @@ export type EntityProps = {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
+  enableInput?: boolean
 }
 
 type allTarget<T extends EntityRefShape> = {
@@ -86,6 +88,7 @@ export type EntityEventHandler = {
   onSpatialDrag?: (event: SpatialDragEntityEvent) => void
   onSpatialDragEnd?: (event: SpatialDragEndEntityEvent) => void
   // rotate
+  spatialEventOptions?: SpatialEventOptions
   onSpatialRotate?: (event: SpatialRotateEntityEvent) => void
   onSpatialRotateEnd?: (event: SpatialRotateEndEntityEvent) => void
   // magnify
@@ -101,11 +104,9 @@ export const eventMap = {
   onSpatialDrag: 'spatialdrag',
   onSpatialDragEnd: 'spatialdragend',
   // rotate
-  onSpatialRotateStart: 'spatialrotatestart',
   onSpatialRotate: 'spatialrotate',
   onSpatialRotateEnd: 'spatialrotateend',
   // magnify
-  onSpatialMagnifyStart: 'spatialmagnifystart',
   onSpatialMagnify: 'spatialmagnify',
   onSpatialMagnifyEnd: 'spatialmagnifyend',
 } as const

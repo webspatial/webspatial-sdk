@@ -2,7 +2,6 @@ import React, { CSSProperties, useRef, useState } from 'react'
 import * as THREE from 'three'
 import {
   enableDebugTool,
-  toSceneSpatial,
   Model,
   ModelRef,
   ModelSpatialTapEvent,
@@ -41,10 +40,7 @@ function ModelTest() {
   const onSpatialTap = (e: ModelSpatialTapEvent) => {
     console.log(
       'model onSpatialTap',
-      e.currentTarget.getBoundingClientCube(),
-      e.currentTarget.getBoundingClientRect(),
       e.detail.location3D,
-      toSceneSpatial(e.detail.location3D, e.currentTarget),
       e.currentTarget.currentSrc,
     )
   }

@@ -1,11 +1,10 @@
 import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
-import { EntityEventHandler, EntityProps } from '../type'
+import { EntityProps } from '../type'
 import {
   EntityRefShape,
   EntityRef,
-  useEntityEvent,
   useEntityId,
   useEntityRef,
   useEntityTransform,
@@ -14,8 +13,7 @@ import {
 
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
-} & EntityProps &
-  EntityEventHandler & { ref: ForwardedRef<EntityRefShape> }
+} & EntityProps & { ref: ForwardedRef<EntityRefShape> }
 
 export const useEntity = ({
   ref,
@@ -23,17 +21,7 @@ export const useEntity = ({
   position,
   rotation,
   scale,
-  onSpatialTap,
-  onSpatialDragStart,
-  onSpatialDrag,
-  onSpatialDragEnd,
-  // onSpatialRotateStart,
-  onSpatialRotate,
-  onSpatialRotateEnd,
-  // onSpatialMagnifyStart,
-  onSpatialMagnify,
-  onSpatialMagnifyEnd,
-  // TODO: add other event handlers
+  enableInput,
   createEntity,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
@@ -44,6 +32,7 @@ export const useEntity = ({
 
   useEffect(() => {
     if (!ctx) return
+
     const controller = new AbortController()
 
     const init = async () => {
@@ -81,19 +70,13 @@ export const useEntity = ({
   useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
   useEntityRef(ref, instanceRef.current)
 
-  useEntityEvent({
-    instance: instanceRef.current,
-    onSpatialTap,
-    onSpatialDragStart,
-    onSpatialDrag,
-    onSpatialDragEnd,
-    // onSpatialRotateStart,
-    onSpatialRotate,
-    onSpatialRotateEnd,
-    // onSpatialMagnifyStart,
-    onSpatialMagnify,
-    onSpatialMagnifyEnd,
-  })
+  useEffect(() => {
+    const ent = instanceRef.current.entity
+    if (!ent) return
+    if (enableInput !== undefined) {
+      ent.enableInput = !!enableInput
+    }
+  }, [instanceRef.current.entity, enableInput])
 
   return instanceRef.current.entity
 }
