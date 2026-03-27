@@ -83,7 +83,6 @@ export default function RealityDynamicAssets() {
     setDynamicOpacity(o => (o === 0.8 ? 0.4 : 0.8))
   }
 
-  // Minimal button inline style: larger clickable, subtle border, pointer
   const btnStyle: React.CSSProperties = {
     padding: '8px 16px',
     margin: '0 6px 6px 0',
@@ -96,7 +95,6 @@ export default function RealityDynamicAssets() {
     transition: 'background 0.15s',
     outline: 'none',
   }
-  // on hover, apply very light gray (not via CSS, keep JS only), so no further handling
 
   return (
     <div>

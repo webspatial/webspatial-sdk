@@ -20,6 +20,16 @@ type GeometryEntityProps = EntityProps &
     createGeometry: (options: any) => Promise<SpatialGeometry>
   }
 
+type LastGeometrySnapshot = {
+  geometryOptions: any
+  materials: string[] | undefined
+}
+
+type GeometryEntityMutable = {
+  lastSnapshot: LastGeometrySnapshot | null
+  rebuildGen: number
+}
+
 export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
   (
     { id, children, name, materials, geometryOptions, createGeometry, ...rest },
@@ -28,74 +38,84 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
     const ctx = useRealityContext()
     const entityRef = useRef<SpatialEntity | null>(null)
     const componentRef = useRef<SpatialComponent | null>(null)
-    const lastGeometryOptionsRef = useRef<any>(null)
-    const lastMaterialsRef = useRef<string[] | undefined>(undefined)
-    const isInitializedRef = useRef(false)
+    // Tracks the last applied mesh + materials, plus a generation counter so
+    // overlapping async rebuilds (e.g. fast sliders) cannot apply out of order.
+    const mutableRef = useRef<GeometryEntityMutable>({
+      lastSnapshot: null,
+      rebuildGen: 0,
+    })
 
-    // Dynamic geometry/material rebuild
     useEffect(() => {
-      if (!ctx || !entityRef.current || !isInitializedRef.current) return
+      const { lastSnapshot } = mutableRef.current
+      if (!ctx || !entityRef.current || lastSnapshot === null) return
 
+      // Parents may pass a new options object each render with the same values;
+      // shallow compare avoids ripping down the mesh when nothing meaningful changed.
       const geometryChanged = !shallowEqualObject(
-        lastGeometryOptionsRef.current,
+        lastSnapshot.geometryOptions,
         geometryOptions,
       )
       const materialsChanged = !shallowEqualArray(
-        lastMaterialsRef.current,
+        lastSnapshot.materials,
         materials,
       )
 
       if (!geometryChanged && !materialsChanged) return
 
-      lastGeometryOptionsRef.current = geometryOptions
-      lastMaterialsRef.current = materials
+      mutableRef.current.lastSnapshot = { geometryOptions, materials }
+      mutableRef.current.rebuildGen += 1
+      const gen = mutableRef.current.rebuildGen
 
       const rebuild = async () => {
         const entity = entityRef.current
         if (!entity) return
 
         try {
-          // Remove old component
-          if (componentRef.current) {
-            await entity.removeComponent(componentRef.current)
-            componentRef.current.destroy()
+          const oldComponent = componentRef.current
+          if (oldComponent) {
+            await entity.removeComponent(oldComponent)
+            await oldComponent.destroy()
             componentRef.current = null
+            if (gen !== mutableRef.current.rebuildGen) return
           }
 
-          // Create new geometry
           const geometry = await createGeometry(geometryOptions)
+          // A newer rebuild started; drop this mesh so it is not left orphaned.
+          if (gen !== mutableRef.current.rebuildGen) {
+            await geometry.destroy()
+            return
+          }
 
-          // Resolve materials
           const materialList: SpatialMaterial[] = await Promise.all(
             materials
               ?.map(mid => ctx.resourceRegistry.get<SpatialMaterial>(mid))
               .filter(Boolean) ?? [],
           )
+          if (gen !== mutableRef.current.rebuildGen) {
+            await geometry.destroy()
+            return
+          }
 
-          // Create new model component
           const modelComponent = await ctx.session.createModelComponent({
             mesh: geometry,
             materials: materialList,
           })
+          if (gen !== mutableRef.current.rebuildGen) {
+            await modelComponent.destroy()
+            await geometry.destroy()
+            return
+          }
 
-          // Add to entity
           await entity.addComponent(modelComponent)
           componentRef.current = modelComponent
         } catch (error) {
-          console.error('GeometryEntity: rebuild failed', error)
+          if (gen === mutableRef.current.rebuildGen) {
+            console.error('GeometryEntity: rebuild failed', error)
+          }
         }
       }
       rebuild()
-    }, [
-      ctx,
-      geometryOptions?.width,
-      geometryOptions?.height,
-      geometryOptions?.depth,
-      geometryOptions?.cornerRadius,
-      geometryOptions?.splitFaces,
-      geometryOptions?.radius,
-      materials,
-    ])
+    }, [ctx, geometryOptions, materials, createGeometry])
 
     return (
       <BaseEntity
@@ -129,9 +149,7 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
 
             entityRef.current = ent
             componentRef.current = modelComponent
-            lastGeometryOptionsRef.current = geometryOptions
-            lastMaterialsRef.current = materials
-            isInitializedRef.current = true
+            mutableRef.current.lastSnapshot = { geometryOptions, materials }
 
             return ent
           } catch (error) {
