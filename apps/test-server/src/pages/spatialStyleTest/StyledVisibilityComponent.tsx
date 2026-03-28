@@ -9,7 +9,8 @@ const Host = styled.div<{ $hidden?: boolean }>`
   padding: 8px;
   border-radius: 8px;
   background: #eef;
-  --xr-back: 24;
+  transform: ${props => (props.$hidden ? 'rotate(45deg)' : 'none')};
+  --xr-back: ${props => (props.$hidden ? '24' : '100')};
 `
 
 const ToggleButton = styled.button`
