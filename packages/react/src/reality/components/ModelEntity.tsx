@@ -22,6 +22,9 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)
     const lastMaterialsRef = useRef<string[] | undefined>(undefined)
 
+    // TODO: Overlapping async `setMaterials` calls (e.g. rapid `materials` prop changes) can apply
+    // out of order, like GeometryEntity's rebuild race. Use a generation counter (see
+    // `rebuildGen` in GeometryEntity) so stale applies are ignored after awaits.
     // Dynamic material override (including clearing: props may go from ids to undefined / [])
     useEffect(() => {
       if (!ctx || !entityRef.current) return
