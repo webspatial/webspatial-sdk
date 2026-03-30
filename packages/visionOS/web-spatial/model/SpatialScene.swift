@@ -350,8 +350,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         // write through
         spatialWebViewModel.updateWindowKV([
-            "innerDepth": depth,
-            "outerDepth": depth,
+            "xrInnerDepth": depth,
+            "xrOuterDepth": depth,
             "outerHeight": height + SpatialScene.navHeight,
         ])
     }

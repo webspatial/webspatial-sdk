@@ -71,6 +71,16 @@ class Dynamic3DManager {
     }
 
     static func loadResourceToLocal(_ urlString: String, loadComplete: @escaping (Result<URL, Error>) -> Void) {
+        // load local file
+        if urlString.starts(with: "file://") {
+            guard let localUrl = URL(string: pwaManager.getLocalResourceURL(url: urlString)) else {
+                loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Local file is not found"])))
+                return
+            }
+            loadComplete(.success(localUrl))
+            return
+        }
+        // load net file
         guard let url = URL(string: urlString) else {
             loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
             return

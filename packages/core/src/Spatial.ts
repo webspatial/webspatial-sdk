@@ -6,6 +6,8 @@ import { SpatialWebEvent } from './SpatialWebEvent'
  * This is the main entry point for the WebSpatial SDK, providing access to spatial capabilities.
  */
 export class Spatial {
+  private wsAppShellVersionFromUA: string | null | undefined
+
   /**
    * Requests a spatial session object from the browser.
    * This is the primary method to initialize spatial functionality.
@@ -31,6 +33,25 @@ export class Spatial {
       return true
     }
     return false
+  }
+
+  getShellVersionFromUA(): string | null {
+    if (this.wsAppShellVersionFromUA !== undefined) {
+      return this.wsAppShellVersionFromUA
+    }
+    if (
+      typeof navigator === 'undefined' ||
+      typeof navigator.userAgent !== 'string'
+    ) {
+      this.wsAppShellVersionFromUA = null
+      return null
+    }
+
+    const match = navigator.userAgent.match(
+      /WSAppShell\/(\d+(?:\.\d+){2}(?:[-+][0-9A-Za-z.-]+)*)/,
+    )
+    this.wsAppShellVersionFromUA = match ? match[1] : '1.3.0'
+    return this.wsAppShellVersionFromUA
   }
 
   /** @deprecated

@@ -1,5 +1,41 @@
 # @webspatial/platform-avp
 
+## 1.4.0
+
+### Minor Changes
+
+- 56e98c8: rename innerDepth to xrInnerDepth and outerDepth to xrOuterDepth
+- 58e1f69: Attachment init flow and lifecycle cleanup.
+
+  - **Core**
+    - Split attachment creation into `CreateAttachmentEntityCommand` (window/engine) and `InitializeAttachmentCommand` (send id, parent, position, size over JSB so native initializes after window exists).
+    - `createAttachmentEntity()` now runs both; native receives full options via init command.
+  - **React**
+    - `AttachmentEntity`: inline head-style sync via `MutationObserver` on `document.head`; direct cleanup on unmount (no StrictMode-only logic).
+    - `useEntity`: forwards all entity event handlers (tap, drag, rotate, magnify) to `useEntityEvent`.
+    - `useSpatializedElement`: ref-based cleanup so elements are destroyed correctly on unmount.
+    - Removed React 18 StrictMode–specific deferred cleanup from Reality, useEntity, AttachmentEntity, useSpatializedElement.
+  - **visionOS**
+    - Attachment manager and JSB handling updated for init command and consolidated window creation.
+
+- 087fa12: react-sdk:support convertCoordinate
+- 98fd429: react-sdk support pointToPhysical,physicalToPoint API from useMetrics() hook
+- 8676fc5: convertCoordinate support 2dFrame as input and output
+- 8f8c50a: Spatial rotate axis constraint for spatialized elements.
+
+  - **Core**
+    - `SpatializedElementProperties` adds optional `rotateConstrainedToAxis` (Vec3) on partial updates to native.
+  - **React**
+    - `spatialEventOptions={{ constrainedToAxis: Vec3 | [number, number, number] }}` on spatialized containers and JSX intrinsics (`enable-xr`); omit or `[0,0,0]` means unconstrained.
+    - `PortalSpatializedContainer` syncs axis via `updateProperties`; `Model` / degraded paths strip `spatialEventOptions` from DOM.
+  - **visionOS**
+    - `RotateGesture3D(constrainedToAxis:)` when axis is non-zero; world-space axis, normalized on native.
+
+### Patch Changes
+
+- dabb15f: Update UA injection logic in VisionOS and add WSAppShell version number
+- 696506e: Fix visionOS spatial element transform and gesture coordinates: use proxy transform only for local→scene (drop getBoundingClientCube); clarify location3D (element local) vs globalLocation3D (scene); define semantic local z with front face = 0 via localFrameOffsetZ (zIndex + backOffset, exclude translateZ). Rename GestureFlags to GestureState.
+
 ## 1.3.0
 
 ### Minor Changes
