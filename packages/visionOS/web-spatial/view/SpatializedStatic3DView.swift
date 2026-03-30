@@ -20,6 +20,19 @@ struct SpatializedStatic3DView: View {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
     }
 
+    /// Attempts to load from each source in order, returning the first success.
+    private func loadFromSources(_ sources: [ModelSource]) async -> Model3DAsset? {
+        for source in sources {
+            guard let url = localOrRemoteURL(url: source.src) else { continue }
+            do {
+                return try await loadAsset(from: url)
+            } catch {
+                continue
+            }
+        }
+        return nil
+    }
+
     var body: some View {
         let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
@@ -31,7 +44,8 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if let url = localOrRemoteURL(url: spatializedStatic3DElement.modelURL) {
+        let hasValidSource = URL(string: spatializedStatic3DElement.modelURL) != nil || !spatializedStatic3DElement.sources.isEmpty
+        if hasValidSource {
             Group {
                 if isLoading {
                     ProgressView()
@@ -73,7 +87,21 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
-            .task(id: url) { await loadSource(from: url) }
+            .task(id: spatializedStatic3DElement.allSources) {
+                // Sequential fallback through sources
+                if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
+                    if spatializedStatic3DElement.autoplay,
+                       let firstAnimation = loaded.availableAnimations.first
+                    {
+                        loaded.selectedAnimation = firstAnimation
+                    }
+                    self.asset = loaded
+                    self.loadFailed = false
+                } else {
+                    self.asset = nil
+                    self.loadFailed = true
+                }
+            }
         } else {
             EmptyView()
         }
