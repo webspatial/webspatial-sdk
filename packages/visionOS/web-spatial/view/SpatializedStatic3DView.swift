@@ -6,14 +6,15 @@ struct SpatializedStatic3DView: View {
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var asset: Model3DAsset?
+    @State private var source: String?
     @State private var isLoading = false
 
     private var spatializedStatic3DElement: SpatializedStatic3DElement {
         return spatializedElement as! SpatializedStatic3DElement
     }
 
-    func onLoadSuccess() {
-        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
+    func onLoadSuccess(src: String) {
+        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess(src: src))
     }
 
     func onLoadFailure() {
@@ -31,11 +32,11 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if let url = localOrRemoteURL(url: spatializedStatic3DElement.modelURL) {
+        if !spatializedStatic3DElement.allSources.isEmpty {
             Group {
                 if isLoading {
                     ProgressView()
-                } else if let asset {
+                } else if let asset, let source {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
                             .resizable(true)
@@ -45,7 +46,7 @@ struct SpatializedStatic3DView: View {
                             )
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
                             .onAppear {
-                                self.onLoadSuccess()
+                                self.onLoadSuccess(src: source)
                             }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
@@ -73,7 +74,7 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
-            .task(id: url) { await loadSource(from: url) }
+            .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
         }
@@ -94,17 +95,28 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
-    private func loadSource(from url: URL) async {
+    private func loadSources() async {
         isLoading = true
-        do {
-            asset = try await loadAsset(from: url)
-            if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
-                asset?.selectedAnimation = firstAnimation
-            }
-        } catch {
-            asset = nil
+        let result = await loadSources(spatializedStatic3DElement.allSources)
+        asset = result?.asset
+        source = result?.url.absoluteString
+        if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
+            asset?.selectedAnimation = firstAnimation
         }
         isLoading = false
+    }
+
+    /// Attempts to load from each source in order, returning the first success.
+    private func loadSources(_ sources: [ModelSource]) async -> (url: URL, asset: Model3DAsset)? {
+        for source in sources {
+            guard let url = localOrRemoteURL(url: source.src) else { continue }
+            do {
+                return try (url, await loadAsset(from: url))
+            } catch {
+                continue
+            }
+        }
+        return nil
     }
 }
 

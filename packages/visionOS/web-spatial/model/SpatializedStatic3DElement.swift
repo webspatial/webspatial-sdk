@@ -1,12 +1,23 @@
 import Foundation
 import SwiftUI
 
+struct ModelSource: Codable, Equatable {
+    let src: String
+    let type: String?
+}
+
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
-    var modelURL: String = ""
+    var modelURL: String?
+    var sources: [ModelSource] = []
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
+    var allSources: [ModelSource] {
+        return if let modelURL {
+            [ModelSource(src: modelURL, type: nil)] + sources
+        } else { sources }
+    }
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type

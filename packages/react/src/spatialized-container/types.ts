@@ -86,6 +86,7 @@ export type SpatializedStatic3DContainerProps =
       src?: string
       autoPlay?: boolean
       loop?: boolean
+      children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
@@ -96,6 +97,7 @@ export type SpatializedStatic3DContentProps = {
   src?: string
   autoPlay?: boolean
   loop?: boolean
+  children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
 }
