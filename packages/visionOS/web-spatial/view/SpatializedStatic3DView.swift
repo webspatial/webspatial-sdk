@@ -35,6 +35,19 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
+    /// Attempts to load from each source in order, returning the first success.
+    private func loadFromSources(_ sources: [ModelSource]) async -> Model3DAsset? {
+        for source in sources {
+            guard let url = localOrRemoteURL(url: source.src) else { continue }
+            do {
+                return try await loadAsset(from: url)
+            } catch {
+                continue
+            }
+        }
+        return nil
+    }
+
     var body: some View {
         let depth = spatializedElement.depth
         let transform = spatializedStatic3DElement.modelTransform
@@ -46,7 +59,8 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if let url = localOrRemoteURL(url: spatializedStatic3DElement.modelURL) {
+        let hasValidSource = URL(string: spatializedStatic3DElement.modelURL) != nil || !spatializedStatic3DElement.sources.isEmpty
+        if hasValidSource {
             Group {
                 if let asset {
                     Model3D(asset: asset) { resolvedModel3D in
@@ -78,17 +92,17 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
-            .task(id: url) {
-                do {
-                    let loaded = try await loadAsset(from: url)
-                    if spatializedStatic3DElement.autoplay {
-                        if let firstAnimation = loaded.availableAnimations.first {
-                            loaded.selectedAnimation = firstAnimation
-                        }
+            .task(id: spatializedStatic3DElement.allSources) {
+                // Sequential fallback through sources
+                if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
+                    if spatializedStatic3DElement.autoplay,
+                       let firstAnimation = loaded.availableAnimations.first
+                    {
+                        loaded.selectedAnimation = firstAnimation
                     }
                     self.asset = loaded
                     self.loadFailed = false
-                } catch {
+                } else {
                     self.asset = nil
                     self.loadFailed = true
                 }

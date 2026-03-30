@@ -542,7 +542,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
-        spatialObject.modelURL = command.modelURL
+        if let modelURL = command.modelURL {
+            spatialObject.modelURL = modelURL
+        }
+        if let sources = command.sources {
+            spatialObject.sources = sources
+        }
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
@@ -584,6 +589,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         updateSpatializedElementProperties(spatializedElement, command)
+
+        if let sources = command.sources {
+            spatializedElement.sources = sources
+        }
 
         if let modelURL = command.modelURL {
             spatializedElement.modelURL = modelURL
