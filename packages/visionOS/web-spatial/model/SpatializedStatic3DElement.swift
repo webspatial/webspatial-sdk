@@ -15,6 +15,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
+    var animationPaused: Bool = true
     var allSources: [ModelSource] {
         let usdz = sources.filter { $0.type == USDZ_MIME_TYPE }
         let rest = sources.filter { $0.type != USDZ_MIME_TYPE }

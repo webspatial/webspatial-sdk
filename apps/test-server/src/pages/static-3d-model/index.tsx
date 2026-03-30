@@ -70,6 +70,23 @@ function App() {
           className="w-full h-[200px] object-contain"
         />
       </Model>
+      <section className="playbackControls">
+        <button
+          className="btn btn-success m-1"
+          onClick={() => modelRef.current?.play()}
+        >
+          |▶
+        </button>
+        <button
+          className="btn btn-info  m-1"
+          onClick={() => modelRef.current?.pause()}
+        >
+          ⏸
+        </button>
+        <span className="m-1">
+          Paused: {modelRef.current?.paused ?? 'false'}
+        </span>
+      </section>
       <Logger logs={logs} clearLog={clearLog} />
     </div>
   )
@@ -272,7 +289,10 @@ function NumberInput({ label, value, setValue, step }: InputProps) {
   return (
     <span className="m-1 inline-block">
       <label>{label}:</label>
-      <button className="btn btn-sm" onClick={() => setValue(value - step)}>
+      <button
+        className="btn btn-neutral btn-sm"
+        onClick={() => setValue(value - step)}
+      >
         -
       </button>
       <input
@@ -282,7 +302,10 @@ function NumberInput({ label, value, setValue, step }: InputProps) {
         value={value}
         onChange={e => setValue(parseFloat(e.currentTarget.value))}
       />
-      <button className="btn btn-sm" onClick={() => setValue(value + step)}>
+      <button
+        className="btn btn-neutral btn-sm"
+        onClick={() => setValue(value + step)}
+      >
         +
       </button>{' '}
     </span>
@@ -297,11 +320,11 @@ type ToggleProps = {
 function Toggle({ label, setValue, step }: ToggleProps) {
   return (
     <span className="m-1 inline-block">
-      <button className="btn btn-sm" onClick={e => setValue(-step)}>
+      <button className="btn btn-neutral btn-sm" onClick={e => setValue(-step)}>
         -
       </button>
       <label>{label}</label>
-      <button className="btn btn-sm" onClick={e => setValue(step)}>
+      <button className="btn btn-neutral btn-sm" onClick={e => setValue(step)}>
         +
       </button>{' '}
     </span>

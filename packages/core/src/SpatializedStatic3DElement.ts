@@ -4,7 +4,7 @@ import {
   ModelSource,
   SpatializedStatic3DElementProperties,
 } from './types/types'
-import { SpatialWebMsgType } from './WebMsgCommand'
+import { SpatialWebMsgType, AnimationStateChangeDetail } from './WebMsgCommand'
 
 /**
  * Represents a static 3D model element in the spatial environment.
@@ -100,11 +100,57 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Whether the animation is currently paused.
+   */
+  private _paused: boolean = true
+
+  /**
+   * Returns whether the animation is currently paused.
+   */
+  get paused(): boolean {
+    return this._paused
+  }
+
+  /**
+   * Callback for animation state changes.
+   */
+  private _onAnimationStateChangeCallback?: (
+    detail: AnimationStateChangeDetail,
+  ) => void
+
+  /**
+   * Sets the callback for animation state changes.
+   */
+  set onAnimationStateChangeCallback(
+    callback: undefined | ((detail: AnimationStateChangeDetail) => void),
+  ) {
+    this._onAnimationStateChangeCallback = callback
+  }
+
+  /**
+   * Starts or resumes animation playback.
+   * @returns Promise resolving when the command is sent
+   */
+  async play(): Promise<void> {
+    this._paused = false
+    await this.updateProperties({ animationPaused: false })
+  }
+
+  /**
+   * Pauses animation playback.
+   * @returns Promise resolving when the command is sent
+   */
+  async pause(): Promise<void> {
+    this._paused = true
+    await this.updateProperties({ animationPaused: true })
+  }
+
+  /**
    * Processes events received from the WebSpatial environment.
    * Handles model loading events in addition to base spatial events.
    * @param data The event data received from the WebSpatial system
    */
-  override onReceiveEvent(data: { type: SpatialWebMsgType }) {
+  override onReceiveEvent(data: { type: SpatialWebMsgType; detail?: unknown }) {
     if (data.type === SpatialWebMsgType.modelloaded) {
       // Handle successful model loading
       this._onLoadCallback?.()
@@ -113,6 +159,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       // Handle model loading failure
       this._onLoadFailureCallback?.()
       this._readyResolve?.(false)
+    } else if (data.type === SpatialWebMsgType.animationstatechange) {
+      const detail = data.detail as AnimationStateChangeDetail
+      this._paused = detail.paused
+      this._onAnimationStateChangeCallback?.(detail)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data as any)

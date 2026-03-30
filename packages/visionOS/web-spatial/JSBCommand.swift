@@ -265,6 +265,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let modelTransform: [Double]?
     let autoplay: Bool?
     let loop: Bool?
+    let animationPaused: Bool?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
