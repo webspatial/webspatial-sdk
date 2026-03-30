@@ -1,6 +1,9 @@
 import {
+  Children,
   ForwardedRef,
   forwardRef,
+  isValidElement,
+  ReactElement,
   useCallback,
   useContext,
   useEffect,
@@ -15,16 +18,17 @@ import {
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
-import { SpatializedStatic3DElement } from '@webspatial/core-sdk'
+import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
 
+function getAbsoluteURL(url: string): string
+function getAbsoluteURL(url: undefined): undefined
+function getAbsoluteURL(url: string | undefined): string | undefined
 function getAbsoluteURL(url?: string) {
-  if (!url) {
-    return ''
-  }
+  if (!url) return url
   try {
     return new URL(url, document.baseURI).toString()
   } catch {
@@ -63,30 +67,48 @@ function createLoadSuccessEvent(
   return createLoadEvent('modelloaded', targetGetter)
 }
 
+function collectSources(children: React.ReactNode): ModelSource[] {
+  const sources: ModelSource[] = []
+  Children.forEach(children, child => {
+    if (
+      isValidElement(child) &&
+      (child as ReactElement<{ src?: string; type?: string }>).type === 'source'
+    ) {
+      const { src, type } = (
+        child as ReactElement<{ src?: string; type?: string }>
+      ).props
+      if (src) {
+        sources.push({ src: getAbsoluteURL(src), type })
+      }
+    }
+  })
+  return sources
+}
+
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
-  const { src, spatializedElement, onLoad, onError, autoPlay, loop } = props
-  const spatializedStatic3DElement =
-    spatializedElement as SpatializedStatic3DElement
+  const { src, children, spatializedElement, onLoad, onError, autoPlay, loop } =
+    props
 
-  const portalInstanceObject: PortalInstanceObject = useContext(
-    PortalInstanceContext,
-  )!
+  const portalInstanceObject = useContext(PortalInstanceContext)!
 
-  const currentSrc: string = useMemo(() => getAbsoluteURL(src), [src])
+  const modelURL = useMemo(() => getAbsoluteURL(src), [src])
+  const sources = useMemo(() => collectSources(children), [children])
 
   useEffect(() => {
-    if (src) {
-      spatializedStatic3DElement.updateProperties({
-        modelURL: currentSrc,
-        autoplay: autoPlay,
-        loop,
-      })
-    }
-  }, [currentSrc, autoPlay, loop])
+    // If modelURL was previously set and now is undefined then a dummy
+    // value needs to be sent to clear the old value
+    // TODO: Can native side handle null instead of ''
+    spatializedElement.updateProperties({
+      modelURL: modelURL ?? '',
+      sources,
+      autoplay: autoPlay,
+      loop,
+    })
+  }, [modelURL, JSON.stringify(sources), autoPlay, loop])
 
   useEffect(() => {
     if (onLoad) {
-      spatializedStatic3DElement.onLoadCallback = () => {
+      spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
             () => (portalInstanceObject.dom as any).__targetProxy,
@@ -94,13 +116,13 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
         )
       }
     } else {
-      spatializedStatic3DElement.onLoadCallback = undefined
+      spatializedElement.onLoadCallback = undefined
     }
   }, [onLoad])
 
   useEffect(() => {
     if (onError) {
-      spatializedStatic3DElement.onLoadFailureCallback = () => {
+      spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
             () => (portalInstanceObject.dom as any).__targetProxy,
@@ -108,7 +130,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
         )
       }
     } else {
-      spatializedStatic3DElement.onLoadFailureCallback = undefined
+      spatializedElement.onLoadFailureCallback = undefined
     }
   }, [onError])
 
@@ -122,8 +144,10 @@ function SpatializedStatic3DElementContainerBase(
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
   const createSpatializedElement = useCallback(() => {
-    const url = getAbsoluteURL(props.src)
-    promiseRef.current = getSession()!.createSpatializedStatic3DElement(url)
+    promiseRef.current = getSession()!.createSpatializedStatic3DElement(
+      getAbsoluteURL(props.src),
+      collectSources(props.children),
+    )
     return promiseRef.current
   }, [])
   const extraRefProps = useCallback(
@@ -132,7 +156,10 @@ function SpatializedStatic3DElementContainerBase(
 
       return {
         get currentSrc(): string {
-          return getAbsoluteURL(props.src)
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.currentSrc ?? ''
         },
         get ready(): Promise<ModelLoadEvent> {
           return promiseRef

@@ -1665,6 +1665,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       updateProperties,
       updateModelTransform,
       ready: Promise.resolve(true),
+      currentSrc: window.location.origin + '/resolved.usdz',
       onLoadCallback: undefined,
       onLoadFailureCallback: undefined,
     }
@@ -1741,8 +1742,16 @@ describe('SpatializedStatic3DElementContainer', () => {
       await Promise.resolve()
     })
 
+    expect(createSpatializedStatic3DElement).toHaveBeenCalledWith(
+      window.location.origin + '/m.glb',
+      [],
+    )
+
     expect(updateProperties).toHaveBeenCalledWith({
       modelURL: window.location.origin + '/m.glb',
+      sources: [],
+      autoplay: undefined,
+      loop: undefined,
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
@@ -1753,7 +1762,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     expect(onError.mock.calls[0]?.[0].type).toBe('modelloadfailed')
     expect(onLoad.mock.calls[0]?.[0].target).toEqual({ tid: 1 })
 
-    expect(extra.currentSrc).toBe(window.location.origin + '/m.glb')
+    expect(extra.currentSrc).toBe(window.location.origin + '/resolved.usdz')
     await expect(extra.ready).resolves.toMatchObject({ type: 'modelloaded' })
 
     const m = extra.entityTransform
