@@ -73,6 +73,10 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
         try {
           const oldComponent = componentRef.current
           if (oldComponent) {
+            // TODO(P2): Rebuild removes/destroys the model component but not the previous mesh
+            // `SpatialGeometry`; those objects stay registered until explicitly destroyed (native
+            // `SpatialModelComponent.onDestroy` also only nils `mesh`). Destroy the prior mesh after
+            // teardown or fix cascade destroy on the Swift side to cap memory on long-lived updates.
             await entity.removeComponent(oldComponent)
             await oldComponent.destroy()
             componentRef.current = null

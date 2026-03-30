@@ -89,6 +89,9 @@ class SpatialModelComponent: SpatialComponent {
     }
 
     override func onDestroy() {
+        // TODO(P2): `mesh` is a registered `Geometry` spatial object; clearing the reference does not
+        // run `Geometry.destroy()`, so dynamic mesh rebuilds can leak mesh/registry entries until the
+        // scene ends. Call `mesh?.destroy()` (or equivalent) before nil-ing when ownership is exclusive.
         _resource = nil
         spatialMaterials = []
         mesh = nil

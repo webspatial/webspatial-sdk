@@ -22,9 +22,9 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)
     const lastMaterialsRef = useRef<string[] | undefined>(undefined)
 
-    // TODO: Overlapping async `setMaterials` calls (e.g. rapid `materials` prop changes) can apply
-    // out of order, like GeometryEntity's rebuild race. Use a generation counter (see
-    // `rebuildGen` in GeometryEntity) so stale applies are ignored after awaits.
+    // TODO(P2): Material overrides run async (`Promise.all` + `setMaterials`) with no generation/abort
+    // guard; a slower resolve can apply after a newer prop update and leave native materials stale vs
+    // React. Mirror `rebuildGen` in GeometryEntity so only the latest apply runs after awaits.
     // Dynamic material override (including clearing: props may go from ids to undefined / [])
     useEffect(() => {
       if (!ctx || !entityRef.current) return
