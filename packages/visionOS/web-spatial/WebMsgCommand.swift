@@ -97,8 +97,17 @@ struct WebSpatialMagnifyEndGuestureEvent: Encodable {
     let type: SpatialWebMsgType = .spatialmagnifyend
 }
 
+struct ModelLoadSuccessDetail: Encodable {
+    let src: String
+}
+
 struct ModelLoadSuccess: Encodable {
     let type: SpatialWebMsgType = .modelloaded
+    let detail: ModelLoadSuccessDetail
+
+    init(src: String) {
+        detail = ModelLoadSuccessDetail(src: src)
+    }
 }
 
 struct ModelLoadFailure: Encodable {
