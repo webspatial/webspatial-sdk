@@ -411,3 +411,53 @@ export interface AttachmentEntityUpdateOptions {
   position?: [number, number, number]
   size?: { width: number; height: number }
 }
+
+// manifest
+
+export type SceneUnitPx = `${number}px`
+export type SceneUnitM = `${number}m`
+export type SceneUnit = number | SceneUnitPx | SceneUnitM
+
+export interface XRSceneSize {
+  width: SceneUnit
+  height: SceneUnit
+  depth?: SceneUnit
+}
+
+export interface XRSceneResizability {
+  minWidth?: SceneUnit
+  minHeight?: SceneUnit
+  maxWidth?: SceneUnit
+  maxHeight?: SceneUnit
+}
+
+export interface XRMainSceneConfig {
+  type?: SpatialSceneType
+  default_size?: XRSceneSize
+  resizability?: XRSceneResizability
+  worldScaling?: WorldScalingType
+  worldAlignment?: WorldAlignmentType
+  baseplateVisibility?: BaseplateVisibilityType
+}
+
+export interface XRSpatialSceneDefaults {
+  default_size?: XRSceneSize
+  resizability?: XRSceneResizability
+  worldScaling?: WorldScalingType
+  worldAlignment?: WorldAlignmentType
+  baseplateVisibility?: BaseplateVisibilityType
+}
+
+export interface XRSpatialSceneOverrides {
+  window_scene?: XRSpatialSceneDefaults
+  volume_scene?: XRSpatialSceneDefaults
+}
+
+export interface XRSpatialSceneConfig extends XRSpatialSceneDefaults {
+  overrides?: XRSpatialSceneOverrides
+}
+
+export interface XRPrdConfig {
+  xr_main_scene?: XRMainSceneConfig
+  xr_spatial_scene?: XRSpatialSceneConfig
+}

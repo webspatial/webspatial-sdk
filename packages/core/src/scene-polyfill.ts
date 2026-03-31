@@ -27,6 +27,13 @@ const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
   },
 }
 
+let xr_window_defaults: SpatialSceneCreationOptions = {
+  ...defaultSceneConfig,
+}
+let xr_volume_defaults: SpatialSceneCreationOptions = {
+  ...defaultSceneConfigVolume,
+}
+
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
 
 class SceneManager {
@@ -40,6 +47,7 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
+    this.setupManifest()
     this.originalOpen = window.open.bind(window)
     ;(window as any).open = this.open
   }
@@ -71,6 +79,49 @@ class SceneManager {
       // Fallback: leave unchanged
       return raw
     }
+  }
+
+  private async setupManifest() {
+    const manifest = await this.getPWAManifest()
+    console.log('manifest', manifest)
+    try {
+      const xr = (manifest as any)?.xr_spatial_scene
+      if (!xr || typeof xr !== 'object') return
+      const { overrides, ...topLevel } = xr as Record<string, any>
+      const merge = (base: any, over: any): any => {
+        if (!over) return { ...(base || {}) }
+        const out: any = { ...(base || {}) }
+        for (const k of Object.keys(over)) {
+          const bv = out[k]
+          const ov = over[k]
+          if (
+            ov &&
+            typeof ov === 'object' &&
+            !Array.isArray(ov) &&
+            bv &&
+            typeof bv === 'object' &&
+            !Array.isArray(bv)
+          ) {
+            out[k] = merge(bv, ov)
+          } else {
+            out[k] = ov
+          }
+        }
+        return out
+      }
+      const windowRaw = merge(topLevel, overrides?.window_scene)
+      const volumeRaw = merge(topLevel, overrides?.volume_scene)
+      xr_window_defaults = { ...(windowRaw as any) }
+      console.log(
+        '🚀 ~ SceneManager ~ setupManifest ~ xr_window_defaults:',
+        xr_window_defaults,
+      )
+      xr_volume_defaults = { ...(volumeRaw as any) }
+      console.log(
+        '🚀 ~ SceneManager ~ setupManifest ~ xr_volume_defaults:',
+        xr_volume_defaults,
+      )
+    } catch {}
   }
 
   private open = (url?: string, target?: string, features?: string) => {
@@ -129,6 +180,54 @@ class SceneManager {
     this.configMap[name] = {
       ...formattedConfig,
       type: sceneType,
+    }
+  }
+  async getPWAManifest(manifestUrl?: string): Promise<any | undefined> {
+    let href: string | undefined = manifestUrl
+    if (!href) {
+      const el = document.querySelector(
+        'link[rel="manifest"]',
+      ) as HTMLLinkElement | null
+      href = el?.getAttribute('href') || el?.href
+    }
+    if (!href) return
+    href = this.ensureAbsoluteUrl(href)
+    if (!href) return
+    if (href.startsWith('data:')) {
+      try {
+        const comma = href.indexOf(',')
+        if (comma < 0) return
+        const meta = href.slice(5, comma)
+        const data = href.slice(comma + 1)
+        const isBase64 = /;base64/i.test(meta)
+        const decoded = isBase64 ? atob(data) : decodeURIComponent(data)
+        return JSON.parse(decoded)
+      } catch {
+        return
+      }
+    }
+    try {
+      const res = await fetch(href, { credentials: 'same-origin' })
+      if (!res.ok) throw new Error(String(res.status))
+      try {
+        return await res.json()
+      } catch {
+        const t = await res.text()
+        return JSON.parse(t)
+      }
+    } catch {
+      try {
+        const res = await fetch(href)
+        if (!res.ok) return
+        try {
+          return await res.json()
+        } catch {
+          const t = await res.text()
+          return JSON.parse(t)
+        }
+      } catch {
+        return
+      }
     }
   }
 }
@@ -325,7 +424,9 @@ function handleATag(event: MouseEvent) {
 }
 
 function getSceneDefaultConfig(sceneType: SpatialSceneType) {
-  return sceneType === 'window' ? defaultSceneConfig : defaultSceneConfigVolume
+  return sceneType === 'window'
+    ? xr_window_defaults || defaultSceneConfig
+    : xr_volume_defaults || defaultSceneConfigVolume
 }
 
 async function injectScenePolyfill() {
