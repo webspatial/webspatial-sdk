@@ -1,10 +1,11 @@
-import { ForwardedRef, useEffect, useRef, useState } from 'react'
-import { SpatialEntity, Vec3 } from '@webspatial/core-sdk'
+import { ForwardedRef, useEffect, useRef } from 'react'
+import { SpatialEntity } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
-import { EntityProps } from '../type'
+import { EntityEventHandler, EntityProps } from '../type'
 import {
   EntityRefShape,
   EntityRef,
+  useEntityEvent,
   useEntityId,
   useEntityRef,
   useEntityTransform,
@@ -13,7 +14,9 @@ import {
 
 type UseEntityOptions = {
   createEntity: (signal: AbortSignal) => Promise<SpatialEntity>
-} & EntityProps & { ref: ForwardedRef<EntityRefShape> }
+  recreateKey?: string
+} & EntityProps &
+  EntityEventHandler & { ref: ForwardedRef<EntityRefShape> }
 
 export const useEntity = ({
   ref,
@@ -22,7 +25,16 @@ export const useEntity = ({
   rotation,
   scale,
   enableInput,
+  onSpatialTap,
+  onSpatialDragStart,
+  onSpatialDrag,
+  onSpatialDragEnd,
+  onSpatialRotate,
+  onSpatialRotateEnd,
+  onSpatialMagnify,
+  onSpatialMagnifyEnd,
   createEntity,
+  recreateKey,
 }: UseEntityOptions) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
@@ -39,6 +51,12 @@ export const useEntity = ({
       try {
         const ent = await createEntity(controller.signal)
         if (!ent) return
+        if (controller.signal.aborted) {
+          ent.destroy()
+          return
+        }
+        // Apply transform before adding to scene so it never flashes at default scale
+        await ent.updateTransform({ position, rotation, scale })
         if (controller.signal.aborted) {
           ent.destroy()
           return
@@ -64,11 +82,23 @@ export const useEntity = ({
       controller.abort()
       instanceRef.current?.destroy()
     }
-  }, [ctx, parent])
+  }, [ctx, parent, recreateKey])
 
   useEntityId({ id, entity: instanceRef.current.entity })
   useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
   useEntityRef(ref, instanceRef.current)
+
+  useEntityEvent({
+    instance: instanceRef.current,
+    onSpatialTap,
+    onSpatialDragStart,
+    onSpatialDrag,
+    onSpatialDragEnd,
+    onSpatialRotate,
+    onSpatialRotateEnd,
+    onSpatialMagnify,
+    onSpatialMagnifyEnd,
+  })
 
   useEffect(() => {
     const ent = instanceRef.current.entity

@@ -13,6 +13,7 @@ import {
 import {
   AddComponentToEntityCommand,
   AddEntityToEntityCommand,
+  RemoveComponentFromEntityCommand,
   RemoveEntityFromParentCommand,
   UpdateEntityEventCommand,
   UpdateEntityPropertiesCommand,
@@ -78,6 +79,9 @@ export class SpatialEntity extends SpatialObject {
 
   async addComponent(component: SpatialComponent) {
     return new AddComponentToEntityCommand(this, component).execute()
+  }
+  async removeComponent(component: SpatialComponent) {
+    return new RemoveComponentFromEntityCommand(this, component).execute()
   }
   async setPosition(position: Vec3) {
     return this.updateTransform({ position })
