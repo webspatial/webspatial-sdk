@@ -75,6 +75,7 @@ export const routes = [
       { path: '/spatial-div-test', label: 'SpatialDiv Test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
+      { path: '/popover-test', label: 'Popover Portal' },
       { path: '/android-bringup', label: 'Android Bringup' },
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },

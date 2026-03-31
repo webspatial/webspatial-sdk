@@ -2,6 +2,10 @@ import { hijackGetComputedStyle } from './hooks/useDomProxy'
 import { injectSpatialDefaultStyle } from './StandardSpatializedContainer'
 import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
 
+export {
+  useSpatialPortalContainer,
+  SpatialWindowContext,
+} from './context/SpatialWindowContext'
 export { SpatializedContainer } from './SpatializedContainer'
 export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
