@@ -3,10 +3,6 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
-function makeOriginalKey(key: string) {
-  return `__original_${key}`
-}
-
 export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   /** Raw Standard host element (styled root). Used to mirror class onto the transform probe. */
@@ -315,31 +311,6 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       },
     )
     this.domProxy = domProxy
-
-    // hijack classList
-    const domClassList = dom.classList
-    const domClassMethodKeys: Array<'add' | 'remove' | 'toggle' | 'replace'> = [
-      'add',
-      'remove',
-      'toggle',
-      'replace',
-    ]
-    domClassMethodKeys.forEach(key => {
-      const hiddenKey = makeOriginalKey(key)
-      const hiddenKeyExist = (domClassList as any)[hiddenKey] !== undefined
-      const originalMethod = hiddenKeyExist
-        ? (domClassList as any)[hiddenKey]
-        : domClassList[key].bind(domClassList)
-
-      ;(domClassList as any)[hiddenKey] = originalMethod
-
-      domClassList[key] = function (this: any, ...args: any[]) {
-        const result = (originalMethod as Function)(...args)
-        self.scheduleSyncTransformClassFromStandard()
-
-        return result
-      }
-    })
 
     // clear styleProxy
     this.styleProxy = undefined
