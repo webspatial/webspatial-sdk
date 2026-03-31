@@ -1277,19 +1277,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return nil
         }
 
-        for (_, object) in spatialObjects {
-            guard let dynamic3dElement = object as? SpatializedDynamic3DElement else {
-                continue
+        var current: Entity? = entity
+        while let node = current {
+            if let rootEntity = node as? SpatialRootEntity {
+                return rootEntity.root
             }
-
-            let root = dynamic3dElement.getRoot()
-            var current: Entity? = entity
-            while let node = current {
-                if node === root {
-                    return dynamic3dElement
-                }
-                current = node.parent
-            }
+            current = node.parent
         }
 
         return nil
