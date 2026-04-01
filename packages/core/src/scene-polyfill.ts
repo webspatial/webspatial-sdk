@@ -81,13 +81,7 @@ class SceneManager {
         if (token) {
           const host = window.location.host
           const protocol = window.location.protocol
-          const finalURL =
-            protocol +
-            '//' +
-            host +
-            '/' +
-            token +
-            '/?command=createSpatialized2DElement'
+          const finalURL = `${protocol}//${host}/${token}/?command=createSpatialized2DElement`
           const rid = new URL(url).searchParams.get('rid')
           const final = new URL(finalURL)
           if (rid) final.searchParams.set('rid', rid)

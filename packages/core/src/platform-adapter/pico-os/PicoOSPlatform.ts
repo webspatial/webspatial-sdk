@@ -23,7 +23,8 @@ function nextRequestId() {
   return `rId_${requestId}`
 }
 
-export class SwanPlatform implements PlatformAbility {
+// Only supports Pico OS 6
+export class PicoOSPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
     // swan JS Bridge interface only support sync invoking
     // in order to implement promise API, register every request by requestId and remove when resolve/reject.

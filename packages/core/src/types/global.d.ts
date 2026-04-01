@@ -22,7 +22,7 @@ declare global {
     webkit: any
     webspatialBridge: any
 
-    // Project Swan browser injects this global object to provide internal capabilities.
+    // Project Pico OS browser injects this global object to provide internal capabilities.
     webSpatial?: {
       genToken?: () => string
     }
