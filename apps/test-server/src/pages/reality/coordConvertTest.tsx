@@ -83,8 +83,8 @@ export default function CoordConvertTest() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: fromEntityRef.current as any,
-        to: toEntityRef.current as any,
+        from: fromEntityRef.current,
+        to: toEntityRef.current,
       },
     )
     log('fromId:', fromEntityRef.current?.id)
@@ -95,8 +95,8 @@ export default function CoordConvertTest() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: fromEntityRef.current as any,
-        to: fromEntityRef.current as any,
+        from: fromEntityRef.current,
+        to: fromEntityRef.current,
       },
     )
     log('A->A result:', ret)
@@ -105,8 +105,8 @@ export default function CoordConvertTest() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: toEntityRef.current as any,
-        to: fromEntityRef.current as any,
+        from: toEntityRef.current,
+        to: fromEntityRef.current,
       },
     )
     log('fromId:', toEntityRef.current?.id)
@@ -117,8 +117,8 @@ export default function CoordConvertTest() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: toEntityRef.current as any,
-        to: toEntityRef.current as any,
+        from: toEntityRef.current,
+        to: toEntityRef.current,
       },
     )
     log('B->B result:', ret)
@@ -127,12 +127,12 @@ export default function CoordConvertTest() {
   async function handleConvertAtoBThenA() {
     const original = fromPosition
     const toPos = await convertCoordinate(original, {
-      from: fromEntityRef.current as any,
-      to: toEntityRef.current as any,
+      from: fromEntityRef.current,
+      to: toEntityRef.current,
     })
     const backPos = await convertCoordinate(toPos, {
-      from: toEntityRef.current as any,
-      to: fromEntityRef.current as any,
+      from: toEntityRef.current,
+      to: fromEntityRef.current,
     })
     // log round-trip difference
     const diff = {
@@ -146,22 +146,22 @@ export default function CoordConvertTest() {
   async function handleConvertAtoWindow() {
     const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
     const ret = await convertCoordinate(pos, {
-      from: fromEntityRef.current as any,
-      to: window as any,
+      from: fromEntityRef.current,
+      to: window,
     })
     log('A->window result:', ret)
   }
   async function handleConvertBtoWindow() {
     const pos = toPosition
     const ret = await convertCoordinate(pos, {
-      from: toEntityRef.current as any,
-      to: window as any,
+      from: toEntityRef.current,
+      to: window,
     })
     log('B->window result:', ret)
   }
   async function handleMoveBToA() {
-    const fromRef = fromEntityRef.current as any
-    const toRef = toEntityRef.current as any
+    const fromRef = fromEntityRef.current
+    const toRef = toEntityRef.current
     if (!fromRef || !toRef) {
       log('Move B to A failed: refs not ready')
       return
@@ -178,8 +178,8 @@ export default function CoordConvertTest() {
     log('Move B to A target:', target)
   }
   async function handleMoveAToB() {
-    const fromRef = fromEntityRef.current as any
-    const toRef = toEntityRef.current as any
+    const fromRef = fromEntityRef.current
+    const toRef = toEntityRef.current
     if (!fromRef || !toRef) {
       log('Move A to B failed: refs not ready')
       return
