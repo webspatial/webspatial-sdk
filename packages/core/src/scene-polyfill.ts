@@ -10,6 +10,8 @@ import {
   isValidWorldAlignmentType,
   isValidBaseplateVisibilityType,
   PWAManifest,
+  XRSpatialSceneConfig,
+  XRSpatialSceneDefaults,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { deepCloneJSON } from './utils'
@@ -37,6 +39,61 @@ let xr_volume_defaults: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
+
+/**
+ * Deep-merge two plain object trees (no arrays, no special classes).
+ * - Creates a shallow clone of base, then recursively merges properties from over.
+ * - When both sides at a key are plain objects, merges recursively; otherwise, replaces with over.
+ * - Ignores arrays (treated as replace).
+ * Intended for small configuration objects like manifest overrides.
+ */
+function deepMergePlain<
+  T extends Record<string, any>,
+  U extends Record<string, any> | undefined,
+>(base: T, over: U): T & (U extends undefined ? {} : U) {
+  if (!over) return { ...(base || {}) } as any
+  const out: any = { ...(base || {}) }
+  for (const k of Object.keys(over)) {
+    const bv = out[k]
+    const ov = (over as any)[k]
+    if (
+      ov &&
+      typeof ov === 'object' &&
+      !Array.isArray(ov) &&
+      bv &&
+      typeof bv === 'object' &&
+      !Array.isArray(bv)
+    ) {
+      out[k] = deepMergePlain(bv, ov)
+    } else {
+      out[k] = ov
+    }
+  }
+  return out
+}
+
+/**
+ * Normalize XRSpatialSceneDefaults (manifest shape) into SpatialSceneCreationOptions (runtime shape).
+ * - Only remap default_size -> defaultSize when present.
+ * - Leaves other keys (resizability, worldScaling, etc.) unchanged.
+ * - Units are left as-is; downstream formatting is handled by formatSceneConfig.
+ */
+function normalizeXRDefaultsToSceneOptions(
+  src: XRSpatialSceneDefaults | Record<string, any>,
+): SpatialSceneCreationOptions {
+  const out: any = { ...(src || {}) }
+  const ds =
+    (src as any).defaultSize !== undefined
+      ? (src as any).defaultSize
+      : (src as any).default_size
+  if (ds !== undefined) {
+    out.defaultSize = ds
+  }
+  if ('default_size' in out) {
+    delete out.default_size
+  }
+  return out as SpatialSceneCreationOptions
+}
 
 class SceneManager {
   private originalOpen: any
@@ -94,36 +151,16 @@ class SceneManager {
     try {
       const xr = manifest?.xr_spatial_scene
       if (!xr || typeof xr !== 'object') return
-      const { overrides, ...topLevel } = xr as any
-      const merge = (base: any, over: any): any => {
-        if (!over) return { ...(base || {}) }
-        const out: any = { ...(base || {}) }
-        for (const k of Object.keys(over)) {
-          const bv = out[k]
-          const ov = over[k]
-          if (
-            ov &&
-            typeof ov === 'object' &&
-            !Array.isArray(ov) &&
-            bv &&
-            typeof bv === 'object' &&
-            !Array.isArray(bv)
-          ) {
-            out[k] = merge(bv, ov)
-          } else {
-            out[k] = ov
-          }
-        }
-        return out
-      }
-      const windowRaw = merge(topLevel, overrides?.window_scene)
-      const volumeRaw = merge(topLevel, overrides?.volume_scene)
-      xr_window_defaults = { ...(windowRaw as any) }
+      const { overrides, ...topLevel } = xr as XRSpatialSceneConfig
+      // Merge top-level defaults with per-scene overrides.
+      const windowRaw = deepMergePlain(topLevel, overrides?.window_scene)
+      const volumeRaw = deepMergePlain(topLevel, overrides?.volume_scene)
+      xr_window_defaults = normalizeXRDefaultsToSceneOptions(windowRaw)
       console.log(
         '🚀 ~ SceneManager ~ setupManifest ~ xr_window_defaults:',
         xr_window_defaults,
       )
-      xr_volume_defaults = { ...(volumeRaw as any) }
+      xr_volume_defaults = normalizeXRDefaultsToSceneOptions(volumeRaw)
       console.log(
         '🚀 ~ SceneManager ~ setupManifest ~ xr_volume_defaults:',
         xr_volume_defaults,
@@ -208,6 +245,18 @@ class SceneManager {
     }
   }
   async getPWAManifest(manifestUrl?: string): Promise<PWAManifest | undefined> {
+    /**
+     * Resolve and load a PWA manifest as JSON:
+     * 1) Determine href:
+     *    - Prefer explicit manifestUrl if provided;
+     *    - Fallback to <link rel="manifest">, preferring the raw attribute over computed href.
+     * 2) Normalize href to absolute using ensureAbsoluteUrl (respects <base href>).
+     * 3) Handle data URLs inline:
+     *    - data:...;base64,... → atob then JSON.parse
+     *    - data:...,... → decodeURIComponent then JSON.parse
+     * 4) Fetch with credentials same-origin first; if that fails (e.g., CORS), attempt unauthenticated fetch.
+     * 5) Parse as JSON; if response body is text, parse the text as JSON.
+     */
     let href: string | undefined = manifestUrl
     if (!href) {
       const el = document.querySelector(
@@ -219,6 +268,7 @@ class SceneManager {
     href = this.ensureAbsoluteUrl(href)
     if (!href) return
     if (href.startsWith('data:')) {
+      // Inline data URL manifest: data:[<mediatype>][;base64],<data>
       try {
         const comma = href.indexOf(',')
         if (comma < 0) return
@@ -232,6 +282,7 @@ class SceneManager {
       }
     }
     try {
+      // Same-origin fetch with credentials first.
       const res = await fetch(href, { credentials: 'same-origin' })
       if (!res.ok) throw new Error(String(res.status))
       try {
@@ -242,6 +293,7 @@ class SceneManager {
       }
     } catch {
       try {
+        // Fallback: unauthenticated fetch (may help when same-origin credentials fail due to CORS).
         const res = await fetch(href)
         if (!res.ok) return
         try {
