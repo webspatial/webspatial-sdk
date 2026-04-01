@@ -59,3 +59,24 @@ export function composeSRT(position: Vec3, rotation: Vec3, scale: Vec3) {
   m = m.scale(sx, sy, sz)
   return m
 }
+
+/**
+ * Deep-clone a plain JSON-serializable object by value.
+ *
+ * Notes:
+ * - Only use for data composed of primitives, arrays, and plain objects.
+ * - Functions, Dates, Maps/Sets, DOM nodes, and circular structures are not supported.
+ */
+export function deepCloneJSON<T>(value: T): T {
+  const sc = (globalThis as any).structuredClone as
+    | ((v: any) => any)
+    | undefined
+  if (typeof sc === 'function') {
+    try {
+      return sc(value)
+    } catch {
+      // fall through to JSON method
+    }
+  }
+  return JSON.parse(JSON.stringify(value))
+}

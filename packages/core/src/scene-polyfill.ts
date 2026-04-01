@@ -12,6 +12,7 @@ import {
   PWAManifest,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
+import { deepCloneJSON } from './utils'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -53,7 +54,12 @@ class SceneManager {
     ;(window as any).open = this.open
   }
 
-  private configMap: Record<string, SpatialSceneCreationOptionsInternal> = {} // name=>config
+  // Stores the latest formatted config used by the platform (per scene name).
+  // This object contains normalized values and is safe for internal consumption.
+  private configMap: Record<string, SpatialSceneCreationOptionsInternal> = {}
+  // Stores the raw callback return value (per scene name) to feed into the next initScene call as `pre`.
+  // We keep this unformatted so developers receive exactly what they last returned.
+  private callbackReturnMap: Record<string, SpatialSceneCreationOptions> = {}
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
@@ -172,12 +178,30 @@ class SceneManager {
     options?: { type: SpatialSceneType },
   ) {
     const sceneType = options?.type ?? 'window'
-    const defaultConfig = getSceneDefaultConfig(sceneType)
-    const rawReturnVal = callback({ ...defaultConfig })
-    const [formattedConfig, errors] = formatSceneConfig(rawReturnVal, sceneType)
+    const defaultConfigRaw = getSceneDefaultConfig(sceneType)
+    const previousOrDefault =
+      this.callbackReturnMap[name] ??
+      ((): SpatialSceneCreationOptions => {
+        // Clone default config to avoid mutating shared defaults during formatting.
+        const cloned = deepCloneJSON(
+          defaultConfigRaw,
+        ) as SpatialSceneCreationOptions
+        const [formatted] = formatSceneConfig(cloned, sceneType)
+        return formatted
+      })()
+    const rawReturnVal = callback(previousOrDefault)
+    // Format a cloned copy for internal usage so that rawReturnVal remains intact for future pre values.
+    const clonedForFormat = deepCloneJSON(
+      rawReturnVal,
+    ) as SpatialSceneCreationOptions
+    const [formattedConfig, errors] = formatSceneConfig(
+      clonedForFormat,
+      sceneType,
+    )
     if (errors.length > 0) {
       console.warn(`initScene ${name} with errors: ${errors.join(', ')}`)
     }
+    this.callbackReturnMap[name] = rawReturnVal
     this.configMap[name] = {
       ...formattedConfig,
       type: sceneType,

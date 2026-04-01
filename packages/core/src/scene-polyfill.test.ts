@@ -341,7 +341,7 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn)
+    initScene('sa-no-type', mockFn)
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
@@ -353,7 +353,7 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn, { type: 'window' })
+    initScene('sa-window', mockFn, { type: 'window' })
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
@@ -365,12 +365,27 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn, { type: 'volume' })
+    initScene('sa-volume', mockFn, { type: 'volume' })
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
         defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
       }),
     )
+  })
+})
+
+describe('initScene callback chaining', () => {
+  it('passes previous return value as next pre argument', () => {
+    const firstReturn = { defaultSize: { width: 1000, height: 1000 } }
+    const cb1 = vi.fn().mockReturnValue(firstReturn)
+    initScene('sa-chain', cb1)
+    expect(cb1).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+
+    const cb2 = vi.fn().mockReturnValue({})
+    initScene('sa-chain', cb2)
+    expect(cb2).toHaveBeenCalledWith(firstReturn)
   })
 })
