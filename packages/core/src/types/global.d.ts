@@ -22,6 +22,11 @@ declare global {
     webkit: any
     webspatialBridge: any
 
+    // Project Pico OS browser injects this global object to provide internal capabilities.
+    webSpatial?: {
+      genToken?: () => string
+    }
+
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
 
