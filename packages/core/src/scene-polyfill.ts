@@ -15,6 +15,7 @@ import {
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { deepCloneJSON } from './utils'
+import { pointToPhysical, physicalToPoint } from './physicalMetrics'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -310,11 +311,11 @@ class SceneManager {
 }
 
 function pxToMeter(px: number): number {
-  return px / 1360
+  return pointToPhysical(px)
 }
 
 function meterToPx(meter: number): number {
-  return meter * 1360
+  return physicalToPoint(meter)
 }
 
 function formatToNumber(
