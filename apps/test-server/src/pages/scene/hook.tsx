@@ -66,7 +66,7 @@ function App() {
         onClick={async () => {
           startlog('open no name')
           winARef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
+            '/#/scene/xrapp',
             // 'http://localhost:5173/src/scene/xrapp.html',
           )
         }}
@@ -83,10 +83,7 @@ function App() {
               height: 500,
             },
           }))
-          winARef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
-            'sa',
-          )
+          winARef.current = window.open('/#/scene/xrapp', 'sa')
           // winARef.current = window.open('', 'sa')
         }}
       >
@@ -97,7 +94,7 @@ function App() {
         onClick={async () => {
           startlog('open')
           winARef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
+            '/#/scene/xrapp',
             'sa',
             'width=800,height=600',
           )
@@ -144,10 +141,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winBRef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
-            'sb',
-          )
+          winBRef.current = window.open('/#/scene/xrapp', 'sb')
         }}
       >
         open sb xrapp
@@ -167,10 +161,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winCRef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
-            'sc',
-          )
+          winCRef.current = window.open('/#/scene/xrapp', 'sc')
         }}
       >
         open sc
@@ -180,14 +171,8 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open')
-          winARef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
-            'sa',
-          )
-          winBRef.current = window.open(
-            'http://localhost:5173/src/pages/scene/xrapp.html',
-            'sb',
-          )
+          winARef.current = window.open('/#/scene/xrapp', 'sa')
+          winBRef.current = window.open('/#/scene/xrapp', 'sb')
         }}
       >
         open sa+sb

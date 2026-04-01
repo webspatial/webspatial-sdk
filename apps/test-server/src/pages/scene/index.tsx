@@ -84,10 +84,7 @@ export default function SceneTest() {
                 }),
                 { type: 'volume' },
               )
-              winARef.current = window.open(
-                '/src/pages/scene/volume.html',
-                'sa',
-              )
+              winARef.current = window.open('/#/scene/volume', 'sa')
             }}
           >
             Invalid Unit Test
@@ -110,10 +107,7 @@ export default function SceneTest() {
                   }),
                   { type: 'volume' },
                 )
-                winARef.current = window.open(
-                  '/src/pages/reality/index.html',
-                  'sa',
-                )
+                winARef.current = window.open('/#/reality', 'sa')
               }}
             >
               Open Volume
@@ -135,10 +129,7 @@ export default function SceneTest() {
                   }),
                   { type: 'volume' },
                 )
-                winARef.current = window.open(
-                  '/src/pages/scene/volume.html',
-                  'sa',
-                )
+                winARef.current = window.open('/#/scene/volume', 'sa')
               }}
             >
               Resizable Volume
@@ -162,6 +153,113 @@ export default function SceneTest() {
               onClick={() => window.open(extUrl2, 'sa')}
             >
               MDN
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">
+          <h2 className="text-lg font-bold mb-4 border-b border-gray-800 pb-2">
+            Window Tests
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/#/scene/xrapp', 'sa')
+              }}
+            >
+              Open A (sa)
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winBRef.current = window.open('/#/scene/xrapp', 'sb')
+              }}
+            >
+              Open B (sb)
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/#/scene/xrapp', 'sa')
+                winBRef.current = window.open(extUrl, 'sb')
+              }}
+            >
+              Open A + B
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('close')
+                try {
+                  if (!winARef.current) {
+                    log('no window')
+                    return
+                  }
+                  if (winARef.current?.closed) {
+                    log('is already closed')
+                  } else {
+                    winARef.current?.close?.()
+                    log('close success')
+                  }
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Close A
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('close')
+                try {
+                  if (!winBRef.current) {
+                    log('no window')
+                    return
+                  }
+                  if (winBRef.current?.closed) {
+                    log('is already closed')
+                  } else {
+                    winBRef.current?.close?.()
+                    log('close success')
+                  }
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Close B
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('focus')
+                try {
+                  if (!winARef.current) {
+                    log('no window')
+                    return
+                  }
+                  winARef.current?.focus?.()
+                  log('focus success')
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Focus A
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                //@ts-ignore
+                log('windowID:', window._webSpatialID)
+              }}
+            >
+              Get window._webSpatialID
             </button>
           </div>
         </section>
