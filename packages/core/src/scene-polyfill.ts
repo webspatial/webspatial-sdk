@@ -9,6 +9,7 @@ import {
   isValidWorldScalingType,
   isValidWorldAlignmentType,
   isValidBaseplateVisibilityType,
+  PWAManifest,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 
@@ -85,9 +86,9 @@ class SceneManager {
     const manifest = await this.getPWAManifest()
     console.log('manifest', manifest)
     try {
-      const xr = (manifest as any)?.xr_spatial_scene
+      const xr = manifest?.xr_spatial_scene
       if (!xr || typeof xr !== 'object') return
-      const { overrides, ...topLevel } = xr as Record<string, any>
+      const { overrides, ...topLevel } = xr as any
       const merge = (base: any, over: any): any => {
         if (!over) return { ...(base || {}) }
         const out: any = { ...(base || {}) }
@@ -182,7 +183,7 @@ class SceneManager {
       type: sceneType,
     }
   }
-  async getPWAManifest(manifestUrl?: string): Promise<any | undefined> {
+  async getPWAManifest(manifestUrl?: string): Promise<PWAManifest | undefined> {
     let href: string | undefined = manifestUrl
     if (!href) {
       const el = document.querySelector(

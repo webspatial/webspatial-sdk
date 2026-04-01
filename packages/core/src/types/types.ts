@@ -461,3 +461,19 @@ export interface XRPrdConfig {
   xr_main_scene?: XRMainSceneConfig
   xr_spatial_scene?: XRSpatialSceneConfig
 }
+
+export interface PWAManifest extends XRPrdConfig {
+  name?: string
+  short_name?: string
+  start_url?: string
+  display?: string
+  icons?: Array<{
+    src: string
+    sizes?: string
+    type?: string
+    purpose?: string
+  }>
+  id?: string
+  scope?: string
+  [key: string]: any
+}
