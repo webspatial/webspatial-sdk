@@ -196,7 +196,22 @@ class SceneManager {
       return newWindow
     }
 
-    const cfg = target ? this.getConfig(target) : undefined
+    let cfg = target ? this.getConfig(target) : undefined
+    if (!cfg) {
+      // Fallback path:
+      // - If the caller used window.open with a named target that hasn't been initialized via initScene(..., name),
+      //   we synthesize a minimal scene configuration using the SDK's default window settings.
+      // - We choose 'window' as the default scene type to match typical browser semantics for unnamed targets
+      //   and external links (flat 2D window rather than a 3D volume).
+      // - The defaults are formatted into internal numeric units and then tagged with an explicit type so
+      //   the native side can construct the scene consistently.
+      const baseDefaults = getSceneDefaultConfig('window')
+      const [formattedDefaults] = formatSceneConfig(
+        deepCloneJSON(baseDefaults) as SpatialSceneCreationOptions,
+        'window',
+      )
+      cfg = { ...formattedDefaults, type: 'window' }
+    }
     const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
     const result = cmd.executeSync()
 
@@ -228,10 +243,40 @@ class SceneManager {
         return formatted
       })()
     const rawReturnVal = callback(previousOrDefault)
-    // Format a cloned copy for internal usage so that rawReturnVal remains intact for future pre values.
     const clonedForFormat = deepCloneJSON(
       rawReturnVal,
     ) as SpatialSceneCreationOptions
+    /**
+     * Normalize resizability units for volume scenes before final formatting.
+     *
+     * Context:
+     * - formatSceneConfig always converts resizability to pixels ('px'), but it interprets
+     *   the "default unit" differently per scene type:
+     *     - window  → default unit is 'px'
+     *     - volume  → default unit is 'm'
+     * - Many apps return plain numbers for resizability intending "pixels". In a volume scene,
+     *   a plain number would otherwise be treated as meters and then converted to pixels,
+     *   resulting in unexpectedly huge values.
+     *
+     * Strategy:
+     * - For volume scenes only, coerce numeric resizability fields to explicit 'px' strings
+     *   (e.g., 1024 → '1024px') so downstream formatting preserves the author's pixel intent.
+     * - We intentionally do NOT touch defaultSize here:
+     *   - defaultSize for volume is supposed to be in meters at runtime
+     *   - callers can still pass strings with explicit units (e.g., '1m', '1360px') and those
+     *     will be handled by formatSceneConfig accordingly.
+     *
+     * Window scenes are unaffected because their default unit for resizability is already 'px'.
+     */
+    if (sceneType === 'volume' && clonedForFormat.resizability) {
+      const r: any = clonedForFormat.resizability
+      const keys = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+      for (const k of keys) {
+        if (typeof r[k] === 'number') {
+          r[k] = `${r[k]}px`
+        }
+      }
+    }
     const [formattedConfig, errors] = formatSceneConfig(
       clonedForFormat,
       sceneType,
@@ -452,6 +497,13 @@ export function initScene(
   options?: { type: SpatialSceneType },
 ) {
   return SceneManager.getInstance().initScene(name, callback, options)
+}
+
+export function __getSceneConfigSnapshotForTest(
+  name: string,
+): SpatialSceneCreationOptionsInternal | undefined {
+  const mgr = SceneManager.getInstance() as any
+  return mgr?.configMap?.[name]
 }
 
 export function hijackWindowOpen(window: WindowProxy) {

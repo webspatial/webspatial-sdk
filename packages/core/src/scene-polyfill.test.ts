@@ -1,5 +1,10 @@
 import { describe, expect, test, vi, beforeEach, afterEach, it } from 'vitest'
-import { formatSceneConfig, initScene, injectSceneHook } from './scene-polyfill'
+import {
+  formatSceneConfig,
+  initScene,
+  injectSceneHook,
+  __getSceneConfigSnapshotForTest,
+} from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
 
 describe('test formatSceneConfig in window', () => {
@@ -369,6 +374,33 @@ describe('initScene should receive defaultScene config by type', () => {
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+      }),
+    )
+  })
+
+  it('with volume type and merge pre', () => {
+    const cb = vi.fn().mockImplementation(pre => ({
+      ...pre,
+      // defaultSize: { width: 1, height: 1, depth: 0.1 },
+    }))
+
+    // pre-snapshot should be empty before initScene writes configMap
+    const preSnap = __getSceneConfigSnapshotForTest('sa')
+    expect(preSnap).toBeUndefined()
+
+    initScene('sa', cb, { type: 'volume' })
+
+    expect(cb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+      }),
+    )
+
+    const snap = __getSceneConfigSnapshotForTest('sa')
+    expect(snap).toEqual(
+      expect.objectContaining({
+        type: 'volume',
         defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
       }),
     )

@@ -173,4 +173,98 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
 
     cleanup()
   })
+
+  it('applies provided mixed-case defaults and empty volume override; volume pre is formatted as expected', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        default_size: {
+          width: '1024px',
+          height: '1024px',
+          depth: '55px',
+        },
+        resizability: {
+          minWidth: '1024px',
+          minHeight: '1024px',
+          maxWidth: '2000px',
+          maxHeight: '2000px',
+        },
+        worldScaling: 'automatic',
+        worldAlignment: 'automatic',
+        baseplateVisibility: 'visible',
+        overrides: {
+          window_scene: {
+            default_size: {
+              width: '500px',
+              height: '500px',
+              depth: '55px',
+            },
+            resizability: {
+              minWidth: '500px',
+              minHeight: '500px',
+              maxWidth: '1000px',
+              maxHeight: '1000px',
+            },
+          },
+          volume_scene: {},
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    const pxToM = (px: number) => px / 1360
+
+    let volDefaults: any
+    initScene(
+      'sa',
+      pre => {
+        volDefaults = pre
+        return { ...pre }
+      },
+      { type: 'volume' },
+    )
+
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        defaultSize: {
+          width: pxToM(1024),
+          height: pxToM(1024),
+          depth: pxToM(55),
+        },
+        resizability: expect.objectContaining({
+          minWidth: 1024,
+          minHeight: 1024,
+          maxWidth: 2000,
+          maxHeight: 2000,
+        }),
+        worldScaling: 'automatic',
+        worldAlignment: 'automatic',
+        baseplateVisibility: 'visible',
+      }),
+    )
+
+    // Snapshot current 'sa' internal config before cleanup
+    const { __getSceneConfigSnapshotForTest } = await import('./scene-polyfill')
+    const snap = __getSceneConfigSnapshotForTest('sa')
+    expect(snap).toEqual(
+      expect.objectContaining({
+        type: 'volume',
+        defaultSize: {
+          width: pxToM(1024),
+          height: pxToM(1024),
+          depth: pxToM(55),
+        },
+        resizability: expect.objectContaining({
+          minWidth: 1024,
+          minHeight: 1024,
+          maxWidth: 2000,
+          maxHeight: 2000,
+        }),
+      }),
+    )
+
+    cleanup()
+  })
 })
