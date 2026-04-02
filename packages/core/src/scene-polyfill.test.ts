@@ -331,10 +331,10 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
       type: 'volume',
       defaultSize: { width: 1, height: 1, depth: 1 },
       resizability: {
-        minWidth: 0.5 * 1360,
-        minHeight: 1 * 1360,
-        maxWidth: 0.5 * 1360,
-        maxHeight: 1 * 1360,
+        minWidth: 0.5,
+        minHeight: 1,
+        maxWidth: 0.5,
+        maxHeight: 1,
       },
     })
   })
