@@ -6,9 +6,9 @@
 
 - Updated dependencies [3b304a1]
 - Updated dependencies [c7b240c]
-  - @webspatial/core-sdk@2.0.0
-  - @webspatial/react-sdk@2.0.0
-  - @webspatial/builder@2.0.0
+  - @webspatial/core-sdk@1.5.0
+  - @webspatial/react-sdk@1.5.0
+  - @webspatial/builder@1.5.0
 
 ## 0.0.21
 
