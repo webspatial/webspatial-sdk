@@ -4,8 +4,13 @@ import RealityKit
 
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
-    private var rootEntity = SpatialEntity()
+    private var rootEntity = SpatialRootEntity()
     private var viewContent: RealityViewContent? = nil
+
+    override init() {
+        super.init()
+        rootEntity.root = self
+    }
 
     func getRoot() -> SpatialEntity {
         return rootEntity

@@ -83,32 +83,56 @@ export default function CoordConvertTest() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: fromEntityRef.current as any,
-        to: toEntityRef.current as any,
+        from: fromEntityRef.current,
+        to: toEntityRef.current,
       },
     )
+    log('fromId:', fromEntityRef.current?.id)
+    log('toId:', toEntityRef.current?.id)
     log('A->B result:', ret)
+  }
+  async function handleConvertAtoA() {
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: fromEntityRef.current,
+        to: fromEntityRef.current,
+      },
+    )
+    log('A->A result:', ret)
   }
   async function handleConvertBtoA() {
     const ret = await convertCoordinate(
       { x: 0, y: 0, z: 0 },
       {
-        from: toEntityRef.current as any,
-        to: fromEntityRef.current as any,
+        from: toEntityRef.current,
+        to: fromEntityRef.current,
       },
     )
+    log('fromId:', toEntityRef.current?.id)
+    log('toId:', fromEntityRef.current?.id)
     log('B->A result:', ret)
+  }
+  async function handleConvertBtoB() {
+    const ret = await convertCoordinate(
+      { x: 0, y: 0, z: 0 },
+      {
+        from: toEntityRef.current,
+        to: toEntityRef.current,
+      },
+    )
+    log('B->B result:', ret)
   }
   // convert A position to B, then convert back to A
   async function handleConvertAtoBThenA() {
     const original = fromPosition
     const toPos = await convertCoordinate(original, {
-      from: fromEntityRef.current as any,
-      to: toEntityRef.current as any,
+      from: fromEntityRef.current,
+      to: toEntityRef.current,
     })
     const backPos = await convertCoordinate(toPos, {
-      from: toEntityRef.current as any,
-      to: fromEntityRef.current as any,
+      from: toEntityRef.current,
+      to: fromEntityRef.current,
     })
     // log round-trip difference
     const diff = {
@@ -122,14 +146,22 @@ export default function CoordConvertTest() {
   async function handleConvertAtoWindow() {
     const pos = fromPosition //{ x: 0.1, y: 0.1, z: 0.1 }
     const ret = await convertCoordinate(pos, {
-      from: fromEntityRef.current as any,
-      to: window as any,
+      from: fromEntityRef.current,
+      to: window,
     })
     log('A->window result:', ret)
   }
+  async function handleConvertBtoWindow() {
+    const pos = toPosition
+    const ret = await convertCoordinate(pos, {
+      from: toEntityRef.current,
+      to: window,
+    })
+    log('B->window result:', ret)
+  }
   async function handleMoveBToA() {
-    const fromRef = fromEntityRef.current as any
-    const toRef = toEntityRef.current as any
+    const fromRef = fromEntityRef.current
+    const toRef = toEntityRef.current
     if (!fromRef || !toRef) {
       log('Move B to A failed: refs not ready')
       return
@@ -146,8 +178,8 @@ export default function CoordConvertTest() {
     log('Move B to A target:', target)
   }
   async function handleMoveAToB() {
-    const fromRef = fromEntityRef.current as any
-    const toRef = toEntityRef.current as any
+    const fromRef = fromEntityRef.current
+    const toRef = toEntityRef.current
     if (!fromRef || !toRef) {
       log('Move A to B failed: refs not ready')
       return
@@ -237,16 +269,16 @@ export default function CoordConvertTest() {
               <Entity
                 id="entityA"
                 name="entityA"
-                position={{ x: -0.2, y: 0, z: 0 }}
+                position={{ x: -0.1, y: 0, z: 0 }}
               >
                 <BoxEntity
                   id="boxA"
                   name="boxA"
                   ref={fromEntityRef}
-                  width={0.2}
-                  height={0.2}
+                  width={0.1}
+                  height={0.1}
                   depth={0.1}
-                  cornerRadius={0.5}
+                  // cornerRadius={0.5}
                   materials={['matRed']}
                   position={fromPosition}
                   rotation={rotation}
@@ -277,16 +309,17 @@ export default function CoordConvertTest() {
               <Entity
                 id="entityB"
                 name="entityB"
-                position={{ x: 0.2, y: 0, z: 0 }}
+                // position={{ x: 0.1, y: 0, z: 0 }}
+                position={{ x: 0, y: 0, z: 0 }}
               >
                 <BoxEntity
                   id="boxB"
                   name="boxB"
                   ref={toEntityRef}
-                  width={0.2}
-                  height={0.2}
+                  width={0.1}
+                  height={0.1}
                   depth={0.1}
-                  cornerRadius={0.5}
+                  // cornerRadius={0.5}
                   materials={['matBlue']}
                   position={toPosition}
                   rotation={rotation}
@@ -301,14 +334,23 @@ export default function CoordConvertTest() {
         <button className={btnCls} onClick={handleConvertAtoB}>
           convertCoordinate A→B
         </button>
+        <button className={btnCls} onClick={handleConvertAtoA}>
+          convertCoordinate A→A
+        </button>
         <button className={btnCls} onClick={handleConvertBtoA}>
           convertCoordinate B→A
+        </button>
+        <button className={btnCls} onClick={handleConvertBtoB}>
+          convertCoordinate B→B
         </button>
         <button className={btnCls} onClick={handleConvertAtoBThenA}>
           convertCoordinate A→B→A
         </button>
         <button className={btnCls} onClick={handleConvertAtoWindow}>
           convertCoordinate A→window
+        </button>
+        <button className={btnCls} onClick={handleConvertBtoWindow}>
+          convertCoordinate B→window
         </button>
         <button className={btnCls} onClick={handleMoveAToB}>
           Move A to B

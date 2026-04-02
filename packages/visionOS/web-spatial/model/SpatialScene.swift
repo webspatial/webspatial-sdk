@@ -321,6 +321,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(InitializeAttachmentCommand.self, onInitializeAttachment)
         spatialWebViewModel.addJSBListener(ConvertCoordinate.self, onConvertCoordinate)
 
+        spatialWebViewModel.addJSBListener(UpdateUnlitMaterialProperties.self, onUpdateUnlitMaterialProperties)
+        spatialWebViewModel.addJSBListener(RemoveComponentFromEntity.self, onRemoveComponentFromEntity)
+        spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
+
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -1196,6 +1200,52 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(baseReplyData))
     }
 
+    private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
+            return
+        }
+        material.updateProperties(color: command.color, transparent: command.transparent, opacity: command.opacity)
+        // Re-apply material to any ModelComponent or ModelEntity override that references it
+        for (_, obj) in spatialObjects {
+            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(command.id) {
+                comp.refreshMaterials()
+            } else if let modelEntity = obj as? SpatialModelEntity, modelEntity.usesMaterial(command.id) {
+                modelEntity.refreshMaterials()
+            }
+        }
+        resolve(.success(baseReplyData))
+    }
+
+    private func onRemoveComponentFromEntity(command: RemoveComponentFromEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialEntity,
+              let component = spatialObjects[command.componentId] as? SpatialComponent
+        else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Remove component failed")))
+            return
+        }
+        entity.removeComponent(component)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onSetMaterialsOnEntity(command: SetMaterialsOnEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialModelEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelEntity \(command.entityId) not found")))
+            return
+        }
+        var materials: [SpatialMaterial] = []
+        for mid in command.materialIds {
+            if let material = spatialObjects[mid] as? SpatialMaterial {
+                materials.append(material)
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(mid) not found")))
+                return
+            }
+        }
+        entity.setMaterials(materials)
+        resolve(.success(baseReplyData))
+    }
+
     private func addSpatialObject(_ object: any SpatialObjectProtocol) {
         var spatialObject = object
         spatialObjects[spatialObject.spatialId] = spatialObject
@@ -1227,19 +1277,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return nil
         }
 
-        for (_, object) in spatialObjects {
-            guard let dynamic3dElement = object as? SpatializedDynamic3DElement else {
-                continue
+        var current: Entity? = entity
+        while let node = current {
+            if let rootEntity = node as? SpatialRootEntity {
+                return rootEntity.root
             }
-
-            let root = dynamic3dElement.getRoot()
-            var current: Entity? = entity
-            while let node = current {
-                if node === root {
-                    return dynamic3dElement
-                }
-                current = node.parent
-            }
+            current = node.parent
         }
 
         return nil
