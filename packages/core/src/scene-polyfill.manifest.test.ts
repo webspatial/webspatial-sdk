@@ -75,11 +75,11 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     // window uses overrides + formatted to px
     expect(winDefaults).toEqual(
       expect.objectContaining({
-        defaultSize: { width: 1000, height: 300 },
+        defaultSize: { width: '1000px', height: '300px' },
         resizability: expect.objectContaining({
-          minWidth: 500,
-          minHeight: 400,
-          maxWidth: 1200,
+          minWidth: '500px',
+          minHeight: '400px',
+          maxWidth: '1200px',
         }),
         worldAlignment: 'automatic',
         worldScaling: 'dynamic',
@@ -88,19 +88,17 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     )
 
     // volume remains from top-level only (no volume override) and formats:
-    // - defaultSize strings in px are converted to meters for volume defaults
-    //   200px -> 200/1360, 300px -> 300/1360
-    const pxToM = (px: number) => px / 1360
+    // - pre passed to initScene is the raw manifest values (unformatted)
     expect(volDefaults).toEqual(
       expect.objectContaining({
         defaultSize: {
-          width: pxToM(200),
-          height: pxToM(300),
+          width: '200px',
+          height: '300px',
           // depth may be omitted in manifest; defaults keep only provided keys
         },
         resizability: expect.objectContaining({
-          minWidth: 300, // resizability always formatted in px
-          minHeight: 400,
+          minWidth: '300px',
+          minHeight: '400px',
         }),
         worldAlignment: 'gravityAligned',
         worldScaling: 'dynamic',
@@ -152,9 +150,9 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     // volume uses overrides + formatting (m for defaultSize, px for resizability)
     expect(volDefaults).toEqual(
       expect.objectContaining({
-        defaultSize: { width: 2, height: 2, depth: 2 },
+        defaultSize: { width: '2m', height: '2m', depth: '2m' },
         resizability: expect.objectContaining({
-          minWidth: 1360, // 1m -> 1360px
+          minWidth: '1m',
         }),
         baseplateVisibility: 'automatic',
       }),
@@ -163,10 +161,10 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     // window remains from top-level only (no window override)
     expect(winDefaults).toEqual(
       expect.objectContaining({
-        defaultSize: { width: 120, height: 240 },
+        defaultSize: { width: '120px', height: '240px' },
         resizability: expect.objectContaining({
-          minWidth: 200,
-          minHeight: 300,
+          minWidth: '200px',
+          minHeight: '300px',
         }),
       }),
     )
@@ -229,15 +227,15 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     expect(volDefaults).toEqual(
       expect.objectContaining({
         defaultSize: {
-          width: pxToM(1024),
-          height: pxToM(1024),
-          depth: pxToM(55),
+          width: '1024px',
+          height: '1024px',
+          depth: '55px',
         },
         resizability: expect.objectContaining({
-          minWidth: 1024,
-          minHeight: 1024,
-          maxWidth: 2000,
-          maxHeight: 2000,
+          minWidth: '1024px',
+          minHeight: '1024px',
+          maxWidth: '2000px',
+          maxHeight: '2000px',
         }),
         worldScaling: 'automatic',
         worldAlignment: 'automatic',

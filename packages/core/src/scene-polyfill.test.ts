@@ -6,6 +6,7 @@ import {
   __getSceneConfigSnapshotForTest,
 } from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
+import { pointToPhysical } from './physicalMetrics'
 
 describe('test formatSceneConfig in window', () => {
   test('should format window with no unit', () => {
@@ -128,15 +129,15 @@ describe('test formatSceneConfig in volume', () => {
     } satisfies SpatialSceneCreationOptions
     const [formattedConfig] = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
-      width: 1,
-      height: 1,
-      depth: 1,
+      width: pointToPhysical(1),
+      height: pointToPhysical(1),
+      depth: pointToPhysical(1),
     })
     expect(formattedConfig.resizability).toEqual({
-      minWidth: 1360,
-      minHeight: 1360,
-      maxWidth: 1360,
-      maxHeight: 1360,
+      minWidth: 1,
+      minHeight: 1,
+      maxWidth: 1,
+      maxHeight: 1,
     })
   })
 
@@ -321,7 +322,7 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
       }),
     )
 
@@ -329,7 +330,11 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
     const { UpdateSceneConfig } = await import('./JSBCommand')
     expect(UpdateSceneConfig).toHaveBeenCalledWith({
       type: 'volume',
-      defaultSize: { width: 1, height: 1, depth: 1 },
+      defaultSize: {
+        width: pointToPhysical(1),
+        height: pointToPhysical(1),
+        depth: pointToPhysical(1),
+      },
       resizability: {
         minWidth: 0.5,
         minHeight: 1,
@@ -374,7 +379,7 @@ describe('initScene should receive defaultScene config by type', () => {
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
       }),
     )
   })
@@ -393,7 +398,7 @@ describe('initScene should receive defaultScene config by type', () => {
 
     expect(cb).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
       }),
     )
 
