@@ -99,6 +99,7 @@ function normalizeXRDefaultsToSceneOptions(
 class SceneManager {
   private originalOpen: any
   private static instance: SceneManager
+  private manifestReady: Promise<void> | null = null
   static getInstance() {
     if (!SceneManager.instance) {
       SceneManager.instance = new SceneManager()
@@ -107,7 +108,7 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
-    this.setupManifest()
+    this.manifestReady = this.setupManifest()
     this.originalOpen = window.open.bind(window)
     ;(window as any).open = this.open
   }
@@ -121,6 +122,10 @@ class SceneManager {
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
+  }
+
+  waitManifest(): Promise<void> {
+    return this.manifestReady ?? Promise.resolve()
   }
 
   // Ensure URL is absolute; only convert when a relative path is provided
@@ -149,6 +154,7 @@ class SceneManager {
   private async setupManifest() {
     const manifest = await this.getPWAManifest()
     console.log('manifest', manifest)
+    window.opener?.console.log('manifest', manifest)
     try {
       const xr = manifest?.xr_spatial_scene
       if (!xr || typeof xr !== 'object') return
@@ -156,17 +162,24 @@ class SceneManager {
       // Merge top-level defaults with per-scene overrides.
       const windowRaw = deepMergePlain(topLevel, overrides?.window_scene)
       const volumeRaw = deepMergePlain(topLevel, overrides?.volume_scene)
-      xr_window_defaults = normalizeXRDefaultsToSceneOptions(windowRaw)
+      const windowNext = normalizeXRDefaultsToSceneOptions(windowRaw)
       console.log(
         '🚀 ~ SceneManager ~ setupManifest ~ xr_window_defaults:',
-        xr_window_defaults,
+        windowNext,
       )
-      xr_volume_defaults = normalizeXRDefaultsToSceneOptions(volumeRaw)
+      const volumeNext = normalizeXRDefaultsToSceneOptions(volumeRaw)
+      xr_window_defaults = windowNext
+      xr_volume_defaults = volumeNext
       console.log(
         '🚀 ~ SceneManager ~ setupManifest ~ xr_volume_defaults:',
-        xr_volume_defaults,
+        volumeNext,
       )
-    } catch {}
+    } catch (error: any) {
+      console.warn(
+        'SceneManager.setupManifest failed; using built-in defaults.',
+        error?.message || error,
+      )
+    }
   }
 
   private open = (url?: string, target?: string, features?: string) => {
@@ -596,12 +609,17 @@ async function injectScenePolyfill() {
   }
 
   onContentLoaded(async () => {
+    await SceneManager.getInstance().waitManifest()
     const sceneType = window.xrCurrentSceneType ?? 'window'
     const rawDefault = getSceneDefaultConfig(sceneType)
     // Provide a formatted 'pre' to the callback for consistent units and types.
     const [preFormatted] = formatSceneConfig(
       deepCloneJSON(rawDefault) as SpatialSceneCreationOptions,
       sceneType,
+    )
+    window.opener.console.log(
+      '🚀 ~ injectScenePolyfill ~ preFormatted:',
+      preFormatted,
     )
     let cfg = preFormatted
     if (typeof window.xrCurrentSceneDefaults === 'function') {
