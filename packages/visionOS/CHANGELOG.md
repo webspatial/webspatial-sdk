@@ -1,5 +1,11 @@
 # @webspatial/platform-avp
 
+## 2.0.0
+
+### Patch Changes
+
+- 4b46782: refactor: optimize search for d3dElement
+
 ## 1.4.0
 
 ### Minor Changes

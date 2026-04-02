@@ -1,5 +1,17 @@
 # @webspatial/react-sdk
 
+## 2.0.0
+
+### Minor Changes
+
+- 3b304a1: Introduces runtime reactivity to our 3D API. Previously, entities were mostly static after instantiation. We can now dynamically update material properties, modify geometry in-place, and apply material overrides to model entities on the fly.
+
+### Patch Changes
+
+- Updated dependencies [3b304a1]
+- Updated dependencies [c7b240c]
+  - @webspatial/core-sdk@2.0.0
+
 ## 1.4.0
 
 ### Minor Changes
