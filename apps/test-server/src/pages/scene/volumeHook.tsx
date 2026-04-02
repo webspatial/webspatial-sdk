@@ -6,15 +6,15 @@ window.xrCurrentSceneType = 'volume'
 window.xrCurrentSceneDefaults = async () => {
   return {
     defaultSize: {
-      width: 2,
-      height: 1,
-      depth: 1,
+      width: '1m',
+      height: '1m',
+      depth: '1m',
     },
     resizability: {
-      minWidth: 0.5,
-      maxWidth: 2,
-      minHeight: 0.5,
-      maxHeight: 1,
+      minWidth: '0.5m',
+      maxWidth: '2m',
+      minHeight: '0.5m',
+      maxHeight: '1m',
     },
     // worldScaling: 'automatic',
     // worldAlignment: 'automatic',
@@ -264,3 +264,23 @@ function App() {
 }
 
 export default App
+
+function mount() {
+  let root = document.getElementById('root')
+  if (!root) {
+    root = document.createElement('div')
+    root.id = 'root'
+    document.body.appendChild(root)
+  }
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mount)
+} else {
+  mount()
+}

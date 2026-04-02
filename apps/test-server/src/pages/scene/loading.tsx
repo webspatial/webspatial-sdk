@@ -244,3 +244,23 @@ function App() {
 }
 
 export default App
+
+function mount() {
+  let root = document.getElementById('root')
+  if (!root) {
+    root = document.createElement('div')
+    root.id = 'root'
+    document.body.appendChild(root)
+  }
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mount)
+} else {
+  mount()
+}

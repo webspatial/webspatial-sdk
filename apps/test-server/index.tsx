@@ -27,10 +27,7 @@ import SpatialStyleTest from './src/pages/spatialStyleTest/index'
 import CanvasTest from './src/pages/canvas-test/index'
 import JSAPITest from './src/pages/jsapi-test/index'
 import SceneTest from './src/pages/scene/index'
-import SceneHook from './src/pages/scene/hook'
-import SceneLoading from './src/pages/scene/loading'
 import SceneVolume from './src/pages/scene/volume'
-import SceneVolumeHook from './src/pages/scene/volumeHook'
 import SceneXRApp from './src/pages/scene/xrapp'
 import RealityEmpty from './src/pages/reality/empty'
 import RealityGeometryEntity from './src/pages/reality/geometryEntity'
@@ -125,17 +122,11 @@ function App() {
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
                 <Route path="/scene" element={<SceneTest />} />
-                <Route path="/scene/hook" element={<SceneHook />} />
-                <Route path="/scene/loading" element={<SceneLoading />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
-                <Route
-                  path="/scene/volume-hook"
-                  element={<SceneVolumeHook />}
-                />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
                 <Route
                   path="/scene/nosdk"
-                  element={<Placeholder name="nosdk unmigrated" />}
+                  element={<Placeholder name="nosdk unmigrated fixme:" />}
                 />
                 <Route path="/reality" element={<RealityTest />} />
                 <Route path="/reality/debug" element={<RealityDebug />} />

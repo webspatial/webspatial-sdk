@@ -170,15 +170,15 @@ function App() {
       </button>
 
       <h1 className="text-2xl text-black">a tag</h1>
-      <a className={btnCls} href={`/#/scene/hook`}>
+      <a className={btnCls} href={`/pages/scene/hook.html`}>
         open in place
       </a>
-      <a className={btnCls} href={`/#/scene/hook`} target="_blank">
+      <a className={btnCls} href={`/pages/scene/hook.html`} target="_blank">
         open _blank
       </a>
       <a
         className={btnCls}
-        href={`/#/scene/hook`}
+        href={`/pages/scene/hook.html`}
         target="_blank"
         onClick={e => {
           console.log('click on', e)
@@ -192,7 +192,7 @@ function App() {
         onClick={async () => {
           startlog('open no name')
           winARef.current = window.open(
-            '/#/scene/loading',
+            '/pages/scene/loading.html',
             // 'http://localhost:5173/src/scene/xrapp.html',
           )
         }}
@@ -203,10 +203,7 @@ function App() {
         className={btnCls}
         onClick={async () => {
           startlog('open no name')
-          winARef.current = window.open(
-            '/#/scene/hook',
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
+          winARef.current = window.open('/pages/scene/hook.html')
         }}
       >
         open hook

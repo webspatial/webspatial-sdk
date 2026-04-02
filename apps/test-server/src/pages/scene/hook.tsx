@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { initScene } from '@webspatial/react-sdk'
+
+window.xrCurrentSceneType = 'window'
 window.xrCurrentSceneDefaults = async () => {
   return {
     defaultSize: {
@@ -59,7 +61,7 @@ function App() {
 
   return (
     <div className="pl-5 pt-2">
-      <h1 className="text-2xl text-black">openscene</h1>
+      <h1 className="text-2xl text-black">hook</h1>
 
       <button
         className={btnCls}
@@ -246,3 +248,23 @@ function App() {
 }
 
 export default App
+
+function mount() {
+  let root = document.getElementById('root')
+  if (!root) {
+    root = document.createElement('div')
+    root.id = 'root'
+    document.body.appendChild(root)
+  }
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mount)
+} else {
+  mount()
+}

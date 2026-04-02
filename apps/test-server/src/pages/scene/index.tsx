@@ -103,11 +103,17 @@ export default function SceneTest() {
                 initScene(
                   'sa',
                   () => ({
-                    defaultSize: { width: 1, height: 1, depth: 0.1 },
+                    defaultSize: { width: 400, height: 200, depth: 0.1 },
+                    resizability: {
+                      minWidth: 400,
+                      maxWidth: 800,
+                      minHeight: 200,
+                      maxHeight: 400,
+                    },
                   }),
                   { type: 'volume' },
                 )
-                winARef.current = window.open('/#/reality', 'sa')
+                winARef.current = window.open('/#/reality', 'sv')
               }}
             >
               Open Volume
@@ -129,10 +135,16 @@ export default function SceneTest() {
                   }),
                   { type: 'volume' },
                 )
-                winARef.current = window.open('/#/scene/volume', 'sa')
+                winARef.current = window.open('/#/scene/volume', 'sv-resizable')
               }}
             >
               Resizable Volume
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => window.open('/pages/scene/volumeHook.html')}
+            >
+              Open Volume Hook
             </button>
           </div>
         </section>
@@ -166,6 +178,10 @@ export default function SceneTest() {
               className={btnCls}
               onClick={() => {
                 startlog('open')
+                // Open A (sa)
+                initScene('sa', () => ({
+                  defaultSize: { width: 900, height: 500 },
+                }))
                 winARef.current = window.open('/#/scene/xrapp', 'sa')
               }}
             >
@@ -180,6 +196,26 @@ export default function SceneTest() {
             >
               Open B (sb)
             </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/pages/scene/hook.html')
+              }}
+            >
+              Open Window Hook
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                // Open loading demo page in window
+                startlog('open')
+                winARef.current = window.open('/pages/scene/loading.html')
+              }}
+            >
+              Open Loading
+            </button>
+
             <button
               className={btnCls}
               onClick={() => {

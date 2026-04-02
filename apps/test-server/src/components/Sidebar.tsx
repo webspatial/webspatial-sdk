@@ -45,10 +45,14 @@ export const routes = [
     label: 'Scene',
     children: [
       { path: '/scene', label: 'Scene Landing' },
-      { path: '/scene/hook', label: 'Hook' },
-      { path: '/scene/loading', label: 'Loading' },
+      { href: '/pages/scene/hook.html', label: 'Hook', external: true },
+      { href: '/pages/scene/loading.html', label: 'Loading', external: true },
       { path: '/scene/volume', label: 'Volume' },
-      { path: '/scene/volume-hook', label: 'Volume Hook' },
+      {
+        href: '/pages/scene/volumeHook.html',
+        label: 'Volume Hook',
+        external: true,
+      },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
     ],
@@ -127,19 +131,29 @@ export default function Sidebar() {
             </Link>
             {route.children && (
               <div className="ml-4 mt-1 space-y-1">
-                {route.children.map(child => (
-                  <Link
-                    key={child.path}
-                    to={child.path}
-                    className={`block px-4 py-1.5 rounded-lg text-xs transition-colors ${
-                      location.pathname === child.path
-                        ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
-                        : 'text-gray-500 hover:bg-gray-800 hover:text-white'
-                    }`}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
+                {route.children.map(child => {
+                  const key = (child as any).path || (child as any).href
+                  const isActive =
+                    !!(child as any).path &&
+                    location.pathname === (child as any).path
+                  const cls = `block px-4 py-1.5 rounded-lg text-xs transition-colors ${
+                    isActive
+                      ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
+                      : 'text-gray-500 hover:bg-gray-800 hover:text-white'
+                  }`
+                  if ((child as any).href) {
+                    return (
+                      <a key={key} href={(child as any).href} className={cls}>
+                        {child.label}
+                      </a>
+                    )
+                  }
+                  return (
+                    <Link key={key} to={(child as any).path} className={cls}>
+                      {child.label}
+                    </Link>
+                  )
+                })}
               </div>
             )}
           </div>
