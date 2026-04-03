@@ -69,26 +69,70 @@ export default function SceneTest() {
           <h2 className="text-lg font-bold mb-4 border-b border-gray-800 pb-2">
             Error Handling
           </h2>
-          <button
-            className={btnCls}
-            onClick={async () => {
-              startlog('open')
-              initScene(
-                'sa',
-                () => ({
-                  defaultSize: {
-                    width: '10cm',
-                    height: 1,
-                    depth: 1,
-                  },
-                }),
-                { type: 'volume' },
-              )
-              winARef.current = window.open('/#/scene/volume', 'sa')
-            }}
-          >
-            Invalid Unit Test
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sa',
+                  () => ({
+                    defaultSize: {
+                      width: '10cm',
+                      height: 1000,
+                      depth: 100,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sa')
+              }}
+            >
+              Invalid Unit Test
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sv-valid-m',
+                  () => ({
+                    defaultSize: {
+                      width: '0.1m',
+                      height: 1,
+                      depth: 1,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sv-valid-m')
+              }}
+            >
+              Valid Unit Test (meters)
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sv-valid-px',
+                  () => ({
+                    defaultSize: {
+                      width: 100,
+                      height: 1000,
+                      depth: 100,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sv-valid-px')
+              }}
+            >
+              Valid Unit Test (px)
+            </button>
+          </div>
         </section>
 
         <section className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">
@@ -116,14 +160,14 @@ export default function SceneTest() {
                 winARef.current = window.open('/#/reality', 'sv')
               }}
             >
-              Open Volume
+              Open Volume (sv)
             </button>
 
             <button
               className={btnCls}
-              onClick={() => window.open('/pages/scene/volumeHook.html')}
+              onClick={() => window.open('/pages/scene/volumeHook.html', 'sv')}
             >
-              Open Volume Hook
+              Open Volume Hook (sv)
             </button>
           </div>
         </section>
