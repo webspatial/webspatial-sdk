@@ -387,7 +387,7 @@ describe('initScene should receive defaultScene config by type', () => {
   it('with volume type and merge pre', () => {
     const cb = vi.fn().mockImplementation(pre => ({
       ...pre,
-      // defaultSize: { width: 1, height: 1, depth: 0.1 },
+      defaultSize: { ...(pre.defaultSize as any), depth: '0.1m' },
     }))
 
     // pre-snapshot should be empty before initScene writes configMap
@@ -406,7 +406,7 @@ describe('initScene should receive defaultScene config by type', () => {
     expect(snap).toEqual(
       expect.objectContaining({
         type: 'volume',
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.1 },
       }),
     )
   })
