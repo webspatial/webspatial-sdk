@@ -284,34 +284,28 @@ class SceneManager {
    * 5) Parse as JSON; if response body is text, parse the text as JSON.
    */
   async getPWAManifest(manifestUrl?: string): Promise<PWAManifest | undefined> {
-    console.log('[XR] getPWAManifest:start', {
-      manifestUrl,
-      baseURI: document.baseURI,
-    })
+    /**
+     * Resolve and load a PWA manifest as JSON:
+     * 1) Determine href:
+     *    - Prefer explicit manifestUrl if provided;
+     *    - Fallback to <link rel="manifest">, preferring the raw attribute over computed href.
+     * 2) Normalize href to absolute using ensureAbsoluteUrl (respects <base href>).
+     * 3) Handle data URLs inline:
+     *    - data:...;base64,... → atob then JSON.parse
+     *    - data:...,... → decodeURIComponent then JSON.parse
+     * 4) Fetch with credentials same-origin first; if that fails (e.g., CORS), attempt unauthenticated fetch.
+     * 5) Parse as JSON; if response body is text, parse the text as JSON.
+     */
     let href: string | undefined = manifestUrl
     if (!href) {
       const el = document.querySelector(
         'link[rel="manifest"]',
       ) as HTMLLinkElement | null
-      const rawAttr = el?.getAttribute('href') || null
-      const computed = el?.href || null
-      console.log('[XR] getPWAManifest:link', {
-        found: !!el,
-        rawAttr,
-        computed,
-      })
-      href = rawAttr || computed || undefined
+      href = el?.getAttribute('href') || el?.href
     }
-    if (!href) {
-      console.warn('[XR] getPWAManifest:no href found')
-      return
-    }
+    if (!href) return
     href = this.ensureAbsoluteUrl(href)
-    console.log('[XR] getPWAManifest:normalizedHref', href)
-    if (!href) {
-      console.warn('[XR] getPWAManifest:href normalization produced empty')
-      return
-    }
+    if (!href) return
     if (href.startsWith('data:')) {
       // Inline data URL manifest: data:[<mediatype>][;base64],<data>
       try {
@@ -320,93 +314,34 @@ class SceneManager {
         const meta = href.slice(5, comma)
         const data = href.slice(comma + 1)
         const isBase64 = /;base64/i.test(meta)
-        console.log('[XR] getPWAManifest:dataURL', {
-          base64: isBase64,
-          bytes: data.length,
-        })
         const decoded = isBase64 ? atob(data) : decodeURIComponent(data)
-        const json = JSON.parse(decoded)
-        const topKeys =
-          json && typeof json === 'object' ? Object.keys(json) : []
-        const hasXR = !!(json as any)?.xr_spatial_scene
-        console.log('[XR] getPWAManifest:parsed dataURL', { topKeys, hasXR })
-        return json
-      } catch (e: any) {
-        console.warn(
-          '[XR] getPWAManifest:data URL parse failed',
-          e?.message || e,
-        )
+        return JSON.parse(decoded)
+      } catch {
         return
       }
     }
     try {
       // Same-origin fetch with credentials first.
-      console.log('[XR] getPWAManifest:fetch same-origin', href)
       const res = await fetch(href, { credentials: 'same-origin' })
-      console.log('[XR] getPWAManifest:same-origin status', res.status)
       if (!res.ok) throw new Error(String(res.status))
       try {
-        const json = await res.json()
-        const topKeys =
-          json && typeof json === 'object' ? Object.keys(json) : []
-        const hasXR = !!(json as any)?.xr_spatial_scene
-        console.log('[XR] getPWAManifest:parsed json', { topKeys, hasXR })
-        return json
+        return await res.json()
       } catch {
         const t = await res.text()
-        const json = JSON.parse(t)
-        const topKeys =
-          json && typeof json === 'object' ? Object.keys(json) : []
-        const hasXR = !!(json as any)?.xr_spatial_scene
-        console.log('[XR] getPWAManifest:parsed text->json', {
-          topKeys,
-          hasXR,
-        })
-        return json
+        return JSON.parse(t)
       }
-    } catch (err: any) {
-      console.warn(
-        '[XR] getPWAManifest:same-origin fetch failed, fallback',
-        err?.message || err,
-      )
+    } catch {
       try {
-        console.log('[XR] getPWAManifest:fetch unauthenticated', href)
+        // Fallback: unauthenticated fetch (may help when same-origin credentials fail due to CORS).
         const res = await fetch(href)
-        console.log('[XR] getPWAManifest:unauthenticated status', res.status)
-        if (!res.ok) {
-          console.warn(
-            '[XR] getPWAManifest:unauthenticated fetch not ok',
-            res.status,
-          )
-          return
-        }
+        if (!res.ok) return
         try {
-          const json = await res.json()
-          const topKeys =
-            json && typeof json === 'object' ? Object.keys(json) : []
-          const hasXR = !!(json as any)?.xr_spatial_scene
-          console.log('[XR] getPWAManifest:parsed json (fallback)', {
-            topKeys,
-            hasXR,
-          })
-          return json
+          return await res.json()
         } catch {
           const t = await res.text()
-          const json = JSON.parse(t)
-          const topKeys =
-            json && typeof json === 'object' ? Object.keys(json) : []
-          const hasXR = !!(json as any)?.xr_spatial_scene
-          console.log('[XR] getPWAManifest:parsed text->json (fallback)', {
-            topKeys,
-            hasXR,
-          })
-          return json
+          return JSON.parse(t)
         }
-      } catch (err2: any) {
-        console.warn(
-          '[XR] getPWAManifest:fallback fetch failed',
-          err2?.message || err2,
-        )
+      } catch {
         return
       }
     }
