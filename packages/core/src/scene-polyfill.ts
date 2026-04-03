@@ -29,6 +29,45 @@ const defaultSceneConfigVolume: SpatialSceneCreationOptions = {
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
 
+/** WebSpatial protocol commands that use Pico token URL rewrite (auxiliary 2D surfaces). */
+const WEBSPATIAL_TOKEN_REWRITE_COMMANDS = new Set([
+  'createSpatialized2DElement',
+  'createAttachment',
+])
+
+/**
+ * Pico OS: when `webSpatial.genToken()` exists, rewrite whitelisted `webspatial://` opens
+ * to `https://host/<token>/?command=<command>&rid=…`. Other internal URLs are unchanged.
+ */
+export function tryRewriteWebSpatialOpenUrl(url: string): string | null {
+  if (!url.startsWith(INTERNAL_SCHEMA_PREFIX)) {
+    return null
+  }
+  const rest = url.slice(INTERNAL_SCHEMA_PREFIX.length)
+  const command = rest.split(/[?#]/)[0]
+  if (!command || !WEBSPATIAL_TOKEN_REWRITE_COMMANDS.has(command)) {
+    return null
+  }
+  const token = window.webSpatial?.genToken?.()
+  if (!token) {
+    return null
+  }
+  const host = window.location.host
+  const protocol = window.location.protocol
+  const finalURL = `${protocol}//${host}/${token}/?command=${command}`
+  let rid: string | null = null
+  try {
+    rid = new URL(url).searchParams.get('rid')
+  } catch {
+    // leave rid unset if URL parser rejects the scheme in this environment
+  }
+  const final = new URL(finalURL)
+  if (rid) {
+    final.searchParams.set('rid', rid)
+  }
+  return final.toString()
+}
+
 class SceneManager {
   private originalOpen: any
   private static instance: SceneManager
@@ -76,17 +115,9 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      if (url.includes('createSpatialized2DElement')) {
-        const token = window.webSpatial?.genToken?.()
-        if (token) {
-          const host = window.location.host
-          const protocol = window.location.protocol
-          const finalURL = `${protocol}//${host}/${token}/?command=createSpatialized2DElement`
-          const rid = new URL(url).searchParams.get('rid')
-          const final = new URL(finalURL)
-          if (rid) final.searchParams.set('rid', rid)
-          return this.originalOpen(final.toString(), target, features)
-        }
+      const rewritten = tryRewriteWebSpatialOpenUrl(url)
+      if (rewritten) {
+        return this.originalOpen(rewritten, target, features)
       }
       return this.originalOpen(url, target, features)
     }
