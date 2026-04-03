@@ -101,14 +101,14 @@ export default function SceneTest() {
               onClick={async () => {
                 startlog('open')
                 initScene(
-                  'sa',
+                  'sv',
                   () => ({
-                    defaultSize: { width: 400, height: 200, depth: 0.1 },
+                    defaultSize: { width: 1000, height: 1000, depth: 500 },
                     resizability: {
-                      minWidth: 400,
-                      maxWidth: 800,
-                      minHeight: 200,
-                      maxHeight: 400,
+                      minWidth: 1000,
+                      maxWidth: 2000,
+                      minHeight: 1000,
+                      maxHeight: 2000,
                     },
                   }),
                   { type: 'volume' },
@@ -118,28 +118,7 @@ export default function SceneTest() {
             >
               Open Volume
             </button>
-            <button
-              className={btnCls}
-              onClick={async () => {
-                startlog('open')
-                initScene(
-                  'sa',
-                  () => ({
-                    defaultSize: { width: 2, height: 1, depth: 1 },
-                    resizability: {
-                      minWidth: 0.5,
-                      maxWidth: 2,
-                      minHeight: 0.5,
-                      maxHeight: 1,
-                    },
-                  }),
-                  { type: 'volume' },
-                )
-                winARef.current = window.open('/#/scene/volume', 'sv-resizable')
-              }}
-            >
-              Resizable Volume
-            </button>
+
             <button
               className={btnCls}
               onClick={() => window.open('/pages/scene/volumeHook.html')}
@@ -174,6 +153,15 @@ export default function SceneTest() {
             Window Tests
           </h2>
           <div className="flex flex-wrap gap-2">
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/#/scene/xrapp')
+              }}
+            >
+              Open No config window
+            </button>
             <button
               className={btnCls}
               onClick={() => {
