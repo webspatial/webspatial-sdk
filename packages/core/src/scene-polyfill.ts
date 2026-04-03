@@ -208,18 +208,13 @@ class SceneManager {
     let cfg = target ? this.getConfig(target) : undefined
 
     if (cfg === undefined) {
-      // if UA is android or linux, then use default config
-      if (
-        window.navigator.userAgent.includes('Android') ||
-        window.navigator.userAgent.includes('Linux')
-      ) {
-        const preFormatted = deepCloneJSON(
-          getSceneDefaultConfig('window'),
-        ) as SpatialSceneCreationOptions
+      // if no config, use default window config
+      const preFormatted = deepCloneJSON(
+        getSceneDefaultConfig('window'),
+      ) as SpatialSceneCreationOptions
 
-        const [ans] = formatSceneConfig(preFormatted, 'window')
-        cfg = { ...ans, type: 'window' }
-      }
+      const [ans] = formatSceneConfig(preFormatted, 'window')
+      cfg = { ...ans, type: 'window' }
     }
 
     const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
