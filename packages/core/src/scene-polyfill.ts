@@ -164,8 +164,12 @@ class SceneManager {
       const windowNext = normalizeXRDefaultsToSceneOptions(windowRaw)
 
       const volumeNext = normalizeXRDefaultsToSceneOptions(volumeRaw)
-      xr_window_defaults = windowNext
-      xr_volume_defaults = volumeNext
+      if (windowNext && Object.keys(windowNext).length > 0) {
+        xr_window_defaults = windowNext
+      }
+      if (volumeNext && Object.keys(volumeNext).length > 0) {
+        xr_volume_defaults = volumeNext
+      }
     } catch (error: any) {
       console.warn(
         'SceneManager.setupManifest failed; using built-in defaults.',

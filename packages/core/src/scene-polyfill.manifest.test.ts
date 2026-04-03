@@ -266,3 +266,137 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     cleanup()
   })
 })
+
+describe('manifest error paths and empty configs', () => {
+  function addInvalidDataManifest() {
+    const link = document.createElement('link')
+    link.rel = 'manifest'
+    // Invalid JSON payload to force parse failure in getPWAManifest
+    link.href = 'data:application/manifest+json,INVALID_JSON'
+    document.head.appendChild(link)
+    return () => {
+      document.head.removeChild(link)
+    }
+  }
+
+  it('falls back to built-in defaults when no manifest link is present', async () => {
+    vi.resetModules()
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winPre: any
+    initScene(
+      'no-manifest-win',
+      pre => {
+        winPre = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+    let volPre: any
+    initScene(
+      'no-manifest-vol',
+      pre => {
+        volPre = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    // Window defaults: numbers in px domain for width/height
+    expect(winPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: 1280, height: 720 },
+      }),
+    )
+    // Volume defaults: strings in meters for width/height/depth
+    expect(volPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
+      }),
+    )
+  })
+
+  it('falls back to built-in defaults when manifest parsing fails', async () => {
+    vi.resetModules()
+    const cleanup = addInvalidDataManifest()
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winPre: any
+    initScene(
+      'bad-manifest-win',
+      pre => {
+        winPre = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+    let volPre: any
+    initScene(
+      'bad-manifest-vol',
+      pre => {
+        volPre = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: 1280, height: 720 },
+      }),
+    )
+    expect(volPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('ignores empty xr_spatial_scene object and preserves built-in defaults', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {},
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winPre: any
+    initScene(
+      'empty-xr-win',
+      pre => {
+        winPre = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+    let volPre: any
+    initScene(
+      'empty-xr-vol',
+      pre => {
+        volPre = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: 1280, height: 720 },
+      }),
+    )
+    expect(volPre).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
+      }),
+    )
+
+    cleanup()
+  })
+})
