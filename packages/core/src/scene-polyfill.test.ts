@@ -85,6 +85,23 @@ describe('test formatSceneConfig in window', () => {
     ])
   })
 
+  test('window mixed units: cm invalid and numbers treated as px', () => {
+    const config = {
+      defaultSize: {
+        width: '10cm',
+        height: 800,
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [formatted, errors] = formatSceneConfig(config, 'window')
+    expect(errors).toEqual(['defaultSize.width'])
+    expect(formatted.defaultSize).toEqual(
+      expect.objectContaining({
+        height: 800,
+      }),
+    )
+    expect((formatted.defaultSize as any).width).toBeUndefined()
+  })
+
   test('should format window with meter', () => {
     const config = {
       defaultSize: {
@@ -109,6 +126,27 @@ describe('test formatSceneConfig in window', () => {
       maxWidth: 1360,
       maxHeight: 1360,
     })
+  })
+})
+
+describe('formatSceneConfig invalid unit (mixed)', () => {
+  test('volume defaultSize width cm invalid while numbers convert', () => {
+    const config = {
+      defaultSize: {
+        width: '10cm',
+        height: 1000,
+        depth: 100,
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [formattedConfig, errors] = formatSceneConfig(config, 'volume')
+    expect(errors).toEqual(['defaultSize.width'])
+    expect(formattedConfig.defaultSize).toEqual(
+      expect.objectContaining({
+        height: pointToPhysical(1000),
+        depth: pointToPhysical(100),
+      }),
+    )
+    expect((formattedConfig.defaultSize as any).width).toBeUndefined()
   })
 })
 

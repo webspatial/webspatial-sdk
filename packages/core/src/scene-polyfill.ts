@@ -93,7 +93,7 @@ function normalizeXRDefaultsToSceneOptions(
   if ('default_size' in out) {
     delete out.default_size
   }
-  return out as SpatialSceneCreationOptions
+  return out
 }
 
 class SceneManager {
@@ -153,7 +153,6 @@ class SceneManager {
 
   private async setupManifest() {
     const manifest = await this.getPWAManifest()
-    console.log('manifest', manifest)
     try {
       const xr = manifest?.xr_spatial_scene
       if (!xr || typeof xr !== 'object') return
@@ -209,9 +208,7 @@ class SceneManager {
 
     if (cfg === undefined) {
       // if no config, use default window config
-      const preFormatted = deepCloneJSON(
-        getSceneDefaultConfig('window'),
-      ) as SpatialSceneCreationOptions
+      const preFormatted = deepCloneJSON(getSceneDefaultConfig('window'))
 
       const [ans] = formatSceneConfig(preFormatted, 'window')
       cfg = { ...ans, type: 'window' }
@@ -241,21 +238,19 @@ class SceneManager {
       this.callbackReturnMap[name] ??
       ((): SpatialSceneCreationOptions => {
         // Clone default config to avoid mutating shared defaults during formatting.
-        const cloned = deepCloneJSON(
-          defaultConfigRaw,
-        ) as SpatialSceneCreationOptions
+        const cloned = deepCloneJSON(defaultConfigRaw)
         return cloned
       })()
     const rawReturnVal = callback(previousOrDefault)
-    const clonedForFormat = deepCloneJSON(
-      rawReturnVal,
-    ) as SpatialSceneCreationOptions
+    const sanitizedReturnVal = sanitizeSceneOptionsUnits(
+      deepCloneJSON(rawReturnVal),
+    )
+    const clonedForFormat = deepCloneJSON(sanitizedReturnVal)
     // Merge normalized user return with scene-type defaults before final formatting.
     // This ensures missing fields fall back to the appropriate xr_window_defaults / xr_volume_defaults.
-    const baseDefaults = deepCloneJSON(
-      getSceneDefaultConfig(sceneType),
-    ) as SpatialSceneCreationOptions
+    const baseDefaults = deepCloneJSON(getSceneDefaultConfig(sceneType))
     const mergedForFormat = deepMergePlain(baseDefaults, clonedForFormat)
+
     const [formattedConfig, errors] = formatSceneConfig(
       mergedForFormat,
       sceneType,
@@ -264,7 +259,7 @@ class SceneManager {
     if (errors.length > 0) {
       console.warn(`initScene ${name} with errors: ${errors.join(', ')}`)
     }
-    this.callbackReturnMap[name] = rawReturnVal
+    this.callbackReturnMap[name] = sanitizedReturnVal
     this.configMap[name] = {
       ...formattedConfig,
       type: sceneType,
@@ -283,18 +278,6 @@ class SceneManager {
    * 5) Parse as JSON; if response body is text, parse the text as JSON.
    */
   async getPWAManifest(manifestUrl?: string): Promise<PWAManifest | undefined> {
-    /**
-     * Resolve and load a PWA manifest as JSON:
-     * 1) Determine href:
-     *    - Prefer explicit manifestUrl if provided;
-     *    - Fallback to <link rel="manifest">, preferring the raw attribute over computed href.
-     * 2) Normalize href to absolute using ensureAbsoluteUrl (respects <base href>).
-     * 3) Handle data URLs inline:
-     *    - data:...;base64,... → atob then JSON.parse
-     *    - data:...,... → decodeURIComponent then JSON.parse
-     * 4) Fetch with credentials same-origin first; if that fails (e.g., CORS), attempt unauthenticated fetch.
-     * 5) Parse as JSON; if response body is text, parse the text as JSON.
-     */
     let href: string | undefined = manifestUrl
     if (!href) {
       const el = document.querySelector(
@@ -345,6 +328,34 @@ class SceneManager {
       }
     }
   }
+}
+
+function sanitizeSceneOptionsUnits(
+  val: SpatialSceneCreationOptions,
+): SpatialSceneCreationOptions {
+  if (val?.defaultSize) {
+    const keys = ['width', 'height', 'depth'] as const
+    for (const k of keys) {
+      if (
+        k in (val.defaultSize as any) &&
+        !isValidSceneUnit((val.defaultSize as any)[k])
+      ) {
+        delete (val.defaultSize as any)[k]
+      }
+    }
+  }
+  if (val?.resizability) {
+    const keys = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight'] as const
+    for (const k of keys) {
+      if (
+        k in (val.resizability as any) &&
+        !isValidSceneUnit((val.resizability as any)[k])
+      ) {
+        delete (val.resizability as any)[k]
+      }
+    }
+  }
+  return val
 }
 
 function pxToMeter(px: number): number {
@@ -432,9 +443,8 @@ export function formatSceneConfig(
           'px',
         )
       } else {
-        ;(config.defaultSize as any)[k] = (
-          defaultSceneConfig.defaultSize as any
-        )[k]
+        // delete invalid unit
+        delete (config.defaultSize as any)[k]
         errors.push(`defaultSize.${k}`)
       }
     }
@@ -452,7 +462,8 @@ export function formatSceneConfig(
           'px',
         )
       } else {
-        ;(config.resizability as any)[k] = undefined
+        // delete invalid unit
+        delete (config.resizability as any)[k]
         errors.push(`resizability.${k}`)
       }
     }
@@ -575,7 +586,7 @@ async function injectScenePolyfill() {
     const sceneType = window.xrCurrentSceneType ?? 'window'
     const rawDefault = getSceneDefaultConfig(sceneType)
     // Provide a formatted 'pre' to the callback for consistent units and types.
-    const pre = deepCloneJSON(rawDefault) as SpatialSceneCreationOptions
+    const pre = deepCloneJSON(rawDefault)
 
     let cfg = pre
     if (typeof window.xrCurrentSceneDefaults === 'function') {
@@ -593,10 +604,7 @@ async function injectScenePolyfill() {
     })
 
     // Merge callback return with base defaults to ensure missing fields are filled.
-    const mergedCfg = deepMergePlain(
-      deepCloneJSON(rawDefault) as SpatialSceneCreationOptions,
-      cfg,
-    )
+    const mergedCfg = deepMergePlain(deepCloneJSON(rawDefault), cfg)
     const [formattedConfig, errors] = formatSceneConfig(mergedCfg, sceneType)
     if (errors.length > 0) {
       console.warn(
