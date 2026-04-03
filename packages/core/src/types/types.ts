@@ -431,13 +431,8 @@ export interface XRSceneResizability {
   maxHeight?: SceneUnit
 }
 
-export interface XRMainSceneConfig {
+export interface XRMainSceneConfig extends XRSpatialSceneDefaults {
   type?: SpatialSceneType
-  default_size?: XRSceneSize
-  resizability?: XRSceneResizability
-  worldScaling?: WorldScalingType
-  worldAlignment?: WorldAlignmentType
-  baseplateVisibility?: BaseplateVisibilityType
 }
 
 export interface XRSpatialSceneDefaults {
