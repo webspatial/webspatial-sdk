@@ -76,12 +76,18 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      if (url.includes('createSpatialized2DElement')) {
+      if (
+        url.includes('createSpatialized2DElement') ||
+        url.includes('createAttachment')
+      ) {
         const token = window.webSpatial?.genToken?.()
         if (token) {
+          const command = url.includes('createAttachment')
+            ? 'createAttachment'
+            : 'createSpatialized2DElement'
           const host = window.location.host
           const protocol = window.location.protocol
-          const finalURL = `${protocol}//${host}/${token}/?command=createSpatialized2DElement`
+          const finalURL = `${protocol}//${host}/${token}/?command=${command}`
           const rid = new URL(url).searchParams.get('rid')
           const final = new URL(finalURL)
           if (rid) final.searchParams.set('rid', rid)
