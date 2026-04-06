@@ -13,24 +13,12 @@ struct SpatializedStatic3DView: View {
     }
 
     func onLoadSuccess() {
+        // TODO: send back the currentSrc
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess())
     }
 
     func onLoadFailure() {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
-    }
-
-    /// Attempts to load from each source in order, returning the first success.
-    private func loadFromSources(_ sources: [ModelSource]) async -> Model3DAsset? {
-        for source in sources {
-            guard let url = localOrRemoteURL(url: source.src) else { continue }
-            do {
-                return try await loadAsset(from: url)
-            } catch {
-                continue
-            }
-        }
-        return nil
     }
 
     var body: some View {
@@ -87,24 +75,19 @@ struct SpatializedStatic3DView: View {
                 asset.selectedAnimation = animation
                 asset.animationPlaybackController?.resume()
             }
-            .task(id: spatializedStatic3DElement.allSources) {
-                // Sequential fallback through sources
-                if let loaded = await loadFromSources(spatializedStatic3DElement.allSources) {
-                    if spatializedStatic3DElement.autoplay,
-                       let firstAnimation = loaded.availableAnimations.first
-                    {
-                        loaded.selectedAnimation = firstAnimation
-                    }
-                    self.asset = loaded
-                    self.loadFailed = false
-                } else {
-                    self.asset = nil
-                    self.loadFailed = true
-                }
-            }
+            .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
         }
+    }
+
+    private func loadSources() async {
+        isLoading = true
+        asset = await loadSources(spatializedStatic3DElement.allSources)
+        if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
+            asset?.selectedAnimation = firstAnimation
+        }
+        isLoading = false
     }
 
     /// Downloads a remote model file and loads it as a Model3DAsset.
@@ -122,17 +105,17 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
-    private func loadSource(from url: URL) async {
-        isLoading = true
-        do {
-            asset = try await loadAsset(from: url)
-            if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
-                asset?.selectedAnimation = firstAnimation
+    /// Attempts to load from each source in order, returning the first success.
+    private func loadSources(_ sources: [ModelSource]) async -> Model3DAsset? {
+        for source in sources {
+            guard let url = localOrRemoteURL(url: source.src) else { continue }
+            do {
+                return try await loadAsset(from: url)
+            } catch {
+                continue
             }
-        } catch {
-            asset = nil
         }
-        isLoading = false
+        return nil
     }
 }
 
