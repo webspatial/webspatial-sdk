@@ -5,6 +5,7 @@ import SwiftUI
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String = ""
     var modelTransform: AffineTransform3D = .identity
+    var autoplay: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case modelURL, type
