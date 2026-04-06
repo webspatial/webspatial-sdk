@@ -64,7 +64,7 @@ function createLoadSuccessEvent(
 }
 
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
-  const { src, spatializedElement, onLoad, onError } = props
+  const { src, spatializedElement, onLoad, onError, autoPlay } = props
   const spatializedStatic3DElement =
     spatializedElement as SpatializedStatic3DElement
 
@@ -76,9 +76,12 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
 
   useEffect(() => {
     if (src) {
-      spatializedStatic3DElement.updateProperties({ modelURL: currentSrc })
+      spatializedStatic3DElement.updateProperties({
+        modelURL: currentSrc,
+        autoplay: autoPlay,
+      })
     }
-  }, [currentSrc])
+  }, [currentSrc, autoPlay])
 
   useEffect(() => {
     if (onLoad) {
