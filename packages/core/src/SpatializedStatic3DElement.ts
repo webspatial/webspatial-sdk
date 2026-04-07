@@ -43,6 +43,15 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   private sources?: ModelSource[]
 
   /**
+   * The model URL that was successfully loaded by the native runtime.
+   */
+  private _currentSrc: string = ''
+
+  get currentSrc(): string {
+    return this._currentSrc
+  }
+
+  /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
@@ -106,6 +115,7 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   override onReceiveEvent(data: { type: SpatialWebMsgType }) {
     if (data.type === SpatialWebMsgType.modelloaded) {
+      this._currentSrc = (data as any).detail?.src ?? ''
       // Handle successful model loading
       this._onLoadCallback?.()
       this._readyResolve?.(true)

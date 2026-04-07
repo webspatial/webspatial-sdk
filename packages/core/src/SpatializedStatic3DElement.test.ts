@@ -32,8 +32,22 @@ describe('SpatializedStatic3DElement', () => {
     const el = new SpatializedStatic3DElement('s2', 'model.glb')
     const p = el.ready
 
-    el.onReceiveEvent({ type: SpatialWebMsgType.modelloaded })
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: { src: 'https://example.com/model.glb' },
+    })
     await expect(p).resolves.toBe(true)
+  })
+
+  it('sets currentSrc from modelloaded detail data', () => {
+    const el = new SpatializedStatic3DElement('s2b', 'model.glb')
+
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: { src: 'https://cdn.example.com/fallback.usdz' },
+    })
+
+    expect(el.currentSrc).toBe('https://cdn.example.com/fallback.usdz')
   })
 
   it('ready resolves to false on modelloadfailed event', async () => {

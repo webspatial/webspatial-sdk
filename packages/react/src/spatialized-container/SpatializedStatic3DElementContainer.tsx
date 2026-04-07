@@ -156,8 +156,12 @@ function SpatializedStatic3DElementContainerBase(
 
       return {
         get currentSrc(): string {
-          // TODO: Return actual loaded URL from native side when available.
-          return getAbsoluteURL(props.src) ?? ''
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return (
+            spatializedElement?.currentSrc || getAbsoluteURL(props.src) || ''
+          )
         },
         get ready(): Promise<ModelLoadEvent> {
           return promiseRef
