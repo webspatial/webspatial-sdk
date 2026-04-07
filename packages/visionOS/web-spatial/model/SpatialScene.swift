@@ -429,7 +429,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    // Temporary storage for webview models awaiting JSB initialization
+    /// Temporary storage for webview models awaiting JSB initialization
     private var pendingAttachmentWebViewModels = [String: SpatialWebViewModel]()
 
     private func handleCreateAttachment(_ url: URL) -> WebViewElementInfo? {
@@ -602,6 +602,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
             spatializedElement.modelTransform = affineTransform3D
+        }
+
+        if let autoplay = command.autoplay {
+            spatializedElement.autoplay = autoplay
         }
 
         resolve(.success(baseReplyData))
@@ -1111,22 +1115,22 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(ConvertReply(id: command.entityId, position: point)))
     }
 
-    /// Input: command.position, command.fromId, command.toId
-    /// fromId/toId can reference either the scene (window) or an entity.
-    /// Step 1: Convert position to window coordinates (view global, px)
-    ///   - If from is window (scene), position is already in view global (px). Go to Step 2.
-    ///   - If from is 2d frame(SpatializedElement), position is in view local (px).
-    ///     - view local → window (view global, px) using SpatializedElement.convertToScene
-    ///   - If from is an entity, position is in reality entity local (meters):
-    ///     - entity local → reality world (scene)
-    ///     - reality world → window (view global, px)
-    /// Step 2: Convert window coordinates (view global, px) to target output
-    ///   - If to is window, output directly.
-    ///   - If to is 2d frame(SpatializedElement), output in view local (px).
-    ///     - window (view global, px) → view local using SpatializedElement.convertFromScene
-    ///   - If to is an entity, output in reality entity local (meters):
-    ///     - window (view global, px) → reality world (scene)
-    ///     - reality world → reality entity local (meters)
+    // Input: command.position, command.fromId, command.toId
+    // fromId/toId can reference either the scene (window) or an entity.
+    // Step 1: Convert position to window coordinates (view global, px)
+    //   - If from is window (scene), position is already in view global (px). Go to Step 2.
+    //   - If from is 2d frame(SpatializedElement), position is in view local (px).
+    //     - view local → window (view global, px) using SpatializedElement.convertToScene
+    //   - If from is an entity, position is in reality entity local (meters):
+    //     - entity local → reality world (scene)
+    //     - reality world → window (view global, px)
+    // Step 2: Convert window coordinates (view global, px) to target output
+    //   - If to is window, output directly.
+    //   - If to is 2d frame(SpatializedElement), output in view local (px).
+    //     - window (view global, px) → view local using SpatializedElement.convertFromScene
+    //   - If to is an entity, output in reality entity local (meters):
+    //     - window (view global, px) → reality world (scene)
+    //     - reality world → reality entity local (meters)
 
     private func onConvertCoordinate(command: ConvertCoordinate, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         func isSceneId(_ id: String) -> Bool {
