@@ -65,6 +65,14 @@ struct SpatializedStatic3DView: View {
             )
             .offset(x: x, y: y)
             .offset(z: z)
+            .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
+                guard isComplete == true,
+                      spatializedStatic3DElement.loop,
+                      let asset,
+                      let animation = asset.availableAnimations.first else { return }
+                asset.selectedAnimation = animation
+                asset.animationPlaybackController?.resume()
+            }
             .task(id: url) { await loadSource(from: url) }
         } else {
             EmptyView()
