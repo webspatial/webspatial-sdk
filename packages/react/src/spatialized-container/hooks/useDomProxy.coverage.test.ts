@@ -2,6 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { hijackGetComputedStyle, SpatialContainerRefProxy } from './useDomProxy'
 import { SpatialCustomStyleVars } from '../types'
 
+/** Class mirror uses queueMicrotask coalescing; flush before asserting on task.className. */
+async function flushClassSyncMicrotasks() {
+  await Promise.resolve()
+}
+
 describe('SpatialContainerRefProxy', () => {
   it('writes ref only when both doms exist', () => {
     const ref = { current: null as any }
@@ -81,7 +86,7 @@ describe('SpatialContainerRefProxy', () => {
     expect(dom.style.getPropertyValue('visibility')).toBe('hidden')
   })
 
-  it('intercepts removeAttribute for style and class', () => {
+  it('intercepts removeAttribute for style and class', async () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)
     const dom = document.createElement('div')
@@ -93,6 +98,7 @@ describe('SpatialContainerRefProxy', () => {
 
     domProxy.className = 'a'
     expect(dom.className).toContain('xr-spatial-default')
+    await flushClassSyncMicrotasks()
     expect(task.className).toBe(dom.className)
 
     domProxy.style.visibility = 'hidden'
@@ -107,10 +113,11 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.style.getPropertyValue('transform')).toBe('')
 
     domProxy.removeAttribute('class')
+    await flushClassSyncMicrotasks()
     expect(domProxy.className).toBe('xr-spatial-default')
   })
 
-  it('syncs classList changes to task container', () => {
+  it('syncs classList changes to task container', async () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)
     const dom = document.createElement('div')
@@ -120,9 +127,11 @@ describe('SpatialContainerRefProxy', () => {
     proxy.updateTransformVisibilityTaskContainerDom(task)
 
     dom.classList.add('x')
+    await flushClassSyncMicrotasks()
     expect(task.className).toBe(dom.className)
 
     dom.classList.remove('x')
+    await flushClassSyncMicrotasks()
     expect(task.className).toBe(dom.className)
   })
 

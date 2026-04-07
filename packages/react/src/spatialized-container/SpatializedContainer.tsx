@@ -1,4 +1,12 @@
-import { ForwardedRef, forwardRef, useContext, useEffect, useMemo } from 'react'
+import {
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -142,6 +150,21 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         spatialContainerRefProxy,
       } = useDomProxy<T>(ref, extraRefProps)
 
+      const [probeClassName, setProbeClassName] = useState(
+        () => props.className ?? '',
+      )
+      const notifyProbeClass = useCallback((name: string) => {
+        setProbeClassName(prev => (prev === name ? prev : name))
+      }, [])
+      useEffect(() => {
+        spatialContainerRefProxy.current.setMirrorClassNotify?.(
+          notifyProbeClass,
+        )
+        return () => {
+          spatialContainerRefProxy.current.setMirrorClassNotify?.(null)
+        }
+      }, [spatialContainerRefProxy, notifyProbeClass])
+
       useEffect(() => {
         rootSpatializedContainerObject.updateSpatialContainerRefProxyInfo(
           spatialId,
@@ -167,7 +190,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
-            className={props.className}
+            className={probeClassName}
             style={props.style}
           />
         </SpatialLayerContext.Provider>
@@ -179,6 +202,19 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       standardSpatializedContainerCallback,
       spatialContainerRefProxy,
     } = useDomProxy<T>(ref, extraRefProps)
+
+    const [probeClassName, setProbeClassName] = useState(
+      () => props.className ?? '',
+    )
+    const notifyProbeClass = useCallback((name: string) => {
+      setProbeClassName(prev => (prev === name ? prev : name))
+    }, [])
+    useEffect(() => {
+      spatialContainerRefProxy.current.setMirrorClassNotify?.(notifyProbeClass)
+      return () => {
+        spatialContainerRefProxy.current.setMirrorClassNotify?.(null)
+      }
+    }, [spatialContainerRefProxy, notifyProbeClass])
 
     const spatialEvents = useSpatialEvents<T>(
       {
@@ -226,7 +262,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
-            className={props.className}
+            className={probeClassName}
             style={props.style}
           />
         </SpatializedContainerContext.Provider>
