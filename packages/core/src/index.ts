@@ -16,10 +16,11 @@ export * from './types/global.d'
 import { injectSceneHook } from './scene-polyfill'
 import { isSSREnv } from './ssr-polyfill'
 import { spatialWindowPolyfill } from './spatial-window-polyfill'
+import { UAManager } from './utils/ua'
 
 export { isSSREnv }
 
-if (!isSSREnv() && navigator.userAgent.indexOf('WebSpatial/') > 0) {
+if (!isSSREnv() && UAManager.hasWebSpatialEnv()) {
   injectSceneHook()
   spatialWindowPolyfill()
 }

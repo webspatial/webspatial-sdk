@@ -1,4 +1,4 @@
-import { parseCornerRadius } from './utils'
+import { parseCornerRadius } from './utils/utils'
 import { Spatial } from './Spatial'
 import { SpatialSession } from './SpatialSession'
 import { BackgroundMaterialType } from './types/types'

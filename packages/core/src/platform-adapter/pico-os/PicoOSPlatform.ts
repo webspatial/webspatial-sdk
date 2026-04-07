@@ -4,6 +4,8 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
+import { isVersionGreater } from '../../utils/utils'
+import { UAManager } from '../../utils/ua'
 
 interface JSBResponse {
   success: boolean
@@ -71,6 +73,9 @@ export class PicoOSPlatform implements PlatformAbility {
     // Waiting for request to create spatial div
     return new Promise((resolve, reject) => {
       const createdId = nextRequestId()
+
+      const tokenFeature = (window.webSpatial || window.__webspatialShell__)
+        ?.genToken
       try {
         let windowProxy: any = null
         SpatialWebEvent.addEventReceiver(
@@ -87,10 +92,13 @@ export class PicoOSPlatform implements PlatformAbility {
         )
         windowProxy = this.openWindow(
           command,
-          'rid=' + createdId,
+          tokenFeature ? `rid=${createdId}` : query,
           target,
           features,
         ).windowProxy
+        if (!tokenFeature) {
+          windowProxy?.open(`about:blank?rid=${createdId}`, '_self')
+        }
       } catch (error: unknown) {
         const { code, message } = error as JSBError
         SpatialWebEvent.removeEventReceiver(createdId)

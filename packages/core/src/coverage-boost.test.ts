@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { composeSRT, parseCornerRadius } from './utils'
+import { composeSRT, parseCornerRadius } from './utils/utils'
 import {
   CommandResultFailure,
   CommandResultSuccess,

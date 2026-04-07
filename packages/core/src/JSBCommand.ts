@@ -26,7 +26,7 @@ import {
   AttachmentEntityUpdateOptions,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
-import { composeSRT } from './utils'
+import { composeSRT } from './utils/utils'
 
 const platform = createPlatform()
 

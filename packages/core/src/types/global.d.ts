@@ -27,6 +27,10 @@ declare global {
       genToken?: () => string
     }
 
+    __webspatialShell__?: {
+      genToken?: () => string
+    }
+
     // Will be removed in favor of __WebSpatialData
     WebSpatailNativeVersion: string
 

@@ -1,4 +1,4 @@
-import { Vec3 } from './types/types'
+import { Vec3 } from '../types/types'
 
 function parseBorderRadius(borderProperty: string, width: number) {
   if (borderProperty === '') {
@@ -79,4 +79,24 @@ export function deepCloneJSON<T>(value: T): T {
     }
   }
   return JSON.parse(JSON.stringify(value))
+}
+
+export function isVersionGreater(a: number[] | null, b: number[]): boolean {
+  if (!a) {
+    return false
+  }
+  for (let index = 0; index < 3; index += 1) {
+    const diff = a[index] - b[index]
+    if (diff > 0) {
+      return true
+    }
+    if (diff < 0) {
+      return false
+    }
+  }
+  return false
+}
+
+export function getVersionArray(version: string): number[] {
+  return version.split('.').map(Number)
 }
