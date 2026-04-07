@@ -65,6 +65,7 @@ import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
 import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivConvertTest'
 import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
+import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -215,6 +216,10 @@ function App() {
                   element={<SpatialConverter />}
                 />
                 <Route path="/spatial-div-test" element={<SpatialDivTest />} />
+                <Route
+                  path="/dropdown-menu-test"
+                  element={<DropdownMenuTest />}
+                />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />
