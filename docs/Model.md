@@ -10,7 +10,7 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 function Example() {
   const style = { height: '200px', '--xr-depth': '100px' };
   return (
-    <Model enable-xr autoplay loop style={style}>
+    <Model enable-xr autoPlay loop style={style}>
       <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
       <source src="/modelasset/vehicle.glb" type="model/gltf-binary" />
       <img src="/modelasset/vehicle.png" />
@@ -38,7 +38,7 @@ Specifies how the model should be loaded.
 - `eager` (default): The model begins loading immediately.
 - `lazy` The model loading is deferred until it enters the webview's viewport. This is handled natively to ensure accurate intersection detection and optimal performance.
 
-`autoplay`
+`autoPlay`
 
 A Boolean attribute; if `true`, the model's first available animation will automatically begin to play as soon as the model has successfully loaded.
 
@@ -207,7 +207,7 @@ Automatically play a model's animation in a loop.
 import { Model } from '@webspatial/react-sdk';
 
 function AnimatedModel() {
-  return <Model src="/animated-robot.glb" autoplay loop enable-xr/>;
+  return <Model src="/animated-robot.glb" autoPlay loop enable-xr/>;
 }
 ```
 
@@ -260,7 +260,7 @@ function LongScrollPage() {
 | src | ✅<br>WebSpatial 1.1 | ✅ (USD/USDZ/GLB/GLTF)<br>⍺2.0 |
 | onLoad | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
 | onError | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| autoplay | WebSpatial April | ⍺2.1 |
+| autoPlay | WebSpatial April | ⍺2.1 |
 | loop | WebSpatial April | ⍺2.1 |
 | `<source>` | WebSpatial April | ⍺2.1 |
 | stagemode | WebSpatial May | β2.0 |
