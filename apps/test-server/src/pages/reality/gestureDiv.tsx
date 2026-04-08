@@ -5,28 +5,32 @@ enableDebugTool()
 
 export default function GestureDiv() {
   const [pos, setPos] = useState({ x: 0, y: 0, z: 0 })
-  const lastTranslation = useRef({ x: 0, y: 0, z: 0 })
+  const dragStartPos = useRef({ x: 0, y: 0, z: 0 })
 
   const onSpatialDragStart = () => {
-    lastTranslation.current = { x: 0, y: 0, z: 0 }
+    dragStartPos.current = pos
+    console.log(
+      '🚀 ~ onSpatialDragStart ~ dragStartPos.current:',
+      dragStartPos.current,
+    )
   }
 
   const onSpatialDrag = (evt: SpatialDragEvent) => {
-    const deltaX = evt.detail.translation3D.x - lastTranslation.current.x
-    const deltaY = evt.detail.translation3D.y - lastTranslation.current.y
-    const deltaZ = evt.detail.translation3D.z - lastTranslation.current.z
-
-    lastTranslation.current = evt.detail.translation3D
-
-    setPos(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY,
-      z: prev.z + deltaZ,
-    }))
+    const newPos = {
+      x: dragStartPos.current.x + evt.detail.translation3D.x,
+      y: dragStartPos.current.y + evt.detail.translation3D.y,
+      z: dragStartPos.current.z + evt.detail.translation3D.z,
+    }
+    console.log('🚀 ~ onSpatialDrag ~ newPos:', newPos)
+    setPos(newPos)
   }
 
   const onSpatialDragEnd = () => {
-    lastTranslation.current = { x: 0, y: 0, z: 0 }
+    dragStartPos.current = pos
+    console.log(
+      '🚀 ~ onSpatialDragEnd ~ dragStartPos.current:',
+      dragStartPos.current,
+    )
   }
 
   return (
@@ -59,7 +63,7 @@ export default function GestureDiv() {
             height: 160,
             background: '#22cc66',
             color: '#071a0e',
-            '--xr-back': '80px',
+            '--xr-back': '0px',
             transform: `translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px)`,
             touchAction: 'none',
             userSelect: 'none',
