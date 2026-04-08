@@ -1,14 +1,14 @@
 ## Context
 
-WebSpatial runs in multiple environments: native **WebSpatial runtime** (e.g. visionOS-class), **PICO-class**, and **plain web**. Capabilities differ by **runtime type × Shell version** (see **`review.md`**). The SDK differentiates behavior internally (polyfills, scene/session), but **application code** needs a single, supported contract for “what can I use here?”.
+WebSpatial runs in multiple environments. Capabilities differ by runtime and version. Application code needs a single supported contract for capability checks.
 
-**Source of truth for capabilities**: **Shell version** from **`WSAppShell/...`**. The **`WebSpatial/x.y.z`** UA token indicates SDK compatibility with the shell; it does **not** define capability exposure.
+Current v1 source is SDK capability table + shell version parsing, with a future direction toward runtime-provided capability manifest.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Expose **`WebSpatialRuntime.supports(name, tokens?)`** and **`WebSpatialRuntime.getRuntime()`** from **`@webspatial/react-sdk`** (implementation may live in `@webspatial/core-sdk`).
+- Expose **`WebSpatialRuntime.supports(name, tokens?)`** from **`@webspatial/react-sdk`**.
 - Ship a **versioned capability table** in the SDK; **table keys match `supports` strings** (see **`review.md`** §3).
 - Make behavior **testable** and **documented** (keys, sub-tokens, `false` semantics).
 - Define behavior for **SSR** and **no `window`**: no throw; conservative results (see **`review.md`** §4).
@@ -18,22 +18,24 @@ WebSpatial runs in multiple environments: native **WebSpatial runtime** (e.g. vi
 - Manifest API capability detection (out of scope for this change).
 - **`noRuntime.ts`** build stub (separate concern).
 - **`getSdkVersion()`** in v1 (JS versions: `package.json` / release notes).
-- Replace every ad-hoc DOM probe; **some** DOM checks (`in` on refs) remain documented alongside **`supports`**.
+- Full manifest-based capability negotiation (future work).
+- **Subscribe / mid-session capability updates** (no reactive hook in v1; see Decisions §4).
 
 ## Decisions
 
-1. **Primary API shape: `supports` + `getRuntime`**
+1. **Primary external API shape: `supports`**
    - **`supports(name, tokens?)`**: returns **`boolean`**. Unknown `name` or unknown sub-token → **`false`**. Sub-tokens (when present) use **AND** semantics; **`supports(name, [])` ≡ `supports(name)`**.
-   - **`getRuntime()`**: returns **`{ type: 'visionOS' | 'picoOS' | 'web', shellVersion: string | null }`** (read-only snapshot).
+   - `getRuntime()` remains internal-only with snapshot shape `{ type: 'visionos' | 'picoos' | null, shellVersion: string | null }`.
 
 2. **Capability table**
-   - **Per `runtime.type`**, semver-ordered **Shell** rows; query rules in **`review.md`** §4 (including **web** conservative behavior, **fallback to greatest row ≤ shell**, **false** when below table min or unparseable version).
+   - **Per runtime type**, semver-ordered **Shell** rows; query rules in **`review.md`** §4 (fallback to greatest row <= shell, conservative false when unknown/too old/unparseable).
 
 3. **Package placement**
-   - Core owns resolution + table; **React SDK** is the **documented entry** for `WebSpatialRuntime` (aligned with product expectation).
+   - Core owns resolution + table; React SDK exposes `WebSpatialRuntime.supports`.
 
-4. **Optional hook**
-   - **`useWebSpatialCapabilities`** only if subscribe / mid-session updates are required later; v1 may omit.
+4. **Stable capabilities after runtime is known (v1)**
+   - Once the WebSpatial runtime is determined for the page/session, **capability results are treated as fixed** for that lifetime.
+   - Apps rely on **synchronous** `supports(...)` only; **no** subscribe API, **no** `useWebSpatialCapabilities` (or equivalent) in v1.
 
 5. **Alternatives considered** (unchanged in spirit)
    - Snapshot-only object without `supports`: poorer DX vs product **`supports('Model')`** mind map.
@@ -42,8 +44,8 @@ WebSpatial runs in multiple environments: native **WebSpatial runtime** (e.g. vi
 ## Risks / Trade-offs
 
 - **[Risk] Table lags a new Shell** → **Mitigation**: §4.2 in **`review.md`** (fallback row); new capabilities stay **`false`** until the table ships.
+- **[Risk] Shell-version inference is coarse** → **Mitigation**: future runtime-provided capability manifest (see **`review.md`** §6.2).
 - **[Risk] Key proliferation** → **Mitigation**: documented v1 lists in **`review.md`**; governance in review.
-- **[Risk] React `domProxy` and `in`** → **Mitigation**: implement **`has` trap** for `xrClientDepth` / `xrOffsetBack` (see **`review.md`** §3.5).
 
 ## Migration Plan
 
@@ -52,7 +54,7 @@ WebSpatial runs in multiple environments: native **WebSpatial runtime** (e.g. vi
 
 ## References
 
-- **[`review.md`](./review.md)** — consolidated design review (API lists, resolution rules, fallback conventions, open product items).
+- **[`review.md`](./review.md)** — consolidated design review (API lists, resolution rules, fallback conventions).
 - **[`capability-matrix.template.md`](./capability-matrix.template.md)** — product/runtime matrix template (collaboration); runtime data lives in `capability-table.ts` when implemented ([`review.md` §6.1](./review.md#review-6-1)).
 - **Jump links** (stable anchors in `review.md`):
   - [Contents (TOC)](./review.md#review-contents)
@@ -61,15 +63,9 @@ WebSpatial runs in multiple environments: native **WebSpatial runtime** (e.g. vi
   - [§3 Capability keys](./review.md#review-3)
   - [§4 Resolution rules](./review.md#review-4)
   - [§5 Fallback conventions](./review.md#review-5)
-  - [§5.1 Sub-capabilities / fallback ownership](./review.md#review-5-1)
+  - [§5.1 `Model` fallback exception](./review.md#review-5-1)
   - [§3.6 Evolving `Model` sub-tokens](./review.md#review-3-6)
   - [§6 Table maintenance](./review.md#review-6)
   - [§6.1 Where the matrix lives](./review.md#review-6-1)
-  - [§7 Open items](./review.md#review-7)
-  - [§8 Review checklist](./review.md#review-8)
-
-## Open Questions (remaining)
-
-- **Material vs UnlitMaterial** public doc strings (**product**).
-- **External naming** (visionOS / PICO / neutral wording) (**product**).
-- **Attachment** fallback UX (**product**).
+  - [§6.2 Future runtime capability manifest](./review.md#review-6-2)
+  - [§7 Review checklist](./review.md#review-7)

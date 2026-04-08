@@ -14,7 +14,7 @@
 | **N** | Not supported (`false`). |
 | *(empty)* | To be decided. |
 
-Use **semver** for `shellVersion` (from **`WSAppShell/...`**). One row per **distinct** Shell version **row** you maintain in the matrix (add a row when the capability **surface** changes vs the previous version).
+Use **semver** for `shellVersion` (prefer `WSAppShell/...`; pico may temporarily expose `PicoWebApp/...` during migration). One row per **distinct** Shell version **row** you maintain in the matrix (add a row when the capability **surface** changes vs the previous version).
 
 Canonical key names match [`review.md` section 3](review.md#review-3). **§2** below is the **full v1 `supports` column list** (copy-paste friendly).
 
@@ -26,9 +26,9 @@ Canonical key names match [`review.md` section 3](review.md#review-3). **§2** b
 
 | Column | Notes |
 |--------|--------|
-| `shellVersion` | Semver from `WSAppShell/...`; `web` sheet may use `n/a` or empty. |
+| `shellVersion` | Semver from UA shell token; for non-WebSpatial runtime rows use `n/a` if you keep a note row. |
 
-Use **one sheet (or section) per `runtime.type`** (`visionOS`, `picoOS`, `web`) so **`runtime.type`** does not need a column unless you prefer a single master table.
+Use one sheet/section per runtime: `visionos`, `picoos`. Non-WebSpatial runtime (`type = null`) is typically documented as conservative false behavior, not as a normal capability matrix sheet.
 
 ### 2.2 HTML — components (canonical keys only, 15 columns)
 
@@ -36,53 +36,57 @@ Use **one sheet (or section) per `runtime.type`** (`visionOS`, `picoOS`, `web`) 
 
 `Model`, `Reality`, `Entity`, `BoxEntity`, `SphereEntity`, `ConeEntity`, `CylinderEntity`, `PlaneEntity`, `SceneGraph`, `ModelAsset`, `ModelEntity`, `UnlitMaterial`, `Material`, `AttachmentAsset`, `AttachmentEntity`
 
-### 2.3 CSS — three keys (v1)
+### 2.3 CSS — four keys
 
-`'-xr-background-material'`, `'-xr-back'`, `'-xr-depth'`
+`'-xr-background-material'`, `'-xr-back'`, `'-xr-depth'`, `'-xr-transform'`
 
 ### 2.4 Spatial gestures — eight keys
 
 `SpatialTapEvent`, `SpatialDragStartEvent`, `SpatialDragEvent`, `SpatialDragEndEvent`, `SpatialRotateEvent`, `SpatialRotateEndEvent`, `SpatialMagnifyEvent`, `SpatialMagnifyEndEvent`
 
-### 2.5 JS — npm — two top-level keys
+### 2.5 JS / Scene / Utility — top-level keys
 
-`initScene`, `useMetrics`
+`useMetrics`, `convertCoordinate`, `WindowScene`, `VolumeScene`
 
-### 2.6 Not in this matrix (DOM)
+### 2.6 DOM depth keys (in supports)
 
-**`xrClientDepth` / `xrOffsetBack`** are **not** `supports()` top-level keys ([`review.md` §3.5](review.md#review-3-5)). Track with **`in`** checks separately if needed.
+`xrClientDepth`, `xrOffsetBack`, `xrInnerDepth`, `xrOuterDepth`
+
+When one of these is `N`, corresponding runtime read should be `undefined`.
 
 ### 2.7 Copy-paste: spreadsheet header row (tab-separated)
 
-Paste into row 1 of a spreadsheet (28 capability columns + `Notes`):
+Paste into row 1 of a spreadsheet:
 
 ```text
-shellVersion	Model	Reality	Entity	BoxEntity	SphereEntity	ConeEntity	CylinderEntity	PlaneEntity	SceneGraph	ModelAsset	ModelEntity	UnlitMaterial	Material	AttachmentAsset	AttachmentEntity	'-xr-background-material'	'-xr-back'	'-xr-depth'	SpatialTapEvent	SpatialDragStartEvent	SpatialDragEvent	SpatialDragEndEvent	SpatialRotateEvent	SpatialRotateEndEvent	SpatialMagnifyEvent	SpatialMagnifyEndEvent	initScene	useMetrics	Notes
+shellVersion	Model	Reality	Entity	BoxEntity	SphereEntity	ConeEntity	CylinderEntity	PlaneEntity	SceneGraph	ModelAsset	ModelEntity	UnlitMaterial	Material	AttachmentAsset	AttachmentEntity	'-xr-background-material'	'-xr-back'	'-xr-depth'	'-xr-transform'	SpatialTapEvent	SpatialDragStartEvent	SpatialDragEvent	SpatialDragEndEvent	SpatialRotateEvent	SpatialRotateEndEvent	SpatialMagnifyEvent	SpatialMagnifyEndEvent	useMetrics	convertCoordinate	WindowScene	VolumeScene	xrClientDepth	xrOffsetBack	xrInnerDepth	xrOuterDepth	Notes
 ```
 
 ### 2.8 Optional — sub-token columns (same `shellVersion` rows)
 
 Add only if product tracks sub-capabilities at matrix level ([`review.md` §3.4](review.md#review-3-4), [§3.6](review.md#review-3-6)).
 
-**`initScene` sub-tokens (7):** `initScene:defaultSize`, `initScene:resizability`, `initScene:worldScaling`, `initScene:worldAlignment`, `initScene:baseplateVisibility`, `initScene:sceneType:window`, `initScene:sceneType:volume`
+**Scene sub-tokens:** `WindowScene:defaultSize`, `WindowScene:resizability`, `VolumeScene:defaultSize`, `VolumeScene:resizability`, `VolumeScene:worldScaling`, `VolumeScene:worldAlignment`, `VolumeScene:baseplateVisibility`
 
-**`useMetrics` sub-tokens (2):** `useMetrics:worldScalingCompensation:scaled`, `useMetrics:worldScalingCompensation:unscaled`
+**`Material` sub-tokens:** `Material:unlit`
 
-**`Model` sub-tokens (examples — extend when defined):** `Model:source`, `Model:autoplay`
+**`Model` sub-tokens (current baseline):** `Model:autoplay`, `Model:loop`, `Model:stagemode`, `Model:poster`, `Model:loading`, `Model:source`, `Model:ready`, `Model:currentSrc`, `Model:entityTransform`, `Model:paused`, `Model:duration`, `Model:playbackRate`, `Model:play`, `Model:pause`, `Model:currentTime`
+
+**Event sub-tokens:** `SpatialRotateEvent:constrainedToAxis`
 
 Copy-paste header row for optional sub-tokens only:
 
 ```text
-shellVersion	initScene:defaultSize	initScene:resizability	initScene:worldScaling	initScene:worldAlignment	initScene:baseplateVisibility	initScene:sceneType:window	initScene:sceneType:volume	useMetrics:worldScalingCompensation:scaled	useMetrics:worldScalingCompensation:unscaled	Model:source	Model:autoplay	Notes
+shellVersion	WindowScene:defaultSize	WindowScene:resizability	VolumeScene:defaultSize	VolumeScene:resizability	VolumeScene:worldScaling	VolumeScene:worldAlignment	VolumeScene:baseplateVisibility	Material:unlit	Model:autoplay	Model:loop	Model:stagemode	Model:poster	Model:loading	Model:source	Model:ready	Model:currentSrc	Model:entityTransform	Model:paused	Model:duration	Model:playbackRate	Model:play	Model:pause	Model:currentTime	SpatialRotateEvent:constrainedToAxis	Notes
 ```
 
 ---
 
 ## 3. Example sheets (abbreviated rows — use §2 headers for real tables)
 
-### A. `visionOS`
+### A. `visionos`
 
-**`runtime.type`:** `visionOS`
+**`runtime.type`:** `visionos`
 
 | shellVersion | Notes |
 |--------------|-------|
@@ -90,29 +94,27 @@ shellVersion	initScene:defaultSize	initScene:resizability	initScene:worldScaling
 
 Fill **Y/N** against the **§2.7** header row in your spreadsheet (not duplicated here — table would be too wide for Markdown).
 
-### B. `picoOS`
+### B. `picoos`
 
-**`runtime.type`:** `picoOS`
+**`runtime.type`:** `picoos`
 
 | shellVersion | Notes |
 |--------------|-------|
 | *replace with real versions* | Same columns as §2.7. |
 
-### C. `web`
+### C. non-WebSpatial runtime (`type = null`)
 
-**`runtime.type`:** `web`
-
-Typically **one row**; Spatial-related keys **N** per [`review.md` §4.1](review.md#review-4-1).
+Conservative behavior is documented in [`review.md` §4.1](review.md#review-4-1): spatial-related keys resolve to `N`.
 
 | shellVersion | Notes |
 |--------------|-------|
-| n/a | Set **N** for Spatial-related `supports` keys (or leave empty until confirmed). |
+| n/a | Optional note row; not required as normal matrix sheet. |
 
 ---
 
 ## 4. Sub-capabilities (optional)
 
-If you track **`supports('initScene', [...])`** or **`supports('Model', [...])`** at the matrix level, use **§2.8** columns on the same `shellVersion` rows, or a **separate sheet** with the same row keys and only sub-token columns.
+If you track sub-capabilities at matrix level, use **§2.8** columns on the same `shellVersion` rows, or a separate sheet with the same row keys and only sub-token columns.
 
 ---
 

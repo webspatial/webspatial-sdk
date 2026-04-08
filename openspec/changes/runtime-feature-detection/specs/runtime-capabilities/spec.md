@@ -2,21 +2,9 @@
 
 ## ADDED Requirements
 
-### Requirement: Expose runtime identity
-
-The WebSpatial SDK MUST provide a documented API that returns a **read-only runtime snapshot** for the current host: at minimum **`type`** (`visionOS` | `picoOS` | `web`) and **`shellVersion`** (string parsed from **`WSAppShell/...`**, or **`null`** when unavailable).
-
-#### Scenario: SSR or no window
-
-- **WHEN** `window` is unavailable (e.g. SSR)
-- **THEN** the API MUST NOT throw solely for that reason
-- **AND** **`shellVersion`** MAY be **`null`** as documented
-
----
-
 ### Requirement: Expose capability queries via `supports`
 
-The WebSpatial SDK MUST provide a documented **`supports(name, tokens?)`** function that returns **`boolean`**, indicating whether the **current WebSpatial runtime** (including degraded non-spatial environments) supports the named capability, optionally constrained by **predefined sub-tokens**.
+The WebSpatial SDK MUST provide a documented **`supports(name, tokens?)`** function that returns **`boolean`**, indicating whether the current runtime supports the named capability, optionally constrained by predefined sub-tokens.
 
 #### Scenario: Unknown top-level name
 
@@ -38,9 +26,9 @@ The WebSpatial SDK MUST provide a documented **`supports(name, tokens?)`** funct
 - **WHEN** `tokens` is an empty array
 - **THEN** behavior MUST match **omitting** `tokens` (top-level check only)
 
-#### Scenario: No WebSpatial runtime or conservative host
+#### Scenario: Non-WebSpatial runtime
 
-- **WHEN** the host is **`web`** or capabilities are otherwise conservative per public documentation
+- **WHEN** runtime is not WebSpatial (internal runtime type is `null`)
 - **THEN** **`supports`** MUST return **`false`** for Spatial-dependent keys as defined per key
 
 ---
@@ -57,11 +45,60 @@ The SDK MUST maintain **public documentation** listing every top-level **`name`*
 
 ---
 
+### Requirement: Internal runtime snapshot
+
+Runtime identity snapshot MAY exist as an internal function and is not required to be part of external app API.
+
+Internal snapshot shape is:
+
+- `type`: `'visionos' | 'picoos' | null`
+- `shellVersion`: `string | null`
+
+#### Scenario: UA parsing
+
+- **WHEN** UA includes `WSAppShell/<version>`
+- **THEN** parser MUST use it as shell version
+- **AND** parser MAY fallback to legacy `PicoWebApp/<version>` during migration
+
+#### Scenario: SSR or no window
+
+- **WHEN** `window` is unavailable (e.g. SSR)
+- **THEN** runtime parsing and `supports` checks MUST NOT throw solely for that reason
+
+---
+
 ### Requirement: Discoverability without undocumented globals
 
-The capability API MUST be usable such that **reading capabilities** does not require the application to rely on undocumented globals; the supported entry point MUST be the exported API (e.g. **`WebSpatialRuntime`** from **`@webspatial/react-sdk`**) or a documented re-export path.
+The capability API MUST be usable without undocumented globals; supported app entry point is exported `WebSpatialRuntime.supports`.
 
 #### Scenario: Repeated reads
 
-- **WHEN** application code calls **`supports`** or **`getRuntime`** multiple times
-- **THEN** successive reads MUST return **consistent** results for the same runtime state unless the implementation explicitly documents **capability updates** (e.g. future subscribe / reconnect)
+- **WHEN** application code calls **`supports`** multiple times
+- **THEN** successive reads MUST return **consistent** results for the same runtime state
+- **AND** v1 treats capabilities as **stable** for the page/session once runtime is determined (no subscribe / mid-session capability refresh API)
+
+---
+
+### Requirement: Unsupported behavior contracts
+
+For APIs documented as runtime-gated, unsupported calls/reads MUST follow documented fallback behavior.
+
+#### Scenario: `useMetrics` and `convertCoordinate`
+
+- **WHEN** `supports('useMetrics')` or `supports('convertCoordinate')` is `false`
+- **THEN** calling corresponding API MUST throw `WebSpatialRuntimeError`
+
+#### Scenario: Unsupported HTML component rendering
+
+- **WHEN** a non-Model HTML capability key resolves to `false` (including `AttachmentAsset` / `AttachmentEntity` and other component keys)
+- **THEN** SDK fallback MUST not render corresponding DOM/entity node and MUST not execute dependent runtime side effects
+
+#### Scenario: `Model` exception fallback
+
+- **WHEN** `supports('Model')` is `false`
+- **THEN** fallback MUST render native `<model>` with props passthrough
+
+#### Scenario: Unsupported model JS members
+
+- **WHEN** a model JS sub-capability resolves to `false`
+- **THEN** corresponding member on simulated model element MUST be absent (`in` check false, property read `undefined`)
