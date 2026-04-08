@@ -66,6 +66,7 @@
     }
   },
   "devDependencies": {
+    "@webspatial/core-sdk": "workspace:*",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.5.5",
