@@ -52,6 +52,7 @@ const buildOptions = {
   },
   // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
   alias: {
+    three: path.resolve('node_modules/three/src/Three.js'),
     react: path.resolve('node_modules/react'),
     'react-dom': path.resolve('node_modules/react-dom'),
     '@webspatial/react-sdk/jsx-runtime': path.resolve(
