@@ -74,6 +74,10 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDragging(_ event: DragGesture.Value) {
+        if !gestureState.isDrag {
+            spatialScene.isSpatialElementGestureActive = true
+        }
+
         if spatializedElement.enableDragStartGesture, !gestureState.isDrag {
             let startLocal = sceneToLocal(event.startLocation3D)
             let globalPoint3D = event.startLocation3D
@@ -97,6 +101,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
         gestureState.isDrag = false
+        spatialScene.isSpatialElementGestureActive = false
         if spatializedElement.enableDragEndGesture {
             let gestureEvent = WebSpatialDragEndGuestureEvent()
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)

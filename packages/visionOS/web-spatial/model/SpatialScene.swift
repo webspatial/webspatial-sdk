@@ -85,6 +85,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     // TOPIC end
 
+    var isSpatialElementGestureActive = false
+
     var spatialWebViewModel: SpatialWebViewModel
 
     private var meterToPtUnscaled: Double?
