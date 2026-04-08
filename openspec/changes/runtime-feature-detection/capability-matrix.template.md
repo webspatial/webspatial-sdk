@@ -46,7 +46,7 @@ Use one sheet/section per runtime: `visionos`, `picoos`. Non-WebSpatial runtime 
 
 ### 2.5 JS / Scene / Utility — top-level keys
 
-`useMetrics`, `convertCoordinate`, `WindowScene`, `VolumeScene`
+`useMetrics`, `convertCoordinate`, `initScene`, `WindowScene`, `VolumeScene`
 
 ### 2.6 DOM depth keys (in supports)
 
@@ -59,8 +59,10 @@ When one of these is `N`, corresponding runtime read should be `undefined`.
 Paste into row 1 of a spreadsheet:
 
 ```text
-shellVersion	Model	Reality	Entity	BoxEntity	SphereEntity	ConeEntity	CylinderEntity	PlaneEntity	SceneGraph	ModelAsset	ModelEntity	UnlitMaterial	Material	AttachmentAsset	AttachmentEntity	'-xr-background-material'	'-xr-back'	'-xr-depth'	'-xr-transform'	SpatialTapEvent	SpatialDragStartEvent	SpatialDragEvent	SpatialDragEndEvent	SpatialRotateEvent	SpatialRotateEndEvent	SpatialMagnifyEvent	SpatialMagnifyEndEvent	useMetrics	convertCoordinate	WindowScene	VolumeScene	xrClientDepth	xrOffsetBack	xrInnerDepth	xrOuterDepth	Notes
+shellVersion	Model	Reality	Entity	BoxEntity	SphereEntity	ConeEntity	CylinderEntity	PlaneEntity	SceneGraph	ModelAsset	ModelEntity	UnlitMaterial	Material	AttachmentAsset	AttachmentEntity	'-xr-background-material'	'-xr-back'	'-xr-depth'	'-xr-transform'	SpatialTapEvent	SpatialDragStartEvent	SpatialDragEvent	SpatialDragEndEvent	SpatialRotateEvent	SpatialRotateEndEvent	SpatialMagnifyEvent	SpatialMagnifyEndEvent	useMetrics	convertCoordinate	initScene	WindowScene	VolumeScene	xrClientDepth	xrOffsetBack	xrInnerDepth	xrOuterDepth	Notes
 ```
+
+**CSV starters (open in Excel / Sheets):** [`capability-matrix/visionos-main.csv`](./capability-matrix/visionos-main.csv), [`capability-matrix/picoos-main.csv`](./capability-matrix/picoos-main.csv) — see [`capability-matrix/README.md`](./capability-matrix/README.md).
 
 ### 2.8 Optional — sub-token columns (same `shellVersion` rows)
 
@@ -79,6 +81,8 @@ Copy-paste header row for optional sub-tokens only:
 ```text
 shellVersion	WindowScene:defaultSize	WindowScene:resizability	VolumeScene:defaultSize	VolumeScene:resizability	VolumeScene:worldScaling	VolumeScene:worldAlignment	VolumeScene:baseplateVisibility	Material:unlit	Model:autoplay	Model:loop	Model:stagemode	Model:poster	Model:loading	Model:source	Model:ready	Model:currentSrc	Model:entityTransform	Model:paused	Model:duration	Model:playbackRate	Model:play	Model:pause	Model:currentTime	SpatialRotateEvent:constrainedToAxis	Notes
 ```
+
+**CSV starters:** [`capability-matrix/visionos-subtokens.csv`](./capability-matrix/visionos-subtokens.csv), [`capability-matrix/picoos-subtokens.csv`](./capability-matrix/picoos-subtokens.csv).
 
 ---
 

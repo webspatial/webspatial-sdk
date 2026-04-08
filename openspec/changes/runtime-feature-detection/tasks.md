@@ -23,7 +23,7 @@ See **[`review.md`](./review.md#review-contents)** (table of contents) for the f
 
 - [ ] 4.1 Unit tests: resolution rules (mock UA), `supports` shape, unknown keys/tokens
 - [ ] 4.2 JS API behavior: unsupported `useMetrics` / `convertCoordinate` throw `WebSpatialRuntimeError`
-- [ ] 4.3 Scene keys and sub-tokens: `WindowScene`, `VolumeScene`, `defaultSize`, `resizability`, `worldScaling`, `worldAlignment`, `baseplateVisibility`
+- [ ] 4.3 Scene / init API keys: `initScene` (top-level, no sub-tokens); `WindowScene`, `VolumeScene` and sub-tokens `defaultSize`, `resizability`, `worldScaling`, `worldAlignment`, `baseplateVisibility`
 - [ ] 4.4 Model sub-token tests (`autoplay`, `loop`, `stagemode`, `poster`, `loading`, `source`) and model JS API token checks
 - [ ] 4.5 Public API doc (keys, sub-tokens, fallback semantics) + link to **`review.md`**
 

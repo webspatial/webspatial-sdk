@@ -134,6 +134,7 @@ Top-level keys:
 
 - `useMetrics`
 - `convertCoordinate`
+- `initScene` (no sub-tokens; use `WindowScene` / `VolumeScene` and their sub-tokens for scene-shape details)
 - `WindowScene`
 - `VolumeScene`
 
@@ -141,8 +142,6 @@ Scene sub-tokens:
 
 - `WindowScene`: `defaultSize`, `resizability`
 - `VolumeScene`: `defaultSize`, `resizability`, `worldScaling`, `worldAlignment`, `baseplateVisibility`
-
-`initScene` remains a JS API but does not use sub-token capability checks in this change.
 
 <a id="review-3-5"></a>
 
