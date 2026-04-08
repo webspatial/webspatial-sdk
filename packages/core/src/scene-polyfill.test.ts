@@ -1,6 +1,12 @@
 import { describe, expect, test, vi, beforeEach, afterEach, it } from 'vitest'
-import { formatSceneConfig, initScene, injectSceneHook } from './scene-polyfill'
+import {
+  formatSceneConfig,
+  initScene,
+  injectSceneHook,
+  __getSceneConfigSnapshotForTest,
+} from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
+import { pointToPhysical } from './physicalMetrics'
 
 describe('test formatSceneConfig in window', () => {
   test('should format window with no unit', () => {
@@ -79,6 +85,23 @@ describe('test formatSceneConfig in window', () => {
     ])
   })
 
+  test('window mixed units: cm invalid and numbers treated as px', () => {
+    const config = {
+      defaultSize: {
+        width: '10cm',
+        height: 800,
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [formatted, errors] = formatSceneConfig(config, 'window')
+    expect(errors).toEqual(['defaultSize.width'])
+    expect(formatted.defaultSize).toEqual(
+      expect.objectContaining({
+        height: 800,
+      }),
+    )
+    expect((formatted.defaultSize as any).width).toBeUndefined()
+  })
+
   test('should format window with meter', () => {
     const config = {
       defaultSize: {
@@ -106,6 +129,27 @@ describe('test formatSceneConfig in window', () => {
   })
 })
 
+describe('formatSceneConfig invalid unit (mixed)', () => {
+  test('volume defaultSize width cm invalid while numbers convert', () => {
+    const config = {
+      defaultSize: {
+        width: '10cm',
+        height: 1000,
+        depth: 100,
+      },
+    } satisfies SpatialSceneCreationOptions
+    const [formattedConfig, errors] = formatSceneConfig(config, 'volume')
+    expect(errors).toEqual(['defaultSize.width'])
+    expect(formattedConfig.defaultSize).toEqual(
+      expect.objectContaining({
+        height: pointToPhysical(1000),
+        depth: pointToPhysical(100),
+      }),
+    )
+    expect((formattedConfig.defaultSize as any).width).toBeUndefined()
+  })
+})
+
 describe('test formatSceneConfig in volume', () => {
   test('should format volume with no unit', () => {
     const config = {
@@ -123,15 +167,15 @@ describe('test formatSceneConfig in volume', () => {
     } satisfies SpatialSceneCreationOptions
     const [formattedConfig] = formatSceneConfig(config, 'volume')
     expect(formattedConfig.defaultSize).toEqual({
-      width: 1,
-      height: 1,
-      depth: 1,
+      width: pointToPhysical(1),
+      height: pointToPhysical(1),
+      depth: pointToPhysical(1),
     })
     expect(formattedConfig.resizability).toEqual({
-      minWidth: 1360,
-      minHeight: 1360,
-      maxWidth: 1360,
-      maxHeight: 1360,
+      minWidth: 1,
+      minHeight: 1,
+      maxWidth: 1,
+      maxHeight: 1,
     })
   })
 
@@ -316,7 +360,7 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
       }),
     )
 
@@ -324,12 +368,16 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
     const { UpdateSceneConfig } = await import('./JSBCommand')
     expect(UpdateSceneConfig).toHaveBeenCalledWith({
       type: 'volume',
-      defaultSize: { width: 1, height: 1, depth: 1 },
+      defaultSize: {
+        width: pointToPhysical(1),
+        height: pointToPhysical(1),
+        depth: pointToPhysical(1),
+      },
       resizability: {
-        minWidth: 0.5 * 1360,
-        minHeight: 1 * 1360,
-        maxWidth: 0.5 * 1360,
-        maxHeight: 1 * 1360,
+        minWidth: 0.5,
+        minHeight: 1,
+        maxWidth: 0.5,
+        maxHeight: 1,
       },
     })
   })
@@ -341,7 +389,7 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn)
+    initScene('sa-no-type', mockFn)
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
@@ -353,7 +401,7 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn, { type: 'window' })
+    initScene('sa-window', mockFn, { type: 'window' })
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
@@ -365,12 +413,54 @@ describe('initScene should receive defaultScene config by type', () => {
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
 
-    initScene('sa', mockFn, { type: 'volume' })
+    initScene('sa-volume', mockFn, { type: 'volume' })
 
     expect(mockFn).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultSize: { width: 0.94, height: 0.94, depth: 0.94 },
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
       }),
     )
+  })
+
+  it('with volume type and merge pre', () => {
+    const cb = vi.fn().mockImplementation(pre => ({
+      ...pre,
+      defaultSize: { ...(pre.defaultSize as any), depth: '0.1m' },
+    }))
+
+    // pre-snapshot should be empty before initScene writes configMap
+    const preSnap = __getSceneConfigSnapshotForTest('sa')
+    expect(preSnap).toBeUndefined()
+
+    initScene('sa', cb, { type: 'volume' })
+
+    expect(cb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
+      }),
+    )
+
+    const snap = __getSceneConfigSnapshotForTest('sa')
+    expect(snap).toEqual(
+      expect.objectContaining({
+        type: 'volume',
+        defaultSize: { width: 0.94, height: 0.94, depth: 0.1 },
+      }),
+    )
+  })
+})
+
+describe('initScene callback chaining', () => {
+  it('passes previous return value as next pre argument', () => {
+    const firstReturn = { defaultSize: { width: 1000, height: 1000 } }
+    const cb1 = vi.fn().mockReturnValue(firstReturn)
+    initScene('sa-chain', cb1)
+    expect(cb1).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
+    )
+
+    const cb2 = vi.fn().mockReturnValue({})
+    initScene('sa-chain', cb2)
+    expect(cb2).toHaveBeenCalledWith(firstReturn)
   })
 })

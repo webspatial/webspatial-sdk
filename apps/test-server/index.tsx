@@ -27,10 +27,7 @@ import SpatialStyleTest from './src/pages/spatialStyleTest/index'
 import CanvasTest from './src/pages/canvas-test/index'
 import JSAPITest from './src/pages/jsapi-test/index'
 import SceneTest from './src/pages/scene/index'
-import SceneHook from './src/pages/scene/hook'
-import SceneLoading from './src/pages/scene/loading'
 import SceneVolume from './src/pages/scene/volume'
-import SceneVolumeHook from './src/pages/scene/volumeHook'
 import SceneXRApp from './src/pages/scene/xrapp'
 import RealityEmpty from './src/pages/reality/empty'
 import RealityGeometryEntity from './src/pages/reality/geometryEntity'
@@ -68,6 +65,7 @@ import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
 import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivConvertTest'
 import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
+import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -125,17 +123,11 @@ function App() {
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
                 <Route path="/scene" element={<SceneTest />} />
-                <Route path="/scene/hook" element={<SceneHook />} />
-                <Route path="/scene/loading" element={<SceneLoading />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
-                <Route
-                  path="/scene/volume-hook"
-                  element={<SceneVolumeHook />}
-                />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
                 <Route
                   path="/scene/nosdk"
-                  element={<Placeholder name="nosdk unmigrated" />}
+                  element={<Placeholder name="nosdk unmigrated fixme:" />}
                 />
                 <Route path="/reality" element={<RealityTest />} />
                 <Route path="/reality/debug" element={<RealityDebug />} />
@@ -224,6 +216,10 @@ function App() {
                   element={<SpatialConverter />}
                 />
                 <Route path="/spatial-div-test" element={<SpatialDivTest />} />
+                <Route
+                  path="/dropdown-menu-test"
+                  element={<DropdownMenuTest />}
+                />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />

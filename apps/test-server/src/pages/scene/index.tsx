@@ -69,29 +69,70 @@ export default function SceneTest() {
           <h2 className="text-lg font-bold mb-4 border-b border-gray-800 pb-2">
             Error Handling
           </h2>
-          <button
-            className={btnCls}
-            onClick={async () => {
-              startlog('open')
-              initScene(
-                'sa',
-                () => ({
-                  defaultSize: {
-                    width: '10cm',
-                    height: 1,
-                    depth: 1,
-                  },
-                }),
-                { type: 'volume' },
-              )
-              winARef.current = window.open(
-                '/src/pages/scene/volume.html',
-                'sa',
-              )
-            }}
-          >
-            Invalid Unit Test
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sa',
+                  () => ({
+                    defaultSize: {
+                      width: '10cm',
+                      height: 1000,
+                      depth: 100,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sa')
+              }}
+            >
+              Invalid Unit Test
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sv-valid-m',
+                  () => ({
+                    defaultSize: {
+                      width: '0.1m',
+                      height: 1,
+                      depth: 1,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sv-valid-m')
+              }}
+            >
+              Valid Unit Test (meters)
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={async () => {
+                startlog('open')
+                initScene(
+                  'sv-valid-px',
+                  () => ({
+                    defaultSize: {
+                      width: 100,
+                      height: 1000,
+                      depth: 100,
+                    },
+                  }),
+                  { type: 'volume' },
+                )
+                winARef.current = window.open('/#/scene/volume', 'sv-valid-px')
+              }}
+            >
+              Valid Unit Test (px)
+            </button>
+          </div>
         </section>
 
         <section className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">
@@ -104,44 +145,29 @@ export default function SceneTest() {
               onClick={async () => {
                 startlog('open')
                 initScene(
-                  'sa',
+                  'sv',
                   () => ({
-                    defaultSize: { width: 1, height: 1, depth: 0.1 },
-                  }),
-                  { type: 'volume' },
-                )
-                winARef.current = window.open(
-                  '/src/pages/reality/index.html',
-                  'sa',
-                )
-              }}
-            >
-              Open Volume
-            </button>
-            <button
-              className={btnCls}
-              onClick={async () => {
-                startlog('open')
-                initScene(
-                  'sa',
-                  () => ({
-                    defaultSize: { width: 2, height: 1, depth: 1 },
+                    defaultSize: { width: 1000, height: 1000, depth: 500 },
                     resizability: {
-                      minWidth: 0.5,
-                      maxWidth: 2,
-                      minHeight: 0.5,
-                      maxHeight: 1,
+                      minWidth: 1000,
+                      maxWidth: 2000,
+                      minHeight: 1000,
+                      maxHeight: 2000,
                     },
                   }),
                   { type: 'volume' },
                 )
-                winARef.current = window.open(
-                  '/src/pages/scene/volume.html',
-                  'sa',
-                )
+                winARef.current = window.open('/#/reality', 'sv')
               }}
             >
-              Resizable Volume
+              Open Volume (sv)
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={() => window.open('/pages/scene/volumeHook.html', 'sv')}
+            >
+              Open Volume Hook (sv)
             </button>
           </div>
         </section>
@@ -162,6 +188,146 @@ export default function SceneTest() {
               onClick={() => window.open(extUrl2, 'sa')}
             >
               MDN
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">
+          <h2 className="text-lg font-bold mb-4 border-b border-gray-800 pb-2">
+            Window Tests
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/#/scene/xrapp')
+              }}
+            >
+              Open No config window
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                // Open A (sa)
+                initScene('sa', () => ({
+                  defaultSize: { width: 900, height: 500 },
+                }))
+                winARef.current = window.open('/#/scene/xrapp', 'sa')
+              }}
+            >
+              Open A (sa)
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winBRef.current = window.open('/#/scene/xrapp', 'sb')
+              }}
+            >
+              Open B (sb)
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/pages/scene/hook.html')
+              }}
+            >
+              Open Window Hook
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                // Open loading demo page in window
+                startlog('open')
+                winARef.current = window.open('/pages/scene/loading.html')
+              }}
+            >
+              Open Loading
+            </button>
+
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('open')
+                winARef.current = window.open('/#/scene/xrapp', 'sa')
+                winBRef.current = window.open(extUrl, 'sb')
+              }}
+            >
+              Open A + B
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('close')
+                try {
+                  if (!winARef.current) {
+                    log('no window')
+                    return
+                  }
+                  if (winARef.current?.closed) {
+                    log('is already closed')
+                  } else {
+                    winARef.current?.close?.()
+                    log('close success')
+                  }
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Close A
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('close')
+                try {
+                  if (!winBRef.current) {
+                    log('no window')
+                    return
+                  }
+                  if (winBRef.current?.closed) {
+                    log('is already closed')
+                  } else {
+                    winBRef.current?.close?.()
+                    log('close success')
+                  }
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Close B
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                startlog('focus')
+                try {
+                  if (!winARef.current) {
+                    log('no window')
+                    return
+                  }
+                  winARef.current?.focus?.()
+                  log('focus success')
+                } catch (error: any) {
+                  log(error.message)
+                }
+              }}
+            >
+              Focus A
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                //@ts-ignore
+                log('windowID:', window._webSpatialID)
+              }}
+            >
+              Get window._webSpatialID
             </button>
           </div>
         </section>
