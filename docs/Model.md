@@ -263,9 +263,9 @@ function LongScrollPage() {
 | autoPlay | WebSpatial April | ⍺2.1 |
 | loop | WebSpatial April | ⍺2.1 |
 | `<source>` | WebSpatial April | ⍺2.1 |
-| stagemode | WebSpatial May | β2.0 |
 | poster | WebSpatial May | β2.0 |
 | loading | WebSpatial June | β2.1 |
+| stagemode | WebSpatial June | β2.1 |
 
 ### CSS
 | Style | visionOS | Pico OS |
