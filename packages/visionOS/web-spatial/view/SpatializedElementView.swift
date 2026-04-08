@@ -203,6 +203,9 @@ struct SpatializedElementView<Content: View>: View {
             // Gesture before .position(): event.location3D is in the element's local space
             // (top-left origin), and does not include visual transforms.
             .simultaneousGesture(enableGesture ? gesture : nil)
+            .onDisappear {
+                spatialScene.isSpatialElementGestureActive = false
+            }
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 proxy.transform(in: .named("SpatialScene"))!
             } action: { new in
