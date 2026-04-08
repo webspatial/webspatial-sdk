@@ -19,6 +19,8 @@ export enum SpatialWebMsgType {
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 
+  animationstatechange = 'animationstatechange',
+
   objectdestroy = 'objectdestroy',
 }
 
@@ -74,4 +76,14 @@ export interface ModelLoadSuccess {
 
 export interface ModelLoadFailure {
   type: SpatialWebMsgType.modelloadfailed
+}
+
+export interface AnimationStateChangeDetail {
+  paused: boolean
+  duration: number
+}
+
+export interface AnimationStateChangeMsg {
+  type: SpatialWebMsgType.animationstatechange
+  detail: AnimationStateChangeDetail
 }

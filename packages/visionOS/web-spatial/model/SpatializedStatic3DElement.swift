@@ -13,6 +13,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var modelTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
+    var animationPaused: Bool = true
     var allSources: [ModelSource] {
         return if let modelURL {
             [ModelSource(src: modelURL, type: nil)] + sources
