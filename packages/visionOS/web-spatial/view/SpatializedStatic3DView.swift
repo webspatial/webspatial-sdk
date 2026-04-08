@@ -15,6 +15,17 @@ struct SpatializedStatic3DView: View {
 
     func onLoadSuccess(src: String) {
         spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess(src: src))
+        // Report duration after load so the web layer can read it
+        let duration = asset?.animationPlaybackController?.duration ?? 0
+        spatialScene.sendWebMsg(
+            spatializedElement.id,
+            AnimationStateChangeEvent(
+                detail: AnimationStateChangeDetail(
+                    paused: spatializedStatic3DElement.animationPaused,
+                    duration: duration
+                )
+            )
+        )
     }
 
     func onLoadFailure() {
@@ -80,6 +91,11 @@ struct SpatializedStatic3DView: View {
                 }
             }
             .onChange(of: spatializedStatic3DElement.animationPaused) { onPlayback(isPaused: $1) }
+            .onChange(of: spatializedStatic3DElement.playbackRate) { _, rate in
+                guard let asset,
+                      let controller = asset.animationPlaybackController else { return }
+                controller.speed = Float(rate)
+            }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
@@ -95,6 +111,7 @@ struct SpatializedStatic3DView: View {
         }
         asset.selectedAnimation = asset.availableAnimations.first
         let controller = asset.animationPlaybackController
+        controller?.speed = Float(spatializedStatic3DElement.playbackRate)
         isPaused ? controller?.pause() : controller?.resume()
         let duration = controller?.duration ?? 0
         spatialScene.sendWebMsg(
@@ -125,7 +142,9 @@ struct SpatializedStatic3DView: View {
         let result = await loadSources(spatializedStatic3DElement.allSources)
         asset = result?.asset
         source = result?.url.absoluteString
-        if spatializedStatic3DElement.autoplay {
+        if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
+            asset?.selectedAnimation = firstAnimation
+            asset?.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
             spatializedStatic3DElement.animationPaused = false
         }
         isLoading = false

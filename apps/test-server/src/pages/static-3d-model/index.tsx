@@ -11,9 +11,17 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
+  const [isPaused, setIsPaused] = useState(true)
   useEffect(() => {
     modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
+  useEffect(() => {
+    const id = setInterval(
+      () => setIsPaused(modelRef.current?.paused ?? true),
+      200,
+    )
+    return () => clearInterval(id)
+  }, [setIsPaused])
 
   return (
     <div className="prose max-w-none">
@@ -28,7 +36,7 @@ function App() {
         style={{
           height: '200px',
           '--xr-depth': '100px',
-          '--xr-back': '100px',
+          '--xr-back': '50px',
           transform,
         }}
         ref={modelRef}
@@ -84,7 +92,8 @@ function App() {
           ⏸
         </button>
         <span className="m-1">
-          Paused: {modelRef.current?.paused ?? 'false'}
+          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${isPaused}`}
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
