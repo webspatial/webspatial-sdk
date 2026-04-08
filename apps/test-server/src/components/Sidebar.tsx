@@ -77,6 +77,7 @@ export const routes = [
     children: [
       { path: '/head-style-sync', label: 'SpatialDiv Head Sync' },
       { path: '/spatial-div-test', label: 'SpatialDiv Test' },
+      { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/android-bringup', label: 'Android Bringup' },
