@@ -122,7 +122,7 @@ a read-only `DOMPoint` that indicates the extents of the bounding box of the mod
 
 `duration`
 
-a read-only `double` reflecting the un-scaled total duration of the animation, if present. If there is no animation on this model, the value is 0.
+a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
 `currentTime`
 
