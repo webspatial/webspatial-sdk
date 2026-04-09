@@ -6,14 +6,16 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ## Try it
 
+<p align="center"><img src="imgs/Model-try-it.png" height="400" /></p>
+
 ```jsx
 function Example() {
-  const style = { height: '200px', '--xr-depth': '100px' };
+  const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
-      <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
-      <source src="/modelasset/vehicle.glb" type="model/gltf-binary" />
-      <img src="/modelasset/vehicle.png" />
+      <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
+      <source src="/model/fox.glb" type="model/gltf-binary" />
+      <img src="/model/fox.png" />
     </Model>
   )
 }
