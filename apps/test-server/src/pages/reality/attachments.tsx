@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useRef } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 import {
   AttachmentAsset,
   AttachmentEntity,
@@ -11,6 +13,7 @@ import {
   Model,
 } from '@webspatial/react-sdk'
 
+gsap.registerPlugin(useGSAP)
 enableDebugTool()
 
 const attachmentDivStyle = {
@@ -499,6 +502,275 @@ function TestNestedAttachmentSwap() {
   )
 }
 
+/** GSAP-driven scale pulse; used inside AttachmentAsset portals. */
+function GsapPulseAttachmentContent() {
+  const rootRef = useRef<HTMLDivElement>(null)
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        '.ws-att-gsap-pulse',
+        { scale: 1 },
+        {
+          scale: 1.14,
+          repeat: -1,
+          yoyo: true,
+          duration: 0.75,
+          ease: 'sine.inOut',
+        },
+      )
+    },
+    { scope: rootRef },
+  )
+  return (
+    <div
+      ref={rootRef}
+      style={{
+        background: 'rgba(0,60,80,0.9)',
+        color: 'white',
+        padding: 12,
+        borderRadius: 8,
+        textAlign: 'center',
+      }}
+    >
+      <div
+        className="ws-att-gsap-pulse"
+        style={{ transformOrigin: 'center center', fontWeight: 600 }}
+      >
+        GSAP pulse
+      </div>
+      <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.9 }}>
+        Scale should loop on this panel.
+      </p>
+    </div>
+  )
+}
+
+function TestGSAPSingleAttachment() {
+  return (
+    <TestCase title="10. GSAP inside a single AttachmentEntity">
+      <p className="text-sm text-gray-600 mb-2">
+        Baseline: one AttachmentEntity and one AttachmentAsset. GSAP should
+        animate the attachment content (continuous scale pulse).
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid #0a7' }}
+      >
+        <UnlitMaterial id="matGsapSingle" color="#008877" />
+        <AttachmentAsset name="gsap-single-pulse">
+          <GsapPulseAttachmentContent />
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matGsapSingle']}
+            />
+            <AttachmentEntity
+              attachment="gsap-single-pulse"
+              position={[0, 0.12, 0]}
+              size={{ width: 220, height: 120 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestGSAPSharedAttachmentAsset() {
+  return (
+    <TestCase title="11. Shared AttachmentAsset + GSAP">
+      <p className="text-sm text-gray-600 mb-2">
+        Two AttachmentEntities use the same AttachmentAsset. React portals the
+        same subtree into each container; Expect both to show the same text, but
+        the scale pulse may appear on only one side.
+      </p>
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid #077' }}
+      >
+        <UnlitMaterial id="matGsapSharedA" color="#006666" />
+        <UnlitMaterial id="matGsapSharedB" color="#008888" />
+        <AttachmentAsset name="gsap-shared-pulse">
+          <GsapPulseAttachmentContent />
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matGsapSharedA']}
+            />
+            <AttachmentEntity
+              attachment="gsap-shared-pulse"
+              position={[0, 0.15, 0]}
+              size={{ width: 200, height: 130 }}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matGsapSharedB']}
+            />
+            <AttachmentEntity
+              attachment="gsap-shared-pulse"
+              position={[0, 0.15, 0]}
+              size={{ width: 200, height: 130 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  unit,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+  unit: string
+}) {
+  return (
+    <label className="flex items-center gap-3 text-sm">
+      <span className="w-28 shrink-0 text-gray-700">{label}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="flex-1 min-w-0"
+      />
+      <span className="w-20 shrink-0 tabular-nums text-gray-600 text-right">
+        {unit === ' m' ? value.toFixed(2) : value}
+        {unit}
+      </span>
+    </label>
+  )
+}
+
+function TestAttachmentPositionSizeSliders() {
+  const [posX, setPosX] = React.useState(0)
+  const [posY, setPosY] = React.useState(0.12)
+  const [posZ, setPosZ] = React.useState(0)
+  const [sizeW, setSizeW] = React.useState(220)
+  const [sizeH, setSizeH] = React.useState(120)
+
+  const position: [number, number, number] = [posX, posY, posZ]
+  const size = { width: sizeW, height: sizeH }
+
+  return (
+    <TestCase title="12. Dynamic position & size (sliders)">
+      <p className="text-sm text-gray-600 mb-3">
+        Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
+        position (meters, relative to parent) and size (pixels). The native
+        attachment should follow without remounting.
+      </p>
+      <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
+        <SliderRow
+          label="Position X"
+          value={posX}
+          min={-0.25}
+          max={0.25}
+          step={0.01}
+          onChange={setPosX}
+          unit=" m"
+        />
+        <SliderRow
+          label="Position Y"
+          value={posY}
+          min={-0.05}
+          max={0.35}
+          step={0.01}
+          onChange={setPosY}
+          unit=" m"
+        />
+        <SliderRow
+          label="Position Z"
+          value={posZ}
+          min={-0.1}
+          max={0.25}
+          step={0.01}
+          onChange={setPosZ}
+          unit=" m"
+        />
+        <SliderRow
+          label="Width"
+          value={sizeW}
+          min={100}
+          max={400}
+          step={10}
+          onChange={setSizeW}
+          unit=" px"
+        />
+        <SliderRow
+          label="Height"
+          value={sizeH}
+          min={60}
+          max={280}
+          step={10}
+          onChange={setSizeH}
+          unit=" px"
+        />
+      </div>
+      <Reality
+        style={{ width: '480px', height: '420px', border: '1px solid #6366f1' }}
+      >
+        <UnlitMaterial id="matSliderAtt" color="#6366f1" />
+        <AttachmentAsset name="slider-dynamic-attachment">
+          <div
+            style={{
+              background: 'rgba(40,40,90,0.92)',
+              color: 'white',
+              padding: 12,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600 }}>Resizable panel</p>
+            <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.85 }}>
+              {sizeW}×{sizeH}px · offset ({posX.toFixed(2)}, {posY.toFixed(2)},{' '}
+              {posZ.toFixed(2)}) m
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matSliderAtt']}
+            />
+            <AttachmentEntity
+              attachment="slider-dynamic-attachment"
+              position={position}
+              size={size}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function TestLastDefinitionWins() {
   return (
     <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset name">
@@ -586,6 +858,9 @@ function App() {
         <TestAttachmentAnimation />
         <TestNestedAttachmentSwap />
         <TestLastDefinitionWins />
+        <TestGSAPSingleAttachment />
+        <TestGSAPSharedAttachmentAsset />
+        <TestAttachmentPositionSizeSliders />
       </div>
     </div>
   )
