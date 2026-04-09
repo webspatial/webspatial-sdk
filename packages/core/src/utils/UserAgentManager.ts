@@ -1,9 +1,7 @@
-import { getVersionArray } from './utils'
-
 /** VisionOS shell's UA use "WSAppShell"
  *  PicoOS shell's UA use "PicoWebApp"
  */
-export const UAManager = {
+export const UserAgentManager = {
   getUserAgent(): string {
     return typeof window !== 'undefined' ? window.navigator.userAgent : ''
   },
@@ -27,16 +25,16 @@ export const UAManager = {
     const match = this.getUserAgent().match(
       /(?:WebSpatial)\/(\d+(?:\.\d+){2}(?:[-+][0-9A-Za-z.-]+)*)/,
     )
-    return getVersionArray(match ? match[1] : '0.0.0')
+    return match ? match[1] : '0.0.0'
   },
   getShellVersionFromUA: function () {
     if (this.wsAppShellVersionFromUA !== '0.0.0') {
-      return getVersionArray(this.wsAppShellVersionFromUA)
+      return this.wsAppShellVersionFromUA
     }
     const match = this.getUserAgent().match(
       /(?:WSAppShell|PicoWebApp)\/(\d+(?:\.\d+){2}(?:[-+][0-9A-Za-z.-]+)*)/,
     )
     this.wsAppShellVersionFromUA = match ? match[1] : '0.0.0'
-    return getVersionArray(this.wsAppShellVersionFromUA)
+    return this.wsAppShellVersionFromUA
   },
 }

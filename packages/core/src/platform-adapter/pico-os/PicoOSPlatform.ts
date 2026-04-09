@@ -4,8 +4,6 @@ import {
   CommandResultSuccess,
 } from '../CommandResultUtils'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
-import { isVersionGreater } from '../../utils/utils'
-import { UAManager } from '../../utils/ua'
 
 interface JSBResponse {
   success: boolean

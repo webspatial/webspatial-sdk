@@ -14,8 +14,7 @@ import {
   XRSpatialSceneDefaults,
 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
-import { deepCloneJSON, isVersionGreater } from './utils/utils'
-import { UAManager } from './utils/ua'
+import { deepCloneJSON } from './utils/utils'
 import { pointToPhysical, physicalToPoint } from './physicalMetrics'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
@@ -188,7 +187,9 @@ class SceneManager {
           url.includes('createAttachment')) &&
         tokenFeature
       ) {
-        const token = tokenFeature?.()
+        const token = (
+          window.webSpatial || window.__webspatialShell__
+        )?.genToken?.()
         if (token) {
           const command = url.includes('createAttachment')
             ? 'createAttachment'

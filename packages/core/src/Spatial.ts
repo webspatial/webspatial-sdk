@@ -1,6 +1,6 @@
 import { SpatialSession } from './SpatialSession'
 import { SpatialWebEvent } from './SpatialWebEvent'
-import { UAManager } from './utils/ua'
+import { UserAgentManager } from './utils/UserAgentManager'
 
 /**
  * Base object designed to be placed on navigator.spatial to mirror navigator.xr for webxr.
@@ -30,7 +30,7 @@ export class Spatial {
    * @returns True if running in a spatial web environment, false otherwise
    */
   runInSpatialWeb() {
-    if (UAManager.hasWebSpatialEnv()) {
+    if (UserAgentManager.hasWebSpatialEnv()) {
       return true
     }
     return false

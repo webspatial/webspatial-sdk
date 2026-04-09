@@ -1,24 +1,29 @@
 import { isSSREnv } from '../ssr-polyfill'
 import { PlatformAbility } from './interface'
 import { SSRPlatform } from './ssr/SSRPlatform'
-import { isVersionGreater } from '../utils/utils'
-import { UAManager } from '../utils/ua'
+import { UserAgentManager } from '../utils/UserAgentManager'
+import semver from 'semver'
 
 export function createPlatform(): PlatformAbility {
   if (isSSREnv()) {
     return new SSRPlatform()
   }
-  if (UAManager.isPuppeteer()) {
+  if (UserAgentManager.isPuppeteer()) {
     const PuppeteerPlatform =
       require('./puppeteer/PuppeteerPlatform').PuppeteerPlatform
     return new PuppeteerPlatform()
   } else if (
-    UAManager.isPicoOS() &&
-    isVersionGreater(UAManager.getWebSpatialVersionFromUA(), [0, 0, 1])
+    UserAgentManager.isPicoOS() &&
+    semver.gt(UserAgentManager.getShellVersionFromUA(), '0.0.1')
   ) {
+    console.log(
+      UserAgentManager.getShellVersionFromUA(),
+      '> 0.0.1',
+      semver.gt(UserAgentManager.getShellVersionFromUA(), '0.0.1'),
+    )
     const PicoOSPlatform = require('./pico-os/PicoOSPlatform').PicoOSPlatform
     return new PicoOSPlatform()
-  } else if (UAManager.isAndroid()) {
+  } else if (UserAgentManager.isAndroid()) {
     const AndroidPlatform = require('./android/AndroidPlatform').AndroidPlatform
     return new AndroidPlatform()
   } else {
