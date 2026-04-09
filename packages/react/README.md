@@ -29,3 +29,4 @@ pnpm docs:components:check
 Generated output is written to:
 
 - `docs/generated/react-components.json`
+- `docs/generated/react-components.md`

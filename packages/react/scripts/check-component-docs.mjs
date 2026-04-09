@@ -13,10 +13,13 @@ execSync('node packages/react/scripts/generate-component-docs.mjs', {
 })
 
 try {
-  execSync('git diff --exit-code -- docs/generated/react-components.json', {
-    cwd: repoRoot,
-    stdio: 'inherit',
-  })
+  execSync(
+    'git diff --exit-code -- docs/generated/react-components.json docs/generated/react-components.md',
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+    },
+  )
 } catch (_error) {
   console.error(
     'Component docs are out of date. Run: pnpm -F @webspatial/react-sdk run docs:components',
