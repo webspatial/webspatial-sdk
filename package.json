@@ -16,6 +16,8 @@
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\"",
     "ciTest": "cd tests/ci-test/ && pnpm run test",
+    "docs:components": "pnpm -F @webspatial/react-sdk run docs:components",
+    "docs:components:check": "pnpm -F @webspatial/react-sdk run docs:components:check",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
     "changeset": "changeset",

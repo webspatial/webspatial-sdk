@@ -36,7 +36,9 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "start": "npm run dev",
-    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
+    "docs:components": "node ./scripts/generate-component-docs.mjs",
+    "docs:components:check": "node ./scripts/check-component-docs.mjs"
   },
   "repository": {
     "type": "git",

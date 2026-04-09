@@ -13,3 +13,19 @@ The React SDK from the WebSpatial SDK makes the WebSpatial API immediately avail
 - [Quick Example](https://webspatial.dev/docs/quick-example)
 - [Core Concepts](https://webspatial.dev/docs/core-concepts)
 - [Development Guide](https://webspatial.dev/docs/development-guide)
+
+## Component API doc generation (experimental)
+
+The React SDK now includes a component-doc extraction workflow for key public
+components.
+
+From repo root:
+
+```bash
+pnpm docs:components
+pnpm docs:components:check
+```
+
+Generated output is written to:
+
+- `docs/generated/react-components.json`

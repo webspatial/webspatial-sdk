@@ -5,7 +5,7 @@ import { SpatialBoxGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type BoxEntityProps = EntityProps & {
+export type BoxEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialBoxGeometryOptions
@@ -31,3 +31,5 @@ export const BoxEntity = forwardRef<EntityRefShape, BoxEntityProps>(
     )
   },
 )
+
+BoxEntity.displayName = 'BoxEntity'
