@@ -39,9 +39,12 @@ class SpatialUnlitMaterial: SpatialMaterial {
         _resource = mat
     }
 
-    func updateProperties(color: String?, transparent: Bool?, opacity: Float?) {
+    func updateProperties(color: String?, texture: TextureResource?? = nil, transparent: Bool?, opacity: Float?) {
         if let color = color {
             currentColor = UIColor(Color(hex: color))
+        }
+        if let tex = texture {
+            currentTexture = tex
         }
         if let transparent = transparent {
             currentTransparent = transparent

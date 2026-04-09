@@ -260,6 +260,10 @@ export interface SpatialUnlitMaterialOptions {
   opacity?: number
 }
 
+export interface SpatialTextureResourceOptions {
+  url: string
+}
+
 export interface ModelComponentOptions {
   mesh: SpatialGeometry
   materials: SpatialMaterial[]

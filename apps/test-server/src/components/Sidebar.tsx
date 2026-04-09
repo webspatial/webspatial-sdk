@@ -31,6 +31,10 @@ export const routes = [
         label: 'Model/Div Convert',
       },
       { path: '/reality/dynamicAssets', label: 'DynamicAssets' },
+      {
+        path: '/reality/textured-unlit-box',
+        label: 'Textured unlit box',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },

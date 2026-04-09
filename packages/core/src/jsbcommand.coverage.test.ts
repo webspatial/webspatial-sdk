@@ -272,6 +272,7 @@ describe('realityCreator', () => {
       if (cmd === 'CreateModelComponent') return ok({ id: 'cmp-1' })
       if (cmd === 'CreateSpatialModelEntity') return ok({ id: 'ment-1' })
       if (cmd === 'CreateModelAsset') return ok({ id: 'asset-1' })
+      if (cmd === 'CreateTexture') return ok({ id: 'tex-1' })
       return ok({ id: 'id-1' })
     })
   })
@@ -282,6 +283,7 @@ describe('realityCreator', () => {
     const mat = await import('./reality/material/SpatialUnlitMaterial')
     const cmp = await import('./reality/component/ModelComponent')
     const asset = await import('./reality/resource/SpatialModelAsset')
+    const tex = await import('./reality/resource/SpatialTextureResource')
     const ent = await import('./reality/entity/SpatialEntity')
     const modelEnt = await import('./reality/entity/SpatialModelEntity')
 
@@ -310,6 +312,10 @@ describe('realityCreator', () => {
     await expect(
       creator.createModelAsset({ url: 'https://example.com/a.glb' }),
     ).resolves.toBeInstanceOf(asset.SpatialModelAsset)
+
+    await expect(
+      creator.createSpatialTexture({ url: 'https://example.com/tex.png' }),
+    ).resolves.toBeInstanceOf(tex.SpatialTextureResource)
 
     await expect(
       creator.createSpatialModelEntity(
