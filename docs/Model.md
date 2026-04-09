@@ -8,7 +8,7 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ```jsx
 function Example() {
-  const style = { height: '200px', '--xr-depth': '100px' };
+  const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
       <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
@@ -49,8 +49,9 @@ A Boolean attribute; if `true`, the animation will automatically seek back to th
 `stagemode`
 
 Controls the built-in user interaction mode for the model.
-  - **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
-  - `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+
+- **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
+- `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
 
 ## Events
 
@@ -158,24 +159,28 @@ Specifies the MIME media type of the Model. Currently supported [MIME model type
 
 ## Usage Notes
 
-- **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an ***orbit*** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Native gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+- **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an **_orbit_** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Native gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
 
 ## Examples
+
 ### Single `src`
 
 A basic model embed using the `src` attribute.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
-function MyScene() { return (<Model src="/modelasset/Duck.glb" enable-xr/>); }
+function MyScene() {
+  return <Model src="/modelasset/Duck.glb" enable-xr />
+}
 ```
 
 ### Multiple `<source>` elements
+
 Providing both USDZ and GLB formats for cross-platform compatibility.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
 function MyScene() {
   return (
@@ -183,7 +188,7 @@ function MyScene() {
       <source src="/modelasset/vehicle.usdz" type="model/vnd.usdz+zip" />
       <source src="/modelasset/vehicle.glb" type="model/gltf-binary" />
     </Model>
-  );
+  )
 }
 ```
 
@@ -192,10 +197,16 @@ function MyScene() {
 Display a poster while the model is loading.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
 function MyScene() {
-  return <Model src="/MaterialsVariantsShoe.glb" poster="/shoe-poster.png"  enable-xr/>;
+  return (
+    <Model
+      src="/MaterialsVariantsShoe.glb"
+      poster="/shoe-poster.png"
+      enable-xr
+    />
+  )
 }
 ```
 
@@ -204,10 +215,10 @@ function MyScene() {
 Automatically play a model's animation in a loop.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
 function AnimatedModel() {
-  return <Model src="/animated-robot.glb" autoPlay loop enable-xr/>;
+  return <Model src="/animated-robot.glb" autoPlay loop enable-xr />
 }
 ```
 
@@ -216,10 +227,10 @@ function AnimatedModel() {
 Enable built-in drag-to-rotate functionality.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
 function OrbitingDuck() {
-  return <Model src="/modelasset/Duck.glb" stagemode="orbit" enable-xr/>;
+  return <Model src="/modelasset/Duck.glb" stagemode="orbit" enable-xr />
 }
 ```
 
@@ -228,7 +239,7 @@ function OrbitingDuck() {
 Defer loading until the model is scrolled into view.
 
 ```jsx
-import { Model } from '@webspatial/react-sdk';
+import { Model } from '@webspatial/react-sdk'
 
 function LongScrollPage() {
   return (
@@ -236,64 +247,69 @@ function LongScrollPage() {
       {/* ... a lot of content ... */}
       <Model loading="lazy" src="/modelasset/cone.glb" enable-xr />
     </div>
-  );
+  )
 }
 ```
 
 ## Technical Summary
 
-|||
-| --- | --- |
-| Permitted content | If the element has a `src` attribute: zero or more  elements (for future compatibility), followed by transparent content that contains no media elements. Else: zero or more  elements, followed by zero or more  elements, followed by transparent content. |
-| Permitted parents | Any element that accepts embedded content. |
-| Tag omission | The start tag is required. The end tag can be omitted if there are no child elements |
-| Implicit ARIA role | `none` |
-| Permitted ARIA roles | `application` |
-| DOM interface | The React `ref` provides an interface compliant with `SpatializedStatic3DElementRef`, which extends `HTMLDivElement` and adds properties like `currentSrc`, `ready`, and `entityTransform`. |
+|                      |                                                                                                                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Permitted content    | If the element has a `src` attribute: zero or more elements (for future compatibility), followed by transparent content that contains no media elements. Else: zero or more elements, followed by zero or more elements, followed by transparent content. |
+| Permitted parents    | Any element that accepts embedded content.                                                                                                                                                                                                                |
+| Tag omission         | The start tag is required. The end tag can be omitted if there are no child elements                                                                                                                                                                      |
+| Implicit ARIA role   | `none`                                                                                                                                                                                                                                                    |
+| Permitted ARIA roles | `application`                                                                                                                                                                                                                                             |
+| DOM interface        | The React `ref` provides an interface compliant with `SpatializedStatic3DElementRef`, which extends `HTMLDivElement` and adds properties like `currentSrc`, `ready`, and `entityTransform`.                                                               |
 
 ## Browser Compatibility
+
 ### HTML
-| Property | visionOS | Pico OS 6 |
-| --- | --- | --- |
-| model | ✅<br>WebSpatial 1.1 | ❌ |
-| enable-xr | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| src | ✅<br>WebSpatial 1.1 | ✅ (USD/USDZ/GLB/GLTF)<br>⍺2.0 |
-| onLoad | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| onError | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| autoPlay | WebSpatial April | ⍺2.1 |
-| loop | WebSpatial April | ⍺2.1 |
-| `<source>` | WebSpatial April | ⍺2.1 |
-| stagemode | WebSpatial May | β2.0 |
-| poster | WebSpatial May | β2.0 |
-| loading | WebSpatial June | β2.1 |
+
+| Property   | visionOS             | Pico OS 6                      |
+| ---------- | -------------------- | ------------------------------ |
+| model      | ✅<br>WebSpatial 1.1 | ❌                             |
+| enable-xr  | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0                     |
+| src        | ✅<br>WebSpatial 1.1 | ✅ (USD/USDZ/GLB/GLTF)<br>⍺2.0 |
+| onLoad     | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0                     |
+| onError    | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0                     |
+| autoPlay   | WebSpatial April     | ⍺2.1                           |
+| loop       | WebSpatial April     | ⍺2.1                           |
+| `<source>` | WebSpatial April     | ⍺2.1                           |
+| poster     | WebSpatial May       | β2.0                           |
+| loading    | WebSpatial June      | β2.1                           |
+| stagemode  | WebSpatial June      | β2.1                           |
 
 ### CSS
-| Style | visionOS | Pico OS |
-| --- | --- | --- |
-| --xr-depth | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| --xr-back | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| width | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| height | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+
+| Style                                                     | visionOS             | Pico OS    |
+| --------------------------------------------------------- | -------------------- | ---------- |
+| --xr-depth                                                | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+| --xr-back                                                 | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+| width                                                     | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+| height                                                    | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
 | translate, translateX, translateY, translateZ translate3d | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| rotate, rotateX, rotateY, rotateZ, rotate3d | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
-| scale, scaleX, scaleY, scaleZ, scale3d | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+| rotate, rotateX, rotateY, rotateZ, rotate3d               | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
+| scale, scaleX, scaleY, scaleZ, scale3d                    | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0 |
 
 ### Javascript
-| Style | visionOS | Pico OS |
-| --- | --- | --- |
-| entityTransform | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
-| currentSrc | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
-| ready | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
-| duration | WebSpatial April | ⍺2.1 |
-| playbackRate | WebSpatial April | ⍺2.1 |
-| paused | WebSpatial April | ⍺2.1 |
-| play() | WebSpatial April | ⍺2.1 |
-| pause() | WebSpatial April | ⍺2.1 |
-| currentTime | WebSpatial May | β2.0 |
-| boundingBoxCenter | WebSpatial June | β2.1 |
-| boundingBoxExtents | WebSpatial June | β2.1 |
+
+| Style              | visionOS             | Pico OS    |
+| ------------------ | -------------------- | ---------- |
+| entityTransform    | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
+| currentSrc         | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
+| ready              | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
+| duration           | WebSpatial April     | ⍺2.1       |
+| playbackRate       | WebSpatial April     | ⍺2.1       |
+| paused             | WebSpatial April     | ⍺2.1       |
+| play()             | WebSpatial April     | ⍺2.1       |
+| pause()            | WebSpatial April     | ⍺2.1       |
+| currentTime        | WebSpatial May       | β2.0       |
+| boundingBoxCenter  | WebSpatial June      | β2.1       |
+| boundingBoxExtents | WebSpatial June      | β2.1       |
 
 ## High-Level Architecture
+
 The implementation will touch four key areas of the WebSpatial SDK.
 
 1. **@webspatial/react-sdk**: The public-facing `<Model>` component and its underlying `SpatializedStatic3DElementContainer` will be updated to accept the new attributes (`poster`, `loading`, `autoplay`, `loop`, `stagemode`) and children (`<source>`). It will also expose the new animation control methods on its `ref`.
@@ -311,30 +327,33 @@ The implementation will touch four key areas of the WebSpatial SDK.
 #### 4.1. React SDK (`@webspatial/react-sdk`)
 
 - **New Props**: The `ModelProps` type will be extended to include:
-	- `autoplay?: boolean`: If true, the model's first animation will play automatically upon successful load.
-	- `loop?: boolean`: If true, animations will loop indefinitely.
+
+  - `autoplay?: boolean`: If true, the model's first animation will play automatically upon successful load.
+  - `loop?: boolean`: If true, animations will loop indefinitely.
 
 - **Ref API Extension**: The `SpatializedStatic3DElementRef` type in `types.ts` will be expanded. We will augment the `ref` object in `SpatializedStatic3DElementContainer.tsx` with the following methods and properties:
-	- `play(): Promise<void>`: Sends a JSB command to the native layer to start or resume the animation.
-	- `pause(): void`: Sends a JSB command to pause the animation.
-	- `paused: boolean` (read-only): Reflects the current playback state, managed by events from native.
-	- `currentTime: number` (read/write): Gets or sets the current playback time. Setting it sends a "seek" JSB command. Synced from the native animation controller and is throttled to update at most once per second for bridge efficiency.
-	- `duration: number` (read-only): Reports the total duration of the current animation.
-	- `playbackRate: number` (read/write): Gets or sets the playback speed.
+  - `play(): Promise<void>`: Sends a JSB command to the native layer to start or resume the animation.
+  - `pause(): void`: Sends a JSB command to pause the animation.
+  - `paused: boolean` (read-only): Reflects the current playback state, managed by events from native.
+  - `currentTime: number` (read/write): Gets or sets the current playback time. Setting it sends a "seek" JSB command. Synced from the native animation controller and is throttled to update at most once per second for bridge efficiency.
+  - `duration: number` (read-only): Reports the total duration of the current animation.
+  - `playbackRate: number` (read/write): Gets or sets the playback speed.
 
 #### 4.2. Core SDK (`@webspatial/core-sdk`)
 
 - **New JSB Commands**: We will define a new set of commands in `JSBCommand.ts` for animation control, all targeting a `SpatializedStatic3DElement`.
-	- `PlayAnimationCommand(id: string)`
-	- `PauseAnimationCommand(id: string)`
-	- `SetAnimationTimeCommand(id: string, time: number)`
-	- `SetPlaybackRateCommand(id: string, rate: number)`
+
+  - `PlayAnimationCommand(id: string)`
+  - `PauseAnimationCommand(id: string)`
+  - `SetAnimationTimeCommand(id: string, time: number)`
+  - `SetPlaybackRateCommand(id: string, rate: number)`
 
 - **New Properties**: The `UpdateSpatializedStatic3DElementProperties` command will be extended to carry `autoplay` and `loop` booleans.
 
 - **New WebMsg Events**: To sync state from native back to the web, we'll define new events in `WebMsgCommand.ts`:
-	- `AnimationStateChange(id: string, detail: { paused: boolean, duration: number })`
-	- `AnimationTimeUpdate(id: string, detail: { currentTime: number })`
+
+  - `AnimationStateChange(id: string, detail: { paused: boolean, duration: number })`
+  - `AnimationTimeUpdate(id: string, detail: { currentTime: number })`
 
 - **State Synchronization**: The `SpatializedStatic3DElement` class will listen for these new events and update its internal state, which will, in turn, be exposed via the React `ref`.
 
@@ -345,10 +364,11 @@ The bulk of the animation logic resides in the native layer.
 - **Receiving Commands**: `JSBManager.swift` will be updated to decode the new animation commands and dispatch them to the correct `SpatializedStatic3DElement` instance.
 
 - **Animation Playback Management**:
-	1. In `SpatializedStatic3DView.swift`, create a `Model3DAsset` and pass it to `Model3D`.
-	2. We can access the available animations via `modelAsset.availableAnimations`. By default, we will operate on the **first** animation.
-	3. The `play()`, `pause()`, `seek(to:)` methods on the `AnimationPlaybackController` will be used to implement the JSB command handlers. This controller is obtained from the `ModelEntity` using `modelEntity.playAnimation()`.
-	4. The `autoplay` and `loop` properties will be handled here. If `autoplay` is true, we will immediately call `play()` after the model loads. The `repeat` mode of the animation controller will be configured based on the `loop` flag.
+
+  1.  In `SpatializedStatic3DView.swift`, create a `Model3DAsset` and pass it to `Model3D`.
+  2.  We can access the available animations via `modelAsset.availableAnimations`. By default, we will operate on the **first** animation.
+  3.  The `play()`, `pause()`, `seek(to:)` methods on the `AnimationPlaybackController` will be used to implement the JSB command handlers. This controller is obtained from the `ModelEntity` using `modelEntity.playAnimation()`.
+  4.  The `autoplay` and `loop` properties will be handled here. If `autoplay` is true, we will immediately call `play()` after the model loads. The `repeat` mode of the animation controller will be configured based on the `loop` flag.
 
 - **State Reporting**: A timer (e.g., `Timer.publish`) will be set up in `SpatializedStatic3DView.swift` to periodically check the `currentTime` of the `AnimationPlaybackController` and send `AnimationTimeUpdate` messages back to the web layer to keep the `ref.currentTime` property in sync. The max frequency will be 1Hz to avoid saturating the JSB bridge. `AnimationStateChange` will be sent whenever playback starts, pauses, or the duration becomes known.
 
@@ -357,8 +377,8 @@ struct RobotView: View {
   @State private var asset: Model3DAsset?
   var body: some View {
     if asset == nil {
-      ProgressView().task { 
-        asset = try? await Model3DAsset(named: "sparky") 
+      ProgressView().task {
+        asset = try? await Model3DAsset(named: "sparky")
         guard let asset = asset else { return }
         asset.selectedAnimation = asset.availableAnimations.first
         guard controller = asset.animationPlaybackController else { return }
@@ -370,6 +390,7 @@ struct RobotView: View {
   }
 }
 ```
+
 [Reference](https://developer.apple.com/videos/play/wwdc2025/274/?time=243)
 
 ### 5. Native Orbit Interaction (`stagemode="orbit"`)
@@ -385,11 +406,12 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 - **New Property**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to include the `stagemode` string. This property will be sent to the native layer.
 
 #### 5.3. Native visionOS Layer (`packages/visionOS`)
+
 1. In `SpatializedStatic3DView.swift`, we will check for the `stagemode` property on the `SpatializedStatic3DElement`.
 2. If `stagemode` is `"orbit"`, we will add a `DragGesture` to the view.
 3. The `onChanged` handler for the `DragGesture` will be used to manipulate the model's orientation.
-	- A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
-	- A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
+   - A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
+   - A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
 4. A state variable (e.g., `@State private var orbitRotation: Angle3D = .zero`) will be used to accumulate the rotation from the drag gesture. This rotation will be applied to the model using the `.rotation3DEffect()` modifier on the `Model3D` view.
 
 - **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
@@ -405,32 +427,34 @@ To provide developers with flexibility and ensure the best model format is used,
 - **Component Signature**: The `ModelProps` type will be updated to accept `children`.
 
 - **Source Gathering Logic**: In `SpatializedStatic3DElementContainer.tsx`, the logic will focus purely on collecting an ordered list of sources.
-	1. The `src` prop on the `<Model>` component is treated as the highest priority source.
-	2. `React.Children.toArray` will be used to iterate over `children`, filtering for `<source>` elements.
-	3. A `sources` array of objects `{ src: string; type?: string }` will be assembled, with the main `src` at the front, followed by the sources from the `<source>` children in their DOM order. Each URL will be normalized using `getAbsoluteURL`.
-	4. This array will be passed to the Core SDK.
+  1.  The `src` prop on the `<Model>` component is treated as the highest priority source.
+  2.  `React.Children.toArray` will be used to iterate over `children`, filtering for `<source>` elements.
+  3.  A `sources` array of objects `{ src: string; type?: string }` will be assembled, with the main `src` at the front, followed by the sources from the `<source>` children in their DOM order. Each URL will be normalized using `getAbsoluteURL`.
+  4.  This array will be passed to the Core SDK.
 
 #### 6.2. Core SDK (`@webspatial/core-sdk`) & Native Bridging
 
 - **JSB Command Update**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to carry the new `sources` property.
-	- `sources?: { src: string; type?: string }[]`
+
+  - `sources?: { src: string; type?: string }[]`
 
 - **Core Element (SpatializedStatic3DElement.ts)**: It will simply forward the `sources` array to the native layer via the updated `updateProperties` call. The `ready` promise will now resolve based on the final outcome communicated back from the native layer after it has completed its source selection process.
 
 #### 6.3. Native visionOS Layer (`packages/visionOS`)
 
 - **Model & State**:
-	- In `JSBCommand.swift`, `UpdateSpatializedStatic3DElementProperties` will be updated to decode the `sources: [ModelSource]?` array, where `ModelSource` is a new `Decodable` struct: `struct ModelSource: Decodable { let src: String; let type: String?; }`.
-	- In `SpatializedStatic3DElement.swift`, new properties will be added: `var sources: [ModelSource] = []` and `var currentSourceIndex: Int = 0`.
+
+  - In `JSBCommand.swift`, `UpdateSpatializedStatic3DElementProperties` will be updated to decode the `sources: [ModelSource]?` array, where `ModelSource` is a new `Decodable` struct: `struct ModelSource: Decodable { let src: String; let type: String?; }`.
+  - In `SpatializedStatic3DElement.swift`, new properties will be added: `var sources: [ModelSource] = []` and `var currentSourceIndex: Int = 0`.
 
 - **Source Priority & Loading Logic**: The core responsibility for trying each source lives `SpatializedStatic3DView.swift`.
-	1. When the view's properties are updated with a new `sources` list, it will reset `currentSourceIndex` to 0 and begin the loading process.
-	2. It will attempt to load the model from `sources[currentSourceIndex].src`. The view will use the `type` attribute to help prioritize or skip formats. On visionOS, sources with type `model/vnd.usdz+zip` will be preferred.
-	3. The `Model3D(url:)` initializer will be used.
-		- On `.success`, the view will fire a single `modelloaded` event and stop the process.
-		- On `.failure`, instead of immediately firing `modelloadfailed`, it will increment `currentSourceIndex`. If there are more sources to try (`currentSourceIndex < sources.count`), it will re-render, triggering an attempt to load the next source.
-		- Only after the last source in the array fails will it fire a single, definitive `modelloadfailed` event.
-	4. This centralizes the fallback logic natively, making the web implementation cleaner and more declarative.
+  1.  When the view's properties are updated with a new `sources` list, it will reset `currentSourceIndex` to 0 and begin the loading process.
+  2.  It will attempt to load the model from `sources[currentSourceIndex].src`. The view will use the `type` attribute to help prioritize or skip formats. On visionOS, sources with type `model/vnd.usdz+zip` will be preferred.
+  3.  The `Model3D(url:)` initializer will be used.
+      - On `.success`, the view will fire a single `modelloaded` event and stop the process.
+      - On `.failure`, instead of immediately firing `modelloadfailed`, it will increment `currentSourceIndex`. If there are more sources to try (`currentSourceIndex < sources.count`), it will re-render, triggering an attempt to load the next source.
+      - Only after the last source in the array fails will it fire a single, definitive `modelloadfailed` event.
+  4.  This centralizes the fallback logic natively, making the web implementation cleaner and more declarative.
 
 ### 7. Poster Image (`poster="..."`)
 
@@ -441,17 +465,20 @@ A poster image provides immediate visual feedback to the user, filling the compo
 - **Prop Handling**: The `<Model>` component will accept a `poster` prop (string URL). The URL will be normalized using `getAbsoluteURL`.
 
 #### 7.2. Native visionOS Layer (`packages/visionOS`)
+
 For a more integrated experience in Spatial Mode, we will handle the poster on the native side.
+
 - **New JSB Command**: A new property will be added to `UpdateSpatializedStatic3DElementProperties` in `JSBCommand.swift` and `JSBCommand.ts`: `posterURL: String?`. The React layer will send this URL along with the initial properties.
 
 - **SwiftUI Implementation**:
-	1. The `body` will use a `ZStack`.
-	2. The bottom layer of the `ZStack` will be an `AsyncImage(url: URL(string: posterURL))` if `posterURL` is provided. This image will be configured to act as the back-plane of the 3D container.
-	4. The top layer will be the `Model3D` view. Its content will be conditionally rendered based on the loading phase.
-	6. The `AsyncImage` will be hidden until the model has loaded, using `.opacity(isModelReady ? 0 : 1)`. This ensures a smooth transition where the poster is visible until the model is fully rendered and appears in its place.
-	7. This approach ensures the poster is correctly positioned in 3D space as part of the spatial element, rather than being a simple 2D overlay.
+  1.  The `body` will use a `ZStack`.
+  2.  The bottom layer of the `ZStack` will be an `AsyncImage(url: URL(string: posterURL))` if `posterURL` is provided. This image will be configured to act as the back-plane of the 3D container.
+  3.  The top layer will be the `Model3D` view. Its content will be conditionally rendered based on the loading phase.
+  4.  The `AsyncImage` will be hidden until the model has loaded, using `.opacity(isModelReady ? 0 : 1)`. This ensures a smooth transition where the poster is visible until the model is fully rendered and appears in its place.
+  5.  This approach ensures the poster is correctly positioned in 3D space as part of the spatial element, rather than being a simple 2D overlay.
 
 ### 8. Lazy Loading (`loading="lazy"`) 🚧
+
 Lazy loading will be managed natively to more accurately determine viewport intersection, removing the need for a web-based `IntersectionObserver` and simplifying the React implementation.
 
 #### 8.1. React SDK (`@webspatial/react-sdk`)
@@ -467,22 +494,24 @@ Lazy loading will be managed natively to more accurately determine viewport inte
 #### 8.3. Native visionOS Layer (`packages/visionOS`)
 
 - **Native Intersection Detection**: The native layer will now be responsible for calculating if the element is visible within the webview's viewport.
-	1. **State Management**: `SpatializedStatic3DElement.swift` will store the `loading` mode and a new computed property `var isIntersecting: Bool`.
-	2. **Viewport & Scroll Data**: To calculate intersection, we need context from the webview.
-		- `SpatialScene.spatialWebViewModel` already exposes `scrollOffset` via its `addScrollUpdateListener`.
-		- We will extend `SpatialWebViewModel.swift` to also expose the webview's viewport size. A new method or computed property will be added: `var viewportSize: CGSize { return webview?.scrollView.frame.size ?? .zero }`.
-	3. **Intersection Calculation**: With the element's 2D frame (`clientX`, `clientY`, `width`, `height`), the `scrollOffset`, and the `viewportSize`, the native `SpatializedStatic3DElement` can accurately compute if its frame overlaps with the visible area of the webview at any time. This calculation will be triggered whenever a scroll update occurs.
-	4. **Gated Model Loading**: In `SpatializedStatic3DView.swift`, the decision to render the `Model3D` will be gated by a condition: `let shouldLoad = spatializedElement.loading == .eager || (spatializedElement.loading == .lazy && spatializedElement.isIntersecting)`.
-		- If `shouldLoad` is `false`, the view will render the poster/back-plane or a lightweight placeholder.
-		- The model loading process (`Model3D(url:)`) will only be initiated when `shouldLoad` first becomes `true`.
-	5. **Scroll Updates**: On each scroll event received from `addScrollUpdateListener`, the `isIntersecting` state for all lazy elements will be re-evaluated. If an element's `isIntersecting` status changes from `false` to `true`, and it hasn't loaded yet, the loading process is triggered.
+  1.  **State Management**: `SpatializedStatic3DElement.swift` will store the `loading` mode and a new computed property `var isIntersecting: Bool`.
+  2.  **Viewport & Scroll Data**: To calculate intersection, we need context from the webview.
+      - `SpatialScene.spatialWebViewModel` already exposes `scrollOffset` via its `addScrollUpdateListener`.
+      - We will extend `SpatialWebViewModel.swift` to also expose the webview's viewport size. A new method or computed property will be added: `var viewportSize: CGSize { return webview?.scrollView.frame.size ?? .zero }`.
+  3.  **Intersection Calculation**: With the element's 2D frame (`clientX`, `clientY`, `width`, `height`), the `scrollOffset`, and the `viewportSize`, the native `SpatializedStatic3DElement` can accurately compute if its frame overlaps with the visible area of the webview at any time. This calculation will be triggered whenever a scroll update occurs.
+  4.  **Gated Model Loading**: In `SpatializedStatic3DView.swift`, the decision to render the `Model3D` will be gated by a condition: `let shouldLoad = spatializedElement.loading == .eager || (spatializedElement.loading == .lazy && spatializedElement.isIntersecting)`.
+      - If `shouldLoad` is `false`, the view will render the poster/back-plane or a lightweight placeholder.
+      - The model loading process (`Model3D(url:)`) will only be initiated when `shouldLoad` first becomes `true`.
+  5.  **Scroll Updates**: On each scroll event received from `addScrollUpdateListener`, the `isIntersecting` state for all lazy elements will be re-evaluated. If an element's `isIntersecting` status changes from `false` to `true`, and it hasn't loaded yet, the loading process is triggered.
 
 ## Risks
+
 - **Gesture Conflicts**: Our proposed solution of disabling drag listeners when orbit is present is a safe starting point.
 - **Safari Alignment**: Since the `<model>` element is still an evolving standard, our implementation is a best-effort interpretation. We must be prepared to adapt as the standard solidifies.
 - **Animation State Sync**: Keeping `ref.currentTime` perfectly in sync can be chatty. The proposed `Timer`-based approach is a good start, but we may need to throttle the update frequency to avoid overwhelming the webview bridge.
 
 ## References
+
 - [A step into the spatial web: The HTML model element in Apple Vision Pro](https://webkit.org/blog/17118/a-step-into-the-spatial-web-the-html-model-element-in-apple-vision-pro/)
 - [model-element/explainer.md at main · immersive-web/model-element](https://github.com/immersive-web/model-element/blob/main/explainer.md#stage-interaction-mode)
 - [The `<model>` element](https://immersive-web.github.io/model-element/)
