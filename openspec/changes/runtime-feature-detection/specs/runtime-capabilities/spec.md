@@ -47,9 +47,9 @@ The SDK MUST maintain **public documentation** listing every top-level **`name`*
 
 ### Requirement: Internal runtime snapshot
 
-Runtime identity snapshot MAY exist as an internal function and is not required to be part of external app API.
+The WebSpatial SDK MUST maintain an internal read-only runtime snapshot (for example via an internal `getRuntime()` helper) for capability resolution. That snapshot MUST NOT be part of the documented application-facing public API.
 
-Internal snapshot shape is:
+The snapshot MUST contain at minimum:
 
 - `type`: `'visionos' | 'picoos' | null`
 - `shellVersion`: `string | null`
