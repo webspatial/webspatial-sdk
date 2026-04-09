@@ -5,4 +5,4 @@
 '@webspatial/core-sdk': minor
 ---
 
-Model add <source> element support for multi-format fallback
+Add `<source>` support for model multi-format fallback, fix Spatial UA detection, and align no-runtime fallback behavior.
