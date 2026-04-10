@@ -40,6 +40,9 @@ declare global {
 
     xrInnerDepth: number
     xrOuterDepth: number
+
+    SpatialId?: string
+    __SpatialId?: string
   }
 
   interface HTMLElement {
