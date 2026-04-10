@@ -14,7 +14,7 @@
 | **N** | Not supported (`false`). |
 | *(empty)* | To be decided. |
 
-Use **semver** for `shellVersion` (prefer `WSAppShell/...`; pico may temporarily expose `PicoWebApp/...` during migration). One row per **distinct** Shell version **row** you maintain in the matrix (add a row when the capability **surface** changes vs the previous version).
+Use **semver** for `shellVersion`. In practice, packaged/hybrid runtimes commonly expose `WSAppShell/...`, while Pico OS browser-mode runtime exposes `PicoWebApp/...`. One row per **distinct** Shell version **row** you maintain in the matrix (add a row when the capability **surface** changes vs the previous version).
 
 Canonical key names match [`review.md` section 3](review.md#review-3). **§2** below is the **full v1 `supports` column list** (copy-paste friendly).
 

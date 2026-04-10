@@ -66,6 +66,7 @@ import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivCon
 import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
+import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -122,6 +123,10 @@ function App() {
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route
+                  path="/runtime-capabilities"
+                  element={<RuntimeCapabilitiesPage />}
+                />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />

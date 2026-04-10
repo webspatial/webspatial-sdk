@@ -215,10 +215,11 @@ If runtime is detected but shell version cannot be parsed, return conservative `
 
 ### 4.5 UA parsing notes
 
-- Target shell token format: `WSAppShell/<version>`.
-- visionOS already uses `WSAppShell/<version>`.
-- Pico is transitioning from legacy `PicoWebApp/<version>` to `WSAppShell/<version>`.
-- During migration, parser should prefer `WSAppShell/<version>`, then fallback to `PicoWebApp/<version>`.
+- `WSAppShell/<version>` identifies packaged/hybrid-app runtimes (for example runtimes bundled by platform packages).
+- Pico OS browser-mode runtime uses `PicoWebApp/<version>`.
+- Parser should prefer `WSAppShell/<version>`, and also support `PicoWebApp/<version>` for Pico browser mode.
+- Runtime family (`visionos` vs `picoos`) should be resolved using additional UA signals, not only token name.
+- For internal `type === 'visionos'`, `WSAppShell/<version>` MUST be paired with a Mac-class UA signal (substring `Mac OS X`, case-insensitive). Otherwise treat as non-WebSpatial for capability resolution (`type === null`) while still parsing `shellVersion` when possible.
 - `WebSpatial/<version>` is runtime/webspatial version metadata, not shell version.
 
 ---

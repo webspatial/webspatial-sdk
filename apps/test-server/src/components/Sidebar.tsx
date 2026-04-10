@@ -39,6 +39,7 @@ export const routes = [
   { path: '/spatialStyleTest', label: 'Spatial Style' },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },
+  { path: '/runtime-capabilities', label: 'Runtime capabilities' },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',

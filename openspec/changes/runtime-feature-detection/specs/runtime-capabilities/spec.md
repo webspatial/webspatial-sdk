@@ -58,7 +58,8 @@ The snapshot MUST contain at minimum:
 
 - **WHEN** UA includes `WSAppShell/<version>`
 - **THEN** parser MUST use it as shell version
-- **AND** parser MAY fallback to legacy `PicoWebApp/<version>` during migration
+- **AND** parser MUST NOT map to internal `visionos` unless UA also indicates a Mac-class platform (for example substring `Mac OS X`, case-insensitive)
+- **AND** parser SHOULD support `PicoWebApp/<version>` for Pico OS browser-mode runtimes
 
 #### Scenario: SSR or no window
 

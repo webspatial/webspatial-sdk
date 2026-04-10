@@ -52,10 +52,23 @@ Current v1 source is SDK capability table + shell version parsing, with a future
 - **Additive**: new exports; no required changes for existing apps.
 - **Rollback**: remove or no-op exports; apps can feature-detect `supports` if needed.
 
+## Runtime-provided capability manifest (proposal, task 5.1)
+
+v1 keeps **shell-version tables** in the SDK (`review.md` §4, `capability-data.ts`). A future iteration can add an optional **runtime-provided capability manifest** so the embedding WebSpatial runtime (whether identified by `WSAppShell/<semver>` in packaged mode or `PicoWebApp/<semver>` in Pico browser mode) declares feature flags.
+
+**Sketch (non-normative):**
+
+- **Delivery**: e.g. JSON injected before app script (`window.__webspatialCapabilities` or equivalent), or a first-party WebSpatial message after session start.
+- **Schema**: map of canonical `supports` keys to booleans, plus optional `subTokens: { [topLevelName]: string[] }` for AND semantics; unknown keys ignored by older SDKs (`spec.md` forward-compat).
+- **Precedence**: when present and well-formed, manifest entries **override** table inference for those keys; missing keys fall back to shell table + UA rules.
+- **Versioning**: include `manifestVersion` / `sdkMin` so runtimes and SDKs negotiate safely.
+
+This does not change v1 behavior; it documents direction aligned with **`review.md` §6.2**.
+
 ## References
 
 - **[`review.md`](./review.md)** — consolidated design review (API lists, resolution rules, fallback conventions).
-- **[`capability-matrix.template.md`](./capability-matrix.template.md)** — product/runtime matrix template (collaboration); runtime data lives in `capability-table.ts` when implemented ([`review.md` §6.1](./review.md#review-6-1)).
+- **[`capability-matrix.template.md`](./capability-matrix.template.md)** — product/runtime matrix template (collaboration); runtime data lives in `capability-data.ts` when implemented ([`review.md` §6.1](./review.md#review-6-1)).
 - **Jump links** (stable anchors in `review.md`):
   - [Contents (TOC)](./review.md#review-contents)
   - [§1 Problem and principles](./review.md#review-1)

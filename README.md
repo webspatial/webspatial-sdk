@@ -34,6 +34,10 @@ WebSpatial is a set of spatial APIs and ready-to-use SDK that extend the standar
 
 See the https://webspatial.dev/ for the docs.
 
+### Runtime capabilities
+
+Apps can query the current shell with **`WebSpatialRuntime.supports(name, tokens?)`** from `@webspatial/react-sdk` (see package exports). Documented keys, sub-tokens, resolution rules, and fallback behavior (including the native `<model>` exception) are in the repo design review: [`openspec/changes/runtime-feature-detection/review.md`](openspec/changes/runtime-feature-detection/review.md).
+
 It’s recommended to read the docs in order, especially the first three chapters:
 1. [**Introduction**](https://webspatial.dev/docs/introduction): Introduces the problems WebSpatial solves and the benefits it brings.
 2. [**Quick Example**](https://webspatial.dev/docs/quick-example): Use a minimal example to get a quick feel for the actual results and development experience of the WebSpatial SDK.
