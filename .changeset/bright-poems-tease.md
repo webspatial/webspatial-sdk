@@ -1,8 +1,7 @@
 ---
-'@webspatial/platform-visionos': minor
-'web-content': minor
-'@webspatial/react-sdk': minor
-'@webspatial/core-sdk': minor
+'@webspatial/platform-visionos': patch
+'@webspatial/react-sdk': patch
+'@webspatial/core-sdk': patch
 ---
 
-Add `<source>` support for model multi-format fallback, fix Spatial UA detection, and align no-runtime fallback behavior.
+Add `<source>` fix Spatial UA detection, and align no-runtime fallback behavior.
