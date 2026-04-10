@@ -87,6 +87,16 @@ Top-level configuration block inside `manifest.json`. All fields are optional.
 | `baseplateVisibility` | `"automatic" \| "visible" \| "hidden"` | Baseplate visibility for volumes |
 | `overrides` | [`XRSpatialSceneOverrides`](#overrides) | Per-scene-type overrides |
 
+**Aliases**
+
+- The SDK accepts both snake_case and camelCase for the fields below:
+  - `default_size` / `defaultSize`
+  - `world_scaling` / `worldScaling`
+  - `world_alignment` / `worldAlignment`
+  - `baseplate_visibility` / `baseplateVisibility`
+- If both snake_case and camelCase are present in the same object, snake_case wins.
+- Values passed to `initScene(..., pre => ...)` are normalized to camelCase keys.
+
 ### `overrides`
 
 Optional per-scene-type overrides that are **deep-merged** on top of the top-level `xr_spatial_scene` fields.
@@ -95,6 +105,8 @@ Optional per-scene-type overrides that are **deep-merged** on top of the top-lev
 |-------|------|-------------|
 | `window_scene` | `XRSpatialSceneDefaults` | Overrides applied only to **window** scenes |
 | `volume_scene` | `XRSpatialSceneDefaults` | Overrides applied only to **volume** scenes |
+
+> Both `window_scene` / `windowScene` and `volume_scene` / `volumeScene` are accepted.
 
 Each override object supports the same fields as the top-level `xr_spatial_scene` (excluding `overrides` itself).
 
@@ -120,6 +132,8 @@ Defines the min/max constraints for scene dimensions.
 | `minHeight` | `SceneUnit` | No | Minimum height |
 | `maxWidth` | `SceneUnit` | No | Maximum width |
 | `maxHeight` | `SceneUnit` | No | Maximum height |
+
+> Snake_case keys are also accepted for resizability: `min_width`, `min_height`, `max_width`, `max_height`.
 
 ### Enum Values
 
@@ -240,7 +254,7 @@ Scene dimensions accept the `SceneUnit` type, which supports three formats:
 
 The `initScene()` API continues to work exactly as before. The only difference is what the `pre` argument contains:
 
-```ts
+```js
 import { initScene } from '@webspatial/core-sdk'
 
 initScene('my-scene', (pre) => {

@@ -109,6 +109,154 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     cleanup()
   })
 
+  it('prefers snake_case over camelCase within a layer and still applies overrides by priority', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        defaultSize: { width: '111px', height: '111px' },
+        default_size: { width: '222px', height: '333px' },
+        overrides: {
+          window_scene: {
+            defaultSize: { width: '444px' },
+            default_size: { width: '555px' },
+          },
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winDefaults: any
+    initScene(
+      'w',
+      pre => {
+        winDefaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    let volDefaults: any
+    initScene(
+      'v',
+      pre => {
+        volDefaults = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winDefaults).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '555px', height: '333px' },
+      }),
+    )
+
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '222px', height: '333px' },
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('supports overrides windowScene/volumeScene and snake_case resizability keys', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        resizability: {
+          min_width: '300px',
+          min_height: '400px',
+          max_width: '1200px',
+          max_height: '1300px',
+        },
+        worldScaling: 'automatic',
+        overrides: {
+          windowScene: {
+            world_scaling: 'dynamic',
+          },
+          volumeScene: {
+            baseplate_visibility: 'hidden',
+          },
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winDefaults: any
+    initScene(
+      'w',
+      pre => {
+        winDefaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    let volDefaults: any
+    initScene(
+      'v',
+      pre => {
+        volDefaults = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winDefaults).toEqual(
+      expect.objectContaining({
+        resizability: {
+          minWidth: '300px',
+          minHeight: '400px',
+          maxWidth: '1200px',
+          maxHeight: '1300px',
+        },
+        worldScaling: 'dynamic',
+      }),
+    )
+
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        resizability: {
+          minWidth: '300px',
+          minHeight: '400px',
+          maxWidth: '1200px',
+          maxHeight: '1300px',
+        },
+        baseplateVisibility: 'hidden',
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('does not normalize initScene callback return value when chaining', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        default_size: { width: '222px', height: '333px' },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    const firstReturn: any = { default_size: { width: '777px' } }
+    const cb1 = vi.fn().mockReturnValue(firstReturn)
+    initScene('chain', cb1, { type: 'window' })
+
+    const cb2 = vi.fn().mockReturnValue({})
+    initScene('chain', cb2, { type: 'window' })
+
+    expect(cb2).toHaveBeenCalledWith(firstReturn)
+
+    cleanup()
+  })
+
   it('applies volume overrides without affecting window defaults', async () => {
     vi.resetModules()
     const cleanup = addDataManifest({
