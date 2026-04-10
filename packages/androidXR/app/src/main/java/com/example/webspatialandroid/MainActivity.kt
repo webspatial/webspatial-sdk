@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 
 val debugSpaceToggle = false
 val debugSpaceToggleTime: Long = 200
-var startURL = "http://localhost:5173/src/androidBringup/index.html"
+var startURL = "http://localhost:5173/"
 var console = Console()
 var windowContainers = mutableStateListOf<SpatialWindowContainer>()
 

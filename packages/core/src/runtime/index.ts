@@ -8,6 +8,10 @@ export {
 } from './supports'
 export { compareSemver, parseSemverOrNull } from './semver'
 export { computeRuntimeFromUserAgent, parseShellToken } from './userAgent'
+export {
+  resolveJsbAdapterPlatform,
+  type JsbAdapterPlatformKind,
+} from './jsbAdapterPlatform'
 export type { CapabilityVersionRow } from './capability-data'
 export { CAPABILITY_TABLE } from './capability-data'
 export {

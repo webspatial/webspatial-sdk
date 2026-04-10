@@ -75,6 +75,9 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
   }
 
   const rt = getRuntime()
+  if (rt.type === 'puppeteer') {
+    return true
+  }
   if (rt.type === null) return false
   if (rt.shellVersion === null) return false
 
@@ -87,6 +90,8 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
 
   const parsedShell = parseSemverOrNull(rt.shellVersion)
   if (!parsedShell) return false
+
+  if (rt.type !== 'visionos' && rt.type !== 'picoos') return false
 
   const row = selectRow(rt.type, parsedShell)
   if (!row) return false

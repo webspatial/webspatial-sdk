@@ -42,6 +42,12 @@ export function computeRuntimeFromUserAgent(
   if (userAgent === undefined || userAgent === '') {
     return { type: null, shellVersion: null }
   }
+  // Must run before the shell-token gate: Puppeteer UAs may omit WSAppShell/PicoWebApp.
+  if (userAgent.includes('Puppeteer')) {
+    const { version } = parseShellToken(userAgent)
+    return { type: 'puppeteer', shellVersion: version }
+  }
+
   const { version, source } = parseShellToken(userAgent)
   if (!version) {
     return { type: null, shellVersion: null }

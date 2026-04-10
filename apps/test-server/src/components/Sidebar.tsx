@@ -81,7 +81,6 @@ export const routes = [
       { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
-      { path: '/android-bringup', label: 'Android Bringup' },
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },

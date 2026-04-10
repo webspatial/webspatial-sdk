@@ -46,7 +46,6 @@ import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
 import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
-import AndroidBringup from './src/pages/androidBringup/index'
 import DisplayTest from './src/pages/displayTest/index'
 import MemoryStats from './src/pages/memoryStats/index'
 import NestedFixPosition from './src/pages/nestedfixposition/index'
@@ -208,7 +207,6 @@ function App() {
                   path="/fixed-position-test"
                   element={<FixedPositionTest />}
                 />
-                <Route path="/android-bringup" element={<AndroidBringup />} />
                 <Route path="/display-test" element={<DisplayTest />} />
                 <Route path="/memory-stats" element={<MemoryStats />} />
                 <Route

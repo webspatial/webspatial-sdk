@@ -110,6 +110,37 @@ describe('getRuntime / supports', () => {
     expect(supports('VolumeScene', ['baseplateVisibility'])).toBe(true)
   })
 
+  test('Puppeteer UA: type puppeteer; all valid supports() true', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Puppeteer WSAppShell/1.5.0 WebSpatial/1.5.0',
+    } as Navigator)
+    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
+      './supports'
+    )
+    resetRuntimeCacheForTests()
+    const rt = getRuntime()
+    expect(rt.type).toBe('puppeteer')
+    expect(rt.shellVersion).toBe('1.5.0')
+    expect(supports('Model')).toBe(true)
+    expect(supports('Model', ['poster'])).toBe(true)
+    expect(supports('UnknownThing' as any)).toBe(false)
+    expect(supports('Model', ['not-a-token' as any])).toBe(false)
+  })
+
+  test('Puppeteer UA without shell token: still puppeteer; valid supports() true', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 Puppeteer HeadlessChrome/120.0.0.0',
+    } as Navigator)
+    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
+      './supports'
+    )
+    resetRuntimeCacheForTests()
+    expect(getRuntime().type).toBe('puppeteer')
+    expect(getRuntime().shellVersion).toBe(null)
+    expect(supports('Model')).toBe(true)
+  })
+
   test('visionOS WS_SHELL_VERSION placeholder: debug mode; all valid supports() true', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
