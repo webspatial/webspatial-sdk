@@ -4,4 +4,4 @@
 '@webspatial/core-sdk': patch
 ---
 
-Add `<source>` fix Spatial UA detection, and align no-runtime fallback behavior.
+Model add <source> element support for multi-format fallback
