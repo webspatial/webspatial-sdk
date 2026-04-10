@@ -80,18 +80,13 @@ struct SpatializedStatic3DView: View {
         }
     }
 
-    /// Downloads a remote model file and loads it as a Model3DAsset.
-    /// Model3DAsset(url:) requires a local file URL, so remote
-    /// resources must be downloaded first.
+    /// Resolves a local file URL and loads it as a Model3DAsset.
+    /// Remote URLs go through ``NativeAssetStore`` (same cache, single-flight, and HTTP validation as dynamic 3D).
     private func loadAsset(from url: URL) async throws -> Model3DAsset {
         if url.isFileURL {
             return try await Model3DAsset(url: url)
         }
-        let (tempURL, _) = try await URLSession.shared.download(from: url)
-        // TODO: Use FileManager.temporaryDirectory and FileManager.removeItem for auto cleanup
-        let localURL = tempURL.deletingPathExtension()
-            .appendingPathExtension(url.pathExtension)
-        try FileManager.default.moveItem(at: tempURL, to: localURL)
+        let localURL = try await NativeAssetStore.shared.localFileURL(for: url)
         return try await Model3DAsset(url: localURL)
     }
 

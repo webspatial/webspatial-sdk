@@ -41,6 +41,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var attachmentManager = AttachmentManager()
 
+    /// Latest ``NativeAssetStore`` counters, refreshed when Inspect runs without a target id (embedded in the JSON payload).
+    private(set) var nativeAssetStoreStats: NativeAssetStore.Stats?
+
     /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
@@ -484,6 +487,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         attachmentManager.destroyAll()
         backgroundMaterial = .None
+
+        // Log store counters on each WKWebView didStartLoad (init + eviction still run once per app process).
+        Task {
+            let s = await NativeAssetStore.shared.snapshot()
+            print(
+                "[NativeAssetStore] page navigation (spatial objects cleared): cacheHits=\(s.cacheHits) missesJoinedInFlight=\(s.missesJoinedInFlight) missesLeaderStarted=\(s.missesLeaderStarted) downloadsSucceeded=\(s.downloadsSucceeded) downloadsFailed=\(s.downloadsFailed)"
+            )
+        }
     }
 
     /// Some SPA navigations (history back/forward) do not trigger a full WKNavigation
@@ -513,8 +524,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 return
             }
         } else {
-            // inspect current SpatialScene
-            resolve(.success(self))
+            // inspect current SpatialScene (refresh NativeAssetStore stats on MainActor before encoding)
+            Task { @MainActor in
+                let stats = await NativeAssetStore.shared.snapshot()
+                self.nativeAssetStoreStats = stats
+                let statsLine =
+                    "[NativeAssetStore] stats: cacheHits=\(stats.cacheHits) missesJoinedInFlight=\(stats.missesJoinedInFlight) missesLeaderStarted=\(stats.missesLeaderStarted) downloadsSucceeded=\(stats.downloadsSucceeded) downloadsFailed=\(stats.downloadsFailed)"
+                print(statsLine)
+                logger.info(statsLine)
+                resolve(.success(self))
+            }
             return
         }
     }
@@ -1321,7 +1340,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList, nativeAssetStoreStats
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -1343,5 +1362,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         try container.encode(spatialObjectList, forKey: .spatialObjectList)
 
         try container.encode(SpatialObjectWeakRefManager.weakRefObjects.count, forKey: .spatialObjectRefCount)
+
+        try container.encodeIfPresent(nativeAssetStoreStats, forKey: .nativeAssetStoreStats)
     }
 }

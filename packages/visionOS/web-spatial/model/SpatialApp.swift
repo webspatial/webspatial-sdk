@@ -107,6 +107,9 @@ class SpatialApp {
         print("plainSceneOptions", sceneOptions)
 
         logger.debug("WebSpatial App Started -------- rootURL: " + startURL)
+
+        // Eagerly initialize NativeAssetStore so cache root + eviction diagnostics run without a remote download or Inspect.
+        _ = NativeAssetStore.shared
     }
 
     func createScene(_ url: String, _ style: SpatialScene.WindowStyle, _ state: SpatialScene.SceneStateKind, _ sceneOptions: SceneOptions? = nil) -> SpatialScene {

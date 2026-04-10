@@ -13,7 +13,9 @@ class SpatialModelResource: SpatialObject {
         Dynamic3DManager.loadResourceToLocal(urlString) { result in
             switch result {
             case let .success(url):
+                if self.isDestroyed { return }
                 DispatchQueue.main.async {
+                    if self.isDestroyed { return }
                     do {
                         let entity = try Entity.load(contentsOf: url)
                         self._resource = entity
@@ -25,6 +27,7 @@ class SpatialModelResource: SpatialObject {
                     }
                 }
             case let .failure(error):
+                if self.isDestroyed { return }
                 print("Failed to download model: \(error)")
                 onload(.failure(error))
                 self.destroy()
