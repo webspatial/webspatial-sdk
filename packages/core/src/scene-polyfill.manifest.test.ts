@@ -1,17 +1,33 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('./spatial-host', () => ({
+const jsbMocks = vi.hoisted(() => ({
+  createSpatialSceneCommand: vi.fn().mockImplementation(() => ({
+    executeSync: vi.fn().mockReturnValue({
+      data: { id: 'scene-1', windowProxy: {} },
+    }),
+  })),
+  focusSceneExecute: vi.fn().mockResolvedValue(undefined),
+}))
+
+const spatialHostMocks = vi.hoisted(() => ({
   openSpatialSceneSync: vi.fn().mockReturnValue({
     success: true,
     data: { id: 'scene-1', windowProxy: {} },
   }),
 }))
 
+const originalWindowOpen = window.open
+
+vi.mock('./spatial-host', () => ({
+  openSpatialSceneSync: spatialHostMocks.openSpatialSceneSync,
+}))
+
 vi.mock('./JSBCommand', () => {
   return {
+    createSpatialSceneCommand: jsbMocks.createSpatialSceneCommand,
     FocusScene: vi.fn().mockImplementation(function () {
       return {
-        execute: vi.fn().mockResolvedValue(undefined),
+        execute: jsbMocks.focusSceneExecute,
       }
     }),
   }
@@ -32,6 +48,16 @@ async function waitTick() {
   await Promise.resolve()
   await new Promise(r => setTimeout(r, 0))
 }
+
+afterEach(() => {
+  window.open = originalWindowOpen
+  jsbMocks.createSpatialSceneCommand.mockClear()
+  jsbMocks.focusSceneExecute.mockClear()
+  spatialHostMocks.openSpatialSceneSync.mockClear()
+  document
+    .querySelectorAll('link[rel="manifest"]')
+    .forEach(node => node.parentElement?.removeChild(node))
+})
 
 describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defaults', () => {
   it('applies window overrides without affecting volume defaults', async () => {
@@ -108,6 +134,239 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
         worldScaling: 'dynamic',
         baseplateVisibility: 'visible',
       }),
+    )
+
+    cleanup()
+  })
+
+  it('prefers snake_case over camelCase within a layer and still applies overrides by priority', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        defaultSize: { width: '111px', height: '111px' },
+        default_size: { width: '222px', height: '333px' },
+        overrides: {
+          window_scene: {
+            defaultSize: { width: '444px' },
+            default_size: { width: '555px' },
+          },
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winDefaults: any
+    initScene(
+      'w',
+      pre => {
+        winDefaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    let volDefaults: any
+    initScene(
+      'v',
+      pre => {
+        volDefaults = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winDefaults).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '555px', height: '333px' },
+      }),
+    )
+
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '222px', height: '333px' },
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('supports overrides windowScene/volumeScene and snake_case resizability keys', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        resizability: {
+          min_width: '300px',
+          min_height: '400px',
+          max_width: '1200px',
+          max_height: '1300px',
+        },
+        worldScaling: 'automatic',
+        overrides: {
+          windowScene: {
+            world_scaling: 'dynamic',
+          },
+          volumeScene: {
+            baseplate_visibility: 'hidden',
+          },
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winDefaults: any
+    initScene(
+      'w',
+      pre => {
+        winDefaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    let volDefaults: any
+    initScene(
+      'v',
+      pre => {
+        volDefaults = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winDefaults).toEqual(
+      expect.objectContaining({
+        resizability: {
+          minWidth: '300px',
+          minHeight: '400px',
+          maxWidth: '1200px',
+          maxHeight: '1300px',
+        },
+        worldScaling: 'dynamic',
+      }),
+    )
+
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        resizability: {
+          minWidth: '300px',
+          minHeight: '400px',
+          maxWidth: '1200px',
+          maxHeight: '1300px',
+        },
+        baseplateVisibility: 'hidden',
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('normalizes top-level world_alignment and baseplate_visibility aliases', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        world_alignment: 'gravityAligned',
+        baseplate_visibility: 'hidden',
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let winDefaults: any
+    initScene(
+      'w-alias',
+      pre => {
+        winDefaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    let volDefaults: any
+    initScene(
+      'v-alias',
+      pre => {
+        volDefaults = pre
+        return pre
+      },
+      { type: 'volume' },
+    )
+
+    expect(winDefaults).toEqual(
+      expect.objectContaining({
+        worldAlignment: 'gravityAligned',
+        baseplateVisibility: 'hidden',
+      }),
+    )
+    expect(volDefaults).toEqual(
+      expect.objectContaining({
+        worldAlignment: 'gravityAligned',
+        baseplateVisibility: 'hidden',
+      }),
+    )
+
+    cleanup()
+  })
+
+  it('does not normalize initScene callback return value when chaining', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        default_size: { width: '222px', height: '333px' },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    const firstReturn: any = { default_size: { width: '777px' } }
+    const cb1 = vi.fn().mockReturnValue(firstReturn)
+    initScene('chain', cb1, { type: 'window' })
+
+    const cb2 = vi.fn().mockReturnValue({})
+    initScene('chain', cb2, { type: 'window' })
+
+    expect(cb2).toHaveBeenCalledWith(firstReturn)
+
+    cleanup()
+  })
+
+  it('uses manifest aliases when window.open creates a named scene without initScene', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        default_size: { width: '300px', height: '400px' },
+        world_alignment: 'gravityAligned',
+        overrides: {
+          windowScene: {
+            default_size: { width: '500px' },
+            resizability: { min_width: '320px' },
+            baseplate_visibility: 'visible',
+          },
+        },
+      },
+    })
+    const { hijackWindowOpen } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    window.open('https://example.com/scene', 'manifest-alias-window')
+
+    expect(spatialHostMocks.openSpatialSceneSync).toHaveBeenCalledWith(
+      'https://example.com/scene',
+      expect.objectContaining({
+        type: 'window',
+        defaultSize: { width: 500, height: 400 },
+        resizability: { minWidth: 320 },
+        worldAlignment: 'gravityAligned',
+        baseplateVisibility: 'visible',
+      }),
+      'manifest-alias-window',
+      undefined,
     )
 
     cleanup()
