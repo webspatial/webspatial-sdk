@@ -63,9 +63,7 @@ export class ResourceRegistry {
     this.resources.clear()
 
     pending.forEach(promise =>
-      promise
-        .then(spatialObj => spatialObj.destroy())
-        .catch(() => {}),
+      promise.then(spatialObj => spatialObj.destroy()).catch(() => {}),
     )
   }
 }

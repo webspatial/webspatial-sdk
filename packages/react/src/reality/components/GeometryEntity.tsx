@@ -95,9 +95,8 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
               ?.map(mid =>
                 ctx.resourceRegistry.get<SpatialMaterial>('material', mid),
               )
-              .filter(
-                (p): p is Promise<SpatialMaterial> => p !== undefined,
-              ) ?? []
+              .filter((p): p is Promise<SpatialMaterial> => p !== undefined) ??
+            []
           const materialList: SpatialMaterial[] =
             await Promise.all(materialPromises)
           if (gen !== mutableRef.current.rebuildGen) {
