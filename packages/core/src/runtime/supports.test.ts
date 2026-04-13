@@ -62,7 +62,7 @@ describe('getRuntime / supports', () => {
     expect(supports('UnknownThing' as any)).toBe(false)
   })
 
-  test('pico UA: type picoos; matrix 0.1.1 sub-tokens (alpha2.1)', async () => {
+  test('pico UA: type picoos; matrix 0.1.1 sub-tokens (alpha2.0 baseline)', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.1.1 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
@@ -71,9 +71,22 @@ describe('getRuntime / supports', () => {
     resetRuntimeCacheForTests()
     expect(supports('initScene')).toBe(true)
     expect(supports('Model', ['not-a-token' as any])).toBe(false)
-    expect(supports('Model', ['source'])).toBe(true)
+    expect(supports('Model', ['source'])).toBe(false)
+    expect(supports('Model', ['ready', 'currentSrc'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
     expect(supports('WindowScene', ['defaultSize', 'resizability'])).toBe(true)
+  })
+
+  test('pico UA PicoWebApp/0.1.2: matrix playback row (alpha2.0)', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.1.2 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('Model', ['autoplay', 'loop', 'source'])).toBe(true)
+    expect(supports('Model', ['currentTime'])).toBe(false)
+    expect(supports('Model', ['poster'])).toBe(false)
   })
 
   test('alias Box → BoxEntity', async () => {
@@ -160,16 +173,29 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['not-a-token' as any])).toBe(false)
   })
 
-  test('Model HTML + JS sub-tokens from stub table', async () => {
+  test('visionOS WSAppShell/1.5.0: Model sub-tokens (alpha2.0 baseline)', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 WSAppShell/1.5.0 WebSpatial/1.5.0',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('Model', ['autoplay'])).toBe(true)
+    expect(supports('Model', ['autoplay'])).toBe(false)
     expect(supports('Model', ['poster'])).toBe(false)
     expect(supports('Model', ['ready', 'currentSrc'])).toBe(true)
     expect(supports('Model', ['currentTime'])).toBe(false)
+  })
+
+  test('visionOS WSAppShell/1.6.0: Model playback row (WebSpatial April)', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.6.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('Model', ['autoplay', 'loop', 'source'])).toBe(true)
+    expect(supports('Model', ['currentTime'])).toBe(false)
+    expect(supports('Model', ['poster'])).toBe(false)
+    expect(supports('Model', ['play', 'pause', 'duration'])).toBe(true)
   })
 })
