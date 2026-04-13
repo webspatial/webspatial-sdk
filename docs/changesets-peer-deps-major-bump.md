@@ -22,6 +22,7 @@ This repo uses:
   - `@webspatial/react-sdk`
   - `@webspatial/builder`
   - `@webspatial/platform-visionos`
+  - `@webspatial/platform-androidxrapp`
 
 ## Fix Applied
 

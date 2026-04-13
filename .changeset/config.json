@@ -7,7 +7,8 @@
       "@webspatial/core-sdk",
       "@webspatial/react-sdk",
       "@webspatial/builder",
-      "@webspatial/platform-visionos"
+      "@webspatial/platform-visionos",
+      "@webspatial/platform-androidxrapp"
     ]
   ],
   "linked": [],

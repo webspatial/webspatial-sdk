@@ -206,6 +206,8 @@ importers:
         specifier: ^5.2.2
         version: 5.7.3
 
+  packages/androidXR: {}
+
   packages/autoTest:
     dependencies:
       '@tailwindcss/vite':

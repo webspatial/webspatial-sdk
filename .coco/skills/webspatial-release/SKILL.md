@@ -21,7 +21,7 @@ description: |
 ## 关键约定（务必先读）
 
 - **发布主分支是 `stable`**：Changesets 发布工作流仅在 push 到 `stable` 时触发（`.changeset/config.json` 里的 `baseBranch` 也是 `stable`）。
-- **一组包固定同版本**：`@webspatial/core-sdk`、`@webspatial/react-sdk`、`@webspatial/builder`、`@webspatial/platform-visionos` 属于 `fixed` 组，发布时会一起涨版本。
+- **一组包固定同版本**：`@webspatial/core-sdk`、`@webspatial/react-sdk`、`@webspatial/builder`、`@webspatial/platform-visionos`、`@webspatial/platform-androidxrapp` 属于 `fixed` 组，发布时会一起涨版本。
 - **主分支 `main` 会被自动同步**：stable 发布成功后，CI 会自动创建 “Merge stable into main” 的同步 PR（见 `.github/workflows/changesets.yml`）。
 
 ## 什么时候需要 Changeset
