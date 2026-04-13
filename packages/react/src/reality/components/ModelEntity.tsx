@@ -1,6 +1,7 @@
 import React, { forwardRef, useEffect, useRef } from 'react'
 import {
   SpatialMaterial,
+  SpatialModelAsset,
   SpatialModelEntity as CoreSpatialModelEntity,
 } from '@webspatial/core-sdk'
 import { EntityProps, EntityEventHandler } from '../type'
@@ -37,9 +38,15 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
         try {
           const materialList: SpatialMaterial[] = (
             await Promise.all(
-              next.map(mid => ctx.resourceRegistry.get<SpatialMaterial>(mid)),
+              next
+                .map(mid =>
+                  ctx.resourceRegistry.get<SpatialMaterial>('material', mid),
+                )
+                .filter(
+                  (p): p is Promise<SpatialMaterial> => p !== undefined,
+                ),
             )
-          ).filter(Boolean)
+          )
           if (entityRef.current) {
             await entityRef.current.setMaterials(materialList)
           }
@@ -58,9 +65,13 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
         recreateKey={model}
         createEntity={async (ctx, signal) => {
           try {
-            const modelAsset = await ctx!.resourceRegistry.get(model)
-            if (!modelAsset)
+            const modelPromise = ctx!.resourceRegistry.get<SpatialModelAsset>(
+              'modelAsset',
+              model,
+            )
+            if (!modelPromise)
               throw new Error(`ModelEntity: model not found ${model}`)
+            const modelAsset = await modelPromise
             if (signal.aborted) return null as any
 
             const ent = await ctx!.session.createSpatialModelEntity(
@@ -76,11 +87,18 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
             if (materials && materials.length > 0) {
               const materialList: SpatialMaterial[] = (
                 await Promise.all(
-                  materials.map(mid =>
-                    ctx!.resourceRegistry.get<SpatialMaterial>(mid),
-                  ),
+                  materials
+                    .map(mid =>
+                      ctx!.resourceRegistry.get<SpatialMaterial>(
+                        'material',
+                        mid,
+                      ),
+                    )
+                    .filter(
+                      (p): p is Promise<SpatialMaterial> => p !== undefined,
+                    ),
                 )
-              ).filter(Boolean)
+              )
               if (materialList.length > 0 && !signal.aborted) {
                 await ent.setMaterials(materialList)
               }

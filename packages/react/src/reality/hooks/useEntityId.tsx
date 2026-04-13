@@ -9,9 +9,9 @@ export const useEntityId: React.FC<Props> = ({ id, entity }) => {
   const ctx = useRealityContext()
   useEffect(() => {
     if (!id || !entity || !ctx) return
-    ctx.resourceRegistry.add(id, Promise.resolve(entity))
+    ctx.resourceRegistry.add('entity', id, Promise.resolve(entity))
     return () => {
-      ctx.resourceRegistry.remove(id)
+      ctx.resourceRegistry.remove('entity', id)
     }
   }, [id, entity, ctx])
 

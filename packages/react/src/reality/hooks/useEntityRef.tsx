@@ -69,8 +69,11 @@ export class EntityRef implements EntityRefShape {
   ): Promise<Vec3> {
     if (!this._entity) return position
     try {
-      const fromEnt = await this._ctx?.resourceRegistry.get(fromEntityId)
-      const toEnt = await this._ctx?.resourceRegistry.get(toEntityId)
+      const fromP = this._ctx?.resourceRegistry.get('entity', fromEntityId)
+      const toP = this._ctx?.resourceRegistry.get('entity', toEntityId)
+      if (!fromP || !toP) return position
+      const fromEnt = await fromP
+      const toEnt = await toP
       if (!fromEnt || !toEnt) return position
       const ret = await this._entity.convertFromEntityToEntity(
         fromEnt.id,
@@ -89,7 +92,9 @@ export class EntityRef implements EntityRefShape {
   ): Promise<Vec3> {
     if (!this._entity) return position
     try {
-      const ent = await this._ctx?.resourceRegistry.get(entityId)
+      const entP = this._ctx?.resourceRegistry.get('entity', entityId)
+      if (!entP) return position
+      const ent = await entP
       if (!ent) return position
       const ret = await this._entity.convertFromEntityToScene(ent.id, position)
       return ret?.data ?? position
@@ -104,7 +109,9 @@ export class EntityRef implements EntityRefShape {
   ): Promise<Vec3> {
     if (!this._entity) return position
     try {
-      const ent = await this._ctx?.resourceRegistry.get(entityId)
+      const entP = this._ctx?.resourceRegistry.get('entity', entityId)
+      if (!entP) return position
+      const ent = await entP
       if (!ent) return position
       const ret = await this._entity.convertFromSceneToEntity(ent.id, position)
       return ret?.data ?? position

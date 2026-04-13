@@ -1,44 +1,71 @@
-import {
-  SpatializedDynamic3DElement,
-  SpatialObject,
-  SpatialSession,
-} from '@webspatial/core-sdk'
+import { SpatialObject } from '@webspatial/core-sdk'
+
+export type ResourceType =
+  | 'texture'
+  | 'material'
+  | 'geometry'
+  | 'entity'
+  | 'modelAsset'
+
+/**
+ * Namespaced registry so texture / material / entity / modelAsset ids cannot collide.
+ *
+ * Ordering: consumers that call `get()` must run after the matching `add()` (typically declare
+ * resources earlier in `<Reality>` so their effects run first). There is no wait-for-registration;
+ * missing keys return `undefined` from `get()`.
+ */
 export class ResourceRegistry {
   private resources: Map<string, Promise<SpatialObject>> = new Map()
-  add<T extends SpatialObject>(id: string, resource: Promise<T>) {
-    this.resources.set(id, resource)
-  }
-  remove(id: string) {
-    this.resources.delete(id)
+
+  private makeKey(type: ResourceType, id: string): string {
+    return `${type}:${id}`
   }
 
-  // Remove the resource by id and destroy it once resolved
-  // This does not cancel in-flight creation; it schedules destruction after resolution
-  removeAndDestroy(id: string) {
-    const p = this.resources.get(id)
-    if (p) {
-      // Schedule destruction when the resource becomes available
-      p.then(spatialObj => spatialObj.destroy()).catch(() => {
-        // swallow rejection to avoid unhandled promise errors during teardown
-      })
+  add<T extends SpatialObject>(
+    type: ResourceType,
+    id: string,
+    resource: Promise<T>,
+  ): void {
+    const key = this.makeKey(type, id)
+    if (this.resources.has(key)) {
+      console.warn(
+        `[ResourceRegistry] Overwriting existing ${type} with id "${id}"`,
+      )
     }
-    this.resources.delete(id)
+    this.resources.set(key, resource)
   }
-  get<T extends SpatialObject>(id: string) {
-    return this.resources.get(id) as Promise<T>
+
+  get<T extends SpatialObject>(
+    type: ResourceType,
+    id: string,
+  ): Promise<T> | undefined {
+    const key = this.makeKey(type, id)
+    const p = this.resources.get(key)
+    return p as Promise<T> | undefined
   }
-  destroy() {
-    // Collect pending resources and clear registry immediately
+
+  remove(type: ResourceType, id: string): void {
+    const key = this.makeKey(type, id)
+    this.resources.delete(key)
+  }
+
+  removeAndDestroy(type: ResourceType, id: string): void {
+    const key = this.makeKey(type, id)
+    const p = this.resources.get(key)
+    if (p) {
+      p.then(spatialObj => spatialObj.destroy()).catch(() => {})
+    }
+    this.resources.delete(key)
+  }
+
+  destroy(): void {
     const pending = Array.from(this.resources.values())
     this.resources.clear()
 
-    // Best-effort destroy for all resolved and future-resolving resources
     pending.forEach(promise =>
       promise
         .then(spatialObj => spatialObj.destroy())
-        .catch(() => {
-          // swallow rejection to avoid unhandled promise errors during teardown
-        }),
+        .catch(() => {}),
     )
   }
 }

@@ -28,7 +28,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
       try {
         const resolvedUrl = resolveAssetUrl(options.src)
         const modelAssetPromise = session.createModelAsset({ url: resolvedUrl })
-        resourceRegistry.add(options.id, modelAssetPromise)
+        resourceRegistry.add('modelAsset', options.id, modelAssetPromise)
 
         const mat = await modelAssetPromise
         if (controller.signal.aborted) {

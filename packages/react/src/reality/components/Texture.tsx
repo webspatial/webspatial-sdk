@@ -10,6 +10,10 @@ export type TextureProps = {
   onError?: (error: any) => void
 }
 
+// Declare <Texture> before sibling <UnlitMaterial textureId="…"> under the same <Reality>.
+// UnlitMaterial reads the texture from the registry when it creates the native material; if this
+// effect has not run add() yet, that lookup is empty and the texture is omitted.
+
 function resolveTextureUrl(url: string): string {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
@@ -30,7 +34,7 @@ export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
       try {
         const resolvedUrl = resolveTextureUrl(options.url)
         const texturePromise = session.createTexture({ url: resolvedUrl })
-        resourceRegistry.add(options.id, texturePromise)
+        resourceRegistry.add('texture', options.id, texturePromise)
         const texture = await texturePromise
         if (controller.signal.aborted) {
           texture.destroy()
@@ -47,7 +51,7 @@ export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
 
     return () => {
       controller.abort()
-      resourceRegistry.removeAndDestroy(options.id)
+      resourceRegistry.removeAndDestroy('texture', options.id)
       textureRef.current = undefined
       isInitializedRef.current = false
     }

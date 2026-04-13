@@ -281,8 +281,8 @@ describe('reality/utils/ResourceRegistry', () => {
       resolveResource = resolve
     })
 
-    registry.add('a', p as any)
-    registry.removeAndDestroy('a')
+    registry.add('material', 'a', p as any)
+    registry.removeAndDestroy('material', 'a')
     resolveResource({ destroy })
     await Promise.resolve()
     expect(destroy).toHaveBeenCalledTimes(1)
@@ -292,8 +292,16 @@ describe('reality/utils/ResourceRegistry', () => {
     const registry = new ResourceRegistry()
     const destroy1 = vi.fn().mockResolvedValue(undefined)
     const destroy2 = vi.fn().mockResolvedValue(undefined)
-    registry.add('a', Promise.resolve({ destroy: destroy1 }) as any)
-    registry.add('b', Promise.resolve({ destroy: destroy2 }) as any)
+    registry.add(
+      'material',
+      'a',
+      Promise.resolve({ destroy: destroy1 }) as any,
+    )
+    registry.add(
+      'material',
+      'b',
+      Promise.resolve({ destroy: destroy2 }) as any,
+    )
 
     registry.destroy()
     await Promise.resolve()

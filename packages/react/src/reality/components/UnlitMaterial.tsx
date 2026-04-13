@@ -24,12 +24,17 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     const init = async () => {
       let textureIdForNative = options.textureId
       if (options.textureId) {
-        const texturePending = resourceRegistry.get<SpatialObject>(
+        const texPromise = resourceRegistry.get<SpatialObject>(
+          'texture',
           options.textureId,
         )
-        if (texturePending) {
-          const textureResource = await texturePending
-          textureIdForNative = textureResource.id
+        if (texPromise) {
+          try {
+            const textureResource = await texPromise
+            textureIdForNative = textureResource.id
+          } catch (error) {
+            console.error(' ~ UnlitMaterial ~ texture resolve:', error)
+          }
         }
       }
       const commandOptions: SpatialUnlitMaterialOptions = {
@@ -39,7 +44,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         opacity: options.opacity,
       }
       const materialPromise = session.createUnlitMaterial(commandOptions)
-      resourceRegistry.add(options.id, materialPromise)
+      resourceRegistry.add('material', options.id, materialPromise)
       try {
         const mat = await materialPromise
         materialRef.current = mat
@@ -52,7 +57,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 
     return () => {
       // Use registry to schedule destruction after promise resolves
-      resourceRegistry.removeAndDestroy(options.id)
+      resourceRegistry.removeAndDestroy('material', options.id)
       materialRef.current = undefined
       isInitializedRef.current = false
     }
@@ -69,13 +74,21 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         if (options.textureId === '') {
           updates.textureId = ''
         } else {
-          const texturePending = ctx.resourceRegistry.get<SpatialObject>(
+          const texPromise = ctx.resourceRegistry.get<SpatialObject>(
+            'texture',
             options.textureId,
           )
-          if (texturePending) {
-            const textureResource = await texturePending
-            if (cancelled) return
-            updates.textureId = textureResource.id
+          if (texPromise) {
+            try {
+              const textureResource = await texPromise
+              if (cancelled) return
+              updates.textureId = textureResource.id
+            } catch (error) {
+              console.error(
+                ' ~ UnlitMaterial ~ texture resolve (update):',
+                error,
+              )
+            }
           } else {
             updates.textureId = options.textureId
           }
