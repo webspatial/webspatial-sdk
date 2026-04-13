@@ -1,5 +1,13 @@
 # @webspatial/core-sdk
 
+## Unreleased
+
+### Minor Changes
+
+- Runtime **capability matrix** (`CAPABILITY_TABLE` in `capability-data.ts`): visionOS **1.5.0** and **1.6.0**, picoOS **0.1.1** and **0.1.2**, transcribed from the product matrix (Model sub-tokens, Window/Volume/Material/SpatialRotateEvent). `supports()` continues to select the highest row with `row.version <=` shell semver from `WSAppShell` / `PicoWebApp`.
+- Runtime **DOM depth key lists**: `ELEMENT_DOM_DEPTH_KEYS` (`xrClientDepth`, `xrOffsetBack`), `WINDOW_DOM_DEPTH_KEYS` (`xrInnerDepth`, `xrOuterDepth`), `DOM_DEPTH_KEYS`, exported from `@webspatial/core-sdk` runtime.
+- **`contract-review.test.ts`**: asserts window depth keys absent when unsupported (plain UA) and element depth keys not mirrored on `window`.
+
 ## 1.5.0
 
 ### Minor Changes

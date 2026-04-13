@@ -1,5 +1,12 @@
 # @webspatial/react-sdk
 
+## Unreleased
+
+### Patch Changes
+
+- **`SpatializedStatic3DElementContainer`**: when `supports('Model', ['currentSrc'])`, ref `currentSrc` reads **`spatializedElement?.currentSrc`** (aligned with native); `ready` / `entityTransform` remain **`supports()`-gated** `Object.defineProperty` extras on the spatialized ref proxy.
+- **`useDomProxy.coverage.test.ts`**: tests for **`xrClientDepth`** / **`xrOffsetBack`** on `SpatialContainerRefProxy` (`in` + getter vs stubbed `supports()`).
+
 ## 1.5.0
 
 ### Minor Changes

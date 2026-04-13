@@ -1,5 +1,15 @@
 # @webspatial/platform-avp
 
+## 1.6.0
+
+### Minor Changes
+
+- Bump package semver to **1.6.0** so preview / matrix alignment can target **`WSAppShell/1.6.0`** alongside `@webspatial/core-sdk` capability rows (see core-sdk `CAPABILITY_TABLE`).
+
+### Patch Changes
+
+- **`manifest.swift`**: default `start_url` for local dev may point at **`#/runtime-capabilities`** (with prior `#/` entry commented) for contract / capability UI testing.
+
 ## 1.5.0
 
 ### Patch Changes
