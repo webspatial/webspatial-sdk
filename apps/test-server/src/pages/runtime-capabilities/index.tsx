@@ -13,6 +13,8 @@ import {
 } from '@webspatial/core-sdk'
 import { WebSpatialRuntime } from '@webspatial/react-sdk'
 
+import { ContractChecksPanel } from './ContractChecks'
+
 function ResultBadge({ value }: { value: boolean | undefined }) {
   if (value === true) {
     return (
@@ -80,12 +82,13 @@ function SectionCard({
   )
 }
 
-type CapabilitiesTab = 'env' | 'live' | 'matrix'
+type CapabilitiesTab = 'env' | 'live' | 'matrix' | 'contract'
 
 const CAPABILITY_TABS: { id: CapabilitiesTab; label: string }[] = [
   { id: 'env', label: 'Environment' },
   { id: 'live', label: 'Live capabilities' },
   { id: 'matrix', label: 'vision vs pico' },
+  { id: 'contract', label: 'Contract' },
 ]
 
 export default function RuntimeCapabilitiesPage() {
@@ -483,6 +486,21 @@ export default function RuntimeCapabilitiesPage() {
                 </table>
               </div>
             </div>
+          </SectionCard>
+        </div>
+
+        <div
+          role="tabpanel"
+          id="capabilities-panel-contract"
+          aria-labelledby="capabilities-tab-contract"
+          hidden={tab !== 'contract'}
+        >
+          <SectionCard
+            accent="violet"
+            title="OpenSpec contract checks"
+            subtitle="§3.5.1 window depth; §3.5.2 live spatialized ref (xrClientDepth / xrOffsetBack); §3.6 Model sub-tokens vs ref."
+          >
+            <ContractChecksPanel />
           </SectionCard>
         </div>
 

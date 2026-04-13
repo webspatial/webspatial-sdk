@@ -52,7 +52,7 @@ Use one sheet/section per runtime: `visionos`, `picoos`. Non-WebSpatial runtime 
 
 `xrClientDepth`, `xrOffsetBack`, `xrInnerDepth`, `xrOuterDepth`
 
-When one of these is `N`, corresponding runtime read should be `undefined`.
+When a key is `N`: follow [`review.md`](./review.md#review-3-5) §3.5 — **`xrInnerDepth` / `xrOuterDepth`** must be absent from **`window`**; **`xrClientDepth` / `xrOffsetBack`** must be absent from the **spatialized `ref`** surface (and must not be mirrored onto `window`).
 
 ### 2.7 Copy-paste: spreadsheet header row (tab-separated)
 

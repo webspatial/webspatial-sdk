@@ -16,7 +16,7 @@ See **[`review.md`](./review.md#review-contents)** (table of contents) for the f
 ## 3. React SDK
 
 - [x] 3.1 Export **`WebSpatialRuntime.supports`** from **`@webspatial/react-sdk`** (do not expose `getRuntime`)
-- [x] 3.2 DOM depth support keys: `xrClientDepth`, `xrOffsetBack`, `xrInnerDepth`, `xrOuterDepth`; unsupported reads should be `undefined`
+- [x] 3.2 DOM depth keys: `xrInnerDepth`/`xrOuterDepth` on `window`; `xrClientDepth`/`xrOffsetBack` on spatialized `ref` (not `window`) — see `review.md` §3.5
 - [x] 3.3 Model unsupported JS members should be absent (`in === false`, read `undefined`, no noop methods)
 
 ## 4. Tests and docs

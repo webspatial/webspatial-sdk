@@ -47,11 +47,20 @@ export const JS_SCENE_KEYS = [
   'VolumeScene',
 ] as const
 
+/**
+ * Spatialized container `ref` readbacks (`HTMLElement` / React `useDomProxy` Proxy).
+ * See `global.d.ts` (`HTMLElement`) and `useDomProxy.ts` (`has` / `get` traps).
+ */
+export const ELEMENT_DOM_DEPTH_KEYS = ['xrClientDepth', 'xrOffsetBack'] as const
+
+/**
+ * Scene / global readbacks on `Window` (`global.d.ts` → `Window`).
+ */
+export const WINDOW_DOM_DEPTH_KEYS = ['xrInnerDepth', 'xrOuterDepth'] as const
+
 export const DOM_DEPTH_KEYS = [
-  'xrClientDepth',
-  'xrOffsetBack',
-  'xrInnerDepth',
-  'xrOuterDepth',
+  ...ELEMENT_DOM_DEPTH_KEYS,
+  ...WINDOW_DOM_DEPTH_KEYS,
 ] as const
 
 /** PascalCase / string keys accepted by `supports()`. */

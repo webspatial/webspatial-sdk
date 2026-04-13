@@ -147,14 +147,32 @@ Scene sub-tokens:
 
 ### 3.5 DOM depth keys
 
-DOM depth fields are part of `supports` checks:
+DOM depth fields are part of `supports` checks (same four names). They attach to **two different surfaces** (see `global.d.ts`):
 
-- `xrClientDepth`
-- `xrOffsetBack`
-- `xrInnerDepth`
-- `xrOuterDepth`
+| Keys | Surface |
+|------|---------|
+| `xrInnerDepth`, `xrOuterDepth` | **`Window`** (global / scene readbacks) |
+| `xrClientDepth`, `xrOffsetBack` | **Spatialized container `ref`** (`HTMLElement` readbacks via the React SDK **dom proxy** — `useDomProxy.ts`; **not** `window`) |
 
-Contract: when a DOM depth key is unsupported, corresponding runtime read must be `undefined` (for example, `window.xrInnerDepth === undefined` when `supports('xrInnerDepth') === false`).
+<a id="review-3-5-1"></a>
+
+#### 3.5.1 `xrInnerDepth` / `xrOuterDepth` (`Window`)
+
+When **`supports('<key>')` is `false`**, the host must **not** expose that key on **`window`’s surface** — **`!(<key> in window)`** must hold (stricter than only `window.<key> === undefined`, which still passes if an own property exists with value `undefined`).
+
+Optional stricter check (own properties only): **`Object.prototype.hasOwnProperty.call(window, '<key>')` must be `false`** when unsupported.
+
+When **supported**, injection and type are host-defined; plain browsers may still omit these keys.
+
+<a id="review-3-5-2"></a>
+
+#### 3.5.2 `xrClientDepth` / `xrOffsetBack` (spatialized `ref`)
+
+These are **not** `window` globals. Consumers read them on the **spatialized element `ref`** (dom proxy). When **`supports('<key>')` is `false`**, **`'<key>' in ref` must be `false`** and reads must yield `undefined` (see Proxy `has` / `get` in `useDomProxy.ts`).
+
+**Additionally**, these keys must **not** be mirrored onto **`window`** — **`!(<key> in window)`** must hold (they belong on element/ref only; `Window` typings do not include them).
+
+When **supported**, values are host-defined; the dom proxy surfaces them per React SDK behavior.
 
 <a id="review-3-6"></a>
 
