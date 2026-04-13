@@ -65,3 +65,13 @@ export interface SpatialMagnifyEndMsg {
   type: SpatialWebMsgType.spatialmagnifyend
   detail: SpatialMagnifyEventDetail
 }
+
+export interface ModelLoadSuccess {
+  type: SpatialWebMsgType.modelloaded
+  // detail object is undefined in old native runtimes
+  detail?: { src: string }
+}
+
+export interface ModelLoadFailure {
+  type: SpatialWebMsgType.modelloadfailed
+}

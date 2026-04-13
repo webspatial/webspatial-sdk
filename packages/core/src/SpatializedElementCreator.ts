@@ -6,6 +6,7 @@ import {
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+import { ModelSource } from './types/types'
 
 export async function createSpatialized2DElement(): Promise<Spatialized2DElement> {
   const result = await new createSpatialized2DElementCommand().execute()
@@ -21,16 +22,18 @@ export async function createSpatialized2DElement(): Promise<Spatialized2DElement
 }
 
 export async function createSpatializedStatic3DElement(
-  modelURL: string,
+  modelURL?: string,
+  sources?: ModelSource[],
 ): Promise<SpatializedStatic3DElement> {
   const result = await new CreateSpatializedStatic3DElementCommand(
     modelURL,
+    sources,
   ).execute()
   if (!result.success) {
     throw new Error('createSpatializedStatic3DElement failed')
   } else {
     const { id } = result.data
-    return new SpatializedStatic3DElement(id, modelURL)
+    return new SpatializedStatic3DElement(id, modelURL, sources)
   }
 }
 

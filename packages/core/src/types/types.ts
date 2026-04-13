@@ -95,9 +95,15 @@ export interface Spatialized2DElementProperties
   scrollEdgeInsetsMarginRight: number
 }
 
+export interface ModelSource {
+  src: string
+  type?: string
+}
+
 export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
+  sources?: ModelSource[]
   modelTransform?: number[]
   autoplay?: boolean
   loop?: boolean
