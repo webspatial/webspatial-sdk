@@ -184,7 +184,9 @@ class SceneManager {
         url.includes('createSpatialized2DElement') ||
         url.includes('createAttachment')
       ) {
-        const token = window.webSpatial?.genToken?.()
+        const token = (
+          window.webSpatial ?? window.__webspatialShell__
+        )?.genToken?.()
         if (token) {
           const command = url.includes('createAttachment')
             ? 'createAttachment'
