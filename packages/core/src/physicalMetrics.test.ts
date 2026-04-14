@@ -107,4 +107,43 @@ describe('physicalMetrics', () => {
     expect(m.getValue().meterToPtUnscaled).toBe(400)
     ;(window as any).__webspatialsdk__ = undefined
   })
+
+  test('subscribe supports multiple concurrent subscribers', async () => {
+    const m = await loadModule()
+    const { SpatialWebEvent } = await import('./SpatialWebEvent')
+    SpatialWebEvent.init()
+
+    const cb1 = vi.fn()
+    const cb2 = vi.fn()
+    const unsubscribe1 = m.subscribe(cb1)
+    const unsubscribe2 = m.subscribe(cb2)
+
+    ;(window as any).__webspatialsdk__ = {
+      physicalMetrics: {
+        meterToPtScaled: 900,
+        meterToPtUnscaled: 800,
+      },
+    }
+    window.__SpatialWebEvent({ id: 'window', data: {} })
+    expect(cb1).toHaveBeenCalledTimes(1)
+    expect(cb2).toHaveBeenCalledTimes(1)
+    expect(m.getValue().meterToPtScaled).toBe(900)
+    expect(m.getValue().meterToPtUnscaled).toBe(800)
+
+    unsubscribe1()
+    ;(window as any).__webspatialsdk__ = {
+      physicalMetrics: {
+        meterToPtScaled: 700,
+        meterToPtUnscaled: 600,
+      },
+    }
+    window.__SpatialWebEvent({ id: 'window', data: {} })
+    expect(cb1).toHaveBeenCalledTimes(1)
+    expect(cb2).toHaveBeenCalledTimes(2)
+    expect(m.getValue().meterToPtScaled).toBe(700)
+    expect(m.getValue().meterToPtUnscaled).toBe(600)
+
+    unsubscribe2()
+    ;(window as any).__webspatialsdk__ = undefined
+  })
 })
