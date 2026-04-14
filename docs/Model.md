@@ -10,7 +10,7 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ```jsx
 function Example() {
-  const style = { height: '200px', '--xr-depth': '100px' }
+  const style = { display: 'block', height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
       <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
@@ -343,14 +343,7 @@ The implementation will touch four key areas of the WebSpatial SDK.
 
 #### 4.2. Core SDK (`@webspatial/core-sdk`)
 
-- **New JSB Commands**: We will define a new set of commands in `JSBCommand.ts` for animation control, all targeting a `SpatializedStatic3DElement`.
-
-  - `PlayAnimationCommand(id: string)`
-  - `PauseAnimationCommand(id: string)`
-  - `SetAnimationTimeCommand(id: string, time: number)`
-  - `SetPlaybackRateCommand(id: string, rate: number)`
-
-- **New Properties**: The `UpdateSpatializedStatic3DElementProperties` command will be extended to carry `autoplay` and `loop` booleans.
+- **New Properties**: The `UpdateSpatializedStatic3DElementProperties` command will be extended to carry `autoplay`, `loop`, `animationPaused`, `playbackRate` and `currentTime`.
 
 - **New WebMsg Events**: To sync state from native back to the web, we'll define new events in `WebMsgCommand.ts`:
 
