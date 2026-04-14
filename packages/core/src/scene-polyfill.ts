@@ -255,9 +255,17 @@ class SceneManager {
       )
       if (windowNext && Object.keys(windowNext).length > 0) {
         xr_window_defaults = windowNext
+        console.log(
+          '🚀 ~ SceneManager ~ setupManifest ~ xr_window_defaults:',
+          xr_window_defaults,
+        )
       }
       if (volumeNext && Object.keys(volumeNext).length > 0) {
         xr_volume_defaults = volumeNext
+        console.log(
+          '🚀 ~ SceneManager ~ setupManifest ~ xr_volume_defaults:',
+          xr_volume_defaults,
+        )
       }
     } catch (error: any) {
       console.warn(
@@ -312,6 +320,7 @@ class SceneManager {
     }
 
     const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
+    console.log('🚀 ~ SceneManager ~ cmd:', cmd)
     const result = cmd.executeSync()
 
     const id = result.data?.id
