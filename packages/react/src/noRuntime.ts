@@ -37,7 +37,7 @@ export class WebSpatialRuntimeError extends Error {
 export class Spatial {
   /**
    * Requests a session object from the browser
-   * @returns The session or null if not availible in the current browser
+   * @returns The session or null if not available in the current browser
    * [TODO] discuss implications of this not being async
    */
   requestSession() {
@@ -59,14 +59,14 @@ export class Spatial {
   }
   /**
    * Gets the native version, format is "x.x.x"
-   * @returns native version string
+   * @returns native version string, or null when runtime is unavailable
    */
   getNativeVersion() {
     return null
   }
   /**
    * Gets the client version, format is "x.x.x"
-   * @returns client version string
+   * @returns client version string, or null when runtime is unavailable
    */
   getClientVersion() {
     return null
@@ -92,5 +92,5 @@ export const PhysicalMetrics = {
     meterToPtUnscaled: 1360,
     meterToPtScaled: 1360,
   }),
-  subscribe: (cb: any) => {},
+  subscribe: (cb: any) => () => {},
 }
