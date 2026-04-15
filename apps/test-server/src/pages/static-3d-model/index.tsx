@@ -30,7 +30,6 @@ function App() {
       <CSSTransform onChange={setTransform} />
       <EntityTransform model={modelRef} />
       <Model
-        className="block"
         // src="/modelasset/cone.usdz"
         enable-xr
         autoPlay

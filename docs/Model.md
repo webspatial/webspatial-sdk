@@ -10,7 +10,7 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ```jsx
 function Example() {
-  const style = { display: 'block', height: '200px', '--xr-depth': '100px' }
+  const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
       <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
