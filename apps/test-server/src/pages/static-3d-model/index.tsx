@@ -58,11 +58,11 @@ function App() {
       >
         <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
-          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
+          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
           type="model/vnd.usdz+zip"
         />
         <source
-          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
           type="model/vnd.usdz+zip"
         />
         <img
