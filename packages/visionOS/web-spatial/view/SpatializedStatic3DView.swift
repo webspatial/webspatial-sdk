@@ -73,6 +73,7 @@ struct SpatializedStatic3DView: View {
                    let animation = asset.availableAnimations.first
                 {
                     asset.selectedAnimation = animation
+                    asset.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
                     asset.animationPlaybackController?.resume()
                 } else {
                     // Non-looping animation completed naturally; sync paused state to JS
@@ -80,6 +81,7 @@ struct SpatializedStatic3DView: View {
                 }
             }
             .onChange(of: spatializedStatic3DElement.animationPaused) { onPlayback(isPaused: $1) }
+            .onChange(of: spatializedStatic3DElement.playbackRate) { asset?.animationPlaybackController?.speed = Float($1) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
@@ -98,6 +100,7 @@ struct SpatializedStatic3DView: View {
             asset.selectedAnimation = asset.availableAnimations.first
         }
         let controller = asset.animationPlaybackController
+        controller?.speed = Float(spatializedStatic3DElement.playbackRate)
         isPaused ? controller?.pause() : controller?.resume()
         let duration = controller?.duration ?? 0
         spatialScene.sendWebMsg(

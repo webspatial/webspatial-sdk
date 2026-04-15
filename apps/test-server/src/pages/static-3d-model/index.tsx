@@ -11,9 +11,19 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
+  const [isPaused, setIsPaused] = useState(true)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
   useEffect(() => {
     modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
+  // Monitor duration and pause state since there is no playback lifecycle events
+  useEffect(() => {
+    const id = setInterval(
+      () => setIsPaused(modelRef.current?.paused ?? true),
+      200,
+    )
+    return () => clearInterval(id)
+  }, [setIsPaused])
 
   return (
     <div className="prose max-w-none">
@@ -28,7 +38,7 @@ function App() {
         style={{
           height: '200px',
           '--xr-depth': '100px',
-          '--xr-back': '100px',
+          '--xr-back': '50px',
           transform,
         }}
         ref={modelRef}
@@ -83,8 +93,24 @@ function App() {
         >
           ⏸
         </button>
+        <select
+          className="select m-1"
+          value={playbackRate}
+          onChange={e => {
+            setPlaybackRate(parseFloat(e.target.value))
+            if (modelRef.current?.playbackRate) {
+              modelRef.current.playbackRate = parseFloat(e.target.value)
+            }
+          }}
+        >
+          <option value={0.5}>0.5</option>
+          <option value={1.0}>1.0</option>
+          <option value={1.5}>1.5</option>
+          <option value={100.0}>100.0</option>
+        </select>
         <span className="m-1">
-          Paused: {modelRef.current?.paused ?? 'false'}
+          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${isPaused}`}, Rate: {modelRef.current?.playbackRate}
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />

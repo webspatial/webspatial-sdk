@@ -623,6 +623,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.animationPaused = animationPaused
         }
 
+        if let playbackRate = command.playbackRate {
+            spatializedElement.playbackRate = playbackRate
+        }
+
         resolve(.success(baseReplyData))
     }
 
