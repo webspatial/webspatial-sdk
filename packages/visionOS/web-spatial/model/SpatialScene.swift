@@ -1236,6 +1236,31 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(baseReplyData))
     }
 
+    /// After `SpatialUnlitMaterial.updateProperties`, ModelComponent still has a stale material copy — only refresh users of that material id.
+    private func refreshComponentsUsingMaterial(_ materialId: String) {
+        for (_, obj) in spatialObjects {
+            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(materialId) {
+                comp.refreshMaterials()
+            }
+        }
+        for (_, obj) in spatialObjects {
+            if let entity = obj as? SpatialModelEntity, entity.usesMaterial(materialId) {
+                entity.refreshMaterials()
+            }
+        }
+    }
+
+    /// Texture URL changes can affect any material referencing that resource; we do not track texture→material edges, so refresh every model component.
+    private func refreshAllModelMaterials() {
+        for (_, obj) in spatialObjects {
+            if let comp = obj as? SpatialModelComponent {
+                comp.refreshMaterials()
+            } else if let modelEntity = obj as? SpatialModelEntity {
+                modelEntity.refreshMaterials()
+            }
+        }
+    }
+
     private func onUpdateTextureProperties(command: UpdateTextureProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let texture = spatialObjects[command.id] as? SpatialTextureResource else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(command.id) not found")))
@@ -1248,13 +1273,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         Task {
             do {
                 try await texture.updateURL(newURL)
-                for (_, obj) in spatialObjects {
-                    if let comp = obj as? SpatialModelComponent {
-                        comp.refreshMaterials()
-                    } else if let modelEntity = obj as? SpatialModelEntity {
-                        modelEntity.refreshMaterials()
-                    }
-                }
+                // Materials may still hold the old TextureResource until JS sends UpdateUnlitMaterialProperties; push copies to all meshes.
+                refreshAllModelMaterials()
                 resolve(.success(baseReplyData))
             } catch {
                 resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
@@ -1279,14 +1299,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             }
         }
         material.updateProperties(color: command.color, texture: texture, transparent: command.transparent, opacity: command.opacity)
-        // Re-apply material to any ModelComponent or ModelEntity override that references it
-        for (_, obj) in spatialObjects {
-            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(command.id) {
-                comp.refreshMaterials()
-            } else if let modelEntity = obj as? SpatialModelEntity, modelEntity.usesMaterial(command.id) {
-                modelEntity.refreshMaterials()
-            }
-        }
+        refreshComponentsUsingMaterial(command.id)
         resolve(.success(baseReplyData))
     }
 

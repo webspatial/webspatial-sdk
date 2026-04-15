@@ -22,6 +22,8 @@ class SpatialMaterial: SpatialObject {
 
 @Observable
 class SpatialUnlitMaterial: SpatialMaterial {
+    /// Single RealityKit unlit instance we mutate in place; avoids allocating a new `UnlitMaterial()` on every property update.
+    private var _mat: UnlitMaterial
     private(set) var currentColor: UIColor
     private(set) var currentTexture: TextureResource?
     private(set) var currentTransparent: Bool
@@ -32,11 +34,22 @@ class SpatialUnlitMaterial: SpatialMaterial {
         currentTexture = texture
         currentTransparent = transparent
         currentOpacity = opacity
+        _mat = UnlitMaterial()
         super.init(.UnlitMaterial)
-        var mat = UnlitMaterial()
-        mat.color = .init(tint: currentColor, texture: texture != nil ? .init(texture!) : nil)
-        mat.blending = transparent ? .transparent(opacity: .init(scale: opacity)) : .opaque
-        _resource = mat
+        applyProperties()
+    }
+
+    /// Pushes `currentColor` / `currentTexture` / blending into `_mat` and exposes it as `resource`.
+    /// ModelComponent still holds its own copy, so callers must `refreshMaterials()` on affected components after this.
+    private func applyProperties() {
+        _mat.color = .init(
+            tint: currentColor,
+            texture: currentTexture.map { .init($0) }
+        )
+        _mat.blending = currentTransparent
+            ? .transparent(opacity: .init(scale: currentOpacity))
+            : .opaque
+        _resource = _mat
     }
 
     func updateProperties(color: String?, texture: TextureResource?? = nil, transparent: Bool?, opacity: Float?) {
@@ -52,10 +65,7 @@ class SpatialUnlitMaterial: SpatialMaterial {
         if let opacity = opacity {
             currentOpacity = opacity
         }
-        var mat = UnlitMaterial()
-        mat.color = .init(tint: currentColor, texture: currentTexture != nil ? .init(currentTexture!) : nil)
-        mat.blending = currentTransparent ? .transparent(opacity: .init(scale: currentOpacity)) : .opaque
-        _resource = mat
+        applyProperties()
     }
 }
 

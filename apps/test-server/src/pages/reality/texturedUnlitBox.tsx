@@ -19,6 +19,8 @@ const DEMO_TEXTURE_URL =
 export default function TexturedUnlitBox() {
   const [textureReady, setTextureReady] = useState(false)
   const [status, setStatus] = useState('Loading texture…')
+  /** Live-update shared unlit material (same id on all primitives below). */
+  const [tint, setTint] = useState('#ffffff')
 
   return (
     <div className="p-10 text-white min-h-full">
@@ -33,6 +35,20 @@ export default function TexturedUnlitBox() {
         <code className="text-gray-300">ConeEntity</code>, and{' '}
         <code className="text-gray-300">PlaneEntity</code>. Status: {status}
       </p>
+      {textureReady ? (
+        <p className="text-sm text-gray-400 mb-3">
+          Dynamic unlit: one shared material; tint updates in place.
+          <button
+            type="button"
+            className="ml-3 px-3 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-xs"
+            onClick={() =>
+              setTint(t => (t === '#ffffff' ? '#ff8844' : '#ffffff'))
+            }
+          >
+            Toggle tint ({tint})
+          </button>
+        </p>
+      ) : null}
 
       <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111]">
         <Reality
@@ -61,7 +77,7 @@ export default function TexturedUnlitBox() {
             <>
               <UnlitMaterial
                 id="matTextured"
-                color="#ffffff"
+                color={tint}
                 textureId="texGrid"
                 transparent={false}
                 opacity={1}
