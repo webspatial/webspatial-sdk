@@ -20,11 +20,7 @@ export function parseShellToken(ua: string): {
 
 /** Pico runtime: require explicit Pico tokens (do not treat generic `like Quest` VR UAs as picoos). */
 function inferPicoOs(ua: string): boolean {
-  return (
-    /\bPicoWebApp\//i.test(ua) ||
-    /\bPicoBrowser\b/i.test(ua) ||
-    /\bPicoWebApp\b/i.test(ua)
-  )
+  return /\bPicoWebApp\//i.test(ua) || /\bPicoBrowser\b/i.test(ua)
 }
 
 /** visionOS-class WebView UAs include a Mac OS X platform token; `WSAppShell` alone is not enough. */
