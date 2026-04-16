@@ -58,7 +58,7 @@ function renderPlaceholderInSubPortal(
 
   const { width, height } = portalInstanceObject.domRect
   const display =
-    portalInstanceObject.computedStyle!.getPropertyPriority('display')
+    portalInstanceObject.computedStyle!.getPropertyValue('display')
 
   const spatialIdProps = { [SpatialID]: spatialId }
   return (
