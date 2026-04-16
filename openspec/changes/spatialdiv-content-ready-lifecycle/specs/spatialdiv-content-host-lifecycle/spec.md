@@ -30,6 +30,32 @@ Application code MUST NOT assume that `ref.current` is a safe default mount targ
 - **WHEN** a spatial container is mounted with `ref={r}` and `onSpatialContentReady` is invoked
 - **THEN** `r.current` MUST NOT be `null`
 
+### Requirement: Ref assignment is gated by both internal hosts and deduplicated
+
+The system SHALL set the forwarded spatial container ref to a non-null proxy value only when BOTH of the following are available:
+
+- the Standard instance host/proxy (`domProxy`), and
+- the TransformVisibilityTaskContainer host.
+
+If either dependency is unavailable, the system SHALL set the forwarded ref to `null`.
+
+The system SHALL deduplicate ref dispatches:
+
+- if the effective outgoing ref value is already `null`, it MUST NOT dispatch `null` again;
+- if the effective outgoing ref value is already the same non-null proxy object, it MUST NOT dispatch it again.
+
+This deduplication requirement applies to both object refs (`ref.current = ...`) and callback refs (`ref(value)`).
+
+#### Scenario: No duplicate callback for unchanged null state
+
+- **WHEN** internal updates occur while either host is still unavailable and the effective ref value remains `null`
+- **THEN** callback refs MUST NOT be invoked repeatedly with `null`
+
+#### Scenario: No duplicate callback for unchanged non-null state
+
+- **WHEN** internal updates occur while both hosts remain available and the effective ref value remains the same proxy object
+- **THEN** callback refs MUST NOT be invoked repeatedly with the same non-null object
+
 ### Requirement: Cleanup function semantics
 
 If `onSpatialContentReady` returns a function, the system SHALL invoke that function:

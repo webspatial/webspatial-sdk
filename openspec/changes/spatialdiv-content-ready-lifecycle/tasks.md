@@ -8,6 +8,7 @@
 
 ## 2. Runtime wiring (SpatializedContainer / Portal)
 
+- [ ] 2.0 Update `SpatialContainerRefProxy.updateDomProxyToRef` so ref dispatches are deduplicated when the effective value does not change (`null`→`null` and same proxy→same proxy), for both object refs and callback refs.
 - [ ] 2.1 Plumb `onSpatialContentReady` through `SpatializedContainer` props into the portal pipeline without forwarding it to the underlying DOM component as an unknown attribute.
 - [ ] 2.2 Implement ready emission in `PortalSpatializedContainer` when `spatializedElement` exists and `portalInstanceObject.dom` is available, and portal content is about to/just mounted (exact timing per design: must satisfy spec ordering vs `ref`).
 - [ ] 2.3 Implement cleanup bookkeeping: store last returned cleanup, invoke it before subsequent ready, on unmount, and on internal teardown paths (including StrictMode remount cases).
@@ -22,6 +23,7 @@
 
 - [ ] 4.1 Add focused unit/integration tests under `packages/react` (prefer existing test harness) covering: first ready, cleanup on unmount, remount (StrictMode-like double invoke), nested ordering.
 - [ ] 4.2 Add a regression test that degraded container does not forward `onSpatialContentReady` to DOM attributes.
+- [ ] 4.3 Add unit tests for ref deduplication: repeated internal updates must not re-invoke callback refs with the same `null` or same proxy object.
 
 ## 5. Docs & demos
 
