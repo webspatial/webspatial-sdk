@@ -2,6 +2,7 @@ import { initPolyfill } from './spatialized-container'
 
 export { WebSpatialRuntime } from './webSpatialRuntime'
 export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
+export type { CapabilityKey } from '@webspatial/core-sdk'
 export { enableDebugTool } from './utils'
 export * from './initScene'
 export * from './spatialized-container'

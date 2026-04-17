@@ -63,14 +63,17 @@ export const DOM_DEPTH_KEYS = [
   ...WINDOW_DOM_DEPTH_KEYS,
 ] as const
 
-/** PascalCase / string keys accepted by `supports()`. */
-export const TOP_LEVEL_KEYS: readonly string[] = [
+/** Top-level names accepted by `supports(name)` (canonical keys after alias normalization). */
+export const TOP_LEVEL_KEYS = [
   ...COMPONENT_KEYS,
   ...CSS_KEYS,
   ...GESTURE_KEYS,
   ...JS_SCENE_KEYS,
   ...DOM_DEPTH_KEYS,
-]
+] as const
+
+/** Union of documented capability keys; unknown strings may still be passed to `supports` (returns `false`). */
+export type CapabilityKey = (typeof TOP_LEVEL_KEYS)[number]
 
 const ALIAS_TO_CANONICAL: Record<string, string> = {
   Box: 'BoxEntity',
@@ -117,7 +120,7 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
 }
 
 export function isKnownTopLevel(name: string): boolean {
-  return TOP_LEVEL_KEYS.includes(name)
+  return (TOP_LEVEL_KEYS as readonly string[]).includes(name)
 }
 
 export function isKnownSubToken(name: string, token: string): boolean {
