@@ -5,7 +5,7 @@ import { SpatialPlaneGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type PlaneEntityProps = EntityProps & {
+export type PlaneEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialPlaneGeometryOptions

@@ -4,7 +4,7 @@ import { useRealityContext } from '../context'
 import type { ContainerEntry } from '../context/AttachmentContext'
 import { InsideAttachmentContext } from '../context/InsideAttachmentContext'
 
-type AttachmentAssetProps = {
+export type AttachmentAssetProps = {
   name: string
   children?: React.ReactNode
 }

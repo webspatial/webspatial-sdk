@@ -544,9 +544,13 @@ async function main() {
     packageRoot,
   )
 
-  const componentFiles = componentDocgenConfig.components.map(component =>
-    path.resolve(repoRoot, component.sourceFile),
-  )
+  const componentFiles = componentDocgenConfig.components.flatMap(component => {
+    const paths = [path.resolve(repoRoot, component.sourceFile)]
+    if (component.propsSourceFile) {
+      paths.push(path.resolve(repoRoot, component.propsSourceFile))
+    }
+    return paths
+  })
 
   const allRootNames = Array.from(
     new Set([...parsedConfig.fileNames, ...componentFiles]),
@@ -570,8 +574,20 @@ async function main() {
       )
     }
 
+    const propsTypeSourceFile = componentConfig.propsSourceFile
+      ? program.getSourceFile(
+          path.resolve(repoRoot, componentConfig.propsSourceFile),
+        )
+      : sourceFile
+
+    if (!propsTypeSourceFile) {
+      throw new Error(
+        `Props source file not found in TypeScript program: ${componentConfig.propsSourceFile}`,
+      )
+    }
+
     const propsTypeNode = findExportedTypeNode(
-      sourceFile,
+      propsTypeSourceFile,
       componentConfig.propsType,
     )
     if (!propsTypeNode) {

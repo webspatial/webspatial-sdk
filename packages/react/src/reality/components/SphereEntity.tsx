@@ -5,7 +5,7 @@ import { SpatialSphereGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type SphereEntityProps = EntityProps & {
+export type SphereEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialSphereGeometryOptions

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useRealityContext } from '../context'
 import { SpatialModelAsset } from '@webspatial/core-sdk'
-type Props = {
+export type ModelAssetProps = {
   children?: React.ReactNode
   id: string // user id
   src: string // model url
@@ -17,7 +17,10 @@ const resolveAssetUrl = (url: string): string => {
   return new URL(url, window.location.href).href
 }
 
-export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
+export const ModelAsset: React.FC<ModelAssetProps> = ({
+  children,
+  ...options
+}) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialModelAsset>()
   useEffect(() => {

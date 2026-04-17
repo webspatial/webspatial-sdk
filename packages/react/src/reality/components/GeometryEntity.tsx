@@ -12,7 +12,7 @@ import { shallowEqualObject, shallowEqualArray } from '../utils'
 import { BaseEntity } from './BaseEntity'
 import { useRealityContext } from '../context'
 
-type GeometryEntityProps = EntityProps &
+export type GeometryEntityProps = EntityProps &
   EntityEventHandler & {
     children?: React.ReactNode
     materials?: string[]

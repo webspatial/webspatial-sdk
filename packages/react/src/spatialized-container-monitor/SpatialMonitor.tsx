@@ -2,7 +2,7 @@ import { useMonitorDomChange } from './useMonitorDomChange'
 import { useMonitorDocumentHeaderChange } from './useMonitorDocumentHeaderChange'
 import { ElementType, ForwardedRef, forwardRef } from 'react'
 
-type SpatialMonitorProps = {
+export type SpatialMonitorProps = {
   El?: ElementType
 }
 
