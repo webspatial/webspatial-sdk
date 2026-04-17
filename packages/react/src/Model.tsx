@@ -8,7 +8,6 @@ import { withSSRSupported } from './ssr'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
 
 import { Spatial } from '@webspatial/core-sdk'
-import { WebSpatialRuntime } from './webSpatialRuntime'
 
 export type ModelProps = SpatializedStatic3DContainerProps & {
   'enable-xr'?: boolean
@@ -24,12 +23,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   // Model must handle insideAttachment itself because
   // SpatializedStatic3DElementContainer passes component="div" to the base,
   // but the correct degraded element for a Model is a <model> tag, not a <div>.
-  if (
-    !enableXR ||
-    !spatial.runInSpatialWeb() ||
-    insideAttachment ||
-    !WebSpatialRuntime.supports('Model')
-  ) {
+  if (!enableXR || !spatial.runInSpatialWeb() || insideAttachment) {
     const {
       onSpatialTap,
       onSpatialDragStart,

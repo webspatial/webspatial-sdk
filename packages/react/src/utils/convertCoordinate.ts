@@ -4,11 +4,7 @@ const e2w = await convertCoordinate(position, { from: elementOrEntity, to: windo
 const w2e = await convertCoordinate(position, { from: window, to: elementOrEntity })
  * 
  */
-import {
-  supports,
-  WebSpatialRuntimeError,
-  type Vec3,
-} from '@webspatial/core-sdk'
+import type { Vec3 } from '@webspatial/core-sdk'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
@@ -55,9 +51,6 @@ export async function convertCoordinate(
   position: Vec3,
   { from, to }: { from: CoordinateConvertible; to: CoordinateConvertible },
 ): Promise<Vec3> {
-  if (!supports('convertCoordinate')) {
-    throw new WebSpatialRuntimeError('convertCoordinate')
-  }
   try {
     const fromId = resolveSpatialObjectId(from)
     const toId = resolveSpatialObjectId(to)
