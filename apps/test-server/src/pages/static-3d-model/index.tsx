@@ -26,11 +26,12 @@ function App() {
   }, [setIsPaused])
 
   return (
-    <div className="prose max-w-none">
+    <div className="prose max-w-none p-10">
       <CSSTransform onChange={setTransform} />
       <EntityTransform model={modelRef} />
       <Model
         // src="/modelasset/cone.usdz"
+        poster="/img/toy_drummer.png"
         enable-xr
         autoPlay
         loop
@@ -65,6 +66,10 @@ function App() {
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}
       >
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
         <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
           src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"

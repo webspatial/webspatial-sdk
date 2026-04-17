@@ -15,6 +15,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var loop: Bool = false
     var animationPaused: Bool = true
     var playbackRate: Double = 1.0
+    var posterURL: String?
     var allSources: [ModelSource] {
         return if let modelURL {
             [ModelSource(src: modelURL, type: nil)] + sources
