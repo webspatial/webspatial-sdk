@@ -26,6 +26,8 @@ pnpm docs:components
 pnpm docs:components:check
 ```
 
+`docs:components:check` is also run in GitHub Actions CI so generated files stay aligned with source.
+
 Generated output is written to:
 
 - `docs/generated/react-components.json`

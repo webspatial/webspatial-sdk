@@ -318,6 +318,7 @@
 ## SpatializedContainer
 
 - Source: `packages/react/src/spatialized-container/SpatializedContainer.tsx`
+- Props type source: `packages/react/src/spatialized-container/types.ts`
 - Props type: `SpatializedContainerProps`
 
 ### Custom props
@@ -630,6 +631,7 @@
 ## Spatialized2DElementContainer
 
 - Source: `packages/react/src/spatialized-container/Spatialized2DElementContainer.tsx`
+- Props type source: `packages/react/src/spatialized-container/types.ts`
 - Props type: `Spatialized2DElementContainerProps`
 
 ### Custom props
@@ -940,6 +942,7 @@
 ## SpatializedStatic3DElementContainer
 
 - Source: `packages/react/src/spatialized-container/SpatializedStatic3DElementContainer.tsx`
+- Props type source: `packages/react/src/spatialized-container/types.ts`
 - Props type: `SpatializedStatic3DContainerProps`
 
 ### Custom props

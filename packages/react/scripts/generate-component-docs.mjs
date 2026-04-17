@@ -396,8 +396,7 @@ function normalizeDocgenPropMeta(propInfo = {}) {
   }
 }
 
-async function parseWithReactDocgen(componentConfig) {
-  const reactDocgen = await getReactDocgenModule()
+async function parseWithReactDocgen(componentConfig, reactDocgen) {
   if (!reactDocgen?.parse) {
     return null
   }
@@ -498,6 +497,9 @@ function renderDocsMarkdown(docJson) {
     lines.push(`## ${component.displayName || component.name}`)
     lines.push('')
     lines.push(`- Source: \`${component.sourceFile}\``)
+    if (component.propsSourceFile) {
+      lines.push(`- Props type source: \`${component.propsSourceFile}\``)
+    }
     lines.push(`- Props type: \`${component.propsType}\``)
     if (component.refTypeResolved) {
       lines.push(`- Ref type: \`${component.refTypeResolved}\``)
@@ -562,7 +564,11 @@ async function main() {
   })
   const checker = program.getTypeChecker()
 
+  const reactDocgenModule = await getReactDocgenModule()
+  const docgenModuleLoaded = Boolean(reactDocgenModule?.parse)
+
   const components = []
+  let docgenSummaryMergeCount = 0
 
   for (const componentConfig of componentDocgenConfig.components) {
     const absoluteSource = path.resolve(repoRoot, componentConfig.sourceFile)
@@ -591,8 +597,10 @@ async function main() {
       componentConfig.propsType,
     )
     if (!propsTypeNode) {
+      const propsDefFile =
+        componentConfig.propsSourceFile ?? componentConfig.sourceFile
       throw new Error(
-        `Could not find exported type/interface ${componentConfig.propsType} in ${componentConfig.sourceFile}`,
+        `Could not find exported type/interface ${componentConfig.propsType} in ${propsDefFile}`,
       )
     }
 
@@ -615,7 +623,13 @@ async function main() {
       : ''
 
     const tsProps = extractTsProps(checker, sourceFile, propsTypeNode)
-    const reactDocgenData = await parseWithReactDocgen(componentConfig)
+    const reactDocgenData = await parseWithReactDocgen(
+      componentConfig,
+      reactDocgenModule,
+    )
+    if (reactDocgenData) {
+      docgenSummaryMergeCount += 1
+    }
     const mergedProps = mergeTsAndDocgenProps(tsProps, reactDocgenData)
     const categorized = classifyProps(mergedProps)
 
@@ -625,6 +639,9 @@ async function main() {
         extractDisplayName(sourceFile, componentConfig.name) ||
         componentConfig.name,
       sourceFile: componentConfig.sourceFile,
+      propsSourceFile: componentConfig.propsSourceFile
+        ? toPosix(componentConfig.propsSourceFile)
+        : null,
       propsType: componentConfig.propsType,
       refTypeResolved: refTypeNode
         ? checker.typeToString(checker.getTypeAtLocation(refTypeNode))
@@ -635,11 +652,16 @@ async function main() {
   }
 
   const output = {
-    schemaVersion: 2,
+    schemaVersion: 3,
+    package: '@webspatial/react-sdk',
     generatedBy: 'packages/react/scripts/generate-component-docs.mjs',
     parser: {
-      primary: 'react-docgen',
-      fallback: 'typescript-checker',
+      propsAndTypes: 'typescript-program',
+      jsdocMerge: docgenModuleLoaded ? 'react-docgen' : 'unavailable',
+    },
+    reactDocgen: {
+      moduleLoaded: docgenModuleLoaded,
+      componentsWithDocMatch: docgenSummaryMergeCount,
     },
     tsconfigPath: toPosix(path.relative(repoRoot, tsconfigPath)),
     components,

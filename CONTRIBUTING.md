@@ -56,6 +56,10 @@ npm run dev
    - You should now see webspatial running in the simulator
    - To set a custom initial URL, you can modify `manifest.swift`
 
+## React SDK component API docs
+
+When you add or change a **public** React component under `packages/react` (or its exported prop types), update `packages/react/scripts/component-docs.config.mjs` if needed, then from the repo root run `pnpm docs:components` and commit `docs/generated/react-components.json` and `docs/generated/react-components.md`. CI runs `pnpm docs:components:check` to ensure they stay in sync.
+
 ## Packages
 
 - [@webspatial/react-sdk](packages/react/README.md) - The React SDK makes the WebSpatial API immediately available inside React.
