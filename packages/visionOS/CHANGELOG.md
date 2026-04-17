@@ -9,6 +9,21 @@
 ### Patch Changes
 
 - **`manifest.swift`**: default `start_url` for local dev may point at **`#/runtime-capabilities`** (with prior `#/` entry commented) for contract / capability UI testing.
+- f1b28eb: Model add play(), pause(), and paused for playback controls
+- 0f743a1: Model add <source> element support for multi-format fallback
+- 5d72631: Add autoplay attribute to <Model>
+
+  When a 3D model contains an embedded animation, developers can opt into automatic playback via a simple boolean attribute. When autoplay is set, the model's first available animation begins playing as soon as the model has successfully loaded.
+
+- 005480c: Model add duration and playbackRate for animation control
+- d9a0418: Add loop attribute to <Model>
+
+  When loop is set, the animation automatically seeks back to the start upon reaching the end.
+
+### Patch Changes
+
+- 2d9762d: fix: Model animation bugs
+- badae61: fix spatialzedElementView stuttering issue when dragging
 
 ## 1.5.0
 
