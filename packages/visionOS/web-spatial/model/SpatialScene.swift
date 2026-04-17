@@ -85,6 +85,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     // TOPIC end
 
+    var isSpatialElementGestureActive = false
+
     var spatialWebViewModel: SpatialWebViewModel
 
     private var meterToPtUnscaled: Double?
@@ -617,6 +619,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let loop = command.loop {
             spatializedElement.loop = loop
+        }
+
+        if let animationPaused = command.animationPaused {
+            spatializedElement.animationPaused = animationPaused
+        }
+
+        if let playbackRate = command.playbackRate {
+            spatializedElement.playbackRate = playbackRate
         }
 
         resolve(.success(baseReplyData))

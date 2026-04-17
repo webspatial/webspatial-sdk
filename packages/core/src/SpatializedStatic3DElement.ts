@@ -8,6 +8,8 @@ import {
   ModelLoadSuccess,
   ModelLoadFailure,
   SpatialWebMsgType,
+  AnimationStateChangeDetail,
+  AnimationStateChangeMsg,
 } from './WebMsgCommand'
 
 /**
@@ -106,6 +108,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (properties.loop !== undefined) {
       this._loop = properties.loop
     }
+    if (properties.playbackRate !== undefined) {
+      this._playbackRate = properties.playbackRate
+    }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
       properties,
@@ -113,13 +118,88 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Total animation duration in seconds, synced from native.
+   */
+  private _duration: number = 0
+
+  /**
+   * Returns the total animation duration in seconds.
+   */
+  get duration(): number {
+    return this._duration
+  }
+
+  /**
+   * Playback speed multiplier.
+   */
+  private _playbackRate: number = 1
+
+  /**
+   * Returns the current playback rate.
+   */
+  get playbackRate(): number {
+    return this._playbackRate
+  }
+
+  /**
+   * Sets the playback rate and sends it to native.
+   */
+  set playbackRate(value: number) {
+    this.updateProperties({ playbackRate: value })
+  }
+
+  /**
+   * Whether the animation is currently paused.
+   */
+  private _paused: boolean = true
+
+  /**
+   * Returns whether the animation is currently paused.
+   */
+  get paused(): boolean {
+    return this._paused
+  }
+
+  /**
+   * Callback for animation state changes.
+   */
+  private _onAnimationStateChangeCallback?: (
+    detail: AnimationStateChangeDetail,
+  ) => void
+
+  /**
+   * Sets the callback for animation state changes.
+   */
+  set onAnimationStateChangeCallback(
+    callback: undefined | ((detail: AnimationStateChangeDetail) => void),
+  ) {
+    this._onAnimationStateChangeCallback = callback
+  }
+
+  /**
+   * Starts or resumes animation playback.
+   * @returns Promise resolving when the command is sent
+   */
+  async play(): Promise<void> {
+    this._paused = false
+    await this.updateProperties({ animationPaused: false })
+  }
+
+  /**
+   * Pauses animation playback.
+   * @returns Promise resolving when the command is sent
+   */
+  async pause(): Promise<void> {
+    this._paused = true
+    await this.updateProperties({ animationPaused: true })
+  }
+
+  /**
    * Processes events received from the WebSpatial environment.
    * Handles model loading events in addition to base spatial events.
    * @param data The event data received from the WebSpatial system
    */
-  override onReceiveEvent(
-    data: ModelLoadSuccess | ModelLoadFailure | ReceiveEventData,
-  ) {
+  override onReceiveEvent(data: Static3DReceiveEventData) {
     if (data.type === SpatialWebMsgType.modelloaded) {
       // On old runtimes (<⍺2.1) detail is not returned so fallback to modelURL
       this._currentSrc = data.detail?.src ?? this.modelURL ?? ''
@@ -130,6 +210,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       // Handle model loading failure
       this._onLoadFailureCallback?.()
       this._readyResolve?.(false)
+    } else if (data.type === SpatialWebMsgType.animationstatechange) {
+      this._paused = data.detail.paused
+      this._duration = data.detail.duration
+      this._onAnimationStateChangeCallback?.(data.detail)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)
@@ -191,3 +275,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     this.updateProperties({ modelTransform })
   }
 }
+
+type Static3DReceiveEventData =
+  | ModelLoadSuccess
+  | ModelLoadFailure
+  | ReceiveEventData
+  | AnimationStateChangeMsg

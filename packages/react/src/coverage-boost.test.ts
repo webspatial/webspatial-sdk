@@ -1093,8 +1093,10 @@ describe('PortalSpatializedContainer', () => {
           this.parentPortalInstanceObject = parentPortalInstanceObject
           this.domRect = { width: 10, height: 20 }
           this.computedStyle = {
-            getPropertyValue: () => 'relative',
-            getPropertyPriority: () => 'block',
+            getPropertyValue: (prop: string) => {
+              if (prop === 'display') return 'block'
+              return 'relative'
+            },
           }
           this.dom = document.createElement('div')
         }

@@ -22,7 +22,7 @@ struct SpatializedElementView<Content: View>: View {
 
     /// Begin Interaction
     var gesture: some Gesture {
-        DragGesture(minimumDistance: 10)
+        DragGesture(minimumDistance: 10, coordinateSpace: .named("SpatialScene"))
             .onChanged(onDragging)
             .onEnded(onDraggingEnded)
             .simultaneously(with:
@@ -74,14 +74,13 @@ struct SpatializedElementView<Content: View>: View {
     }
 
     private func onDragging(_ event: DragGesture.Value) {
+        if !gestureState.isDrag {
+            spatialScene.isSpatialElementGestureActive = true
+        }
+
         if spatializedElement.enableDragStartGesture, !gestureState.isDrag {
-            let frameZ = localFrameOffsetZ()
-            let startLocal = Point3D(
-                x: event.startLocation3D.x,
-                y: event.startLocation3D.y,
-                z: event.startLocation3D.z - frameZ
-            )
-            let globalPoint3D = localToScene(event.startLocation3D)
+            let startLocal = sceneToLocal(event.startLocation3D)
+            let globalPoint3D = event.startLocation3D
             let gestureEvent = WebSpatialDragStartGuestureEvent(detail: .init(
                 startLocation3D: startLocal,
                 globalLocation3D: globalPoint3D
@@ -102,6 +101,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onDraggingEnded(_ event: DragGesture.Value) {
         gestureState.isDrag = false
+        spatialScene.isSpatialElementGestureActive = false
         if spatializedElement.enableDragEndGesture {
             let gestureEvent = WebSpatialDragEndGuestureEvent()
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
@@ -119,6 +119,11 @@ struct SpatializedElementView<Content: View>: View {
         let p = SIMD4<Double>(localPoint.x, localPoint.y, localPoint.z, 1.0)
         let scene = gestureState.proxyTransform.matrix * p
         return Point3D(x: scene.x, y: scene.y, z: scene.z)
+    }
+
+    private func sceneToLocal(_ scenePoint: Point3D) -> Point3D {
+        let local = spatializedElement.convertFromScene(SIMD3<Double>(scenePoint.x, scenePoint.y, scenePoint.z))
+        return Point3D(x: local.x, y: local.y, z: local.z)
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {
@@ -198,6 +203,9 @@ struct SpatializedElementView<Content: View>: View {
             // Gesture before .position(): event.location3D is in the element's local space
             // (top-left origin), and does not include visual transforms.
             .simultaneousGesture(enableGesture ? gesture : nil)
+            .onDisappear {
+                spatialScene.isSpatialElementGestureActive = false
+            }
             .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
                 proxy.transform(in: .named("SpatialScene"))!
             } action: { new in

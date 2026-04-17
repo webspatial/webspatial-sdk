@@ -20,6 +20,7 @@ import RealityTest from './src/pages/reality/index'
 import RealityDebug from './src/pages/reality/debug'
 import RealityDynamic3D from './src/pages/reality/dynamic3d'
 import RealityGestures from './src/pages/reality/gestures'
+import GestureDiv from './src/pages/reality/gestureDiv'
 import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
 import BasicTransform from './src/pages/basic-transform/index'
 import ModelTest from './src/pages/model-test/index'
@@ -140,6 +141,7 @@ function App() {
                   element={<RealityDynamic3D />}
                 />
                 <Route path="/reality/gestures" element={<RealityGestures />} />
+                <Route path="/reality/gestureDiv" element={<GestureDiv />} />
                 <Route
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
