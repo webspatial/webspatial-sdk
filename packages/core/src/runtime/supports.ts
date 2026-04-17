@@ -3,6 +3,7 @@ import { compareSemver, parseSemverOrNull } from './semver'
 import type { WebSpatialRuntimeSnapshot } from './types'
 import { computeRuntimeFromUserAgent } from './userAgent'
 import {
+  type CapabilityKey,
   isKnownSubToken,
   isKnownTopLevel,
   normalizeCapabilityName,
@@ -61,6 +62,11 @@ function selectRow(
 /**
  * Public capability probe (`WebSpatialRuntime.supports` re-exports this from React SDK).
  */
+export function supports(
+  name: CapabilityKey,
+  tokens?: readonly string[],
+): boolean
+export function supports(name: string, tokens?: readonly string[]): boolean
 export function supports(name: string, tokens?: readonly string[]): boolean {
   if (typeof name !== 'string') return false
   const canonical = normalizeCapabilityName(name)
