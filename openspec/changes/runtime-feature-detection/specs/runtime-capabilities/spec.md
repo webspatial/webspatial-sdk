@@ -91,8 +91,18 @@ For APIs documented as runtime-gated, unsupported calls/reads MUST follow docume
 
 #### Scenario: Unsupported HTML component rendering
 
-- **WHEN** a non-Model HTML capability key resolves to `false` (including `AttachmentAsset` / `AttachmentEntity` and other component keys)
+- **WHEN** a non-Model, non-`Reality` HTML capability key resolves to `false` (including `Material`, `AttachmentAsset` / `AttachmentEntity`, and other component keys not covered by dedicated scenarios)
 - **THEN** SDK fallback MUST not render corresponding DOM/entity node and MUST not execute dependent runtime side effects
+
+#### Scenario: `Reality` unsupported fallback
+
+- **WHEN** `supports('Reality')` is `false`
+- **THEN** SDK MUST NOT create or attach the spatialized Reality root entity and MUST NOT execute dependent runtime side effects
+- **AND** SDK MUST render exactly one host placeholder `div` that preserves the layout box (layout-affecting props such as `className`, `style`, and other attributes that participate in CSS layout MUST apply to that host so authored layout is preserved)
+- **AND** that placeholder MUST be visually hidden from users
+- **AND** that placeholder MUST NOT participate in keyboard focus (for example it MUST NOT be focusable and MUST NOT use a positive `tabIndex`)
+- **AND** that placeholder MUST be excluded from the accessibility tree (for example `aria-hidden="true"`)
+- **AND** `Reality` MUST NOT render its React child subtree (no `children` mount)
 
 #### Scenario: `Model` exception fallback
 

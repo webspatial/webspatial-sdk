@@ -248,7 +248,7 @@ If runtime is detected but shell version cannot be parsed, return conservative `
 
 General rule: unsupported capability means no hidden emulation.
 
-- For unsupported HTML components (for example `Reality`, `Material`, `ModelAsset`, `AttachmentAsset`, `AttachmentEntity`): do not render node, and do not execute runtime side effects.
+- For unsupported HTML components (for example `Material`, `ModelAsset`, `AttachmentAsset`, `AttachmentEntity`): do not render node, and do not execute runtime side effects. `Reality` and `Model` follow dedicated rules below.
 - For unsupported `useMetrics` and `convertCoordinate`: calling API throws `WebSpatialRuntimeError`.
 - For unsupported model JS sub-APIs: member must not exist on simulated element (`in` false, read returns `undefined`), no noop placeholder.
 
@@ -260,6 +260,17 @@ General rule: unsupported capability means no hidden emulation.
 
 - If `supports('Model') === false`, fallback renders native `<model>` and forwards props.
 - Sub-capability checks still follow parent/child constraint (parent false => child false).
+
+<a id="review-5-2"></a>
+
+### 5.2 `Reality` unsupported fallback
+
+If `supports('Reality') === false`:
+
+- Do not create spatial entities or run Reality-dependent runtime side effects.
+- Render a single invisible host placeholder `div` that **preserves the layout box** (layout-affecting props apply to the host).
+- Placeholder is not visible, does not take keyboard focus, and is not exposed to assistive technologies (for example `aria-hidden="true"`).
+- Do not mount `Reality` child subtree.
 
 ---
 
