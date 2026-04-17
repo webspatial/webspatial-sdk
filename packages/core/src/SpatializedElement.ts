@@ -111,16 +111,7 @@ export abstract class SpatializedElement extends SpatialObject {
    * Handles various spatial events like transforms, gestures, and interactions.
    * @param data The event data received from the WebSpatial system
    */
-  protected onReceiveEvent(
-    data:
-      | SpatialTapMsg
-      | SpatialDragStartMsg
-      | SpatialDragMsg
-      | SpatialDragEndMsg
-      | SpatialRotateMsg
-      | SpatialRotateEndMsg
-      | ObjectDestroyMsg,
-  ) {
+  protected onReceiveEvent(data: ReceiveEventData) {
     const { type } = data
     if (type === SpatialWebMsgType.objectdestroy) {
       this.isDestroyed = true
@@ -260,3 +251,12 @@ export abstract class SpatializedElement extends SpatialObject {
     SpatialWebEvent.removeEventReceiver(this.id)
   }
 }
+
+export type ReceiveEventData =
+  | SpatialTapMsg
+  | SpatialDragStartMsg
+  | SpatialDragMsg
+  | SpatialDragEndMsg
+  | SpatialRotateMsg
+  | SpatialRotateEndMsg
+  | ObjectDestroyMsg

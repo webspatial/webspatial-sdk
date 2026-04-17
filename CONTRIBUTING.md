@@ -62,6 +62,24 @@ npm run dev
 - [@webspatial/core-sdk](packages/core/README.md) - The React SDK is implemented on top of the Core SDK, which is a framework-agnostic pure-JS API that enables the WebSpatial App Shell to natively spatialize 2D HTML content and render 3D content.
 - [@webspatial/builder](packages/cli/README.md) - The build tool transforms websites into Packaged WebSpatial Apps for debugging and distributing on spatial computing platforms.
 
+## Changesets (releases)
+
+Published packages in this monorepo are versioned with [Changesets](https://github.com/changesets/changesets). Configuration lives in [`.changeset/config.json`](.changeset/config.json).
+
+### When you need a changeset
+
+If your pull request **changes anything under `packages/`** (source, `package.json`, platform shells, etc.), add a changeset so the release notes and semver bumps stay accurate:
+
+1. From the repo root, run **`pnpm changeset`** (or `npx changeset add`).
+2. Select the affected `@webspatial/*` packages and **patch**, **minor**, or **major** as appropriate. The `fixed` group in config bumps several packages together when any of them changes.
+3. Commit the generated **`.changeset/<random-name>.md`** with your code.
+
+You do **not** need a changeset for edits that only touch `apps/`, `tests/`, `.github/` (unless they change published packages), docs outside packages, or other paths that do not modify `packages/`.
+
+### Bypass (maintainers)
+
+For rare cases where `packages/` changed but **no** release note or version bump should be recorded, a maintainer can add the GitHub label **`skip-changeset`** to the PR so CI allows merging without a new `.changeset/*.md` file. Create that label once under **Issues → Labels** if it does not exist yet.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

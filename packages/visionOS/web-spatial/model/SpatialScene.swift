@@ -85,6 +85,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     // TOPIC end
 
+    var isSpatialElementGestureActive = false
+
     var spatialWebViewModel: SpatialWebViewModel
 
     private var meterToPtUnscaled: Double?
@@ -543,6 +545,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedStatic3DElement = createSpatializedElement(.SpatializedStatic3DElement)
         spatialObject.modelURL = command.modelURL
+        if let sources = command.sources {
+            spatialObject.sources = sources
+        }
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
@@ -585,6 +590,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         updateSpatializedElementProperties(spatializedElement, command)
 
+        if let sources = command.sources {
+            spatializedElement.sources = sources
+        }
+
         if let modelURL = command.modelURL {
             spatializedElement.modelURL = modelURL
         }
@@ -610,6 +619,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let loop = command.loop {
             spatializedElement.loop = loop
+        }
+
+        if let animationPaused = command.animationPaused {
+            spatializedElement.animationPaused = animationPaused
+        }
+
+        if let playbackRate = command.playbackRate {
+            spatializedElement.playbackRate = playbackRate
         }
 
         resolve(.success(baseReplyData))

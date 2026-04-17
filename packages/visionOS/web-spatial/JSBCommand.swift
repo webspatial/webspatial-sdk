@@ -14,7 +14,8 @@ struct AddSpatializedElementToSpatialScene: CommandDataProtocol {
 
 struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedStatic3DElement"
-    let modelURL: String
+    let modelURL: String?
+    let sources: [ModelSource]?
 }
 
 struct CreateSpatializedDynamic3DElement: CommandDataProtocol {
@@ -260,9 +261,12 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let rotateConstrainedToAxis: Vec3?
 
     let modelURL: String?
+    let sources: [ModelSource]?
     let modelTransform: [Double]?
     let autoplay: Bool?
     let loop: Bool?
+    let animationPaused: Bool?
+    let playbackRate: Double?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {

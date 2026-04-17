@@ -86,6 +86,7 @@ export type SpatializedStatic3DContainerProps =
       src?: string
       autoPlay?: boolean
       loop?: boolean
+      children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
@@ -96,6 +97,7 @@ export type SpatializedStatic3DContentProps = {
   src?: string
   autoPlay?: boolean
   loop?: boolean
+  children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
 }
@@ -120,6 +122,11 @@ export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
   ready: Promise<ModelLoadEvent>
   entityTransform: DOMMatrixReadOnly
+  play(): Promise<void>
+  pause(): Promise<void>
+  readonly paused: boolean
+  readonly duration: number
+  playbackRate: number
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {

@@ -19,6 +19,8 @@ export enum SpatialWebMsgType {
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 
+  animationstatechange = 'animationstatechange',
+
   objectdestroy = 'objectdestroy',
 }
 
@@ -64,4 +66,24 @@ export interface SpatialMagnifyMsg {
 export interface SpatialMagnifyEndMsg {
   type: SpatialWebMsgType.spatialmagnifyend
   detail: SpatialMagnifyEventDetail
+}
+
+export interface ModelLoadSuccess {
+  type: SpatialWebMsgType.modelloaded
+  // detail object is undefined in old native runtimes
+  detail?: { src: string }
+}
+
+export interface ModelLoadFailure {
+  type: SpatialWebMsgType.modelloadfailed
+}
+
+export interface AnimationStateChangeDetail {
+  paused: boolean
+  duration: number
+}
+
+export interface AnimationStateChangeMsg {
+  type: SpatialWebMsgType.animationstatechange
+  detail: AnimationStateChangeDetail
 }
