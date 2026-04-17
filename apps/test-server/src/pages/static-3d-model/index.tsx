@@ -11,16 +11,25 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
+  const [isPaused, setIsPaused] = useState(true)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
   useEffect(() => {
     modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
+  // Monitor duration and pause state since there is no playback lifecycle events
+  useEffect(() => {
+    const id = setInterval(
+      () => setIsPaused(modelRef.current?.paused ?? true),
+      200,
+    )
+    return () => clearInterval(id)
+  }, [setIsPaused])
 
   return (
     <div className="prose max-w-none">
       <CSSTransform onChange={setTransform} />
       <EntityTransform model={modelRef} />
       <Model
-        className="block"
         // src="/modelasset/cone.usdz"
         enable-xr
         autoPlay
@@ -28,7 +37,7 @@ function App() {
         style={{
           height: '200px',
           '--xr-depth': '100px',
-          '--xr-back': '100px',
+          '--xr-back': '50px',
           transform,
         }}
         ref={modelRef}
@@ -58,11 +67,11 @@ function App() {
       >
         <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
-          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
+          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
           type="model/vnd.usdz+zip"
         />
         <source
-          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
           type="model/vnd.usdz+zip"
         />
         <img
@@ -70,6 +79,39 @@ function App() {
           className="w-full h-[200px] object-contain"
         />
       </Model>
+      <section className="playbackControls">
+        <button
+          className="btn btn-success m-1"
+          onClick={() => modelRef.current?.play()}
+        >
+          |▶
+        </button>
+        <button
+          className="btn btn-info  m-1"
+          onClick={() => modelRef.current?.pause()}
+        >
+          ⏸
+        </button>
+        <select
+          className="select m-1"
+          value={playbackRate}
+          onChange={e => {
+            setPlaybackRate(parseFloat(e.target.value))
+            if (modelRef.current?.playbackRate) {
+              modelRef.current.playbackRate = parseFloat(e.target.value)
+            }
+          }}
+        >
+          <option value={0.5}>0.5</option>
+          <option value={1.0}>1.0</option>
+          <option value={1.5}>1.5</option>
+          <option value={100.0}>100.0</option>
+        </select>
+        <span className="m-1">
+          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${isPaused}`}, Rate: {modelRef.current?.playbackRate}
+        </span>
+      </section>
       <Logger logs={logs} clearLog={clearLog} />
     </div>
   )
@@ -272,7 +314,10 @@ function NumberInput({ label, value, setValue, step }: InputProps) {
   return (
     <span className="m-1 inline-block">
       <label>{label}:</label>
-      <button className="btn btn-sm" onClick={() => setValue(value - step)}>
+      <button
+        className="btn btn-neutral btn-sm"
+        onClick={() => setValue(value - step)}
+      >
         -
       </button>
       <input
@@ -282,7 +327,10 @@ function NumberInput({ label, value, setValue, step }: InputProps) {
         value={value}
         onChange={e => setValue(parseFloat(e.currentTarget.value))}
       />
-      <button className="btn btn-sm" onClick={() => setValue(value + step)}>
+      <button
+        className="btn btn-neutral btn-sm"
+        onClick={() => setValue(value + step)}
+      >
         +
       </button>{' '}
     </span>
@@ -297,11 +345,11 @@ type ToggleProps = {
 function Toggle({ label, setValue, step }: ToggleProps) {
   return (
     <span className="m-1 inline-block">
-      <button className="btn btn-sm" onClick={e => setValue(-step)}>
+      <button className="btn btn-neutral btn-sm" onClick={e => setValue(-step)}>
         -
       </button>
       <label>{label}</label>
-      <button className="btn btn-sm" onClick={e => setValue(step)}>
+      <button className="btn btn-neutral btn-sm" onClick={e => setValue(step)}>
         +
       </button>{' '}
     </span>
