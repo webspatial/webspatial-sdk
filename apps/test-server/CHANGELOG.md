@@ -1,5 +1,39 @@
 # web-content
 
+## 0.1.0
+
+### Minor Changes
+
+- f1b28eb: Model add play(), pause(), and paused for playback controls
+- 0f743a1: Model add <source> element support for multi-format fallback
+- 5d72631: Add autoplay attribute to <Model>
+
+  When a 3D model contains an embedded animation, developers can opt into automatic playback via a simple boolean attribute. When autoplay is set, the model's first available animation begins playing as soon as the model has successfully loaded.
+
+- 005480c: Model add duration and playbackRate for animation control
+- d9a0418: Add loop attribute to <Model>
+
+  When loop is set, the animation automatically seeks back to the start upon reaching the end.
+
+### Patch Changes
+
+- 2d9762d: fix: Model animation bugs
+- 5df9519: fix: incorrect display style for spatial containers
+- Updated dependencies [f1b28eb]
+- Updated dependencies [0f743a1]
+- Updated dependencies [19a0daf]
+- Updated dependencies [c44661f]
+- Updated dependencies [afb6c35]
+- Updated dependencies [5d72631]
+- Updated dependencies [ee7c68f]
+- Updated dependencies [19a0daf]
+- Updated dependencies [3d62c5d]
+- Updated dependencies [005480c]
+- Updated dependencies [5df9519]
+- Updated dependencies [d9a0418]
+  - @webspatial/react-sdk@1.6.0
+  - @webspatial/core-sdk@1.6.0
+
 ## 0.0.23
 
 ### Patch Changes
