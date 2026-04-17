@@ -28,6 +28,7 @@ import {
   PortalInstanceContext,
   PortalInstanceObject,
 } from './context/PortalInstanceContext'
+import { SpatialWindowContext } from './context/SpatialWindowContext'
 import { getSession } from '../utils'
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
@@ -100,7 +101,12 @@ function SpatializedContent<P extends ElementType>(
     portalInstanceObject,
   )
 
-  return createPortal(JSXPortalInstance, windowProxy.document.body)
+  return createPortal(
+    <SpatialWindowContext.Provider value={windowProxy}>
+      {JSXPortalInstance}
+    </SpatialWindowContext.Provider>,
+    windowProxy.document.body,
+  )
 }
 
 function getExtraSpatializedElementProperties(
