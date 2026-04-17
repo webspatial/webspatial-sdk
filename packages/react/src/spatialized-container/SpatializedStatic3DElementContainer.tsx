@@ -23,7 +23,6 @@ import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import { WebSpatialRuntime } from '../webSpatialRuntime'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -153,54 +152,35 @@ function SpatializedStatic3DElementContainerBase(
   }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
-      const { supports } = WebSpatialRuntime
       let modelTransform = new DOMMatrixReadOnly()
-      const extras: Record<string, unknown> = {}
-
-      if (supports('Model', ['currentSrc'])) {
-        Object.defineProperty(extras, 'currentSrc', {
-          enumerable: true,
-          configurable: true,
-          get(): string {
-            const spatializedElement = (domProxy as any)
-              .__spatializedElement as SpatializedStatic3DElement | undefined
-            return spatializedElement?.currentSrc ?? ''
-          },
-        })
+      return {
+        get currentSrc(): string {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.currentSrc ?? ''
+        },
+        get ready(): Promise<ModelLoadEvent> {
+          return promiseRef
+            .current!.then(spatializedElement => spatializedElement.ready)
+            .then(success => {
+              if (success) return createLoadSuccessEvent(() => domProxy)
+              throw createLoadFailureEvent(() => domProxy)
+            })
+        },
+        get entityTransform(): DOMMatrixReadOnly {
+          return modelTransform
+        },
+        set entityTransform(value: DOMMatrixReadOnly) {
+          modelTransform = value
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          spatializedElement?.updateModelTransform(modelTransform)
+        },
       }
-      if (supports('Model', ['ready'])) {
-        Object.defineProperty(extras, 'ready', {
-          enumerable: true,
-          configurable: true,
-          get(): Promise<ModelLoadEvent> {
-            return promiseRef
-              .current!.then(spatializedElement => spatializedElement.ready)
-              .then(success => {
-                if (success) return createLoadSuccessEvent(() => domProxy)
-                throw createLoadFailureEvent(() => domProxy)
-              })
-          },
-        })
-      }
-      if (supports('Model', ['entityTransform'])) {
-        Object.defineProperty(extras, 'entityTransform', {
-          enumerable: true,
-          configurable: true,
-          get(): DOMMatrixReadOnly {
-            return modelTransform
-          },
-          set(value: DOMMatrixReadOnly) {
-            modelTransform = value
-            const spatializedElement = (domProxy as any)
-              .__spatializedElement as SpatializedStatic3DElement | undefined
-            spatializedElement?.updateModelTransform(modelTransform)
-          },
-        })
-      }
-
-      return extras
     },
-    [props.src],
+    [],
   )
 
   return (
