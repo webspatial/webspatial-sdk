@@ -109,7 +109,19 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._loop = properties.loop
     }
     if (properties.playbackRate !== undefined) {
+      // Re-anchor so extrapolation uses the new rate only for future elapsed
+      // time, not the window between the last sample and this change.
+      if (!this._paused) {
+        this._currentTime = this.currentTime
+        this._anchorTimestamp = Date.now()
+      }
       this._playbackRate = properties.playbackRate
+    }
+    if (properties.currentTime !== undefined) {
+      // Optimistically update the local anchor so subsequent reads reflect
+      // the requested seek without waiting for the next native sample.
+      this._currentTime = properties.currentTime
+      this._anchorTimestamp = Date.now()
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
@@ -149,6 +161,48 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Last playback position sampled from native (seconds).
+   */
+  private _currentTime: number = 0
+
+  /**
+   * Unix epoch time (ms) corresponding to `_currentTime`. Sourced from the
+   * native `timestamp` on samples, or `Date.now()` on local seeks/transitions.
+   */
+  private _anchorTimestamp: number = 0
+
+  private clampTime(time: number): number {
+    if (!Number.isFinite(time) || time < 0) return 0
+    // When looping the current time is modulo the duration
+    if (time > this._duration) {
+      return this.loop && this.duration > 0
+        ? time % this._duration
+        : this.duration
+    }
+    return time
+  }
+
+  /**
+   * Returns the current (un-scaled) playback position in seconds. While
+   * playing, the value is extrapolated from the last anchor using
+   * `playbackRate` and clamped to `[0, duration]`; while paused it returns
+   * the anchor directly.
+   */
+  get currentTime(): number {
+    if (this._paused) return this._currentTime
+    const elapsed = (Date.now() - this._anchorTimestamp) / 1000
+    return this.clampTime(this._currentTime + elapsed * this._playbackRate)
+  }
+
+  /**
+   * Seeks the animation to `value` seconds (clamped to `[0, duration]`) and
+   * forwards the request to native.
+   */
+  set currentTime(value: number) {
+    this.updateProperties({ currentTime: this.clampTime(value) })
+  }
+
+  /**
    * Whether the animation is currently paused.
    */
   private _paused: boolean = true
@@ -181,6 +235,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @returns Promise resolving when the command is sent
    */
   async play(): Promise<void> {
+    if (this._paused) {
+      // Start extrapolating from the last known position on resume.
+      this._anchorTimestamp = Date.now()
+    }
     this._paused = false
     await this.updateProperties({ animationPaused: false })
   }
@@ -190,6 +248,12 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @returns Promise resolving when the command is sent
    */
   async pause(): Promise<void> {
+    if (!this._paused) {
+      // Freeze the extrapolated position so reads remain stable until the
+      // next native sample arrives.
+      this._currentTime = this.currentTime
+      this._anchorTimestamp = Date.now()
+    }
     this._paused = true
     await this.updateProperties({ animationPaused: true })
   }
@@ -213,6 +277,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     } else if (data.type === SpatialWebMsgType.animationstatechange) {
       this._paused = data.detail.paused
       this._duration = data.detail.duration
+      // In unsupported environments currentTime is invalid
+      this._currentTime = data.detail.currentTime ?? 0
+      this._anchorTimestamp = data.detail.timestamp ?? Date.now()
       this._onAnimationStateChangeCallback?.(data.detail)
     } else {
       // Handle other spatial events using the base class implementation

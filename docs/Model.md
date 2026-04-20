@@ -129,7 +129,7 @@ a read-only `double` reflecting the un-scaled total duration of the animation in
 
 `currentTime`
 
-a read-write `double` reflecting the un-scaled playback time of the model animation, if present. It is clamped to the duration of the animation, so for an animation with no animation, the value is always 0.
+a read-write `double` reflecting the un-scaled playback time of the model animation in seconds. It is clamped to the duration of the animation, so for an animation with no animation, the value is always 0.
 
 `playbackRate`
 

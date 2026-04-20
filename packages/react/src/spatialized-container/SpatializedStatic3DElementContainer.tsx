@@ -226,6 +226,20 @@ function SpatializedStatic3DElementContainerBase(
             spatializedElement.playbackRate = value
           }
         },
+        get currentTime(): number {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.currentTime ?? 0
+        },
+        set currentTime(value: number) {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          if (spatializedElement) {
+            spatializedElement.currentTime = value
+          }
+        },
       }
     },
     [],

@@ -11,7 +11,7 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
-  const [isPaused, setIsPaused] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0.0)
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
   useEffect(() => {
@@ -20,11 +20,11 @@ function App() {
   // Monitor duration and pause state since there is no playback lifecycle events
   useEffect(() => {
     const id = setInterval(
-      () => setIsPaused(modelRef.current?.paused ?? true),
+      () => setCurrentTime(modelRef.current?.currentTime ?? 0.0),
       200,
     )
     return () => clearInterval(id)
-  }, [setIsPaused])
+  }, [setCurrentTime])
 
   return (
     <div className="prose max-w-none p-10">
@@ -40,6 +40,7 @@ function App() {
           height: '200px',
           '--xr-depth': '100px',
           '--xr-back': '50px',
+          marginBottom: '20px',
           transform,
         }}
         ref={modelRef}
@@ -68,14 +69,14 @@ function App() {
         }}
       >
         <source
+          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <source
           src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
           type="model/vnd.usdz+zip"
         />
         <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
-        <source
-          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
-          type="model/vnd.usdz+zip"
-        />
         <source
           src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
           type="model/vnd.usdz+zip"
@@ -87,6 +88,16 @@ function App() {
       </Model>
       <section className="playbackControls">
         <button
+          className="btn m-1"
+          onClick={() => {
+            if (modelRef.current?.currentTime) {
+              modelRef.current.currentTime -= 10
+            }
+          }}
+        >
+          ⏪
+        </button>
+        <button
           className="btn btn-success m-1"
           onClick={() => modelRef.current?.play()}
         >
@@ -97,6 +108,16 @@ function App() {
           onClick={() => modelRef.current?.pause()}
         >
           ⏸
+        </button>
+        <button
+          className="btn m-1"
+          onClick={() => {
+            if (modelRef.current?.currentTime) {
+              modelRef.current.currentTime += 10
+            }
+          }}
+        >
+          ⏩
         </button>
         <label className="inline-flex items-center align-middle">
           <input
@@ -123,8 +144,10 @@ function App() {
           <option value={100.0}>100.0</option>
         </select>
         <span className="m-1">
-          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
-          {`${isPaused}`}, Rate: {modelRef.current?.playbackRate}
+          Time: {currentTime.toFixed(2)}/
+          {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${modelRef.current?.paused ?? true}`}, Rate:{' '}
+          {modelRef.current?.playbackRate}
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />

@@ -82,6 +82,7 @@ struct SpatializedStatic3DView: View {
             }
             .onChange(of: spatializedStatic3DElement.animationPaused) { onPlayback(isPaused: $1) }
             .onChange(of: spatializedStatic3DElement.playbackRate) { asset?.animationPlaybackController?.speed = Float($1) }
+            .onChange(of: spatializedStatic3DElement.pendingSeekTime) { _, time in onSeek(time: time) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
@@ -123,12 +124,40 @@ struct SpatializedStatic3DView: View {
         }
         let controller = asset.animationPlaybackController
         controller?.speed = Float(spatializedStatic3DElement.playbackRate)
+        if let time = spatializedStatic3DElement.pendingSeekTime, let controller {
+            controller.time = time
+            spatializedStatic3DElement.pendingSeekTime = nil
+        }
         isPaused ? controller?.pause() : controller?.resume()
+        sendAnimationStateChange(isPaused: isPaused)
+    }
+
+    /// Seeks the underlying animation controller when a non-nil `time` is
+    /// requested, then clears `pendingSeekTime` so subsequent identical
+    /// requests still trigger a fresh seek.
+    private func onSeek(time: Double?) {
+        guard let controller = asset?.animationPlaybackController, let time else { return }
+        controller.time = time
+        spatializedStatic3DElement.pendingSeekTime = nil
+        sendAnimationStateChange(isPaused: spatializedStatic3DElement.animationPaused)
+    }
+
+    /// Emits the current animation state to the web layer, sampling the
+    /// controller's position and the wall clock together so the web side can
+    /// extrapolate between samples.
+    private func sendAnimationStateChange(isPaused: Bool) {
+        let controller = asset?.animationPlaybackController
         let duration = controller?.duration ?? 0
+        let currentTime = controller?.time ?? 0
         spatialScene.sendWebMsg(
             spatializedElement.id,
             AnimationStateChangeEvent(
-                detail: AnimationStateChangeDetail(paused: isPaused, duration: duration)
+                detail: AnimationStateChangeDetail(
+                    paused: isPaused,
+                    duration: duration,
+                    currentTime: currentTime,
+                    timestamp: Date().timeIntervalSince1970 * 1000
+                )
             )
         )
     }
