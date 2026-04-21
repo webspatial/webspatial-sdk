@@ -59,6 +59,8 @@ describe('getRuntime / supports', () => {
     expect(rt.type).toBe('visionos')
     expect(rt.shellVersion).toBe('1.5.0')
     expect(supports('Model')).toBe(true)
+    expect(supports('xrInnerDepth')).toBe(true)
+    expect(supports('xrOuterDepth')).toBe(true)
     expect(supports('UnknownThing' as any)).toBe(false)
   })
 
@@ -75,6 +77,8 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['ready', 'currentSrc'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
     expect(supports('WindowScene', ['defaultSize', 'resizability'])).toBe(true)
+    expect(supports('xrInnerDepth')).toBe(false)
+    expect(supports('xrOuterDepth')).toBe(false)
   })
 
   test('pico UA PicoWebApp/0.1.2: matrix playback row (alpha2.0)', async () => {
@@ -87,6 +91,8 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['autoplay', 'loop', 'source'])).toBe(true)
     expect(supports('Model', ['currentTime'])).toBe(false)
     expect(supports('Model', ['poster'])).toBe(false)
+    expect(supports('xrInnerDepth')).toBe(false)
+    expect(supports('xrOuterDepth')).toBe(false)
   })
 
   test('alias Box → BoxEntity', async () => {
