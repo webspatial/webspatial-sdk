@@ -28,9 +28,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 - `onSpatialContentReady?: (ctx: SpatialContentReadyContext) => void | (() => void)`
 - `ctx` MUST include at minimum:
-  - `host: HTMLElement` — the element app code MAY use as the mount target for imperative external renderers (by default, the portal content root host; implementation details may evolve, but the semantic meaning must remain stable).
-  - `generation: number` — monotonically increasing within a spatial container instance stream (starts at `1` for the first ready after mount).
-  - `reason: 'mount' | 'recreated'` — distinguishes the first ready from subsequent ready events caused by internal recreation.
+  - `host: HTMLElement` — the portal webview root element app code MAY use as the mount target for imperative external renderers (Three.js canvas DOM, ECharts containers, and so on). Semantically this is the connected portal content root rendered into the isolated `windowProxy` document (not the Standard hidden layout host).
 
 **Why**
 
@@ -49,7 +47,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 - Gate emission on `spatializedElement` + `portalInstanceObject.dom` + connected portal host (`ctx.host.isConnected`).
 - Emit from the portal content subtree using `useLayoutEffect` timing (after commit DOM mutations, before paint).
 - Never emit during render.
-- At most once per `generation` while continuously ready; teardown runs cleanup and increments generation on the next satisfied transition.
+- Model readiness as `isReady` edge transitions: emit on `false → true`, cleanup on `true → false`, and do not re-emit while `isReady` stays continuously `true`.
 
 **Why**
 
@@ -72,7 +70,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 **Contract**
 
-- For nested `SpatialDiv`, parent `onSpatialContentReady` MUST run before child `onSpatialContentReady` for a stable render generation.
+- For nested `SpatialDiv`, parent `onSpatialContentReady` MUST run before child `onSpatialContentReady` on the same rising-edge transition where both become ready.
 - When a parent is recreated/replaced, child cleanups MUST run depth-first (deepest child first) before parent cleanup, and before the parent emits its next `onSpatialContentReady`.
 
 **Why**
@@ -87,7 +85,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 ## Risks / Trade-offs
 
 - **[Risk] Wrong timing still causes footguns** → gate firing on the same hard conditions used to render portal content in `PortalSpatializedContainer`, and validate with `apps/test-server` coverage pages.
-- **[Risk] StrictMode double initialization** → require idempotent cleanup; implementation SHOULD avoid duplicate ready for the same `generation`, or MUST run cleanup before a duplicate ready.
+- **[Risk] StrictMode double initialization** → require idempotent cleanup; implementation SHOULD avoid duplicate ready while `isReady` remains continuously `true`, or MUST run cleanup before the next rising-edge ready.
 - **[Risk] Wrong `host` selection** → anchor semantics to the portal content root and document it; if multiple hosts are needed later, introduce an explicit slot API (out of scope for this change).
 
 ## Migration Plan

@@ -10,9 +10,8 @@
 
 - [ ] 2.0 Update `SpatialContainerRefProxy.updateDomProxyToRef` so ref dispatches are deduplicated when the effective value does not change (`null`→`null` and same proxy→same proxy), for both object refs and callback refs.
 - [ ] 2.1 Plumb `onSpatialContentReady` through `SpatializedContainer` props into the portal pipeline without forwarding it to the underlying DOM component as an unknown attribute.
-- [ ] 2.2 Implement ready emission per spec: gate on `spatializedElement` + `portalInstanceObject.dom`, emit from portal content using `useLayoutEffect` timing after `ctx.host` is connected; no synchronous emission during render; at most once per `generation` while continuously ready.
-- [ ] 2.3 Implement cleanup bookkeeping: store last returned cleanup, invoke it before subsequent ready, on unmount, and on internal teardown paths (including StrictMode remount cases).
-- [ ] 2.4 Implement `generation` + `reason` fields per spec; ensure monotonic `generation` across recreated streams for a single React component instance.
+- [ ] 2.2 Implement ready emission per spec: model `isReady` edge transitions; emit on `false → true` in `useLayoutEffect` after `ctx.host` is connected; run cleanup on `true → false`; do not re-emit while `isReady` remains continuously `true`; never emit during render.
+- [ ] 2.3 Implement cleanup bookkeeping: store last returned cleanup, invoke it on `isReady` falling edge, before a new rising-edge ready, on unmount, and on internal teardown paths (including StrictMode remount cases).
 
 ## 3. Nested ordering & safety
 

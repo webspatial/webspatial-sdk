@@ -10,9 +10,7 @@ The prop MUST be typed as a function:
 
 Where `SpatialContentReadyContext` MUST contain at minimum:
 
-- `host: HTMLElement` — the element application code MAY treat as the mount target for imperative external renderers (for example a Three.js `WebGLRenderer` DOM element).
-- `generation: number` — a monotonically increasing integer for this spatial container instance stream (starts at `1` for the first ready event after mount).
-- `reason: 'mount' | 'recreated'` — distinguishes the first ready from subsequent ready events caused by internal recreation.
+- `host: HTMLElement` — the portal webview root element application code MAY treat as the mount target for imperative external renderers (for example Three.js canvas DOM, ECharts containers). This MUST refer to the connected portal content root rendered by spatialized portal content (not the Standard hidden layout host).
 
 #### Scenario: TypeScript recognizes the prop on intrinsic spatial elements
 
@@ -21,19 +19,21 @@ Where `SpatialContentReadyContext` MUST contain at minimum:
 
 ### Requirement: `onSpatialContentReady` fires after portal content commit (layout timing)
 
-The system SHALL invoke `onSpatialContentReady` only after ALL of the following are true:
+Define `isReady` as ALL of the following:
 
 - `spatializedElement` exists for this spatial container stream, and
 - `portalInstanceObject.dom` exists for layout sampling, and
 - portal spatialized content has committed at least once such that `ctx.host` refers to an `HTMLElement` with `ctx.host.isConnected === true`.
 
-The invocation MUST occur during `useLayoutEffect` timing for the portal content subtree (after DOM mutations from the commit phase, before the browser paints).
+The system SHALL model readiness as edge-triggered transitions on `isReady`:
+
+- When `isReady` transitions from `false → true`, the system SHALL invoke `onSpatialContentReady` during `useLayoutEffect` timing for the portal content subtree (after DOM mutations from the commit phase, before the browser paints).
+- When `isReady` transitions from `true → false`, the system SHALL invoke the cleanup function returned by the prior `onSpatialContentReady` (if any).
+- While `isReady` remains continuously `true`, ordinary re-renders MUST NOT re-invoke `onSpatialContentReady`.
 
 The system MUST NOT invoke `onSpatialContentReady` during render.
 
-For a given `generation`, the system MUST emit `onSpatialContentReady` at most once while the ready conditions remain continuously satisfied (ordinary re-renders MUST NOT re-emit).
-
-When ready conditions transition from satisfied → unsatisfied, the system MUST run the prior cleanup (if any) and return to a not-ready state; a subsequent transition back to satisfied MUST emit a new ready event with `reason: 'recreated'` and an incremented `generation`.
+Application code MAY append imperative external renderer DOM under `ctx.host`. If React-managed children also occupy `ctx.host`, DOM ownership conflicts are possible; the SDK documentation MUST warn about safe partitioning patterns.
 
 #### Scenario: Ready fires after host is connected
 
@@ -44,6 +44,11 @@ When ready conditions transition from satisfied → unsatisfied, the system MUST
 
 - **WHEN** React is rendering spatialized portal content
 - **THEN** `onSpatialContentReady` MUST NOT be invoked synchronously during render
+
+#### Scenario: Stable ready does not re-emit on re-render
+
+- **WHEN** `isReady` remains continuously `true` across one or more re-renders
+- **THEN** `onSpatialContentReady` MUST NOT be invoked again
 
 ### Requirement: Ready ordering relative to `ref`
 
@@ -99,7 +104,7 @@ The cleanup function MUST be safe to call multiple times (idempotent) from the S
 
 ### Requirement: Nested SpatialDiv ordering
 
-When `SpatialDiv` elements are nested, the system SHALL invoke parent `onSpatialContentReady` before child `onSpatialContentReady` for a given stable render generation.
+When `SpatialDiv` elements are nested, the system SHALL invoke parent `onSpatialContentReady` before child `onSpatialContentReady` for a given commit where both become ready on the same `isReady` rising edge transition.
 
 When a parent spatial container is recreated/replaced, the system SHALL run child cleanups (depth-first: deepest child first) before running parent cleanup, and before emitting the parent’s next `onSpatialContentReady`.
 
