@@ -212,7 +212,7 @@ export default function SceneTest() {
                 startlog('open')
                 // Open A (sa)
                 initScene('sa', () => ({
-                  defaultSize: { width: 900, height: 500 },
+                  // defaultSize: { width: 900, height: 500 },
                 }))
                 winARef.current = window.open('/#/scene/xrapp', 'sa')
               }}
