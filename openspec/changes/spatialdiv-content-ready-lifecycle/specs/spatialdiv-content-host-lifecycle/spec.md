@@ -19,6 +19,32 @@ Where `SpatialContentReadyContext` MUST contain at minimum:
 - **WHEN** an application uses `WebSpatialJSX` typings for a DOM element with `enable-xr`
 - **THEN** TypeScript SHALL allow `onSpatialContentReady` without casting to `any`
 
+### Requirement: `onSpatialContentReady` fires after portal content commit (layout timing)
+
+The system SHALL invoke `onSpatialContentReady` only after ALL of the following are true:
+
+- `spatializedElement` exists for this spatial container stream, and
+- `portalInstanceObject.dom` exists for layout sampling, and
+- portal spatialized content has committed at least once such that `ctx.host` refers to an `HTMLElement` with `ctx.host.isConnected === true`.
+
+The invocation MUST occur during `useLayoutEffect` timing for the portal content subtree (after DOM mutations from the commit phase, before the browser paints).
+
+The system MUST NOT invoke `onSpatialContentReady` during render.
+
+For a given `generation`, the system MUST emit `onSpatialContentReady` at most once while the ready conditions remain continuously satisfied (ordinary re-renders MUST NOT re-emit).
+
+When ready conditions transition from satisfied → unsatisfied, the system MUST run the prior cleanup (if any) and return to a not-ready state; a subsequent transition back to satisfied MUST emit a new ready event with `reason: 'recreated'` and an incremented `generation`.
+
+#### Scenario: Ready fires after host is connected
+
+- **WHEN** portal spatialized content mounts into the portal document and `ctx.host` becomes connected
+- **THEN** `onSpatialContentReady` MUST be invoked in `useLayoutEffect` timing and `ctx.host.isConnected` MUST be true
+
+#### Scenario: No ready during render
+
+- **WHEN** React is rendering spatialized portal content
+- **THEN** `onSpatialContentReady` MUST NOT be invoked synchronously during render
+
 ### Requirement: Ready ordering relative to `ref`
 
 When `onSpatialContentReady` is invoked, the system SHALL guarantee that the spatial container’s forwarded `ref.current` is non-null (when a ref is provided).

@@ -42,6 +42,20 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 - `ref.getContentHost()` only: easy to misuse from `useEffect([])`; weaker than a push-style readiness signal.
 - Documentation-only guidance: does not provide a positive, enforceable API surface.
 
+### Decision 1b: Emit `onSpatialContentReady` on portal content `useLayoutEffect`
+
+**Contract**
+
+- Gate emission on `spatializedElement` + `portalInstanceObject.dom` + connected portal host (`ctx.host.isConnected`).
+- Emit from the portal content subtree using `useLayoutEffect` timing (after commit DOM mutations, before paint).
+- Never emit during render.
+- At most once per `generation` while continuously ready; teardown runs cleanup and increments generation on the next satisfied transition.
+
+**Why**
+
+- Maximizes compatibility with child DOM refs and avoids “ready too early” races.
+- Aligns with StrictMode remount expectations when paired with cleanup.
+
 ### Decision 2: Ordering contract between `ref` and `onSpatialContentReady`
 
 **Contract**
