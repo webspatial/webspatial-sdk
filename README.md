@@ -24,6 +24,10 @@ The current documentation lives at [webspatial.dev](https://webspatial.dev).
 - [React SDK API](https://webspatial.dev/docs/api/react-sdk): React components, CSS APIs, DOM APIs, events, JS APIs, and scene options
 - [Builder API](https://webspatial.dev/docs/api/builder): `run`, `build`, and `publish`
 
+### Runtime capabilities
+
+Apps can query the current shell with `WebSpatialRuntime.supports(name, tokens?)` from `@webspatial/react-sdk` (see package exports). For documented keys, sub-tokens, resolution rules, and fallback behavior (including the native `<model>` exception), see [`openspec/changes/runtime-feature-detection/review.md`](openspec/changes/runtime-feature-detection/review.md).
+
 ## Contributing
 
 We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.

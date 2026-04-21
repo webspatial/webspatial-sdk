@@ -153,7 +153,6 @@ function SpatializedStatic3DElementContainerBase(
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
-
       return {
         get currentSrc(): string {
           const spatializedElement = (domProxy as any).__spatializedElement as

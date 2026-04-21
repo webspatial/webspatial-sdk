@@ -4,6 +4,11 @@
 
 ### Minor Changes
 
+- Bump package semver to **1.6.0** so preview / matrix alignment can target **`WSAppShell/1.6.0`** alongside `@webspatial/core-sdk` capability rows (see core-sdk `CAPABILITY_TABLE`).
+
+### Patch Changes
+
+- **`manifest.swift`**: default `start_url` for local dev may point at **`#/runtime-capabilities`** (with prior `#/` entry commented) for contract / capability UI testing.
 - f1b28eb: Model add play(), pause(), and paused for playback controls
 - 0f743a1: Model add <source> element support for multi-format fallback
 - 5d72631: Add autoplay attribute to <Model>
