@@ -35,7 +35,7 @@ struct SpatializedStatic3DView: View {
         if !spatializedStatic3DElement.allSources.isEmpty {
             Group {
                 if isLoading {
-                    ProgressView()
+                    posterView { ProgressView() }
                 } else if let asset, let source {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
@@ -51,7 +51,7 @@ struct SpatializedStatic3DView: View {
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
                 } else {
-                    Text("").onAppear {
+                    posterView { Text("") }.onAppear {
                         self.onLoadFailure()
                     }
                 }
@@ -85,6 +85,28 @@ struct SpatializedStatic3DView: View {
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
+        }
+    }
+
+    /// Renders the poster image while the 3D model is loading or after all
+    /// sources fail. When no poster URL is provided, or the poster itself is
+    /// still loading/failed, the supplied `fallback` view is shown instead.
+    @ViewBuilder
+    private func posterView<Fallback: View>(
+        @ViewBuilder fallback: @escaping () -> Fallback
+    ) -> some View {
+        if let posterURL = spatializedStatic3DElement.posterURL,
+           let url = localOrRemoteURL(url: posterURL)
+        {
+            AsyncImage(url: url) { phase in
+                if case let .success(image) = phase {
+                    image.resizable().aspectRatio(contentMode: .fit)
+                } else {
+                    fallback()
+                }
+            }
+        } else {
+            fallback()
         }
     }
 

@@ -84,6 +84,7 @@ export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
     Omit<React.ComponentPropsWithoutRef<'div'>, 'onLoad' | 'onError'> & {
       src?: string
+      poster?: string
       autoPlay?: boolean
       loop?: boolean
       children?: React.ReactNode
@@ -95,6 +96,7 @@ export type SpatializedStatic3DContainerProps =
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
   src?: string
+  poster?: string
   autoPlay?: boolean
   loop?: boolean
   children?: React.ReactNode

@@ -1760,6 +1760,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       sources: [],
       autoplay: undefined,
       loop: undefined,
+      posterURL: '',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
