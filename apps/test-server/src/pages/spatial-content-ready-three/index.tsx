@@ -23,6 +23,8 @@ const DEPTH_SINGLE = 110
 type AttachOpts = {
   meshColor: number
   slotSelector: string
+  enableClickToggle?: boolean
+  onToggleAnimating?: (animating: boolean) => void
 }
 
 function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
@@ -52,6 +54,7 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
   mountEl.appendChild(renderer.domElement)
 
   let raf = 0
+  let isAnimating = true
 
   // Guard against layout feedback loops (canvas size affecting host size repeatedly).
   const MAX_RENDER_SIDE = 2048
@@ -65,10 +68,25 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
 
   layout()
 
+  const prevCursor = mountEl.style.cursor
+  if (opts.enableClickToggle) {
+    mountEl.style.cursor = 'pointer'
+    opts.onToggleAnimating?.(isAnimating)
+  }
+
+  const handleToggleClick = () => {
+    if (!opts.enableClickToggle) return
+    isAnimating = !isAnimating
+    opts.onToggleAnimating?.(isAnimating)
+  }
+  mountEl.addEventListener('click', handleToggleClick)
+
   const animate = () => {
     raf = requestAnimationFrame(animate)
-    mesh.rotation.x += 0.018
-    mesh.rotation.y += 0.026
+    if (isAnimating) {
+      mesh.rotation.x += 0.018
+      mesh.rotation.y += 0.026
+    }
     renderer.render(scene, camera)
   }
   animate()
@@ -78,6 +96,8 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
 
   return () => {
     cancelAnimationFrame(raf)
+    mountEl.removeEventListener('click', handleToggleClick)
+    mountEl.style.cursor = prevCursor
     ro.disconnect()
     geometry.dispose()
     material.dispose()
@@ -100,6 +120,8 @@ export default function SpatialContentReadyThreePage() {
 
   const [showMainPanel, setShowMainPanel] = useState(true)
   const [showNestedBlock, setShowNestedBlock] = useState(true)
+  const [singleAnimating, setSingleAnimating] = useState(true)
+  const singleAnimatingRef = useRef(true)
 
   const outerRef = useRef<HTMLDivElement | null>(null)
   const innerRef = useRef<HTMLDivElement | null>(null)
@@ -171,6 +193,14 @@ export default function SpatialContentReadyThreePage() {
       const disposeThree = attachThreeToHost(ctx, {
         meshColor: 0xaa66ff,
         slotSelector: '[data-three-slot="single"]',
+        enableClickToggle: true,
+        onToggleAnimating: animating => {
+          if (singleAnimatingRef.current !== animating) {
+            pushLine(`[single toggle] ${animating ? 'running' : 'paused'}`)
+          }
+          singleAnimatingRef.current = animating
+          setSingleAnimating(animating)
+        },
       })
       return () => {
         disposeThree()
@@ -327,6 +357,10 @@ export default function SpatialContentReadyThreePage() {
           >
             <div className="text-[11px] text-violet-300/70 px-2 py-1 border-b border-white/10">
               Single SpatialDiv · purple cube (always mounted on this page)
+            </div>
+            <div className="text-[10px] text-violet-200/70 px-2 py-0.5 border-b border-white/10">
+              Click purple panel to toggle animation ·{' '}
+              {singleAnimating ? 'Running' : 'Paused'}
             </div>
             <div
               data-three-slot="single"
