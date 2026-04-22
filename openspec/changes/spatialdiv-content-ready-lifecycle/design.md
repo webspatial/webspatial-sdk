@@ -71,19 +71,22 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 **Contract**
 
-- For nested `SpatialDiv`, parent `onSpatialContentReady` MUST run before child `onSpatialContentReady` on the same rising-edge transition where both become ready.
-- When a parent is recreated/replaced, child cleanups MUST run depth-first (deepest child first) before parent cleanup, and before the parent emits its next `onSpatialContentReady`.
+- In WebSpatial runtime (portal path), for nested `SpatialDiv`, parent `onSpatialContentReady` MUST run before child `onSpatialContentReady` on the same rising-edge transition where both become ready.
+- In WebSpatial runtime (portal path), when a parent is recreated/replaced, child cleanups MUST run depth-first (deepest child first) before parent cleanup, and before the parent emits its next `onSpatialContentReady`.
+- In non-WebSpatial fallback (plain DOM path), callback ordering between parent/child `SpatialDiv` is not guaranteed as part of API contract.
 
 **Why**
 
 - Child portal attachment may depend on the parent `Spatialized2DElement` being attached; ordering reduces races.
+- Fallback plain DOM readiness is host-attachment driven and may follow different React commit/layout-effect sequencing than portal runtime; documenting this avoids fragile app assumptions.
 
 ### Decision 4: Typing surface and degraded rendering
 
 - `onSpatialContentReady` is part of the **SpatialDiv (2D)** public API only (`Spatialized2DElementContainer` / `div` JSX augmentation). It is **not** exposed on `Model`, `Reality`, or static 3D container prop types.
 - `WebSpatialJSX.IntrinsicElements['div']` includes `onSpatialContentReady`; other intrinsic tags keep gesture props without this callback (SpatialDiv is `div`-based).
-- In non-WebSpatial environments or degraded rendering paths (for example `DegradedContainer`, attachment-degraded plain HTML in `SpatializedContainer`), the prop MUST NOT leak to real DOM attributes; strip it or ignore it consistently with existing `spatialEventOptions` stripping patterns.
-- On those paths the callback MUST NOT run — there is no portal content host; treating it as a no-op matches app expectations.
+- In non-WebSpatial environments, the fallback plain DOM `SpatialDiv` SHOULD still run `onSpatialContentReady` so app code can use a unified lifecycle API in web-only usage; `ctx.host` is that fallback DOM host.
+- In attachment-degraded paths (for example `insideAttachment` plain HTML fallback), callback invocation remains suppressed.
+- Across all degraded/plain-HTML paths, the prop MUST NOT leak to real DOM attributes; strip it or ignore it consistently with existing `spatialEventOptions` stripping patterns.
 
 ### Decision 5: `ctx.host` anchoring
 
@@ -92,7 +95,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 ### Decision 6: Verification
 
-- Add package tests covering timing, cleanup, StrictMode remount ordering, nested parent/child order, ref non-null when ready fires, deduped ref callbacks, and degraded non-invocation; optional `apps/test-server` pages for interactive validation.
+- Add package tests covering timing, cleanup, StrictMode remount ordering, nested parent/child order, ref non-null when ready fires, deduped ref callbacks, non-WebSpatial fallback invocation with connected host, and attachment-degraded non-invocation; optional `apps/test-server` pages for interactive validation.
 
 ## Risks / Trade-offs
 

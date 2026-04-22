@@ -1200,7 +1200,7 @@ describe('PortalSpatializedContainer', () => {
 })
 
 describe('SpatializedContainer', () => {
-  it('renders plain component when not in WebSpatial env', async () => {
+  it('renders plain component and runs ready callback in non-WebSpatial env', async () => {
     vi.resetModules()
     vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
       return {
@@ -1215,14 +1215,27 @@ describe('SpatializedContainer', () => {
     const { SpatializedContainer } = await import(
       './spatialized-container/SpatializedContainer'
     )
+    const cleanup = vi.fn()
+    const onSpatialContentReady = vi.fn((ctx: { host: HTMLElement }) => {
+      expect(ctx.host.tagName).toBe('DIV')
+      expect(ctx.host.isConnected).toBe(true)
+      return cleanup
+    })
 
     const r = render(
       React.createElement(SpatializedContainer, {
         component: 'div',
         'data-testid': 'plain',
+        onSpatialContentReady,
       } as any),
     )
-    expect(r.container.querySelector('[data-testid="plain"]')).toBeTruthy()
+    const el = r.container.querySelector('[data-testid="plain"]')
+    expect(el).toBeTruthy()
+    expect(el?.getAttribute('onSpatialContentReady')).toBe(null)
+    expect(onSpatialContentReady).toHaveBeenCalledTimes(1)
+
+    r.unmount()
+    expect(cleanup).toHaveBeenCalledTimes(1)
   })
 
   it('renders root container with standard/portal/task containers', async () => {

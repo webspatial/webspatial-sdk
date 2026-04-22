@@ -18,7 +18,7 @@ import {
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 export type { Quaternion } from '@webspatial/core-sdk'
 
-/** Portal content root for imperative mounting (WebSpatial isolated document). */
+/** Connected content root for imperative mounting (portal root or web fallback host). */
 export type SpatialContentReadyContext = {
   host: HTMLElement
 }
@@ -74,7 +74,7 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
 > & {
   extraRefProps?: (domProxy: T) => Record<string, unknown>
   /**
-   * SpatialDiv (2D portal) only — fired when isolated portal `ctx.host` is connected.
+   * SpatialDiv only — fired when `ctx.host` is connected (portal root or web fallback host).
    * Not part of `Model` / `Reality` public APIs.
    */
   onSpatialContentReady?: SpatialContentReadyCallback

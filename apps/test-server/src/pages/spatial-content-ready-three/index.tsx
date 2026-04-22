@@ -22,6 +22,7 @@ const DEPTH_SINGLE = 110
 
 type AttachOpts = {
   meshColor: number
+  slotSelector: string
 }
 
 function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
@@ -35,22 +36,31 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
 
   const renderer = new WebGLRenderer({ antialias: true, alpha: false })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.domElement.style.display = 'block'
+  renderer.domElement.style.width = '100%'
+  renderer.domElement.style.height = '100%'
+  renderer.domElement.style.maxWidth = '100%'
+  renderer.domElement.style.maxHeight = '100%'
 
   const geometry = new BoxGeometry(1, 1, 1)
   const material = new MeshBasicMaterial({ color: opts.meshColor })
   const mesh = new Mesh(geometry, material)
   scene.add(mesh)
 
-  host.appendChild(renderer.domElement)
+  const mountEl =
+    (host.querySelector(opts.slotSelector) as HTMLElement | null) ?? host
+  mountEl.appendChild(renderer.domElement)
 
   let raf = 0
 
+  // Guard against layout feedback loops (canvas size affecting host size repeatedly).
+  const MAX_RENDER_SIDE = 2048
   const layout = () => {
-    const w = Math.max(host.clientWidth, 64)
-    const h = Math.max(host.clientHeight, 64)
+    const w = Math.min(Math.max(mountEl.clientWidth, 64), MAX_RENDER_SIDE)
+    const h = Math.min(Math.max(mountEl.clientHeight, 64), MAX_RENDER_SIDE)
     camera.aspect = w / h
     camera.updateProjectionMatrix()
-    renderer.setSize(w, h)
+    renderer.setSize(w, h, false)
   }
 
   layout()
@@ -64,7 +74,7 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
   animate()
 
   const ro = new ResizeObserver(() => layout())
-  ro.observe(host)
+  ro.observe(mountEl)
 
   return () => {
     cancelAnimationFrame(raf)
@@ -73,8 +83,8 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
     material.dispose()
     renderer.dispose()
     const el = renderer.domElement
-    if (el.parentNode === host) {
-      host.removeChild(el)
+    if (el.parentNode === mountEl) {
+      mountEl.removeChild(el)
     }
   }
 }
@@ -108,7 +118,10 @@ export default function SpatialContentReadyThreePage() {
         `[outer ready #${n}] ref.current→${refOk ? 'set' : 'null'} host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
       )
 
-      const disposeThree = attachThreeToHost(ctx, { meshColor: 0x4488ff })
+      const disposeThree = attachThreeToHost(ctx, {
+        meshColor: 0x4488ff,
+        slotSelector: '[data-three-slot="outer"]',
+      })
 
       return () => {
         disposeThree()
@@ -131,7 +144,10 @@ export default function SpatialContentReadyThreePage() {
         `[inner ready #${n}] ref.current→${refOk ? 'set' : 'null'} host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
       )
 
-      const disposeThree = attachThreeToHost(ctx, { meshColor: 0x44ff88 })
+      const disposeThree = attachThreeToHost(ctx, {
+        meshColor: 0x44ff88,
+        slotSelector: '[data-three-slot="inner"]',
+      })
 
       return () => {
         disposeThree()
@@ -152,7 +168,10 @@ export default function SpatialContentReadyThreePage() {
       pushLine(
         `[single ready #${n}] host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
       )
-      const disposeThree = attachThreeToHost(ctx, { meshColor: 0xaa66ff })
+      const disposeThree = attachThreeToHost(ctx, {
+        meshColor: 0xaa66ff,
+        slotSelector: '[data-three-slot="single"]',
+      })
       return () => {
         disposeThree()
         cleanupSeq.current += 1
@@ -258,6 +277,11 @@ export default function SpatialContentReadyThreePage() {
               <div className="text-[11px] text-gray-500 px-2 py-1 border-b border-white/10 shrink-0">
                 Outer SpatialDiv · blue cube
               </div>
+              <div
+                data-three-slot="outer"
+                className="shrink-0 border-b border-white/10"
+                style={{ height: '200px' }}
+              />
               {showNestedBlock && (
                 <div className="p-3 flex justify-center shrink-0">
                   <div
@@ -275,6 +299,11 @@ export default function SpatialContentReadyThreePage() {
                     <div className="text-[10px] text-emerald-400/80 px-2 py-0.5 border-b border-emerald-500/20">
                       Inner SpatialDiv · green cube
                     </div>
+                    <div
+                      data-three-slot="inner"
+                      className="shrink-0"
+                      style={{ height: '108px' }}
+                    />
                   </div>
                 </div>
               )}
@@ -299,6 +328,11 @@ export default function SpatialContentReadyThreePage() {
             <div className="text-[11px] text-violet-300/70 px-2 py-1 border-b border-white/10">
               Single SpatialDiv · purple cube (always mounted on this page)
             </div>
+            <div
+              data-three-slot="single"
+              className="shrink-0"
+              style={{ height: '108px' }}
+            />
           </div>
         </div>
 

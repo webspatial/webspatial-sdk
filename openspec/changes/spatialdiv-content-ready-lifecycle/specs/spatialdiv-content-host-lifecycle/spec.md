@@ -124,31 +124,49 @@ The cleanup function MUST be safe to call multiple times (idempotent) from the S
 
 ### Requirement: Nested SpatialDiv ordering
 
-When `SpatialDiv` elements are nested, the system SHALL invoke parent `onSpatialContentReady` before child `onSpatialContentReady` for a given commit where both become ready on the same `isReady` rising edge transition.
+In WebSpatial runtime (portal path), when `SpatialDiv` elements are nested, the system SHALL invoke parent `onSpatialContentReady` before child `onSpatialContentReady` for a given commit where both become ready on the same `isReady` rising edge transition.
 
-When a parent spatial container is recreated/replaced, the system SHALL run child cleanups (depth-first: deepest child first) before running parent cleanup, and before emitting the parent’s next `onSpatialContentReady`.
+In WebSpatial runtime (portal path), when a parent spatial container is recreated/replaced, the system SHALL run child cleanups (depth-first: deepest child first) before running parent cleanup, and before emitting the parent’s next `onSpatialContentReady`.
+
+In non-WebSpatial fallback (plain DOM path), parent/child callback ordering is implementation-dependent and MUST NOT be treated as a stable API contract by application code.
 
 #### Scenario: Parent ready precedes child ready
 
-- **WHEN** a parent `enable-xr` element contains a child `enable-xr` element and both become ready
+- **WHEN** a parent `enable-xr` element contains a child `enable-xr` element and both become ready in WebSpatial runtime
 - **THEN** the parent `onSpatialContentReady` MUST run before the child `onSpatialContentReady`
 
-### Requirement: Degraded / non-XR rendering must not leak the prop to DOM
+#### Scenario: Non-WebSpatial fallback does not guarantee parent/child callback order
 
-When spatial features are unavailable and the SDK renders a degraded plain DOM container, the system SHALL NOT forward `onSpatialContentReady` as a real DOM attribute.
+- **WHEN** a parent plain-DOM fallback `SpatialDiv` contains a child fallback `SpatialDiv`
+- **THEN** parent and child `onSpatialContentReady` callback ordering MUST be considered unspecified by API contract
 
-The system MUST NOT invoke `onSpatialContentReady` on degraded paths (including spatial-unavailable fallback and attachment-degraded fallback where `SpatializedContainer` renders plain HTML).
+### Requirement: Non-WebSpatial fallback must keep API usable without leaking DOM attributes
 
-If the prop is present when the capability is unavailable, the system SHOULD ignore it or warn once in development builds; the exact warning behavior is implementation-defined but MUST NOT crash production rendering.
+When WebSpatial runtime is unavailable and the SDK renders a plain DOM `SpatialDiv` fallback, the system SHALL still support `onSpatialContentReady` for that fallback path.
+
+For this fallback path:
+
+- The callback MUST run in `useLayoutEffect` timing (never during render).
+- `ctx.host` MUST be the connected fallback DOM host element rendered by that `SpatialDiv`.
+- Returned cleanup semantics MUST match the primary requirement (unmount / teardown / re-ready boundaries).
+
+When rendering any plain HTML degraded path, the system SHALL NOT forward `onSpatialContentReady` as a real DOM attribute.
+
+Attachment-degraded fallback (for example `insideAttachment`) MUST continue to suppress `onSpatialContentReady` invocation, because no supported spatial content host contract is provided there.
 
 #### Scenario: Degraded container keeps DOM attribute namespace clean
 
 - **WHEN** `onSpatialContentReady` is passed while rendering degraded plain HTML
 - **THEN** the resulting DOM element MUST NOT include an `onSpatialContentReady` attribute
 
-#### Scenario: Degraded path does not invoke ready
+#### Scenario: Non-WebSpatial fallback still invokes ready
 
-- **WHEN** spatial features are unavailable and `onSpatialContentReady` is passed
+- **WHEN** WebSpatial runtime is unavailable and `onSpatialContentReady` is passed to SpatialDiv
+- **THEN** `onSpatialContentReady` MUST be called with a connected fallback host element
+
+#### Scenario: Attachment-degraded path does not invoke ready
+
+- **WHEN** attachment fallback renders plain HTML and `onSpatialContentReady` is passed
 - **THEN** `onSpatialContentReady` MUST NOT be called
 
 ### Requirement: Documentation warns against child DOM ref patterns
@@ -159,6 +177,7 @@ The documentation MUST recommend:
 
 - declarative React updates for layout/size changes, and
 - `onSpatialContentReady` + cleanup for external renderer attachment.
+- treating nested parent/child callback ordering as runtime-dependent: guaranteed in WebSpatial runtime, unspecified in non-WebSpatial fallback.
 
 #### Scenario: Docs include a Do/Don’t guidance block
 
@@ -176,11 +195,11 @@ Automated tests SHALL cover at minimum:
 - `isReady` falling edge invokes prior cleanup before the next rising edge.
 - StrictMode-style remount: cleanup from the first ready runs before the second ready.
 - Forwarded spatial `ref`: non-null when ready is invoked; ref callback deduplication per prior requirements.
-- Degraded path: prop stripped from DOM; `onSpatialContentReady` never called.
-- Nested spatial containers: parent ready before child ready on the same rising edge where both become ready.
+- Non-WebSpatial fallback: prop stripped from DOM attribute space; `onSpatialContentReady` still called with connected fallback host.
+- Attachment-degraded path: prop stripped from DOM attribute space; `onSpatialContentReady` never called.
+- Nested spatial containers: in WebSpatial runtime, parent ready before child ready on the same rising edge where both become ready; in non-WebSpatial fallback, ordering is unspecified.
 
 #### Scenario: CI exercises the matrix
 
 - **WHEN** the React package test suite runs for this change
 - **THEN** it SHALL include tests that satisfy the acceptance matrix above
-
