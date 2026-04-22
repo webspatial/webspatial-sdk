@@ -13,6 +13,7 @@ function App() {
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
   const [isPaused, setIsPaused] = useState(true)
   const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [loop, setLoop] = useState(true)
   useEffect(() => {
     modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
@@ -34,7 +35,7 @@ function App() {
         poster="/img/toy_drummer.png"
         enable-xr
         autoPlay
-        loop
+        loop={loop}
         style={{
           height: '200px',
           '--xr-depth': '100px',
@@ -97,6 +98,15 @@ function App() {
         >
           ⏸
         </button>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={loop}
+            onChange={() => setLoop(!loop)}
+          />
+          <span className="label-text m-1">Loop</span>
+        </label>
         <select
           className="select m-1"
           value={playbackRate}
