@@ -522,7 +522,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // Check if it's an attachment first
         if attachmentManager.get(id: command.id) != nil {
             attachmentManager.remove(id: command.id)
-            if let wrapper = findSpatialObject(command.id) as? SpatialEntity {
+            if let wrapper: SpatialEntity = findSpatialObject(command.id) {
                 wrapper.destroy()
             }
             resolve(.success(nil))

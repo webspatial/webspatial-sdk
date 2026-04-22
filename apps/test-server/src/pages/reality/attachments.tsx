@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import {
@@ -35,9 +35,214 @@ function TestCase({
   )
 }
 
+function TestAttachmentEntityApiParity() {
+  const attachmentRef = useRef<React.ElementRef<typeof AttachmentEntity>>(null)
+  /** Entity `rotation` is Euler angles in degrees (same as composeSRT / DOMMatrix.rotate). */
+  const [parentRotYDeg, setParentRotYDeg] = useState(0)
+  const [parentScale, setParentScale] = useState(1)
+  const [attachRotYDeg, setAttachRotYDeg] = useState(0)
+  const [attachScale, setAttachScale] = useState(1)
+  const [logLines, setLogLines] = useState<string[]>([])
+
+  const log = useCallback((msg: string) => {
+    setLogLines(prev => [...prev.slice(-48), msg])
+  }, [])
+
+  const uniformScale = { x: attachScale, y: attachScale, z: attachScale }
+
+  return (
+    <TestCase title="0. AttachmentEntity ↔ BoxEntity API">
+      <p className="text-sm text-gray-600 mb-3 max-w-4xl">
+        Demonstrates the same entity surface as{' '}
+        <code className="text-xs">BoxEntity</code>:
+        <code className="text-xs"> position</code>,
+        <code className="text-xs"> rotation</code>,
+        <code className="text-xs"> scale</code>,
+        <code className="text-xs"> enableInput</code>,
+        <code className="text-xs"> id</code>,
+        <code className="text-xs"> ref</code>, and all eight spatial handlers.
+        Adjust <strong>parent</strong> rotation and scale — the attachment is a
+        child in the native scene graph, so it inherits those transforms without
+        per-frame JS on the attachment. Gesture hits on the panel route through
+        the standard entity event pipeline.{' '}
+        <strong>Rotation props use degrees</strong> (WebSpatial matches{' '}
+        <code className="text-[11px]">DOMMatrix.rotate</code>), not radians.
+      </p>
+      <div className="mb-4 flex flex-wrap gap-x-8 gap-y-3 max-w-4xl text-xs">
+        <label className="flex flex-col gap-1 min-w-[200px]">
+          <span className="text-gray-700">Parent rotation Y (°)</span>
+          <input
+            type="range"
+            min={-90}
+            max={90}
+            step={1}
+            value={parentRotYDeg}
+            onChange={e => setParentRotYDeg(Number(e.target.value))}
+            className="w-full max-w-xs"
+          />
+          <span className="tabular-nums text-gray-500">{parentRotYDeg}°</span>
+        </label>
+        <label className="flex flex-col gap-1 min-w-[200px]">
+          <span className="text-gray-700">Parent scale (uniform)</span>
+          <input
+            type="range"
+            min={0.55}
+            max={1.45}
+            step={0.02}
+            value={parentScale}
+            onChange={e => setParentScale(Number(e.target.value))}
+            className="w-full max-w-xs"
+          />
+          <span className="tabular-nums text-gray-500">
+            {parentScale.toFixed(2)}
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 min-w-[200px]">
+          <span className="text-gray-700">Attachment local rotation Y (°)</span>
+          <input
+            type="range"
+            min={-75}
+            max={75}
+            step={1}
+            value={attachRotYDeg}
+            onChange={e => setAttachRotYDeg(Number(e.target.value))}
+            className="w-full max-w-xs"
+          />
+          <span className="tabular-nums text-gray-500">{attachRotYDeg}°</span>
+        </label>
+        <label className="flex flex-col gap-1 min-w-[200px]">
+          <span className="text-gray-700">
+            Attachment local scale (uniform)
+          </span>
+          <input
+            type="range"
+            min={0.75}
+            max={1.25}
+            step={0.02}
+            value={attachScale}
+            onChange={e => setAttachScale(Number(e.target.value))}
+            className="w-full max-w-xs"
+          />
+          <span className="tabular-nums text-gray-500">
+            {attachScale.toFixed(2)}
+          </span>
+        </label>
+      </div>
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="rounded border border-gray-400 bg-white px-3 py-1 text-xs hover:bg-gray-50"
+          onClick={() =>
+            log(
+              `ref snapshot: ref.id=${String(attachmentRef.current?.id)} · entity=${attachmentRef.current?.entity ? 'ready' : 'null'}`,
+            )
+          }
+        >
+          Log <code className="text-[10px]">ref</code> (id / entity)
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-6 items-start">
+        <Reality
+          style={{
+            width: '440px',
+            height: '400px',
+            border: '1px solid rgb(99 102 241)',
+          }}
+        >
+          <UnlitMaterial id="matApiParity" color="#6366f1" />
+          <AttachmentAsset name="api-parity-attachment">
+            <div
+              style={{
+                padding: 14,
+                background: 'rgba(25,25,55,0.96)',
+                color: '#fff',
+                borderRadius: 8,
+                minHeight: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>
+                Attachment UI
+              </p>
+              <p
+                style={{
+                  margin: '10px 0 0',
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  opacity: 0.9,
+                }}
+              >
+                Spatial gestures here use the same registration path as geometry
+                entities (<code className="text-[11px]">enableInput</code> +
+                handlers).
+              </p>
+            </div>
+          </AttachmentAsset>
+          <SceneGraph>
+            <Entity
+              id="parent-for-attachment-api"
+              position={{ x: 0, y: 0, z: 0.12 }}
+              rotation={{ x: 0, y: parentRotYDeg, z: 0 }}
+              scale={{ x: parentScale, y: parentScale, z: parentScale }}
+            >
+              <BoxEntity
+                width={0.12}
+                height={0.12}
+                depth={0.12}
+                materials={['matApiParity']}
+              />
+              <AttachmentEntity
+                ref={attachmentRef}
+                id="attachment-api-demo"
+                attachment="api-parity-attachment"
+                position={{ x: 0, y: 0.14, z: 0 }}
+                rotation={{ x: 0, y: attachRotYDeg, z: 0 }}
+                scale={uniformScale}
+                enableInput
+                size={{ width: 260, height: 150 }}
+                onSpatialTap={() => log('onSpatialTap')}
+                onSpatialDragStart={() => log('onSpatialDragStart')}
+                onSpatialDrag={() => log('onSpatialDrag')}
+                onSpatialDragEnd={() => log('onSpatialDragEnd')}
+                onSpatialRotate={() => log('onSpatialRotate')}
+                onSpatialRotateEnd={() => log('onSpatialRotateEnd')}
+                onSpatialMagnify={() => log('onSpatialMagnify')}
+                onSpatialMagnifyEnd={() => log('onSpatialMagnifyEnd')}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+        <div className="flex min-h-[200px] min-w-[240px] max-w-xl flex-1 flex-col rounded border border-gray-200 bg-gray-50">
+          <div className="border-b border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600">
+            Gesture log (spatial runtime)
+          </div>
+          <div className="max-h-52 overflow-y-auto p-2 font-mono text-[11px] leading-snug">
+            {logLines.length === 0 ? (
+              <span className="text-gray-400">
+                Drag / tap / pinch / rotate on the attachment in device or
+                simulator…
+              </span>
+            ) : (
+              logLines.map((line, i) => (
+                <div key={`${i}-${line.slice(0, 12)}`}>{line}</div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </TestCase>
+  )
+}
+
 function TestBasicAttachment() {
   return (
     <TestCase title="1. Basic Attachment">
+      <p className="text-sm text-gray-500 mb-3">
+        Minimal placement only. For <code className="text-xs">ref</code>,
+        transforms, <code className="text-xs">enableInput</code>, and gesture
+        callbacks, see{' '}
+        <strong>test 0 — AttachmentEntity ↔ BoxEntity API</strong>.
+      </p>
       <Reality
         style={{ width: '400px', height: '400px', border: '1px solid black' }}
       >
@@ -849,6 +1054,7 @@ function App() {
       <h1 className="text-3xl font-bold mb-6">Attachment Tests</h1>
 
       <div className="flex flex-wrap gap-8">
+        <TestAttachmentEntityApiParity />
         <TestBasicAttachment />
         <TestNestedRealityInSpatialDiv />
         <TestModelFallback />
