@@ -135,6 +135,34 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.className).toBe(dom.className)
   })
 
+  it('deduplicates repeated null callback ref dispatches', () => {
+    const fn = vi.fn()
+    const proxy = new SpatialContainerRefProxy<any>(fn as any)
+
+    proxy.updateTransformVisibilityTaskContainerDom(null)
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(fn).toHaveBeenLastCalledWith(null)
+    fn.mockClear()
+
+    proxy.updateTransformVisibilityTaskContainerDom(null)
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('deduplicates non-null callback when Standard dom unchanged', () => {
+    const fn = vi.fn()
+    const proxy = new SpatialContainerRefProxy<any>(fn as any)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    fn.mockClear()
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    expect(fn).not.toHaveBeenCalled()
+  })
+
   it('supports extra ref props', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref, () => ({

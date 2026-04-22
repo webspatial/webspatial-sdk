@@ -4,8 +4,10 @@ import React, {
   ElementType,
   ForwardedRef,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
+  useState,
 } from 'react'
 
 import { Spatialized2DElement } from '@webspatial/core-sdk'
@@ -29,14 +31,39 @@ import {
   PortalInstanceObject,
 } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
+import { useSpatialContentReady } from './hooks/useSpatialContentReady'
+
+function mergeRefs<T>(
+  ...refs: Array<React.Ref<T> | undefined | null>
+): React.RefCallback<T> {
+  return value => {
+    for (const ref of refs) {
+      if (ref == null) continue
+      if (typeof ref === 'function') {
+        ref(value)
+      } else {
+        ;(ref as React.MutableRefObject<T | null>).current = value
+      }
+    }
+  }
+}
+
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
-    'spatializedElement'
+    'spatializedElement' | 'onSpatialContentReady'
   >,
   portalInstanceObject: PortalInstanceObject,
+  hostRef?: React.RefCallback<HTMLElement | null>,
 ) {
-  const { component: El, style: inStyle = {}, ...props } = inProps
+  const {
+    component: El,
+    style: inStyle = {},
+    ref: userRef,
+    ...props
+  } = inProps as React.ComponentPropsWithRef<P> & {
+    component: P
+  }
   const extraStyle: CSSProperties = {
     visibility: 'visible',
     position: 'relative',
@@ -62,7 +89,9 @@ function getJSXPortalInstance<P extends ElementType>(
     ...extraStyle,
   }
 
-  return <El style={style} {...props} />
+  const mergedRef = hostRef != null ? mergeRefs(hostRef, userRef) : userRef
+
+  return <El ref={mergedRef} style={style} {...props} />
 }
 
 function useSyncDocumentTitle(
@@ -81,9 +110,21 @@ function useSyncDocumentTitle(
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
-  const { spatializedElement, ...restProps } = props
+  const { spatializedElement, onSpatialContentReady, ...restProps } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const { windowProxy } = spatialized2DElement
+
+  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
+  const portalInstanceObject: PortalInstanceObject = useContext(
+    PortalInstanceContext,
+  )!
+
+  useSpatialContentReady({
+    spatializedElement,
+    portalInstanceObject,
+    hostElement: hostEl,
+    onSpatialContentReady,
+  })
 
   useSyncHeadStyles(windowProxy, {
     subtree: false,
@@ -92,12 +133,14 @@ function SpatializedContent<P extends ElementType>(
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
-  const portalInstanceObject: PortalInstanceObject = useContext(
-    PortalInstanceContext,
-  )!
+  const setHostCallback = useCallback((el: HTMLElement | null) => {
+    setHostEl(el)
+  }, [])
+
   const JSXPortalInstance = getJSXPortalInstance(
     restProps,
     portalInstanceObject,
+    setHostCallback,
   )
 
   return createPortal(JSXPortalInstance, windowProxy.document.body)

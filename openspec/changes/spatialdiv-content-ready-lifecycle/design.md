@@ -47,7 +47,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 - Gate emission on `spatializedElement` + `portalInstanceObject.dom` + connected portal host (`ctx.host.isConnected`).
 - Emit from the portal content subtree using `useLayoutEffect` timing (after commit DOM mutations, before paint).
 - Never emit during render.
-- Model readiness as `isReady` edge transitions: emit on `false → true`, cleanup on `true → false`, and do not re-emit while `isReady` stays continuously `true`.
+- Treat readiness as `isReady` edge transitions: emit on `false → true`, cleanup on `true → false`, and do not re-emit while `isReady` stays continuously `true`.
 
 **Why**
 
@@ -59,6 +59,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 **Contract**
 
 - When `onSpatialContentReady` is invoked, the spatial container’s forwarded `ref.current` MUST be non-null (when a ref is provided).
+- `Model`, `Reality`, and any other component that forwards `ref` through `SpatializedContainer` use the **same** ref gate (Standard + TransformVisibilityTaskContainer). Model load, Reality child entities, and similar native readiness do **not** define a separate ref assignment schedule.
 - App code MUST NOT treat `ref.current` as the default mount target for external renderer DOM by default; app code SHOULD mount under `ctx.host` unless the SDK explicitly documents otherwise.
 - When cleanup returned from `onSpatialContentReady` runs, app code MUST NOT rely on `ref.current`; cleanup MUST use closed-over handles (`host`, renderer instances, animation tokens).
 
@@ -79,8 +80,19 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 ### Decision 4: Typing surface and degraded rendering
 
-- `onSpatialContentReady` is added to `WebSpatialJSX.IntrinsicElements` alongside existing spatial gesture props.
-- In non-WebSpatial environments or degraded rendering paths (for example `DegradedContainer`), the prop MUST NOT leak to real DOM attributes; strip it or ignore it consistently with existing `spatialEventOptions` stripping patterns.
+- `onSpatialContentReady` is part of the **SpatialDiv (2D)** public API only (`Spatialized2DElementContainer` / `div` JSX augmentation). It is **not** exposed on `Model`, `Reality`, or static 3D container prop types.
+- `WebSpatialJSX.IntrinsicElements['div']` includes `onSpatialContentReady`; other intrinsic tags keep gesture props without this callback (SpatialDiv is `div`-based).
+- In non-WebSpatial environments or degraded rendering paths (for example `DegradedContainer`, attachment-degraded plain HTML in `SpatializedContainer`), the prop MUST NOT leak to real DOM attributes; strip it or ignore it consistently with existing `spatialEventOptions` stripping patterns.
+- On those paths the callback MUST NOT run — there is no portal content host; treating it as a no-op matches app expectations.
+
+### Decision 5: `ctx.host` anchoring
+
+- `ctx.host` MUST be the portal subtree root DOM instance for the spatialized portal stream (today: the element that backs the root `<El {...} />` of `SpatializedContent` portaled into `windowProxy.document.body`), not an arbitrary body child.
+- Implementation MUST ensure ref dispatch completes before emitting `onSpatialContentReady` on the same rising edge (commit ref before portal `useLayoutEffect` ready).
+
+### Decision 6: Verification
+
+- Add package tests covering timing, cleanup, StrictMode remount ordering, nested parent/child order, ref non-null when ready fires, deduped ref callbacks, and degraded non-invocation; optional `apps/test-server` pages for interactive validation.
 
 ## Risks / Trade-offs
 

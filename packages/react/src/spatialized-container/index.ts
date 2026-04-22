@@ -31,6 +31,8 @@ export {
   type ModelSpatialMagnifyEndEvent,
   type ModelLoadEvent,
   type SpatialEventOptions,
+  type SpatialContentReadyContext,
+  type SpatialContentReadyCallback,
 } from './types'
 
 export function initPolyfill() {

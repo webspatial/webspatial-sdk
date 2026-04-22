@@ -60,6 +60,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
     getExtraSpatializedElementProperties: _getExtra,
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
+    onSpatialContentReady: _onSpatialContentReady,
     ...restProps
   } = inprops as DegradedProps
   return (
@@ -177,6 +178,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         createSpatializedElement,
         getExtraSpatializedElementProperties,
         spatialEventOptions: _nestedSpatialEventOptions,
+        onSpatialContentReady: _nestedOnSpatialContentReady,
         ...restProps
       } = props
       return (
@@ -240,6 +242,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       createSpatializedElement,
       getExtraSpatializedElementProperties,
       spatialEventOptions: _rootSpatialEventOptions,
+      onSpatialContentReady: _rootOnSpatialContentReady,
       ...restProps
     } = props
 

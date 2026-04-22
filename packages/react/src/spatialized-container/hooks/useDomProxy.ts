@@ -20,6 +20,8 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private ref: ForwardedRef<SpatializedElementRef<T>>
   public domProxy?: T | null
   private styleProxy?: CSSStyleDeclaration
+  /** Last value dispatched to `ref` (undefined = none yet); avoids duplicate null/proxy writes. */
+  private lastOutgoingToRef: T | null | undefined = undefined
 
   // extre ref props, used to add extra props to ref
   private extraRefProps?: ((domProxy: T) => Record<string, unknown>) | undefined
@@ -107,6 +109,11 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       this.domProxy = undefined
       this.styleProxy = undefined
       this.updateDomProxyToRef()
+      return
+    }
+
+    if (this.standardRawDom === dom && this.domProxy) {
+      this.scheduleSyncTransformClassFromStandard()
       return
     }
 
@@ -339,11 +346,19 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
     if (!ref) {
       return
     }
-    if (this.domProxy && this.transformVisibilityTaskContainerDom) {
+    const next: T | null =
+      this.domProxy && this.transformVisibilityTaskContainerDom
+        ? this.domProxy
+        : null
+    if (this.lastOutgoingToRef === next) {
+      return
+    }
+    this.lastOutgoingToRef = next
+    if (next) {
       if (typeof ref === 'function') {
-        ref(this.domProxy)
+        ref(next)
       } else {
-        ref.current = this.domProxy
+        ref.current = next
       }
     } else {
       if (typeof ref === 'function') {
@@ -356,6 +371,8 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
 
   updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
     this.ref = ref
+    this.lastOutgoingToRef = undefined
+    this.updateDomProxyToRef()
   }
 }
 
