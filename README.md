@@ -26,7 +26,7 @@ The current documentation lives at [webspatial.dev](https://webspatial.dev).
 
 ### Runtime capabilities
 
-Apps can query the current shell with `WebSpatialRuntime.supports(name, tokens?)` from `@webspatial/react-sdk` (see package exports). For documented keys, sub-tokens, resolution rules, and fallback behavior (including the native `<model>` exception), see [`openspec/changes/runtime-feature-detection/review.md`](openspec/changes/runtime-feature-detection/review.md).
+Apps can query the current shell with `WebSpatialRuntime.supports(name, tokens?)` from `@webspatial/react-sdk` (see package exports). For documented keys, sub-tokens, resolution rules, and fallback behavior (including the native `<model>` exception), see [`openspec/specs/runtime-capabilities/spec.md`](openspec/specs/runtime-capabilities/spec.md).
 
 ## Contributing
 
