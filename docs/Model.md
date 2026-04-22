@@ -6,11 +6,11 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ## Try it
 
-<p align="center"><img src="imgs/Model-try-it.png" height="400" /></p>
+<p align="center"><video src="https://github.com/user-attachments/assets/92fd9390-8961-4754-8b31-006d98937051" height="400" /></p>
 
 ```jsx
 function Example() {
-  const style = { display: 'block', height: '200px', '--xr-depth': '100px' }
+  const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
       <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
@@ -125,7 +125,7 @@ a read-only `DOMPoint` that indicates the extents of the bounding box of the mod
 
 `duration`
 
-a read-only `double` reflecting the un-scaled total duration of the animation, if present. If there is no animation on this model, the value is 0.
+a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
 `currentTime`
 
@@ -275,9 +275,9 @@ function LongScrollPage() {
 | src        | ✅<br>WebSpatial 1.1 | ✅ (USD/USDZ/GLB/GLTF)<br>⍺2.0 |
 | onLoad     | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0                     |
 | onError    | ✅<br>WebSpatial 1.1 | ✅<br>⍺2.0                     |
-| autoPlay   | WebSpatial April     | ⍺2.1                           |
-| loop       | WebSpatial April     | ⍺2.1                           |
-| `<source>` | WebSpatial April     | ⍺2.1                           |
+| autoPlay   | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1                     |
+| loop       | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1                     |
+| `<source>` | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1                     |
 | poster     | WebSpatial May       | β2.0                           |
 | loading    | WebSpatial June      | β2.1                           |
 | stagemode  | WebSpatial June      | β2.1                           |
@@ -301,11 +301,11 @@ function LongScrollPage() {
 | entityTransform    | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
 | currentSrc         | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
 | ready              | ✅<br>WebSpatial 1.2 | ✅<br>⍺2.0 |
-| duration           | WebSpatial April     | ⍺2.1       |
-| playbackRate       | WebSpatial April     | ⍺2.1       |
-| paused             | WebSpatial April     | ⍺2.1       |
-| play()             | WebSpatial April     | ⍺2.1       |
-| pause()            | WebSpatial April     | ⍺2.1       |
+| duration           | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1 |
+| playbackRate       | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1 |
+| paused             | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1 |
+| play()             | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1 |
+| pause()            | ✅<br>WebSpatial 1.7 | ✅<br>⍺2.1 |
 | currentTime        | WebSpatial May       | β2.0       |
 | boundingBoxCenter  | WebSpatial June      | β2.1       |
 | boundingBoxExtents | WebSpatial June      | β2.1       |

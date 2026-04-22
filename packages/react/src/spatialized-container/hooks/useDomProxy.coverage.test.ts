@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import * as core from '@webspatial/core-sdk'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { hijackGetComputedStyle, SpatialContainerRefProxy } from './useDomProxy'
 import { SpatialCustomStyleVars } from '../types'
 
@@ -178,6 +179,49 @@ describe('SpatialContainerRefProxy', () => {
     proxy.updateTransformVisibilityTaskContainerDom(task)
 
     expect((ref.current as any).foo).toBe('bar')
+  })
+})
+
+describe('spatialized ref: xrClientDepth / xrOffsetBack', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function attachDomProxy() {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    return { dom, domProxy: ref.current as Record<string, unknown> }
+  }
+
+  it('`in` is false and get is undefined when supports is false', () => {
+    vi.spyOn(core, 'supports').mockImplementation((name: string) => {
+      if (name === 'xrClientDepth' || name === 'xrOffsetBack') return false
+      return true
+    })
+    const { dom, domProxy } = attachDomProxy()
+    dom.style.setProperty(SpatialCustomStyleVars.depth, '9px')
+    dom.style.setProperty(SpatialCustomStyleVars.back, '8px')
+
+    expect('xrClientDepth' in domProxy).toBe(false)
+    expect('xrOffsetBack' in domProxy).toBe(false)
+    expect(domProxy.xrClientDepth).toBeUndefined()
+    expect(domProxy.xrOffsetBack).toBeUndefined()
+  })
+
+  it('`in` is true and get reads raw style vars when supports is true', () => {
+    vi.spyOn(core, 'supports').mockReturnValue(true)
+    const { dom, domProxy } = attachDomProxy()
+    dom.style.setProperty(SpatialCustomStyleVars.depth, '9px')
+    dom.style.setProperty(SpatialCustomStyleVars.back, '8px')
+
+    expect('xrClientDepth' in domProxy).toBe(true)
+    expect('xrOffsetBack' in domProxy).toBe(true)
+    expect(domProxy.xrClientDepth).toBe('9px')
+    expect(domProxy.xrOffsetBack).toBe('8px')
   })
 })
 

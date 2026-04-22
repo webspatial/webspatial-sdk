@@ -11,6 +11,7 @@ export * as PhysicalMetrics from './physicalMetrics'
 export * from './reality'
 export * from './types/types'
 export * from './types/global.d'
+export * from './runtime'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'

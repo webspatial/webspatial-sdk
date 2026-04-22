@@ -1,6 +1,6 @@
 import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
-import { BackgroundMaterialType } from '@webspatial/core-sdk'
+import { BackgroundMaterialType, supports } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
 export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
@@ -128,9 +128,15 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             return target
           }
           if (prop === 'xrClientDepth') {
+            if (!supports('xrClientDepth')) {
+              return undefined
+            }
             return target.style.getPropertyValue(SpatialCustomStyleVars.depth)
           }
           if (prop === 'xrOffsetBack') {
+            if (!supports('xrOffsetBack')) {
+              return undefined
+            }
             return target.style.getPropertyValue(SpatialCustomStyleVars.back)
           }
           if (prop === 'style') {
@@ -314,6 +320,23 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             self.scheduleSyncTransformClassFromStandard()
           }
           return ok
+        },
+        has(target, prop) {
+          if (prop === 'xrClientDepth') {
+            return supports('xrClientDepth')
+          }
+          if (prop === 'xrOffsetBack') {
+            return supports('xrOffsetBack')
+          }
+          if (typeof prop === 'string' && self.extraRefProps) {
+            if (!cacheExtraRefProps) {
+              cacheExtraRefProps = self.extraRefProps(domProxy)
+            }
+            if (cacheExtraRefProps.hasOwnProperty(prop)) {
+              return true
+            }
+          }
+          return prop in target
         },
       },
     )

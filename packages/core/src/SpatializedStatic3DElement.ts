@@ -108,10 +108,44 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (properties.loop !== undefined) {
       this._loop = properties.loop
     }
+    if (properties.playbackRate !== undefined) {
+      this._playbackRate = properties.playbackRate
+    }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
       properties,
     ).execute()
+  }
+
+  /**
+   * Total animation duration in seconds, synced from native.
+   */
+  private _duration: number = 0
+
+  /**
+   * Returns the total animation duration in seconds.
+   */
+  get duration(): number {
+    return this._duration
+  }
+
+  /**
+   * Playback speed multiplier.
+   */
+  private _playbackRate: number = 1
+
+  /**
+   * Returns the current playback rate.
+   */
+  get playbackRate(): number {
+    return this._playbackRate
+  }
+
+  /**
+   * Sets the playback rate and sends it to native.
+   */
+  set playbackRate(value: number) {
+    this.updateProperties({ playbackRate: value })
   }
 
   /**
@@ -178,6 +212,7 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._readyResolve?.(false)
     } else if (data.type === SpatialWebMsgType.animationstatechange) {
       this._paused = data.detail.paused
+      this._duration = data.detail.duration
       this._onAnimationStateChangeCallback?.(data.detail)
     } else {
       // Handle other spatial events using the base class implementation

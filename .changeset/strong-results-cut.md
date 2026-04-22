@@ -5,6 +5,4 @@
 '@webspatial/core-sdk': minor
 ---
 
-Add loop attribute to <Model>
-
-When loop is set, the animation automatically seeks back to the start upon reaching the end.
+add poster attribute to <Model>

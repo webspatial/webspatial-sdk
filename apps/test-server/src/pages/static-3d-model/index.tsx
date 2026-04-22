@@ -11,24 +11,34 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
+  const [isPaused, setIsPaused] = useState(true)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
   useEffect(() => {
     modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
   }, [logLine])
+  // Monitor duration and pause state since there is no playback lifecycle events
+  useEffect(() => {
+    const id = setInterval(
+      () => setIsPaused(modelRef.current?.paused ?? true),
+      200,
+    )
+    return () => clearInterval(id)
+  }, [setIsPaused])
 
   return (
-    <div className="prose max-w-none">
+    <div className="prose max-w-none p-10">
       <CSSTransform onChange={setTransform} />
       <EntityTransform model={modelRef} />
       <Model
-        className="block"
         // src="/modelasset/cone.usdz"
+        poster="/img/toy_drummer.png"
         enable-xr
         autoPlay
         loop
         style={{
           height: '200px',
           '--xr-depth': '100px',
-          '--xr-back': '100px',
+          '--xr-back': '50px',
           transform,
         }}
         ref={modelRef}
@@ -56,13 +66,17 @@ function App() {
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}
       >
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
         <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
-          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
+          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
           type="model/vnd.usdz+zip"
         />
         <source
-          src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
+          src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
           type="model/vnd.usdz+zip"
         />
         <img
@@ -83,8 +97,24 @@ function App() {
         >
           ⏸
         </button>
+        <select
+          className="select m-1"
+          value={playbackRate}
+          onChange={e => {
+            setPlaybackRate(parseFloat(e.target.value))
+            if (modelRef.current?.playbackRate) {
+              modelRef.current.playbackRate = parseFloat(e.target.value)
+            }
+          }}
+        >
+          <option value={0.5}>0.5</option>
+          <option value={1.0}>1.0</option>
+          <option value={1.5}>1.5</option>
+          <option value={100.0}>100.0</option>
+        </select>
         <span className="m-1">
-          Paused: {modelRef.current?.paused ?? 'false'}
+          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${isPaused}`}, Rate: {modelRef.current?.playbackRate}
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
