@@ -328,6 +328,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
 
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
+        spatialWebViewModel.addJSBListener(UpdateAttachmentSizeCommand.self, onUpdateAttachmentSize)
 
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
@@ -452,11 +453,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
 
-        var position = SIMD3<Float>(0, 0, 0)
-        if let posArray = command.position, posArray.count >= 3 {
-            position = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
-        }
-
         let size = CGSize(
             width: command.size?.width ?? 100,
             height: command.size?.height ?? 100
@@ -469,11 +465,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         attachmentManager.create(
             id: command.id,
-            parentEntityId: command.parentEntityId,
-            position: position,
             size: size,
             webViewModel: webViewModel
         )
+
+        let wrapper = SpatialEntity(spatialId: command.id)
+        addSpatialObject(wrapper)
 
         resolve(.success(baseReplyData))
     }
@@ -525,6 +522,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // Check if it's an attachment first
         if attachmentManager.get(id: command.id) != nil {
             attachmentManager.remove(id: command.id)
+            if let wrapper = findSpatialObject(command.id) as? SpatialEntity {
+                wrapper.destroy()
+            }
             resolve(.success(nil))
             return
         }
@@ -1213,19 +1213,27 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onUpdateAttachmentEntity(command: UpdateAttachmentEntityCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        // Deprecated. Size-only path retained one release for old-JS-against-new-native compatibility.
+        // Transforms now route through UpdateEntityPropertiesCommand on the wrapper.
         guard attachmentManager.get(id: command.id) != nil else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
             return
         }
-        var newPosition: SIMD3<Float>? = nil
-        if let posArray = command.position, posArray.count >= 3 {
-            newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
+        let size: CGSize? = command.size.map { CGSize(width: $0.width, height: $0.height) }
+        attachmentManager.update(id: command.id, size: size)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onUpdateAttachmentSize(command: UpdateAttachmentSizeCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        var size: CGSize? = nil
+        if command.width != nil || command.height != nil {
+            let current = attachmentManager.get(id: command.id)?.size ?? CGSize(width: 100, height: 100)
+            size = CGSize(
+                width: command.width ?? current.width,
+                height: command.height ?? current.height
+            )
         }
-        var newSize: CGSize? = nil
-        if let sizeObj = command.size {
-            newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
-        }
-        attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+        attachmentManager.update(id: command.id, size: size)
         resolve(.success(baseReplyData))
     }
 

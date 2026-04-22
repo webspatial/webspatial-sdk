@@ -64,7 +64,7 @@ function TestBasicAttachment() {
             />
             <AttachmentEntity
               attachment="basic-attachment"
-              position={[0, 0.1, 0]}
+              position={{ x: 0, y: 0.1, z: 0 }}
               size={{ width: 200, height: 100 }}
             />
           </Entity>
@@ -114,7 +114,7 @@ function TestNestedRealityInSpatialDiv() {
               />
               <AttachmentEntity
                 attachment="nested-spatialdiv-attachment"
-                position={[0, 0.1, 0]}
+                position={{ x: 0, y: 0.1, z: 0 }}
                 size={{ width: 220, height: 100 }}
               />
             </Entity>
@@ -167,7 +167,7 @@ function TestModelFallback() {
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <AttachmentEntity
               attachment="model-fallback-attachment"
-              position={[0, 0, 0]}
+              position={{ x: 0, y: 0, z: 0 }}
               size={{ width: 300, height: 250 }}
             />
           </Entity>
@@ -213,7 +213,7 @@ function TestRealityFallback() {
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <AttachmentEntity
               attachment="reality-fallback-attachment"
-              position={[0, 0, 0]}
+              position={{ x: 0, y: 0, z: 0 }}
               size={{ width: 250, height: 200 }}
             />
           </Entity>
@@ -262,7 +262,7 @@ function TestSpatialDivFallback() {
           <Entity position={{ x: 0, y: 0, z: 0.1 }}>
             <AttachmentEntity
               attachment="spatialdiv-fallback-attachment"
-              position={[0, 0, 0]}
+              position={{ x: 0, y: 0, z: 0 }}
               size={{ width: 250, height: 200 }}
             />
           </Entity>
@@ -330,7 +330,7 @@ function TestSharedAttachmentState() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 160, height: 80 }}
             />
           </Entity>
@@ -345,7 +345,7 @@ function TestSharedAttachmentState() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 160, height: 80 }}
             />
           </Entity>
@@ -405,7 +405,7 @@ function TestAttachmentAnimation() {
             />
             <AttachmentEntity
               attachment="anim-attachment"
-              position={[0, 0.12, 0]}
+              position={{ x: 0, y: 0.12, z: 0 }}
               size={{ width: 180, height: 60 }}
             />
           </Entity>
@@ -471,7 +471,7 @@ function TestNestedAttachmentSwap() {
             />
             <AttachmentEntity
               attachment={parentAttachment}
-              position={[0, 0.2, 0]}
+              position={{ x: 0, y: 0.2, z: 0 }}
               size={{ width: 150, height: 50 }}
             />
 
@@ -485,7 +485,7 @@ function TestNestedAttachmentSwap() {
               />
               <AttachmentEntity
                 attachment={childAttachment}
-                position={[0, 0.15, 0]}
+                position={{ x: 0, y: 0.15, z: 0 }}
                 size={{ width: 150, height: 50 }}
               />
             </Entity>
@@ -569,7 +569,7 @@ function TestGSAPSingleAttachment() {
             />
             <AttachmentEntity
               attachment="gsap-single-pulse"
-              position={[0, 0.12, 0]}
+              position={{ x: 0, y: 0.12, z: 0 }}
               size={{ width: 220, height: 120 }}
             />
           </Entity>
@@ -605,7 +605,7 @@ function TestGSAPSharedAttachmentAsset() {
             />
             <AttachmentEntity
               attachment="gsap-shared-pulse"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 200, height: 130 }}
             />
           </Entity>
@@ -618,7 +618,7 @@ function TestGSAPSharedAttachmentAsset() {
             />
             <AttachmentEntity
               attachment="gsap-shared-pulse"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 200, height: 130 }}
             />
           </Entity>
@@ -672,7 +672,7 @@ function TestAttachmentPositionSizeSliders() {
   const [sizeW, setSizeW] = React.useState(220)
   const [sizeH, setSizeH] = React.useState(120)
 
-  const position: [number, number, number] = [posX, posY, posZ]
+  const position = { x: posX, y: posY, z: posZ }
   const size = { width: sizeW, height: sizeH }
 
   return (
@@ -820,7 +820,7 @@ function TestLastDefinitionWins() {
             />
             <AttachmentEntity
               attachment="dup-asset"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 160, height: 80 }}
             />
           </Entity>
@@ -833,7 +833,7 @@ function TestLastDefinitionWins() {
             />
             <AttachmentEntity
               attachment="dup-asset"
-              position={[0, 0.15, 0]}
+              position={{ x: 0, y: 0.15, z: 0 }}
               size={{ width: 160, height: 80 }}
             />
           </Entity>

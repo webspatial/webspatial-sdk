@@ -1,15 +1,12 @@
-import { SpatialObject } from '../SpatialObject'
+import { SpatialEntity } from './entity/SpatialEntity'
 import {
   CreateAttachmentEntityCommand,
-  UpdateAttachmentEntityCommand,
   InitializeAttachmentCommand,
+  UpdateAttachmentSizeCommand,
 } from '../JSBCommand'
-import {
-  AttachmentEntityOptions,
-  AttachmentEntityUpdateOptions,
-} from '../types/types'
+import { AttachmentEntityOptions } from '../types/types'
 
-export class Attachment extends SpatialObject {
+export class Attachment extends SpatialEntity {
   constructor(
     id: string,
     private readonly windowProxy: WindowProxy,
@@ -26,11 +23,16 @@ export class Attachment extends SpatialObject {
     return this.windowProxy
   }
 
-  async update(options: AttachmentEntityUpdateOptions) {
+  async setWidth(width: number) {
     if (this.isDestroyed) return
-    if (options.position) this.options.position = options.position
-    if (options.size) this.options.size = options.size
-    return new UpdateAttachmentEntityCommand(this.id, options).execute()
+    this.options.size = { ...this.options.size, width }
+    return new UpdateAttachmentSizeCommand(this.id, { width }).execute()
+  }
+
+  async setHeight(height: number) {
+    if (this.isDestroyed) return
+    this.options.size = { ...this.options.size, height }
+    return new UpdateAttachmentSizeCommand(this.id, { height }).execute()
   }
 }
 

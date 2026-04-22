@@ -699,14 +699,16 @@ export class InitializeAttachmentCommand extends JSBCommand {
   protected getParams() {
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
       size: this.options.size,
       ownerViewId: this.options.ownerViewId,
     }
   }
 }
 
+/**
+ * @deprecated Use UpdateAttachmentSizeCommand for size and
+ * UpdateEntityPropertiesCommand for transforms. Retained for one release.
+ */
 export class UpdateAttachmentEntityCommand extends JSBCommand {
   commandType = 'UpdateAttachmentEntity'
   constructor(
@@ -719,6 +721,23 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     return {
       id: this.attachmentId,
       ...this.options,
+    }
+  }
+}
+
+export class UpdateAttachmentSizeCommand extends JSBCommand {
+  commandType = 'UpdateAttachmentSize'
+  constructor(
+    private attachmentId: string,
+    private params: { width?: number; height?: number },
+  ) {
+    super()
+  }
+  protected getParams() {
+    return {
+      id: this.attachmentId,
+      width: this.params.width,
+      height: this.params.height,
     }
   }
 }

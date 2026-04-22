@@ -383,8 +383,6 @@ struct GetSpatialSceneStateCommand: CommandDataProtocol {
 struct InitializeAttachmentCommand: CommandDataProtocol {
     static let commandType = "InitializeAttachment"
     let id: String
-    let parentEntityId: String
-    let position: [Float]?
     let size: AttachmentSize?
     let ownerViewId: String
 }
@@ -394,6 +392,13 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let id: String
     let position: [Float]?
     let size: AttachmentSize?
+}
+
+struct UpdateAttachmentSizeCommand: CommandDataProtocol {
+    static let commandType = "UpdateAttachmentSize"
+    let id: String
+    let width: Double?
+    let height: Double?
 }
 
 struct AttachmentSize: Codable {

@@ -76,6 +76,15 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
     }
 
+    init(spatialId: String) {
+        self.spatialId = spatialId
+        super.init()
+        SpatialObject.serialQueue.sync {
+            SpatialObject.objects[spatialId] = self
+        }
+        SpatialObjectWeakRefManager.setWeakRef(spatialId, self)
+    }
+
     func addChild(entity: SpatialEntity) {
         spatialChildren[entity.spatialId] = entity
         super.addChild(entity)

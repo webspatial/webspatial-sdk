@@ -3,8 +3,6 @@ import SwiftUI
 
 struct AttachmentInfo: Identifiable, Equatable {
     let id: String
-    var parentEntityId: String
-    var position: SIMD3<Float>
     var size: CGSize
     var webViewModel: SpatialWebViewModel
 
@@ -27,8 +25,6 @@ class AttachmentManager {
     // SpatialWebViewModel's lazy re-init.
     func create(
         id: String,
-        parentEntityId: String,
-        position: SIMD3<Float>,
         size: CGSize,
         webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
@@ -37,8 +33,6 @@ class AttachmentManager {
 
         let info = AttachmentInfo(
             id: id,
-            parentEntityId: parentEntityId,
-            position: position,
             size: size,
             webViewModel: webViewModel
         )
@@ -46,15 +40,9 @@ class AttachmentManager {
         return info
     }
 
-    func update(id: String, position: SIMD3<Float>?, size: CGSize?) {
+    func update(id: String, size: CGSize?) {
         guard var info = attachments[id] else { return }
-
-        if let position = position {
-            info.position = position
-        }
-        if let size = size {
-            info.size = size
-        }
+        if let size = size { info.size = size }
 
         attachments[id] = info
     }

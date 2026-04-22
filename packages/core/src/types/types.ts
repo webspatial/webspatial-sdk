@@ -412,12 +412,13 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
 export interface AttachmentEntityOptions {
-  parentEntityId: string
-  position?: [number, number, number]
   size: { width: number; height: number }
   ownerViewId: string
 }
 
+/**
+ * @deprecated Use Attachment.setPosition / setWidth / setHeight instead.
+ */
 export interface AttachmentEntityUpdateOptions {
   position?: [number, number, number]
   size?: { width: number; height: number }

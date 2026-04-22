@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Minor Changes
+
+- **Breaking:** `<AttachmentEntity>` `position` no longer accepts a tuple `[x, y, z]`. Use a `Vec3` object `{ x, y, z }`, consistent with `<Entity>`, `<BoxEntity>`, and other entity components.
+
+  ```tsx
+  // before
+  <AttachmentEntity position={[0, 0.3, 0]} />
+  // after
+  <AttachmentEntity position={{ x: 0, y: 0.3, z: 0 }} />
+  ```
+
 ### Patch Changes
 
 - **`SpatializedStatic3DElementContainer`**: when `supports('Model', ['currentSrc'])`, ref `currentSrc` reads **`spatializedElement?.currentSrc`** (aligned with native); `ready` / `entityTransform` remain **`supports()`-gated** `Object.defineProperty` extras on the spatialized ref proxy.

@@ -195,7 +195,7 @@ export class SpatialSession {
   /**
    * Creates an attachment entity that renders 2D HTML content as a child
    * of a 3D entity in the scene graph.
-   * @param options Configuration options including parent entity ID, position, and size
+   * @param options Configuration options including size and owner view id; parent via SetParentForEntity.
    * @returns Promise resolving to a new Attachment instance
    */
   createAttachmentEntity(

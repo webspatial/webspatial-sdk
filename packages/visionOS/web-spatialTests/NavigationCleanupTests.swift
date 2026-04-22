@@ -14,11 +14,11 @@ final class NavigationCleanupTests: XCTestCase {
         panel.setParent(scene)
         XCTAssertNotNil(scene.findSpatialObject(panel.id) as Spatialized2DElement?)
 
+        let attachmentWebView = SpatialWebViewModel(url: nil)
         _ = scene.attachmentManager.create(
             id: "test-attachment",
-            parentEntityId: "test-parent-entity",
-            position: SIMD3<Float>(0, 0, 0),
-            size: CGSize(width: 100, height: 100)
+            size: CGSize(width: 100, height: 100),
+            webViewModel: attachmentWebView
         )
         XCTAssertFalse(scene.attachmentManager.attachments.isEmpty)
 
