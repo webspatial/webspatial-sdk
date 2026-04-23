@@ -629,6 +629,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.playbackRate = playbackRate
         }
 
+        if let currentTime = command.currentTime {
+            spatializedElement.pendingSeekTime = currentTime
+        }
+
         if let posterURL = command.posterURL {
             spatializedElement.posterURL = posterURL.isEmpty ? nil : posterURL
         }

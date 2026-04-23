@@ -129,6 +129,7 @@ export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   readonly paused: boolean
   readonly duration: number
   playbackRate: number
+  currentTime: number
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {
