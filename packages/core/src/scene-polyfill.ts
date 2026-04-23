@@ -526,7 +526,7 @@ export function hijackWindowATag(openedWindow: WindowProxy) {
 
     // Look for <a> element in the clicked elements parents and if found override navigation behavior if needed
     while (element) {
-      if (element && element.tagName == 'A') {
+      if (element.tagName == 'A') {
         // When using libraries like react route's <Link> it sets an onclick event, when this happens we should do nothing and let that occur
 
         // if onClick is set for the element, the raw onclick will be noop() trapped so the onclick check is no longer trustable
@@ -538,7 +538,7 @@ export function hijackWindowATag(openedWindow: WindowProxy) {
 
         return true
       }
-      if (element && element.parentElement) {
+      if (element.parentElement) {
         element = element.parentElement
       } else {
         break
@@ -548,6 +548,8 @@ export function hijackWindowATag(openedWindow: WindowProxy) {
 }
 
 function handleATag(event: MouseEvent, link: HTMLAnchorElement) {
+  // Respect clicks that have already been cancelled (e.g. by app/router handlers).
+  if (event.defaultPrevented) return false
   // Use the anchor found during bubbling so nested clicks like <a><img /></a> are handled correctly.
   const target = link.target
   const url = link.href
