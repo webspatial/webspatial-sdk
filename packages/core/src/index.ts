@@ -1,4 +1,4 @@
-/// <reference path="./types/global.d.ts" />
+export type {} from './types/global'
 
 export { SpatialObject } from './SpatialObject'
 export { Spatial } from './Spatial'
