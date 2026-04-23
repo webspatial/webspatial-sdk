@@ -275,12 +275,12 @@ function LongScrollPage() {
 | src        | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.0 | ✓<br>1.1       |
 | onLoad     | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
 | onError    | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.7       |
-| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.7       |
-| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.7       |
-| poster     | ✓<br>26            | 6 β2.0                          | ✓<br>1.7       |
+| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
+| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.6       |
 | loading    | 26                 | 6 β2.1                          | June           |
-| stagemode  | 26                 | 6 β2.1                          | June           |
+| stagemode  | 26                 | 6                               | July           |
 
 ### CSS
 
@@ -301,14 +301,14 @@ function LongScrollPage() {
 | entityTransform    | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
 | currentSrc         | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
 | ready              | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
-| duration           | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| playbackRate       | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| paused             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| currentTime        | 26       | 6 β2.0      | May            |
-| boundingBoxCenter  | 26       | 6 β2.1      | June           |
-| boundingBoxExtents | 26       | 6 β2.1      | June           |
+| duration           | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| playbackRate       | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| paused             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.6       |
+| boundingBoxCenter  | 26       | 6           | July           |
+| boundingBoxExtents | 26       | 6           | July           |
 
 ## High-Level Architecture
 
