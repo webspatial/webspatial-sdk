@@ -393,6 +393,9 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   }
 
   updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
+    if (this.ref === ref) {
+      return
+    }
     this.ref = ref
     this.lastOutgoingToRef = undefined
     this.updateDomProxyToRef()

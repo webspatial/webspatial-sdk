@@ -164,6 +164,23 @@ describe('SpatialContainerRefProxy', () => {
     expect(fn).not.toHaveBeenCalled()
   })
 
+  it('does not re-dispatch same proxy when updateRef repeats with same callback ref', () => {
+    const fn = vi.fn()
+    const proxy = new SpatialContainerRefProxy<any>(fn as any)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(fn).toHaveBeenNthCalledWith(1, null)
+    expect(fn).toHaveBeenNthCalledWith(2, expect.any(Object))
+    fn.mockClear()
+
+    proxy.updateRef(fn as any)
+    expect(fn).not.toHaveBeenCalled()
+  })
+
   it('supports extra ref props', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref, () => ({
