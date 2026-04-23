@@ -1,7 +1,8 @@
 import type { PhysicalMetricsValueShape } from '../physicalMetrics'
+import type { SpatialSceneCreationOptions, SpatialSceneType } from './types'
 
 declare global {
-  declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
+  const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
   interface Window {
     xrCurrentSceneType: SpatialSceneType
