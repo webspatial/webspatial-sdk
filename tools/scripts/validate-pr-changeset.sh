@@ -3,8 +3,33 @@
 # (not README.md). Set SKIP_CHANGESET=1 when the PR has label skip-changeset.
 set -euo pipefail
 
+is_stable_merge_pr() {
+  local head_ref="${PR_HEAD_REF:-}"
+  local title="${PR_TITLE:-}"
+  local body="${PR_BODY:-}"
+
+  if [[ "$head_ref" == "stable" || "$head_ref" == stable-merge-* ]]; then
+    return 0
+  fi
+
+  if [[ "$title" =~ ^Merge[[:space:]]+stable[[:space:]]+into[[:space:]]+main$ ]]; then
+    return 0
+  fi
+
+  if [[ "$body" == *"from \`stable\` into \`main\`"* ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
 if [[ "${SKIP_CHANGESET:-0}" == "1" ]]; then
   echo "Skipping changeset check (skip-changeset)."
+  exit 0
+fi
+
+if is_stable_merge_pr; then
+  echo "Skipping changeset check (stable merge PR)."
   exit 0
 fi
 

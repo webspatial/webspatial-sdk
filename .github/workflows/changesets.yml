@@ -104,7 +104,9 @@ jobs:
           body: |
             This pull request was created automatically by GitHub Actions.
             It merges the latest release from `stable` into `main` again.
+            No additional changeset is required because this PR only syncs
+            commits that were already versioned and released from `stable`.
           branch: 'stable-merge-main'
           base: 'main'
-          labels: 'BranchAutoMerge'
+          labels: 'BranchAutoMerge,skip-changeset'
           delete-branch: true
