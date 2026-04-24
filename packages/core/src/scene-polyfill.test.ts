@@ -4,6 +4,7 @@ import {
   initScene,
   injectSceneHook,
   __getSceneConfigSnapshotForTest,
+  hijackWindowATag,
 } from './scene-polyfill'
 import { SpatialSceneCreationOptions } from './types/types'
 import { pointToPhysical } from './physicalMetrics'
@@ -462,5 +463,64 @@ describe('initScene callback chaining', () => {
     const cb2 = vi.fn().mockReturnValue({})
     initScene('sa-chain', cb2)
     expect(cb2).toHaveBeenCalledWith(firstReturn)
+  })
+})
+
+describe('hijackWindowATag', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    document.onclick = null
+    vi.restoreAllMocks()
+  })
+
+  it('handles clicks on nested elements inside anchor tags', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    hijackWindowATag(window)
+
+    const anchor = document.createElement('a')
+    anchor.href = 'https://example.com/detail'
+    anchor.target = '_blank'
+
+    const image = document.createElement('img')
+    anchor.appendChild(image)
+    document.body.appendChild(anchor)
+
+    image.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true }),
+    )
+
+    expect(openSpy).toHaveBeenCalledWith('https://example.com/detail', '_blank')
+  })
+})
+
+describe('hijackWindowATag – defaultPrevented', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    document.onclick = null
+    vi.restoreAllMocks()
+  })
+
+  it('does not open a new window when the click was already preventDefault-ed', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    hijackWindowATag(window)
+
+    const anchor = document.createElement('a')
+    anchor.href = 'https://example.com/detail'
+    anchor.target = '_blank'
+
+    const span = document.createElement('span')
+    anchor.appendChild(span)
+    document.body.appendChild(anchor)
+
+    // Simulate an app-level handler that cancels the click before the polyfill sees it.
+    span.addEventListener('click', ev => {
+      ev.preventDefault()
+    })
+
+    span.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true }),
+    )
+
+    expect(openSpy).not.toHaveBeenCalled()
   })
 })
