@@ -1,5 +1,13 @@
 # autotest
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [12085ea]
+  - @webspatial/core-sdk@1.6.1
+  - @webspatial/react-sdk@1.6.1
+
 ## 1.0.4
 
 ### Patch Changes
