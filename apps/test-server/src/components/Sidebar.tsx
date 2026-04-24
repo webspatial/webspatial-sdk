@@ -40,6 +40,7 @@ export const routes = [
   { path: '/spatialStyleTest', label: 'Spatial Style' },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },
+  { path: '/runtime-capabilities', label: 'Runtime capabilities' },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',
@@ -81,7 +82,6 @@ export const routes = [
       { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
-      { path: '/android-bringup', label: 'Android Bringup' },
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },

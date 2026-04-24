@@ -267,6 +267,8 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let loop: Bool?
     let animationPaused: Bool?
     let playbackRate: Double?
+    let currentTime: Double?
+    let posterURL: String?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {

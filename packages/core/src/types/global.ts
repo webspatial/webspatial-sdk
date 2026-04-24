@@ -1,7 +1,8 @@
 import type { PhysicalMetricsValueShape } from '../physicalMetrics'
+import type { SpatialSceneCreationOptions, SpatialSceneType } from './types'
 
 declare global {
-  declare const __WEBSPATIAL_CORE_SDK_VERSION__: string
+  const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
   interface Window {
     xrCurrentSceneType: SpatialSceneType
@@ -41,13 +42,17 @@ declare global {
       physicalMetrics?: PhysicalMetricsValueShape
     }
 
-    xrInnerDepth: number
-    xrOuterDepth: number
+    /** Present when `supports('xrInnerDepth')` is true; otherwise `undefined`. */
+    xrInnerDepth?: number
+    /** Present when `supports('xrOuterDepth')` is true; otherwise `undefined`. */
+    xrOuterDepth?: number
   }
 
   interface HTMLElement {
-    xrOffsetBack: number
-    xrClientDepth: number
+    /** Present when `supports('xrOffsetBack')` is true for element readbacks. */
+    xrOffsetBack?: number
+    /** Present when `supports('xrClientDepth')` is true for element readbacks. */
+    xrClientDepth?: number
   }
 }
 

@@ -1661,6 +1661,12 @@ describe('SpatializedStatic3DElementContainer', () => {
   it('syncs modelURL and wires load callbacks and extra ref props', async () => {
     vi.resetModules()
 
+    vi.doMock('./webSpatialRuntime', () => ({
+      WebSpatialRuntime: {
+        supports: () => true,
+      },
+    }))
+
     const updateProperties = vi.fn()
     const updateModelTransform = vi.fn()
     const spatializedStatic3DElement: any = {
@@ -1754,6 +1760,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       sources: [],
       autoplay: undefined,
       loop: undefined,
+      posterURL: '',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
@@ -1778,6 +1785,12 @@ describe('SpatializedStatic3DElementContainer', () => {
 
   it('extra ready rejects with failure event when model ready fails', async () => {
     vi.resetModules()
+
+    vi.doMock('./webSpatialRuntime', () => ({
+      WebSpatialRuntime: {
+        supports: () => true,
+      },
+    }))
 
     const spatializedStatic3DElement: any = {
       updateProperties: vi.fn(),
