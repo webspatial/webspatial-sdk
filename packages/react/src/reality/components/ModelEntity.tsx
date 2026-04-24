@@ -9,14 +9,14 @@ import { BaseEntity } from './BaseEntity'
 import { useRealityContext } from '../context'
 import { shallowEqualArray } from '../utils'
 
-type Props = EntityProps & {
+export type ModelEntityProps = EntityProps & {
   model: string
   materials?: string[]
 } & EntityEventHandler & {
     children?: React.ReactNode
   }
 
-export const ModelEntity = forwardRef<EntityRefShape, Props>(
+export const ModelEntity = forwardRef<EntityRefShape, ModelEntityProps>(
   ({ id, model, children, name, materials, ...rest }, ref) => {
     const ctx = useRealityContext()
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)

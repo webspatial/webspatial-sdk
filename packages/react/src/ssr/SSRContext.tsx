@@ -2,13 +2,15 @@ import React, { createContext, useState, useEffect } from 'react'
 
 export const SSRContext = createContext(false)
 
+export type SSRProviderProps = {
+  isSSR?: boolean
+  children: React.ReactNode
+}
+
 export const SSRProvider = ({
   isSSR: initialIsSSR = true,
   children,
-}: {
-  isSSR?: boolean
-  children: React.ReactNode
-}) => {
+}: SSRProviderProps) => {
   const [isSSR, setIsSSR] = useState(initialIsSSR)
 
   useEffect(() => {

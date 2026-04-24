@@ -5,7 +5,7 @@ import { SpatialConeGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type ConeEntityProps = EntityProps & {
+export type ConeEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialConeGeometryOptions

@@ -7,7 +7,7 @@ import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
-type AttachmentEntityProps = {
+export type AttachmentEntityProps = {
   attachment: string
   position?: [number, number, number]
   size: { width: number; height: number }

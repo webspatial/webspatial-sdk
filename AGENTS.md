@@ -29,6 +29,13 @@ From repo root:
 
 - Build all `@webspatial/*` packages: `npm run buildPackages`
 
+### React SDK (`@webspatial/react-sdk`) component API docs
+
+Public component prop tables are generated into `docs/generated/` (JSON + Markdown) from `packages/react/scripts/component-docs.config.mjs`, using the TypeScript program for types and `react-docgen` to merge JSDoc when parsing succeeds.
+
+- Regenerate after changing public components or prop types: `pnpm docs:components` (repo root) or `pnpm -F @webspatial/react-sdk run docs:components`.
+- CI enforces freshness via `pnpm docs:components:check`.
+
 ### Run CI/E2E Harness
 
 - From repo root: `npm run ciTest`

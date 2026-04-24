@@ -35,6 +35,9 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      - name: Verify React SDK generated component docs
+        run: pnpm docs:components:check
+
       - name: Test changeset
         run: npx changeset version
       
