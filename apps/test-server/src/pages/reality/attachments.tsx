@@ -1,5 +1,6 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
+import * as THREE from 'three'
 import { useGSAP } from '@gsap/react'
 import {
   AttachmentAsset,
@@ -843,6 +844,105 @@ function TestLastDefinitionWins() {
   )
 }
 
+/** Minimal Three.js scene inside attachment DOM (smoke test for WebGL + portal). */
+function ThreeSpinningBoxMount() {
+  const mountRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const mount = mountRef.current
+    if (!mount) return
+
+    const width = 220
+    const height = 220
+
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x1a1a2e)
+
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100)
+    camera.position.z = 2.5
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    renderer.setSize(width, height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    mount.appendChild(renderer.domElement)
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1)
+    const material = new THREE.MeshNormalMaterial()
+    const cube = new THREE.Mesh(geometry, material)
+    scene.add(cube)
+
+    let raf = 0
+    const tick = () => {
+      raf = requestAnimationFrame(tick)
+      cube.rotation.x += 0.012
+      cube.rotation.y += 0.018
+      renderer.render(scene, camera)
+    }
+    raf = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      geometry.dispose()
+      material.dispose()
+      renderer.dispose()
+      if (renderer.domElement.parentNode === mount) {
+        mount.removeChild(renderer.domElement)
+      }
+    }
+  }, [])
+
+  return <div ref={mountRef} style={{ width: 220, height: 220 }} />
+}
+
+function TestThreejsInAttachment() {
+  return (
+    <TestCase title="13. Three.js canvas inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        Smoke test: mount Three.js (WebGLRenderer + rAF loop) inside
+        AttachmentAsset so developers can confirm Three.js works in attachment
+        content.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid #6366f1' }}
+      >
+        <UnlitMaterial id="matThreeHost" color="#6366f1" />
+        <AttachmentAsset name="threejs-attachment">
+          <div
+            style={{
+              background: 'rgba(30,30,50,0.95)',
+              color: '#e0e7ff',
+              padding: 10,
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Three.js box</span>
+            <ThreeSpinningBoxMount />
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matThreeHost']}
+            />
+            <AttachmentEntity
+              attachment="threejs-attachment"
+              position={[0, 0.12, 0]}
+              size={{ width: 260, height: 300 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function App() {
   return (
     <div className="p-8">
@@ -861,6 +961,7 @@ function App() {
         <TestGSAPSingleAttachment />
         <TestGSAPSharedAttachmentAsset />
         <TestAttachmentPositionSizeSliders />
+        <TestThreejsInAttachment />
       </div>
     </div>
   )
