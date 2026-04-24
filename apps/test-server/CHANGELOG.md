@@ -1,10 +1,13 @@
 # web-content
 
-## Unreleased
+## 0.1.1
 
 ### Patch Changes
 
-- **Runtime capabilities** (`/runtime-capabilities`): new **Contract** tab with OpenSpec-oriented checks — **§3.5.1** window depth (`xrInnerDepth` / `xrOuterDepth`), **§3.5.2** live spatialized ref (`xrClientDepth` / `xrOffsetBack` on `enable-xr` div), **§3.6** Model HTML vs `ref.current` sub-tokens. **vision vs pico** tab subtitle clarifies baseline rows from `CAPABILITY_TABLE`.
+- Updated dependencies [12085ea]
+  - @webspatial/core-sdk@1.6.1
+  - @webspatial/react-sdk@1.6.1
+
 ## 0.1.0
 
 ### Minor Changes
