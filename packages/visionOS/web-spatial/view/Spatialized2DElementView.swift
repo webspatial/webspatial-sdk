@@ -72,6 +72,9 @@ struct Spatialized2DElementView: View {
         DragGesture()
             .onChanged { gesture in
 //                print("\(spatialized2DElement.name) dragWebGesture")
+                if spatialScene.isSpatialElementGestureActive {
+                    return
+                }
                 if spatialized2DElement.scrollPageEnabled {
                     if !gestureData.dragStarted {
                         gestureData.dragStarted = true
@@ -86,6 +89,9 @@ struct Spatialized2DElementView: View {
             }
             .onEnded { _ in
                 print("\(spatialized2DElement.name) dragWebGestureEnd")
+                if spatialScene.isSpatialElementGestureActive {
+                    return
+                }
                 if spatialized2DElement.scrollPageEnabled {
                     gestureData.dragStarted = false
                     gestureData.dragStart = 0

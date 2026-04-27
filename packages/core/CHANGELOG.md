@@ -1,5 +1,34 @@
 # @webspatial/core-sdk
 
+## 1.6.1
+
+### Patch Changes
+
+- 12085ea: Fix anchor click interception in the scene polyfill when users click nested elements inside an anchor tag, such as images wrapped by links. The polyfill now uses the anchor found during event bubbling so target-based navigation handling still works for `_blank` and other non-`_self` links.
+
+## 1.6.0
+
+### Minor Changes
+
+- f1b28eb: Model add play(), pause(), and paused for playback controls
+- 0f743a1: Model add <source> element support for multi-format fallback
+- 19a0daf: manifest support new xr_spatial_scene API
+- 5d72631: Add autoplay attribute to <Model>
+
+  When a 3D model contains an embedded animation, developers can opt into automatic playback via a simple boolean attribute. When autoplay is set, the model's first available animation begins playing as soon as the model has successfully loaded.
+
+- 19a0daf: update initScene callback input pre to be previous return value.
+- 005480c: Model add duration and playbackRate for animation control
+- d9a0418: Add loop attribute to <Model>
+
+  When loop is set, the animation automatically seeks back to the start upon reaching the end.
+
+### Patch Changes
+
+- afb6c35: fix spatialDiv create issue. API change for token access.
+- ee7c68f: Fix Spatial UA detection and align no-runtime fallback behavior
+- 3d62c5d: Pico OS: when `webSpatial.genToken()` is present, rewrite `window.open` for **`createSpatialized2DElement`** and **`createAttachment`** to the token URL form (`command=` + optional `rid`). Other `webspatial://` URLs are left unchanged.
+
 ## 1.5.0
 
 ### Minor Changes

@@ -19,6 +19,8 @@ export enum SpatialWebMsgType {
   spatialmagnify = 'spatialmagnify',
   spatialmagnifyend = 'spatialmagnifyend',
 
+  animationstatechange = 'animationstatechange',
+
   objectdestroy = 'objectdestroy',
 }
 
@@ -74,4 +76,24 @@ export interface ModelLoadSuccess {
 
 export interface ModelLoadFailure {
   type: SpatialWebMsgType.modelloadfailed
+}
+
+export interface AnimationStateChangeDetail {
+  paused: boolean
+  duration: number
+  /**
+   * Sampled animation playback position in seconds at `timestamp`.
+   * Optional for compatibility with older native runtimes.
+   */
+  currentTime?: number
+  /**
+   * Unix epoch time in milliseconds at which `currentTime` was sampled.
+   * Used to extrapolate `currentTime` between samples while playing.
+   */
+  timestamp?: number
+}
+
+export interface AnimationStateChangeMsg {
+  type: SpatialWebMsgType.animationstatechange
+  detail: AnimationStateChangeDetail
 }

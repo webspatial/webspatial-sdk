@@ -189,7 +189,25 @@ export default function SceneTest() {
             >
               MDN
             </button>
+            {/* Click the nested image to reproduce anchor bubbling behavior in the polyfill. */}
+            <a
+              className={`${btnCls} inline-flex items-center gap-2`}
+              href="/#/reality"
+              target="sv"
+              rel="noreferrer"
+            >
+              <img
+                alt="nested link icon"
+                className="w-4 h-4 rounded-sm"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234B5563'/%3E%3Cpath d='M5 8h6M8 5l3 3-3 3' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+              />
+              <span>Nested Anchor Click</span>
+            </a>
           </div>
+          <p className="mt-3 text-xs text-gray-400">
+            Click the icon inside Nested Anchor Click to simulate a nested
+            target inside an anchor tag.
+          </p>
         </section>
 
         <section className="bg-[#1A1A1A] p-6 rounded-xl border border-gray-800">

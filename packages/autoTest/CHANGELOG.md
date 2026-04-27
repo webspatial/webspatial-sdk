@@ -1,5 +1,32 @@
 # autotest
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [12085ea]
+  - @webspatial/core-sdk@1.6.1
+  - @webspatial/react-sdk@1.6.1
+
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [f1b28eb]
+- Updated dependencies [0f743a1]
+- Updated dependencies [19a0daf]
+- Updated dependencies [c44661f]
+- Updated dependencies [afb6c35]
+- Updated dependencies [5d72631]
+- Updated dependencies [ee7c68f]
+- Updated dependencies [19a0daf]
+- Updated dependencies [3d62c5d]
+- Updated dependencies [005480c]
+- Updated dependencies [5df9519]
+- Updated dependencies [d9a0418]
+  - @webspatial/react-sdk@1.6.0
+  - @webspatial/core-sdk@1.6.0
+
 ## 1.0.3
 
 ### Patch Changes

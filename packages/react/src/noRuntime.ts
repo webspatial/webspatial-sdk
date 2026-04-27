@@ -3,10 +3,41 @@ export default {}
 
 export const SpatialHelper = {}
 
+/** Minimal `Vec3` shape for the web no-runtime bundle (see real type in `@webspatial/core-sdk`). */
+export interface Vec3 {
+  x: number
+  y: number
+  z: number
+}
+
+/**
+ * Web bundle stub: no native WebSpatial runtime — capability checks are conservative.
+ * Metrics/coordinate helpers stay available so plain-browser demos keep working.
+ */
+export function supports(name: string, _tokens?: readonly string[]): boolean {
+  if (name === 'useMetrics' || name === 'convertCoordinate') {
+    return true
+  }
+  return false
+}
+
+export class WebSpatialRuntimeError extends Error {
+  public readonly capability: string
+
+  constructor(capability: string, message?: string) {
+    super(
+      message ??
+        `Capability "${capability}" is not supported in this WebSpatial runtime`,
+    )
+    this.name = 'WebSpatialRuntimeError'
+    this.capability = capability
+  }
+}
+
 export class Spatial {
   /**
    * Requests a session object from the browser
-   * @returns The session or null if not availible in the current browser
+   * @returns The session or null if not available in the current browser
    * [TODO] discuss implications of this not being async
    */
   requestSession() {
@@ -28,14 +59,14 @@ export class Spatial {
   }
   /**
    * Gets the native version, format is "x.x.x"
-   * @returns native version string
+   * @returns native version string, or null when runtime is unavailable
    */
   getNativeVersion() {
     return null
   }
   /**
    * Gets the client version, format is "x.x.x"
-   * @returns client version string
+   * @returns client version string, or null when runtime is unavailable
    */
   getClientVersion() {
     return null
@@ -61,5 +92,5 @@ export const PhysicalMetrics = {
     meterToPtUnscaled: 1360,
     meterToPtScaled: 1360,
   }),
-  subscribe: (cb: any) => {},
+  subscribe: (cb: any) => () => {},
 }

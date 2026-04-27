@@ -35,7 +35,7 @@ struct SpatializedStatic3DView: View {
         if !spatializedStatic3DElement.allSources.isEmpty {
             Group {
                 if isLoading {
-                    ProgressView()
+                    posterView { ProgressView() }
                 } else if let asset, let source {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
@@ -51,7 +51,7 @@ struct SpatializedStatic3DView: View {
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
                 } else {
-                    Text("").onAppear {
+                    posterView { Text("") }.onAppear {
                         self.onLoadFailure()
                     }
                 }
@@ -67,17 +67,99 @@ struct SpatializedStatic3DView: View {
             .offset(x: x, y: y)
             .offset(z: z)
             .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
-                guard isComplete == true,
-                      spatializedStatic3DElement.loop,
-                      let asset,
-                      let animation = asset.availableAnimations.first else { return }
-                asset.selectedAnimation = animation
-                asset.animationPlaybackController?.resume()
+                guard isComplete == true else { return }
+                if spatializedStatic3DElement.loop,
+                   let asset,
+                   let animation = asset.availableAnimations.first
+                {
+                    asset.selectedAnimation = animation
+                    asset.animationPlaybackController?.speed = Float(spatializedStatic3DElement.playbackRate)
+                    asset.animationPlaybackController?.resume()
+                } else {
+                    // Non-looping animation completed naturally; sync paused state to JS
+                    spatializedStatic3DElement.animationPaused = true
+                }
             }
+            .onChange(of: spatializedStatic3DElement.animationPaused) { onPlayback(isPaused: $1) }
+            .onChange(of: spatializedStatic3DElement.playbackRate) { asset?.animationPlaybackController?.speed = Float($1) }
+            .onChange(of: spatializedStatic3DElement.pendingSeekTime) { _, time in onSeek(time: time) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
             EmptyView()
         }
+    }
+
+    /// Renders the poster image while the 3D model is loading or after all
+    /// sources fail. When no poster URL is provided, or the poster itself is
+    /// still loading/failed, the supplied `fallback` view is shown instead.
+    @ViewBuilder
+    private func posterView<Fallback: View>(
+        @ViewBuilder fallback: @escaping () -> Fallback
+    ) -> some View {
+        if let posterURL = spatializedStatic3DElement.posterURL,
+           let url = localOrRemoteURL(url: posterURL)
+        {
+            AsyncImage(url: url) { phase in
+                if case let .success(image) = phase {
+                    image.resizable().aspectRatio(contentMode: .fit)
+                } else {
+                    fallback()
+                }
+            }
+        } else {
+            fallback()
+        }
+    }
+
+    /// Plays or pauses the model animation and sends an animation state to the web code
+    private func onPlayback(isPaused: Bool) {
+        guard let asset else {
+            // If entity has not loaded yet and play is called then autoplay after load
+            if !isPaused { spatializedStatic3DElement.autoplay = true }
+            return
+        }
+        // Setting selectedAnimation resets the animation and autoplays on first load
+        if asset.selectedAnimation == nil || asset.animationPlaybackController?.isComplete == true {
+            asset.selectedAnimation = asset.availableAnimations.first
+        }
+        let controller = asset.animationPlaybackController
+        controller?.speed = Float(spatializedStatic3DElement.playbackRate)
+        if let time = spatializedStatic3DElement.pendingSeekTime, let controller {
+            controller.time = time
+            spatializedStatic3DElement.pendingSeekTime = nil
+        }
+        isPaused ? controller?.pause() : controller?.resume()
+        sendAnimationStateChange(isPaused: isPaused)
+    }
+
+    /// Seeks the underlying animation controller when a non-nil `time` is
+    /// requested, then clears `pendingSeekTime` so subsequent identical
+    /// requests still trigger a fresh seek.
+    private func onSeek(time: Double?) {
+        guard let controller = asset?.animationPlaybackController, let time else { return }
+        controller.time = time
+        spatializedStatic3DElement.pendingSeekTime = nil
+        sendAnimationStateChange(isPaused: spatializedStatic3DElement.animationPaused)
+    }
+
+    /// Emits the current animation state to the web layer, sampling the
+    /// controller's position and the wall clock together so the web side can
+    /// extrapolate between samples.
+    private func sendAnimationStateChange(isPaused: Bool) {
+        let controller = asset?.animationPlaybackController
+        let duration = controller?.duration ?? 0
+        let currentTime = controller?.time ?? 0
+        spatialScene.sendWebMsg(
+            spatializedElement.id,
+            AnimationStateChangeEvent(
+                detail: AnimationStateChangeDetail(
+                    paused: isPaused,
+                    duration: duration,
+                    currentTime: currentTime,
+                    timestamp: Date().timeIntervalSince1970 * 1000
+                )
+            )
+        )
     }
 
     /// Downloads a remote model file and loads it as a Model3DAsset.
@@ -100,8 +182,12 @@ struct SpatializedStatic3DView: View {
         let result = await loadSources(spatializedStatic3DElement.allSources)
         asset = result?.asset
         source = result?.url.absoluteString
-        if spatializedStatic3DElement.autoplay, let firstAnimation = asset?.availableAnimations.first {
-            asset?.selectedAnimation = firstAnimation
+        if spatializedStatic3DElement.autoplay {
+            // If animationPaused didn't change then SwiftUI will not trigger onChange so manually trigger playback
+            // This happens when play is called before load and autoplay is enabled
+            if spatializedStatic3DElement.animationPaused {
+                spatializedStatic3DElement.animationPaused = false
+            } else { onPlayback(isPaused: false) }
         }
         isLoading = false
     }

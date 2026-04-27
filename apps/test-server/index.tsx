@@ -20,6 +20,7 @@ import RealityTest from './src/pages/reality/index'
 import RealityDebug from './src/pages/reality/debug'
 import RealityDynamic3D from './src/pages/reality/dynamic3d'
 import RealityGestures from './src/pages/reality/gestures'
+import GestureDiv from './src/pages/reality/gestureDiv'
 import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
 import BasicTransform from './src/pages/basic-transform/index'
 import ModelTest from './src/pages/model-test/index'
@@ -47,7 +48,6 @@ import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
 import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
-import AndroidBringup from './src/pages/androidBringup/index'
 import DisplayTest from './src/pages/displayTest/index'
 import MemoryStats from './src/pages/memoryStats/index'
 import NestedFixPosition from './src/pages/nestedfixposition/index'
@@ -67,6 +67,7 @@ import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivCon
 import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
+import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -123,6 +124,10 @@ function App() {
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route
+                  path="/runtime-capabilities"
+                  element={<RuntimeCapabilitiesPage />}
+                />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
@@ -137,6 +142,7 @@ function App() {
                   element={<RealityDynamic3D />}
                 />
                 <Route path="/reality/gestures" element={<RealityGestures />} />
+                <Route path="/reality/gestureDiv" element={<GestureDiv />} />
                 <Route
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
@@ -208,7 +214,6 @@ function App() {
                   path="/fixed-position-test"
                   element={<FixedPositionTest />}
                 />
-                <Route path="/android-bringup" element={<AndroidBringup />} />
                 <Route path="/display-test" element={<DisplayTest />} />
                 <Route path="/memory-stats" element={<MemoryStats />} />
                 <Route

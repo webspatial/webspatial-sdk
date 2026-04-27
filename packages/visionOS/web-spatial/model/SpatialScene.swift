@@ -85,6 +85,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     // TOPIC end
 
+    var isSpatialElementGestureActive = false
+
     var spatialWebViewModel: SpatialWebViewModel
 
     private var meterToPtUnscaled: Double?
@@ -619,6 +621,22 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let loop = command.loop {
             spatializedElement.loop = loop
+        }
+
+        if let animationPaused = command.animationPaused {
+            spatializedElement.animationPaused = animationPaused
+        }
+
+        if let playbackRate = command.playbackRate {
+            spatializedElement.playbackRate = playbackRate
+        }
+
+        if let currentTime = command.currentTime {
+            spatializedElement.pendingSeekTime = currentTime
+        }
+
+        if let posterURL = command.posterURL {
+            spatializedElement.posterURL = posterURL.isEmpty ? nil : posterURL
         }
 
         resolve(.success(baseReplyData))

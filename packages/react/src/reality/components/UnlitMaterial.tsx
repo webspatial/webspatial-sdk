@@ -15,7 +15,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
   ...options
 }) => {
   const ctx = useRealityContext()
-  const materialRef = useRef<SpatialUnlitMaterial>()
+  const materialRef = useRef<SpatialUnlitMaterial | undefined>(undefined)
   const isInitializedRef = useRef(false)
 
   useEffect(() => {

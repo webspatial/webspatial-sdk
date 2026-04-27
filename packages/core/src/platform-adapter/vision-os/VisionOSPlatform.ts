@@ -1,12 +1,23 @@
-import { PlatformAbility, CommandResult } from '../interface'
+import {
+  PlatformAbility,
+  CommandResult,
+  WebSpatialProtocolResult,
+} from '../interface'
 import {
   CommandResultFailure,
   CommandResultSuccess,
 } from '../CommandResultUtils'
+import { buildSpatialSceneQuery } from '../spatialSceneQuery'
+import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
+import type { AttachmentEntityOptions } from '../../types/types'
 
 type JSBError = {
+  code?: string
   message: string
 }
+
+const UUID_RE =
+  /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi
 
 export class VisionOSPlatform implements PlatformAbility {
   async callJSB(cmd: string, msg: string): Promise<CommandResult> {
@@ -17,36 +28,20 @@ export class VisionOSPlatform implements PlatformAbility {
       return CommandResultSuccess(result)
     } catch (error: unknown) {
       // console.error(`VisionOSPlatform cmd: ${cmd}, msg: ${msg} error: ${error}`)
-      const { code, message } = JSON.parse((error as JSBError).message)
+      const { code, message } = this.parseJSBError(error)
       return CommandResultFailure(code, message)
     }
   }
 
-  callWebSpatialProtocol(
-    command: string,
-    query?: string,
+  openSpatialSceneSync(
+    url: string,
+    config: SpatialSceneCreationOptionsInternal | undefined,
     target?: string,
     features?: string,
-  ): Promise<CommandResult> {
-    const { spatialId: id, windowProxy } = this.openWindow(
-      command,
-      query,
-      target,
-      features,
-    )
-    return Promise.resolve(
-      CommandResultSuccess({ windowProxy: windowProxy, id }),
-    )
-  }
-
-  callWebSpatialProtocolSync(
-    command: string,
-    query?: string,
-    target?: string,
-    features?: string,
-  ): CommandResult {
+  ): WebSpatialProtocolResult {
+    const query = buildSpatialSceneQuery(url, config)
     const { spatialId: id = '', windowProxy } = this.openWindow(
-      command,
+      'createSpatialScene',
       query,
       target,
       features,
@@ -55,22 +50,58 @@ export class VisionOSPlatform implements PlatformAbility {
     return CommandResultSuccess({ windowProxy, id })
   }
 
+  createNativeSpatialDiv(): Promise<WebSpatialProtocolResult> {
+    return this.openProtocolAsync('createSpatialized2DElement')
+  }
+
+  createNativeAttachment(
+    _options?: AttachmentEntityOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.openProtocolAsync('createAttachment')
+  }
+
+  private async openProtocolAsync(
+    command: string,
+  ): Promise<WebSpatialProtocolResult> {
+    const { spatialId: id = '', windowProxy } = this.openWindow(
+      command,
+      '',
+      undefined,
+      undefined,
+    )
+    return CommandResultSuccess({ windowProxy, id })
+  }
+
   private openWindow(
     command: string,
     query?: string,
     target?: string,
     features?: string,
-  ) {
+  ): { spatialId?: string; windowProxy: WindowProxy | null } {
     const windowProxy = window.open(
       `webspatial://${command}?${query || ''}`,
       target,
       features,
     )
     const ua = windowProxy?.navigator.userAgent
-    const spatialId = ua?.match(
-      /\b([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})\b/gi,
-    )?.[0]
+    const spatialId = ua?.match(UUID_RE)?.[0]
 
     return { spatialId, windowProxy }
+  }
+
+  private parseJSBError(error: unknown): { code: string; message: string } {
+    try {
+      const parsed = JSON.parse((error as JSBError).message ?? '')
+      return {
+        code: parsed.code ?? 'E_VISIONOS_JSB',
+        message: parsed.message ?? 'VisionOS JSB execution failed',
+      }
+    } catch {
+      return {
+        code: 'E_VISIONOS_JSB',
+        message:
+          (error as JSBError)?.message ?? 'VisionOS JSB execution failed',
+      }
+    }
   }
 }

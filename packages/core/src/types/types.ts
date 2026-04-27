@@ -107,6 +107,10 @@ export interface SpatializedStatic3DElementProperties
   modelTransform?: number[]
   autoplay?: boolean
   loop?: boolean
+  animationPaused?: boolean
+  playbackRate?: number
+  currentTime?: number
+  posterURL?: string
 }
 
 export interface SpatialSceneCreationOptions {
