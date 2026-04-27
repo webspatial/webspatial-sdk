@@ -1,9 +1,9 @@
 import { SpatialObject } from '../SpatialObject'
 import {
-  CreateAttachmentEntityCommand,
   UpdateAttachmentEntityCommand,
   InitializeAttachmentCommand,
 } from '../JSBCommand'
+import { createNativeAttachment } from '../spatial-host'
 import {
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
@@ -37,7 +37,7 @@ export class Attachment extends SpatialObject {
 export async function createAttachmentEntity(
   options: AttachmentEntityOptions,
 ): Promise<Attachment> {
-  const result = await new CreateAttachmentEntityCommand(options).execute()
+  const result = await createNativeAttachment(options)
   if (!result.success) {
     throw new Error('createAttachmentEntity failed: ' + result?.errorMessage)
   }

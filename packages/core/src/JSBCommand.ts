@@ -1,5 +1,4 @@
-import { createPlatform } from './platform-adapter'
-import { WebSpatialProtocolResult } from './platform-adapter/interface'
+import { getPlatform } from './platform-runtime'
 import { SpatialComponent } from './reality/component/SpatialComponent'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import { SpatialMaterial } from './reality/material/SpatialMaterial'
@@ -26,10 +25,7 @@ import {
   AttachmentEntityUpdateOptions,
   ModelSource,
 } from './types/types'
-import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
-
-const platform = createPlatform()
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -38,6 +34,7 @@ abstract class JSBCommand {
   async execute() {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
+    const platform = await getPlatform()
     return platform.callJSB(this.commandType, msg)
   }
 }
@@ -606,88 +603,6 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
-/* WebSpatial Protocol Begin */
-abstract class WebSpatialProtocolCommand extends JSBCommand {
-  target?: string
-  features?: string
-
-  async execute(): Promise<WebSpatialProtocolResult> {
-    const query = this.getQuery()
-    return platform.callWebSpatialProtocol(
-      this.commandType,
-      query,
-      this.target,
-      this.features,
-    )
-  }
-
-  executeSync(): WebSpatialProtocolResult {
-    const query = this.getQuery()
-    return platform.callWebSpatialProtocolSync(
-      this.commandType,
-      query,
-      this.target,
-      this.features,
-    )
-  }
-
-  private getQuery() {
-    let query = undefined
-    const params = this.getParams()
-    if (params) {
-      query = Object.keys(params)
-        .map(key => {
-          const value = params[key]
-          const finalValue =
-            typeof value === 'object' ? JSON.stringify(value) : value
-          return `${key}=${encodeURIComponent(finalValue)}`
-        })
-        .join('&')
-    }
-
-    return query
-  }
-}
-
-export class createSpatialized2DElementCommand extends WebSpatialProtocolCommand {
-  commandType = 'createSpatialized2DElement'
-  constructor() {
-    super()
-  }
-  protected getParams() {
-    return {}
-  }
-}
-
-export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
-  commandType = 'createSpatialScene'
-
-  constructor(
-    private url: string,
-    private config: SpatialSceneCreationOptionsInternal | undefined,
-    public target?: string,
-    public features?: string,
-  ) {
-    super()
-  }
-  protected getParams() {
-    return {
-      url: this.url,
-      config: this.config,
-    }
-  }
-}
-
-export class CreateAttachmentEntityCommand extends WebSpatialProtocolCommand {
-  commandType = 'createAttachment'
-  constructor(private options: AttachmentEntityOptions) {
-    super()
-  }
-  protected getParams() {
-    return {} // No metadata — just trigger engine/webview creation
-  }
-}
-
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -730,5 +645,3 @@ function uuid(): string {
     return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
   })
 }
-
-/* WebSpatial Protocol End */
