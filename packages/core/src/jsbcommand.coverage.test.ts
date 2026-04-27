@@ -55,12 +55,14 @@ class DOMMatrixPolyfill {
 
 const platformSpy = {
   callJSB: vi.fn(),
-  callWebSpatialProtocol: vi.fn(),
-  callWebSpatialProtocolSync: vi.fn(),
+  openSpatialSceneSync: vi.fn(),
+  createNativeSpatialDiv: vi.fn(),
+  createNativeAttachment: vi.fn(),
 }
 
 vi.mock('./platform-adapter', () => ({
-  createPlatform: () => platformSpy,
+  createPlatform: () => Promise.resolve(platformSpy),
+  createPlatformSync: () => platformSpy,
 }))
 
 function ok(data: any = {}) {
@@ -72,23 +74,20 @@ function ok(data: any = {}) {
   })
 }
 
-function parseQuery(q?: string) {
-  const sp = new URLSearchParams(q ?? '')
-  const out: Record<string, string> = {}
-  for (const [k, v] of sp.entries()) out[k] = v
-  return out
-}
-
 describe('JSBCommand', () => {
   beforeEach(() => {
     platformSpy.callJSB.mockReset()
-    platformSpy.callWebSpatialProtocol.mockReset()
-    platformSpy.callWebSpatialProtocolSync.mockReset()
+    platformSpy.openSpatialSceneSync.mockReset()
+    platformSpy.createNativeSpatialDiv.mockReset()
+    platformSpy.createNativeAttachment.mockReset()
     platformSpy.callJSB.mockImplementation(() => ok({ id: 'id-1' }))
-    platformSpy.callWebSpatialProtocol.mockImplementation(() =>
+    platformSpy.createNativeSpatialDiv.mockImplementation(() =>
       ok({ windowProxy: {}, id: 'spatial-1' }),
     )
-    platformSpy.callWebSpatialProtocolSync.mockImplementation(() => ({
+    platformSpy.createNativeAttachment.mockImplementation(() =>
+      ok({ windowProxy: {}, id: 'spatial-1' }),
+    )
+    platformSpy.openSpatialSceneSync.mockImplementation(() => ({
       success: true,
       data: { windowProxy: {}, id: 'spatial-1' },
       errorCode: '',
@@ -191,40 +190,6 @@ describe('JSBCommand', () => {
       'UpdateUnlitMaterialProperties',
       JSON.stringify({ id: 'so-1', color: '#fff' }),
     )
-  })
-
-  it('creates query string and calls WebSpatialProtocol', async () => {
-    const mod = await import('./JSBCommand')
-    const { createSpatialSceneCommand, createSpatialized2DElementCommand } = mod
-
-    await new createSpatialized2DElementCommand().execute()
-    expect(platformSpy.callWebSpatialProtocol).toHaveBeenCalledWith(
-      'createSpatialized2DElement',
-      '',
-      undefined,
-      undefined,
-    )
-
-    const cmd = new createSpatialSceneCommand(
-      'https://example.com/a?b=c',
-      { type: 'window', defaultSize: { width: 1, height: 2 } } as any,
-      '_self',
-      'popup=1',
-    )
-    await cmd.execute()
-    const call = platformSpy.callWebSpatialProtocol.mock.calls.at(-1)
-    expect(call?.[0]).toBe('createSpatialScene')
-    expect(call?.[2]).toBe('_self')
-    expect(call?.[3]).toBe('popup=1')
-    const q = parseQuery(call?.[1])
-    expect(q.url).toBe('https://example.com/a?b=c')
-    expect(JSON.parse(q.config)).toEqual({
-      type: 'window',
-      defaultSize: { width: 1, height: 2 },
-    })
-
-    cmd.executeSync()
-    expect(platformSpy.callWebSpatialProtocolSync).toHaveBeenCalled()
   })
 })
 

@@ -1,12 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 
+vi.mock('./spatial-host', () => ({
+  openSpatialSceneSync: vi.fn().mockReturnValue({
+    success: true,
+    data: { id: 'scene-1', windowProxy: {} },
+  }),
+}))
+
 vi.mock('./JSBCommand', () => {
   return {
-    createSpatialSceneCommand: vi.fn().mockImplementation(() => ({
-      executeSync: vi.fn().mockReturnValue({
-        data: { id: 'scene-1', windowProxy: {} },
-      }),
-    })),
     FocusScene: vi.fn().mockImplementation(() => ({
       execute: vi.fn().mockResolvedValue(undefined),
     })),
