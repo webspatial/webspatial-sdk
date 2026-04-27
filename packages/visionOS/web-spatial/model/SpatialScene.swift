@@ -982,6 +982,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 try await texture.load()
                 resolve(.success(AddSpatializedElementReply(id: texture.id)))
             } catch {
+                texture.destroy()
                 resolve(.failure(JsbError(code: .CommandError, message: "Failed to load texture from \(command.url): \(error.localizedDescription)")))
             }
         }
@@ -1268,17 +1269,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    /// Texture URL changes can affect any material referencing that resource; we do not track texture→material edges, so refresh every model component.
-    private func refreshAllModelMaterials() {
-        for (_, obj) in spatialObjects {
-            if let comp = obj as? SpatialModelComponent {
-                comp.refreshMaterials()
-            } else if let modelEntity = obj as? SpatialModelEntity {
-                modelEntity.refreshMaterials()
-            }
-        }
-    }
-
     private func onUpdateTextureProperties(command: UpdateTextureProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let texture = spatialObjects[command.id] as? SpatialTextureResource else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(command.id) not found")))
@@ -1291,8 +1281,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         Task {
             do {
                 try await texture.updateURL(newURL)
-                // Materials may still hold the old TextureResource until JS sends UpdateUnlitMaterialProperties; push copies to all meshes.
-                refreshAllModelMaterials()
+                var refreshedMaterialIds = Set<String>()
+                for (_, obj) in spatialObjects {
+                    guard let material = obj as? SpatialUnlitMaterial,
+                          material.textureSpatialId == command.id
+                    else { continue }
+                    material.updateProperties(color: nil, texture: .some(texture.resource), transparent: nil, opacity: nil)
+                    refreshedMaterialIds.insert(material.spatialId)
+                }
+                for mid in refreshedMaterialIds {
+                    refreshComponentsUsingMaterial(mid)
+                }
                 resolve(.success(baseReplyData))
             } catch {
                 resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
@@ -1317,6 +1316,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             }
         }
         material.updateProperties(color: command.color, texture: texture, transparent: command.transparent, opacity: command.opacity)
+        if let tid = command.textureId {
+            material.textureSpatialId = tid.isEmpty ? nil : tid
+        }
         refreshComponentsUsingMaterial(command.id)
         resolve(.success(baseReplyData))
     }

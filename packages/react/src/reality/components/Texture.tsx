@@ -11,7 +11,14 @@ export type TextureProps = {
 }
 
 function resolveTextureUrl(url: string): string {
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('file://')
+  ) {
+    return url
+  }
+  if (typeof window === 'undefined' || !window.location?.href) {
     return url
   }
   return new URL(url, window.location.href).href
@@ -25,7 +32,7 @@ export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
   useEffect(() => {
     if (!ctx) return
     const controller = new AbortController()
-    const { session, reality, resourceRegistry } = ctx
+    const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
         const resolvedUrl = resolveTextureUrl(options.url)
@@ -54,10 +61,30 @@ export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
   }, [ctx])
 
   useEffect(() => {
-    if (!isInitializedRef.current || !textureRef.current) return
-    const resolvedUrl = resolveTextureUrl(options.url)
-    textureRef.current.updateProperties({ url: resolvedUrl })
-  }, [options.url])
+    if (!ctx || !isInitializedRef.current || !textureRef.current) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const resolvedUrl = resolveTextureUrl(options.url)
+        const result = await textureRef.current!.updateProperties({
+          url: resolvedUrl,
+        })
+        if (cancelled) return
+        if (result.success) {
+          options.onLoad?.()
+        } else {
+          options.onError?.(
+            new Error(result.errorMessage || 'Texture update failed'),
+          )
+        }
+      } catch (error: any) {
+        if (!cancelled) options.onError?.(error)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [ctx, options.url])
 
   return null
 }

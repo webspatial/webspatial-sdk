@@ -28,12 +28,15 @@ class SpatialUnlitMaterial: SpatialMaterial {
     private(set) var currentTexture: TextureResource?
     private(set) var currentTransparent: Bool
     private(set) var currentOpacity: Float
+    /// Spatial id of the bound `SpatialTextureResource`, when this material displays a texture. Used to push `TextureResource` updates after `UpdateTextureProperties`.
+    var textureSpatialId: String?
 
-    init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1) {
+    init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1, textureSpatialId: String? = nil) {
         currentColor = UIColor(Color(hex: color))
         currentTexture = texture
         currentTransparent = transparent
         currentOpacity = opacity
+        self.textureSpatialId = textureSpatialId
         _mat = UnlitMaterial()
         super.init(.UnlitMaterial)
         applyProperties()
