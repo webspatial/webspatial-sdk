@@ -283,7 +283,7 @@ If the JSBridge/native layer fails the play request, `animateTransform(...)` MUS
 | `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final native transform |
 | `{animationId}_stopped` | `stop()` called | `TransformValues` — transform at stop point |
 
-Both event listeners are registered at `play` time to avoid race conditions where `stop()` is called before listeners are ready.
+Both event listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal event fires before listeners are ready.
 
 `animationId` MUST be globally unique within a runtime process so event names do not collide across entities or sessions.
 

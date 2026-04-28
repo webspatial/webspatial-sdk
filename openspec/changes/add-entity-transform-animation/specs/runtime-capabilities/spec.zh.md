@@ -14,6 +14,11 @@
 - **WHEN** 当前 runtime 缺少实体 Transform 动画所需的 native bridge 或播放行为
 - **THEN** `supports('useAnimation')` MUST 返回 `false`
 
+#### Scenario: supports 结果稳定
+
+- **WHEN** 应用在同一 runtime 进程生命周期内多次调用 `supports('useAnimation')`
+- **THEN** 返回结果 MUST 保持稳定，不得在运行时变化
+
 #### Scenario: useAnimation 不支持 sub-token
 
 - **WHEN** 应用代码对 `supports('useAnimation', tokens)` 传入任意 sub-token

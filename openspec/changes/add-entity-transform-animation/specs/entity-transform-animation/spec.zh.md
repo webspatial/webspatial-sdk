@@ -60,6 +60,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 - **WHEN** 动画配置指定 `rotation` 值
 - **THEN** SDK MUST 将其解释为**角度制**（degrees）的欧拉角，而非弧度
+- **AND** rotation 的欧拉角轴顺序与坐标系语义 MUST 与现有实体 `rotation` prop 保持一致（遵循 SDK 既有 transform 约定）
 
 #### Scenario: rotation 插值使用最短路径四元数 SLERP
 
@@ -84,6 +85,13 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **GIVEN** 动画配置将 `autoStart` 设置为 `false`
 - **WHEN** 实体挂载完成
 - **THEN** 播放 MUST 保持空闲，直到 `api.play()` 被调用
+
+#### Scenario: 实体未绑定时调用 play
+
+- **GIVEN** 目标实体尚未完成挂载并绑定
+- **WHEN** 应用调用 `api.play()`
+- **THEN** SDK MUST 将该请求排队，并在实体完成挂载并绑定后执行
+- **AND** 该排队请求的播放请求时刻 MUST 以实际执行时刻（实体已绑定）为准
 
 #### Scenario: 延迟播放
 
@@ -120,6 +128,12 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **GIVEN** 动画配置将 `loop` 设置为 `{ reverse: true }`
 - **WHEN** 播放到达任一端点
 - **THEN** 下一轮 MUST 在 `from` 与 `to` 之间反向播放
+
+#### Scenario: loop object 默认行为
+
+- **GIVEN** 动画配置将 `loop` 设置为对象且 `reverse` 为省略或 `false`（例如 `{}` 或 `{ reverse: false }`）
+- **WHEN** 播放到达目标状态
+- **THEN** 行为 MUST 等价于 `loop: true` 的 reset 循环
 
 #### Scenario: 非法动画配置
 
@@ -216,6 +230,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 应用调用 `api.pause()`、`api.resume()` 或 `api.stop()`
 - **THEN** 这些调用 MUST 为 no-op（不抛错、不触发生命周期回调、不发送 native 命令）
 
+#### Scenario: 控制命令按调用顺序串行化
+
+- **GIVEN** 一个 hook 实例在短时间内连续调用 `play`、`pause`、`resume`、`stop` 等控制方法
+- **WHEN** SDK 将控制命令发送到 Native 层
+- **THEN** SDK MUST 按调用顺序串行化发送并处理这些命令
+
 #### Scenario: 已有 active session 时调用 play
 
 - **GIVEN** 一个动画会话已经处于 active 状态（`delaying`、`running` 或 `paused`）
@@ -254,6 +274,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** SDK MUST 抛错以暴露该失败
 - **AND** SDK MUST 不得将会话推进到 active 状态
 
+#### Scenario: pause/resume/stop 在 Native 或 bridge 失败时抛错
+
+- **GIVEN** `supports('useAnimation')` 为 `true` 且存在 active session
+- **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
+- **THEN** SDK MUST 抛错以暴露该失败
+
 ---
 
 ### Requirement: 播放期间避免 transform 更新竞争
@@ -266,7 +292,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 在会话 active 期间 React 触发实体 re-render
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
-- **AND** 对被抑制字段在会话期间接收到的最新 props 值 MAY 被缓存，用于抑制解除后的恢复同步
+- **AND** 对被抑制字段在会话期间接收到的最新 props 值 MUST 被缓存，用于抑制解除后的恢复同步
 
 #### Scenario: 动画结束后释放抑制
 
