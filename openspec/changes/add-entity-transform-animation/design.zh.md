@@ -18,6 +18,7 @@
 - 在本次变更中引入弹簧物理或超出既定范围的复杂 easing。
 - 在本次变更中解决大角度旋转等限制（仅文档化现状与边界行为）。
 - 引入运行时能力的订阅/动态刷新模型。
+- 在单个 hook 内编排多步动画序列（如 react-spring 的 `to: [...]` 数组或 async 脚本）、跨实体的交错动画（如 react-spring 的 `useTrail`）或跨 hook 的顺序编排（如 react-spring 的 `useChain`）。应用代码可通过 `onComplete` → `play()` 链式调用实现基本串联。后续版本可能引入专门的编排原语。
 
 ## API 外形
 
@@ -103,6 +104,9 @@ interface AnimationApi {
 
   /** 当前是否处于 delaying 或 running 状态（paused 时为 false）。 */
   readonly isAnimating: boolean
+
+  /** 当前是否处于暂停状态。 */
+  readonly isPaused: boolean
 }
 ```
 
@@ -241,8 +245,9 @@ interface SpatialEntity {
 
 interface AnimateTransformCommand {
   /**
-   * 单个动画会话的全局唯一 id。
-   * 每次 `play` 请求 MUST 生成一个新的 `animationId`。
+   * 标识动画会话。每次 `play` 命令 MUST 生成一个新的全局唯一
+   * `animationId`。`pause`、`resume` 和 `stop` 命令 MUST 复用创建
+   * 该会话的 `play` 命令所生成的 `animationId`。
    */
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop'
@@ -267,6 +272,8 @@ interface AnimateTransformResult {
   stopped: Promise<TransformValues>
 }
 ```
+
+React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 + 角度制欧拉角）转换为 `Float4x4`，并在触发生命周期回调之前将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制）。
 
 若实体在会话 active 期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
 
@@ -322,6 +329,7 @@ interface AnimateTransformResult {
    - 通过 `supports('useAnimation')` 表达端到端动画能力是否可用。
    - 应用可在缺少 Native bridge/播放能力的环境中做安全分支。
    - 备选方案：不新增 capability key。否决原因：评审明确提到 feature detection 是外部契约的一部分。
+   - 后续版本可能引入 sub-token（如 `supports('useAnimation', ['opacity'])`）以实现更细粒度的能力检测。当前契约——sub-token 始终返回 `false`——具有前向兼容性：基于 v1 编写的应用不会因新增 sub-token 而破坏，因为它们目前从不传递 sub-token。
 
 7. **不支持的 runtime 需要给出 warning**
    - 当 `supports('useAnimation')` 为 `false` 的 runtime 里仍直接使用 `useAnimation` 时，SDK 应给出 warning，而不是完全静默失败。

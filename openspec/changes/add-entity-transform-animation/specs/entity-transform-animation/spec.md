@@ -8,7 +8,7 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 
 - **WHEN** application code calls `useAnimation(config)`
 - **THEN** the hook MUST return a two-item tuple of `[animation, api]`
-- **AND** `api` MUST expose `play`, `pause`, `resume`, `stop`, and `isAnimating`
+- **AND** `api` MUST expose `play`, `pause`, `resume`, `stop`, `isAnimating`, and `isPaused`
 
 #### Scenario: Entity animation prop
 
@@ -50,6 +50,7 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 - **WHEN** `api.play()` is called (or autoStart triggers)
 - **THEN** the native layer MUST snapshot the entity's current transform at that moment and use it as the starting state for each animated field
 - **AND** the snapshot MUST NOT be taken earlier than that playback request moment (including hook creation time or entity mount time)
+- **AND** the snapshot MUST only cover the transform fields declared in `to`; fields not present in `to` MUST NOT be snapshotted or affected by the animation session
 - **AND** `delay` MUST only affect when visual motion begins and MUST NOT change when the start snapshot is captured
 
 ---
@@ -93,6 +94,9 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **THEN** the SDK MUST queue the request and execute it after the entity is mounted and bound
 - **AND** the playback request moment for the queued request MUST be the actual execution moment (when the entity is bound)
 - **AND** if the entity transform is updated externally while queued, the start snapshot MUST use the entity's current transform at the execution moment
+- **AND** `api.isAnimating` MUST be `true` while the request is queued
+- **AND** the config used for the queued play MUST be the config at the time `play()` was called, not at the time the entity is bound
+- **AND** if `api.pause()` or `api.stop()` is called while the request is queued, the SDK MUST process them in call order: `stop()` cancels the queued play and fires `onStop`; `pause()` causes the play to start in paused state once the entity is bound
 
 #### Scenario: Delayed playback
 
@@ -123,6 +127,7 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **WHEN** playback reaches the target state
 - **THEN** the animation MUST reset to the `from` state (or the initial state if `from` is omitted) and replay toward `to`, repeating indefinitely without ending after a single cycle
 - **AND** when `from` is omitted, the "initial state" MUST be the start snapshot captured at the session's first `play` moment and MUST NOT be re-snapshotted each cycle
+- **AND** the reset from `to` back to `from` MUST be instantaneous with no easing or transition; applications that need smooth direction reversal SHOULD use `loop: { reverse: true }` instead
 
 #### Scenario: Infinite reverse loop
 
@@ -161,22 +166,25 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 |---|---|---|
 | `position.*` | finite | Any component being `NaN` or `Infinity` MUST be rejected |
 | `rotation.*` | finite | Any component being `NaN` or `Infinity` MUST be rejected |
-| `scale.*` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
+| `scale.*` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected. Zero scale is permitted (e.g. for exit animations) but may produce a degenerate transform; animating **from** a zero-scale state is not recommended and may yield undefined interpolation results |
 
 ---
 
 ### Requirement: Define isAnimating state semantics
 
-`api.isAnimating` MUST reflect the animation session state according to the following model:
+A session is **alive** when it is in any of the following states: queued, delaying, running, or paused. A session is **not alive** when idle (no session or session ended). `isAnimating` reflects whether the session is actively progressing, not whether it is alive. `isPaused` reflects whether the session is frozen but still alive.
 
-| State | `isAnimating` | Description |
-|---|---|---|
-| idle | `false` | No session, or session ended |
-| delaying | `true` | `play()` called, delay period active, visual motion not yet started |
-| running | `true` | Visual motion in progress |
-| paused | `false` | Session paused via `api.pause()` |
+`api.isAnimating` and `api.isPaused` MUST reflect the animation session state according to the following model:
 
-For this spec, an active session MUST include `delaying`, `running`, and `paused`.
+| State | `isAnimating` | `isPaused` | Description |
+|---|---|---|---|
+| idle | `false` | `false` | No session, or session ended |
+| queued | `true` | `false` | `play()` called before entity bound, waiting for bind |
+| delaying | `true` | `false` | `play()` called, delay period active, visual motion not yet started |
+| running | `true` | `false` | Visual motion in progress |
+| paused | `false` | `true` | Session paused via `api.pause()` |
+
+A session exists (is alive) when `isAnimating || isPaused` is `true`. No-op conditions for `pause()`, `resume()`, and `stop()` apply when `!isAnimating && !isPaused` (i.e. no alive session).
 
 #### Scenario: isAnimating during delay
 
@@ -229,6 +237,12 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** application code calls `api.stop()`
 - **THEN** the configured `onStop` callback MUST receive the entity's current transform state at the stop point
 
+#### Scenario: TransformValues coordinate space and units
+
+- **WHEN** `onComplete` or `onStop` delivers a `TransformValues` payload
+- **THEN** all values MUST represent the entity's **local** transform
+- **AND** `rotation` values MUST be Euler angles in **degrees**, consistent with the input convention of `AnimationConfig`
+
 #### Scenario: Callback invocation count and exclusivity
 
 - **WHEN** `api.play()` starts an animation session
@@ -237,7 +251,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 #### Scenario: Control methods are no-op in invalid states
 
-- **GIVEN** there is no active session
+- **GIVEN** there is no alive session (`isAnimating` is `false` AND `isPaused` is `false`)
 - **WHEN** application code calls `api.pause()`, `api.resume()`, or `api.stop()`
 - **THEN** the call MUST be a no-op (no error thrown, no lifecycle callback invoked, no native command sent)
 
@@ -245,7 +259,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 - **GIVEN** a hook instance calls control methods like `play`, `pause`, `resume`, and `stop` in quick succession
 - **WHEN** the SDK sends control commands to the native layer
-- **THEN** the SDK MUST serialize and process those commands in the same call order
+- **THEN** the SDK MUST send those commands to the native bridge in the same call order, and the bridge MUST deliver them to native in that order
 
 #### Scenario: Play while session is already active
 
@@ -292,6 +306,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause`, `resume`, or `stop`
 - **THEN** the SDK MUST throw to surface the failure
 - **AND** the thrown error message MUST include at least `animationId`, the command type (play/pause/resume/stop), and a human-readable failure reason
+- **AND** the session MUST remain in its state prior to the failed command, allowing application code to retry or take alternative action
 
 ---
 
@@ -306,7 +321,7 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
 - **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
 - **AND** the latest prop values received for suppressed fields MUST be cached for resuming ordinary synchronization after suppression is released
-- **AND** the cache MUST be maintained per field (`position`, `rotation`, `scale`) and MUST only apply during the current session; it MUST be cleared when the session ends
+- **AND** the cache MUST be maintained per field (`position`, `rotation`, `scale`) and MUST be retained until the first React render cycle after the session ends, at which point ordinary synchronization resumes with the prop values from that render and the cache is discarded
 
 #### Scenario: Suppression release after animation ends
 

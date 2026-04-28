@@ -8,7 +8,7 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 - **WHEN** 应用代码调用 `useAnimation(config)`
 - **THEN** Hook MUST 返回二元组 `[animation, api]`
-- **AND** `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`isAnimating`
+- **AND** `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`isAnimating`、`isPaused`
 
 #### Scenario: 实体 animation prop
 
@@ -30,6 +30,7 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 - **THEN** SDK MUST 先停止 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
 - **AND** 若 `animationB` 存在且其 `autoStart` 为 `true`（或省略），SDK MUST 在停止旧会话后启动 `animationB` 对应的新会话，并触发 `animationB` 的 `onStart`
 - **AND** 旧会话的 `onStop` MUST 在新会话的 `onStart` 之前触发
+- **AND** 旧会话的 stop 命令 MUST 先于新会话的 play 命令发送到 native bridge
 
 ---
 
@@ -50,6 +51,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 调用 `api.play()`（或 autoStart 触发时）
 - **THEN** native 层 MUST 在此刻快照实体当前 transform，作为每个被动画控制字段的起始状态
 - **AND** 快照 MUST 不得早于该播放请求时刻（包括 hook 创建时或实体挂载时提前获取）
+- **AND** 快照 MUST 仅覆盖 `to` 中声明的 transform 字段；`to` 中未出现的字段 MUST 不得被快照或受动画会话影响
 - **AND** `delay` MUST 只影响视觉运动开始时机，不得改变起始快照时机
 
 ---
@@ -93,6 +95,9 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **THEN** SDK MUST 将该请求排队，并在实体完成挂载并绑定后执行
 - **AND** 该排队请求的播放请求时刻 MUST 以实际执行时刻（实体已绑定）为准
 - **AND** 若排队期间实体 transform 被外部更新，起始快照 MUST 以实际执行时刻的实体当前 transform 为准
+- **AND** 排队期间 `api.isAnimating` MUST 为 `true`
+- **AND** 排队的 play 所使用的 config MUST 以 `play()` 调用时刻的 config 为准，而非实体绑定时的 config
+- **AND** 若排队期间调用 `api.pause()` 或 `api.stop()`，SDK MUST 按调用顺序处理：`stop()` 取消排队的 play 并触发 `onStop`；`pause()` 使 play 在实体绑定后以 paused 状态启动
 
 #### Scenario: 延迟播放
 
@@ -123,6 +128,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 播放到达目标状态
 - **THEN** 动画 MUST 重置到 `from` 状态（若省略 `from` 则为初始状态），重新向 `to` 播放，无限重复，不应在单次循环后结束
 - **AND** 当省略 `from` 时，“初始状态”MUST 指该会话第一次 `play` 时刻的起始快照，不得在每轮循环重新快照
+- **AND** 从 `to` 回到 `from` 的 reset MUST 是瞬时的，不经过 easing 或过渡；需要平滑往返的应用 SHOULD 改用 `loop: { reverse: true }`
 
 #### Scenario: reverse 方式的无限循环
 
@@ -161,22 +167,25 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 |---|---|---|
 | `position.*` | 有限值 | 任意分量为 `NaN` 或 `Infinity` MUST 被拒绝 |
 | `rotation.*` | 有限值 | 任意分量为 `NaN` 或 `Infinity` MUST 被拒绝 |
-| `scale.*` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
+| `scale.*` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝。zero scale 允许使用（如退场动画），但可能产生退化 transform；从 zero-scale 状态开始动画不推荐，插值结果可能未定义 |
 
 ---
 
 ### Requirement: 定义 isAnimating 状态语义
 
-`api.isAnimating` MUST 按以下模型反映动画会话状态：
+会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。idle 状态（无会话或会话已结束）时为 **not alive**。`isAnimating` 反映会话是否在积极推进，而非是否 alive。`isPaused` 反映会话是否被冻结但仍然 alive。
 
-| 状态 | `isAnimating` | 说明 |
-|---|---|---|
-| idle | `false` | 无会话，或会话已结束 |
-| delaying | `true` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
-| running | `true` | 视觉运动进行中 |
-| paused | `false` | 通过 `api.pause()` 暂停 |
+`api.isAnimating` 和 `api.isPaused` MUST 按以下模型反映动画会话状态：
 
-本规范中的 active session MUST 包含 `delaying`、`running` 与 `paused`。
+| 状态 | `isAnimating` | `isPaused` | 说明 |
+|---|---|---|---|
+| idle | `false` | `false` | 无会话，或会话已结束 |
+| queued | `true` | `false` | 实体未绑定时调用 `play()`，等待绑定 |
+| delaying | `true` | `false` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
+| running | `true` | `false` | 视觉运动进行中 |
+| paused | `false` | `true` | 通过 `api.pause()` 暂停 |
+
+当 `isAnimating || isPaused` 为 `true` 时会话存在（alive）。`pause()`、`resume()`、`stop()` 的 no-op 条件为 `!isAnimating && !isPaused`（即无 alive 会话）。
 
 #### Scenario: delay 期间 isAnimating
 
@@ -229,6 +238,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 配置的 `onStop` MUST 收到 stop 时刻实体当前 transform 状态
 
+#### Scenario: TransformValues 坐标空间与单位
+
+- **WHEN** `onComplete` 或 `onStop` 交付 `TransformValues` 数据
+- **THEN** 所有值 MUST 表示实体的 **local** transform
+- **AND** `rotation` 值 MUST 为**角度制**（degrees）的欧拉角，与 `AnimationConfig` 的输入约定一致
+
 #### Scenario: 生命周期回调次数与互斥
 
 - **WHEN** `api.play()` 启动一个动画会话
@@ -237,7 +252,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: 非法状态下的控制方法为 no-op
 
-- **GIVEN** 当前不存在 active session
+- **GIVEN** 当前不存在 alive session（`isAnimating` 为 `false` 且 `isPaused` 为 `false`）
 - **WHEN** 应用调用 `api.pause()`、`api.resume()` 或 `api.stop()`
 - **THEN** 这些调用 MUST 为 no-op（不抛错、不触发生命周期回调、不发送 native 命令）
 
@@ -245,7 +260,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 - **GIVEN** 一个 hook 实例在短时间内连续调用 `play`、`pause`、`resume`、`stop` 等控制方法
 - **WHEN** SDK 将控制命令发送到 Native 层
-- **THEN** SDK MUST 按调用顺序串行化发送并处理这些命令
+- **THEN** SDK MUST 按调用顺序向 native bridge 发送这些命令，且 bridge MUST 以相同顺序交付给 native
 
 #### Scenario: 已有 active session 时调用 play
 
@@ -253,6 +268,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 应用代码再次调用 `api.play()`
 - **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
 - **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
+- **AND** 前一个会话的 `onStop` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 MUST 为 `true`
 
 #### Scenario: 每次 play 生成新的会话 id
 
@@ -292,6 +308,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 抛错以暴露该失败
 - **AND** 抛出的错误 message MUST 至少包含 `animationId`、命令类型（play/pause/resume/stop）与失败原因
+- **AND** 会话 MUST 保持在失败命令之前的状态，允许应用代码重试或采取其他操作
 
 ---
 
@@ -306,7 +323,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
 - **AND** 对被抑制字段在会话期间接收到的最新 props 值 MUST 被缓存，用于抑制解除后的恢复同步
-- **AND** 缓存 MUST 按字段（`position`、`rotation`、`scale`）分别维护，且仅在当前会话 active 期间生效；会话结束时 MUST 清空
+- **AND** 缓存 MUST 按字段（`position`、`rotation`、`scale`）分别维护，且 MUST 保留至会话结束后的第一个 React 渲染周期，届时以该渲染周期的 prop 值恢复常规同步，缓存随即丢弃
 
 #### Scenario: 动画结束后释放抑制
 

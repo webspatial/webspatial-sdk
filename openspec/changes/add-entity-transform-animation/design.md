@@ -18,6 +18,7 @@ See the proposal for full motivation. In short: entity transform updates are cur
 - Adding spring physics or arbitrary easing beyond the documented timing functions in this change.
 - Solving large-angle rotation limitations beyond documenting current behavior.
 - Adding a reactive runtime capability subscription model.
+- Orchestrating multi-step animation sequences within a single hook (e.g. react-spring's `to: [...]` array or async script), staggered animations across entities (e.g. react-spring's `useTrail`), or cross-hook sequencing (e.g. react-spring's `useChain`). Application code can achieve basic sequencing via `onComplete` → `play()` chaining. Dedicated orchestration primitives may be considered in future versions.
 
 ## API Surface
 
@@ -103,6 +104,9 @@ interface AnimationApi {
 
   /** Whether the animation is currently delaying or running (false while paused). */
   readonly isAnimating: boolean
+
+  /** Whether the animation is currently paused. */
+  readonly isPaused: boolean
 }
 ```
 
@@ -241,8 +245,10 @@ interface SpatialEntity {
 
 interface AnimateTransformCommand {
   /**
-   * A globally-unique id for a single animation session.
-   * A new `animationId` MUST be generated for each `play` request.
+   * Identifies the animation session. A new globally-unique `animationId`
+   * MUST be generated for each `play` command. `pause`, `resume`, and `stop`
+   * commands MUST reuse the `animationId` from the `play` command that
+   * created the session.
    */
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop'
@@ -267,6 +273,8 @@ interface AnimateTransformResult {
   stopped: Promise<TransformValues>
 }
 ```
+
+React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees) to `Float4x4` before calling `animateTransform`, and for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before invoking lifecycle callbacks.
 
 If the entity unmounts while a session is active, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
 
@@ -322,6 +330,7 @@ For a given `animationId`, native MUST emit exactly one terminal event (`_comple
    - `supports('useAnimation')` documents whether the end-to-end animation feature is available in the current runtime.
    - Applications can branch on capability before depending on the animation API in environments that do not yet implement the native bridge path.
    - Alternative considered: no dedicated capability key. Rejected because the review explicitly calls out feature detection as part of the external contract.
+   - Future versions may introduce sub-tokens (e.g. `supports('useAnimation', ['opacity'])`) for feature-granular detection. The current contract — sub-tokens always return `false` — is forward-compatible: applications written against v1 will not break when new sub-tokens are added, because they never pass sub-tokens today.
 
 7. **Unsupported runtimes surface a warning**
    - When `useAnimation` is used in a runtime where `supports('useAnimation')` is `false`, the SDK should surface a warning instead of failing silently.
