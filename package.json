@@ -14,6 +14,7 @@
     "xcode": "open packages/visionOS/web-spatial.xcodeproj",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\"",
+    "test:react-compat": "pnpm --filter react18-compat test && pnpm --filter react19-compat test",
     "ciTest": "cd tests/ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
