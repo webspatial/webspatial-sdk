@@ -2,6 +2,7 @@
 
 - [ ] 1.1 Add the `entity-transform-animation` and `runtime-capabilities` spec artifacts to the implementation plan and align naming with `supports('useAnimation')`
 - [ ] 1.2 Define the public React and core SDK types for `useAnimation`, `AnimationApi`, entity `animation` prop, and animation result payloads
+- [ ] 1.3 Add validation rules for invalid animation config and define warning behavior for unsupported runtimes
 
 ## 2. Core SDK and command flow
 
@@ -12,8 +13,9 @@
 ## 3. React SDK integration
 
 - [ ] 3.1 Implement `useAnimation(config)` with `play`, `pause`, `resume`, `stop`, `isAnimating`, `autoStart`, `delay`, and `loop` behavior
-- [ ] 3.2 Add the entity `animation` prop and suppress competing ordinary transform updates only for fields controlled by the active animation
-- [ ] 3.3 Guard unsupported runtimes with the documented capability behavior and keep non-animated transform paths unchanged
+- [ ] 3.2 Wire the entity `animation` prop through the shared entity abstraction layer before updating leaf entity components
+- [ ] 3.3 Suppress competing ordinary transform updates only for fields controlled by the active animation
+- [ ] 3.4 Guard unsupported runtimes with the documented warning behavior and keep non-animated transform paths unchanged
 
 ## 4. Native visionOS playback
 

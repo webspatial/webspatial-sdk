@@ -53,6 +53,18 @@
    - 应用可在缺少 Native bridge/播放能力的环境中做安全分支。
    - 备选方案：不新增 capability key。否决原因：评审明确提到 feature detection 是外部契约的一部分。
 
+7. **不支持的 runtime 需要给出 warning**
+   - 当 `supports('useAnimation')` 为 `false` 的 runtime 里仍直接使用 `useAnimation` 时，SDK 应给出 warning，而不是完全静默失败。
+   - 这样既能保留能力检测契约，又能在接入阶段尽早暴露误用。
+
+8. **非法动画配置视为程序错误**
+   - 对非法配置，例如不支持的 loop 结构、缺少动画目标、无意义的时序参数，应直接抛错，而不是忽略。
+   - 这样能把问题暴露在调用点附近，避免出现难排查的部分生效或静默失败。
+
+9. **实体接入优先走公共抽象层**
+   - 新增 `animation` prop 时，应优先接入公共实体抽象层，再下沉到叶子实体组件。
+   - 这样可以减少重复逻辑，并保持不同实体类型的 transform 同步行为一致。
+
 ## 风险 / 权衡
 
 - **风险：**评审文档与最终实现 API 漂移 -> **缓解：**先用 OpenSpec 固化 `play`、`animation` prop、`loop` 与生命周期回调的契约，再进入代码阶段。
@@ -68,8 +80,8 @@
 - 在 test-server 示例中验证后再推广到更多 sample。
 - 若需要暂停发布，通过 capability key 关闭并避免在 public export 中暴露该能力，直到 Native 支持完善。
 
-## 未决问题
+## 已确认结论
 
-- 在不支持的 runtime 中，`useAnimation` 被直接使用时应当 silent no-op 还是给出 warning。
-- 第一版是否需要对无效 loop/transform 配置给出显式错误，还是沿用现有的参数校验习惯。
-- 仓库内是否已有可复用的实体抽象点，能承载新增 `animation` prop，避免在多个实体组件中重复改动。
+- 在不支持的 runtime 中，如果未先做能力检测就直接使用 `useAnimation`，SDK 应给出 warning。
+- 非法动画配置应直接抛错，而不是静默忽略。
+- 实体侧接入优先走公共抽象层，避免在多个组件中重复改动。
