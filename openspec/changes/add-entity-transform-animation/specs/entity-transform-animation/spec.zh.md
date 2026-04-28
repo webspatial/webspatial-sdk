@@ -16,6 +16,13 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 - **THEN** 组件 MUST 将该对象作为 transform 播放的动画输入
 - **AND** 动画契约 MUST 可用，且不需要把隐藏动画字段 spread 到实体普通 props 中
 
+#### Scenario: animation 对象禁止多实体复用
+
+- **GIVEN** 同一个 `animation` 对象已经绑定到某个实体
+- **WHEN** 应用尝试将该 `animation` 对象绑定到第二个实体
+- **THEN** SDK MUST 立即抛错
+- **AND** 抛错时机 MUST 在第二个实体尝试绑定 `animation` prop 时，而不是延迟到 `autoStart` 或 `api.play()`
+
 ---
 
 ### Requirement: 支持 transform 字段子集动画
@@ -34,7 +41,8 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **GIVEN** 动画配置省略 `from`
 - **WHEN** 调用 `api.play()`（或 autoStart 触发时）
 - **THEN** native 层 MUST 在此刻快照实体当前 transform，作为每个被动画控制字段的起始状态
-- **AND** 快照 MUST 不得在 hook 创建时或实体挂载时提前获取
+- **AND** 快照 MUST 不得早于该播放请求时刻（包括 hook 创建时或实体挂载时提前获取）
+- **AND** `delay` MUST 只影响视觉运动开始时机，不得改变起始快照时机
 
 ---
 
@@ -90,6 +98,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **GIVEN** 动画配置将 `loop` 设置为 `true`
 - **WHEN** 播放到达目标状态
 - **THEN** 动画 MUST 重置到 `from` 状态（若省略 `from` 则为初始状态），重新向 `to` 播放，无限重复，不应在单次循环后结束
+- **AND** 当省略 `from` 时，“初始状态”MUST 指该会话第一次 `play` 时刻的起始快照，不得在每轮循环重新快照
 
 #### Scenario: reverse 方式的无限循环
 
@@ -126,6 +135,8 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 | delaying | `true` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
 | running | `true` | 视觉运动进行中 |
 | paused | `false` | 通过 `api.pause()` 暂停 |
+
+本规范中的 active session MUST 包含 `delaying`、`running` 与 `paused`。
 
 #### Scenario: delay 期间 isAnimating
 
@@ -173,7 +184,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: 已有 active session 时调用 play
 
-- **GIVEN** 一个动画会话已经处于 active 状态
+- **GIVEN** 一个动画会话已经处于 active 状态（`delaying`、`running` 或 `paused`）
 - **WHEN** 应用代码再次调用 `api.play()`
 - **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
 - **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
@@ -207,13 +218,14 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 在会话 active 期间 React 触发实体 re-render
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
+- **AND** 对被抑制字段在会话期间接收到的最新 props 值 MAY 被缓存，用于抑制解除后的恢复同步
 
 #### Scenario: 动画结束后释放抑制
 
 - **GIVEN** 一个动画会话正在控制 `position`
 - **WHEN** 动画会话通过自然完成或 `api.stop()` 结束
 - **THEN** SDK MUST 在触发生命周期回调之前释放对 `position` 的抑制
-- **AND** 对 `position` 的常规 transform 同步 MUST 在回调之后的下一个 React 渲染周期恢复
+- **AND** 对 `position` 的常规 transform 同步 MUST 在回调之后的下一个 React 渲染周期恢复，并以该渲染周期中的最新 props 值为准
 
 #### Scenario: stop 保持 stop 点的 transform
 
