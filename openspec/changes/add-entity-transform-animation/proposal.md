@@ -1,6 +1,6 @@
 ## Why
 
-WebSpatial SDK can update entity transform props today, but every change is instantaneous. The reviewed design proposes a first-class animation API for position, rotation, and scale, and this change is needed now so the public contract, feature detection, and cross-layer behavior are agreed before implementation starts.
+WebSpatial SDK can update entity transform props today (position, rotation, scale), but every change is instantaneous with no built-in transition. This makes common spatial UX patterns (entrance, move, rotate, scale, delayed appearance, looping motion) harder to express consistently across apps. The reviewed direction introduces a first-class, react-spring-inspired declarative API while delegating playback to RealityKit's native animation engine (90fps) so animation is not JS frame-driven. This change is needed now so the public contract, feature detection, and cross-layer behavior are agreed before implementation starts.
 
 ## What Changes
 
