@@ -109,6 +109,8 @@ export interface SpatializedStatic3DElementProperties
   loop?: boolean
   animationPaused?: boolean
   playbackRate?: number
+  currentTime?: number
+  posterURL?: string
 }
 
 export interface SpatialSceneCreationOptions {

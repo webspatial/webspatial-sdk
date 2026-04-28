@@ -119,6 +119,9 @@ struct ModelLoadFailure: Encodable {
 struct AnimationStateChangeDetail: Encodable {
     let paused: Bool
     let duration: Double
+    let currentTime: Double
+    /// Unix epoch time in milliseconds
+    let timestamp: Double
 }
 
 struct AnimationStateChangeEvent: Encodable {
