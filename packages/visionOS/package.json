@@ -5,7 +5,7 @@
   "type": "commonjs",
   "main": "package.json",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22.2"
   },
   "repository": {
     "type": "git",
