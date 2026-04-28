@@ -101,7 +101,7 @@ interface AnimationApi {
   /** Stop the animation. The entity stays at the stop-point transform. */
   stop(): void
 
-  /** Whether an animation session is currently active. */
+  /** Whether the animation is currently delaying or running (false while paused). */
   readonly isAnimating: boolean
 }
 ```

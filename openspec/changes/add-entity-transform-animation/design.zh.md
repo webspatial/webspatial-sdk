@@ -101,7 +101,7 @@ interface AnimationApi {
   /** 停止动画，实体保持在 stop 点。 */
   stop(): void
 
-  /** 当前是否有动画会话在播放中。 */
+  /** 当前是否处于 delaying 或 running 状态（paused 时为 false）。 */
   readonly isAnimating: boolean
 }
 ```
