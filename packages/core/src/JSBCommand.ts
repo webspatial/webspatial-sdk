@@ -24,6 +24,7 @@ import {
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
   ModelSource,
+  SpatialTextureResourceOptions,
 } from './types/types'
 import { composeSRT } from './utils'
 
@@ -555,7 +556,7 @@ export class ConvertCoordinateCommand extends JSBCommand {
   commandType = 'ConvertCoordinate'
 }
 
-export class CreateTextureResourceCommand extends JSBCommand {
+export class CreateTextureCommand extends JSBCommand {
   constructor(private url: string) {
     super()
   }
@@ -564,7 +565,24 @@ export class CreateTextureResourceCommand extends JSBCommand {
       url: this.url,
     }
   }
-  commandType = 'CreateTextureResource'
+  commandType = 'CreateTexture'
+}
+
+export class UpdateTexturePropertiesCommand extends SpatializedElementCommand {
+  properties: Partial<SpatialTextureResourceOptions>
+  commandType = 'UpdateTextureProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatialTextureResourceOptions>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
 }
 
 export class InspectCommand extends JSBCommand {

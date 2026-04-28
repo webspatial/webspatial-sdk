@@ -307,6 +307,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
         spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
+        spatialWebViewModel.addJSBListener(CreateTexture.self, onCreateTexture)
+        spatialWebViewModel.addJSBListener(UpdateTextureProperties.self, onUpdateTextureProperties)
         spatialWebViewModel.addJSBListener(CreateModelComponent.self, onCreateModelComponent)
         spatialWebViewModel.addJSBListener(AddComponentToEntity.self, onAddComponentToEntity)
         spatialWebViewModel.addJSBListener(AddEntityToDynamic3D.self, onAddEntityToDynamic3D)
@@ -972,8 +974,28 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         //      @fukang: add Component here
     }
 
+    private func onCreateTexture(command: CreateTexture, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let texture = SpatialTextureResource(command.url)
+        addSpatialObject(texture)
+        Task {
+            do {
+                try await texture.load()
+                resolve(.success(AddSpatializedElementReply(id: texture.id)))
+            } catch {
+                texture.destroy()
+                resolve(.failure(JsbError(code: .CommandError, message: "Failed to load texture from \(command.url): \(error.localizedDescription)")))
+            }
+        }
+    }
+
     private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        let material = Dynamic3DManager.createUnlitMaterial(command, nil)
+        var tex: TextureResource? = nil
+        if let textureId = command.textureId,
+           let texObj = spatialObjects[textureId] as? SpatialTextureResource
+        {
+            tex = texObj.resource
+        }
+        let material = Dynamic3DManager.createUnlitMaterial(command, tex)
         addSpatialObject(material)
         resolve(.success(AddSpatializedElementReply(id: material.id)))
     }
@@ -1233,20 +1255,71 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(baseReplyData))
     }
 
+    /// After `SpatialUnlitMaterial.updateProperties`, ModelComponent still has a stale material copy — only refresh users of that material id.
+    private func refreshComponentsUsingMaterial(_ materialId: String) {
+        for (_, obj) in spatialObjects {
+            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(materialId) {
+                comp.refreshMaterials()
+            }
+        }
+        for (_, obj) in spatialObjects {
+            if let entity = obj as? SpatialModelEntity, entity.usesMaterial(materialId) {
+                entity.refreshMaterials()
+            }
+        }
+    }
+
+    private func onUpdateTextureProperties(command: UpdateTextureProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let texture = spatialObjects[command.id] as? SpatialTextureResource else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(command.id) not found")))
+            return
+        }
+        guard let newURL = command.url else {
+            resolve(.success(baseReplyData))
+            return
+        }
+        Task {
+            do {
+                try await texture.updateURL(newURL)
+                var refreshedMaterialIds = Set<String>()
+                for (_, obj) in spatialObjects {
+                    guard let material = obj as? SpatialUnlitMaterial,
+                          material.textureSpatialId == command.id
+                    else { continue }
+                    material.updateProperties(color: nil, texture: .some(texture.resource), transparent: nil, opacity: nil)
+                    refreshedMaterialIds.insert(material.spatialId)
+                }
+                for mid in refreshedMaterialIds {
+                    refreshComponentsUsingMaterial(mid)
+                }
+                resolve(.success(baseReplyData))
+            } catch {
+                resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
+            }
+        }
+    }
+
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
             return
         }
-        material.updateProperties(color: command.color, transparent: command.transparent, opacity: command.opacity)
-        // Re-apply material to any ModelComponent or ModelEntity override that references it
-        for (_, obj) in spatialObjects {
-            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(command.id) {
-                comp.refreshMaterials()
-            } else if let modelEntity = obj as? SpatialModelEntity, modelEntity.usesMaterial(command.id) {
-                modelEntity.refreshMaterials()
+        var texture: TextureResource?? = nil
+        if let textureId = command.textureId {
+            if textureId.isEmpty {
+                texture = .some(nil)
+            } else if let texObj = spatialObjects[textureId] as? SpatialTextureResource {
+                texture = .some(texObj.resource)
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(textureId) not found")))
+                return
             }
         }
+        material.updateProperties(color: command.color, texture: texture, transparent: command.transparent, opacity: command.opacity)
+        if let tid = command.textureId {
+            material.textureSpatialId = tid.isEmpty ? nil : tid
+        }
+        refreshComponentsUsingMaterial(command.id)
         resolve(.success(baseReplyData))
     }
 
