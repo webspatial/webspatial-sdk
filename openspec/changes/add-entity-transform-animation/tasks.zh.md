@@ -34,6 +34,6 @@
   - [ ] 5.1.6 动画 prop 替换（停止旧会话 → 启动新会话，onStop 先于 onStart）
   - [ ] 5.1.7 delay 期间暂停（剩余时间保留，resume 继续）
   - [ ] 5.1.8 实体绑定前 play（queued 状态、isAnimating、queued 时 stop/pause）
-  - [ ] 5.1.9 Bridge 失败恢复（会话保留失败前状态）
+  - [ ] 5.1.9 Bridge 失败恢复（会话保留失败前状态、onError 触发或 console.error 兜底）
 - [ ] 5.2 更新 `docs/` 中相关文档，以及示例或 test-server 页面以覆盖新的动画 API
 - [ ] 5.3 每个涉及 public API 新增或修改的 PR 中附带 changeset entry，而不是最后统一补充

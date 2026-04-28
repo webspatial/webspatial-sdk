@@ -289,23 +289,23 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **GIVEN** `supports('useAnimation')` is `false`
 - **WHEN** application code calls `api.play()`
 - **THEN** the call MUST be a no-op (no error thrown, no native command sent)
-- **AND** `onStart`, `onComplete`, and `onStop` MUST NOT be invoked
+- **AND** `onStart`, `onComplete`, `onStop`, and `onError` MUST NOT be invoked
 - **AND** `api.isAnimating` MUST remain `false`
 
-#### Scenario: Throw on native or bridge failure
+#### Scenario: Asynchronous bridge or native failure during play
 
 - **GIVEN** `supports('useAnimation')` is `true`
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing a play request
-- **THEN** the SDK MUST throw to surface the failure
+- **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
+- **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
 - **AND** the SDK MUST NOT transition the session into an active state
-- **AND** the thrown error message MUST include at least `animationId`, the command type (play/pause/resume/stop), and a human-readable failure reason
 
-#### Scenario: Throw on native or bridge failure for pause/resume/stop
+#### Scenario: Asynchronous bridge or native failure for pause/resume/stop
 
 - **GIVEN** `supports('useAnimation')` is `true` and there is an active session
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause`, `resume`, or `stop`
-- **THEN** the SDK MUST throw to surface the failure
-- **AND** the thrown error message MUST include at least `animationId`, the command type (play/pause/resume/stop), and a human-readable failure reason
+- **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
+- **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
 - **AND** the session MUST remain in its state prior to the failed command, allowing application code to retry or take alternative action
 
 ---

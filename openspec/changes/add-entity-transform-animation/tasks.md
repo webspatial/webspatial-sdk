@@ -34,6 +34,6 @@
   - [ ] 5.1.6 Animation prop replacement (stop old session → start new, onStop before onStart)
   - [ ] 5.1.7 Pause during delay (remaining time preserved, resume continues)
   - [ ] 5.1.8 Play before entity bound (queued state, isAnimating, stop/pause while queued)
-  - [ ] 5.1.9 Bridge failure recovery (session retains pre-failure state)
+  - [ ] 5.1.9 Bridge failure recovery (session retains pre-failure state, onError invoked or console.error fallback)
 - [ ] 5.2 Update the relevant docs in `docs/` and any representative examples or test-server pages for the new animation API
 - [ ] 5.3 Include a changeset entry in each PR that adds or modifies public API surface, rather than deferring a single changeset to the end

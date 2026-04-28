@@ -83,6 +83,25 @@ interface AnimationConfig {
 
   /** 通过 api.stop() 停止时触发，携带 stop 点的 transform。 */
   onStop?: (currentValues: TransformValues) => void
+
+  /**
+   * bridge 或 native 异步操作失败时触发。
+   * 若未提供，SDK MUST 通过 console.error 输出错误。
+   */
+  onError?: (error: AnimationError) => void
+}
+```
+
+### AnimationError
+
+```typescript
+interface AnimationError {
+  /** 发生错误的会话。 */
+  animationId: string
+  /** 失败的命令。 */
+  command: 'play' | 'pause' | 'resume' | 'stop'
+  /** 人类可读的失败原因。 */
+  reason: string
 }
 ```
 
@@ -343,6 +362,13 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 9. **实体接入优先走公共抽象层**
    - 新增 `animation` prop 时，应优先接入公共实体抽象层，再下沉到叶子实体组件。
    - 这样可以减少重复逻辑，并保持不同实体类型的 transform 同步行为一致。
+
+10. **异步 bridge 错误通过 `onError` 回调暴露，而非 throw**
+    - `play()`、`pause()`、`resume()`、`stop()` 保持同步 `void` 签名。bridge/native 往返中发生的异步错误通过 `AnimationConfig` 上的 `onError` 回调送达（若未配置 `onError`，则通过 `console.error` 输出）。
+    - 同步 `throw` 仅用于调用时即可检测的 programmer error（非法 config、多实体绑定）。
+    - 这将错误分为两类：(1) 开发时错误，通过 throw 立即暴露；(2) 运行时/基础设施故障，通过回调异步上报。
+    - react-spring 没有 `onError` 等价物，因为其动画完全在 JS 端运算，不存在远端失败路径。我们的架构将播放委托给 native 并经由 JSBridge，引入了真实的异步失败模式，因此需要显式的错误通道。
+    - 备选方案：将 API 改为 `play(): Promise<void>`。否决原因：迫使所有调用点处理 Promise，增加了成功路径的开销，且偏离了 react-spring 命令式 API 的 fire-and-forget 风格。
 
 ## 风险 / 权衡
 
