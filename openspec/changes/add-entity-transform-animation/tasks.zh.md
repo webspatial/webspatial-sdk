@@ -25,6 +25,15 @@
 
 ## 5. 验证与文档
 
-- [ ] 5.1 增加聚焦测试：能力检测、React 生命周期、字段级抑制、命令与事件顺序
+- [ ] 5.1 增加聚焦测试：
+  - [ ] 5.1.1 能力检测（`supports('useAnimation')` true/false/sub-token）
+  - [ ] 5.1.2 React 播放生命周期（start/complete/stop 回调、互斥性、调用次数）
+  - [ ] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
+  - [ ] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
+  - [ ] 5.1.5 同一动画绑定多个实体（抛错）
+  - [ ] 5.1.6 动画 prop 替换（停止旧会话 → 启动新会话，onStop 先于 onStart）
+  - [ ] 5.1.7 delay 期间暂停（剩余时间保留，resume 继续）
+  - [ ] 5.1.8 实体绑定前 play（queued 状态、isAnimating、queued 时 stop/pause）
+  - [ ] 5.1.9 Bridge 失败恢复（会话保留失败前状态）
 - [ ] 5.2 更新 `docs/` 中相关文档，以及示例或 test-server 页面以覆盖新的动画 API
 - [ ] 5.3 每个涉及 public API 新增或修改的 PR 中附带 changeset entry，而不是最后统一补充
