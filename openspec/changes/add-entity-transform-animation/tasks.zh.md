@@ -2,6 +2,7 @@
 
 - [ ] 1.1 将 `entity-transform-animation` 与 `runtime-capabilities` 的 spec 纳入实现计划，并统一命名到 `supports('useAnimation')`
 - [ ] 1.2 定义 `useAnimation`、`AnimationApi`、实体 `animation` prop 与动画结果回传的对外类型（React 与 Core SDK）
+- [ ] 1.3 增加非法动画配置的校验规则，并明确不支持 runtime 下的 warning 行为
 
 ## 2. Core SDK 与命令链路
 
@@ -12,8 +13,9 @@
 ## 3. React SDK 集成
 
 - [ ] 3.1 实现 `useAnimation(config)`，支持 `play`、`pause`、`resume`、`stop`、`isAnimating`、`autoStart`、`delay`、`loop`
-- [ ] 3.2 为实体组件新增 `animation` prop，并仅对被动画控制的字段抑制普通 transform 更新，避免竞争
-- [ ] 3.3 按规范对不支持的 runtime 做能力 gate，并保持非动画的 transform 路径行为不变
+- [ ] 3.2 优先在公共实体抽象层接入 `animation` prop，再更新各个叶子实体组件
+- [ ] 3.3 仅对被动画控制的字段抑制普通 transform 更新，避免竞争
+- [ ] 3.4 按规范对不支持的 runtime 给出 warning，并保持非动画的 transform 路径行为不变
 
 ## 4. Native visionOS 播放
 

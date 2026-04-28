@@ -53,6 +53,18 @@ Current SDK behavior updates entity transform props immediately. There is no bui
    - Applications can branch on capability before depending on the animation API in environments that do not yet implement the native bridge path.
    - Alternative considered: no dedicated capability key. Rejected because the review explicitly calls out feature detection as part of the external contract.
 
+7. **Unsupported runtimes surface a warning**
+   - When `useAnimation` is used in a runtime where `supports('useAnimation')` is `false`, the SDK should surface a warning instead of failing silently.
+   - This keeps capability misuse visible during integration without changing the capability contract itself.
+
+8. **Invalid animation config is treated as a programmer error**
+   - Invalid config such as unsupported loop shape, missing animation targets, or nonsensical timing values should throw rather than be ignored.
+   - This keeps failures close to the call site and avoids debugging ambiguous partial playback behavior.
+
+9. **Entity integration should land in the shared abstraction first**
+   - The new `animation` prop should be wired through the common entity abstraction layer before touching leaf entity components.
+   - This minimizes duplicated logic and keeps transform synchronization behavior consistent across entity types.
+
 ## Risks / Trade-offs
 
 - **Risk:** API drift between reviewed docs and implementation -> **Mitigation:** lock the OpenSpec contract around `play`, `animation` prop, `loop`, and lifecycle callbacks before editing code.
@@ -68,8 +80,8 @@ Current SDK behavior updates entity transform props immediately. There is no bui
 - Validate the feature in test-server examples before relying on it in broader samples.
 - If rollout needs to pause, disable the capability key and avoid exposing the feature in public exports until native support is complete.
 
-## Open Questions
+## Resolved Follow-ups
 
-- Whether unsupported runtimes should no-op or warn when `useAnimation` is used without a preceding capability check.
-- Whether the first implementation should expose any public error surface for invalid loop or transform configs, or rely on existing argument validation patterns only.
-- Whether the current repository already has an entity abstraction point that can absorb the new `animation` prop without duplicated component changes.
+- Unsupported runtimes should emit a warning when `useAnimation` is used without a successful capability check.
+- Invalid animation config should throw instead of being silently ignored.
+- Entity integration should go through the shared abstraction layer first to avoid duplicated component changes.

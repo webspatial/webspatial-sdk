@@ -72,6 +72,12 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 播放到达任一端点
 - **THEN** 下一轮 MUST 在 `from` 与 `to` 之间反向播放
 
+#### Scenario: 非法动画配置
+
+- **GIVEN** 应用代码传入非法动画配置，例如缺少 transform 目标、不支持的 loop 结构、或无效的时序参数
+- **WHEN** SDK 在播放前校验配置
+- **THEN** SDK MUST 直接抛错，而不是静默忽略该非法配置
+
 ---
 
 ### Requirement: 提供命令式播放生命周期
@@ -98,6 +104,13 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 配置的 `onStop` MUST 收到 stop 时刻实体当前 transform 状态
+
+#### Scenario: 不支持的 runtime warning
+
+- **GIVEN** `supports('useAnimation')` 为 `false`
+- **WHEN** 应用代码仍尝试使用 `useAnimation`
+- **THEN** SDK MUST 给出 warning，说明当前 runtime 不支持实体 Transform 动画
+- **AND** SDK MUST 不得为这次请求启动 Native 播放
 
 ---
 
