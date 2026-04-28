@@ -1,6 +1,10 @@
 ## Why
 
-WebSpatial SDK can update entity transform props today (position, rotation, scale), but every change is instantaneous with no built-in transition. This makes common spatial UX patterns (entrance, move, rotate, scale, delayed appearance, looping motion) harder to express consistently across apps. The reviewed direction introduces a first-class, react-spring-inspired declarative API while delegating playback to RealityKit's native animation engine (90fps) so animation is not JS frame-driven. This change is needed now so the public contract, feature detection, and cross-layer behavior are agreed before implementation starts.
+**Problem.** WebSpatial SDK can update entity transform props (position, rotation, scale), but every change is instantaneous — there is no built-in transition. Common spatial UX patterns such as entrance animations, smooth moves, rotations, delayed appearances, and looping motion are hard to express consistently across apps.
+
+**Approach.** Introduce a react-spring-inspired declarative `useAnimation` API on the React side, while delegating actual playback to RealityKit's native animation engine. This keeps animation at 90 fps without per-frame JS-to-native bridge calls.
+
+**Why now.** The public API shape, feature-detection contract, and cross-layer behavior need to be agreed before implementation starts, so this proposal locks the spec first.
 
 ## What Changes
 
@@ -14,7 +18,7 @@ WebSpatial SDK can update entity transform props today (position, rotation, scal
 
 ### New Capabilities
 
-- `entity-transform-animation`: Declarative and imperative animation of entity transform properties, including playback lifecycle and React integration rules.
+- `entity-transform-animation`: Declarative and imperative animation of entity transform properties (position, rotation, scale only; non-transform properties such as material, opacity, and color are out of scope), including playback lifecycle and React integration rules.
 
 ### Modified Capabilities
 
@@ -26,3 +30,4 @@ WebSpatial SDK can update entity transform props today (position, rotation, scal
 - **Public API**: New `useAnimation` hook, entity `animation` prop, and animation playback methods.
 - **Documentation**: Update the entity animation docs and capability documentation.
 - **Validation**: Add coverage for runtime capability checks, React API behavior, JSBridge command flow, and native completion / stop events.
+- **Breaking changes**: None. This change is purely additive.
