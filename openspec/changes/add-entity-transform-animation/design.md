@@ -113,6 +113,114 @@ interface TransformValues {
 }
 ```
 
+## Usage Examples
+
+### Entrance animation on mount
+
+Animate position and scale together with a delay. `autoStart` defaults to `true`, so playback begins when the entity mounts.
+
+```tsx
+function FloatingBox() {
+  const [animation] = useAnimation({
+    from: { position: { x: 0, y: -1, z: -2 }, scale: { x: 0.1, y: 0.1, z: 0.1 } },
+    to:   { position: { x: 0, y: 1, z: -2 },  scale: { x: 1, y: 1, z: 1 } },
+    duration: 0.6,
+    delay: 1.5,
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### Manual trigger with play()
+
+Set `autoStart: false` and call `api.play()` on interaction.
+
+```tsx
+function TapToMove() {
+  const [animation, api] = useAnimation({
+    from: { position: { x: -1, y: 0, z: -2 } },
+    to:   { position: { x: 1, y: 0, z: -2 } },
+    duration: 0.8,
+    autoStart: false,
+  })
+
+  return (
+    <Reality onSpatialTap={() => api.play()}>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### Continuous reverse loop with pause / resume
+
+Infinite back-and-forth rotation. Tap toggles pause and resume.
+
+```tsx
+function SpinningModel() {
+  const [animation, api] = useAnimation({
+    from: { rotation: { x: 0, y: 0, z: 0 } },
+    to:   { rotation: { x: 0, y: 170, z: 0 } },
+    duration: 2.0,
+    timingFunction: 'linear',
+    loop: { reverse: true },
+  })
+
+  return (
+    <Reality onSpatialTap={() => api.isAnimating ? api.pause() : api.play()}>
+      <SceneGraph>
+        <ModelEntity model="robot" scale={{ x: 0.2, y: 0.2, z: 0.2 }} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### Stop and sync state
+
+During playback, the animation takes over `position` and ordinary prop updates are suppressed. After `stop()`, control returns to the `position` prop. `onStop` syncs the stop-point transform back into React state so the entity does not jump.
+
+```tsx
+function StopAndSync() {
+  const [pos, setPos] = useState<Vec3>({ x: 0, y: 0, z: -2 })
+
+  const [animation, api] = useAnimation({
+    to: { position: { x: 2, y: 2, z: -2 } },
+    duration: 3.0,
+    autoStart: false,
+    onStop: (current) => {
+      if (current.position) setPos(current.position)
+    },
+  })
+
+  return (
+    <>
+      <button onClick={() => api.play()}>Play</button>
+      <button onClick={() => api.stop()}>Stop</button>
+      <Reality>
+        <SceneGraph>
+          <BoxEntity
+            width={0.3} height={0.3} depth={0.3}
+            position={pos}
+            animation={animation}
+          />
+        </SceneGraph>
+      </Reality>
+    </>
+  )
+}
+```
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK
