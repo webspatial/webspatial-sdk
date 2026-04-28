@@ -1,6 +1,6 @@
 ## 背景
 
-当前 SDK 对实体 transform props 的更新是立即生效的，缺少 Native 播放契约、动画生命周期回调，以及 React re-render 与进行中的 Native 动画之间的协调机制。本次变更聚焦最高频的 transform 过渡场景（入场、移动、旋转、缩放、延迟出现、循环动效），且第一版明确只覆盖 transform 动画；底层执行依赖 RealityKit 原生动画能力，以避免 JS 逐帧驱动带来的性能与同步问题。
+完整动机见 proposal。简言之：实体 transform 更新目前是瞬时跳变，缺少 native 过渡能力。本设计文档覆盖 transform-only 动画 API、跨层契约及行为规则。
 
 ## 目标 / 非目标
 
@@ -19,6 +19,146 @@
 - 在本次变更中解决大角度旋转等限制（仅文档化现状与边界行为）。
 - 引入运行时能力的订阅/动态刷新模型。
 
+## API 外形
+
+对外契约以 `useAnimation` Hook 为核心。以下类型定义了约定的 API 形状；具体行为语义见配套的 spec 文档。
+
+### Hook 签名
+
+```typescript
+function useAnimation(config: AnimationConfig): [AnimatedProps, AnimationApi]
+```
+
+### AnimationConfig
+
+```typescript
+interface AnimationConfig {
+  /** 目标 transform 值（必填）。 */
+  to: {
+    position?: Vec3
+    rotation?: Vec3
+    scale?: Vec3
+  }
+
+  /** 起始 transform 值。省略则从实体当前状态开始。 */
+  from?: {
+    position?: Vec3
+    rotation?: Vec3
+    scale?: Vec3
+  }
+
+  /** 时长，单位秒。默认 0.3 */
+  duration?: number
+
+  /** 缓动曲线。默认 'easeInOut' */
+  timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+
+  /** 播放前延迟，单位秒。默认 0 */
+  delay?: number
+
+  /** 实体挂载后是否自动播放。默认 true */
+  autoStart?: boolean
+
+  /**
+   * 循环行为。
+   * - true：回到 from 重新播放（无限 reset 循环）
+   * - { reverse: true }：每轮反向（无限 reverse 循环）
+   * - undefined / false：播放一次
+   */
+  loop?: boolean | { reverse?: boolean }
+
+  /** 播放开始时触发。 */
+  onStart?: () => void
+
+  /** 非循环动画自然结束时触发，携带 Native 侧最终 transform。 */
+  onComplete?: (finalValues: TransformValues) => void
+
+  /** 通过 api.stop() 停止时触发，携带 stop 点的 transform。 */
+  onStop?: (currentValues: TransformValues) => void
+}
+```
+
+### AnimationApi
+
+```typescript
+interface AnimationApi {
+  /** 启动（或重新启动）动画。 */
+  play(): void
+
+  /** 在当前进度暂停。 */
+  pause(): void
+
+  /** 从暂停处恢复。 */
+  resume(): void
+
+  /** 停止动画，实体保持在 stop 点。 */
+  stop(): void
+
+  /** 当前是否有动画会话在播放中。 */
+  readonly isAnimating: boolean
+}
+```
+
+### AnimatedProps
+
+Hook 返回元组的第一个元素，不透明对象。直接传给实体的 `animation` prop 即可，应用代码无需读取或修改其内容。
+
+### TransformValues
+
+```typescript
+interface TransformValues {
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+}
+```
+
+## 跨层契约
+
+### React SDK → Core SDK
+
+React 通过 `SpatialEntity` 上的一个方法驱动完整的动画生命周期：
+
+```typescript
+interface SpatialEntity {
+  animateTransform(command: AnimateTransformCommand): Promise<AnimateTransformResult>
+}
+
+interface AnimateTransformCommand {
+  animationId: string
+  type: 'play' | 'pause' | 'resume' | 'stop'
+  /** type 为 'play' 时必填，其他类型忽略。 */
+  entityId?: string
+  toTransform?: Float4x4
+  fromTransform?: Float4x4
+  duration?: number
+  timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+  delay?: number
+  loop?: boolean | { reverse?: boolean }
+}
+
+interface AnimateTransformResult {
+  animationId: string
+  /** 动画自然完成时 resolve。 */
+  finished: Promise<TransformValues>
+  /** 通过 stop() 停止时 resolve。 */
+  stopped: Promise<TransformValues>
+}
+```
+
+### Core SDK ↔ Native（JSBridge）
+
+**JS → Native 命令：**单个 `AnimateTransform` 命令，通过 `type` 字段区分操作，结构与上述 `AnimateTransformCommand` 一致。Core SDK 序列化后通过 bridge 发送。
+
+**Native → JS 事件：**
+
+| 事件名 | 触发时机 | Payload |
+|---|---|---|
+| `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — Native 侧最终 transform |
+| `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点的 transform |
+
+两个事件监听在 `play` 时注册，避免 `stop()` 在监听就绪前被调用导致的竞态。
+
 ## 关键决策
 
 1. **对外 API 以 `useAnimation` + 实体 `animation` prop 为入口**
@@ -35,23 +175,6 @@
    - 最新评审设计倾向用一个 Animation command + `type` 来区分 play/pause/resume/stop，而不是四个独立命令。
    - 好处：减少 JSBridge 注册点，控制流更集中，所有操作都围绕 `animationId` 会话展开。
    - 备选方案：每个动作一个命令。否决原因：重复注册与解析，收益有限。
-   - 命令伪 schema（供参考）：
-     ```jsonc
-     {
-       "commandType": "AnimateTransform",
-       "animationId": "<string>",
-       "type": "play" | "pause" | "resume" | "stop",
-       // 以下字段仅在 type 为 "play" 时存在：
-       "entityId": "<string>",
-       "toTransform": { ... },
-       "fromTransform": { ... },  // 可选
-       "duration": 0.3,
-       "timingFunction": "easeInOut",
-       "delay": 0,
-       "loop": true | { "reverse": true }
-     }
-     ```
-
 4. **动画在 Native 侧播放，并把终态 transform 回传到 JS**
    - Native 负责动画会话、时序、delay、loop、pause/resume 状态。
    - JS 侧收到 completed/stopped 的 transform，用于触发回调并在 stop 时同步状态。

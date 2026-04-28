@@ -6,6 +6,22 @@
 
 **为什么现在做：**API 外形、feature detection 契约和跨层行为需要在编码前达成一致，因此本提案先锁定 spec。
 
+## 一览
+
+```tsx
+// 最小用法 — 外层 <Reality> 与 <SceneGraph> 省略
+const [animation, api] = useAnimation({
+  to: { position: { x: 0, y: 1.5, z: -2 } },
+  duration: 0.6,
+  timingFunction: 'easeOut',
+})
+
+// 在 <SceneGraph> 内部：
+<BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+```
+
+Hook 声明动画意图，播放由 Native 以 90 fps 执行。需要时可通过 `api.play()`、`pause()`、`resume()`、`stop()` 命令式控制。
+
 ## 变更内容
 
 - 新增实体 Transform 动画能力，以 React `useAnimation(config)` Hook 与实体组件的 `animation` prop 为中心。
