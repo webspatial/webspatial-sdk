@@ -35,16 +35,34 @@ Current SDK behavior updates entity transform props immediately. There is no bui
    - The latest reviewed design consolidates play, pause, resume, and stop into one animation command with a `type` discriminator instead of four separate commands.
    - This reduces JSBridge registration overhead, keeps control flow centralized, and matches the fact that all operations address one animation session identified by `animationId`.
    - Alternative considered: separate command types per action. Rejected because it duplicates registration and parsing without improving the public contract.
+   - Command pseudo-schema for reference:
+     ```jsonc
+     {
+       "commandType": "AnimateTransform",
+       "animationId": "<string>",
+       "type": "play" | "pause" | "resume" | "stop",
+       // fields below present only when type is "play":
+       "entityId": "<string>",
+       "toTransform": { ... },
+       "fromTransform": { ... },  // optional
+       "duration": 0.3,
+       "timingFunction": "easeInOut",
+       "delay": 0,
+       "loop": true | { "reverse": true }
+     }
+     ```
 
 4. **Playback runs on the native side and reports terminal transform state back to JS**
    - Native playback owns the animation session, timing, delay, loop behavior, and pause / resume state.
    - JS receives completion and stop results so callbacks can observe the actual final or current transform from native state.
    - Alternative considered: emulate motion in JS and stream transform updates over the bridge. Rejected because it adds bridge traffic, risks jitter, and weakens parity with the reviewed RealityKit-based design.
+   - **Stop semantics:** when `stop()` is called, the entity freezes at its current in-flight transform (the stop point), not at `from` or `to`. The native side reads `entity.transform` at that instant, reports it back via the stopped event, and the `onStop` callback delivers that value so JS state can be synced.
 
 5. **Entity transform synchronization uses per-field animation suppression**
    - While animation controls a specific field, ordinary transform syncing for that field is suppressed so React re-renders do not race the active animation.
    - Untargeted transform fields continue to behave exactly as they do today.
    - Alternative considered: freeze all transform syncing while any animation is active. Rejected because it unnecessarily blocks unrelated transform updates.
+   - **Suppression release timing:** field-level suppression is lifted when the animation session ends (via completion or stop). The `__animating` flags are cleared before the lifecycle callback fires, so the next React render cycle after the callback will resume ordinary transform synchronization for the previously animated fields.
 
 6. **Capability detection is explicit and top-level**
    - `supports('useAnimation')` documents whether the end-to-end animation feature is available in the current runtime.
@@ -69,6 +87,7 @@ Current SDK behavior updates entity transform props immediately. There is no bui
 - **Risk:** React re-renders still leak competing transform updates -> **Mitigation:** add targeted tests for mixed animated and non-animated fields and wire suppression at the entity transform sync boundary.
 - **Risk:** Native playback edge cases around delay, stop, and completion ordering -> **Mitigation:** keep a single animation session record keyed by `animationId` and verify callback ordering in tests.
 - **Risk:** Runtime support differs across environments -> **Mitigation:** gate the feature with `supports('useAnimation')` and document conservative false behavior.
+- **Risk:** Bridge overhead could accumulate for complex animation orchestration -> **Mitigation:** a single play command equals 1 bridge call; during playback there are zero per-frame bridge calls; terminal events add at most 1 callback per session (completion or stop). Total bridge traffic per animation lifecycle is bounded at 2–3 calls regardless of duration or frame count.
 - **Risk:** Rotation behavior surprises developers for large angles -> **Mitigation:** document the limitation and keep the first version scoped to the reviewed transform behavior.
 
 ## Migration Plan

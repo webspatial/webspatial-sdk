@@ -35,16 +35,34 @@
    - 最新评审设计倾向用一个 Animation command + `type` 来区分 play/pause/resume/stop，而不是四个独立命令。
    - 好处：减少 JSBridge 注册点，控制流更集中，所有操作都围绕 `animationId` 会话展开。
    - 备选方案：每个动作一个命令。否决原因：重复注册与解析，收益有限。
+   - 命令伪 schema（供参考）：
+     ```jsonc
+     {
+       "commandType": "AnimateTransform",
+       "animationId": "<string>",
+       "type": "play" | "pause" | "resume" | "stop",
+       // 以下字段仅在 type 为 "play" 时存在：
+       "entityId": "<string>",
+       "toTransform": { ... },
+       "fromTransform": { ... },  // 可选
+       "duration": 0.3,
+       "timingFunction": "easeInOut",
+       "delay": 0,
+       "loop": true | { "reverse": true }
+     }
+     ```
 
 4. **动画在 Native 侧播放，并把终态 transform 回传到 JS**
    - Native 负责动画会话、时序、delay、loop、pause/resume 状态。
    - JS 侧收到 completed/stopped 的 transform，用于触发回调并在 stop 时同步状态。
    - 备选方案：在 JS 侧模拟并逐帧通过 bridge 推送。否决原因：bridge 压力大、抖动风险高、与 RealityKit 驱动的评审方向不一致。
+   - **Stop 语义：**调用 `stop()` 时，实体冻结在当前播放中间态（stop 点），而不是回到 `from` 或跳到 `to`。Native 侧读取当时的 `entity.transform`，通过 stopped 事件回传，`onStop` 回调将该值交给 JS 侧以便同步状态。
 
 5. **transform 同步采用按字段抑制策略**
    - 当动画控制某个字段时，只抑制该字段的常规同步，避免与动画竞争。
    - 未被动画控制的字段保持现有行为，不受影响。
    - 备选方案：任意字段动画中就冻结全部 transform 同步。否决原因：会无谓阻断与动画无关的更新。
+   - **抑制解除时机：**字段级抑制在动画会话结束时（completion 或 stop）解除。`__animating` flags 在生命周期回调触发前被清除，因此回调之后的下一个 React 渲染周期将恢复对先前被动画控制字段的常规 transform 同步。
 
 6. **能力检测采用明确的 top-level key**
    - 通过 `supports('useAnimation')` 表达端到端动画能力是否可用。
@@ -69,6 +87,7 @@
 - **风险：**React re-render 仍可能发送竞争的 transform 更新 -> **缓解：**为混合字段（部分动画/部分非动画）增加针对性测试，并在实体 transform 同步边界实现字段级抑制。
 - **风险：**Native 在 delay、stop、completed 的事件顺序存在边界情况 -> **缓解：**以 `animationId` 维护单会话记录，并用测试覆盖事件顺序与回调触发。
 - **风险：**不同 runtime 支持差异导致行为不一致 -> **缓解：**用 `supports('useAnimation')` gate，并文档化保守返回 false 的策略。
+- **风险：**Bridge 开销在复杂动画编排中可能累积 -> **缓解：**单次 play = 1 次 bridge 调用；播放期间零逐帧 bridge 调用；终态事件最多 1 次回调（completion 或 stop）。每个动画生命周期的 bridge 总流量不超过 2–3 次调用，与时长和帧数无关。
 - **风险：**大角度旋转行为可能让开发者困惑 -> **缓解：**明确文档化限制，第一版只覆盖评审范围内的 transform 动画行为。
 
 ## 发布与回滚

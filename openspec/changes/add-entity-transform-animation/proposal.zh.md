@@ -1,6 +1,10 @@
 ## 为什么
 
-WebSpatial SDK 目前允许开发者通过 React props 直接更新实体的 transform（position、rotation、scale），但所有变更都是瞬时跳变，缺少内建的平滑过渡能力。这会让常见空间交互与视觉反馈场景（入场、移动、旋转、缩放、延迟出现、循环动效）难以低成本、稳定一致地表达。评审方向提供一个参考 react-spring 的声明式 API，同时把播放交给 RealityKit 原生动画引擎执行，以获得更稳定的表现与更低的桥接开销（目标 90fps）。因此需要先固化对外契约、feature detection 与跨层行为，再进入实现阶段，避免后续反复调整。
+**问题：**WebSpatial SDK 目前可以通过 React props 更新实体的 transform（position、rotation、scale），但所有变更都是瞬时跳变，没有内建的平滑过渡。这导致常见的空间交互场景（入场动画、平滑移动、旋转、延迟出现、循环动效）难以低成本且一致地实现。
+
+**方案：**引入一套参考 react-spring 的声明式 `useAnimation` API，由 React 侧声明动画意图，实际播放交给 RealityKit 原生动画引擎执行，在 90 fps 下运行且无需逐帧 JS-to-Native bridge 调用。
+
+**为什么现在做：**API 外形、feature detection 契约和跨层行为需要在编码前达成一致，因此本提案先锁定 spec。
 
 ## 变更内容
 
@@ -14,7 +18,7 @@ WebSpatial SDK 目前允许开发者通过 React props 直接更新实体的 tra
 
 ### 新增能力
 
-- `entity-transform-animation`：对实体 transform 属性进行声明式与命令式动画控制，包括播放生命周期与 React 集成规则。
+- `entity-transform-animation`：对实体 transform 属性（仅 position、rotation、scale；不含 material、opacity、color 等非 transform 属性）进行声明式与命令式动画控制，包括播放生命周期与 React 集成规则。
 
 ### 修改的能力
 
@@ -26,3 +30,4 @@ WebSpatial SDK 目前允许开发者通过 React props 直接更新实体的 tra
 - **Public API**：新增 `useAnimation` Hook、实体 `animation` prop、以及动画播放控制方法。
 - **Documentation**：更新实体动画文档与能力检测文档。
 - **Validation**：补齐能力检测、React API 行为、JSBridge 命令流、Native 完成与停止事件的覆盖。
+- **Breaking changes**：无。本次变更为纯增量。
