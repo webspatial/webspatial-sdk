@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "jsxImportSource": "@webspatial/react-sdk",
-    "target": "ES2020",
+    "target": "ES2024",
     "module": "CommonJS",
     "moduleResolution": "node",
     "rootDir": ".",
