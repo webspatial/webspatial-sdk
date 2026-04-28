@@ -75,7 +75,7 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
-  /** 播放开始时触发。 */
+  /** 会话成功建立并进入 delaying 或 running 时触发；queued 阶段不触发。 */
   onStart?: () => void
 
   /** 非循环动画自然结束时触发，携带 Native 侧最终 transform。 */
@@ -207,7 +207,17 @@ function SpinningModel() {
   })
 
   return (
-    <Reality onSpatialTap={() => api.isAnimating ? api.pause() : api.play()}>
+    <Reality
+      onSpatialTap={() => {
+        if (api.isPaused) {
+          api.resume()
+        } else if (api.isAnimating) {
+          api.pause()
+        } else {
+          api.play()
+        }
+      }}
+    >
       <SceneGraph>
         <ModelEntity model="robot" scale={{ x: 0.2, y: 0.2, z: 0.2 }} animation={animation} />
       </SceneGraph>
@@ -294,7 +304,7 @@ interface AnimateTransformResult {
 
 React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 + 角度制欧拉角）转换为 `Float4x4`，并在触发生命周期回调之前将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制）。
 
-若实体在会话 active 期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
+若实体在 alive 会话存在期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
 
 若 JSBridge 或 Native 在执行 play 请求时失败，`animateTransform(...)` MUST reject 以暴露该失败。
 
@@ -325,7 +335,7 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 2. **React 将配置与渲染态 animation 对象分离**
    - `from`、`to`、回调、时序参数、loop 等配置由 hook 内部存储（state/ref），不直接作为渲染 payload 暴露。
    - 渲染态 `animation` 对象只携带 transform 目标值与实体绑定所需的内部元数据。
-   - 配置变更仅对下一次 `play()` 生效，且 MUST 不影响当前 active session。
+   - 配置变更仅对下一次 `play()` 生效，且 MUST 不影响当前 alive 会话。
    - 备选方案：把完整 config 放到实体 prop。否决原因：渲染与控制耦合、易产生不必要的 re-render。
 
 3. **Core 与 Native 采用统一的动画命令契约**

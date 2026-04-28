@@ -25,11 +25,12 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 
 #### Scenario: Replace or remove animation prop on the same entity
 
-- **GIVEN** an entity is already bound to `animationA`, and it may have an active session
+- **GIVEN** an entity is already bound to `animationA`, and it may have an alive session
 - **WHEN** a later render replaces the entity's `animation` prop with `animationB`, or removes the `animation` prop
 - **THEN** the SDK MUST stop the session for `animationA` first (if any) and invoke `animationA`'s `onStop`
 - **AND** if `animationB` exists and its `autoStart` is `true` (or omitted), the SDK MUST start a new session for `animationB` after stopping the old session and invoke `animationB`'s `onStart`
 - **AND** the old session’s `onStop` MUST fire before the new session’s `onStart`
+- **AND** the stop command for the old session MUST be sent to the native bridge before the play command for the new session
 
 ---
 
@@ -211,12 +212,14 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 #### Scenario: Start callback
 
-- **WHEN** `api.play()` starts a new animation session
+- **WHEN** the animation session requested by `api.play()` is established successfully and enters `delaying` or `running`
 - **THEN** the configured `onStart` callback MUST be invoked once for that session
+- **AND** if that request is still queued because the entity is not yet bound, `onStart` MUST NOT fire early
+- **AND** if that request fails before the session enters `delaying` or `running`, `onStart` MUST NOT fire
 
 #### Scenario: Pause and resume
 
-- **GIVEN** an animation session is active
+- **GIVEN** an animation session is alive
 - **WHEN** application code calls `api.pause()` and later `api.resume()`
 - **THEN** the same session MUST continue from its paused progress instead of starting a fresh session
 
@@ -249,6 +252,13 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** `onStart` MUST be invoked at most once for that session
 - **AND** when the session ends, `onComplete` and `onStop` MUST be mutually exclusive, and each MUST be invoked at most once for that session
 
+#### Scenario: onError callback count and relation to other callbacks
+
+- **WHEN** an asynchronous bridge or native command fails
+- **THEN** `onError` MUST be invoked at most once for that failed command
+- **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onStop` MUST NOT be invoked for that failed request
+- **AND** if the failed command is `pause`, `resume`, or `stop`, the failure itself MUST NOT trigger `onComplete` or `onStop`
+
 #### Scenario: Control methods are no-op in invalid states
 
 - **GIVEN** there is no alive session (`isAnimating` is `false` AND `isPaused` is `false`)
@@ -261,12 +271,13 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** the SDK sends control commands to the native layer
 - **THEN** the SDK MUST send those commands to the native bridge in the same call order, and the bridge MUST deliver them to native in that order
 
-#### Scenario: Play while session is already active
+#### Scenario: Play while an alive session already exists
 
-- **GIVEN** an animation session is already active (`delaying`, `running`, or `paused`)
+- **GIVEN** an animation session is already alive (`queued`, `delaying`, `running`, or `paused`)
 - **WHEN** application code calls `api.play()` again
 - **THEN** the SDK MUST stop the existing session first and start a new session with the current config
 - **AND** the `onStop` callback for the previous session MUST fire before the new session’s `onStart`
+- **AND** `api.isAnimating` MUST be `false` when the previous session’s `onStop` fires, and MUST be `true` when the new session’s `onStart` fires
 
 #### Scenario: Each play generates a new session id
 
@@ -298,11 +309,11 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing a play request
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
-- **AND** the SDK MUST NOT transition the session into an active state
+- **AND** the SDK MUST NOT transition the session into an alive state
 
 #### Scenario: Asynchronous bridge or native failure for pause/resume/stop
 
-- **GIVEN** `supports('useAnimation')` is `true` and there is an active session
+- **GIVEN** `supports('useAnimation')` is `true` and there is an alive session
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause`, `resume`, or `stop`
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
@@ -317,9 +328,9 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 #### Scenario: Animated and non-animated fields coexist
 
 - **GIVEN** an animation session controls `position`
-- **WHEN** React re-renders the entity while the session is active
+- **WHEN** React re-renders the entity while the session is alive
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
-- **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
+- **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the alive animation session
 - **AND** the latest prop values received for suppressed fields MUST be cached for resuming ordinary synchronization after suppression is released
 - **AND** the cache MUST be maintained per field (`position`, `rotation`, `scale`) and MUST be retained until the first React render cycle after the session ends, at which point ordinary synchronization resumes with the prop values from that render and the cache is discarded
 
@@ -332,7 +343,7 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 
 #### Scenario: Stop preserves the stop-point transform
 
-- **GIVEN** an animation session is active and the entity is mid-flight
+- **GIVEN** an animation session is alive and the entity is mid-flight
 - **WHEN** application code calls `api.stop()`
 - **THEN** the entity MUST remain at its current in-flight transform (the stop point)
 - **AND** the entity MUST NOT jump to `from` or `to`
@@ -341,12 +352,12 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 
 ### Requirement: Clean up animation on unmount
 
-#### Scenario: Entity unmounts during active animation
+#### Scenario: Entity unmounts while an alive session exists
 
-- **GIVEN** an animation session is in any active state (delaying, running, or paused)
+- **GIVEN** an animation session is in any alive state (queued, delaying, running, or paused)
 - **WHEN** the entity component unmounts
 - **THEN** the SDK MUST stop the native animation session and release associated resources
-- **AND** lifecycle callbacks (`onStop`, `onComplete`) MUST NOT fire after unmount
+- **AND** lifecycle callbacks (`onStart`, `onStop`, `onComplete`, `onError`) MUST NOT fire after unmount
 
 #### Scenario: Entity unmounts during delay
 
