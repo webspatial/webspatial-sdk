@@ -4,7 +4,9 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -34,9 +36,11 @@ import { withSSRSupported } from '../ssr'
  */
 function DegradedContainer<T extends SpatializedElementRef>({
   innerRef,
+  enableOnSpatialContentReadyFallback,
   ...inprops
 }: SpatializedContainerProps<T> & {
   innerRef: ForwardedRef<SpatializedElementRef<T>>
+  enableOnSpatialContentReadyFallback: boolean
 }) {
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
@@ -60,10 +64,59 @@ function DegradedContainer<T extends SpatializedElementRef>({
     getExtraSpatializedElementProperties: _getExtra,
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
+    onSpatialContentReady: _onSpatialContentReady,
     ...restProps
   } = inprops as DegradedProps
+
+  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
+  const callbackRef = useRef(_onSpatialContentReady)
+  callbackRef.current = _onSpatialContentReady
+
+  useLayoutEffect(() => {
+    if (
+      !enableOnSpatialContentReadyFallback ||
+      !hostEl ||
+      !hostEl.isConnected ||
+      !callbackRef.current
+    ) {
+      return () => {}
+    }
+
+    let cleanup: void | (() => void)
+    try {
+      cleanup = callbackRef.current({ host: hostEl })
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[WebSpatial] onSpatialContentReady threw', e)
+      }
+    }
+
+    return () => {
+      if (typeof cleanup !== 'function') return
+      try {
+        cleanup()
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[WebSpatial] onSpatialContentReady cleanup threw', e)
+        }
+      }
+    }
+  }, [enableOnSpatialContentReadyFallback, hostEl])
+
+  const setHostRef = useCallback(
+    (node: SpatializedElementRef<T> | null) => {
+      if (typeof innerRef === 'function') {
+        innerRef(node)
+      } else if (innerRef != null) {
+        innerRef.current = node
+      }
+      setHostEl(node as HTMLElement | null)
+    },
+    [innerRef],
+  )
+
   return (
-    <Component ref={innerRef} {...restProps}>
+    <Component ref={setHostRef} {...restProps}>
       {children}
     </Component>
   )
@@ -82,7 +135,15 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
       )
     }
-    return <DegradedContainer {...inprops} innerRef={ref} />
+    return (
+      <DegradedContainer
+        {...inprops}
+        innerRef={ref}
+        enableOnSpatialContentReadyFallback={
+          !isWebSpatialEnv && !insideAttachment
+        }
+      />
+    )
   }
 
   const layer = useContext(SpatialLayerContext) + 1
@@ -177,6 +238,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         createSpatializedElement,
         getExtraSpatializedElementProperties,
         spatialEventOptions: _nestedSpatialEventOptions,
+        onSpatialContentReady: _nestedOnSpatialContentReady,
         ...restProps
       } = props
       return (
@@ -240,6 +302,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       createSpatializedElement,
       getExtraSpatializedElementProperties,
       spatialEventOptions: _rootSpatialEventOptions,
+      onSpatialContentReady: _rootOnSpatialContentReady,
       ...restProps
     } = props
 

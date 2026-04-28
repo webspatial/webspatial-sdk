@@ -42,3 +42,4 @@ The system MUST allow constraining spatial **rotate** gestures to a single axis 
 - **GIVEN** `constrainedToAxis` is a vector whose magnitude is below the platform's floating-point epsilon (e.g. `[1e-15, 0, 0]`)
 - **WHEN** the value is applied on the native side
 - **THEN** the implementation SHOULD treat it as unconstrained (same as zero vector) rather than producing undefined behavior
+

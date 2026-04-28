@@ -16,7 +16,10 @@ import { SpatializedElement } from '@webspatial/core-sdk'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
 
-export type RealityProps = React.ComponentPropsWithRef<'div'> &
+export type RealityProps = Omit<
+  React.ComponentPropsWithRef<'div'>,
+  'onSpatialContentReady'
+> &
   EntityEventHandler
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
