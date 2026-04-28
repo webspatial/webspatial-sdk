@@ -1,10 +1,16 @@
 ## Why
 
-**Problem.** WebSpatial SDK can update entity transform props (position, rotation, scale), but every change is instantaneous — there is no built-in transition. Common spatial UX patterns such as entrance animations, smooth moves, rotations, delayed appearances, and looping motion are hard to express consistently across apps.
+**Problem**
 
-**Approach.** Introduce a react-spring-inspired declarative `useAnimation` API on the React side, while delegating actual playback to RealityKit's native animation engine. This keeps animation at 90 fps without per-frame JS-to-native bridge calls.
+WebSpatial SDK can update entity transform props (position, rotation, scale), but every change is instantaneous — there is no built-in transition. Common spatial UX patterns such as entrance animations, smooth moves, rotations, delayed appearances, and looping motion are hard to express consistently across apps.
 
-**Why now.** The public API shape, feature-detection contract, and cross-layer behavior need to be agreed before implementation starts, so this proposal locks the spec first.
+**Approach**
+
+Introduce a react-spring-inspired declarative `useAnimation` API on the React side, while delegating actual playback to RealityKit's native animation engine. This keeps animation at 90 fps without per-frame JS-to-native bridge calls.
+
+**Why now**
+
+The public API shape, feature-detection contract, and cross-layer behavior need to be agreed before implementation starts, so this proposal locks the spec first.
 
 ## At a Glance
 
