@@ -16,6 +16,13 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 - **THEN** the component MUST treat that object as the animation input for transform playback
 - **AND** the animation contract MUST be usable without spreading hidden animation fields into ordinary entity props
 
+#### Scenario: animation object MUST NOT be bound to multiple entities
+
+- **GIVEN** the same `animation` object is already bound to an entity
+- **WHEN** application code attempts to bind that same `animation` object to a second entity
+- **THEN** the SDK MUST throw immediately
+- **AND** the throw MUST happen when the second entity attempts to bind the `animation` prop, not later at `autoStart` or `api.play()`
+
 ---
 
 ### Requirement: Animate transform subsets
@@ -34,7 +41,8 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 - **GIVEN** the animation config omits `from`
 - **WHEN** `api.play()` is called (or autoStart triggers)
 - **THEN** the native layer MUST snapshot the entity's current transform at that moment and use it as the starting state for each animated field
-- **AND** the snapshot MUST NOT be taken at hook creation time or entity mount time
+- **AND** the snapshot MUST NOT be taken earlier than that playback request moment (including hook creation time or entity mount time)
+- **AND** `delay` MUST only affect when visual motion begins and MUST NOT change when the start snapshot is captured
 
 ---
 
@@ -90,6 +98,7 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **GIVEN** the animation config sets `loop` to `true`
 - **WHEN** playback reaches the target state
 - **THEN** the animation MUST reset to the `from` state (or the initial state if `from` is omitted) and replay toward `to`, repeating indefinitely without ending after a single cycle
+- **AND** when `from` is omitted, the "initial state" MUST be the start snapshot captured at the session's first `play` moment and MUST NOT be re-snapshotted each cycle
 
 #### Scenario: Infinite reverse loop
 
@@ -126,6 +135,8 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 | delaying | `true` | `play()` called, delay period active, visual motion not yet started |
 | running | `true` | Visual motion in progress |
 | paused | `false` | Session paused via `api.pause()` |
+
+For this spec, an active session MUST include `delaying`, `running`, and `paused`.
 
 #### Scenario: isAnimating during delay
 
@@ -173,7 +184,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 #### Scenario: Play while session is already active
 
-- **GIVEN** an animation session is already active
+- **GIVEN** an animation session is already active (`delaying`, `running`, or `paused`)
 - **WHEN** application code calls `api.play()` again
 - **THEN** the SDK MUST stop the existing session first and start a new session with the current config
 - **AND** the `onStop` callback for the previous session MUST fire before the new session’s `onStart`
@@ -207,13 +218,14 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **WHEN** React re-renders the entity while the session is active
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
 - **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
+- **AND** the latest prop values received for suppressed fields MAY be cached for resuming ordinary synchronization after suppression is released
 
 #### Scenario: Suppression release after animation ends
 
 - **GIVEN** an animation session was controlling `position`
 - **WHEN** the animation session ends via natural completion or `api.stop()`
 - **THEN** the SDK MUST release the suppression for `position` before firing the lifecycle callback
-- **AND** ordinary transform synchronization for `position` MUST resume on the next React render cycle after the callback
+- **AND** ordinary transform synchronization for `position` MUST resume on the next React render cycle after the callback using the latest prop values in that render cycle
 
 #### Scenario: Stop preserves the stop-point transform
 
