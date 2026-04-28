@@ -32,8 +32,24 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 #### Scenario: Omit from state
 
 - **GIVEN** the animation config omits `from`
-- **WHEN** playback starts
-- **THEN** the animation MUST begin from the entity's current transform state for each animated field
+- **WHEN** `api.play()` is called (or autoStart triggers)
+- **THEN** the native layer MUST snapshot the entity's current transform at that moment and use it as the starting state for each animated field
+- **AND** the snapshot MUST NOT be taken at hook creation time or entity mount time
+
+---
+
+### Requirement: Define rotation units and interpolation
+
+#### Scenario: Rotation values use degrees
+
+- **WHEN** the animation config specifies `rotation` values
+- **THEN** the SDK MUST interpret them as Euler angles in **degrees**, not radians
+
+#### Scenario: Rotation interpolation uses shortest-path quaternion SLERP
+
+- **WHEN** the native layer interpolates rotation
+- **THEN** it MUST use quaternion SLERP via the shortest path
+- **AND** a single-axis rotation greater than 180° in one animation segment MAY produce unexpected results due to shortest-path behavior — this is a documented limitation of the first version
 
 ---
 
@@ -83,9 +99,50 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 
 #### Scenario: Invalid animation config
 
-- **GIVEN** application code provides an invalid animation config such as missing transform targets, unsupported loop shape, or invalid timing values
+- **GIVEN** application code provides an invalid animation config such as missing transform targets or unsupported loop shape
 - **WHEN** the SDK validates the config for playback
 - **THEN** the SDK MUST throw instead of silently ignoring the invalid config
+
+#### Scenario: Timing value validation
+
+The SDK MUST enforce the following ranges at validation time and throw on violation:
+
+| Field | Valid range | Notes |
+|---|---|---|
+| `duration` | `> 0`, finite | `0`, negative, `NaN`, and `Infinity` MUST be rejected |
+| `delay` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
+| `timingFunction` | One of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | Any other string MUST be rejected |
+| `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | Other shapes MUST be rejected |
+
+---
+
+### Requirement: Define isAnimating state semantics
+
+`api.isAnimating` MUST reflect the animation session state according to the following model:
+
+| State | `isAnimating` | Description |
+|---|---|---|
+| idle | `false` | No session, or session ended |
+| delaying | `true` | `play()` called, delay period active, visual motion not yet started |
+| running | `true` | Visual motion in progress |
+| paused | `false` | Session paused via `api.pause()` |
+
+#### Scenario: isAnimating during delay
+
+- **GIVEN** the animation config sets a positive `delay`
+- **WHEN** `api.play()` is called and the delay period is active
+- **THEN** `api.isAnimating` MUST be `true`
+
+#### Scenario: isAnimating after pause
+
+- **GIVEN** an animation session is running or delaying
+- **WHEN** `api.pause()` is called
+- **THEN** `api.isAnimating` MUST be `false`
+
+#### Scenario: isAnimating after stop or completion
+
+- **WHEN** the animation session ends via `api.stop()` or natural completion
+- **THEN** `api.isAnimating` MUST be `false` before any lifecycle callback fires
 
 ---
 
@@ -130,6 +187,14 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the SDK MUST surface a warning indicating that entity transform animation is not supported in the current runtime
 - **AND** the SDK MUST NOT begin native playback for that request
 
+#### Scenario: API behavior in unsupported runtime
+
+- **GIVEN** `supports('useAnimation')` is `false`
+- **WHEN** application code calls `api.play()`
+- **THEN** the call MUST be a no-op (no error thrown, no native command sent)
+- **AND** `onStart`, `onComplete`, and `onStop` MUST NOT be invoked
+- **AND** `api.isAnimating` MUST remain `false`
+
 ---
 
 ### Requirement: Prevent competing transform updates during playback
@@ -156,3 +221,21 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **WHEN** application code calls `api.stop()`
 - **THEN** the entity MUST remain at its current in-flight transform (the stop point)
 - **AND** the entity MUST NOT jump to `from` or `to`
+
+---
+
+### Requirement: Clean up animation on unmount
+
+#### Scenario: Entity unmounts during active animation
+
+- **GIVEN** an animation session is in any active state (delaying, running, or paused)
+- **WHEN** the entity component unmounts
+- **THEN** the SDK MUST stop the native animation session and release associated resources
+- **AND** lifecycle callbacks (`onStop`, `onComplete`) MUST NOT fire after unmount
+
+#### Scenario: Entity unmounts during delay
+
+- **GIVEN** an animation session is in the delay phase
+- **WHEN** the entity component unmounts
+- **THEN** the SDK MUST cancel the pending animation without starting visual motion
+- **AND** no lifecycle callbacks MUST fire

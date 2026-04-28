@@ -33,10 +33,14 @@ function useAnimation(config: AnimationConfig): [AnimatedProps, AnimationApi]
 
 ```typescript
 interface AnimationConfig {
-  /** Target transform values (required). */
+  /**
+   * Target transform values (required).
+   * Rotation values are Euler angles in degrees.
+   * Single-axis rotation > 180° may produce unexpected results (shortest-path SLERP).
+   */
   to: {
     position?: Vec3
-    rotation?: Vec3
+    rotation?: Vec3  // degrees
     scale?: Vec3
   }
 
@@ -50,7 +54,10 @@ interface AnimationConfig {
   /** Duration in seconds. Default: 0.3 */
   duration?: number
 
-  /** Easing curve. Default: 'easeInOut' */
+  /**
+   * Easing curve. Default: 'easeInOut'
+   * Only these four values are valid; other strings will throw at validation time.
+   */
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
 
   /** Delay before playback starts, in seconds. Default: 0 */
