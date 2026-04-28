@@ -1,8 +1,6 @@
 ## 背景
 
-评审文档把实体 Transform 动画拆分为 API 设计、实现设计与边界行为定义。该能力会同时涉及 React 实体组件、Core SDK 命令链路、运行时能力检测以及 visionOS Native scene 层，因此在编码前先明确技术设计更合适。
-
-当前 SDK 对实体 transform props 的更新是立即生效的，缺少 Native 播放契约、动画生命周期回调，以及 React re-render 与进行中的 Native 动画之间的协调机制。
+当前 SDK 对实体 transform props 的更新是立即生效的，缺少 Native 播放契约、动画生命周期回调，以及 React re-render 与进行中的 Native 动画之间的协调机制。本次变更聚焦最高频的 transform 过渡场景（入场、移动、旋转、缩放、延迟出现、循环动效），且第一版明确只覆盖 transform 动画；底层执行依赖 RealityKit 原生动画能力，以避免 JS 逐帧驱动带来的性能与同步问题。
 
 ## 目标 / 非目标
 

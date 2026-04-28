@@ -1,6 +1,6 @@
 ## 为什么
 
-WebSpatial SDK 目前可以更新实体的 transform props，但所有变更都是瞬时生效，没有动画过渡。评审方案提出了面向 position、rotation、scale 的一等动画 API；需要先把对外契约、feature detection 以及跨层行为达成一致，再开始实现，避免后续返工。
+WebSpatial SDK 目前允许开发者通过 React props 直接更新实体的 transform（position、rotation、scale），但所有变更都是瞬时跳变，缺少内建的平滑过渡能力。这会让常见空间交互与视觉反馈场景（入场、移动、旋转、缩放、延迟出现、循环动效）难以低成本、稳定一致地表达。评审方向提供一个参考 react-spring 的声明式 API，同时把播放交给 RealityKit 原生动画引擎执行，以获得更稳定的表现与更低的桥接开销（目标 90fps）。因此需要先固化对外契约、feature detection 与跨层行为，再进入实现阶段，避免后续反复调整。
 
 ## 变更内容
 

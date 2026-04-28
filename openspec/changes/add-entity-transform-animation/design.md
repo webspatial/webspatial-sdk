@@ -1,8 +1,6 @@
 ## Context
 
-The reviewed entity transform animation docs split the feature into API design, implementation design, and boundary behavior. The implementation spans React entity components, core SDK command plumbing, runtime capability detection, and the visionOS native scene layer, so a design document is useful before coding.
-
-Current SDK behavior updates entity transform props immediately. There is no built-in contract for native transform playback, animation lifecycle callbacks, or coordination between React re-renders and in-flight native animation.
+Current SDK behavior updates entity transform props immediately. There is no built-in contract for native transform playback, animation lifecycle callbacks, or coordination between React re-renders and in-flight native animation. This change targets the high-frequency "transform transition" use cases (entrance, move, rotate, scale, delay, loop) and intentionally focuses on transform-only animation, while using RealityKit native animation as the execution engine to avoid JS frame-driven updates.
 
 ## Goals / Non-Goals
 
