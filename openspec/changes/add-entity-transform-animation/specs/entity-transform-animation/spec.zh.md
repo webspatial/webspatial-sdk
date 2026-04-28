@@ -25,7 +25,7 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 #### Scenario: 同一实体替换或移除 animation prop
 
-- **GIVEN** 某个实体已经绑定 `animationA`，且可能存在 active session
+- **GIVEN** 某个实体已经绑定 `animationA`，且可能存在 alive 会话
 - **WHEN** 该实体在后续渲染中将 `animation` prop 替换为 `animationB`，或将 `animation` prop 移除
 - **THEN** SDK MUST 先停止 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
 - **AND** 若 `animationB` 存在且其 `autoStart` 为 `true`（或省略），SDK MUST 在停止旧会话后启动 `animationB` 对应的新会话，并触发 `animationB` 的 `onStart`
@@ -212,12 +212,14 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: onStart 回调
 
-- **WHEN** `api.play()` 启动一个新的动画会话
+- **WHEN** `api.play()` 所请求的动画会话成功建立并进入 `delaying` 或 `running` 状态
 - **THEN** 配置的 `onStart` MUST 对该会话触发一次
+- **AND** 若该请求在 `queued` 阶段尚未完成绑定，`onStart` MUST 不得提前触发
+- **AND** 若该请求在会话进入 `delaying` 或 `running` 之前失败，`onStart` MUST 不得触发
 
 #### Scenario: pause 与 resume
 
-- **GIVEN** 一个动画会话处于 active 状态
+- **GIVEN** 一个动画会话处于 alive 状态
 - **WHEN** 应用先调用 `api.pause()`，再调用 `api.resume()`
 - **THEN** MUST 从暂停进度继续同一会话，而不是启动一个新会话
 
@@ -250,6 +252,13 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** `onStart` MUST 对该会话至多触发一次
 - **AND** 该会话结束时，`onComplete` 与 `onStop` MUST 互斥，且各自 MUST 对该会话至多触发一次
 
+#### Scenario: onError 回调次数与和其他回调的关系
+
+- **WHEN** bridge 或 native 的异步命令失败
+- **THEN** `onError` MUST 对该失败命令至多触发一次
+- **AND** 若失败的是 `play` 命令，`onStart`、`onComplete`、`onStop` MUST 不得对该失败请求触发
+- **AND** 若失败的是 `pause`、`resume` 或 `stop` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onStop`
+
 #### Scenario: 非法状态下的控制方法为 no-op
 
 - **GIVEN** 当前不存在 alive session（`isAnimating` 为 `false` 且 `isPaused` 为 `false`）
@@ -262,9 +271,9 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** SDK 将控制命令发送到 Native 层
 - **THEN** SDK MUST 按调用顺序向 native bridge 发送这些命令，且 bridge MUST 以相同顺序交付给 native
 
-#### Scenario: 已有 active session 时调用 play
+#### Scenario: 已有 alive 会话时调用 play
 
-- **GIVEN** 一个动画会话已经处于 active 状态（`delaying`、`running` 或 `paused`）
+- **GIVEN** 一个动画会话已经处于 alive 状态（`queued`、`delaying`、`running` 或 `paused`）
 - **WHEN** 应用代码再次调用 `api.play()`
 - **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
 - **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
@@ -300,11 +309,11 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
-- **AND** SDK MUST 不得将会话推进到 active 状态
+- **AND** SDK MUST 不得将会话推进到 alive 状态
 
 #### Scenario: pause/resume/stop 时 bridge 或 native 异步失败
 
-- **GIVEN** `supports('useAnimation')` 为 `true` 且存在 active session
+- **GIVEN** `supports('useAnimation')` 为 `true` 且存在 alive 会话
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
@@ -319,7 +328,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 #### Scenario: 动画字段与非动画字段共存
 
 - **GIVEN** 一个动画会话控制 `position`
-- **WHEN** 在会话 active 期间 React 触发实体 re-render
+- **WHEN** 在会话处于 alive 状态期间 React 触发实体 re-render
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
 - **AND** 对被抑制字段在会话期间接收到的最新 props 值 MUST 被缓存，用于抑制解除后的恢复同步
@@ -334,7 +343,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: stop 保持 stop 点的 transform
 
-- **GIVEN** 一个动画会话处于 active 状态且实体正在播放中间态
+- **GIVEN** 一个动画会话处于 alive 状态且实体正在播放中间态
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 实体 MUST 保持在当前播放中间态（stop 点）
 - **AND** 实体 MUST 不得跳转到 `from` 或 `to`
@@ -343,12 +352,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 ### Requirement: 卸载时清理动画
 
-#### Scenario: 动画 active 期间实体卸载
+#### Scenario: alive 会话期间实体卸载
 
-- **GIVEN** 动画会话处于任意活跃状态（delaying、running 或 paused）
+- **GIVEN** 动画会话处于任意 alive 状态（queued、delaying、running 或 paused）
 - **WHEN** 实体组件卸载
 - **THEN** SDK MUST 停止 native 动画会话并释放相关资源
-- **AND** 生命周期回调（`onStop`、`onComplete`）MUST 不得在卸载后触发
+- **AND** 生命周期回调（`onStart`、`onStop`、`onComplete`、`onError`）MUST 不得在卸载后触发
 
 #### Scenario: delay 期间实体卸载
 

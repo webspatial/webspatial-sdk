@@ -14,7 +14,7 @@
 
 - [ ] 3.1 Implement `useAnimation(config)` with `play`, `pause`, `resume`, `stop`, `isAnimating`, `autoStart`, `delay`, and `loop` behavior *(blocked by 2.1)*
 - [ ] 3.2 Wire the entity `animation` prop through the shared entity abstraction layer before updating leaf entity components *(blocked by 3.1)*
-- [ ] 3.3 Suppress competing ordinary transform updates only for fields controlled by the active animation
+- [ ] 3.3 Suppress competing ordinary transform updates only for fields controlled by an alive session
 - [ ] 3.4 Guard unsupported runtimes with the documented warning behavior and keep non-animated transform paths unchanged
 
 ## 4. Native visionOS playback
@@ -27,7 +27,7 @@
 
 - [ ] 5.1 Add focused tests for:
   - [ ] 5.1.1 Capability checks (`supports('useAnimation')` true/false/sub-token)
-  - [ ] 5.1.2 React playback lifecycle (start/complete/stop callbacks, exclusivity, invocation count)
+  - [ ] 5.1.2 React playback lifecycle (onStart timing, start/complete/stop callbacks, exclusivity, invocation count)
   - [ ] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
   - [ ] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
   - [ ] 5.1.5 Same animation bound to multiple entities (throw)

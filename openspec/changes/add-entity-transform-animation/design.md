@@ -8,7 +8,7 @@ See the proposal for full motivation. In short: entity transform updates are cur
 
 - Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/resume/stop`.
 - Keep playback native-driven so transform animation does not depend on per-frame JS updates.
-- Prevent React prop synchronization from fighting active animation for the same transform field.
+- Prevent React prop synchronization from fighting an alive animation session for the same transform field.
 - Document runtime capability detection with `supports('useAnimation')`.
 - Keep the design testable across React, core command flow, and native completion / stop behavior.
 
@@ -75,7 +75,7 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
-  /** Called when playback starts. */
+  /** Called when the session is established successfully and enters delaying or running; not called while queued. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
@@ -207,7 +207,17 @@ function SpinningModel() {
   })
 
   return (
-    <Reality onSpatialTap={() => api.isAnimating ? api.pause() : api.play()}>
+    <Reality
+      onSpatialTap={() => {
+        if (api.isPaused) {
+          api.resume()
+        } else if (api.isAnimating) {
+          api.pause()
+        } else {
+          api.play()
+        }
+      }}
+    >
       <SceneGraph>
         <ModelEntity model="robot" scale={{ x: 0.2, y: 0.2, z: 0.2 }} animation={animation} />
       </SceneGraph>
@@ -295,7 +305,7 @@ interface AnimateTransformResult {
 
 React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees) to `Float4x4` before calling `animateTransform`, and for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before invoking lifecycle callbacks.
 
-If the entity unmounts while a session is active, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
+If the entity unmounts while an alive session exists, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
 
 If the JSBridge/native layer fails the play request, `animateTransform(...)` MUST reject to surface the failure.
 
@@ -326,7 +336,7 @@ For a given `animationId`, native MUST emit exactly one terminal event (`_comple
 2. **React stores config separately from the render-facing animation object**
    - Hook configuration such as `from`, `to`, callbacks, timing, and loop settings stays in hook-owned state or refs.
    - The render-facing `animation` object only carries transform targets and internal binding metadata needed by the entity component.
-   - Config updates apply to the next `play()` and MUST NOT modify an active session.
+   - Config updates apply to the next `play()` and MUST NOT modify an alive session.
    - Alternative considered: put the full config on the entity prop. Rejected because it couples render payload and control payload, and it increases accidental re-render churn.
 
 3. **Core and native layers use a unified animation command contract**
@@ -340,9 +350,9 @@ For a given `animationId`, native MUST emit exactly one terminal event (`_comple
    - **Stop semantics:** when `stop()` is called, the entity freezes at its current in-flight transform (the stop point), not at `from` or `to`. The native side reads `entity.transform` at that instant, reports it back via the stopped event, and the `onStop` callback delivers that value so JS state can be synced.
 
 5. **Entity transform synchronization uses per-field animation suppression**
-   - While animation controls a specific field, ordinary transform syncing for that field is suppressed so React re-renders do not race the active animation.
+   - While animation controls a specific field, ordinary transform syncing for that field is suppressed so React re-renders do not race the alive animation session controlling that field.
    - Untargeted transform fields continue to behave exactly as they do today.
-   - Alternative considered: freeze all transform syncing while any animation is active. Rejected because it unnecessarily blocks unrelated transform updates.
+   - Alternative considered: freeze all transform syncing while any alive animation session exists. Rejected because it unnecessarily blocks unrelated transform updates.
    - **Suppression release timing:** field-level suppression is lifted when the animation session ends (via completion or stop). The `__animating` flags are cleared before the lifecycle callback fires, so the next React render cycle after the callback will resume ordinary transform synchronization for the previously animated fields.
 
 6. **Capability detection is explicit and top-level**
