@@ -1,6 +1,6 @@
 ## Context
 
-Current SDK behavior updates entity transform props immediately. There is no built-in contract for native transform playback, animation lifecycle callbacks, or coordination between React re-renders and in-flight native animation. This change targets the high-frequency "transform transition" use cases (entrance, move, rotate, scale, delay, loop) and intentionally focuses on transform-only animation, while using RealityKit native animation as the execution engine to avoid JS frame-driven updates.
+See the proposal for full motivation. In short: entity transform updates are currently instantaneous with no native transition support. This design covers the transform-only animation API, cross-layer contracts, and behavior rules needed to close that gap.
 
 ## Goals / Non-Goals
 
@@ -19,6 +19,146 @@ Current SDK behavior updates entity transform props immediately. There is no bui
 - Solving large-angle rotation limitations beyond documenting current behavior.
 - Adding a reactive runtime capability subscription model.
 
+## API Surface
+
+The public contract centers on the `useAnimation` hook. The types below define the agreed shape; behavioral semantics are specified in the companion spec.
+
+### Hook Signature
+
+```typescript
+function useAnimation(config: AnimationConfig): [AnimatedProps, AnimationApi]
+```
+
+### AnimationConfig
+
+```typescript
+interface AnimationConfig {
+  /** Target transform values (required). */
+  to: {
+    position?: Vec3
+    rotation?: Vec3
+    scale?: Vec3
+  }
+
+  /** Starting transform values. Omit to animate from the entity's current state. */
+  from?: {
+    position?: Vec3
+    rotation?: Vec3
+    scale?: Vec3
+  }
+
+  /** Duration in seconds. Default: 0.3 */
+  duration?: number
+
+  /** Easing curve. Default: 'easeInOut' */
+  timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+
+  /** Delay before playback starts, in seconds. Default: 0 */
+  delay?: number
+
+  /** Start automatically when the entity mounts. Default: true */
+  autoStart?: boolean
+
+  /**
+   * Loop behavior.
+   * - true: reset to `from` and replay (infinite reset loop)
+   * - { reverse: true }: alternate direction each cycle (infinite reverse loop)
+   * - undefined / false: play once
+   */
+  loop?: boolean | { reverse?: boolean }
+
+  /** Called when playback starts. */
+  onStart?: () => void
+
+  /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
+  onComplete?: (finalValues: TransformValues) => void
+
+  /** Called when playback is stopped via api.stop(). Receives the transform at the stop point. */
+  onStop?: (currentValues: TransformValues) => void
+}
+```
+
+### AnimationApi
+
+```typescript
+interface AnimationApi {
+  /** Start (or restart) the animation. */
+  play(): void
+
+  /** Pause the animation at the current progress. */
+  pause(): void
+
+  /** Resume a paused animation from where it left off. */
+  resume(): void
+
+  /** Stop the animation. The entity stays at the stop-point transform. */
+  stop(): void
+
+  /** Whether an animation session is currently active. */
+  readonly isAnimating: boolean
+}
+```
+
+### AnimatedProps
+
+Opaque object returned as the first tuple element. Pass it directly to the entity's `animation` prop — application code should not read or modify its contents.
+
+### TransformValues
+
+```typescript
+interface TransformValues {
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+}
+```
+
+## Cross-Layer Contracts
+
+### React SDK → Core SDK
+
+React calls one method on `SpatialEntity` to drive the full animation lifecycle:
+
+```typescript
+interface SpatialEntity {
+  animateTransform(command: AnimateTransformCommand): Promise<AnimateTransformResult>
+}
+
+interface AnimateTransformCommand {
+  animationId: string
+  type: 'play' | 'pause' | 'resume' | 'stop'
+  /** Required when type is 'play'; ignored otherwise. */
+  entityId?: string
+  toTransform?: Float4x4
+  fromTransform?: Float4x4
+  duration?: number
+  timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+  delay?: number
+  loop?: boolean | { reverse?: boolean }
+}
+
+interface AnimateTransformResult {
+  animationId: string
+  /** Resolves when the animation completes naturally. */
+  finished: Promise<TransformValues>
+  /** Resolves when the animation is stopped via stop(). */
+  stopped: Promise<TransformValues>
+}
+```
+
+### Core SDK ↔ Native (JSBridge)
+
+**JS → Native command:** a single `AnimateTransform` command with `type` discriminator, matching the `AnimateTransformCommand` shape above. Core SDK serializes and sends it over the bridge.
+
+**Native → JS events:**
+
+| Event name | Trigger | Payload |
+|---|---|---|
+| `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final native transform |
+| `{animationId}_stopped` | `stop()` called | `TransformValues` — transform at stop point |
+
+Both event listeners are registered at `play` time to avoid race conditions where `stop()` is called before listeners are ready.
+
 ## Decisions
 
 1. **Public API uses `useAnimation` plus an entity `animation` prop**
@@ -35,23 +175,6 @@ Current SDK behavior updates entity transform props immediately. There is no bui
    - The latest reviewed design consolidates play, pause, resume, and stop into one animation command with a `type` discriminator instead of four separate commands.
    - This reduces JSBridge registration overhead, keeps control flow centralized, and matches the fact that all operations address one animation session identified by `animationId`.
    - Alternative considered: separate command types per action. Rejected because it duplicates registration and parsing without improving the public contract.
-   - Command pseudo-schema for reference:
-     ```jsonc
-     {
-       "commandType": "AnimateTransform",
-       "animationId": "<string>",
-       "type": "play" | "pause" | "resume" | "stop",
-       // fields below present only when type is "play":
-       "entityId": "<string>",
-       "toTransform": { ... },
-       "fromTransform": { ... },  // optional
-       "duration": 0.3,
-       "timingFunction": "easeInOut",
-       "delay": 0,
-       "loop": true | { "reverse": true }
-     }
-     ```
-
 4. **Playback runs on the native side and reports terminal transform state back to JS**
    - Native playback owns the animation session, timing, delay, loop behavior, and pause / resume state.
    - JS receives completion and stop results so callbacks can observe the actual final or current transform from native state.

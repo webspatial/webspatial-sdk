@@ -6,6 +6,22 @@
 
 **Why now.** The public API shape, feature-detection contract, and cross-layer behavior need to be agreed before implementation starts, so this proposal locks the spec first.
 
+## At a Glance
+
+```tsx
+// Minimal usage — surrounding <Reality> and <SceneGraph> omitted for brevity
+const [animation, api] = useAnimation({
+  to: { position: { x: 0, y: 1.5, z: -2 } },
+  duration: 0.6,
+  timingFunction: 'easeOut',
+})
+
+// Inside a <SceneGraph>:
+<BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+```
+
+The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, `resume()`, and `stop()` give imperative control when needed.
+
 ## What Changes
 
 - Add a new entity transform animation capability centered on a React `useAnimation(config)` hook and an `animation` prop for entity components.
