@@ -478,9 +478,9 @@ describe('SpatializedElement', () => {
     }
 
     const e = new TestElement('el4')
-    expect(SpatialWebEvent.eventReceiver.el4).toBeDefined()
+    expect(SpatialWebEvent.eventReceiver.get('el4')).toBeDefined()
     await e.destroy()
-    expect(SpatialWebEvent.eventReceiver.el4).toBeUndefined()
+    expect(SpatialWebEvent.eventReceiver.get('el4')).toBeUndefined()
   })
 })
 
