@@ -25,6 +25,15 @@
 
 ## 5. Validation and documentation
 
-- [ ] 5.1 Add focused tests for capability checks, React playback lifecycle, transform suppression, and command / event ordering
+- [ ] 5.1 Add focused tests for:
+  - [ ] 5.1.1 Capability checks (`supports('useAnimation')` true/false/sub-token)
+  - [ ] 5.1.2 React playback lifecycle (start/complete/stop callbacks, exclusivity, invocation count)
+  - [ ] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
+  - [ ] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
+  - [ ] 5.1.5 Same animation bound to multiple entities (throw)
+  - [ ] 5.1.6 Animation prop replacement (stop old session → start new, onStop before onStart)
+  - [ ] 5.1.7 Pause during delay (remaining time preserved, resume continues)
+  - [ ] 5.1.8 Play before entity bound (queued state, isAnimating, stop/pause while queued)
+  - [ ] 5.1.9 Bridge failure recovery (session retains pre-failure state)
 - [ ] 5.2 Update the relevant docs in `docs/` and any representative examples or test-server pages for the new animation API
 - [ ] 5.3 Include a changeset entry in each PR that adds or modifies public API surface, rather than deferring a single changeset to the end
