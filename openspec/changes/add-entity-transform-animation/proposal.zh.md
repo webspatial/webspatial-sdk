@@ -1,10 +1,16 @@
 ## 为什么
 
-**问题：**WebSpatial SDK 目前可以通过 React props 更新实体的 transform（position、rotation、scale），但所有变更都是瞬时跳变，没有内建的平滑过渡。这导致常见的空间交互场景（入场动画、平滑移动、旋转、延迟出现、循环动效）难以低成本且一致地实现。
+**问题**
 
-**方案：**引入一套参考 react-spring 的声明式 `useAnimation` API，由 React 侧声明动画意图，实际播放交给 RealityKit 原生动画引擎执行，在 90 fps 下运行且无需逐帧 JS-to-Native bridge 调用。
+WebSpatial SDK 目前可以通过 React props 更新实体的 transform（position、rotation、scale），但所有变更都是瞬时跳变，没有内建的平滑过渡。这导致常见的空间交互场景（入场动画、平滑移动、旋转、延迟出现、循环动效）难以低成本且一致地实现。
 
-**为什么现在做：**API 外形、feature detection 契约和跨层行为需要在编码前达成一致，因此本提案先锁定 spec。
+**方案**
+
+引入一套参考 react-spring 的声明式 `useAnimation` API，由 React 侧声明动画意图，实际播放交给 RealityKit 原生动画引擎执行，在 90 fps 下运行且无需逐帧 JS-to-Native bridge 调用。
+
+**为什么现在做**
+
+API 外形、feature detection 契约和跨层行为需要在编码前达成一致，因此本提案先锁定 spec。
 
 ## 一览
 

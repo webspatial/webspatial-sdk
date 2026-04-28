@@ -113,6 +113,114 @@ interface TransformValues {
 }
 ```
 
+## 用法示例
+
+### 挂载时入场动画
+
+组合 position 与 scale 动画，带延迟。`autoStart` 默认为 `true`，实体挂载后自动播放。
+
+```tsx
+function FloatingBox() {
+  const [animation] = useAnimation({
+    from: { position: { x: 0, y: -1, z: -2 }, scale: { x: 0.1, y: 0.1, z: 0.1 } },
+    to:   { position: { x: 0, y: 1, z: -2 },  scale: { x: 1, y: 1, z: 1 } },
+    duration: 0.6,
+    delay: 1.5,
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### 手动触发 play()
+
+设置 `autoStart: false`，交互时调用 `api.play()`。
+
+```tsx
+function TapToMove() {
+  const [animation, api] = useAnimation({
+    from: { position: { x: -1, y: 0, z: -2 } },
+    to:   { position: { x: 1, y: 0, z: -2 } },
+    duration: 0.8,
+    autoStart: false,
+  })
+
+  return (
+    <Reality onSpatialTap={() => api.play()}>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### 持续反向循环 + 暂停 / 恢复
+
+无限往返旋转，点击切换暂停和恢复。
+
+```tsx
+function SpinningModel() {
+  const [animation, api] = useAnimation({
+    from: { rotation: { x: 0, y: 0, z: 0 } },
+    to:   { rotation: { x: 0, y: 170, z: 0 } },
+    duration: 2.0,
+    timingFunction: 'linear',
+    loop: { reverse: true },
+  })
+
+  return (
+    <Reality onSpatialTap={() => api.isAnimating ? api.pause() : api.play()}>
+      <SceneGraph>
+        <ModelEntity model="robot" scale={{ x: 0.2, y: 0.2, z: 0.2 }} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### 停止并同步状态
+
+播放期间，animation 接管 `position`，普通 prop 更新被抑制。`stop()` 后控制权回到 `position` prop。`onStop` 将 stop 点的 transform 同步回 React state，避免实体跳变。
+
+```tsx
+function StopAndSync() {
+  const [pos, setPos] = useState<Vec3>({ x: 0, y: 0, z: -2 })
+
+  const [animation, api] = useAnimation({
+    to: { position: { x: 2, y: 2, z: -2 } },
+    duration: 3.0,
+    autoStart: false,
+    onStop: (current) => {
+      if (current.position) setPos(current.position)
+    },
+  })
+
+  return (
+    <>
+      <button onClick={() => api.play()}>Play</button>
+      <button onClick={() => api.stop()}>Stop</button>
+      <Reality>
+        <SceneGraph>
+          <BoxEntity
+            width={0.3} height={0.3} depth={0.3}
+            position={pos}
+            animation={animation}
+          />
+        </SceneGraph>
+      </Reality>
+    </>
+  )
+}
+```
+
 ## 跨层契约
 
 ### React SDK → Core SDK
