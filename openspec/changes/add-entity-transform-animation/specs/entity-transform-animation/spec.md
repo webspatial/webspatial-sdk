@@ -99,6 +99,15 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **AND** the config used for the queued play MUST be the config at the time `play()` was called, not at the time the entity is bound
 - **AND** if `api.pause()` or `api.stop()` is called while the request is queued, the SDK MUST process them in call order: `stop()` cancels the queued play and fires `onStop`; `pause()` causes the play to start in paused state once the entity is bound
 
+#### Scenario: Bind after pausing while queued
+
+- **GIVEN** `api.play()` has already entered `queued` before the entity is bound
+- **AND** application code calls `api.pause()` while the request is queued
+- **WHEN** the entity is later bound and the session is established successfully
+- **THEN** the session's first state MUST be `paused`
+- **AND** `onStart` MUST be invoked once for that session
+- **AND** `api.isPaused` MUST be `true`
+
 #### Scenario: Delayed playback
 
 - **GIVEN** the animation config sets a positive `delay`
@@ -208,14 +217,14 @@ A session exists (is alive) when `isAnimating || isPaused` is `true`. No-op cond
 
 ### Requirement: Provide imperative playback lifecycle
 
-The playback API MUST let applications start, pause, resume, and stop an animation session, and it MUST surface lifecycle callbacks for start, natural completion, and stop.
+The playback API MUST let applications start, pause, resume, and stop an animation session, and it MUST surface lifecycle callbacks for start, natural completion, and stop, plus an asynchronous error callback.
 
 #### Scenario: Start callback
 
-- **WHEN** the animation session requested by `api.play()` is established successfully and enters `delaying` or `running`
+- **WHEN** the animation session requested by `api.play()` is established successfully, and its first state is `delaying`, `running`, or `paused` due to a queued pause
 - **THEN** the configured `onStart` callback MUST be invoked once for that session
 - **AND** if that request is still queued because the entity is not yet bound, `onStart` MUST NOT fire early
-- **AND** if that request fails before the session enters `delaying` or `running`, `onStart` MUST NOT fire
+- **AND** if that request fails before the session is established successfully, `onStart` MUST NOT fire
 
 #### Scenario: Pause and resume
 
@@ -258,6 +267,15 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** `onError` MUST be invoked at most once for that failed command
 - **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onStop` MUST NOT be invoked for that failed request
 - **AND** if the failed command is `pause`, `resume`, or `stop`, the failure itself MUST NOT trigger `onComplete` or `onStop`
+
+#### Scenario: stop-old failure MUST block start-new
+
+- **GIVEN** the SDK is executing a stop-old then start-new flow
+- **WHEN** the old session's `stop` command fails asynchronously
+- **THEN** the SDK MUST invoke `onError`
+- **AND** the old session MUST remain in its pre-failure state
+- **AND** the SDK MUST NOT start the new session
+- **AND** the new session's `onStart` MUST NOT fire
 
 #### Scenario: Control methods are no-op in invalid states
 
@@ -310,6 +328,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
 - **AND** the SDK MUST NOT transition the session into an alive state
+- **AND** that `animationId` MUST NOT later receive `_completed` or `_stopped`
 
 #### Scenario: Asynchronous bridge or native failure for pause/resume/stop
 
@@ -318,6 +337,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
 - **AND** the session MUST remain in its state prior to the failed command, allowing application code to retry or take alternative action
+- **AND** that failure MUST NOT terminate the alive session; `_completed` or `_stopped` MAY still arrive later
 
 ---
 

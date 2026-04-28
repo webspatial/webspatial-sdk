@@ -99,6 +99,15 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **AND** 排队的 play 所使用的 config MUST 以 `play()` 调用时刻的 config 为准，而非实体绑定时的 config
 - **AND** 若排队期间调用 `api.pause()` 或 `api.stop()`，SDK MUST 按调用顺序处理：`stop()` 取消排队的 play 并触发 `onStop`；`pause()` 使 play 在实体绑定后以 paused 状态启动
 
+#### Scenario: queued 期间 pause 后绑定
+
+- **GIVEN** `api.play()` 已在实体绑定前进入 `queued`
+- **AND** 应用在 `queued` 期间调用了 `api.pause()`
+- **WHEN** 实体稍后完成绑定，且该会话成功建立
+- **THEN** 会话的首个状态 MUST 为 `paused`
+- **AND** `onStart` MUST 对该会话触发一次
+- **AND** `api.isPaused` MUST 为 `true`
+
 #### Scenario: 延迟播放
 
 - **GIVEN** 动画配置设置了正数 `delay`
@@ -208,14 +217,14 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 ### Requirement: 提供命令式播放生命周期
 
-播放 API MUST 允许应用启动、暂停、恢复、停止动画会话，并 MUST 提供 start、自然完成、stop 的生命周期回调。
+播放 API MUST 允许应用启动、暂停、恢复、停止动画会话，并 MUST 提供 start、自然完成、stop 的生命周期回调，以及异步错误回调。
 
 #### Scenario: onStart 回调
 
-- **WHEN** `api.play()` 所请求的动画会话成功建立并进入 `delaying` 或 `running` 状态
+- **WHEN** `api.play()` 所请求的动画会话成功建立，且首个状态为 `delaying`、`running`，或 queued 期间 `pause()` 导致的 `paused`
 - **THEN** 配置的 `onStart` MUST 对该会话触发一次
 - **AND** 若该请求在 `queued` 阶段尚未完成绑定，`onStart` MUST 不得提前触发
-- **AND** 若该请求在会话进入 `delaying` 或 `running` 之前失败，`onStart` MUST 不得触发
+- **AND** 若该请求在会话成功建立之前失败，`onStart` MUST 不得触发
 
 #### Scenario: pause 与 resume
 
@@ -258,6 +267,15 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** `onError` MUST 对该失败命令至多触发一次
 - **AND** 若失败的是 `play` 命令，`onStart`、`onComplete`、`onStop` MUST 不得对该失败请求触发
 - **AND** 若失败的是 `pause`、`resume` 或 `stop` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onStop`
+
+#### Scenario: stop old 失败时不得 start new
+
+- **GIVEN** SDK 正在执行“先停止旧会话，再启动新会话”的链路
+- **WHEN** 停止旧会话的 `stop` 命令异步失败
+- **THEN** SDK MUST 调用 `onError`
+- **AND** 旧会话 MUST 保持失败前状态
+- **AND** SDK MUST NOT 启动新会话
+- **AND** 新会话的 `onStart` MUST 不得触发
 
 #### Scenario: 非法状态下的控制方法为 no-op
 
@@ -307,17 +325,19 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 - **GIVEN** `supports('useAnimation')` 为 `true`
 - **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
-- **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
+- **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** SDK MUST 不得将会话推进到 alive 状态
+- **AND** 对该 `animationId`，后续 MUST 不得再收到 `_completed` 或 `_stopped`
 
 #### Scenario: pause/resume/stop 时 bridge 或 native 异步失败
 
 - **GIVEN** `supports('useAnimation')` 为 `true` 且存在 alive 会话
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
-- **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
+- **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** 会话 MUST 保持在失败命令之前的状态，允许应用代码重试或采取其他操作
+- **AND** 该失败 MUST 不得终止该 alive 会话；后续仍 MAY 正常收到 `_completed` 或 `_stopped`
 
 ---
 
