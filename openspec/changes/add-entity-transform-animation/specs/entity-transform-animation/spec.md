@@ -72,6 +72,12 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **WHEN** playback reaches either endpoint
 - **THEN** the next cycle MUST reverse direction between `from` and `to`
 
+#### Scenario: Invalid animation config
+
+- **GIVEN** application code provides an invalid animation config such as missing transform targets, unsupported loop shape, or invalid timing values
+- **WHEN** the SDK validates the config for playback
+- **THEN** the SDK MUST throw instead of silently ignoring the invalid config
+
 ---
 
 ### Requirement: Provide imperative playback lifecycle
@@ -98,6 +104,13 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 - **WHEN** application code calls `api.stop()`
 - **THEN** the configured `onStop` callback MUST receive the entity's current transform state at the stop point
+
+#### Scenario: Unsupported runtime warning
+
+- **GIVEN** `supports('useAnimation')` is `false`
+- **WHEN** application code still attempts to use `useAnimation`
+- **THEN** the SDK MUST surface a warning indicating that entity transform animation is not supported in the current runtime
+- **AND** the SDK MUST NOT begin native playback for that request
 
 ---
 
