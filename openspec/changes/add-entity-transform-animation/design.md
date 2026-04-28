@@ -83,6 +83,25 @@ interface AnimationConfig {
 
   /** Called when playback is stopped via api.stop(). Receives the transform at the stop point. */
   onStop?: (currentValues: TransformValues) => void
+
+  /**
+   * Called when an asynchronous error occurs during a bridge or native operation.
+   * If not provided, the SDK MUST log the error via console.error.
+   */
+  onError?: (error: AnimationError) => void
+}
+```
+
+### AnimationError
+
+```typescript
+interface AnimationError {
+  /** The session that encountered the error. */
+  animationId: string
+  /** The command that failed. */
+  command: 'play' | 'pause' | 'resume' | 'stop'
+  /** Human-readable failure reason. */
+  reason: string
 }
 ```
 
@@ -344,6 +363,13 @@ For a given `animationId`, native MUST emit exactly one terminal event (`_comple
 9. **Entity integration should land in the shared abstraction first**
    - The new `animation` prop should be wired through the common entity abstraction layer before touching leaf entity components.
    - This minimizes duplicated logic and keeps transform synchronization behavior consistent across entity types.
+
+10. **Asynchronous bridge errors surface via `onError` callback, not throw**
+    - `play()`, `pause()`, `resume()`, and `stop()` remain synchronous `void` methods. Errors that occur asynchronously during the bridge/native round-trip are delivered through the `onError` callback on `AnimationConfig` (or `console.error` if `onError` is not provided).
+    - Synchronous `throw` is reserved for programmer errors detectable at call time (invalid config, multi-entity bind).
+    - This separates two error categories: (1) developer mistakes caught immediately via throw, (2) runtime/infrastructure failures reported asynchronously via callback.
+    - react-spring has no `onError` equivalent because its animations run entirely in JS with no remote failure path. Our architecture delegates playback to native via JSBridge, introducing a real async failure mode that requires an explicit error channel.
+    - Alternative considered: change the API to `play(): Promise<void>`. Rejected because it forces every call site to handle Promises, increases ceremony for the common success path, and diverges from the fire-and-forget style of react-spring's imperative API.
 
 ## Risks / Trade-offs
 

@@ -291,23 +291,23 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **GIVEN** `supports('useAnimation')` 为 `false`
 - **WHEN** 应用代码调用 `api.play()`
 - **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
-- **AND** `onStart`、`onComplete`、`onStop` MUST 不被触发
+- **AND** `onStart`、`onComplete`、`onStop`、`onError` MUST 不被触发
 - **AND** `api.isAnimating` MUST 保持 `false`
 
-#### Scenario: Native 或 bridge 失败时抛错
+#### Scenario: play 时 bridge 或 native 异步失败
 
 - **GIVEN** `supports('useAnimation')` 为 `true`
 - **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
-- **THEN** SDK MUST 抛错以暴露该失败
+- **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
+- **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** SDK MUST 不得将会话推进到 active 状态
-- **AND** 抛出的错误 message MUST 至少包含 `animationId`、命令类型（play/pause/resume/stop）与失败原因
 
-#### Scenario: pause/resume/stop 在 Native 或 bridge 失败时抛错
+#### Scenario: pause/resume/stop 时 bridge 或 native 异步失败
 
 - **GIVEN** `supports('useAnimation')` 为 `true` 且存在 active session
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
-- **THEN** SDK MUST 抛错以暴露该失败
-- **AND** 抛出的错误 message MUST 至少包含 `animationId`、命令类型（play/pause/resume/stop）与失败原因
+- **THEN** SDK MUST 调用配置的 `onError` 回调，传入包含 `animationId`、命令类型与失败原因的 `AnimationError`
+- **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** 会话 MUST 保持在失败命令之前的状态，允许应用代码重试或采取其他操作
 
 ---
