@@ -96,6 +96,7 @@ export function subscribe(cb: () => void) {
   // receive metrics update from native via SpatialWebEvent, id: "window"
   SpatialWebEvent.addEventReceiver('window', handler)
   return () => {
-    SpatialWebEvent.removeEventReceiver('window')
+    // Remove only this subscription's handler to avoid breaking other subscribers.
+    SpatialWebEvent.removeEventReceiver('window', handler)
   }
 }
