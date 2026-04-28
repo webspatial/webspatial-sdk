@@ -10,20 +10,13 @@ import {
   ModelAsset,
 } from '@webspatial/react-sdk'
 
-const btnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-all'
-
-const greenBtnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-transparent text-white bg-[#22cc66] hover:bg-[#22cc66]/80 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all'
-
-const redBtnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-transparent text-white bg-[#ff0000] hover:bg-[#ff0000]/80 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all'
-
+// Use DaisyUI button styles for consistency across test-server pages.
+const btnCls = 'btn btn-sm btn-neutral'
+const greenBtnCls = 'btn btn-sm btn-success'
+const redBtnCls = 'btn btn-sm btn-error'
 const modelBtnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-transparent text-black bg-[#ffffff] hover:bg-[#ffffff]/80 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all'
-
-const yellowBtnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-transparent text-black bg-[#f2ff00] hover:bg-[#f2ff00]/80 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all'
+  'btn btn-sm bg-white text-black hover:bg-white/80 border-transparent'
+const yellowBtnCls = 'btn btn-sm btn-warning text-black'
 
 export default function RealityGestures() {
   const [logs, setLogs] = useState<string>('')
