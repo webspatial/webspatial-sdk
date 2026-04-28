@@ -92,6 +92,7 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **WHEN** application code calls `api.play()`
 - **THEN** the SDK MUST queue the request and execute it after the entity is mounted and bound
 - **AND** the playback request moment for the queued request MUST be the actual execution moment (when the entity is bound)
+- **AND** if the entity transform is updated externally while queued, the start snapshot MUST use the entity's current transform at the execution moment
 
 #### Scenario: Delayed playback
 
@@ -151,6 +152,16 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 | `delay` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
 | `timingFunction` | One of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | Any other string MUST be rejected |
 | `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | Other shapes MUST be rejected |
+
+#### Scenario: Transform value validation
+
+The SDK MUST enforce the following ranges at validation time and throw on violation:
+
+| Field | Valid range | Notes |
+|---|---|---|
+| `position.*` | finite | Any component being `NaN` or `Infinity` MUST be rejected |
+| `rotation.*` | finite | Any component being `NaN` or `Infinity` MUST be rejected |
+| `scale.*` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
 
 ---
 
@@ -273,12 +284,14 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing a play request
 - **THEN** the SDK MUST throw to surface the failure
 - **AND** the SDK MUST NOT transition the session into an active state
+- **AND** the thrown error message MUST include at least `animationId`, the command type (play/pause/resume/stop), and a human-readable failure reason
 
 #### Scenario: Throw on native or bridge failure for pause/resume/stop
 
 - **GIVEN** `supports('useAnimation')` is `true` and there is an active session
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause`, `resume`, or `stop`
 - **THEN** the SDK MUST throw to surface the failure
+- **AND** the thrown error message MUST include at least `animationId`, the command type (play/pause/resume/stop), and a human-readable failure reason
 
 ---
 
@@ -293,6 +306,7 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
 - **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
 - **AND** the latest prop values received for suppressed fields MUST be cached for resuming ordinary synchronization after suppression is released
+- **AND** the cache MUST be maintained per field (`position`, `rotation`, `scale`) and MUST only apply during the current session; it MUST be cleared when the session ends
 
 #### Scenario: Suppression release after animation ends
 
