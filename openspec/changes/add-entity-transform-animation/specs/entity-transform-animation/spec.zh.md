@@ -32,8 +32,24 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 #### Scenario: 省略 from
 
 - **GIVEN** 动画配置省略 `from`
-- **WHEN** 播放开始
-- **THEN** 动画 MUST 从实体当前 transform 状态开始（针对每个被动画控制的字段）
+- **WHEN** 调用 `api.play()`（或 autoStart 触发时）
+- **THEN** native 层 MUST 在此刻快照实体当前 transform，作为每个被动画控制字段的起始状态
+- **AND** 快照 MUST 不得在 hook 创建时或实体挂载时提前获取
+
+---
+
+### Requirement: 定义旋转单位与插值方式
+
+#### Scenario: rotation 值使用角度
+
+- **WHEN** 动画配置指定 `rotation` 值
+- **THEN** SDK MUST 将其解释为**角度制**（degrees）的欧拉角，而非弧度
+
+#### Scenario: rotation 插值使用最短路径四元数 SLERP
+
+- **WHEN** native 层对 rotation 进行插值
+- **THEN** MUST 使用四元数 SLERP 的最短路径
+- **AND** 单轴超过 180° 的旋转在一次动画段中 MAY 产生非预期结果（最短路径行为）— 这是第一版的已知限制
 
 ---
 
@@ -83,9 +99,50 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 #### Scenario: 非法动画配置
 
-- **GIVEN** 应用代码传入非法动画配置，例如缺少 transform 目标、不支持的 loop 结构、或无效的时序参数
+- **GIVEN** 应用代码传入非法动画配置，例如缺少 transform 目标或不支持的 loop 结构
 - **WHEN** SDK 在播放前校验配置
 - **THEN** SDK MUST 直接抛错，而不是静默忽略该非法配置
+
+#### Scenario: 时序参数校验
+
+SDK MUST 在校验时强制以下范围，违反时抛错：
+
+| 字段 | 合法范围 | 说明 |
+|---|---|---|
+| `duration` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝 |
+| `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
+| `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
+| `loop` | `true`、`false`、`undefined` 或 `{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
+
+---
+
+### Requirement: 定义 isAnimating 状态语义
+
+`api.isAnimating` MUST 按以下模型反映动画会话状态：
+
+| 状态 | `isAnimating` | 说明 |
+|---|---|---|
+| idle | `false` | 无会话，或会话已结束 |
+| delaying | `true` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
+| running | `true` | 视觉运动进行中 |
+| paused | `false` | 通过 `api.pause()` 暂停 |
+
+#### Scenario: delay 期间 isAnimating
+
+- **GIVEN** 动画配置设置了正数 `delay`
+- **WHEN** 调用 `api.play()` 且 delay 期间
+- **THEN** `api.isAnimating` MUST 为 `true`
+
+#### Scenario: pause 后 isAnimating
+
+- **GIVEN** 动画会话处于 running 或 delaying 状态
+- **WHEN** 调用 `api.pause()`
+- **THEN** `api.isAnimating` MUST 为 `false`
+
+#### Scenario: stop 或自然完成后 isAnimating
+
+- **WHEN** 动画会话通过 `api.stop()` 或自然完成结束
+- **THEN** `api.isAnimating` MUST 在任何生命周期回调触发前为 `false`
 
 ---
 
@@ -130,6 +187,14 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **THEN** SDK MUST 给出 warning，说明当前 runtime 不支持实体 Transform 动画
 - **AND** SDK MUST 不得为这次请求启动 Native 播放
 
+#### Scenario: 不支持 runtime 下的 API 行为
+
+- **GIVEN** `supports('useAnimation')` 为 `false`
+- **WHEN** 应用代码调用 `api.play()`
+- **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
+- **AND** `onStart`、`onComplete`、`onStop` MUST 不被触发
+- **AND** `api.isAnimating` MUST 保持 `false`
+
 ---
 
 ### Requirement: 播放期间避免 transform 更新竞争
@@ -156,3 +221,21 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 实体 MUST 保持在当前播放中间态（stop 点）
 - **AND** 实体 MUST 不得跳转到 `from` 或 `to`
+
+---
+
+### Requirement: 卸载时清理动画
+
+#### Scenario: 动画 active 期间实体卸载
+
+- **GIVEN** 动画会话处于任意活跃状态（delaying、running 或 paused）
+- **WHEN** 实体组件卸载
+- **THEN** SDK MUST 停止 native 动画会话并释放相关资源
+- **AND** 生命周期回调（`onStop`、`onComplete`）MUST 不得在卸载后触发
+
+#### Scenario: delay 期间实体卸载
+
+- **GIVEN** 动画会话处于 delay 阶段
+- **WHEN** 实体组件卸载
+- **THEN** SDK MUST 取消待执行的动画，不得启动视觉运动
+- **AND** 不得触发任何生命周期回调

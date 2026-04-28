@@ -33,10 +33,14 @@ function useAnimation(config: AnimationConfig): [AnimatedProps, AnimationApi]
 
 ```typescript
 interface AnimationConfig {
-  /** 目标 transform 值（必填）。 */
+  /**
+   * 目标 transform 值（必填）。
+   * rotation 值为角度制（degrees）的欧拉角。
+   * 单轴超过 180° 的旋转可能因最短路径 SLERP 产生非预期结果。
+   */
   to: {
     position?: Vec3
-    rotation?: Vec3
+    rotation?: Vec3  // 角度制
     scale?: Vec3
   }
 
@@ -50,7 +54,10 @@ interface AnimationConfig {
   /** 时长，单位秒。默认 0.3 */
   duration?: number
 
-  /** 缓动曲线。默认 'easeInOut' */
+  /**
+   * 缓动曲线。默认 'easeInOut'
+   * 仅接受这四个值，其他字符串在校验时抛错。
+   */
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
 
   /** 播放前延迟，单位秒。默认 0 */
