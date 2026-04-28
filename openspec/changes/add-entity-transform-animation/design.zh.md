@@ -75,7 +75,7 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
-  /** 会话成功建立并进入 delaying 或 running 时触发；queued 阶段不触发。 */
+  /** 会话成功建立后触发；首个状态可为 delaying、running，或 queued 期间 pause 导致的 paused。 */
   onStart?: () => void
 
   /** 非循环动画自然结束时触发，携带 Native 侧最终 transform。 */
@@ -100,6 +100,8 @@ interface AnimationError {
   animationId: string
   /** 失败的命令。 */
   command: 'play' | 'pause' | 'resume' | 'stop'
+  /** 可选的机器可读错误码。 */
+  code?: string
   /** 人类可读的失败原因。 */
   reason: string
 }
@@ -306,7 +308,7 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 
 若实体在 alive 会话存在期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
 
-若 JSBridge 或 Native 在执行 play 请求时失败，`animateTransform(...)` MUST reject 以暴露该失败。
+`animateTransform(...)` MAY 仅在命令无法提交到 Native 之前 reject。命令一旦被成功提交，之后发生的异步失败 MUST 通过 `{animationId}_failed` 事件上报，而不是通过 `finished` / `stopped` Promise 暴露。
 
 ### Core SDK ↔ Native（JSBridge）
 
@@ -318,12 +320,17 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 |---|---|---|
 | `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — Native 侧最终 transform |
 | `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点的 transform |
+| `{animationId}_failed` | 某次 `play` / `pause` / `resume` / `stop` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
 
-两个事件监听 MUST 在发送 `play` 命令前完成注册，避免终止事件在监听就绪前触发导致的竞态。
+`_completed`、`_stopped`、`_failed` 事件监听 MUST 在发送 `play` 命令前完成注册，避免终止或失败事件在监听就绪前触发导致的竞态。
 
 `animationId` MUST 在同一 runtime 进程内全局唯一，避免不同实体或不同会话的事件名发生冲突。
 
-对于同一个 `animationId`，Native MUST 只发送一个终止事件（`_completed` 或 `_stopped`），且二者 MUST 互斥。
+对于同一个 `animationId`：
+
+- `play` 成功建立会话后，Native MUST 只发送一个终止事件（`_completed` 或 `_stopped`），且二者 MUST 互斥。
+- 若 `play` 异步失败，Native MUST 至多发送一次 `_failed`，且之后 MUST 不得再发送 `_completed` 或 `_stopped`。
+- 若 `pause`、`resume` 或 `stop` 异步失败，Native MUST 至多为该失败命令发送一次 `_failed`；会话保持失败前状态，之后仍 MAY 正常发送 `_completed` 或 `_stopped`。
 
 ## 关键决策
 
@@ -377,8 +384,14 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
     - `play()`、`pause()`、`resume()`、`stop()` 保持同步 `void` 签名。bridge/native 往返中发生的异步错误通过 `AnimationConfig` 上的 `onError` 回调送达（若未配置 `onError`，则通过 `console.error` 输出）。
     - 同步 `throw` 仅用于调用时即可检测的 programmer error（非法 config、多实体绑定）。
     - 这将错误分为两类：(1) 开发时错误，通过 throw 立即暴露；(2) 运行时/基础设施故障，通过回调异步上报。
+    - Native 通过 `{animationId}_failed` 事件上报异步失败，payload 至少包含 `animationId`、`command`、`reason`，可选机器可读的 `code`。
+    - `play` 失败表示会话未成功建立，因此后续不得再发送 `_completed` / `_stopped`；`pause`、`resume`、`stop` 失败只影响该次控制命令，会话保持失败前状态。
     - react-spring 没有 `onError` 等价物，因为其动画完全在 JS 端运算，不存在远端失败路径。我们的架构将播放委托给 native 并经由 JSBridge，引入了真实的异步失败模式，因此需要显式的错误通道。
     - 备选方案：将 API 改为 `play(): Promise<void>`。否决原因：迫使所有调用点处理 Promise，增加了成功路径的开销，且偏离了 react-spring 命令式 API 的 fire-and-forget 风格。
+
+11. **旧会话停止失败时不得启动新会话**
+    - 对于 `play()` 触发的 restart，或同一实体替换 `animation` prop 触发的 stop-old/start-new，若停止旧会话失败，SDK MUST 触发 `onError` 并保持旧会话失败前状态。
+    - 在这种失败情况下，SDK MUST NOT 启动新会话，也 MUST NOT 触发新会话的 `onStart`。
 
 ## 风险 / 权衡
 
