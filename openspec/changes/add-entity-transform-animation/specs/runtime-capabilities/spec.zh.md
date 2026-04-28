@@ -18,3 +18,4 @@
 
 - **WHEN** 应用代码对 `supports('useAnimation', tokens)` 传入任意 sub-token
 - **THEN** 结果 MUST 为 `false`
+- **AND** 这是有意设计：实体 Transform 动画的第一版仅暴露单个 top-level 能力 key，不提供子能力粒度查询

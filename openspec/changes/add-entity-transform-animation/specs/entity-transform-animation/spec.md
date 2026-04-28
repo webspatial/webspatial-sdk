@@ -60,11 +60,20 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **THEN** the animation MUST wait for that delay before visual motion begins
 - **AND** the playback session MUST remain controllable during the delay period
 
+#### Scenario: Pause during delay period
+
+- **GIVEN** the animation config sets a positive `delay` and playback has been requested
+- **WHEN** application code calls `api.pause()` before the delay period expires
+- **THEN** the remaining delay time MUST be preserved
+- **AND** when `api.resume()` is called, the delay MUST continue from where it was paused rather than restarting from the full delay duration
+
+---
+
 #### Scenario: Infinite loop with reset
 
 - **GIVEN** the animation config sets `loop` to `true`
 - **WHEN** playback reaches the target state
-- **THEN** the animation MUST continue repeating without ending after a single cycle
+- **THEN** the animation MUST reset to the `from` state (or the initial state if `from` is omitted) and replay toward `to`, repeating indefinitely without ending after a single cycle
 
 #### Scenario: Infinite reverse loop
 
@@ -105,6 +114,15 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** application code calls `api.stop()`
 - **THEN** the configured `onStop` callback MUST receive the entity's current transform state at the stop point
 
+#### Scenario: Play while session is already active
+
+- **GIVEN** an animation session is already active
+- **WHEN** application code calls `api.play()` again
+- **THEN** the SDK MUST stop the existing session first and start a new session with the current config
+- **AND** the `onStop` callback for the previous session MUST fire before the new session’s `onStart`
+
+---
+
 #### Scenario: Unsupported runtime warning
 
 - **GIVEN** `supports('useAnimation')` is `false`
@@ -124,3 +142,17 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **WHEN** React re-renders the entity while the session is active
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
 - **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
+
+#### Scenario: Suppression release after animation ends
+
+- **GIVEN** an animation session was controlling `position`
+- **WHEN** the animation session ends via natural completion or `api.stop()`
+- **THEN** the SDK MUST release the suppression for `position` before firing the lifecycle callback
+- **AND** ordinary transform synchronization for `position` MUST resume on the next React render cycle after the callback
+
+#### Scenario: Stop preserves the stop-point transform
+
+- **GIVEN** an animation session is active and the entity is mid-flight
+- **WHEN** application code calls `api.stop()`
+- **THEN** the entity MUST remain at its current in-flight transform (the stop point)
+- **AND** the entity MUST NOT jump to `from` or `to`

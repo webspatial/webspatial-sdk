@@ -60,11 +60,20 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **THEN** 动画 MUST 等待该 delay 后才开始产生可见运动
 - **AND** 播放会话 MUST 在 delay 期间仍可被控制
 
+#### Scenario: delay 期间暂停
+
+- **GIVEN** 动画配置设置了正数 `delay`，且播放已请求
+- **WHEN** 应用代码在 delay 期间调用 `api.pause()`
+- **THEN** 剩余 delay 时间 MUST 被保留
+- **AND** 当 `api.resume()` 被调用时，delay MUST 从暂停处继续，而不是从完整 delay 时长重新开始
+
+---
+
 #### Scenario: reset 方式的无限循环
 
 - **GIVEN** 动画配置将 `loop` 设置为 `true`
 - **WHEN** 播放到达目标状态
-- **THEN** 动画 MUST 继续重复，不应在单次循环后结束
+- **THEN** 动画 MUST 重置到 `from` 状态（若省略 `from` 则为初始状态），重新向 `to` 播放，无限重复，不应在单次循环后结束
 
 #### Scenario: reverse 方式的无限循环
 
@@ -105,6 +114,15 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 配置的 `onStop` MUST 收到 stop 时刻实体当前 transform 状态
 
+#### Scenario: 已有 active session 时调用 play
+
+- **GIVEN** 一个动画会话已经处于 active 状态
+- **WHEN** 应用代码再次调用 `api.play()`
+- **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
+- **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
+
+---
+
 #### Scenario: 不支持的 runtime warning
 
 - **GIVEN** `supports('useAnimation')` 为 `false`
@@ -124,3 +142,17 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 在会话 active 期间 React 触发实体 re-render
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
+
+#### Scenario: 动画结束后释放抑制
+
+- **GIVEN** 一个动画会话正在控制 `position`
+- **WHEN** 动画会话通过自然完成或 `api.stop()` 结束
+- **THEN** SDK MUST 在触发生命周期回调之前释放对 `position` 的抑制
+- **AND** 对 `position` 的常规 transform 同步 MUST 在回调之后的下一个 React 渲染周期恢复
+
+#### Scenario: stop 保持 stop 点的 transform
+
+- **GIVEN** 一个动画会话处于 active 状态且实体正在播放中间态
+- **WHEN** 应用调用 `api.stop()`
+- **THEN** 实体 MUST 保持在当前播放中间态（stop 点）
+- **AND** 实体 MUST 不得跳转到 `from` 或 `to`
