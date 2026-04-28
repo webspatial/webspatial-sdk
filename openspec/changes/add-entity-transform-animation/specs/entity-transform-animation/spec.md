@@ -23,6 +23,14 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 - **THEN** the SDK MUST throw immediately
 - **AND** the throw MUST happen when the second entity attempts to bind the `animation` prop, not later at `autoStart` or `api.play()`
 
+#### Scenario: Replace or remove animation prop on the same entity
+
+- **GIVEN** an entity is already bound to `animationA`, and it may have an active session
+- **WHEN** a later render replaces the entity's `animation` prop with `animationB`, or removes the `animation` prop
+- **THEN** the SDK MUST stop the session for `animationA` first (if any) and invoke `animationA`'s `onStop`
+- **AND** if `animationB` exists and its `autoStart` is `true` (or omitted), the SDK MUST start a new session for `animationB` after stopping the old session and invoke `animationB`'s `onStart`
+- **AND** the old session’s `onStop` MUST fire before the new session’s `onStart`
+
 ---
 
 ### Requirement: Animate transform subsets
@@ -90,6 +98,13 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **WHEN** application code calls `api.pause()` before the delay period expires
 - **THEN** the remaining delay time MUST be preserved
 - **AND** when `api.resume()` is called, the delay MUST continue from where it was paused rather than restarting from the full delay duration
+
+#### Scenario: stop during delay period
+
+- **GIVEN** an animation session is in the delay phase
+- **WHEN** application code calls `api.stop()`
+- **THEN** `onStop` MUST fire once
+- **AND** `onStop` MUST receive the entity's current transform state at the stop moment
 
 ---
 
@@ -172,6 +187,13 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** application code calls `api.pause()` and later `api.resume()`
 - **THEN** the same session MUST continue from its paused progress instead of starting a fresh session
 
+#### Scenario: Config updates apply to the next play only
+
+- **GIVEN** application code updates the `config` passed to `useAnimation(config)` during React re-renders
+- **WHEN** the current session is `delaying`, `running`, or `paused`
+- **THEN** the current session MUST NOT be affected by the config update
+- **AND** the next `api.play()` MUST use the latest `config`
+
 #### Scenario: Natural completion callback
 
 - **WHEN** a non-looping animation finishes naturally
@@ -181,6 +203,18 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 
 - **WHEN** application code calls `api.stop()`
 - **THEN** the configured `onStop` callback MUST receive the entity's current transform state at the stop point
+
+#### Scenario: Callback invocation count and exclusivity
+
+- **WHEN** `api.play()` starts an animation session
+- **THEN** `onStart` MUST be invoked at most once for that session
+- **AND** when the session ends, `onComplete` and `onStop` MUST be mutually exclusive, and each MUST be invoked at most once for that session
+
+#### Scenario: Control methods are no-op in invalid states
+
+- **GIVEN** there is no active session
+- **WHEN** application code calls `api.pause()`, `api.resume()`, or `api.stop()`
+- **THEN** the call MUST be a no-op (no error thrown, no lifecycle callback invoked, no native command sent)
 
 #### Scenario: Play while session is already active
 
@@ -196,6 +230,7 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **GIVEN** `supports('useAnimation')` is `false`
 - **WHEN** application code still attempts to use `useAnimation`
 - **THEN** the SDK MUST surface a warning indicating that entity transform animation is not supported in the current runtime
+- **AND** the warning MUST be emitted at most once per hook instance
 - **AND** the SDK MUST NOT begin native playback for that request
 
 #### Scenario: API behavior in unsupported runtime

@@ -23,6 +23,14 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 - **THEN** SDK MUST 立即抛错
 - **AND** 抛错时机 MUST 在第二个实体尝试绑定 `animation` prop 时，而不是延迟到 `autoStart` 或 `api.play()`
 
+#### Scenario: 同一实体替换或移除 animation prop
+
+- **GIVEN** 某个实体已经绑定 `animationA`，且可能存在 active session
+- **WHEN** 该实体在后续渲染中将 `animation` prop 替换为 `animationB`，或将 `animation` prop 移除
+- **THEN** SDK MUST 先停止 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
+- **AND** 若 `animationB` 存在且其 `autoStart` 为 `true`（或省略），SDK MUST 在停止旧会话后启动 `animationB` 对应的新会话，并触发 `animationB` 的 `onStart`
+- **AND** 旧会话的 `onStop` MUST 在新会话的 `onStart` 之前触发
+
 ---
 
 ### Requirement: 支持 transform 字段子集动画
@@ -90,6 +98,13 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 应用代码在 delay 期间调用 `api.pause()`
 - **THEN** 剩余 delay 时间 MUST 被保留
 - **AND** 当 `api.resume()` 被调用时，delay MUST 从暂停处继续，而不是从完整 delay 时长重新开始
+
+#### Scenario: delay 期间 stop
+
+- **GIVEN** 动画会话处于 delay 阶段
+- **WHEN** 应用调用 `api.stop()`
+- **THEN** `onStop` MUST 触发一次
+- **AND** `onStop` MUST 收到 stop 时刻实体当前 transform 状态
 
 ---
 
@@ -172,6 +187,13 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 应用先调用 `api.pause()`，再调用 `api.resume()`
 - **THEN** MUST 从暂停进度继续同一会话，而不是启动一个新会话
 
+#### Scenario: config 变更仅影响下次 play
+
+- **GIVEN** 应用在 React re-render 中更新了传入 `useAnimation(config)` 的 `config`
+- **WHEN** 当前会话处于 `delaying`、`running` 或 `paused`
+- **THEN** 当前会话 MUST 不受该变更影响
+- **AND** 下一次 `api.play()` MUST 使用最新的 `config`
+
 #### Scenario: 自然完成回调
 
 - **WHEN** 一个非循环动画自然播放结束
@@ -181,6 +203,18 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 - **WHEN** 应用调用 `api.stop()`
 - **THEN** 配置的 `onStop` MUST 收到 stop 时刻实体当前 transform 状态
+
+#### Scenario: 生命周期回调次数与互斥
+
+- **WHEN** `api.play()` 启动一个动画会话
+- **THEN** `onStart` MUST 对该会话至多触发一次
+- **AND** 该会话结束时，`onComplete` 与 `onStop` MUST 互斥，且各自 MUST 对该会话至多触发一次
+
+#### Scenario: 非法状态下的控制方法为 no-op
+
+- **GIVEN** 当前不存在 active session
+- **WHEN** 应用调用 `api.pause()`、`api.resume()` 或 `api.stop()`
+- **THEN** 这些调用 MUST 为 no-op（不抛错、不触发生命周期回调、不发送 native 命令）
 
 #### Scenario: 已有 active session 时调用 play
 
@@ -196,6 +230,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **GIVEN** `supports('useAnimation')` 为 `false`
 - **WHEN** 应用代码仍尝试使用 `useAnimation`
 - **THEN** SDK MUST 给出 warning，说明当前 runtime 不支持实体 Transform 动画
+- **AND** warning MUST 对每个 hook 实例至多触发一次
 - **AND** SDK MUST 不得为这次请求启动 Native 播放
 
 #### Scenario: 不支持 runtime 下的 API 行为

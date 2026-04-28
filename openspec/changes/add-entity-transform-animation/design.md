@@ -274,6 +274,8 @@ interface AnimateTransformResult {
 
 Both event listeners are registered at `play` time to avoid race conditions where `stop()` is called before listeners are ready.
 
+`animationId` MUST be globally unique within a runtime process so event names do not collide across entities or sessions.
+
 ## Decisions
 
 1. **Public API uses `useAnimation` plus an entity `animation` prop**
@@ -284,6 +286,7 @@ Both event listeners are registered at `play` time to avoid race conditions wher
 2. **React stores config separately from the render-facing animation object**
    - Hook configuration such as `from`, `to`, callbacks, timing, and loop settings stays in hook-owned state or refs.
    - The render-facing `animation` object only carries transform targets and internal binding metadata needed by the entity component.
+   - Config updates apply to the next `play()` and MUST NOT modify an active session.
    - Alternative considered: put the full config on the entity prop. Rejected because it couples render payload and control payload, and it increases accidental re-render churn.
 
 3. **Core and native layers use a unified animation command contract**
@@ -309,6 +312,7 @@ Both event listeners are registered at `play` time to avoid race conditions wher
 
 7. **Unsupported runtimes surface a warning**
    - When `useAnimation` is used in a runtime where `supports('useAnimation')` is `false`, the SDK should surface a warning instead of failing silently.
+   - The warning should be emitted at most once per hook instance to avoid log spam.
    - This keeps capability misuse visible during integration without changing the capability contract itself.
 
 8. **Invalid animation config is treated as a programmer error**
