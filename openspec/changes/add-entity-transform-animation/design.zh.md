@@ -274,6 +274,8 @@ interface AnimateTransformResult {
 
 两个事件监听在 `play` 时注册，避免 `stop()` 在监听就绪前被调用导致的竞态。
 
+`animationId` MUST 在同一 runtime 进程内全局唯一，避免不同实体或不同会话的事件名发生冲突。
+
 ## 关键决策
 
 1. **对外 API 以 `useAnimation` + 实体 `animation` prop 为入口**
@@ -284,6 +286,7 @@ interface AnimateTransformResult {
 2. **React 将配置与渲染态 animation 对象分离**
    - `from`、`to`、回调、时序参数、loop 等配置由 hook 内部存储（state/ref），不直接作为渲染 payload 暴露。
    - 渲染态 `animation` 对象只携带 transform 目标值与实体绑定所需的内部元数据。
+   - 配置变更仅对下一次 `play()` 生效，且 MUST 不影响当前 active session。
    - 备选方案：把完整 config 放到实体 prop。否决原因：渲染与控制耦合、易产生不必要的 re-render。
 
 3. **Core 与 Native 采用统一的动画命令契约**
@@ -309,6 +312,7 @@ interface AnimateTransformResult {
 
 7. **不支持的 runtime 需要给出 warning**
    - 当 `supports('useAnimation')` 为 `false` 的 runtime 里仍直接使用 `useAnimation` 时，SDK 应给出 warning，而不是完全静默失败。
+   - warning 应对每个 hook 实例至多触发一次，避免日志刷屏。
    - 这样既能保留能力检测契约，又能在接入阶段尽早暴露误用。
 
 8. **非法动画配置视为程序错误**
