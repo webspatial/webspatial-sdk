@@ -14,7 +14,7 @@
 
 - [ ] 3.1 实现 `useAnimation(config)`，支持 `play`、`pause`、`resume`、`stop`、`isAnimating`、`autoStart`、`delay`、`loop` *(blocked by 2.1)*
 - [ ] 3.2 优先在公共实体抽象层接入 `animation` prop，再更新各个叶子实体组件 *(blocked by 3.1)*
-- [ ] 3.3 仅对被动画控制的字段抑制普通 transform 更新，避免竞争
+- [ ] 3.3 仅对被 alive 会话控制的字段抑制普通 transform 更新，避免竞争
 - [ ] 3.4 按规范对不支持的 runtime 给出 warning，并保持非动画的 transform 路径行为不变
 
 ## 4. Native visionOS 播放
@@ -27,7 +27,7 @@
 
 - [ ] 5.1 增加聚焦测试：
   - [ ] 5.1.1 能力检测（`supports('useAnimation')` true/false/sub-token）
-  - [ ] 5.1.2 React 播放生命周期（start/complete/stop 回调、互斥性、调用次数）
+  - [ ] 5.1.2 React 播放生命周期（onStart 时机、start/complete/stop 回调、互斥性、调用次数）
   - [ ] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
   - [ ] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
   - [ ] 5.1.5 同一动画绑定多个实体（抛错）
