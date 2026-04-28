@@ -60,6 +60,7 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 
 - **WHEN** the animation config specifies `rotation` values
 - **THEN** the SDK MUST interpret them as Euler angles in **degrees**, not radians
+- **AND** the Euler rotation convention (axis order and coordinate system semantics) MUST match the existing entity `rotation` prop conventions (the SDK's established transform semantics)
 
 #### Scenario: Rotation interpolation uses shortest-path quaternion SLERP
 
@@ -84,6 +85,13 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **GIVEN** the animation config sets `autoStart` to `false`
 - **WHEN** the entity is mounted
 - **THEN** playback MUST remain idle until `api.play()` is called
+
+#### Scenario: Call play before the entity is bound
+
+- **GIVEN** the target entity is not yet mounted and bound
+- **WHEN** application code calls `api.play()`
+- **THEN** the SDK MUST queue the request and execute it after the entity is mounted and bound
+- **AND** the playback request moment for the queued request MUST be the actual execution moment (when the entity is bound)
 
 #### Scenario: Delayed playback
 
@@ -120,6 +128,12 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **GIVEN** the animation config sets `loop` to `{ reverse: true }`
 - **WHEN** playback reaches either endpoint
 - **THEN** the next cycle MUST reverse direction between `from` and `to`
+
+#### Scenario: Default behavior for loop objects
+
+- **GIVEN** the animation config sets `loop` to an object with `reverse` omitted or `false` (e.g. `{}` or `{ reverse: false }`)
+- **WHEN** playback reaches the target state
+- **THEN** the behavior MUST be equivalent to the reset loop of `loop: true`
 
 #### Scenario: Invalid animation config
 
@@ -216,6 +230,12 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **WHEN** application code calls `api.pause()`, `api.resume()`, or `api.stop()`
 - **THEN** the call MUST be a no-op (no error thrown, no lifecycle callback invoked, no native command sent)
 
+#### Scenario: Serialize control commands in call order
+
+- **GIVEN** a hook instance calls control methods like `play`, `pause`, `resume`, and `stop` in quick succession
+- **WHEN** the SDK sends control commands to the native layer
+- **THEN** the SDK MUST serialize and process those commands in the same call order
+
 #### Scenario: Play while session is already active
 
 - **GIVEN** an animation session is already active (`delaying`, `running`, or `paused`)
@@ -254,6 +274,12 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the SDK MUST throw to surface the failure
 - **AND** the SDK MUST NOT transition the session into an active state
 
+#### Scenario: Throw on native or bridge failure for pause/resume/stop
+
+- **GIVEN** `supports('useAnimation')` is `true` and there is an active session
+- **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause`, `resume`, or `stop`
+- **THEN** the SDK MUST throw to surface the failure
+
 ---
 
 ### Requirement: Prevent competing transform updates during playback
@@ -266,7 +292,7 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **WHEN** React re-renders the entity while the session is active
 - **THEN** the SDK MUST suppress ordinary `position` transform synchronization for that session
 - **AND** non-animated fields such as `rotation` or `scale` MUST continue to update normally if they are not part of the active animation
-- **AND** the latest prop values received for suppressed fields MAY be cached for resuming ordinary synchronization after suppression is released
+- **AND** the latest prop values received for suppressed fields MUST be cached for resuming ordinary synchronization after suppression is released
 
 #### Scenario: Suppression release after animation ends
 

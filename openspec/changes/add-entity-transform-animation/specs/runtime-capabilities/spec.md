@@ -14,6 +14,11 @@ The runtime capability API MUST document and resolve the top-level key `useAnima
 - **WHEN** the current runtime lacks the native bridge or playback behavior required by the entity transform animation API
 - **THEN** `supports('useAnimation')` MUST return `false`
 
+#### Scenario: supports result is stable
+
+- **WHEN** application code calls `supports('useAnimation')` multiple times within the same runtime process lifetime
+- **THEN** the result MUST remain stable and MUST NOT change at runtime
+
 #### Scenario: No sub-tokens for useAnimation
 
 - **WHEN** application code passes any sub-token to `supports('useAnimation', tokens)`

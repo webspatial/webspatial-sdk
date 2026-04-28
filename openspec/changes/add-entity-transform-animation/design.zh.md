@@ -283,7 +283,7 @@ interface AnimateTransformResult {
 | `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — Native 侧最终 transform |
 | `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点的 transform |
 
-两个事件监听在 `play` 时注册，避免 `stop()` 在监听就绪前被调用导致的竞态。
+两个事件监听 MUST 在发送 `play` 命令前完成注册，避免终止事件在监听就绪前触发导致的竞态。
 
 `animationId` MUST 在同一 runtime 进程内全局唯一，避免不同实体或不同会话的事件名发生冲突。
 
