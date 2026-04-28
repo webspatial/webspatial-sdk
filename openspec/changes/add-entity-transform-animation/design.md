@@ -75,7 +75,7 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
-  /** Called when the session is established successfully and enters delaying or running; not called while queued. */
+  /** Called when the session is established successfully; the first state may be delaying, running, or paused after a queued pause. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
@@ -100,6 +100,8 @@ interface AnimationError {
   animationId: string
   /** The command that failed. */
   command: 'play' | 'pause' | 'resume' | 'stop'
+  /** Optional machine-readable error code. */
+  code?: string
   /** Human-readable failure reason. */
   reason: string
 }
@@ -307,7 +309,7 @@ React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees)
 
 If the entity unmounts while an alive session exists, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
 
-If the JSBridge/native layer fails the play request, `animateTransform(...)` MUST reject to surface the failure.
+`animateTransform(...)` MAY reject only when a command cannot be submitted before native accepts it. Once command submission succeeds, any later asynchronous failure MUST be reported through the `{animationId}_failed` event instead of through the `finished` / `stopped` promises.
 
 ### Core SDK ↔ Native (JSBridge)
 
@@ -319,12 +321,17 @@ If the JSBridge/native layer fails the play request, `animateTransform(...)` MUS
 |---|---|---|
 | `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final native transform |
 | `{animationId}_stopped` | `stop()` called | `TransformValues` — transform at stop point |
+| `{animationId}_failed` | An asynchronous `play` / `pause` / `resume` / `stop` failure occurs | `AnimationError` — at least `animationId`, `command`, and `reason`, with optional `code` |
 
-Both event listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal event fires before listeners are ready.
+`_completed`, `_stopped`, and `_failed` listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal or failure event fires before listeners are ready.
 
 `animationId` MUST be globally unique within a runtime process so event names do not collide across entities or sessions.
 
-For a given `animationId`, native MUST emit exactly one terminal event (`_completed` or `_stopped`) and they MUST be mutually exclusive.
+For a given `animationId`:
+
+- After `play` establishes a session successfully, native MUST emit exactly one terminal event (`_completed` or `_stopped`) and they MUST be mutually exclusive.
+- If `play` fails asynchronously, native MUST emit `_failed` at most once and MUST NOT emit `_completed` or `_stopped` afterward.
+- If `pause`, `resume`, or `stop` fails asynchronously, native MUST emit `_failed` at most once for that failed command; the session remains in its pre-failure state and MAY still emit `_completed` or `_stopped` later.
 
 ## Decisions
 
@@ -378,8 +385,14 @@ For a given `animationId`, native MUST emit exactly one terminal event (`_comple
     - `play()`, `pause()`, `resume()`, and `stop()` remain synchronous `void` methods. Errors that occur asynchronously during the bridge/native round-trip are delivered through the `onError` callback on `AnimationConfig` (or `console.error` if `onError` is not provided).
     - Synchronous `throw` is reserved for programmer errors detectable at call time (invalid config, multi-entity bind).
     - This separates two error categories: (1) developer mistakes caught immediately via throw, (2) runtime/infrastructure failures reported asynchronously via callback.
+    - Native reports asynchronous failures via the `{animationId}_failed` event. The payload contains at least `animationId`, `command`, and `reason`, and MAY include a machine-readable `code`.
+    - A failed `play` means the session never became alive, so `_completed` / `_stopped` must not follow. A failed `pause`, `resume`, or `stop` affects only that command attempt and leaves the session in its pre-failure state.
     - react-spring has no `onError` equivalent because its animations run entirely in JS with no remote failure path. Our architecture delegates playback to native via JSBridge, introducing a real async failure mode that requires an explicit error channel.
     - Alternative considered: change the API to `play(): Promise<void>`. Rejected because it forces every call site to handle Promises, increases ceremony for the common success path, and diverges from the fire-and-forget style of react-spring's imperative API.
+
+11. **A failed stop-old step MUST block start-new**
+    - For `play()`-driven restart and animation-prop replacement flows, if stopping the old session fails, the SDK MUST surface `onError` and preserve the old session's pre-failure state.
+    - In that failure case, the SDK MUST NOT start the new session and MUST NOT fire the new session's `onStart`.
 
 ## Risks / Trade-offs
 
