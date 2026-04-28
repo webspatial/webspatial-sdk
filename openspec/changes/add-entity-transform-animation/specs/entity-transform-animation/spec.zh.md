@@ -92,6 +92,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **WHEN** 应用调用 `api.play()`
 - **THEN** SDK MUST 将该请求排队，并在实体完成挂载并绑定后执行
 - **AND** 该排队请求的播放请求时刻 MUST 以实际执行时刻（实体已绑定）为准
+- **AND** 若排队期间实体 transform 被外部更新，起始快照 MUST 以实际执行时刻的实体当前 transform 为准
 
 #### Scenario: 延迟播放
 
@@ -151,6 +152,16 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 | `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
 | `loop` | `true`、`false`、`undefined` 或 `{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
+
+#### Scenario: transform 数值校验
+
+SDK MUST 在校验时强制以下范围，违反时抛错：
+
+| 字段 | 合法范围 | 说明 |
+|---|---|---|
+| `position.*` | 有限值 | 任意分量为 `NaN` 或 `Infinity` MUST 被拒绝 |
+| `rotation.*` | 有限值 | 任意分量为 `NaN` 或 `Infinity` MUST 被拒绝 |
+| `scale.*` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 
 ---
 
@@ -273,12 +284,14 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 抛错以暴露该失败
 - **AND** SDK MUST 不得将会话推进到 active 状态
+- **AND** 抛出的错误 message MUST 至少包含 `animationId`、命令类型（play/pause/resume/stop）与失败原因
 
 #### Scenario: pause/resume/stop 在 Native 或 bridge 失败时抛错
 
 - **GIVEN** `supports('useAnimation')` 为 `true` 且存在 active session
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 抛错以暴露该失败
+- **AND** 抛出的错误 message MUST 至少包含 `animationId`、命令类型（play/pause/resume/stop）与失败原因
 
 ---
 
@@ -293,6 +306,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** SDK MUST 抑制该会话对应的常规 `position` transform 同步
 - **AND** 未被动画控制的字段如 `rotation` 或 `scale` MUST 继续按现有路径正常更新
 - **AND** 对被抑制字段在会话期间接收到的最新 props 值 MUST 被缓存，用于抑制解除后的恢复同步
+- **AND** 缓存 MUST 按字段（`position`、`rotation`、`scale`）分别维护，且仅在当前会话 active 期间生效；会话结束时 MUST 清空
 
 #### Scenario: 动画结束后释放抑制
 
