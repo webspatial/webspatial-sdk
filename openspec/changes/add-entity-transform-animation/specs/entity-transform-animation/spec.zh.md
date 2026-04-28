@@ -223,6 +223,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
 - **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
 
+#### Scenario: 每次 play 生成新的会话 id
+
+- **WHEN** `api.play()` 启动一个新的动画会话
+- **THEN** SDK MUST 为该会话生成一个新的全局唯一 `animationId`
+- **AND** 后续对该会话的 `pause`、`resume`、`stop` MUST 作用于该 `animationId` 对应的会话
+
 ---
 
 #### Scenario: 不支持的 runtime warning
@@ -240,6 +246,13 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
 - **AND** `onStart`、`onComplete`、`onStop` MUST 不被触发
 - **AND** `api.isAnimating` MUST 保持 `false`
+
+#### Scenario: Native 或 bridge 失败时抛错
+
+- **GIVEN** `supports('useAnimation')` 为 `true`
+- **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
+- **THEN** SDK MUST 抛错以暴露该失败
+- **AND** SDK MUST 不得将会话推进到 active 状态
 
 ---
 

@@ -240,6 +240,10 @@ interface SpatialEntity {
 }
 
 interface AnimateTransformCommand {
+  /**
+   * 单个动画会话的全局唯一 id。
+   * 每次 `play` 请求 MUST 生成一个新的 `animationId`。
+   */
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop'
   /** type 为 'play' 时必填，其他类型忽略。 */
@@ -254,12 +258,19 @@ interface AnimateTransformCommand {
 
 interface AnimateTransformResult {
   animationId: string
-  /** 动画自然完成时 resolve。 */
+  /** 非循环动画自然完成时 resolve；无限循环时永不 resolve。 */
   finished: Promise<TransformValues>
-  /** 通过 stop() 停止时 resolve。 */
+  /**
+   * 通过 stop() 停止时 resolve。
+   * stop 之后 `finished` MUST 保持 pending（不 reject）。
+   */
   stopped: Promise<TransformValues>
 }
 ```
+
+若实体在会话 active 期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
+
+若 JSBridge 或 Native 在执行 play 请求时失败，`animateTransform(...)` MUST reject 以暴露该失败。
 
 ### Core SDK ↔ Native（JSBridge）
 
@@ -275,6 +286,8 @@ interface AnimateTransformResult {
 两个事件监听在 `play` 时注册，避免 `stop()` 在监听就绪前被调用导致的竞态。
 
 `animationId` MUST 在同一 runtime 进程内全局唯一，避免不同实体或不同会话的事件名发生冲突。
+
+对于同一个 `animationId`，Native MUST 只发送一个终止事件（`_completed` 或 `_stopped`），且二者 MUST 互斥。
 
 ## 关键决策
 

@@ -223,6 +223,12 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the SDK MUST stop the existing session first and start a new session with the current config
 - **AND** the `onStop` callback for the previous session MUST fire before the new session’s `onStart`
 
+#### Scenario: Each play generates a new session id
+
+- **WHEN** `api.play()` starts a new animation session
+- **THEN** the SDK MUST generate a new globally-unique `animationId` for that session
+- **AND** subsequent `pause`, `resume`, and `stop` calls MUST target the session identified by that `animationId`
+
 ---
 
 #### Scenario: Unsupported runtime warning
@@ -240,6 +246,13 @@ The playback API MUST let applications start, pause, resume, and stop an animati
 - **THEN** the call MUST be a no-op (no error thrown, no native command sent)
 - **AND** `onStart`, `onComplete`, and `onStop` MUST NOT be invoked
 - **AND** `api.isAnimating` MUST remain `false`
+
+#### Scenario: Throw on native or bridge failure
+
+- **GIVEN** `supports('useAnimation')` is `true`
+- **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing a play request
+- **THEN** the SDK MUST throw to surface the failure
+- **AND** the SDK MUST NOT transition the session into an active state
 
 ---
 
