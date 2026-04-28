@@ -240,6 +240,10 @@ interface SpatialEntity {
 }
 
 interface AnimateTransformCommand {
+  /**
+   * A globally-unique id for a single animation session.
+   * A new `animationId` MUST be generated for each `play` request.
+   */
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop'
   /** Required when type is 'play'; ignored otherwise. */
@@ -254,12 +258,19 @@ interface AnimateTransformCommand {
 
 interface AnimateTransformResult {
   animationId: string
-  /** Resolves when the animation completes naturally. */
+  /** Resolves when a non-looping animation completes naturally. Never resolves for infinite loops. */
   finished: Promise<TransformValues>
-  /** Resolves when the animation is stopped via stop(). */
+  /**
+   * Resolves when the animation is stopped via stop().
+   * After stop, `finished` MUST remain pending (not rejected).
+   */
   stopped: Promise<TransformValues>
 }
 ```
+
+If the entity unmounts while a session is active, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
+
+If the JSBridge/native layer fails the play request, `animateTransform(...)` MUST reject to surface the failure.
 
 ### Core SDK ↔ Native (JSBridge)
 
@@ -275,6 +286,8 @@ interface AnimateTransformResult {
 Both event listeners are registered at `play` time to avoid race conditions where `stop()` is called before listeners are ready.
 
 `animationId` MUST be globally unique within a runtime process so event names do not collide across entities or sessions.
+
+For a given `animationId`, native MUST emit exactly one terminal event (`_completed` or `_stopped`) and they MUST be mutually exclusive.
 
 ## Decisions
 
