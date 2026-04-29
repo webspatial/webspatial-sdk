@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from 'react'
-import { SpatialTextureResource } from '@webspatial/core-sdk'
+import React, { useEffect } from 'react'
 import { useRealityContext } from '../context'
 
 export type TextureProps = {
@@ -26,25 +25,23 @@ function resolveTextureUrl(url: string): string {
 
 export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
   const ctx = useRealityContext()
-  const textureRef = useRef<SpatialTextureResource>()
-  const isInitializedRef = useRef(false)
 
   useEffect(() => {
     if (!ctx) return
     const controller = new AbortController()
     const { session, resourceRegistry } = ctx
+    const textureId = options.id
+
     const init = async () => {
       try {
         const resolvedUrl = resolveTextureUrl(options.url)
         const texturePromise = session.createTexture({ url: resolvedUrl })
-        resourceRegistry.add(options.id, texturePromise)
+        resourceRegistry.add(textureId, texturePromise)
         const texture = await texturePromise
         if (controller.signal.aborted) {
           texture.destroy()
           return
         }
-        textureRef.current = texture
-        isInitializedRef.current = true
         options.onLoad?.()
       } catch (error: any) {
         options.onError?.(error)
@@ -54,37 +51,9 @@ export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
 
     return () => {
       controller.abort()
-      resourceRegistry.removeAndDestroy(options.id)
-      textureRef.current = undefined
-      isInitializedRef.current = false
+      resourceRegistry.removeAndDestroy(textureId)
     }
-  }, [ctx])
-
-  useEffect(() => {
-    if (!ctx || !isInitializedRef.current || !textureRef.current) return
-    let cancelled = false
-    void (async () => {
-      try {
-        const resolvedUrl = resolveTextureUrl(options.url)
-        const result = await textureRef.current!.updateProperties({
-          url: resolvedUrl,
-        })
-        if (cancelled) return
-        if (result.success) {
-          options.onLoad?.()
-        } else {
-          options.onError?.(
-            new Error(result.errorMessage || 'Texture update failed'),
-          )
-        }
-      } catch (error: any) {
-        if (!cancelled) options.onError?.(error)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [ctx, options.url])
+  }, [ctx, options.id, options.url])
 
   return null
 }
