@@ -1255,20 +1255,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(baseReplyData))
     }
 
-    /// After `SpatialUnlitMaterial.updateProperties`, ModelComponent still has a stale material copy — only refresh users of that material id.
-    private func refreshComponentsUsingMaterial(_ materialId: String) {
-        for (_, obj) in spatialObjects {
-            if let comp = obj as? SpatialModelComponent, comp.usesMaterial(materialId) {
-                comp.refreshMaterials()
-            }
-        }
-        for (_, obj) in spatialObjects {
-            if let entity = obj as? SpatialModelEntity, entity.usesMaterial(materialId) {
-                entity.refreshMaterials()
-            }
-        }
-    }
-
     private func onUpdateTextureProperties(command: UpdateTextureProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let texture = spatialObjects[command.id] as? SpatialTextureResource else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(command.id) not found")))
@@ -1281,16 +1267,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         Task {
             do {
                 try await texture.updateURL(newURL)
-                var refreshedMaterialIds = Set<String>()
-                for (_, obj) in spatialObjects {
-                    guard let material = obj as? SpatialUnlitMaterial,
-                          material.textureSpatialId == command.id
-                    else { continue }
-                    material.updateProperties(color: nil, texture: .some(texture.resource), transparent: nil, opacity: nil)
-                    refreshedMaterialIds.insert(material.spatialId)
-                }
+                let refreshedMaterialIds = MaterialSceneRefresh.pushReloadedTextureToBoundUnlitMaterials(
+                    texture: texture,
+                    textureSpatialId: command.id,
+                    spatialObjects: spatialObjects
+                )
                 for mid in refreshedMaterialIds {
-                    refreshComponentsUsingMaterial(mid)
+                    MaterialSceneRefresh.refreshComponentsUsingMaterial(mid, spatialObjects: spatialObjects)
                 }
                 resolve(.success(baseReplyData))
             } catch {
@@ -1319,7 +1302,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let tid = command.textureId {
             material.textureSpatialId = tid.isEmpty ? nil : tid
         }
-        refreshComponentsUsingMaterial(command.id)
+        MaterialSceneRefresh.refreshComponentsUsingMaterial(command.id, spatialObjects: spatialObjects)
         resolve(.success(baseReplyData))
     }
 
