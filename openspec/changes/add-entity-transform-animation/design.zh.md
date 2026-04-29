@@ -124,7 +124,7 @@ interface AnimationApi {
   /** 停止动画，实体保持在 stop 点。 */
   stop(): void
 
-  /** 当前是否处于 delaying 或 running 状态（paused 时为 false）。 */
+  /** 当前是否处于 queued、delaying 或 running 状态（paused 或 idle 时为 false）。 */
   readonly isAnimating: boolean
 
   /** 当前是否处于暂停状态。 */
@@ -319,8 +319,8 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 
 | 事件名 | 触发时机 | Payload |
 |---|---|---|
-| `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — Native 侧最终 transform |
-| `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点的 transform |
+| `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — 最终 transform（由 Core 从 Native `Float4x4` 转换） |
+| `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点 transform（由 Core 从 Native `Float4x4` 转换） |
 | `{animationId}_failed` | 某次 `play` / `pause` / `resume` / `stop` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
 
 `_completed`、`_stopped`、`_failed` 事件监听 MUST 在发送 `play` 命令前完成注册，避免终止或失败事件在监听就绪前触发导致的竞态。
