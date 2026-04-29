@@ -1,6 +1,6 @@
 ## 1. Public API And Capability Contract
 
-- [ ] 1.1 Define `SpatialDiv` `useAnimation` config types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), return types (`SpatialDivAnimatedProps`, `AnimationApi`), and `AnimationError`, covering `back`, `transform.x/y/z`, `opacity`, `depth`, `width`, `height`. Specify default `duration = 0.3` and validate `opacity` in inclusive `[0, 1]`.
+- [ ] 1.1 Define `SpatialDiv` `useAnimation` config types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), return types (`SpatialDivAnimatedProps`, `AnimationApi`), and `AnimationError`, covering `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, `height`. Specify default `duration = 0.3` and validate `opacity` in inclusive `[0, 1]`.
 - [ ] 1.2 Implement entity vs SpatialDiv auto-routing at the `useAnimation` entrypoint based on the `config.to` key set, keeping the entity path unchanged (only add a top-level if/else and internal `__kind` tag).
   - **Depends on** 1.1 (needs SpatialDiv config type definitions)
 - [ ] 1.3 Add public typing for the `animation` prop on spatialized HTML nodes and restrict it to the `enable-xr` path; add `__kind` binding validation (throw when binding entity animation to SpatialDiv or vice versa).
@@ -41,7 +41,7 @@
 
 - [ ] 4.1 Add SpatialDiv animation session storage, a playback controller, and lifecycle management in the visionOS runtime.
   - **Depends on** 2.2 (bridge command shape)
-- [ ] 4.2 Implement native interpolation and application for whitelisted fields: `transform.x/y/z`, `back`, `depth`, `opacity`, `width`, `height`.
+- [ ] 4.2 Implement native interpolation and application for whitelisted fields: `transform.translate.x/y/z`, `back`, `depth`, `opacity`, `width`, `height`.
   - **Depends on** 4.1 (session management)
 - [ ] 4.3 Implement native semantics for `delay`, reset loop (instant reset without re-snapshot), reverse loop, pause (including pausing during delay and preserving remaining delay), resume, and stop, and emit `_completed` / `_stopped` terminal events.
   - **Depends on** 4.2 (interpolation)

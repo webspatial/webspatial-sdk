@@ -1,6 +1,6 @@
 ## 1. 公开 API 与能力契约
 
-- [ ] 1.1 定义 `SpatialDiv` 版本的 `useAnimation` 配置类型（`SpatialDivAnimationConfig`、`SpatialDivAnimatedValues`）、返回类型（`SpatialDivAnimatedProps`、`AnimationApi`）与 `AnimationError` 形状，覆盖 `back`、`transform.x/y/z`、`opacity`、`depth`、`width`、`height`，明确 `duration` 默认值为 `0.3`，`opacity` 校验范围为 `[0, 1]` 闭区间
+- [ ] 1.1 定义 `SpatialDiv` 版本的 `useAnimation` 配置类型（`SpatialDivAnimationConfig`、`SpatialDivAnimatedValues`）、返回类型（`SpatialDivAnimatedProps`、`AnimationApi`）与 `AnimationError` 形状，覆盖 `back`、`transform.translate.x/y/z`、`opacity`、`depth`、`width`、`height`，明确 `duration` 默认值为 `0.3`，`opacity` 校验范围为 `[0, 1]` 闭区间
 - [ ] 1.2 在 `useAnimation` hook 入口实现基于 `config.to` key 集合的 entity / SpatialDiv 自动分叉逻辑，确保 entity 路径代码不受改动（仅新增外层 if/else 分支和 `__kind` 标记）
   - **依赖** 1.1（需要 SpatialDiv 配置类型定义）
 - [ ] 1.3 为空间化 HTML 节点补充 `animation` prop 的对外类型，并约束其仅在 `enable-xr` 链路上生效；在绑定阶段增加 `__kind` 校验（entity animation 绑到 SpatialDiv 或反之时抛错）
@@ -41,7 +41,7 @@
 
 - [ ] 4.1 在 visionOS runtime 中增加 `SpatialDiv` 动画会话存储、播放控制器和生命周期管理
   - **依赖** 2.2（需要 bridge 命令结构就绪）
-- [ ] 4.2 实现白名单字段的 native 插值与应用，包括 `transform.x/y/z`、`back`、`depth`、`opacity`、`width`、`height`
+- [ ] 4.2 实现白名单字段的 native 插值与应用，包括 `transform.translate.x/y/z`、`back`、`depth`、`opacity`、`width`、`height`
   - **依赖** 4.1（需要会话管理就绪）
 - [ ] 4.3 实现 `delay`、reset loop（含瞬时重置，不重新快照）、reverse loop、pause（含 delay 期间 pause 保留剩余 delay）、resume、stop 的 native 语义，并返回 `_completed` / `_stopped` 终态
   - **依赖** 4.2（需要插值就绪）

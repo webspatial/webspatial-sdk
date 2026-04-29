@@ -5,7 +5,7 @@
 - `UpdateSpatialized2DElementProperties`: sync properties such as `width`, `height`, `depth`, `opacity`, and `backOffset`
 - `UpdateSpatializedElementTransform`: sync the full transform matrix
 
-This means that if we simply reuse the "any prop change immediately syncs native" model, animation playback will compete with regular DOM syncing. At the same time, v1 requirements restrict `SpatialDiv` animation to `back`, `transform.x/y/z`, `opacity`, `depth`, `width`, and `height`, and require a high-level API that follows the existing `entity transform animation` proposal. Therefore, this design is not about supporting arbitrary CSS animations; it is about providing a consistent, minimal-scope animation API on top of the current `SpatialDiv` sync architecture.
+This means that if we simply reuse the "any prop change immediately syncs native" model, animation playback will compete with regular DOM syncing. At the same time, v1 requirements restrict `SpatialDiv` animation to `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, and `height`, and require a high-level API that follows the existing `entity transform animation` proposal. Therefore, this design is not about supporting arbitrary CSS animations; it is about providing a consistent, minimal-scope animation API on top of the current `SpatialDiv` sync architecture.
 
 ## Goals / Non-Goals
 
@@ -40,7 +40,7 @@ function useAnimation(config: SpatialDivAnimationConfig): [SpatialDivAnimatedPro
 ```typescript
 interface SpatialDivAnimatedValues {
   back?: number
-  transform?: { x?: number; y?: number; z?: number }
+  transform?: { translate?: { x?: number; y?: number; z?: number } }
   opacity?: number
   depth?: number
   width?: number
@@ -54,7 +54,7 @@ interface SpatialDivAnimatedValues {
 interface SpatialDivAnimationConfig {
   /**
    * Target values (required).
-   * Only accepts whitelisted fields: back, transform.x/y/z, opacity, depth, width, height.
+   * Only accepts whitelisted fields: back, transform.translate.x/y/z, opacity, depth, width, height.
    */
   to: SpatialDivAnimatedValues
 
@@ -146,7 +146,7 @@ An opaque object returned as the first tuple element. Pass it directly to the sp
 
 All whitelisted values use numeric inputs:
 
-- `back`, `depth`, `width`, `height`, `transform.x/y/z`: pixel semantics consistent with existing SpatialDiv behavior
+- `back`, `depth`, `width`, `height`, `transform.translate.x/y/z`: pixel semantics consistent with existing SpatialDiv behavior
 - `opacity`: inclusive range `[0, 1]`
 
 ## Usage Examples
@@ -209,13 +209,13 @@ function ResizePanel() {
 
 ### Looping Float Effect
 
-Use `transform.y` and `loop: { reverse: true }` to float up and down infinitely. Tap to toggle pause/resume.
+Use `transform.translate.y` and `loop: { reverse: true }` to float up and down infinitely. Tap to toggle pause/resume.
 
 ```jsx
 function FloatingBadge() {
   const [animation, api] = useAnimation({
-    from: { transform: { x: 0, y: 0, z: 0 } },
-    to:   { transform: { x: 0, y: 20, z: 0 } },
+    from: { transform: { translate: { x: 0, y: 0, z: 0 } } },
+    to:   { transform: { translate: { x: 0, y: 20, z: 0 } } },
     duration: 1.5,
     timingFunction: 'easeInOut',
     loop: { reverse: true },
@@ -319,7 +319,7 @@ For a given `animationId`:
    The public API remains `useAnimation(config)`. Internally, the hook inspects the key set in `config.to` to route to either the entity path or the `SpatialDiv` path. The two key sets are mutually exclusive:
 
    - Entity keys: `position`, `rotation`, `scale`
-   - SpatialDiv keys: `back`, `transform`, `opacity`, `depth`, `width`, `height`
+   - SpatialDiv keys: `back`, `transform` (v1: `translate` sub-field only), `opacity`, `depth`, `width`, `height`
 
    Rules:
 
@@ -367,12 +367,12 @@ For a given `animationId`:
 
 5. **When `from` is omitted, snapshot at play execution time; `width` / `height` are native-size overrides**
 
-   If `from` is omitted, the SDK snapshots current values when actually issuing `play`, not at hook creation or initial mount. If the element is not yet bound, `play()` enters queued state and the snapshot timing is when binding completes and playback is executed. `delay` only affects when visible motion starts and MUST NOT change snapshot timing. The snapshot MUST cover only fields present in `to`; fields absent from `to` MUST NOT be snapshotted or affected by the session.
+   When `from` is omitted, the native side snapshots current values upon receiving the `play` command (consistent with entity animation), rather than having the JS side pre-read and send them down. This avoids extra bridge round-trips. If the element is not yet bound, `play()` enters queued state and the snapshot timing is when binding completes and playback is executed. `delay` only affects when visible motion starts and MUST NOT change snapshot timing. The snapshot MUST cover only fields present in `to`; fields absent from `to` MUST NOT be snapshotted or affected by the session.
 
    Snapshot sources per field:
 
    - `back`, `opacity`, `depth`: read from native `Spatialized2DElement` current state
-   - `transform.x/y/z`: read translation components from native `Spatialized2DElement` current transform
+   - `transform.translate.x/y/z`: read translation components from native `Spatialized2DElement` current transform
    - `width` / `height`: read native spatial panel size (not DOM `getBoundingClientRect()`), since a previous animation stop may have made native size differ from DOM layout size
 
    `width` / `height` are defined as "native spatial size overrides" because regular `SpatialDiv` sizing originates from the DOM layout box, while the animation target is the native spatial panel:
@@ -387,7 +387,7 @@ For a given `animationId`:
 
    For `back`, `opacity`, `depth`, `width`, and `height`, the SDK uses field-level suppression: when a session controls a field, `PortalInstanceObject.updateSpatializedElementProperties()` MUST stop pushing regular sync updates for that field, while other uncontrolled fields continue to sync normally.
 
-   For `transform`, v1 uses transform-wide suppression rather than splitting into `x/y/z` components. The regular sync path sends a full `DOMMatrix`; suppressing only translation would require matrix decomposition/recomposition on both React and native sides, which is higher risk. Therefore v1 rules are:
+   For `transform` (v1: `translate` sub-field only), v1 uses transform-wide suppression rather than splitting into translation components. The regular sync path sends a full `DOMMatrix`; suppressing only translation would require matrix decomposition/recomposition on both React and native sides, which is higher risk. Therefore v1 rules are:
 
    - If the animation config includes `transform`, regular `updateTransform(matrix)` is suppressed for the duration of the alive session
    - After the session ends, regular transform sync resumes on the next React render
@@ -408,6 +408,8 @@ For a given `animationId`:
 
    Alternative: define a Promise-based control API for `SpatialDiv`. Rejected because it breaks API consistency with entity animation.
 
+   **`onComplete` / `onStop` return scope:** The `SpatialDivAnimatedValues` in callbacks contains only the final or stop-point values for fields declared in `to`; fields not controlled by the animation do not appear in the return value. This is consistent with the entity animation `TransformValues` callback behavior.
+
 8. **If stop-old fails, MUST block start-new**
 
    For `play()` re-entry and animation prop replacement, if the stop-old command fails asynchronously, the SDK MUST report via `onError` and keep the old session in its pre-failure state. In that case, the SDK MUST NOT start a new session and the new session's `onStart` MUST NOT fire.
@@ -422,4 +424,6 @@ For a given `animationId`:
 - **`width` / `height` animation may temporarily diverge native size from DOM layout box** -> Return final values via `onComplete` / `onStop`, and document that apps decide whether to sync React state.
 - **A dedicated capability key adds a small mental overhead** -> But enables independent shipping/rollback from entity animation, which reduces overall risk.
 - **`SpatialDiv` animation touches multiple layers (React, core, bridge, native)** -> Use a unified session command, a single failure event model, and focused tests to reduce cross-layer drift.
+- **If the app does not sync React state in `onComplete` / `onStop` after animation ends, regular sync resumption may push stale values to native, causing a visual "flash-back"** -> Consistent with entity animation behavior. Document and demonstrate in examples that apps MUST manually sync state in callbacks to preserve animation end state.
+- **v1 assumes a React synchronous rendering model** -> Suppression release and regular sync resumption depend on "the next React render after callbacks." Under Concurrent Mode / Suspense, render timing may be non-deterministic. This is a known limitation. XR apps currently do not enable Concurrent Mode; if needed in the future, it should be addressed at the SDK sync infrastructure level.
 - **Sharing the `useAnimation` entrypoint introduces minor entity-side changes** -> Limited to an entrypoint if/else, a `__kind` field, and binding validation; entity core logic remains unchanged. If keys collide in the future, introduce an explicit discriminator.

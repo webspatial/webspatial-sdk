@@ -5,7 +5,7 @@
 - `UpdateSpatialized2DElementProperties`：同步 `width`、`height`、`depth`、`opacity`、`backOffset` 等属性
 - `UpdateSpatializedElementTransform`：同步完整的 transform matrix
 
-这意味着如果直接沿用"普通 props 改变即立刻同步 native"的模型，动画播放会与常规 DOM 同步产生竞争。与此同时，产品需求已将 `SpatialDiv` 动画的第一版范围限制为 `back`、`transform.x/y/z`、`opacity`、`depth`、`width`、`height`，并明确要求高层 API 设计遵循 `entity transform animation` 提案。因此，本设计要解决的核心不是"如何支持任意 CSS 动画"，而是"如何在现有 SpatialDiv 同步架构上，以最小可实现范围提供一致的动画 API"。
+这意味着如果直接沿用"普通 props 改变即立刻同步 native"的模型，动画播放会与常规 DOM 同步产生竞争。与此同时，产品需求已将 `SpatialDiv` 动画的第一版范围限制为 `back`、`transform.translate.x/y/z`、`opacity`、`depth`、`width`、`height`，并明确要求高层 API 设计遵循 `entity transform animation` 提案。因此，本设计要解决的核心不是"如何支持任意 CSS 动画"，而是"如何在现有 SpatialDiv 同步架构上，以最小可实现范围提供一致的动画 API"。
 
 ## 目标 / 非目标
 
@@ -40,7 +40,7 @@ function useAnimation(config: SpatialDivAnimationConfig): [SpatialDivAnimatedPro
 ```typescript
 interface SpatialDivAnimatedValues {
   back?: number
-  transform?: { x?: number; y?: number; z?: number }
+  transform?: { translate?: { x?: number; y?: number; z?: number } }
   opacity?: number
   depth?: number
   width?: number
@@ -54,7 +54,7 @@ interface SpatialDivAnimatedValues {
 interface SpatialDivAnimationConfig {
   /**
    * 目标动画值（必填）。
-   * 仅接受白名单字段：back、transform.x/y/z、opacity、depth、width、height。
+   * 仅接受白名单字段：back、transform.translate.x/y/z、opacity、depth、width、height。
    */
   to: SpatialDivAnimatedValues
 
@@ -146,7 +146,7 @@ interface AnimationApi {
 
 所有白名单值使用数值型输入：
 
-- `back`、`depth`、`width`、`height`、`transform.x/y/z`：使用与现有 SpatialDiv 一致的像素语义
+- `back`、`depth`、`width`、`height`、`transform.translate.x/y/z`：使用与现有 SpatialDiv 一致的像素语义
 - `opacity`：`[0, 1]` 闭区间
 
 ## 用法示例
@@ -209,13 +209,13 @@ function ResizePanel() {
 
 ### 循环浮动效果
 
-使用 `transform.y` 和 `loop: { reverse: true }` 实现无限上下浮动。点击切换暂停 / 恢复。
+使用 `transform.translate.y` 和 `loop: { reverse: true }` 实现无限上下浮动。点击切换暂停 / 恢复。
 
 ```jsx
 function FloatingBadge() {
   const [animation, api] = useAnimation({
-    from: { transform: { x: 0, y: 0, z: 0 } },
-    to:   { transform: { x: 0, y: 20, z: 0 } },
+    from: { transform: { translate: { x: 0, y: 0, z: 0 } } },
+    to:   { transform: { translate: { x: 0, y: 20, z: 0 } } },
     duration: 1.5,
     timingFunction: 'easeInOut',
     loop: { reverse: true },
@@ -319,7 +319,7 @@ interface AnimateSpatialDivResult {
    对外仍使用同名 `useAnimation(config)`，hook 内部通过检查 `config.to` 的 key 来区分走 entity 路径还是 SpatialDiv 路径。两组 key 集合互斥：
 
    - Entity key 集合：`position`、`rotation`、`scale`
-   - SpatialDiv key 集合：`back`、`transform`、`opacity`、`depth`、`width`、`height`
+   - SpatialDiv key 集合：`back`、`transform`（v1 仅 `translate` 子字段）、`opacity`、`depth`、`width`、`height`
 
    规则：
 
@@ -367,12 +367,12 @@ interface AnimateSpatialDivResult {
 
 5. **`from` 缺省时按播放执行时刻快照，`width` / `height` 为 native 尺寸覆盖**
 
-   当 `from` 省略时，SDK 在真正提交 `play` 命令时快照当前值，而不是在 hook 创建或元素首次挂载时提前快照。若元素尚未绑定，`play()` 会进入 queued 状态，快照时刻以元素完成绑定并实际执行播放的时间点为准。`delay` 仅影响视觉动效何时开始，MUST NOT 改变起始快照的采集时机。快照 MUST 仅覆盖 `to` 中声明的字段；`to` 中未出现的字段 MUST NOT 被快照或被动画会话影响。
+   当 `from` 省略时，native 侧在收到 `play` 命令时自行快照当前值（与实体动画一致），而不是由 JS 侧预先读取再下发。这避免了额外的 bridge 往返。若元素尚未绑定，`play()` 会进入 queued 状态，快照时刻以元素完成绑定并实际执行播放的时间点为准。`delay` 仅影响视觉动效何时开始，MUST NOT 改变起始快照的采集时机。快照 MUST 仅覆盖 `to` 中声明的字段；`to` 中未出现的字段 MUST NOT 被快照或被动画会话影响。
 
    各字段的快照来源规则：
 
    - `back`、`opacity`、`depth`：从 native 侧 `Spatialized2DElement` 的当前状态读取
-   - `transform.x/y/z`：从 native 侧 `Spatialized2DElement` 当前 transform 的平移分量读取
+   - `transform.translate.x/y/z`：从 native 侧 `Spatialized2DElement` 当前 transform 的平移分量读取
    - `width` / `height`：从 native 侧 `Spatialized2DElement` 的当前空间面板尺寸读取（而非 DOM `getBoundingClientRect()`），因为之前的动画 stop 可能已让 native 尺寸与 DOM 布局盒不一致
 
    `width` / `height` 的行为单独定义为"native 空间尺寸覆盖"，因为当前普通 `SpatialDiv` 尺寸来自 DOM 布局盒，而动画目标是空间面板本身。也就是说：
@@ -387,7 +387,7 @@ interface AnimateSpatialDivResult {
 
    对 `back`、`opacity`、`depth`、`width`、`height`，SDK 采用字段级抑制：动画会话控制某个字段时，`PortalInstanceObject.updateSpatializedElementProperties()` MUST 暂停向 native 推送该字段的常规同步，但其他未被动画控制的字段仍保持原路径。
 
-   对 `transform`，第一版采用"整体抑制"而不是细分到 `x/y/z` 分量。原因是现有普通同步路径一次性下发完整 `DOMMatrix`，若只抑制平移分量，则需要在 React 和 native 两边都引入矩阵分解与重组逻辑，风险较高。第一版规则因此是：
+   对 `transform`（v1 仅 `translate` 子字段），第一版采用"整体抑制"而不是细分到平移分量。原因是现有普通同步路径一次性下发完整 `DOMMatrix`，若只抑制平移分量，则需要在 React 和 native 两边都引入矩阵分解与重组逻辑，风险较高。第一版规则因此是：
 
    - 一旦动画配置包含 `transform`，常规 `updateTransform(matrix)` 同步在 alive 会话期间整体暂停
    - 动画结束后，在下一个 React 渲染周期恢复常规 transform 同步
@@ -408,6 +408,8 @@ interface AnimateSpatialDivResult {
 
    备选方案是给 `SpatialDiv` 单独定义 Promise 风格控制 API。否决原因是这会破坏与实体动画之间的 API 一致性。
 
+   **`onComplete` / `onStop` 返回值范围：** 回调中的 `SpatialDivAnimatedValues` 仅包含 `to` 中声明的字段对应的终态或 stop 点值；未被动画控制的字段不会出现在返回值中。这与实体动画的 `TransformValues` 回调行为一致。
+
 8. **stop-old 失败时 MUST 阻止 start-new**
 
    对于 `play()` 驱动的重入和 animation prop 替换场景，如果停止旧会话的命令异步失败，SDK MUST 通过 `onError` 上报，并保持旧会话的失败前状态。在该失败情况下，SDK MUST NOT 启动新会话，且新会话的 `onStart` MUST NOT 触发。
@@ -423,3 +425,5 @@ interface AnimateSpatialDivResult {
 - **独立 capability key 会增加一点心智负担** -> 但它换来了与实体动画独立发布、独立回滚的能力，整体风险更小。
 - **`SpatialDiv` 动画会同时触达 React、core、bridge 和 native 多层** -> 用统一会话命令、单一失败事件模型和聚焦测试用例降低跨层行为漂移风险。
 - **共用 `useAnimation` 入口引入轻微的 entity 侧改动** -> 仅限入口 if/else 分支、`__kind` 字段和绑定校验，entity 核心逻辑不变。若未来 key 碰撞需引入显式 discriminator。
+- **动画结束后若应用未在 `onComplete` / `onStop` 中同步 React state，常规同步恢复时可能将旧值推到 native，造成视觉"闪回"** -> 与实体动画行为一致。通过文档和示例明确告知开发者：如需保持动画终态，MUST 在回调中手动同步 state。
+- **v1 假设 React 同步渲染模型** -> 抑制释放与常规同步恢复依赖"回调后的下一个 React 渲染周期"。在 Concurrent Mode / Suspense 下渲染时机可能不确定，属于已知限制。XR 应用目前基本不启用 Concurrent Mode，如未来有需求应在 SDK 同步基础设施层统一解决。

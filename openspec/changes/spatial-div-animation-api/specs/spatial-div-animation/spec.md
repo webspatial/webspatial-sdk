@@ -48,7 +48,7 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 
 ### Requirement: Only whitelisted properties are animatable
 
-`SpatialDiv` animation MUST support only these whitelisted fields: `back`, `transform.x`, `transform.y`, `transform.z`, `opacity`, `depth`, `width`, `height`.
+`SpatialDiv` animation MUST support only these whitelisted fields: `back`, `transform.translate.x`, `transform.translate.y`, `transform.translate.z`, `opacity`, `depth`, `width`, `height`.
 
 #### Scenario: Animate a subset of whitelisted fields
 
@@ -60,7 +60,7 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 #### Scenario: transform is translation-only
 
 - **WHEN** the config includes `transform`
-- **THEN** the SDK MUST accept only translation components `x`, `y`, and `z`
+- **THEN** the SDK MUST accept only the `translate: { x, y, z }` structure with three translation components
 - **AND** the SDK MUST NOT interpret it as an arbitrary CSS transform string, rotation, scale, or matrix interpolation
 
 #### Scenario: width and height semantics
@@ -107,7 +107,7 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 |---|---|---|
 | `back` | finite | `NaN` and `Infinity` MUST be rejected |
 | `depth` | finite | `NaN` and `Infinity` MUST be rejected |
-| `transform.x/y/z` | finite | `NaN` and `Infinity` MUST be rejected |
+| `transform.translate.x/y/z` | finite | `NaN` and `Infinity` MUST be rejected |
 | `width` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
 | `height` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
 | `opacity` | finite, inclusive `[0, 1]` | values outside `[0, 1]`, `NaN`, and `Infinity` MUST be rejected |
@@ -242,11 +242,13 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 
 - **WHEN** a non-looping animation completes naturally
 - **THEN** `onComplete` MUST receive the native final values
+- **AND** the returned `SpatialDivAnimatedValues` MUST contain only the final values for fields declared in `to`; fields not declared in `to` MUST NOT appear in the return value
 
 #### Scenario: Stop callback
 
 - **WHEN** application code calls `api.stop()`
 - **THEN** `onStop` MUST receive the native stop-point values
+- **AND** the returned `SpatialDivAnimatedValues` MUST contain only the stop-point values for fields declared in `to`; fields not declared in `to` MUST NOT appear in the return value
 
 #### Scenario: Callback mutual exclusion and counts
 

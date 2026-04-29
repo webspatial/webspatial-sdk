@@ -27,8 +27,8 @@ The hook declares *what* to animate; playback runs on the native side. `api.play
 
 - Add `SpatialDiv` animation support, following the same family design of `useAnimation(config)` plus an `animation` prop, making `<div enable-xr animation={animation} />` a first-class usage.
 - In the `useAnimation` entrypoint, auto-route to the entity path vs the `SpatialDiv` path based on the key set in `config.to`. The two key sets are mutually exclusive; the entity animation core logic remains unchanged.
-- Restrict animatable properties to an approved whitelist: `back`, `transform.x/y/z`, `opacity`, `depth`, `width`, `height`.
-- Define `transform` animation as translation-only (`x/y/z`); v1 does not support `SpatialDiv` rotation/scale, nor arbitrary CSS transform string interpolation.
+- Restrict animatable properties to an approved whitelist: `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, `height`.
+- Define `transform` animation as covering only the translation component `transform.translate.x/y/z` in v1 (aligned with CSS `transform: translate3d()`). `SpatialDiv` rotation, scale, and arbitrary CSS transform string interpolation are not supported. Future extensions for rotate/scale can add sub-fields under the `transform` object without breaking changes.
 - Define `width` / `height` animation as a native panel-size override for `SpatialDiv`, not a full CSS layout extension; behavior follows native spatial panel sizing.
 - Reuse the same imperative controls and lifecycle semantics as entity animation: `play`, `pause`, `resume`, `stop`, `onStart`, `onComplete`, `onStop`, `onError`, `delay`, `autoStart`, `loop`. Reuse the `AnimationError` type defined by the entity animation proposal.
 - Extend runtime capabilities with a dedicated capability key for `SpatialDiv` animation to avoid coupling with the semantics of entity `supports('useAnimation')`.
@@ -39,7 +39,7 @@ The hook declares *what* to animate; playback runs on the native side. `api.play
 
 ### New Capabilities
 
-- `spatial-div-animation`: Declarative and imperative animation for `SpatialDiv`, covering the whitelisted fields `back`, `transform.x/y/z`, `opacity`, `depth`, `width`, and `height`, plus lifecycle callbacks, error handling, and React integration rules.
+- `spatial-div-animation`: Declarative and imperative animation for `SpatialDiv`, covering the whitelisted fields `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, and `height`, plus lifecycle callbacks, error handling, and React integration rules.
 
 ### Modified Capabilities
 
