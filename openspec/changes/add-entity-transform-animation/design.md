@@ -124,7 +124,7 @@ interface AnimationApi {
   /** Stop the animation. The entity stays at the stop-point transform. */
   stop(): void
 
-  /** Whether the animation is currently delaying or running (false while paused). */
+  /** Whether the session is currently queued, delaying, or running (false while paused or idle). */
   readonly isAnimating: boolean
 
   /** Whether the animation is currently paused. */
@@ -320,8 +320,8 @@ If the entity unmounts while an alive session exists, the SDK MUST stop/cancel t
 
 | Event name | Trigger | Payload |
 |---|---|---|
-| `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final native transform |
-| `{animationId}_stopped` | `stop()` called | `TransformValues` — transform at stop point |
+| `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final transform (converted by Core from native `Float4x4`) |
+| `{animationId}_stopped` | `stop()` called | `TransformValues` — stop-point transform (converted by Core from native `Float4x4`) |
 | `{animationId}_failed` | An asynchronous `play` / `pause` / `resume` / `stop` failure occurs | `AnimationError` — at least `animationId`, `command`, and `reason`, with optional `code` |
 
 `_completed`, `_stopped`, and `_failed` listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal or failure event fires before listeners are ready.
