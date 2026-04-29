@@ -272,7 +272,14 @@ React calls one method on `SpatialEntity` to drive the full animation lifecycle:
 
 ```typescript
 interface SpatialEntity {
-  animateTransform(command: AnimateTransformCommand): Promise<AnimateTransformResult>
+  /**
+   * For a `play` command, resolves with an `AnimateTransformResult` that
+   * carries `finished` and `stopped` promises for the new session.
+   * For `pause`, `resume`, and `stop` commands, resolves with `void`
+   * once the command has been acknowledged by native (no new result object).
+   */
+  animateTransform(command: AnimateTransformCommand & { type: 'play' }): Promise<AnimateTransformResult>
+  animateTransform(command: AnimateTransformCommand): Promise<void>
 }
 
 interface AnimateTransformCommand {
@@ -306,7 +313,9 @@ interface AnimateTransformResult {
 }
 ```
 
-React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees) to `Float4x4` before calling `animateTransform`, and for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before invoking lifecycle callbacks.
+React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees) to `Float4x4` before calling `animateTransform`.
+
+Core SDK is responsible for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before resolving `finished` / `stopped` and before invoking lifecycle callbacks.
 
 If the entity unmounts while an alive session exists, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
 
@@ -339,7 +348,7 @@ For a given `animationId`:
 1. **Public API uses `useAnimation` plus an entity `animation` prop**
    - The reviewed docs prefer an explicit `animation` prop over spreading animation data into normal entity props.
    - `AnimationApi.play()` replaces `start()` so the imperative verbs align better with existing media-style control surfaces.
-   - The `animation` prop is only for entity components under `Reality` / `SceneGraph` that integrate with the `SpatialEntity` abstraction; this restriction is enforced through TypeScript types rather than expanded runtime checks on non-entity components.
+   - The `animation` prop is only accepted by entity components that integrate with the `SpatialEntity` abstraction; this restriction is enforced statically through TypeScript types rather than expanded runtime checks on non-entity components. At runtime, if the entity is never rendered under `Reality` / `SceneGraph`, playback enters `queued` and remains there until the entity binds or unmounts.
    - Alternative considered: spread returned animated props directly onto the entity. Rejected because it mixes hidden animation metadata with normal entity props and makes collisions harder to reason about.
 
 2. **React stores config separately from the render-facing animation object**

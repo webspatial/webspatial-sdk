@@ -272,7 +272,13 @@ React 通过 `SpatialEntity` 上的一个方法驱动完整的动画生命周期
 
 ```typescript
 interface SpatialEntity {
-  animateTransform(command: AnimateTransformCommand): Promise<AnimateTransformResult>
+  /**
+   * `play` 命令返回 `AnimateTransformResult`，携带该会话的 `finished` 和
+   * `stopped` Promise。`pause`、`resume`、`stop` 命令返回 `void`，
+   * 表示 native 已确认收到该命令（不产生新的 result 对象）。
+   */
+  animateTransform(command: AnimateTransformCommand & { type: 'play' }): Promise<AnimateTransformResult>
+  animateTransform(command: AnimateTransformCommand): Promise<void>
 }
 
 interface AnimateTransformCommand {
@@ -305,7 +311,9 @@ interface AnimateTransformResult {
 }
 ```
 
-React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 + 角度制欧拉角）转换为 `Float4x4`，并在触发生命周期回调之前将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制）。
+React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 + 角度制欧拉角）转换为 `Float4x4`。
+
+Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制），并在 resolve `finished` / `stopped` 以及触发生命周期回调之前完成该转换。
 
 若实体在 alive 会话存在期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
 
@@ -338,7 +346,7 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 1. **对外 API 以 `useAnimation` + 实体 `animation` prop 为入口**
    - 评审方向偏向明确的 `animation` prop，而不是把动画数据 spread 到实体普通 props 上。
    - 命令式入口采用 `AnimationApi.play()` 替代 `start()`，使动词语义与常见媒体控制更一致。
-   - `animation` prop 仅面向 `Reality` / `SceneGraph` 下接入 `SpatialEntity` 抽象的 Entity 组件；范围限制通过 TypeScript 类型定义表达，不额外扩大到非 Entity 组件的运行时校验。
+   - `animation` prop 仅被接入 `SpatialEntity` 抽象的 Entity 组件接受；范围限制通过 TypeScript 类型定义在编译期静态保证，不额外扩大到非 Entity 组件的运行时校验。在运行时，若实体从未渲染在 `Reality` / `SceneGraph` 下，播放将进入 `queued` 状态，直到实体绑定或被卸载。
    - 备选方案：直接 spread 返回的 animated props 到实体。否决原因：隐藏字段会混入实体 props，容易发生冲突，语义也不清晰。
 
 2. **React 将配置与渲染态 animation 对象分离**
