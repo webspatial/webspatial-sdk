@@ -16,6 +16,13 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 - **THEN** the component MUST treat that object as the animation input for transform playback
 - **AND** the animation contract MUST be usable without spreading hidden animation fields into ordinary entity props
 
+#### Scenario: animation only supports Reality entity components
+
+- **WHEN** application code passes the `animation` object returned by `useAnimation(config)` to an entity component under `Reality` / `SceneGraph`
+- **THEN** the SDK MUST support that object as the entity transform animation input
+- **AND** TypeScript type definitions MUST restrict this capability to entity components that integrate with the `SpatialEntity` abstraction
+- **AND** this capability does not apply to non-entity React components such as `SpatialDiv`, non-Reality-entity `Model` components, or any component that does not integrate with the `SpatialEntity` abstraction
+
 #### Scenario: animation object MUST NOT be bound to multiple entities
 
 - **GIVEN** the same `animation` object is already bound to an entity

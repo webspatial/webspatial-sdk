@@ -15,6 +15,7 @@
 **非目标：**
 
 - 支持材质、透明度、颜色等非 transform 属性动画。
+- 将 `useAnimation` 扩展到非 `Reality` Entity 的 React 组件，例如 `SpatialDiv`、非 Reality Entity 的普通 `Model` 组件，或其他未接入 `SpatialEntity` 抽象的组件。
 - 在本次变更中引入弹簧物理或超出既定范围的复杂 easing。
 - 在本次变更中解决大角度旋转等限制（仅文档化现状与边界行为）。
 - 引入运行时能力的订阅/动态刷新模型。
@@ -337,6 +338,7 @@ React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 
 1. **对外 API 以 `useAnimation` + 实体 `animation` prop 为入口**
    - 评审方向偏向明确的 `animation` prop，而不是把动画数据 spread 到实体普通 props 上。
    - 命令式入口采用 `AnimationApi.play()` 替代 `start()`，使动词语义与常见媒体控制更一致。
+   - `animation` prop 仅面向 `Reality` / `SceneGraph` 下接入 `SpatialEntity` 抽象的 Entity 组件；范围限制通过 TypeScript 类型定义表达，不额外扩大到非 Entity 组件的运行时校验。
    - 备选方案：直接 spread 返回的 animated props 到实体。否决原因：隐藏字段会混入实体 props，容易发生冲突，语义也不清晰。
 
 2. **React 将配置与渲染态 animation 对象分离**

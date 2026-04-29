@@ -16,6 +16,7 @@
 - [ ] 3.2 优先在公共实体抽象层接入 `animation` prop，再更新各个叶子实体组件 *(blocked by 3.1)*
 - [ ] 3.3 仅对被 alive 会话控制的字段抑制普通 transform 更新，避免竞争
 - [ ] 3.4 按规范对不支持的 runtime 给出 warning，并保持非动画的 transform 路径行为不变
+- [ ] 3.5 通过 TypeScript 类型定义将 `animation` prop 限制在 `Reality` / `SceneGraph` 下的 Entity 组件上，不扩大到非 Entity 组件的运行时校验
 
 ## 4. Native visionOS 播放
 

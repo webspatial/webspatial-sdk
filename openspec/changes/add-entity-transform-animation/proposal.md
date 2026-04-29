@@ -34,6 +34,7 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
 - Add imperative playback controls with `play`, `pause`, `resume`, and `stop`, plus `onStart`, natural completion, `stop`, and `onError` lifecycle / error callbacks.
 - Define timing behavior for `duration`, `timingFunction`, `delay`, `autoStart`, and `loop` with reverse support aligned with the reviewed API direction.
 - Define the cross-layer contract for React, core SDK, JSBridge, and native playback so animations run natively and do not fight normal transform updates.
+- Clarify that the `animation` prop only applies to entity components under `Reality` / `SceneGraph`, not to `SpatialDiv`, non-Reality-entity `Model` components, or other non-entity components; that restriction is expressed through TypeScript type definitions.
 - Extend runtime capability documentation so applications can query `supports('useAnimation')` before relying on the animation API.
 
 ## Capabilities
