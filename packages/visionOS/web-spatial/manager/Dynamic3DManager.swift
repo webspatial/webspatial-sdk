@@ -71,52 +71,13 @@ class Dynamic3DManager {
     }
 
     static func loadResourceToLocal(_ urlString: String, loadComplete: @escaping (Result<URL, Error>) -> Void) {
-        // load local file
-        if urlString.starts(with: "file://") {
-            guard let localUrl = URL(string: pwaManager.getLocalResourceURL(url: urlString)) else {
-                loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Local file is not found"])))
-                return
-            }
-            loadComplete(.success(localUrl))
-            return
-        }
-        // load net file
-        guard let url = URL(string: urlString) else {
-            loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
-            return
-        }
-        // Use an immutable URL to avoid capturing a mutable var in concurrent code
-        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(url.lastPathComponent)
-        let session = URLSession(configuration: URLSessionConfiguration.default)
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        print("start load")
-        let task = session.downloadTask(with: request, completionHandler: { location, response, error in
-            if let error = error {
+        Task {
+            do {
+                let url = try await AssetCache.shared.localFileURL(for: urlString)
+                loadComplete(.success(url))
+            } catch {
                 loadComplete(.failure(error))
-                return
             }
-            if let httpResponse = response as? HTTPURLResponse, !(200 ... 299).contains(httpResponse.statusCode) {
-                let error = NSError(domain: "HTTP Error", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"])
-                loadComplete(.failure(error))
-                return
-            }
-            guard let location = location else {
-                loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download location is nil"])))
-                return
-            }
-            Task {
-                do {
-                    try await FileCoordinator.shared.moveReplacingIfExists(from: location, to: documentsUrl)
-                    print("load complete")
-                    loadComplete(.success(documentsUrl))
-                } catch {
-                    print("File operation error: \(error)")
-                    loadComplete(.failure(error))
-                }
-            }
-
-        })
-        task.resume()
+        }
     }
 }
