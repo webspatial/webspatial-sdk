@@ -25,15 +25,15 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       try {
         let textureIdForNative = options.textureId
         if (options.textureId) {
-          const texturePending = resourceRegistry.get<SpatialObject>(
+          const texturePromise = resourceRegistry.get<SpatialObject>(
             options.textureId,
           )
-          if (texturePending) {
+          if (texturePromise) {
             try {
-              const textureResource = await texturePending
+              const textureResource = await texturePromise
               textureIdForNative = textureResource.id
-            } catch (error) {
-              console.error(' ~ UnlitMaterial ~ texture resolve error:', error)
+            } catch {
+              // Texture create failed or registry cleared; skip material create without logging
               return
             }
           }
@@ -68,40 +68,35 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     if (!ctx || !isInitializedRef.current || !materialRef.current) return
     let cancelled = false
     void (async () => {
-      try {
-        const updates: Partial<SpatialUnlitMaterialOptions> = {}
-        if (options.color !== undefined) updates.color = options.color
-        if (options.textureId !== undefined) {
-          if (options.textureId === '') {
-            updates.textureId = ''
-          } else {
-            const texturePending = ctx.resourceRegistry.get<SpatialObject>(
-              options.textureId,
-            )
-            if (texturePending) {
-              try {
-                const textureResource = await texturePending
-                if (cancelled) return
-                updates.textureId = textureResource.id
-              } catch (error) {
-                console.error(
-                  ' ~ UnlitMaterial ~ texture resolve error:',
-                  error,
-                )
-                return
-              }
-            } else {
-              updates.textureId = options.textureId
+      const updates: Partial<SpatialUnlitMaterialOptions> = {}
+      if (options.color !== undefined) updates.color = options.color
+      if (options.textureId !== undefined) {
+        if (options.textureId === '') {
+          updates.textureId = ''
+        } else {
+          const texturePromise = ctx.resourceRegistry.get<SpatialObject>(
+            options.textureId,
+          )
+          if (texturePromise) {
+            try {
+              const textureResource = await texturePromise
+              if (cancelled) return
+              updates.textureId = textureResource.id
+            } catch {
+              return
             }
+          } else {
+            updates.textureId = options.textureId
           }
         }
-        if (options.transparent !== undefined)
-          updates.transparent = options.transparent
-        if (options.opacity !== undefined) updates.opacity = options.opacity
-        if (cancelled || Object.keys(updates).length === 0) return
-        await materialRef.current?.updateProperties(updates)
-      } catch (error) {
-        console.error(' ~ UnlitMaterial ~ update error:', error)
+      }
+      if (options.transparent !== undefined)
+        updates.transparent = options.transparent
+      if (options.opacity !== undefined) updates.opacity = options.opacity
+      if (cancelled || Object.keys(updates).length === 0) return
+      const mat = materialRef.current
+      if (mat) {
+        void mat.updateProperties(updates).catch(() => {})
       }
     })()
     return () => {
