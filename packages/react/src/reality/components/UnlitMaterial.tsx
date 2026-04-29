@@ -25,9 +25,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       try {
         let textureIdForNative = options.textureId
         if (options.textureId) {
-          const texturePromise = resourceRegistry.get<SpatialObject>(
-            options.textureId,
-          )
+          const texturePromise = resourceRegistry.get(options.textureId)
           if (texturePromise) {
             try {
               const textureResource = await texturePromise
@@ -74,9 +72,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         if (options.textureId === '') {
           updates.textureId = ''
         } else {
-          const texturePromise = ctx.resourceRegistry.get<SpatialObject>(
-            options.textureId,
-          )
+          const texturePromise = ctx.resourceRegistry.get(options.textureId)
           if (texturePromise) {
             try {
               const textureResource = await texturePromise

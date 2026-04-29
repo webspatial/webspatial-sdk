@@ -3,9 +3,13 @@ import { SpatialObject } from '@webspatial/core-sdk'
 /**
  * Tracks spatial resources (textures, materials, entities, …) by string id under one Reality.
  *
+ * Native creation is async (`createTexture`, `createUnlitMaterial`, …). The map
+ * stores `Promise<SpatialObject>` so `add(id, pendingCreation)` can run after `get(id)` — sibling
+ * JSX order does not need to match registration order. Callers are responsible for using the
+ * correct id for each resource kind (same as with string ids today).
+ *
  * Callers can `await get(id)` before `add(id, promise)` runs: `get` returns a promise that
- * settles when something later calls `add` with the same id. That way component order in JSX
- * does not have to match registration order.
+ * settles when something later calls `add` with the same id.
  */
 export class ResourceRegistry {
   /** Every id maps to a promise — either the real resource from add(), or a placeholder until then. */
@@ -34,10 +38,10 @@ export class ResourceRegistry {
     }
   }
 
-  get<T extends SpatialObject>(id: string): Promise<T> {
+  get(id: string): Promise<SpatialObject> {
     const existing = this.resources.get(id)
     if (existing) {
-      return existing as Promise<T>
+      return existing
     }
 
     // Nothing registered yet — return a promise that add() will resolve (or reject on failure).
@@ -45,7 +49,7 @@ export class ResourceRegistry {
       this.deferreds.set(id, { resolve, reject })
     })
     this.resources.set(id, promise)
-    return promise as Promise<T>
+    return promise
   }
 
   remove(id: string): void {
@@ -74,6 +78,8 @@ export class ResourceRegistry {
 
     const pending = Array.from(this.resources.values())
     this.resources.clear()
-    pending.forEach(p => p.then(obj => obj.destroy()).catch(() => {}))
+    // Destroy runs when each creation promise settles — may finish after React unmount; still
+    // required so native objects are released. Failures/no-ops are swallowed per promise.
+    void Promise.allSettled(pending.map(p => p.then(obj => obj.destroy())))
   }
 }
