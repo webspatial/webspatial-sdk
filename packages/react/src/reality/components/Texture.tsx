@@ -1,59 +1,51 @@
 import React, { useEffect } from 'react'
 import { useRealityContext } from '../context'
+import { getAbsoluteUrl } from '../../utils/urlUtils'
 
 export type TextureProps = {
   children?: React.ReactNode
   id: string
   url: string
   onLoad?: () => void
-  onError?: (error: any) => void
+  onError?: (error: unknown) => void
 }
 
-function resolveTextureUrl(url: string): string {
-  if (
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('file://')
-  ) {
-    return url
-  }
-  if (typeof window === 'undefined' || !window.location?.href) {
-    return url
-  }
-  return new URL(url, window.location.href).href
-}
-
-export const Texture: React.FC<TextureProps> = ({ children, ...options }) => {
+export const Texture: React.FC<TextureProps> = ({
+  children,
+  id,
+  url,
+  onLoad,
+  onError,
+}) => {
   const ctx = useRealityContext()
 
   useEffect(() => {
     if (!ctx) return
     const controller = new AbortController()
     const { session, resourceRegistry } = ctx
-    const textureId = options.id
 
     const init = async () => {
       try {
-        const resolvedUrl = resolveTextureUrl(options.url)
+        const resolvedUrl = getAbsoluteUrl(url)
         const texturePromise = session.createTexture({ url: resolvedUrl })
-        resourceRegistry.add(textureId, texturePromise)
+        resourceRegistry.add(id, texturePromise)
         const texture = await texturePromise
         if (controller.signal.aborted) {
           texture.destroy()
           return
         }
-        options.onLoad?.()
-      } catch (error: any) {
-        options.onError?.(error)
+        onLoad?.()
+      } catch (error: unknown) {
+        onError?.(error)
       }
     }
     init()
 
     return () => {
       controller.abort()
-      resourceRegistry.removeAndDestroy(textureId)
+      resourceRegistry.removeAndDestroy(id)
     }
-  }, [ctx, options.id, options.url])
+  }, [ctx, id, url])
 
   return null
 }
