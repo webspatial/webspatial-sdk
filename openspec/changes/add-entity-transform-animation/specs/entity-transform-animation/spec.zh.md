@@ -16,6 +16,13 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 - **THEN** 组件 MUST 将该对象作为 transform 播放的动画输入
 - **AND** 动画契约 MUST 可用，且不需要把隐藏动画字段 spread 到实体普通 props 中
 
+#### Scenario: animation 仅支持 Reality Entity 组件
+
+- **WHEN** 应用将 `useAnimation(config)` 返回的 `animation` 对象传给 `Reality` / `SceneGraph` 下的 Entity 组件
+- **THEN** SDK MUST 支持该对象作为实体 transform 动画输入
+- **AND** TypeScript 类型定义 MUST 将该能力限制在接入 `SpatialEntity` 抽象的 Entity 组件上
+- **AND** 本能力不适用于非 Entity 的 React 组件，例如 `SpatialDiv`、非 Reality Entity 的普通 `Model` 组件，或其他未接入 `SpatialEntity` 抽象的组件
+
 #### Scenario: animation 对象禁止多实体复用
 
 - **GIVEN** 同一个 `animation` 对象已经绑定到某个实体

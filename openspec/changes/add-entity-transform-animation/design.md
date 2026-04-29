@@ -15,6 +15,7 @@ See the proposal for full motivation. In short: entity transform updates are cur
 **Non-Goals:**
 
 - Animating non-transform properties such as material, opacity, or color.
+- Extending `useAnimation` to React components that are not `Reality` entities, such as `SpatialDiv`, non-Reality-entity `Model` components, or any component that does not integrate with the `SpatialEntity` abstraction.
 - Adding spring physics or arbitrary easing beyond the documented timing functions in this change.
 - Solving large-angle rotation limitations beyond documenting current behavior.
 - Adding a reactive runtime capability subscription model.
@@ -338,6 +339,7 @@ For a given `animationId`:
 1. **Public API uses `useAnimation` plus an entity `animation` prop**
    - The reviewed docs prefer an explicit `animation` prop over spreading animation data into normal entity props.
    - `AnimationApi.play()` replaces `start()` so the imperative verbs align better with existing media-style control surfaces.
+   - The `animation` prop is only for entity components under `Reality` / `SceneGraph` that integrate with the `SpatialEntity` abstraction; this restriction is enforced through TypeScript types rather than expanded runtime checks on non-entity components.
    - Alternative considered: spread returned animated props directly onto the entity. Rejected because it mixes hidden animation metadata with normal entity props and makes collisions harder to reason about.
 
 2. **React stores config separately from the render-facing animation object**

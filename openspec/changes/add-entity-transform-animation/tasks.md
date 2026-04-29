@@ -16,6 +16,7 @@
 - [ ] 3.2 Wire the entity `animation` prop through the shared entity abstraction layer before updating leaf entity components *(blocked by 3.1)*
 - [ ] 3.3 Suppress competing ordinary transform updates only for fields controlled by an alive session
 - [ ] 3.4 Guard unsupported runtimes with the documented warning behavior and keep non-animated transform paths unchanged
+- [ ] 3.5 Restrict the `animation` prop to entity components under `Reality` / `SceneGraph` through TypeScript type definitions, without expanding runtime checks across non-entity components
 
 ## 4. Native visionOS playback
 
