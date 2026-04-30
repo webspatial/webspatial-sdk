@@ -42,6 +42,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Used to reset the ready promise when the model URL changes.
    */
   private modelURL?: string
+  // @TODO: Deprecate modelURL property from Web and Swift code
+  get modelUrl(): string | undefined {
+    return this.modelURL
+  }
 
   /**
    * Caches the last sources array to detect changes.
