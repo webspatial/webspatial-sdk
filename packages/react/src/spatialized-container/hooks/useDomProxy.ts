@@ -21,7 +21,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   public domProxy?: T | null
   private styleProxy?: CSSStyleDeclaration
 
-  // extre ref props, used to add extra props to ref
+  // extra ref props, used to add extra props to ref
   private extraRefProps?: ((domProxy: T) => Record<string, unknown>) | undefined
 
   constructor(
@@ -112,7 +112,6 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
 
     this.standardRawDom = dom
 
-    let cacheExtraRefProps: Record<string, unknown> | undefined
     const domProxy = new Proxy<SpatializedElementRef<T>>(
       dom as SpatializedElementRef<T>,
       {
@@ -201,20 +200,14 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
                       value as BackgroundMaterialType,
                     )
                   } else if (prop === SpatialCustomStyleVars.back) {
-                    target.setProperty(
-                      SpatialCustomStyleVars.back,
-                      value as string,
-                    )
+                    target.setProperty(SpatialCustomStyleVars.back, value as string)
                   } else if (prop === SpatialCustomStyleVars.xrZIndex) {
                     target.setProperty(
                       SpatialCustomStyleVars.xrZIndex,
                       value as string,
                     )
                   } else if (prop === SpatialCustomStyleVars.depth) {
-                    target.setProperty(
-                      SpatialCustomStyleVars.depth,
-                      value as string,
-                    )
+                    target.setProperty(SpatialCustomStyleVars.depth, value as string)
                   } else if (prop === 'cssText') {
                     // parse cssText, filter out spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
                     const toFilteredCSSProperties = ['transform', 'visibility']
@@ -258,10 +251,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
           }
 
           if (typeof prop === 'string' && self.extraRefProps) {
-            if (!cacheExtraRefProps) {
-              cacheExtraRefProps = self.extraRefProps(domProxy)
-            }
-            const extraProps = cacheExtraRefProps
+            const extraProps = self.extraRefProps(domProxy)
             if (extraProps.hasOwnProperty(prop)) {
               return extraProps[prop]
             }
@@ -275,10 +265,8 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
                   dom.style.cssText =
                     'visibility: hidden; transition: none; transform: none;'
                   if (self.transformVisibilityTaskContainerDom) {
-                    self.transformVisibilityTaskContainerDom.style.visibility =
-                      ''
-                    self.transformVisibilityTaskContainerDom.style.transform =
-                      ''
+                    self.transformVisibilityTaskContainerDom.style.visibility = ''
+                    self.transformVisibilityTaskContainerDom.style.transform = ''
                   }
                   return true
                 }
@@ -302,10 +290,10 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
 
           // check extraRefProps setter
           if (typeof prop === 'string' && self.extraRefProps) {
-            if (!cacheExtraRefProps) {
-              cacheExtraRefProps = self.extraRefProps(domProxy)
+            const extraProps = self.extraRefProps(domProxy)
+            if (extraProps.hasOwnProperty(prop)) {
+              Reflect.set(extraProps, prop, value)
             }
-            cacheExtraRefProps[prop] = value
           }
 
           const ok = Reflect.set(target, prop, value)
@@ -322,10 +310,8 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
             return supports('xrOffsetBack')
           }
           if (typeof prop === 'string' && self.extraRefProps) {
-            if (!cacheExtraRefProps) {
-              cacheExtraRefProps = self.extraRefProps(domProxy)
-            }
-            if (cacheExtraRefProps.hasOwnProperty(prop)) {
+            const extraProps = self.extraRefProps(domProxy)
+            if (extraProps.hasOwnProperty(prop)) {
               return true
             }
           }
@@ -380,6 +366,12 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
     this.ref = ref
   }
+
+  updateExtraRefProps(
+    extraRefProps?: (domProxy: T) => Record<string, unknown>,
+  ) {
+    this.extraRefProps = extraRefProps
+  }
 }
 
 //  hijack getComputedStyle to get raw dom
@@ -402,6 +394,8 @@ export function useDomProxy<T extends SpatializedElementRef>(
   const spatialContainerRefProxy = useRef<SpatialContainerRefProxy<T>>(
     new SpatialContainerRefProxy<T>(ref, extraRefProps),
   )
+
+  spatialContainerRefProxy.current.updateExtraRefProps(extraRefProps)
 
   useEffect(() => {
     spatialContainerRefProxy.current.updateRef(ref)

@@ -152,6 +152,31 @@ describe('SpatialContainerRefProxy', () => {
 
     expect((ref.current as any).foo).toBe('bar')
   })
+
+  it('reads updated extra ref props after the proxy has been created', () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref, () => ({
+      get foo() {
+        return 'initial'
+      },
+    }))
+
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+
+    expect((ref.current as any).foo).toBe('initial')
+
+    proxy.updateExtraRefProps(() => ({
+      get foo() {
+        return 'updated'
+      },
+    }))
+
+    expect((ref.current as any).foo).toBe('updated')
+  })
 })
 
 describe('spatialized ref: xrClientDepth / xrOffsetBack', () => {
