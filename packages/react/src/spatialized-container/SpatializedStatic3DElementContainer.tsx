@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
@@ -152,22 +153,27 @@ function SpatializedStatic3DElementContainerBase(
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
+  const [spatializedElement, setSpatializedElement] =
+    useState<SpatializedStatic3DElement>()
 
   const createSpatializedElement = useCallback(() => {
-    promiseRef.current = getSession()!.createSpatializedStatic3DElement(
+    const promise = getSession()!.createSpatializedStatic3DElement(
       getAbsoluteURL(props.src),
       collectSources(props.children),
     )
-    return promiseRef.current
+    promiseRef.current = promise
+    promise.then(element => {
+      if (promiseRef.current === promise) {
+        setSpatializedElement(element)
+      }
+    })
+    return promise
   }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
       return {
         get currentSrc(): string {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           return spatializedElement?.currentSrc ?? ''
         },
         get ready(): Promise<ModelLoadEvent> {
@@ -183,66 +189,39 @@ function SpatializedStatic3DElementContainerBase(
         },
         set entityTransform(value: DOMMatrixReadOnly) {
           modelTransform = value
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           spatializedElement?.updateModelTransform(modelTransform)
         },
         async play(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           await spatializedElement?.play()
         },
         async pause(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           await spatializedElement?.pause()
         },
         get paused(): boolean {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           return spatializedElement?.paused ?? true
         },
         get duration(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           return spatializedElement?.duration ?? 0
         },
         get playbackRate(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           return spatializedElement?.playbackRate ?? 1
         },
         set playbackRate(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           if (spatializedElement) {
             spatializedElement.playbackRate = value
           }
         },
         get currentTime(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           return spatializedElement?.currentTime ?? 0
         },
         set currentTime(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
           if (spatializedElement) {
             spatializedElement.currentTime = value
           }
         },
       }
     },
-    [],
+    [spatializedElement],
   )
 
   return (
