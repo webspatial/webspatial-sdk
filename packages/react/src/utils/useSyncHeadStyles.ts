@@ -11,6 +11,10 @@ type SyncTiming = 'immediate' | 'delayed'
 
 function getSyncTiming(mutations?: MutationRecord[] | null): SyncTiming | null {
   if (!Array.isArray(mutations) || mutations.length === 0) return null
+  // Scan the whole batch and take the highest priority across all records.
+  // `immediate` (inline <style> changes) wins over `delayed` (<link rel=stylesheet>),
+  // so a mixed batch is never downgraded to `delayed` by record ordering.
+  let hasDelayed = false
   for (const mutation of mutations) {
     if (mutation.type === 'characterData') {
       const parent = mutation.target.parentElement
@@ -28,11 +32,11 @@ function getSyncTiming(mutations?: MutationRecord[] | null): SyncTiming | null {
       if (tag === 'STYLE') return 'immediate'
       if (tag === 'LINK') {
         const { rel } = node as HTMLLinkElement
-        if (rel && rel.toLowerCase() === 'stylesheet') return 'delayed'
+        if (rel && rel.toLowerCase() === 'stylesheet') hasDelayed = true
       }
     }
   }
-  return null
+  return hasDelayed ? 'delayed' : null
 }
 
 export function useSyncHeadStyles(

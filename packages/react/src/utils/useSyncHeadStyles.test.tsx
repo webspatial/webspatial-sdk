@@ -167,4 +167,60 @@ describe('useSyncHeadStyles', () => {
 
     expect(syncParentHeadToChild).not.toHaveBeenCalled()
   })
+
+  it('prefers immediate when a batch mixes link stylesheet and style text changes', async () => {
+    const childWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+
+    function Test() {
+      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+
+    const style = document.createElement('style')
+    const text = document.createTextNode('.a{padding:12px;}')
+    style.appendChild(text)
+
+    act(() => {
+      observers[0].callback(
+        [
+          {
+            type: 'childList',
+            target: document.head,
+            addedNodes: [link] as unknown as NodeList,
+            removedNodes: [] as unknown as NodeList,
+          } as unknown as MutationRecord,
+          {
+            type: 'characterData',
+            target: text,
+            addedNodes: [],
+            removedNodes: [],
+          } as unknown as MutationRecord,
+        ],
+        observers[0] as unknown as MutationObserver,
+      )
+    })
+    expect(syncParentHeadToChild).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(syncParentHeadToChild).toHaveBeenCalledTimes(1)
+    expect(syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
+
+    vi.advanceTimersByTime(1000)
+    expect(syncParentHeadToChild).toHaveBeenCalledTimes(1)
+
+    unmount()
+  })
 })
