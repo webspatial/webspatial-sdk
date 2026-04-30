@@ -48,6 +48,7 @@ export function useSyncHeadStyles(
 
     let timer: number | undefined
     let immediateQueued = false
+    let disposed = false
     const scheduleSync = (timing: SyncTiming = 'delayed') => {
       if (timer) window.clearTimeout(timer)
       if (timing === 'immediate') {
@@ -55,11 +56,13 @@ export function useSyncHeadStyles(
         immediateQueued = true
         queueMicrotask(() => {
           immediateQueued = false
+          if (disposed) return
           syncParentHeadToChild(childWindow)
         })
         return
       }
       timer = window.setTimeout(() => {
+        if (disposed) return
         syncParentHeadToChild(childWindow)
       }, delayMs)
     }
@@ -78,6 +81,7 @@ export function useSyncHeadStyles(
     })
 
     return () => {
+      disposed = true
       if (timer) window.clearTimeout(timer)
       observer.disconnect()
     }

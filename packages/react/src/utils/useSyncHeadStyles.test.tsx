@@ -128,4 +128,43 @@ describe('useSyncHeadStyles', () => {
     expect(syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
     unmount()
   })
+
+  it('cancels queued immediate sync on unmount', async () => {
+    const childWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+
+    function Test() {
+      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+    const style = document.createElement('style')
+    const text = document.createTextNode('.a{padding:12px;}')
+    style.appendChild(text)
+
+    act(() => {
+      observers[0].callback(
+        [
+          {
+            type: 'characterData',
+            target: text,
+            addedNodes: [],
+            removedNodes: [],
+          } as unknown as MutationRecord,
+        ],
+        observers[0] as unknown as MutationObserver,
+      )
+      unmount()
+    })
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(syncParentHeadToChild).not.toHaveBeenCalled()
+  })
 })
