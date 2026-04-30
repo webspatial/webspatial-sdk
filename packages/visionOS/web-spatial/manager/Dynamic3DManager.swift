@@ -67,7 +67,17 @@ class Dynamic3DManager {
     // Error messages are thrown from createGeometry using GeometryCreationError
 
     static func createUnlitMaterial(_ props: CreateUnlitMaterial, _ tex: TextureResource? = nil) -> SpatialUnlitMaterial {
-        return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)
+        let textureSpatialId: String? = {
+            guard let tid = props.textureId, !tid.isEmpty else { return nil }
+            return tid
+        }()
+        return SpatialUnlitMaterial(
+            props.color ?? "#FFFFFF",
+            tex,
+            props.transparent ?? true,
+            props.opacity ?? 1,
+            textureSpatialId: textureSpatialId
+        )
     }
 
     static func loadResourceToLocal(_ urlString: String, loadComplete: @escaping (Result<URL, Error>) -> Void) {

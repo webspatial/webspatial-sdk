@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import {
+  SpatialObject,
   SpatialUnlitMaterial,
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
@@ -19,11 +20,30 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 
   useEffect(() => {
     if (!ctx) return
-    const { session, reality, resourceRegistry } = ctx
+    const { session, resourceRegistry } = ctx
     const init = async () => {
-      const materialPromise = session.createUnlitMaterial(options)
-      resourceRegistry.add(options.id, materialPromise)
       try {
+        let textureIdForNative = options.textureId
+        if (options.textureId) {
+          const texturePromise = resourceRegistry.get(options.textureId)
+          if (texturePromise) {
+            try {
+              const textureResource = await texturePromise
+              textureIdForNative = textureResource.id
+            } catch {
+              // Texture create failed or registry cleared; skip material create without logging
+              return
+            }
+          }
+        }
+        const commandOptions: SpatialUnlitMaterialOptions = {
+          color: options.color,
+          textureId: textureIdForNative,
+          transparent: options.transparent,
+          opacity: options.opacity,
+        }
+        const materialPromise = session.createUnlitMaterial(commandOptions)
+        resourceRegistry.add(options.id, materialPromise)
         const mat = await materialPromise
         materialRef.current = mat
         isInitializedRef.current = true
@@ -43,16 +63,48 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 
   // Dynamic property updates
   useEffect(() => {
-    if (!isInitializedRef.current || !materialRef.current) return
-    const updates: Partial<SpatialUnlitMaterialOptions> = {}
-    if (options.color !== undefined) updates.color = options.color
-    if (options.transparent !== undefined)
-      updates.transparent = options.transparent
-    if (options.opacity !== undefined) updates.opacity = options.opacity
-    if (Object.keys(updates).length > 0) {
-      materialRef.current.updateProperties(updates)
+    if (!ctx || !isInitializedRef.current || !materialRef.current) return
+    let cancelled = false
+    void (async () => {
+      const updates: Partial<SpatialUnlitMaterialOptions> = {}
+      if (options.color !== undefined) updates.color = options.color
+      if (options.textureId !== undefined) {
+        if (options.textureId === '') {
+          updates.textureId = ''
+        } else {
+          const texturePromise = ctx.resourceRegistry.get(options.textureId)
+          if (texturePromise) {
+            try {
+              const textureResource = await texturePromise
+              if (cancelled) return
+              updates.textureId = textureResource.id
+            } catch {
+              return
+            }
+          } else {
+            updates.textureId = options.textureId
+          }
+        }
+      }
+      if (options.transparent !== undefined)
+        updates.transparent = options.transparent
+      if (options.opacity !== undefined) updates.opacity = options.opacity
+      if (cancelled || Object.keys(updates).length === 0) return
+      const mat = materialRef.current
+      if (mat) {
+        void mat.updateProperties(updates).catch(() => {})
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-  }, [options.color, options.transparent, options.opacity])
+  }, [
+    ctx,
+    options.color,
+    options.textureId,
+    options.transparent,
+    options.opacity,
+  ])
 
   return null
 }
