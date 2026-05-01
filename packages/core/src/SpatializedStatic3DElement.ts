@@ -203,7 +203,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * forwards the request to native.
    */
   set currentTime(value: number) {
-    this.updateProperties({ currentTime: this.clampTime(value) })
+    const time = Number.isNaN(value) ? 0 : clamp(value, 0, this.duration)
+    this.updateProperties({ currentTime: time })
   }
 
   /**
@@ -345,6 +346,11 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     const modelTransform = Array.from(transform.toFloat64Array())
     this.updateProperties({ modelTransform })
   }
+}
+
+// Equivalent of proposed Math.clamp
+function clamp(num: number, min: number, max: number) {
+  return num <= min ? min : num >= max ? max : num
 }
 
 type Static3DReceiveEventData =
