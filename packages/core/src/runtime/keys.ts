@@ -16,6 +16,7 @@ export const COMPONENT_KEYS = [
   'ModelAsset',
   'ModelEntity',
   'UnlitMaterial',
+  'PBRMaterial',
   'Material',
   'AttachmentAsset',
   'AttachmentEntity',
@@ -90,7 +91,7 @@ export function normalizeCapabilityName(name: string): string {
 
 /** Known sub-tokens per canonical top-level `name` (AND semantics). */
 export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
-  Material: ['unlit'],
+  Material: ['unlit', 'pbr'],
   WindowScene: ['defaultSize', 'resizability'],
   VolumeScene: [
     'defaultSize',

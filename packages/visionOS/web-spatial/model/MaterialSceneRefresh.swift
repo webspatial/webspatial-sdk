@@ -30,11 +30,28 @@ enum MaterialSceneRefresh {
     ) -> Set<String> {
         var refreshedMaterialIds = Set<String>()
         for (_, obj) in spatialObjects {
-            guard let material = obj as? SpatialUnlitMaterial,
-                  material.textureSpatialId == textureSpatialId
-            else { continue }
-            material.updateProperties(color: nil, texture: .some(texture.resource), transparent: nil, opacity: nil)
-            refreshedMaterialIds.insert(material.spatialId)
+            if let material = obj as? SpatialUnlitMaterial,
+               material.textureSpatialId == textureSpatialId
+            {
+                material.updateProperties(color: nil, texture: .some(texture.resource), transparent: nil, opacity: nil)
+                refreshedMaterialIds.insert(material.spatialId)
+                continue
+            }
+            if let material = obj as? SpatialPBRMaterial,
+               material.textureSpatialId == textureSpatialId
+            {
+                material.updateProperties(
+                    color: nil,
+                    texture: .some(texture.resource),
+                    metalness: nil,
+                    roughness: nil,
+                    emissiveColor: nil,
+                    emissiveIntensity: nil,
+                    transparent: nil,
+                    opacity: nil
+                )
+                refreshedMaterialIds.insert(material.spatialId)
+            }
         }
         return refreshedMaterialIds
     }

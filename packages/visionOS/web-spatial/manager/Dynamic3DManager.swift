@@ -80,6 +80,24 @@ class Dynamic3DManager {
         )
     }
 
+    static func createPBRMaterial(_ props: CreatePBRMaterial, _ tex: TextureResource? = nil) -> SpatialPBRMaterial {
+        let textureSpatialId: String? = {
+            guard let tid = props.textureId, !tid.isEmpty else { return nil }
+            return tid
+        }()
+        return SpatialPBRMaterial(
+            props.color ?? "#FFFFFF",
+            tex,
+            props.metalness ?? 0,
+            props.roughness ?? 0.5,
+            props.emissiveColor ?? "#000000",
+            props.emissiveIntensity ?? 0,
+            props.transparent ?? false,
+            props.opacity ?? 1,
+            textureSpatialId: textureSpatialId
+        )
+    }
+
     static func loadResourceToLocal(_ urlString: String, loadComplete: @escaping (Result<URL, Error>) -> Void) {
         // load local file
         if urlString.starts(with: "file://") {

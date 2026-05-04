@@ -47,6 +47,18 @@ struct CreateUnlitMaterial: CommandDataProtocol {
     let opacity: Float?
 }
 
+struct CreatePBRMaterial: CommandDataProtocol {
+    static let commandType: String = "CreatePBRMaterial"
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
+    let emissiveColor: String?
+    let emissiveIntensity: Float?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
 struct CreateTexture: CommandDataProtocol {
     static let commandType: String = "CreateTexture"
     let url: String
@@ -157,6 +169,19 @@ struct UpdateUnlitMaterialProperties: CommandDataProtocol {
     let id: String
     let color: String?
     let textureId: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct UpdatePBRMaterialProperties: CommandDataProtocol {
+    static let commandType: String = "UpdatePBRMaterialProperties"
+    let id: String
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
+    let emissiveColor: String?
+    let emissiveIntensity: Float?
     let transparent: Bool?
     let opacity: Float?
 }

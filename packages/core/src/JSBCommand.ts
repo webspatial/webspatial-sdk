@@ -13,6 +13,7 @@ import {
   SpatialSceneProperties,
   SpatialSceneCreationOptions,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialGeometryOptions,
   SpatialGeometryType,
   ModelComponentOptions,
@@ -221,6 +222,23 @@ export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
   }
 }
 
+export class UpdatePBRMaterialProperties extends SpatializedElementCommand {
+  properties: Partial<SpatialPBRMaterialOptions>
+  commandType = 'UpdatePBRMaterialProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatialPBRMaterialOptions>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
   matrix: DOMMatrix
   commandType = 'UpdateSpatializedElementTransform'
@@ -372,6 +390,16 @@ export class CreateSpatialUnlitMaterialCommand extends JSBCommand {
     return this.options
   }
   commandType = 'CreateUnlitMaterial'
+}
+
+export class CreateSpatialPBRMaterialCommand extends JSBCommand {
+  constructor(private options: SpatialPBRMaterialOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreatePBRMaterial'
 }
 
 export class AddComponentToEntityCommand extends JSBCommand {

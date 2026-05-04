@@ -20,6 +20,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialTextureResourceOptions,
   SpatialEntityUserData,
   AttachmentEntityOptions,
@@ -35,6 +36,7 @@ import {
   createSpatialModelEntity,
   createSpatialTexture,
   createSpatialUnlitMaterial,
+  createSpatialPBRMaterial,
 } from './reality/realityCreator'
 import {
   SpatialBoxGeometry,
@@ -169,6 +171,17 @@ export class SpatialSession {
    */
   createUnlitMaterial(options: SpatialUnlitMaterialOptions) {
     return createSpatialUnlitMaterial(options)
+  }
+
+  /**
+   * Creates a physically-based material that responds to scene lighting.
+   * Supports `metalness`, `roughness`, and emissive properties on top of
+   * the base color/texture/transparency surface controls.
+   * @param options Configuration options for the PBR material
+   * @returns Promise resolving to a new SpatialPBRMaterial instance
+   */
+  createPBRMaterial(options: SpatialPBRMaterialOptions) {
+    return createSpatialPBRMaterial(options)
   }
 
   /**

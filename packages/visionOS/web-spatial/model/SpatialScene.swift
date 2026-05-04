@@ -307,6 +307,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
         spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
+        spatialWebViewModel.addJSBListener(CreatePBRMaterial.self, onCreatePBRMaterial)
         spatialWebViewModel.addJSBListener(CreateTexture.self, onCreateTexture)
         spatialWebViewModel.addJSBListener(UpdateTextureProperties.self, onUpdateTextureProperties)
         spatialWebViewModel.addJSBListener(CreateModelComponent.self, onCreateModelComponent)
@@ -326,6 +327,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertCoordinate.self, onConvertCoordinate)
 
         spatialWebViewModel.addJSBListener(UpdateUnlitMaterialProperties.self, onUpdateUnlitMaterialProperties)
+        spatialWebViewModel.addJSBListener(UpdatePBRMaterialProperties.self, onUpdatePBRMaterialProperties)
         spatialWebViewModel.addJSBListener(RemoveComponentFromEntity.self, onRemoveComponentFromEntity)
         spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
 
@@ -1000,6 +1002,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(AddSpatializedElementReply(id: material.id)))
     }
 
+    private func onCreatePBRMaterial(command: CreatePBRMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        var tex: TextureResource? = nil
+        if let textureId = command.textureId,
+           let texObj = spatialObjects[textureId] as? SpatialTextureResource
+        {
+            tex = texObj.resource
+        }
+        let material = Dynamic3DManager.createPBRMaterial(command, tex)
+        addSpatialObject(material)
+        resolve(.success(AddSpatializedElementReply(id: material.id)))
+    }
+
     private func onCreateModelComponent(command: CreateModelComponent, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         if let geometry = spatialObjects[command.geometryId] as? Geometry {
             var materials: [SpatialMaterial] = []
@@ -1299,6 +1313,39 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             }
         }
         material.updateProperties(color: command.color, texture: texture, transparent: command.transparent, opacity: command.opacity)
+        if let tid = command.textureId {
+            material.textureSpatialId = tid.isEmpty ? nil : tid
+        }
+        MaterialSceneRefresh.refreshComponentsUsingMaterial(command.id, spatialObjects: spatialObjects)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onUpdatePBRMaterialProperties(command: UpdatePBRMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let material = spatialObjects[command.id] as? SpatialPBRMaterial else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
+            return
+        }
+        var texture: TextureResource?? = nil
+        if let textureId = command.textureId {
+            if textureId.isEmpty {
+                texture = .some(nil)
+            } else if let texObj = spatialObjects[textureId] as? SpatialTextureResource {
+                texture = .some(texObj.resource)
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(textureId) not found")))
+                return
+            }
+        }
+        material.updateProperties(
+            color: command.color,
+            texture: texture,
+            metalness: command.metalness,
+            roughness: command.roughness,
+            emissiveColor: command.emissiveColor,
+            emissiveIntensity: command.emissiveIntensity,
+            transparent: command.transparent,
+            opacity: command.opacity
+        )
         if let tid = command.textureId {
             material.textureSpatialId = tid.isEmpty ? nil : tid
         }

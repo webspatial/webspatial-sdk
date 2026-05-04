@@ -255,11 +255,22 @@ export type SpatialGeometryOptions =
   | SpatialCylinderGeometryOptions
   | SpatialConeGeometryOptions
 
-export type SpatialMaterialType = 'unlit'
+export type SpatialMaterialType = 'unlit' | 'pbr'
 
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
+  transparent?: boolean
+  opacity?: number
+}
+
+export interface SpatialPBRMaterialOptions {
+  color?: string
+  textureId?: string
+  metalness?: number
+  roughness?: number
+  emissiveColor?: string
+  emissiveIntensity?: number
   transparent?: boolean
   opacity?: number
 }
