@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { SpatialEntity, supports, composeSRT } from '@webspatial/core-sdk'
 import type {
+  AnimatedPropsInternal,
   AnimationConfig,
   AnimationApi,
   AnimatedProps,
@@ -432,7 +433,9 @@ export function useAnimation(
 
   // ---- Bind / unbind lifecycle (called by useEntity) ----
   // Store bind/unbind functions on the animatedProps object for the entity layer to call.
-  ;(animatedProps as any).__bind = (entity: SpatialEntity) => {
+  ;(animatedProps as AnimatedPropsInternal).__bind = (
+    entity: SpatialEntity,
+  ) => {
     entityRef.current = entity
 
     // Check for multi-entity binding
@@ -453,7 +456,7 @@ export function useAnimation(
       })
     }
   }
-  ;(animatedProps as any).__unbind = () => {
+  ;(animatedProps as AnimatedPropsInternal).__unbind = () => {
     const entity = entityRef.current
     const session = sessionRef.current
 
@@ -477,7 +480,7 @@ export function useAnimation(
   }
 
   // Expose a getter for the entity layer to read suppressed fields
-  ;(animatedProps as any).__getSuppressedFields = ():
+  ;(animatedProps as AnimatedPropsInternal).__getSuppressedFields = ():
     | readonly ('position' | 'rotation' | 'scale')[]
     | null => {
     const session = sessionRef.current

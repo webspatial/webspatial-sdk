@@ -172,3 +172,24 @@ export interface AnimateTransformResult {
   /** Resolves when the animation is stopped via stop(). */
   stopped: Promise<TransformValues>
 }
+
+// ---- Internal animated props (cross-layer communication) ----
+
+/**
+ * @internal
+ * Extended interface for `AnimatedProps` used internally by the entity layer
+ * to bind/unbind animations and query suppressed transform fields.
+ * Application code should never use this interface directly.
+ */
+export interface AnimatedPropsInternal extends AnimatedProps {
+  /** Called by the entity layer when the entity instance becomes available. */
+  __bind: (
+    entity: import('../reality/entity/SpatialEntity').SpatialEntity,
+  ) => void
+  /** Called by the entity layer when the entity is destroyed or animation prop changes. */
+  __unbind: () => void
+  /** Returns the transform fields currently suppressed by an alive animation session. */
+  __getSuppressedFields: () =>
+    | readonly ('position' | 'rotation' | 'scale')[]
+    | null
+}

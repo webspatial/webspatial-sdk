@@ -1,6 +1,6 @@
 import { ForwardedRef, useEffect, useRef } from 'react'
 import { SpatialEntity } from '@webspatial/core-sdk'
-import type { AnimatedProps } from '@webspatial/core-sdk'
+import type { AnimatedProps, AnimatedPropsInternal } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
 import {
@@ -78,7 +78,7 @@ export const useEntity = ({
 
         // Bind animation if present
         if (animation) {
-          ;(animation as any).__bind?.(ent)
+          ;(animation as AnimatedPropsInternal).__bind?.(ent)
           prevAnimationRef.current = animation
         }
 
@@ -94,7 +94,7 @@ export const useEntity = ({
       controller.abort()
       // Unbind animation on cleanup
       if (prevAnimationRef.current) {
-        ;(prevAnimationRef.current as any).__unbind?.()
+        ;(prevAnimationRef.current as AnimatedPropsInternal).__unbind?.()
         prevAnimationRef.current = undefined
       }
       instanceRef.current?.destroy()
@@ -112,12 +112,12 @@ export const useEntity = ({
 
     // Unbind old animation
     if (prevAnimation) {
-      ;(prevAnimation as any).__unbind?.()
+      ;(prevAnimation as AnimatedPropsInternal).__unbind?.()
     }
 
     // Bind new animation
     if (animation) {
-      ;(animation as any).__bind?.(entity)
+      ;(animation as AnimatedPropsInternal).__bind?.(entity)
     }
 
     prevAnimationRef.current = animation
