@@ -64,6 +64,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				dynamic3d/EntityAnimationSession.swift,
+				dynamic3d/EntityAnimationManager.swift,
 				dynamic3d/Geometry.swift,
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
