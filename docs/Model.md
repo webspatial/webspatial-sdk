@@ -291,32 +291,31 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 
 - **Gesture Conflict Resolution**: `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` will be disabled when stagemode is set to orbit.
 
-### 8. Lazy Loading (`loading="lazy"`) 🚧
+### 8. Lazy Loading (`loading="lazy"`)
 
-Lazy loading will be managed natively to more accurately determine viewport intersection, removing the need for a web-based `IntersectionObserver` and simplifying the React implementation.
+Match `<img loading="lazy" | "eager">`: when `"lazy"`, the asset isn't fetched until the element is near the viewport; once started, it stays loaded.
 
 #### 8.1. React SDK (`@webspatial/react-sdk`)
 
-- **Prop Forwarding**: The `<Model>` component will accept the `loading?: 'eager' | 'lazy'` prop. This prop will be passed down through `SpatializedStatic3DElementContainer`.
-
-- **No&nbsp;IntersectionObserver**: The previously proposed `useIntersectionLazyLoad` hook and any `IntersectionObserver` logic will be removed entirely from the React SDK for this feature. The component's responsibility is simply to inform the native layer of the desired loading behavior.
+In `SpatializedStatic3DElementContainer.tsx`, derive `effectiveLoading` from an `IntersectionObserver` on the portal element and forward it via the existing `updateProperties({ … })` call. Initial value is `'lazy'` only when `props.loading === 'lazy'`; once it flips to `'eager'`, it sticks (the observer disconnects). But if the sources change and the loading property is `lazy` then the `IntersectionObserver` is re-attached and `updateProperties({ … })` is called with `loading: lazy`.
 
 #### 8.2. Core SDK (`@webspatial/core-sdk`)
 
-- **JSB Command Update**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to include `loading?: 'eager' | 'lazy'`. This value is forwarded directly to the native layer.
+In `SpatialSession.ts` update `createSpatializedStatic3DElement` to accept the `loading` property in addition to `src` and `sources`, which defaults to `'eager'`.
+Extend `CreateSpatializedStatic3DElementCommand` and `UpdateSpatializedStatic3DElementProperties` in `JSBCommand.ts` with `loading?: 'eager' | 'lazy'`, forwarded directly to native.
 
 #### 8.3. Native visionOS Layer (`packages/visionOS`)
 
-- **Native Intersection Detection**: The native layer will now be responsible for calculating if the element is visible within the webview's viewport.
-  1.  **State Management**: `SpatializedStatic3DElement.swift` will store the `loading` mode and a new computed property `var isIntersecting: Bool`.
-  2.  **Viewport & Scroll Data**: To calculate intersection, we need context from the webview.
-      - `SpatialScene.spatialWebViewModel` already exposes `scrollOffset` via its `addScrollUpdateListener`.
-      - We will extend `SpatialWebViewModel.swift` to also expose the webview's viewport size. A new method or computed property will be added: `var viewportSize: CGSize { return webview?.scrollView.frame.size ?? .zero }`.
-  3.  **Intersection Calculation**: With the element's 2D frame (`clientX`, `clientY`, `width`, `height`), the `scrollOffset`, and the `viewportSize`, the native `SpatializedStatic3DElement` can accurately compute if its frame overlaps with the visible area of the webview at any time. This calculation will be triggered whenever a scroll update occurs.
-  4.  **Gated Model Loading**: In `SpatializedStatic3DView.swift`, the decision to render the `Model3D` will be gated by a condition: `let shouldLoad = spatializedElement.loading == .eager || (spatializedElement.loading == .lazy && spatializedElement.isIntersecting)`.
-      - If `shouldLoad` is `false`, the view will render the poster/back-plane or a lightweight placeholder.
-      - The model loading process (`Model3D(url:)`) will only be initiated when `shouldLoad` first becomes `true`.
-  5.  **Scroll Updates**: On each scroll event received from `addScrollUpdateListener`, the `isIntersecting` state for all lazy elements will be re-evaluated. If an element's `isIntersecting` status changes from `false` to `true`, and it hasn't loaded yet, the loading process is triggered.
+Add `var loading: String = "eager"` to `SpatializedStatic3DElement.swift` and gate `allSources` on it:
+
+```swift
+var allSources: [ModelSource] {
+    guard loading == "eager" else { return [] }
+    return if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources } else { sources }
+}
+```
+
+`SpatializedStatic3DView.swift` is untouched. While lazy, `allSources` is `[]`, the existing `if !allSources.isEmpty` gate falls through to `EmptyView()`, and nothing renders, fetches, or autoplays. Poster and autoplay defer for free — both are only reached via `.task(id: allSources)`, which doesn't fire until the eager transition.
 
 ## Risks
 
