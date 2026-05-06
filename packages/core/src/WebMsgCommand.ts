@@ -21,6 +21,11 @@ export enum SpatialWebMsgType {
 
   animationstatechange = 'animationstatechange',
 
+  // Animation terminal events (keyed by animationId, not by this enum)
+  animationcompleted = 'animationcompleted',
+  animationstopped = 'animationstopped',
+  animationfailed = 'animationfailed',
+
   objectdestroy = 'objectdestroy',
 }
 
@@ -96,4 +101,26 @@ export interface AnimationStateChangeDetail {
 export interface AnimationStateChangeMsg {
   type: SpatialWebMsgType.animationstatechange
   detail: AnimationStateChangeDetail
+}
+
+// Animation terminal event payloads (delivered via SpatialWebEvent keyed by animationId)
+
+export interface AnimationCompletedEventPayload {
+  type: 'completed'
+  /** Column-major 4x4 matrix (16 numbers) representing the final native transform. */
+  transform: number[]
+}
+
+export interface AnimationStoppedEventPayload {
+  type: 'stopped'
+  /** Column-major 4x4 matrix (16 numbers) representing the stop-point native transform. */
+  transform: number[]
+}
+
+export interface AnimationFailedEventPayload {
+  type: 'failed'
+  animationId: string
+  command: 'play' | 'pause' | 'resume' | 'stop'
+  code?: string
+  reason: string
 }

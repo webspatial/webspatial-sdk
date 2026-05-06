@@ -50,6 +50,8 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
     flags[`Model:${t}`] = false
   }
   flags['SpatialRotateEvent:constrainedToAxis'] = true
+  // useAnimation not supported until WSAppShell/1.7.0
+  flags['useAnimation'] = false
   return flags
 }
 
@@ -63,6 +65,8 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
     flags[`Model:${t}`] = false
   }
   flags['SpatialRotateEvent:constrainedToAxis'] = true
+  // useAnimation not supported until WSAppShell/1.7.0
+  flags['useAnimation'] = false
   return flags
 }
 
