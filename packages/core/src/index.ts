@@ -12,7 +12,11 @@ export * as PhysicalMetrics from './physicalMetrics'
 
 export * from './reality'
 export * from './types/types'
+export * from './types/animation'
+export * from './types/global.d'
 export * from './runtime'
+
+export { composeSRT, decomposeTransformMatrix } from './utils'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'

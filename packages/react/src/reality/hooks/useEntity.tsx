@@ -1,5 +1,6 @@
 import { ForwardedRef, useEffect, useRef } from 'react'
 import { SpatialEntity } from '@webspatial/core-sdk'
+import type { AnimatedProps } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
 import {
@@ -25,6 +26,7 @@ export const useEntity = ({
   rotation,
   scale,
   enableInput,
+  animation,
   onSpatialTap,
   onSpatialDragStart,
   onSpatialDrag,
@@ -41,6 +43,9 @@ export const useEntity = ({
   const instanceRef = useRef<EntityRef>(new EntityRef(null, ctx))
 
   const forceUpdate = useForceUpdate()
+
+  // Track the current animation prop for bind/unbind
+  const prevAnimationRef = useRef<AnimatedProps | undefined>(undefined)
 
   useEffect(() => {
     if (!ctx) return
@@ -70,6 +75,13 @@ export const useEntity = ({
         }
 
         instanceRef.current?.updateEntity(ent)
+
+        // Bind animation if present
+        if (animation) {
+          ;(animation as any).__bind?.(ent)
+          prevAnimationRef.current = animation
+        }
+
         forceUpdate()
       } catch (error) {
         console.error('useEntity init ~ error:', error)
@@ -80,12 +92,44 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
+      // Unbind animation on cleanup
+      if (prevAnimationRef.current) {
+        ;(prevAnimationRef.current as any).__unbind?.()
+        prevAnimationRef.current = undefined
+      }
       instanceRef.current?.destroy()
     }
   }, [ctx, parent, recreateKey])
 
+  // Handle animation prop changes after initial mount
+  useEffect(() => {
+    const entity = instanceRef.current.entity
+    if (!entity) return
+
+    const prevAnimation = prevAnimationRef.current
+
+    if (prevAnimation === animation) return
+
+    // Unbind old animation
+    if (prevAnimation) {
+      ;(prevAnimation as any).__unbind?.()
+    }
+
+    // Bind new animation
+    if (animation) {
+      ;(animation as any).__bind?.(entity)
+    }
+
+    prevAnimationRef.current = animation
+  }, [animation, instanceRef.current.entity])
+
   useEntityId({ id, entity: instanceRef.current.entity })
-  useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
+  useEntityTransform(instanceRef.current.entity, {
+    position,
+    rotation,
+    scale,
+    animation,
+  })
   useEntityRef(ref, instanceRef.current)
 
   useEntityEvent({
