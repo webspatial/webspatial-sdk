@@ -12,6 +12,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   const actual = await vi.importActual('@webspatial/core-sdk')
   return {
     ...actual,
+    VALID_TIMING_FUNCTIONS: actual.VALID_TIMING_FUNCTIONS,
     supports: (name: string) => {
       if (name === 'useAnimation') return true
       return false
@@ -25,6 +26,23 @@ const { useAnimation } = await import('./useAnimation')
 const baseConfig: AnimationConfig = {
   to: { position: { x: 1, y: 0, z: 0 } },
   duration: 0.5,
+}
+
+async function flushPromises() {
+  await act(async () => {
+    await new Promise(r => setTimeout(r, 0))
+  })
+}
+
+function expectRenderHookToThrow(callback: () => void) {
+  const consoleErrorSpy = vi
+    .spyOn(console, 'error')
+    .mockImplementation(() => {})
+  try {
+    expect(callback).toThrow()
+  } finally {
+    consoleErrorSpy.mockRestore()
+  }
 }
 
 describe('useAnimation hook', () => {
@@ -51,26 +69,26 @@ describe('useAnimation hook', () => {
 
   describe('config validation', () => {
     test('throws on invalid config (missing to)', () => {
-      expect(() => {
+      expectRenderHookToThrow(() => {
         renderHook(() => useAnimation({ to: undefined } as any))
-      }).toThrow()
+      })
     })
 
     test('throws on invalid config (empty to)', () => {
-      expect(() => {
+      expectRenderHookToThrow(() => {
         renderHook(() => useAnimation({ to: {} }))
-      }).toThrow()
+      })
     })
 
     test('throws on negative duration', () => {
-      expect(() => {
+      expectRenderHookToThrow(() => {
         renderHook(() =>
           useAnimation({
             to: { position: { x: 1, y: 0, z: 0 } },
             duration: -1,
           }),
         )
-      }).toThrow()
+      })
     })
   })
 
@@ -115,8 +133,9 @@ describe('useAnimation hook', () => {
   })
 
   describe('autoStart', () => {
-    test('autoStart defaults to true (isAnimating after mount)', () => {
+    test('autoStart defaults to true (isAnimating after mount)', async () => {
       const { result } = renderHook(() => useAnimation(baseConfig))
+      await flushPromises()
       // After auto-start, isAnimating should be true (queued since no entity bound)
       expect(result.current[1].isAnimating).toBe(true)
     })
@@ -130,7 +149,7 @@ describe('useAnimation hook', () => {
   })
 
   describe('play/stop lifecycle (without entity)', () => {
-    test('play transitions to isAnimating (queued)', () => {
+    test('play transitions to isAnimating (queued)', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
       )
@@ -140,10 +159,11 @@ describe('useAnimation hook', () => {
       act(() => {
         api.play()
       })
+      await flushPromises()
       expect(result.current[1].isAnimating).toBe(true)
     })
 
-    test('stop cancels queued session', () => {
+    test('stop cancels queued session', async () => {
       const onStop = vi.fn()
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false, onStop }),
@@ -152,6 +172,7 @@ describe('useAnimation hook', () => {
       act(() => {
         result.current[1].play()
       })
+      await flushPromises()
       expect(result.current[1].isAnimating).toBe(true)
 
       act(() => {
@@ -163,7 +184,7 @@ describe('useAnimation hook', () => {
   })
 
   describe('pause/resume lifecycle (without entity)', () => {
-    test('pause on queued session transitions to isPaused', () => {
+    test('pause on queued session transitions to isPaused', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
       )
@@ -171,6 +192,7 @@ describe('useAnimation hook', () => {
       act(() => {
         result.current[1].play()
       })
+      await flushPromises()
       expect(result.current[1].isAnimating).toBe(true)
       expect(result.current[1].isPaused).toBe(false)
 
@@ -182,7 +204,7 @@ describe('useAnimation hook', () => {
       expect(result.current[1].isAnimating).toBe(false)
     })
 
-    test('resume from queued-paused returns to queued', () => {
+    test('resume from queued-paused returns to queued', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
       )
@@ -190,6 +212,7 @@ describe('useAnimation hook', () => {
       act(() => {
         result.current[1].play()
       })
+      await flushPromises()
       act(() => {
         result.current[1].pause()
       })
@@ -235,7 +258,7 @@ describe('useAnimation hook', () => {
       expect(fields).toBe(null)
     })
 
-    test('__getSuppressedFields returns animated fields during session', () => {
+    test('__getSuppressedFields returns animated fields during session', async () => {
       const { result } = renderHook(() =>
         useAnimation({
           to: {
@@ -244,6 +267,7 @@ describe('useAnimation hook', () => {
           },
         }),
       )
+      await flushPromises()
       const [animatedProps] = result.current
       const fields = (
         animatedProps as AnimatedPropsInternal
