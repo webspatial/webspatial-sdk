@@ -22,18 +22,18 @@
 
 - [x] 4.1 Add native scene-side animation session storage, command handling, and playback controller lifecycle management *(blocked by 2.1)*
 - [x] 4.2 Implement native play, pause, resume, and stop behavior plus completion / stop / failure event emission with transform or error payloads *(blocked by 2.2, 4.1)*
-- [ ] 4.3 Verify delay and loop semantics match the OpenSpec contract for reset looping and reverse looping
+- [x] 4.3 Verify delay and loop semantics match the OpenSpec contract for reset looping and reverse looping
 
 ## 5. Validation and documentation
 
 - [ ] 5.1 Add focused tests for:
   - [x] 5.1.1 Capability checks (`supports('useAnimation')` true/false/sub-token)
-  - [ ] 5.1.2 React playback lifecycle (onStart timing, including queued-to-paused start, start/complete/stop callbacks, exclusivity, invocation count)
+  - [x] 5.1.2 React playback lifecycle (onStart timing, including queued-to-paused start, start/complete/stop callbacks, exclusivity, invocation count)
   - [ ] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
-  - [ ] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
+  - [x] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
   - [x] 5.1.5 Same animation bound to multiple entities (throw)
   - [ ] 5.1.6 Animation prop replacement (stop old session → start new, onStop before onStart)
-  - [ ] 5.1.7 Pause during delay (remaining time preserved, resume continues)
+  - [x] 5.1.7 Pause during delay (remaining time preserved, resume continues)
   - [x] 5.1.8 Play before entity bound (queued state, isAnimating, stop/pause while queued, bind-into-paused)
   - [ ] 5.1.9 Bridge failure recovery (session retains pre-failure state, onError invoked or console.error fallback, no completed/stopped after failed play)
   - [ ] 5.1.10 stop-old failure blocks start-new (both restart and animation-prop replacement paths)
