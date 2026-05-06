@@ -22,18 +22,18 @@
 
 - [x] 4.1 增加 Native scene 侧的动画会话存储、命令处理与播放控制器生命周期管理 *(blocked by 2.1)*
 - [x] 4.2 实现 Native play/pause/resume/stop，并发送 completed / stopped / failed 事件与对应 transform 或错误 payload *(blocked by 2.2, 4.1)*
-- [ ] 4.3 校验 delay 与 loop 的语义与 OpenSpec 契约一致（reset loop 与 reverse loop）
+- [x] 4.3 校验 delay 与 loop 的语义与 OpenSpec 契约一致（reset loop 与 reverse loop）
 
 ## 5. 验证与文档
 
 - [ ] 5.1 增加聚焦测试：
   - [x] 5.1.1 能力检测（`supports('useAnimation')` true/false/sub-token）
-  - [ ] 5.1.2 React 播放生命周期（onStart 时机、包含 queued 后 paused 的 start、start/complete/stop 回调、互斥性、调用次数）
+  - [x] 5.1.2 React 播放生命周期（onStart 时机、包含 queued 后 paused 的 start、start/complete/stop 回调、互斥性、调用次数）
   - [ ] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
-  - [ ] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
+  - [x] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
   - [x] 5.1.5 同一动画绑定多个实体（抛错）
-  - [ ] 5.1.6 动画 prop 替换（停止旧会话 → 启动新会话，onStop 先于 onStart）
-  - [ ] 5.1.7 delay 期间暂停（剩余时间保留，resume 继续）
+  - [x] 5.1.6 动画 prop 替换（停止旧会话 → 启动新会话，onStop 先于 onStart）
+  - [x] 5.1.7 delay 期间暂停（剩余时间保留，resume 继续）
   - [x] 5.1.8 实体绑定前 play（queued 状态、isAnimating、queued 时 stop/pause、绑定后直接 paused）
   - [ ] 5.1.9 Bridge 失败恢复（会话保留失败前状态、onError 触发或 console.error 兜底、play 失败不再 completed/stopped）
   - [ ] 5.1.10 stop old 失败时阻止 start new（restart 与 animation prop 替换两条路径）

@@ -303,6 +303,16 @@ class EntityAnimationManager {
         }
     }
 
+    /// Maps the JS `loop` config to RealityKit repeat mode.
+    ///
+    /// OpenSpec contract (task 4.3 verified):
+    /// - `loop: true` -> reset loop: plays to to, instantly resets to from, repeats.
+    ///   RealityKit .repeat replays the baked animation clip from the start -- matches spec.
+    ///   When from is omitted, the implicit start is the entity transform at play() time,
+    ///   baked into the AnimationResource, so it is NOT re-snapshotted each loop.
+    /// - `loop: { reverse: true }` -> reverse loop: smoothly plays back from to to from.
+    ///   RealityKit .autoReverse does exactly this.
+    /// - No loop -> .none: plays once, fires PlaybackCompleted.
     private func mapRepeatMode(_ loop: AnimateTransformLoopValue?) -> AnimationRepeatMode {
         guard let loop = loop, loop.isEnabled else {
             return .none
