@@ -12,6 +12,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   const actual = await vi.importActual('@webspatial/core-sdk')
   return {
     ...actual,
+    VALID_TIMING_FUNCTIONS: actual.VALID_TIMING_FUNCTIONS,
     supports: (name: string) => {
       if (name === 'useAnimation') return true
       return false
@@ -147,6 +148,26 @@ describe('5.1.2 React playback lifecycle', () => {
       expect(onStart).not.toHaveBeenCalled()
 
       // Bind entity — triggers play
+      act(() => {
+        ;(result.current[0] as AnimatedPropsInternal).__bind(entity)
+      })
+      await flushPromises()
+
+      expect(onStart).toHaveBeenCalledTimes(1)
+    })
+
+    test('onStart fires for autoStart queued-then-bound animation', async () => {
+      const onStart = vi.fn()
+      const { entity } = createMockEntity()
+
+      const { result } = renderHook(() =>
+        useAnimation({ ...baseConfig, onStart }),
+      )
+
+      await flushPromises()
+      expect(result.current[1].isAnimating).toBe(true)
+      expect(onStart).not.toHaveBeenCalled()
+
       act(() => {
         ;(result.current[0] as AnimatedPropsInternal).__bind(entity)
       })

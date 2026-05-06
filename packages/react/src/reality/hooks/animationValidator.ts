@@ -1,4 +1,4 @@
-import type { AnimationConfig, TransformValues } from '@webspatial/core-sdk'
+import type { AnimationConfig } from '@webspatial/core-sdk'
 import { VALID_TIMING_FUNCTIONS } from '@webspatial/core-sdk'
 import type { Vec3 } from '@webspatial/core-sdk'
 

@@ -114,7 +114,6 @@ export function useAnimation(
   const doPlay = useCallback(
     async (session: AnimationSession, entity: SpatialEntity) => {
       const cfg = session.config
-      const animatedFields = session.fields
 
       // Build the command
       const cmd: AnimateTransformCommand = {
