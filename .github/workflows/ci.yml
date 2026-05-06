@@ -35,6 +35,9 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      - name: Test React compatibility
+        run: pnpm run test:react-compat
+
       - name: Test changeset
         run: npx changeset version
       

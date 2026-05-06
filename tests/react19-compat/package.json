@@ -1,0 +1,22 @@
+{
+  "name": "react19-compat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "tsc -p tsconfig.json && vite build"
+  },
+  "dependencies": {
+    "@webspatial/core-sdk": "workspace:*",
+    "@webspatial/react-sdk": "workspace:*",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
+  }
+}
