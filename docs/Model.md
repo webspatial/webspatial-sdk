@@ -6,16 +6,16 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ## Try it
 
-<p align="center"><video src="https://github.com/user-attachments/assets/92fd9390-8961-4754-8b31-006d98937051" height="400" /></p>
+<p align="center"><img src="imgs/Model-Robot.png" height="400" /></p>
 
 ```jsx
 function Example() {
   const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
-      <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
-      <source src="/model/fox.glb" type="model/gltf-binary" />
-      <img src="/model/fox.png" />
+      <source src="/model/robot.glb" type="model/gltf-binary" />
+      <source src="/model/robot.usdz" type="model/vnd.usdz+zip" />
+      <img src="/img/robot.png" />
     </Model>
   )
 }
