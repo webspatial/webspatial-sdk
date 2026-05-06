@@ -1,5 +1,5 @@
 import { SpatialEntity } from '@webspatial/core-sdk'
-import type { AnimatedProps } from '@webspatial/core-sdk'
+import type { AnimatedProps, AnimatedPropsInternal } from '@webspatial/core-sdk'
 import { useEffect, useRef } from 'react'
 import { EntityProps } from '../type'
 import { shallowEqualRotation, shallowEqualVec3 } from '../utils'
@@ -22,8 +22,10 @@ export function useEntityTransform(
 
     // Determine which fields are suppressed by an alive animation session
     const suppressedFields: Set<string> =
-      animation && (animation as any).__getSuppressedFields
-        ? new Set((animation as any).__getSuppressedFields() ?? [])
+      animation && (animation as AnimatedPropsInternal).__getSuppressedFields
+        ? new Set(
+            (animation as AnimatedPropsInternal).__getSuppressedFields() ?? [],
+          )
         : new Set()
 
     // Determine which unsuppressed fields have changed

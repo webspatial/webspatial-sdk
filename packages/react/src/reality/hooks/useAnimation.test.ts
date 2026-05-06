@@ -1,6 +1,7 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type {
+  AnimatedPropsInternal,
   AnimationConfig,
   AnimatedProps,
   AnimationApi,
@@ -213,11 +214,11 @@ describe('useAnimation hook', () => {
       const mockEntity2 = { id: 'entity-2' } as any
 
       // First bind should work
-      ;(animatedProps as any).__bind(mockEntity1)
+      ;(animatedProps as AnimatedPropsInternal).__bind(mockEntity1)
 
       // Second bind to different entity should throw
       expect(() => {
-        ;(animatedProps as any).__bind(mockEntity2)
+        ;(animatedProps as AnimatedPropsInternal).__bind(mockEntity2)
       }).toThrow('must not be bound to multiple entities')
     })
   })
@@ -228,7 +229,9 @@ describe('useAnimation hook', () => {
         useAnimation({ ...baseConfig, autoStart: false }),
       )
       const [animatedProps] = result.current
-      const fields = (animatedProps as any).__getSuppressedFields()
+      const fields = (
+        animatedProps as AnimatedPropsInternal
+      ).__getSuppressedFields()
       expect(fields).toBe(null)
     })
 
@@ -242,7 +245,9 @@ describe('useAnimation hook', () => {
         }),
       )
       const [animatedProps] = result.current
-      const fields = (animatedProps as any).__getSuppressedFields()
+      const fields = (
+        animatedProps as AnimatedPropsInternal
+      ).__getSuppressedFields()
       expect(fields).toContain('position')
       expect(fields).toContain('rotation')
       expect(fields).not.toContain('scale')
