@@ -6,16 +6,16 @@ The `<Model>`component handles loading 3D assets, managing playback of embedded 
 
 ## Try it
 
-<p align="center"><video src="https://github.com/user-attachments/assets/92fd9390-8961-4754-8b31-006d98937051" height="400" /></p>
+<p align="center"><img src="imgs/Model-Robot.png" height="400" /></p>
 
 ```jsx
 function Example() {
   const style = { height: '200px', '--xr-depth': '100px' }
   return (
     <Model enable-xr autoPlay loop style={style}>
-      <source src="/model/fox.usdz" type="model/vnd.usdz+zip" />
-      <source src="/model/fox.glb" type="model/gltf-binary" />
-      <img src="/model/fox.png" />
+      <source src="/model/robot.glb" type="model/gltf-binary" />
+      <source src="/model/robot.usdz" type="model/vnd.usdz+zip" />
+      <img src="/img/robot.png" />
     </Model>
   )
 }
@@ -25,32 +25,20 @@ function Example() {
 
 Like standard HTML elements, the `<Model>` component supports a range of attributes (passed as React props) to control its behavior.
 
-`src`
+`src` The URL of the 3D model to embed. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
 
-The URL of the 3D model to embed. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
+`poster` A URL for an image to be shown while the 3D model is downloading or if it fails to load. If this attribute is not specified, a default loading spinner will be displayed
 
-`poster`
-
-A URL for an image to be shown while the 3D model is downloading or if it fails to load. If this attribute is not specified, a default loading spinner will be displayed
-
-`loading`
-
-Specifies how the model should be loaded.
+`loading` Specifies how the model should be loaded.
 
 - `eager` (default): The model begins loading immediately.
 - `lazy` The model loading is deferred until it enters the webview's viewport. This is handled natively to ensure accurate intersection detection and optimal performance.
 
-`autoPlay`
+`autoPlay` A Boolean attribute; if `true`, the model's first available animation will automatically begin to play as soon as the model has successfully loaded.
 
-A Boolean attribute; if `true`, the model's first available animation will automatically begin to play as soon as the model has successfully loaded.
+`loop` A Boolean attribute; if `true`, the animation will automatically seek back to the start upon reaching the end.
 
-`loop`
-
-A Boolean attribute; if `true`, the animation will automatically seek back to the start upon reaching the end.
-
-`stagemode`
-
-Controls the built-in user interaction mode for the model.
+`stagemode` Controls the built-in user interaction mode for the model.
 
 - **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
 - `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
@@ -59,105 +47,59 @@ Controls the built-in user interaction mode for the model.
 
 The `<Model>` component fires several events to allow developers to monitor its state and respond to user interactions. These are exposed as `on...` props.
 
-`onLoad`
+`onLoad` Fired when the 3D model has successfully loaded and is ready for display and interaction. If multiple sources are provided, this event fires only for the first source that loads successfully.
 
-Fired when the 3D model has successfully loaded and is ready for display and interaction. If multiple sources are provided, this event fires only for the first source that loads successfully.
+`onError` Fired when the model fails to load. If multiple sources are provided, this event is fired only after **all** sources have been attempted and have failed. It does not fire each individual source failure.
 
-`onError`
+`onSpatialTap` Fired when a user performs a tap gesture on the model in the spatial environment.
 
-Fired when the model fails to load. If multiple sources are provided, this event is fired only after **all** sources have been attempted and have failed. It does not fire each individual source failure.
+`onSpatialDragStart` Fired when a user begins a drag gesture on the model.
 
-`onSpatialTap`
+`onSpatialDrag` Fired continuously as the user drags the model.
 
-Fired when a user performs a tap gesture on the model in the spatial environment.
+`onSpatialDragEnd` Fired when the user releases the drag gesture.
 
-`onSpatialDragStart`
+`onSpatialRotate` Fired when a user performs a rotation gesture on the model.
 
-Fired when a user begins a drag gesture on the model.
+`onSpatialRotateEnd` Fired when the user completes the rotation gesture.
 
-`onSpatialDrag`
+`onSpatialMagnify` Fired when a user performs a magnification (pinch) gesture to scale the model.
 
-Fired continuously as the user drags the model.
-
-`onSpatialDragEnd`
-
-Fired when the user releases the drag gesture.
-
-`onSpatialRotate`
-
-Fired when a user performs a rotation gesture on the model.
-
-`onSpatialRotateEnd`
-
-Fired when the user completes the rotation gesture.
-
-`onSpatialMagnify`
-
-Fired when a user performs a magnification (pinch) gesture to scale the model.
-
-`onSpatialMagnifyEnd`
-
-Fired when the user completes the magnification gesture.
+`onSpatialMagnifyEnd` Fired when the user completes the magnification gesture.
 
 ## JavaScript API
 
 In addition to the DOM API relating to the source, animation, and environment map, the JavaScript API has additional capabilities relating to the animation timing and view parameters.
 
-`currentSrc`
+`currentSrc` read-only string returning the URL to the loaded resource.
 
-read-only string returning the URL to the loaded resource.
+`ready` Resolved when the model's source file has been loaded and processed. The Promise is rejected if the source file is unable to be fetched, or if the file cannot be interpreted as a valid 3D model asset.
 
-`ready`
+`entityTransform` a read-write `DOMMatrixReadOnly` that expresses the current mapping of the view of the model contents to the view displayed in the browser.
 
-Resolved when the model's source file has been loaded and processed. The Promise is rejected if the source file is unable to be fetched, or if the file cannot be interpreted as a valid 3D model asset.
+`boundingBoxCenter` a read-only `DOMPoint` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
 
-`entityTransform`
+`boundingBoxExtents` a read-only `DOMPoint` that indicates the extents of the bounding box of the model contents.
 
-a read-write `DOMMatrixReadOnly` that expresses the current mapping of the view of the model contents to the view displayed in the browser.
+`duration` a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
-`boundingBoxCenter`
+`currentTime` a read-write `double` reflecting the un-scaled playback time of the model animation in seconds. It is clamped to the duration of the animation, so for an animation with no animation, the value is always 0.
 
-a read-only `DOMPoint` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
+`playbackRate` a read-write `double` reflecting the time scaling for animations, if present. For example, a model with a ten-second animation and a `playbackRate` of 0.5 will take 20 seconds to complete.
 
-`boundingBoxExtents`
+`paused` A read-only `Boolean` value indicating whether the element has an animation that is currently playing.
 
-a read-only `DOMPoint` that indicates the extents of the bounding box of the model contents.
+`play()` A method that attempts to play a model's animation, if present. It returns a `Promise` that resolves when playback has been successfully started.
 
-`duration`
-
-a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
-
-`currentTime`
-
-a read-write `double` reflecting the un-scaled playback time of the model animation in seconds. It is clamped to the duration of the animation, so for an animation with no animation, the value is always 0.
-
-`playbackRate`
-
-a read-write `double` reflecting the time scaling for animations, if present. For example, a model with a ten-second animation and a `playbackRate` of 0.5 will take 20 seconds to complete.
-
-`paused`
-
-A read-only `Boolean` value indicating whether the element has an animation that is currently playing.
-
-`play()`
-
-A method that attempts to play a model's animation, if present. It returns a `Promise` that resolves when playback has been successfully started.
-
-`pause()`
-
-A method that attempts to pause the playback of a model's animation. If the model is already paused this method will have no effect.
+`pause()` A method that attempts to pause the playback of a model's animation. If the model is already paused this method will have no effect.
 
 ## `<source>` Model source element
 
 The <source> HTML element specifies one or more media resources for the <Model> element. It is a void element, which means that it has no content and does not require a closing tag. Browsers don't all support the same 3D model formats; you can provide multiple sources and the browser will then use the first one it understands. The browser attempts to load each source sequentially, if a source fails the next source is attempted. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
 
-`src`
+`src` The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
 
-The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
-
-`type`
-
-Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
+`type` Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
 
 ## Usage Notes
 
@@ -275,12 +217,12 @@ function LongScrollPage() {
 | src        | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.0 | ✓<br>1.1       |
 | onLoad     | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
 | onError    | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.7       |
-| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.7       |
-| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.7       |
-| poster     | ✓<br>26            | 6 β2.0                          | ✓<br>1.7       |
+| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
+| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.6       |
 | loading    | 26                 | 6 β2.1                          | June           |
-| stagemode  | 26                 | 6 β2.1                          | June           |
+| stagemode  | 26                 | 6                               | July           |
 
 ### CSS
 
@@ -301,14 +243,14 @@ function LongScrollPage() {
 | entityTransform    | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
 | currentSrc         | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
 | ready              | ✓<br>26  | ✓<br>6 ⍺2.0 | ✓<br>1.2       |
-| duration           | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| playbackRate       | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| paused             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.7       |
-| currentTime        | 26       | 6 β2.0      | May            |
-| boundingBoxCenter  | 26       | 6 β2.1      | June           |
-| boundingBoxExtents | 26       | 6 β2.1      | June           |
+| duration           | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| playbackRate       | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| paused             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
+| currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.6       |
+| boundingBoxCenter  | 26       | 6           | July           |
+| boundingBoxExtents | 26       | 6           | July           |
 
 ## High-Level Architecture
 

@@ -38,6 +38,7 @@ import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
+import RealityTexturedUnlitBox from './src/pages/reality/texturedUnlitBox'
 import RealityTestIndex from './src/pages/reality-test/index'
 import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
@@ -182,6 +183,10 @@ function App() {
                 <Route
                   path="/reality/dynamicAssets"
                   element={<RealityDynamicAssets />}
+                />
+                <Route
+                  path="/reality/textured-unlit-box"
+                  element={<RealityTexturedUnlitBox />}
                 />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route

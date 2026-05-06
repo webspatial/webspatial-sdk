@@ -5,6 +5,7 @@ import {
   CreateSpatialGeometryCommand,
   CreateSpatialModelEntityCommand,
   CreateSpatialUnlitMaterialCommand,
+  CreateTextureCommand,
 } from '../JSBCommand'
 import {
   ModelComponentOptions,
@@ -13,12 +14,13 @@ import {
   SpatialModelEntityCreationOptions,
   SpatialUnlitMaterialOptions,
   SpatialEntityUserData,
+  SpatialTextureResourceOptions,
 } from '../types/types'
 import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
 import { SpatialUnlitMaterial } from './material'
-import { SpatialModelAsset } from './resource'
+import { SpatialModelAsset, SpatialTextureResource } from './resource'
 
 export async function createSpatialEntity(
   userData?: SpatialEntityUserData,
@@ -90,5 +92,17 @@ export async function createModelAsset(options: ModelAssetOptions) {
   } else {
     const { id } = result.data
     return new SpatialModelAsset(id, options)
+  }
+}
+
+export async function createSpatialTexture(
+  options: SpatialTextureResourceOptions,
+) {
+  const result = await new CreateTextureCommand(options.url).execute()
+  if (!result.success) {
+    throw new Error('createSpatialTexture failed:' + result?.errorMessage)
+  } else {
+    const { id } = result.data
+    return new SpatialTextureResource(id, options)
   }
 }

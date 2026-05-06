@@ -15,7 +15,9 @@ function App() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
   useEffect(() => {
-    modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
+    modelRef
+      .current!.ready?.then(() => logLine('ref.current.ready success'))
+      .catch(() => logLine('ref.current.ready error'))
   }, [logLine])
   // Monitor duration and pause state since there is no playback lifecycle events
   useEffect(() => {

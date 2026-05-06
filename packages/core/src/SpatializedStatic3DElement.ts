@@ -42,6 +42,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Used to reset the ready promise when the model URL changes.
    */
   private modelURL?: string
+  // @TODO: Deprecate modelURL property from Web and Swift code
+  get modelUrl(): string | undefined {
+    return this.modelURL
+  }
 
   /**
    * Caches the last sources array to detect changes.
@@ -199,7 +203,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * forwards the request to native.
    */
   set currentTime(value: number) {
-    this.updateProperties({ currentTime: this.clampTime(value) })
+    const time = Number.isNaN(value) ? 0 : clamp(value, 0, this.duration)
+    this.updateProperties({ currentTime: time })
   }
 
   /**
@@ -341,6 +346,11 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     const modelTransform = Array.from(transform.toFloat64Array())
     this.updateProperties({ modelTransform })
   }
+}
+
+// Equivalent of proposed Math.clamp
+function clamp(num: number, min: number, max: number) {
+  return num <= min ? min : num >= max ? max : num
 }
 
 type Static3DReceiveEventData =

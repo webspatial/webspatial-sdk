@@ -22,26 +22,45 @@ class SpatialMaterial: SpatialObject {
 
 @Observable
 class SpatialUnlitMaterial: SpatialMaterial {
+    /// Single RealityKit unlit instance we mutate in place; avoids allocating a new `UnlitMaterial()` on every property update.
+    private var _mat: UnlitMaterial
     private(set) var currentColor: UIColor
     private(set) var currentTexture: TextureResource?
     private(set) var currentTransparent: Bool
     private(set) var currentOpacity: Float
+    /// Spatial id of the bound `SpatialTextureResource`, when this material displays a texture. Used to push `TextureResource` updates after `UpdateTextureProperties`.
+    var textureSpatialId: String?
 
-    init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1) {
+    init(_ color: String, _ texture: TextureResource? = nil, _ transparent: Bool = true, _ opacity: Float = 1, textureSpatialId: String? = nil) {
         currentColor = UIColor(Color(hex: color))
         currentTexture = texture
         currentTransparent = transparent
         currentOpacity = opacity
+        self.textureSpatialId = textureSpatialId
+        _mat = UnlitMaterial()
         super.init(.UnlitMaterial)
-        var mat = UnlitMaterial()
-        mat.color = .init(tint: currentColor, texture: texture != nil ? .init(texture!) : nil)
-        mat.blending = transparent ? .transparent(opacity: .init(scale: opacity)) : .opaque
-        _resource = mat
+        applyProperties()
     }
 
-    func updateProperties(color: String?, transparent: Bool?, opacity: Float?) {
+    /// Pushes `currentColor` / `currentTexture` / blending into `_mat` and exposes it as `resource`.
+    /// ModelComponent still holds its own copy, so callers must `refreshMaterials()` on affected components after this.
+    private func applyProperties() {
+        _mat.color = .init(
+            tint: currentColor,
+            texture: currentTexture.map { .init($0) }
+        )
+        _mat.blending = currentTransparent
+            ? .transparent(opacity: .init(scale: currentOpacity))
+            : .opaque
+        _resource = _mat
+    }
+
+    func updateProperties(color: String?, texture: TextureResource?? = nil, transparent: Bool?, opacity: Float?) {
         if let color = color {
             currentColor = UIColor(Color(hex: color))
+        }
+        if let tex = texture {
+            currentTexture = tex
         }
         if let transparent = transparent {
             currentTransparent = transparent
@@ -49,10 +68,7 @@ class SpatialUnlitMaterial: SpatialMaterial {
         if let opacity = opacity {
             currentOpacity = opacity
         }
-        var mat = UnlitMaterial()
-        mat.color = .init(tint: currentColor, texture: currentTexture != nil ? .init(currentTexture!) : nil)
-        mat.blending = currentTransparent ? .transparent(opacity: .init(scale: currentOpacity)) : .opaque
-        _resource = mat
+        applyProperties()
     }
 }
 
