@@ -6,7 +6,7 @@ See the proposal for full motivation. In short: entity transform updates are cur
 
 **Goals:**
 
-- Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/cancel/finished`.
+- Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/cancel/finished/playState`.
 - Keep playback native-driven so transform animation does not depend on per-frame JS updates.
 - Prevent React prop synchronization from fighting an alive animation session for the same transform field.
 - Document runtime capability detection with `supports('useAnimation')`.
@@ -134,6 +134,9 @@ interface AnimationApi {
 
   /** Whether the animation is currently paused. */
   readonly isPaused: boolean
+
+  /** Current session state. */
+  readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
   /** Whether the most recent current session completed naturally. */
   readonly finished: boolean

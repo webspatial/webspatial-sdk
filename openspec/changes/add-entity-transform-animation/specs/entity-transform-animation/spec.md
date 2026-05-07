@@ -8,7 +8,7 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 
 - **WHEN** application code calls `useAnimation(config)`
 - **THEN** the hook MUST return a two-item tuple of `[animation, api]`
-- **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, and `finished`
+- **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
 #### Scenario: Entity animation prop
 
@@ -202,18 +202,20 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 
 A session is **alive** when it is in any of the following states: queued, delaying, running, or paused. A session is **not alive** when idle (no session, session canceled, or no naturally completed session is current). `isAnimating` reflects whether the session is actively progressing, not whether it is alive. `isPaused` reflects whether the session is frozen but still alive. `finished` reflects whether the most recent current session completed naturally; it MUST become `true` only after a non-looping animation completes naturally, and it MUST reset to `false` on a later `play()` that starts a new session or on `cancel()`.
 
-`api.isAnimating`, `api.isPaused`, and `api.finished` MUST reflect the animation session state according to the following model:
+`api.isAnimating`, `api.isPaused`, `api.finished`, and `api.playState` MUST reflect the animation session state according to the following model:
 
-| State | `isAnimating` | `isPaused` | `finished` | Description |
-|---|---|---|---|---|
-| idle | `false` | `false` | `false` | No session, session canceled, or not started yet |
-| queued | `true` | `false` | `false` | `play()` called before entity bound, waiting for bind |
-| delaying | `true` | `false` | `false` | `play()` called, delay period active, visual motion not yet started |
-| running | `true` | `false` | `false` | Visual motion in progress |
-| paused | `false` | `true` | `false` | Session paused via `api.pause()` |
-| finished | `false` | `false` | `true` | Non-looping animation completed naturally |
+| State | `isAnimating` | `isPaused` | `finished` | `playState` | Description |
+|---|---|---|---|---|---|
+| idle | `false` | `false` | `false` | `"idle"` | No session, session canceled, or not started yet |
+| queued | `true` | `false` | `false` | `"queued"` | `play()` called before entity bound, waiting for bind |
+| delaying | `true` | `false` | `false` | `"running"` | `play()` called, delay period active, visual motion not yet started |
+| running | `true` | `false` | `false` | `"running"` | Visual motion in progress |
+| paused | `false` | `true` | `false` | `"paused"` | Session paused via `api.pause()` |
+| finished | `false` | `false` | `true` | `"finished"` | Non-looping animation completed naturally |
 
 A session exists (is alive) when `isAnimating || isPaused` is `true`. No-op conditions for `pause()` and `cancel()` apply when `!isAnimating && !isPaused` (i.e. no alive session). When the current session is `paused`, `play()` MUST continue that same session instead of creating a new one.
+
+`api.playState` MUST return the string corresponding to the current row in the table above. The `delaying` internal state maps to `"running"` for `playState` because from the developer's perspective the session is actively progressing.
 
 #### Scenario: isAnimating during delay
 

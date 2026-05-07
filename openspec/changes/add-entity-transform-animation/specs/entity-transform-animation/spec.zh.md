@@ -8,7 +8,7 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 - **WHEN** 应用代码调用 `useAnimation(config)`
 - **THEN** Hook MUST 返回二元组 `[animation, api]`
-- **AND** `api` MUST 暴露 `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`finished`
+- **AND** `api` MUST 暴露 `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`finished` 与 `playState`
 
 #### Scenario: 实体 animation prop
 
@@ -202,18 +202,20 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。idle 状态（无会话、会话已取消，或尚未自然完成）时为 **not alive**。`isAnimating` 反映会话是否在积极推进，而非是否 alive。`isPaused` 反映会话是否被冻结但仍然 alive。`finished` 反映最近一个当前有效会话是否已自然完成；它 MUST 只在非循环动画自然完成后变为 `true`，并在后续 `play()` 启动新会话或 `cancel()` 时重置为 `false`。
 
-`api.isAnimating`、`api.isPaused` 和 `api.finished` MUST 按以下模型反映动画会话状态：
+`api.isAnimating`、`api.isPaused`、`api.finished` 和 `api.playState` MUST 按以下模型反映动画会话状态：
 
-| 状态 | `isAnimating` | `isPaused` | `finished` | 说明 |
-|---|---|---|---|---|
-| idle | `false` | `false` | `false` | 无会话、会话已取消，或尚未开始 |
-| queued | `true` | `false` | `false` | 实体未绑定时调用 `play()`，等待绑定 |
-| delaying | `true` | `false` | `false` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
-| running | `true` | `false` | `false` | 视觉运动进行中 |
-| paused | `false` | `true` | `false` | 通过 `api.pause()` 暂停 |
-| finished | `false` | `false` | `true` | 非循环动画自然完成 |
+| 状态 | `isAnimating` | `isPaused` | `finished` | `playState` | 说明 |
+|---|---|---|---|---|---|
+| idle | `false` | `false` | `false` | `"idle"` | 无会话、会话已取消，或尚未开始 |
+| queued | `true` | `false` | `false` | `"queued"` | 实体未绑定时调用 `play()`，等待绑定 |
+| delaying | `true` | `false` | `false` | `"running"` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
+| running | `true` | `false` | `false` | `"running"` | 视觉运动进行中 |
+| paused | `false` | `true` | `false` | `"paused"` | 通过 `api.pause()` 暂停 |
+| finished | `false` | `false` | `true` | `"finished"` | 非循环动画自然完成 |
 
 当 `isAnimating || isPaused` 为 `true` 时会话存在（alive）。`pause()` 与 `cancel()` 的 no-op 条件为 `!isAnimating && !isPaused`（即无 alive 会话）。当处于 `paused` 状态时，`play()` MUST 继续当前会话，而不是新建会话。
+
+`api.playState` MUST 返回上表中对应当前行的字符串。内部 `delaying` 状态映射为 `playState` 的 `"running"`，因为从开发者角度该会话正在积极推进。
 
 #### Scenario: delay 期间 isAnimating
 
