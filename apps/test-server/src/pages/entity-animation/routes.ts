@@ -13,17 +13,18 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
   {
     path: '/entity-animation/manual-trigger',
     label: 'Manual Trigger',
-    description: 'Manual play and stop controls for a single animation.',
+    description: 'Manual play and cancel controls for a single animation.',
   },
   {
     path: '/entity-animation/reverse-loop',
     label: 'Reverse Loop',
-    description: 'Reverse loop rotation with pause and resume.',
+    description: 'Reverse loop rotation with pause/play (resume) and cancel.',
   },
   {
     path: '/entity-animation/stop-sync',
-    label: 'Stop and Sync State',
-    description: 'Sync React state with the stop point to avoid jumps.',
+    label: 'Cancel and Sync State',
+    description:
+      'Sync React state with the cancel restore point to avoid jumps.',
   },
   {
     path: '/entity-animation/capability-check',

@@ -86,6 +86,19 @@ export function validateAnimationConfig(config: AnimationConfig): void {
     }
   }
 
+  // playbackRate
+  if (config.playbackRate !== undefined) {
+    if (
+      typeof config.playbackRate !== 'number' ||
+      !isFinite(config.playbackRate) ||
+      config.playbackRate <= 0
+    ) {
+      throw new Error(
+        '[useAnimation] config.playbackRate must be a positive finite number',
+      )
+    }
+  }
+
   // Validate transform values
   if (config.to.position) validateVec3(config.to.position, 'to.position')
   if (config.to.rotation) validateVec3(config.to.rotation, 'to.rotation')

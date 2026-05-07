@@ -41,7 +41,7 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
   AnimationCompletedEventPayload,
-  AnimationStoppedEventPayload,
+  AnimationCanceledEventPayload,
   AnimationFailedEventPayload,
 } from '../../WebMsgCommand'
 
@@ -136,7 +136,7 @@ export class SpatialEntity extends SpatialObject {
    * sends the JSB command, and returns an `AnimateTransformResult` with
    * `finished` and `stopped` promises.
    *
-   * For `pause`, `resume`, `stop`: sends the command and resolves when
+   * For `pause`, `resume`, `cancel``: sends the command and resolves when
    * the bridge acknowledges it.
    */
   animateTransform(
@@ -152,14 +152,14 @@ export class SpatialEntity extends SpatialObject {
       // Register event listeners BEFORE sending the play command
       // to avoid race conditions where native fires before we listen.
       let resolveFinished!: (val: TransformValues) => void
-      let resolveStop!: (val: TransformValues) => void
+      let resolveCancel!: (val: TransformValues) => void
       let resolveFailed!: (err: AnimationError) => void
 
       const finished = new Promise<TransformValues>(r => {
         resolveFinished = r
       })
-      const stopped = new Promise<TransformValues>(r => {
-        resolveStop = r
+      const canceled = new Promise<TransformValues>(r => {
+        resolveCancel = r
       })
       const failed = new Promise<AnimationError>(r => {
         resolveFailed = r
@@ -167,7 +167,7 @@ export class SpatialEntity extends SpatialObject {
 
       const cleanup = () => {
         SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-        SpatialWebEvent.removeEventReceiver(`${animationId}_stopped`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
         SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
       }
 
@@ -185,14 +185,14 @@ export class SpatialEntity extends SpatialObject {
       )
 
       SpatialWebEvent.addEventReceiver(
-        `${animationId}_stopped`,
-        (data: AnimationStoppedEventPayload) => {
+        `${animationId}_canceled`,
+        (data: AnimationCanceledEventPayload) => {
           cleanup()
           const values = decomposeTransformMatrix(data.transform)
           if (values.position) this.position = values.position
           if (values.rotation) this.rotation = values.rotation
           if (values.scale) this.scale = values.scale
-          resolveStop(values)
+          resolveCancel(values)
         },
       )
 
@@ -221,11 +221,11 @@ export class SpatialEntity extends SpatialObject {
       return {
         animationId,
         finished,
-        stopped,
+        canceled,
         failed,
       } as AnimateTransformResult & { failed: Promise<AnimationError> }
     } else {
-      // pause / resume / stop — fire and wait for bridge ack
+      // pause / resume / cancel — fire and wait for bridge ack
       const result = await new AnimateTransformJSBCommand(command).execute()
       if (!result.success) {
         throw new Error(
@@ -241,7 +241,7 @@ export class SpatialEntity extends SpatialObject {
    */
   cleanupAnimationListeners(animationId: string) {
     SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-    SpatialWebEvent.removeEventReceiver(`${animationId}_stopped`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
     SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
   }
 

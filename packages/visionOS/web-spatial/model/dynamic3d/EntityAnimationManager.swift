@@ -37,7 +37,7 @@ class EntityAnimationManager {
     func removeSessionsForEntity(_ entityId: String) {
         let toRemove = sessions.filter { $0.value.entityId == entityId }
         for (id, session) in toRemove {
-            session.markStopped()
+            session.markCanceled()
             session.playbackController?.stop()
             completionSubscriptions.removeValue(forKey: id)
             sessions.removeValue(forKey: id)
@@ -46,7 +46,7 @@ class EntityAnimationManager {
 
     func removeAll() {
         for (_, session) in sessions {
-            session.markStopped()
+            session.markCanceled()
             session.playbackController?.stop()
         }
         completionSubscriptions.removeAll()
@@ -68,7 +68,8 @@ class EntityAnimationManager {
             duration: command.duration ?? 0.3,
             timingFunction: command.timingFunction ?? "easeInOut",
             delay: command.delay ?? 0,
-            loop: command.loop
+            loop: command.loop,
+            speed: command.playbackRate ?? 1.0
         )
         addSession(session)
 
@@ -128,9 +129,9 @@ class EntityAnimationManager {
         resolve(.success(nil))
     }
 
-    // MARK: - Stop
+    // MARK: - Cancel
 
-    func handleStop(
+    func handleCancel(
         command: AnimateTransformCommand,
         entity: SpatialEntity,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
@@ -146,11 +147,32 @@ class EntityAnimationManager {
             return
         }
 
-        session.markStopped()
-        session.playbackController?.stop()
+        session.markCanceled()
 
-        // Send stopped event to JS with current transform
-        sendStoppedEvent(session: session, entity: entity)
+        // Stop the playback controller first, then remove ALL animations from
+        // the entity. RealityKit may retain a "fill" state from the stopped
+        // animation that overrides entity.transform.matrix unless the animation
+        // resource is fully detached via stopAllAnimations().
+        session.playbackController?.stop()
+        entity.stopAllAnimations()
+
+        // Cancel restores entity to the from-transform (or session start snapshot
+        // when from was omitted). This aligns with Web Animation API cancel() semantics.
+        //
+        // IMPORTANT: After stopAllAnimations(), RealityKit bind-point system may
+        // still hold an override on the entity transform for the current frame.
+        // Direct assignment (entity.transform.matrix = ...) is rejected with
+        // "Failed to set override status for bind point component member".
+        // Using move(to:relativeTo:duration:0) creates a zero-duration animation
+        // that properly takes over the bind-point ownership.
+        if let fromArray = session.fromTransform, fromArray.count == 16 {
+            let fromMatrix = arrayToFloat4x4(fromArray)
+            let fromTransform = Transform(matrix: fromMatrix)
+            entity.move(to: fromTransform, relativeTo: entity.parent, duration: 0, timingFunction: .linear)
+        }
+
+        // Send canceled event to JS with the restored transform
+        sendCanceledEvent(session: session, entity: entity)
         removeSession(command.animationId)
 
         resolve(.success(nil))
@@ -164,16 +186,21 @@ class EntityAnimationManager {
         // Build to-transform as float4x4
         guard let toArray = session.toTransform, toArray.count == 16 else {
             sendFailedEvent(session: session, command: "play", reason: "Missing or invalid toTransform")
-            session.markStopped()
+            session.markCanceled()
             removeSession(session.animationId)
             return
         }
 
         let toMatrix = arrayToFloat4x4(toArray)
 
-        // If fromTransform is provided, set entity transform to it before animating
+        // If fromTransform is provided, set entity transform to it before animating.
+        // Direct assignment is safe here because no animation is active on this entity
+        // at this point (any previous animation was already stopped in handleCancel).
+        // NOTE: Do NOT use move(to:duration:0) here — it creates a zero-duration animation
+        // that fires PlaybackCompleted, which would falsely trigger our completion observer.
         if let fromArray = session.fromTransform, fromArray.count == 16 {
             let fromMatrix = arrayToFloat4x4(fromArray)
+            entity.stopAllAnimations()
             entity.transform.matrix = fromMatrix
         }
 
@@ -192,11 +219,12 @@ class EntityAnimationManager {
 
         // Wrap with AnimationView to apply the native delay.
         // RealityKit handles the delay internally — no manual timer needed.
-        let animationView = AnimationView(source: animation, delay: session.delay)
+        var animationView = AnimationView(source: animation, delay: session.delay)
+        animationView.speed = Float(session.speed)
 
         guard let animResource = try? AnimationResource.generate(with: animationView) else {
             sendFailedEvent(session: session, command: "play", reason: "Failed to generate animation resource")
-            session.markStopped()
+            session.markCanceled()
             removeSession(session.animationId)
             return
         }
@@ -219,7 +247,7 @@ class EntityAnimationManager {
             // Fallback: entity not yet in a RealityKit scene — this should not
             // happen in normal flow since play is called after entity is added.
             sendFailedEvent(session: session, command: "play", reason: "Entity has no RealityKit scene for event subscription")
-            session.markStopped()
+            session.markCanceled()
             removeSession(session.animationId)
             return
         }
@@ -247,12 +275,12 @@ class EntityAnimationManager {
         scene.sendWebMsg("\(session.animationId)_completed", payload)
     }
 
-    /// Send the `{animationId}_stopped` event to JS with the entity's current transform.
-    private func sendStoppedEvent(session: EntityAnimationSession, entity: SpatialEntity) {
+    /// Send the `{animationId}_canceled` event to JS with the entity's restored transform.
+    private func sendCanceledEvent(session: EntityAnimationSession, entity: SpatialEntity) {
         guard let scene = scene else { return }
         let transform = float4x4ToArray(entity.transform.matrix)
-        let payload = AnimationStoppedPayload(type: "stopped", transform: transform)
-        scene.sendWebMsg("\(session.animationId)_stopped", payload)
+        let payload = AnimationCanceledPayload(type: "canceled", transform: transform)
+        scene.sendWebMsg("\(session.animationId)_canceled", payload)
     }
 
     /// Send the `{animationId}_failed` event to JS.

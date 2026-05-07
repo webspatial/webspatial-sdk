@@ -9,7 +9,7 @@ struct AnimateTransformCommand: CommandDataProtocol {
     static let commandType: String = "AnimateTransform"
 
     let animationId: String
-    let type: String // "play" | "pause" | "resume" | "stop"
+    let type: String // "play" | "pause" | "resume" | "cancel"
 
     // Fields present only when type == "play"
     let entityId: String?
@@ -19,6 +19,7 @@ struct AnimateTransformCommand: CommandDataProtocol {
     let timingFunction: String?
     let delay: Double?
     let loop: AnimateTransformLoopValue?
+    let playbackRate: Double?
 }
 
 /// Handles the polymorphic `loop` field which can be `true`, `false`, or `{ reverse: true }`.
@@ -67,8 +68,8 @@ class EntityAnimationSession {
     /// The RealityKit animation playback controller.
     var playbackController: AnimationPlaybackController?
 
-    /// Whether the session has been stopped (terminal state).
-    private(set) var isStopped: Bool = false
+    /// Whether the session has been canceled (terminal state).
+    private(set) var isCanceled: Bool = false
 
     /// Whether the session has completed naturally (terminal state).
     private(set) var isCompleted: Bool = false
@@ -94,6 +95,9 @@ class EntityAnimationSession {
     /// Loop configuration.
     let loop: AnimateTransformLoopValue?
 
+    /// Playback speed multiplier. Default: 1.0. Maps to AnimationView.speed.
+    let speed: Double
+
     init(
         animationId: String,
         entityId: String,
@@ -102,7 +106,8 @@ class EntityAnimationSession {
         duration: Double,
         timingFunction: String,
         delay: Double,
-        loop: AnimateTransformLoopValue?
+        loop: AnimateTransformLoopValue?,
+        speed: Double = 1.0
     ) {
         self.animationId = animationId
         self.entityId = entityId
@@ -112,19 +117,20 @@ class EntityAnimationSession {
         self.delay = delay
         self.timingFunction = timingFunction
         self.loop = loop
+        self.speed = speed
     }
 
     /// Whether this session has reached a terminal state.
     var isTerminal: Bool {
-        return isStopped || isCompleted
+        return isCanceled || isCompleted
     }
 
     func markCompleted() {
         isCompleted = true
     }
 
-    func markStopped() {
-        isStopped = true
+    func markCanceled() {
+        isCanceled = true
     }
 
     func markPaused() {
@@ -143,7 +149,7 @@ struct AnimationCompletedPayload: Encodable {
     let transform: [Double]
 }
 
-struct AnimationStoppedPayload: Encodable {
+struct AnimationCanceledPayload: Encodable {
     let type: String
     let transform: [Double]
 }

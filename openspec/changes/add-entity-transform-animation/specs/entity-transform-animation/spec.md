@@ -331,13 +331,21 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 - **AND** the SDK MUST NOT generate a new `animationId`
 - **AND** that `play()` call MUST NOT fire `onStart` again
 
-#### Scenario: Play while a non-paused alive session already exists
+#### Scenario: Play while a non-paused alive session already exists (running/delaying)
 
-- **GIVEN** an animation session is already `queued`, `delaying`, or `running`
+- **GIVEN** an animation session is already in `delaying` or `running` state
 - **WHEN** application code calls `api.play()` again
-- **THEN** the SDK MUST cancel the existing session first and start a new session with the current config
-- **AND** the `onCancel` callback for the previous session MUST fire before the new session’s `onStart`
-- **AND** `api.isAnimating` MUST be `false` when the previous session’s `onCancel` fires, and MUST be `true` when the new session’s `onStart` fires
+- **THEN** the call MUST be a **no-op** (no error thrown, no lifecycle callback invoked, no native command sent, no new session created)
+- **AND** the existing session MUST continue uninterrupted
+- **AND** to restart the animation, application code MUST explicitly call `api.cancel()` before calling `api.play()`
+
+> **Rationale:** This aligns with the Web Animation API where `animation.play()` on an already-running animation is a no-op.
+
+#### Scenario: Play while session is in queued state
+
+- **GIVEN** an animation session is in the `queued` state (play called before entity bound)
+- **WHEN** application code calls `api.play()` again
+- **THEN** the call MUST be a **no-op** — the queued session remains and will start when entity is bound
 
 #### Scenario: Each new-session play generates a new session id
 

@@ -648,6 +648,8 @@ export class AnimateTransformJSBCommand extends JSBCommand {
         params.timingFunction = this.command.timingFunction
       if (this.command.delay !== undefined) params.delay = this.command.delay
       if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
     }
 
     return params
