@@ -30,7 +30,7 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: 20
           cache: 'pnpm'
       
       - name: Install dependencies and build

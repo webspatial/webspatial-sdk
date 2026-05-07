@@ -13,6 +13,11 @@ WebSpatial is a set of [minimal extensions to HTML/CSS/DOM APIs](https://tpac202
 - [`@webspatial/builder`](./packages/cli/): tooling for previewing, building, and publishing packaged WebSpatial apps
 - [`@webspatial/platform-visionos`](./packages/visionOS/): the visionOS runtime package used by Builder
 
+## Requirements
+
+- Node.js 20 or newer
+- pnpm 9 or newer
+
 ## Documentation
 
 The current documentation lives at [webspatial.dev](https://webspatial.dev).
