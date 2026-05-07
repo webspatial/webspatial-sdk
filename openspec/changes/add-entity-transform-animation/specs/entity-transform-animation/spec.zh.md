@@ -175,14 +175,15 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 | `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
 | `loop` | `true`、`false`、`undefined` 或 `{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
-| `playbackRate` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝。默认值：`1` |
+| `playbackRate` | 非零有限值 | `0`、`NaN`、`Infinity` MUST 被拒绝。负值表示倒放。默认值：`1` |
 
 
 #### Scenario: 播放速率
 
-- **GIVEN** 动画配置将 `playbackRate` 设置为正有限数值
+- **GIVEN** 动画配置将 `playbackRate` 设置为非零有限数值
 - **WHEN** 播放开始
 - **THEN** 动画 MUST 以该倍速播放（如 `2` 表示两倍速，`0.5` 表示半速）
+- **AND** 负值 MUST 使动画倒放（从 `to` 向 `from` 方向播放）
 - **AND** `playbackRate` MUST 在会话创建时应用，并在整个会话生命周期内保持不变
 - **AND** 若省略 `playbackRate`，默认值 MUST 为 `1`（正常速度）
 

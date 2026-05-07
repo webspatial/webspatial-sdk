@@ -478,10 +478,10 @@ describe('5.1.11 playbackRate validation', () => {
     }).toThrow(/playbackRate/)
   })
 
-  test('rejects negative playbackRate', () => {
+  test('accepts negative playbackRate (reverse playback)', () => {
     expect(() => {
       renderHook(() => useAnimation({ ...baseConfig, playbackRate: -1 }))
-    }).toThrow(/playbackRate/)
+    }).not.toThrow()
   })
 
   test('rejects NaN playbackRate', () => {
@@ -546,6 +546,28 @@ describe('5.1.11 playbackRate validation', () => {
       (c: any[]) => c[0].type === 'play',
     )
     expect(playCall![0].playbackRate).toBe(2.5)
+  })
+
+  test('passes negative playbackRate to bridge command for reverse playback', async () => {
+    const { entity } = createMockEntity()
+
+    const { result } = renderHook(() =>
+      useAnimation({ ...baseConfig, playbackRate: -1, autoStart: false }),
+    )
+
+    act(() => {
+      ;(result.current[0] as AnimatedPropsInternal).__bind(entity)
+    })
+
+    act(() => {
+      result.current[1].play()
+    })
+    await flushPromises()
+
+    const playCall = entity.animateTransform.mock.calls.find(
+      (c: any[]) => c[0].type === 'play',
+    )
+    expect(playCall![0].playbackRate).toBe(-1)
   })
 })
 
