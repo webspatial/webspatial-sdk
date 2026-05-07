@@ -34,7 +34,8 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
 ## Impact
 
 - **`@webspatial/react-sdk`**
-  - New: `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, `facades/*.tsx`, `hooks-web/useMetrics.ts`, `spatial/index.ts`. A `WebSpatialBootError` class also lands as part of the runtime layer.
+  - New: `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, `runtime/errors.ts` (`WebSpatialBootError` class), `facades/*.tsx`, `hooks-web/useMetrics.ts` (public hook with `'use client'`), `hooks-web/useMetrics-placeholder.ts` (placeholder constants — no hooks, no directive), `spatial/index.ts`.
+  - For React Server Components compatibility, every facade module and every public hook module that calls React hooks (the public `useMetrics.ts`, `runtime/useSpatialReady.ts`, every facade file) MUST begin with the `'use client'` directive; build verification asserts the directive is preserved in the published `dist/` files.
   - Rewritten: `src/index.ts` to export only facades, the `useMetrics` placeholder/real-selector, bridge-public surface (`isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `bootSpatial`), the unified JSX runtime, and type-only exports.
   - `tsup.config.ts`: collapse to three entries (main, spatial, JSX runtime); delete `dist/web` / `dist/default` / `*.web.*` configs; remove `XR_ENV` banner writes.
   - `package.json` `exports`: hard remove `./web` and `./default`; add `./spatial`; collapse `./jsx-runtime` and `./jsx-dev-runtime` to single mappings (drop the `react-server` conditional sub-key).
