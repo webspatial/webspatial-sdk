@@ -17,7 +17,7 @@ import {
 
 export default function EntityAnimationCancelSyncPage() {
   const logger = useLog()
-  const [position, setPosition] = useState<Vec3>({ x: 0, y: 0.5, z: 0 })
+  const [position, setPosition] = useState<Vec3>({ x: 0, y: 0, z: 0 })
 
   const [animation, api] = useAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },

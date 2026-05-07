@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useReducer } from 'react'
 import { SpatialEntity, supports, composeSRT } from '@webspatial/core-sdk'
 import type {
   AnimatedPropsInternal,
@@ -88,6 +88,10 @@ export function useAnimation(
   const unmountedRef = useRef(false)
   const warnedRef = useRef(false)
   const finishedRef = useRef(false)
+
+  // Trigger a re-render when a session ends so that useEntityTransform
+  // re-runs and syncs the React-declared transform back to native.
+  const [, bumpSyncVersion] = useReducer((x: number) => x + 1, 0)
 
   // ---- Command queue for serializing bridge calls ----
   const commandQueueRef = useRef<Promise<void>>(Promise.resolve())
@@ -185,6 +189,7 @@ export function useAnimation(
           if (!session.unmounted && cfg.onComplete) {
             cfg.onComplete(values)
           }
+          bumpSyncVersion()
         })
 
         result.canceled.then((values: TransformValues) => {
@@ -199,6 +204,7 @@ export function useAnimation(
           if (cfg.onCancel) {
             cfg.onCancel(values)
           }
+          bumpSyncVersion()
         })
 
         // Listen for failed event
