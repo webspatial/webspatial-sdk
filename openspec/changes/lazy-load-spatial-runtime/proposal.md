@@ -20,6 +20,7 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
 - Delete the `dist/web` and `dist/default` build entries from `tsup.config.ts`; remove the `XR_ENV` `window.__webspatialsdk__` writes from banners (only version banners remain).
 - Add a hard size budget: `dist/index.js` gzip ≤ 8KB, enforced by a unit test.
 - Document that **`@webspatial/vite-plugin` is no longer required**. Old plugin configurations that alias `@webspatial/react-sdk` to `/web` or `/default` will fail to resolve after this change; users must remove or upgrade the plugin in lockstep with the SDK upgrade.
+- Define a **capability-based bundler contract** (the consuming bundler MUST support ESM, the `exports` package.json field, and dynamic-import code-splitting) so the SDK is plugin-free against any compatible bundler. Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, and esbuild ≥ 0.18 with `splitting: true` are documented tested targets; Module Federation, Next.js Turbopack, Webpack 4, and CommonJS-only consumer pipelines are explicitly out of scope for v1.
 
 ## Capabilities
 
@@ -39,6 +40,7 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
   - Rewritten: `src/index.ts` to export only facades, the `useMetrics` placeholder/real-selector, bridge-public surface (`isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `bootSpatial`), the unified JSX runtime, and type-only exports.
   - `tsup.config.ts`: collapse to three entries (main, spatial, JSX runtime); delete `dist/web` / `dist/default` / `*.web.*` configs; remove `XR_ENV` banner writes.
   - `package.json` `exports`: hard remove `./web` and `./default`; add `./spatial`; collapse `./jsx-runtime` and `./jsx-dev-runtime` to single mappings (drop the `react-server` conditional sub-key).
+  - `package.json` `peerDependencies`: declare `react: ">=18.0"` and `react-dom: ">=18.0"` (the `useSyncExternalStore` baseline required by `useSpatialReady` per the "Plugin-free integration" Requirement).
   - JSX runtime: delete `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts`; the unified runtime in `jsx-runtime.ts` / `jsx-dev-runtime.ts` (via `jsx-shared.ts`) strips markers, wraps with facade HOCs, and clones `props.style` before removing the `enableXr` key.
 - **`@webspatial/core-sdk`**
   - No structural change. `noRuntime.ts` shim is no longer needed by react-sdk after this change but is left in place; cleanup is out of scope.
