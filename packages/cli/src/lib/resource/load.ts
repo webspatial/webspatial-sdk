@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { fetchUtils } from '../utils/FetchUtils-1'
 import { CustomError } from '../utils/CustomError'
-import Jimp = require('jimp')
+import { Jimp } from 'jimp'
 import { ImageHelper } from './imageHelper'
 
 export async function loadJsonFromNet(
@@ -58,7 +58,7 @@ export async function loadJsonFromDisk(
   return JSON.parse(jsonString)
 }
 
-export async function loadImageFromNet(src: string): Promise<Jimp> {
+export async function loadImageFromNet(src: string): Promise<any> {
   const response = await fetchUtils.fetch(src, { encoding: 'binary' })
   if (response.status !== 200) {
     // throw new Error(
@@ -123,7 +123,7 @@ export async function loadImageFromNet(src: string): Promise<Jimp> {
   return await Jimp.read(Buffer.from(body))
 }
 
-export async function loadImageFromDisk(src: string): Promise<Jimp> {
+export async function loadImageFromDisk(src: string): Promise<any> {
   return await Jimp.read(src)
 }
 

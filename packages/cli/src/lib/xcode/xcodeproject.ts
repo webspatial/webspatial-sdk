@@ -194,7 +194,7 @@ export default class XcodeProject {
           }
       */
       iconConfig.images[0]['filename'] = iconFileName
-      await icon.writeAsync(iconFullPath)
+      await icon.write(iconFullPath)
       await fs.writeFileSync(iconConfigPath, JSON.stringify(iconConfig))
 
       const middleIconConfigDirectory = join(
@@ -214,7 +214,7 @@ export default class XcodeProject {
       let middleConfig = await loadJsonFromDisk(middleIconConfigPath)
       let middleIcon = ImageHelper.createImg(512)
       middleConfig.images[0]['filename'] = middleIconFileName
-      await middleIcon.writeAsync(middleIconFullPath)
+      await middleIcon.write(middleIconFullPath as `${string}.${string}`)
       await fs.writeFileSync(middleIconConfigPath, JSON.stringify(middleConfig))
 
       const logoConfigDirectory = join(PROJECT_DIRECTORY, LOGO_DIRECTORY)
@@ -223,7 +223,7 @@ export default class XcodeProject {
       const logoFileName = 'logo.' + icon.getMIME().replace('image/', '')
       const logoFullPath = join(logoConfigDirectory, logoFileName)
       logoConfig.images[0]['filename'] = logoFileName
-      await icon.writeAsync(logoFullPath)
+      await icon.write(logoFullPath)
       await fs.writeFileSync(logoConfigPath, JSON.stringify(logoConfig))
     }
   }
