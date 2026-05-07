@@ -40,25 +40,32 @@
 - [ ] 5.4 Unit tests for `useMetrics` placeholder: returns documented constants (assertion-grade values: `pointToPhysical(0) === 0`, `pointToPhysical(1360) === 1`, `physicalToPoint(1) === 1360`); function identities `===` stable across renders; SSR invocation via `renderToString` does not throw and returns the same constants
 - [ ] 5.5 Document in `packages/react/README.md` and/or migration guide: `useMetrics` resolves to placeholder unless `bootSpatial()` is awaited before the consuming component first mounts; remount required to switch to real implementation
 
-## 6. JSX runtime web variants strip spatial markers
+## 6. JSX runtime: unify, strip, and wrap with facade HOCs
 
-- [ ] 6.1 Update `packages/react/src/jsx/jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts` to strip `enable-xr`, `enable-xr-monitor`, `style.enableXr`, and the `__enableXr__` `className` token from props before delegating to `react/jsx-runtime`
-- [ ] 6.2 Mutate the props object in place (matching the existing AVP-side `replaceToSpatialPrimitiveType` convention in `jsx-shared.ts`); add a comment explaining the convention
-- [ ] 6.3 Cover `jsx`, `jsxs`, and `jsxDEV` call sites; verify `Fragment` re-export is preserved
-- [ ] 6.4 Unit tests: each marker is stripped independently; combined markers are all stripped; non-marker props pass through unchanged; absent markers are a no-op (no allocation churn)
+- [ ] 6.1 **Delete** `packages/react/src/jsx/jsx-runtime.web.ts` and `packages/react/src/jsx/jsx-dev-runtime.web.ts`. The single unified runtime serves all environments (plain web, AVP, SSR, RSC); a separate strip-only sibling is no longer needed
+- [ ] 6.2 Update `packages/react/src/jsx/jsx-shared.ts` so that `withSpatialized2DElementContainer`, `withSpatialMonitor`, and `Model` resolve to the **facade** versions (already exported from the default entry by §4). The `replaceToSpatialPrimitiveType` function performs strip + wrap-with-facade in a single pass; the `if (type === Model) return type;` bypass is preserved
+- [ ] 6.3 Fix the style sub-object mutation bug in `replaceToSpatialPrimitiveType`: instead of `delete propsObject.style.enableXr` (which mutates the user-supplied / memoized / `Object.freeze`d style object), spread-clone the style and reassign: `propsObject.style = (({ enableXr, ...rest }) => rest)(propsObject.style)`. Top-level `props` mutation (delete `enable-xr`, reassign `className`) remains acceptable because React creates a fresh `props` object per call
+- [ ] 6.4 Cover all JSX call sites: `jsx`, `jsxs`, `jsxDEV`. Confirm `Fragment` re-export is preserved
+- [ ] 6.5 Confirm `props.class` (HTML attribute spelling) is **not** recognized as a marker source — only `props.className` is checked. Document this in code comment
+- [ ] 6.6 Unit tests covering: (a) each marker independently triggers strip + facade wrap; (b) combined markers are all stripped; (c) `props.style` reference is unchanged after the JSX call when `enableXr` was present (and after `Object.freeze`d input); (d) `className` ordering preserved with `__enableXr__` removed; (e) `props.class` containing `__enableXr__` is **not** treated as a marker; (f) `Model` type bypasses both strip and wrap; (g) absent markers cause zero allocation churn (no `style` clone, no className split); (h) SSR invocation produces identical strip + wrap behavior
 
 ## 7. Default entry rewrite
 
 - [ ] 7.1 Rewrite `packages/react/src/index.ts` to export only: `WebSpatialRuntime`, `WebSpatialRuntimeError`, `CapabilityKey`, `enableDebugTool`, `convertCoordinate`, `useMetrics` (the placeholder-or-real selector defined in §5.2), all facades, `bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, JSX-related types, `version`. Internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) MUST NOT be exported here. The `props.fallback` prop is intentionally NOT part of the facade public API in v1
 - [ ] 7.2 Remove the top-level side-effect `if (typeof window !== 'undefined') initPolyfill()` from the default entry; polyfill installation moves into the spatial chunk's bootstrap (executed when the chunk loads)
 - [ ] 7.3 Verify no static import path from `src/index.ts` reaches `src/spatial/`; only the bridge's dynamic `import()` may
-- [ ] 7.4 Update `packages/react/src/jsx/jsx-shared.ts` to reflect that the AVP-side runtime no longer needs to externally import facades (the JSX-runtime web variant is now the only path; AVP-side spatializing happens via real components from `src/spatial/`); reconcile the existing self-import of `@webspatial/react-sdk` accordingly
+- [ ] 7.4 The self-import in `packages/react/src/jsx/jsx-shared.ts` (`from '@webspatial/react-sdk'`) MUST resolve to the default entry's facade exports for `withSpatialized2DElementContainer`, `withSpatialMonitor`, `Model` (already the case after §4 lands). Reconcile any `@ts-ignore` comments and ensure the import path is no longer marked external in the JSX bundle's tsup config (the facades are part of the same default-entry static module graph)
 
 ## 8. Build configuration (tsup) and package exports
 
-- [ ] 8.1 Replace `packages/react/tsup.config.ts` with a configuration that produces three outputs: main entry (`src/index.ts` → `dist/index.js`), spatial entry (`src/spatial/index.ts` → `dist/spatial.js`), JSX runtime entries (`src/jsx/jsx-runtime.ts`, `src/jsx/jsx-dev-runtime.ts` → `dist/jsx/*.js`); delete all `dist/web` and `dist/default` configurations
+- [ ] 8.1 Replace `packages/react/tsup.config.ts` with a configuration that produces three outputs: main entry (`src/index.ts` → `dist/index.js`), spatial entry (`src/spatial/index.ts` → `dist/spatial.js`), JSX runtime entries (`src/jsx/jsx-runtime.ts`, `src/jsx/jsx-dev-runtime.ts` → `dist/jsx/*.js`, single unified runtime); delete all `dist/web` / `dist/default` / `*.web.*` configurations
 - [ ] 8.2 Remove `XR_ENV` writes from the tsup banner; only `react-sdk-version` remains
-- [ ] 8.3 Update `packages/react/package.json` `exports` to: `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`; **hard remove** `./web`, `./default`, and the `./web/*` and `./default/*` subpaths
+- [ ] 8.3 Update `packages/react/package.json` `exports`:
+  - `'.'` → `./dist/index.js`
+  - `./jsx-runtime` → `./dist/jsx/jsx-runtime.js` (single mapping; **drop** the `react-server` conditional sub-key)
+  - `./jsx-dev-runtime` → `./dist/jsx/jsx-dev-runtime.js` (single mapping; **drop** the `react-server` conditional sub-key)
+  - `./spatial` → `./dist/spatial.js`
+  - **Hard remove** `./web`, `./default`, `./web/*`, `./default/*` subpaths
 - [ ] 8.4 Update `packages/react/package.json` `main` and `types` to point at the new `dist/index.js` and `dist/index.d.ts`
 - [ ] 8.5 Verify `tsup` emits `dist/spatial.js` as a separate file (not inlined into `dist/index.js`) and that the dynamic `import()` from the bridge resolves to the published subpath
 - [ ] 8.6 Update `packages/react/tsconfig.json` `paths` to remove any `@webspatial/react-sdk/web` or `/default` entries; ensure `@webspatial/react-sdk` resolves to `./src` (unchanged)
