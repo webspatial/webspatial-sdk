@@ -49,47 +49,65 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   type SpatialNS = typeof import('../spatial')
   let spatialImpl: SpatialNS | null = null
   let loadingPromise: Promise<SpatialNS | null> | null = null
-  let onLoadErrorCb: ((err: unknown) => void) | null = null
+  let lastError: WebSpatialBootError | null = null
+  let attemptCount = 0
+  const errorListeners = new Set<(err: WebSpatialBootError) => void>()
+  // Subscribe-style readiness store, consumed by facades via useSyncExternalStore
+  const readinessSubscribers = new Set<() => void>()
   ```
 
-- API:
-  - `getSpatialImpl(): SpatialNS | null` — synchronous read
-  - `loadSpatialImpl(): Promise<SpatialNS | null>` — idempotent; first call performs the dynamic import in a WebSpatial runtime, returns `null` immediately in web mode
+- Internal API (not part of the application-facing public API):
+  - `getSpatialImpl(): SpatialNS | null` — synchronous read.
+  - `loadSpatialImpl(): Promise<SpatialNS | null>` — performs the dynamic import in a WebSpatial runtime, resolves to `null` in web/SSR mode. Idempotent within a single attempt; after a rejection the next call may initiate a fresh attempt provided no other retry is in flight.
+- Public API re-exported from the default entry (contracts pinned in the `bootSpatial` Requirement):
   - `isSpatialReady(): boolean`
-  - `onSpatialLoadError(cb)` — register a single error reporter; invoked if `import('../spatial')` rejects
-- The bridge is **internal**: it is exported from the package only for `bootSpatial()` and facades to consume; it is not part of the public application-facing API surface. Public reachability is acceptable as long as it is undocumented and prefixed (e.g. exported under `__internal_*` names) so external consumers do not depend on it.
-- The bridge does **not** import React. This keeps it independently testable and avoids React/SSR coupling.
+  - `onSpatialLoadError(cb): () => void` — multi-listener; returns an unsubscribe function. Listeners are stored in a `Set` and notified in registration order.
+  - `WebSpatialBootError` — `Error` subclass carrying `cause` (the underlying `import()` error) and `attempt` (1-based count). Stored on `lastError` after each failed attempt.
+- Facades subscribe to bridge readiness changes via `useSyncExternalStore` (decision 4). Subscription bookkeeping is tracked in `readinessSubscribers`; the bridge notifies all subscribers on `false → true` transitions and (rarely) on `true → false` if a future feature ever resets readiness — v1 only flips once.
+- Internal-only symbols MUST be prefixed (e.g. `__internalGetSpatialImpl`) when re-exported from the package, so external consumers cannot accidentally depend on them.
+- The bridge does **not** import React. The `useSyncExternalStore` integration lives inside facades, not in the bridge module — keeping the bridge independently testable and SSR-safe.
 
 ### 3. Boot helper as the single activation path
 
 - `bootSpatial(): Promise<void>` exported from the default entry.
 - In a WebSpatial runtime: call `loadSpatialImpl()`, `await` resolution, return.
-- In a non-WebSpatial runtime (`detectSpatialRuntime() === null`): return immediately without scheduling any network request.
-- Idempotent: multiple `bootSpatial()` calls share the same underlying promise and load the spatial chunk at most once per page.
-- Error semantics: when the dynamic import fails, `bootSpatial()` rejects; facades and hooks remain in placeholder mode. The optional `onSpatialLoadError(cb)` lets the application observe and report the failure without coupling SDK code to a logger.
-- Console warning: if a facade is rendered while `isSpatialReady() === false` and `bootSpatial()` has never been called, log a one-shot dev-mode warning ("Did you forget to await `bootSpatial()` before render?"). The warning is silenced in production builds.
+- In a non-WebSpatial runtime (`detectSpatialRuntime() === null`) or SSR (`typeof window === 'undefined'`): return immediately without scheduling any network request.
+- **Idempotency within an attempt**: concurrent in-flight calls share one promise; after a successful resolution all subsequent calls return an already-resolved promise without scheduling additional work.
+- **Retry-on-demand after failure**: after a rejection, the next `bootSpatial()` invocation MAY initiate a fresh `import()` attempt provided no other retry is currently in flight. The bridge increments `attemptCount` on each fresh attempt; the resulting `WebSpatialBootError` carries that 1-based number.
+- **Error wrapping**: rejections are always thrown as `WebSpatialBootError` instances with `name === 'WebSpatialBootError'`, `cause` set to the original `import()` error, and `attempt: number`. This gives error reporters and ErrorBoundary code a stable type to filter on.
+- **Multi-listener error reporting**: `onSpatialLoadError(cb): () => void` accepts any number of callbacks; returns an unsubscribe. All listeners are notified in registration order on each failure. Successful retries do not replay earlier errors.
+- **No SDK timeout (v1)**: the bridge does not race `import()` against a wall-clock timer. Applications that need a timeout can wrap `bootSpatial()` in their own `Promise.race`. We can revisit if real-world deployments report hung-import scenarios.
+- **Console warning**: if a facade is rendered while `isSpatialReady() === false` and `bootSpatial()` has never been called, log a one-shot dev-mode warning. Silenced in production builds.
 
-**Why one path, not two**: introducing `<SpatialBoundary>`/Suspense in the same change doubles the activation contract and complicates the hook story (placeholders would have to occupy the same React Hook slot count as real implementations to support mid-render switches). With `bootSpatial()` as the single front door, switching only happens between full renders, so there is no Rules-of-Hooks risk and facade/placeholder code stays small.
+**Why one path, not two**: introducing `<SpatialBoundary>`/Suspense in the same change doubles the activation contract and complicates the hook story. With `bootSpatial()` as the single front door, the application is responsible for awaiting it before render in the recommended path. Late boot is still supported (facades subscribe to bridge readiness — see decision 4), but hooks deliberately do not switch mid-life: the placeholder a component first sees is the implementation it sees forever, switching only on remount. This eliminates Rules-of-Hooks risk without forcing placeholders to mimic real-hook call sequences.
 
 ### 4. Facade pattern for components and HOCs
 
 - For every public spatial React component, the default entry exports a facade with the same TypeScript signature.
-- Render logic is uniform:
+- Facades subscribe to bridge readiness through `useSyncExternalStore`, so a `false → true` transition automatically re-renders mounted facades to the real implementation:
 
   ```tsx
+  function useSpatialReady(): boolean {
+    return useSyncExternalStore(subscribeReadiness, getReadinessSnapshot, getServerReadinessSnapshot)
+  }
+
   export function Model(props: ModelProps) {
-    const impl = getSpatialImpl()
+    const ready = useSpatialReady()
+    const impl = ready ? getSpatialImpl() : null
     if (!impl) return props.fallback ?? defaultFallback(props)
     return <impl.Model {...props} />
   }
   ```
 
-- HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. The wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade component, not the real one — the real HOC's own cache lives inside the spatial chunk.
+  - `subscribeReadiness(cb)` adds `cb` to the bridge's `readinessSubscribers` Set and returns the unsubscribe.
+  - `getServerReadinessSnapshot()` returns `false` so SSR always renders fallback (consistent with the SSR/hydration Requirement).
+- HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper; the real HOC's own cache lives inside the spatial chunk.
 - Per-component default fallback:
   - `Model`, `*Entity`, `Material*`, `*Asset` → `null`
   - `Reality` → a single `<div aria-hidden="true">` that preserves layout (matches the existing `runtime-capabilities` Reality fallback contract; not focusable, not in a11y tree, no children rendered).
   - HOC-wrapped components → render the original `Comp` with passthrough props (the wrapper becomes a no-op identity in web mode).
 - Each facade accepts an optional `fallback?: ReactNode` prop that overrides the default. This is documented per component.
+- Facades MUST NOT use the `useSpatialReady` subscription to swap hook implementations — only the rendered component subtree. Hooks (decision 5) explicitly do not switch mid-life.
 
 ### 5. Hook placeholder protocol
 
@@ -100,8 +118,9 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   - `useEntityEvent` / `useRealityEvents` → no-op subscribe (registers nothing)
   - `useEntityId` → returns a stable id derived from React `useId`
   - `useMetrics` → returns an empty / inert metrics snapshot
-- Because `bootSpatial()` is the single activation path **and** is awaited before initial render, no component instance ever observes a "placeholder Hook → real Hook" switch within its lifetime. This eliminates the need to align React Hook call sequences between placeholder and real implementations.
-- If `bootSpatial()` is not awaited (misuse): all hooks remain in placeholder mode for the entire page lifetime — consistent web-fallback behavior, no runtime crash.
+- **No mid-life switch**: a component instance that first invoked a placeholder hook MUST keep invoking the placeholder for its entire lifetime, even if `isSpatialReady()` flips to `true`. The real hook implementation is picked up only when the component unmounts and remounts (e.g. via a `key` change, parent unmount, or page reload). This contract is what allows placeholders and real hooks to differ in their internal React Hook call sequences without violating the Rules of Hooks.
+- The default-entry hook export resolves to either the placeholder or the real hook **at the moment the component first mounts** (decided by checking `isSpatialReady()` once per instance, e.g. via a `useState` initializer). Subsequent renders of that instance keep the same choice.
+- If `bootSpatial()` is not awaited (misuse): all hooks remain in placeholder mode for the entire page lifetime — consistent web-fallback behavior, no runtime crash. Facades will still flip (decision 4), but the spatial hooks inside any already-mounted component will keep returning placeholder values until that component remounts.
 
 ### 6. JSX runtime web variants strip spatial markers
 
@@ -193,5 +212,6 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 
 - Final number for the gzip size budget. 8KB is the design target; the test will be added with the *measured* number once the implementation lands, with an assertion comment that the design target is 8KB.
 - Whether `<SpatialBoundary>` should be added in a follow-up change. Not required by current product needs; track as a separate issue if user feedback shows demand.
-- Whether to expose `getSpatialImpl()` / `isSpatialReady()` as public, documented API for advanced integration scenarios. Default is "internal only" for v1; revisit if needed.
+- Whether to expose `getBootStatus(): 'idle' | 'loading' | 'ready' | 'failed'` (a more granular state-machine query) in addition to `isSpatialReady()`. Skipped in v1 — `isSpatialReady()` plus rejection of `bootSpatial()` plus `onSpatialLoadError(cb)` covers known use cases; revisit if applications request finer state.
+- Whether `bootSpatial()` should accept a `{ timeoutMs }` option. v1 says no (applications can `Promise.race` themselves); revisit if real-world deployments report hung-import scenarios.
 - How aggressively to tighten the size budget after the initial release. A reasonable cadence is to revisit once per minor release based on actual `dist/index.js` measurements.
