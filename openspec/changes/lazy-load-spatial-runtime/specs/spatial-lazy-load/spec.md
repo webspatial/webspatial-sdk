@@ -407,26 +407,67 @@ For each call:
 
 ### Requirement: SSR and hydration safety
 
-In a server-side rendering context the default entry MUST behave as web mode: facades render fallback, hook placeholders return defaults, no dynamic import is scheduled. After client-side hydration the application MAY call `bootSpatial()` to load the spatial chunk and switch facades to real implementations.
+In a server-side rendering context the default entry MUST behave as web mode: facades render their per-component default fallback, hook placeholders return their documented defaults, the bridge MUST NOT schedule any dynamic import, and registered `onSpatialLoadError` callbacks MUST NOT be invoked. The default entry MUST work under any React 18+ SSR API (including `renderToString`, `renderToPipeableStream`, `renderToReadableStream`, and React 19 `prerender*`) and inside React Server Components when the facade or hook is consumed via a Client Component.
 
-#### Scenario: Server render does not touch spatial chunk
+To make hydration safe, the SDK MUST follow these constraints:
 
-- **WHEN** an application server-renders a tree containing facades or hook placeholders
+- **Client-component directive**: every facade module and every public hook module that calls React hooks MUST begin with the `'use client'` directive. The directive MUST be preserved through the build into the published `dist/` files. Without this directive, the React Server Components compiler will treat facades as Server Components and fail the moment they call hooks. Files that do not call React hooks (`runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/errors.ts`, the constant-only `useMetrics` placeholder source, plain type-only modules) MUST NOT carry the directive — they remain server-callable.
+- **Hydration-aware readiness**: `useSpatialReady()` MUST be implemented with `useSyncExternalStore` (or another React-hydration-aware primitive that exposes a server snapshot). This guarantees that the value used during hydration matches the SSR snapshot, and React's built-in transition swaps to the live snapshot only after hydration commits — preventing any mismatch warning regardless of when `bootSpatial()` resolves relative to `hydrateRoot()`.
+- **`getServerSnapshot` stability**: the `getServerSnapshot` argument passed to `useSyncExternalStore` inside `useSpatialReady` MUST be a single module-level constant function returning `false`. It MUST NOT be a fresh closure created per call (which would trigger React's "Snapshot is unstable" warning). The same module-level constant MAY also serve as the plain-web `getSnapshot` (per the `useSpatialReady` short-circuit) since both must report `false`.
+- **Deterministic facade rendering**: given identical props, a facade's fallback rendering MUST produce identical DOM across renders and across server/client. The SDK only guarantees mismatch-free hydration when (a) facade props are identical between server and client, and (b) `useSpatialReady` follows the `useSyncExternalStore` constraint above.
+
+Both `await bootSpatial(); hydrateRoot(...)` (boot before hydrate; bridge ready when hydrate starts) and `hydrateRoot(...); bootSpatial()` (hydrate first, boot after) MUST be supported. The `useSyncExternalStore`-based `useSpatialReady` makes both timings hydration-safe; applications choose based on UX preference (boot-before avoids a fallback-to-real DOM swap; boot-after gets faster initial hydrate).
+
+#### Scenario: Server render does not touch spatial chunk and does not invoke error listeners
+
+- **WHEN** an application server-renders a tree containing facades or hook placeholders under any React 18+ SSR API (including `renderToString`, `renderToPipeableStream`, `renderToReadableStream`, React 19 `prerender*`, and React Server Components Client-Component rendering)
 - **THEN** the spatial chunk MUST NOT be requested
-- **AND** all facades MUST render fallback markup
+- **AND** all facades MUST render their per-component default fallback markup
+- **AND** `bootSpatial()` invoked during SSR MUST resolve without scheduling a dynamic import
+- **AND** any `onSpatialLoadError` callbacks registered before SSR MUST NOT be invoked during SSR
 
-#### Scenario: First client render matches server render
+#### Scenario: Streaming SSR is equivalent to synchronous SSR
+
+- **WHEN** the application uses `renderToPipeableStream` or `renderToReadableStream` rather than synchronous `renderToString`
+- **THEN** facade rendering, hook placeholder behavior, and bridge no-op semantics MUST be identical to the synchronous case
+- **AND** facades MUST NOT introduce Suspense boundaries on their own
+- **AND** the spatial chunk MUST NOT be requested in any chunk of the stream
+
+#### Scenario: RSC client-component facade
+
+- **WHEN** an application using React Server Components imports a facade (e.g. `Model`) into a Server Component file
+- **THEN** the facade module MUST be honored as a Client Component reference (because the facade source begins with `'use client'`)
+- **AND** the Server Component MUST NOT execute the facade's React hooks during the RSC render
+- **AND** the RSC payload MUST contain the standard Client-Component reference for that node
+- **AND** subsequent client-side hydration of the RSC payload MUST render the facade as in any other CSR / hydration scenario covered by this Requirement
+
+#### Scenario: getServerSnapshot returns a stable constant
+
+- **WHEN** `useSpatialReady()` is invoked under SSR
+- **THEN** the `getServerSnapshot` argument passed to its internal `useSyncExternalStore` MUST be a single module-level function reference returning `false`
+- **AND** repeated calls to that `getServerSnapshot` within the same SSR pass MUST return the same `false` value (referential and structural equality)
+- **AND** React MUST NOT log a "The result of `getServerSnapshot` should be cached" warning for this hook
+
+#### Scenario: First client render matches server render regardless of boot timing
 
 - **WHEN** a tree containing facades is server-rendered and then hydrated on the client
-- **AND** the application has not yet awaited `bootSpatial()`
-- **THEN** the first client render MUST produce DOM identical to the server render
+- **AND** `bootSpatial()` may have been awaited before `hydrateRoot(...)`, after `hydrateRoot(...)`, or never
+- **THEN** the first client render during hydration MUST produce DOM identical to the server render — i.e. fallback rendering for every facade
 - **AND** hydration MUST complete without React hydration-mismatch warnings
+- **AND** this contract is delivered by `useSpatialReady`'s `useSyncExternalStore`-based implementation, which uses `getServerSnapshot` (returning `false`) during hydration and only switches to the live snapshot after hydration commits
 
-#### Scenario: Switch to spatial happens after hydration
+#### Scenario: Switch to spatial happens after hydration commits
 
-- **WHEN** an application calls `bootSpatial()` after `ReactDOM.hydrateRoot` has completed
-- **THEN** the next render cycle MAY mount real spatial implementations
+- **WHEN** `bootSpatial()` resolves at any point — before, during, or after hydration
+- **THEN** the switch from facade fallback to real spatial implementation MUST happen on a render cycle scheduled AFTER hydration commits, never during the hydration pass
 - **AND** any DOM changes resulting from the switch MUST NOT be attributed to a hydration mismatch
+- **AND** if `bootSpatial()` was awaited before `hydrateRoot(...)`, the hydration pass MUST still render fallback (matching server output); the swap to real implementation MUST happen on the next React commit
+
+#### Scenario: Mismatch responsibility is limited to deterministic facade output
+
+- **WHEN** the application supplies different props to a facade server-side vs client-side (for example because the server reads a request-specific value the client cannot reproduce, or because data fetching produces different results across the two passes)
+- **THEN** the resulting hydration mismatch MUST be considered the application's responsibility, NOT a violation of this spec
+- **AND** the SDK only guarantees mismatch-free hydration when facade props are identical between server and client and the SSR-related implementation constraints in this Requirement's preamble are met
 
 ---
 

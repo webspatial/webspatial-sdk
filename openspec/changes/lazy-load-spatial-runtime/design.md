@@ -59,10 +59,10 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - Internal API (not part of the application-facing public API):
   - `getSpatialImpl(): SpatialNS | null` — synchronous read.
   - `loadSpatialImpl(): Promise<SpatialNS | null>` — performs the dynamic import in a WebSpatial runtime, resolves to `null` in web/SSR mode. Idempotent within a single attempt; after a rejection the next call may initiate a fresh attempt provided no other retry is in flight.
-- Public API re-exported from the default entry (contracts pinned in the `bootSpatial` Requirement):
+- Public API re-exported from the default entry (contracts pinned in the `bootSpatial` and `SSR and hydration safety` Requirements):
   - `isSpatialReady(): boolean` — synchronous read.
-  - `useSpatialReady(): boolean` — React hook backed by `useSyncExternalStore`; consuming components automatically re-render on `false → true` transitions. In non-WebSpatial browsers (`detectSpatialRuntime() === null`), the hook short-circuits to a no-op subscriber and a constant `false` snapshot, so plain web users pay no per-render bookkeeping cost. SSR-safe (returns `false`).
-  - `onSpatialLoadError(cb): () => void` — multi-listener; returns an unsubscribe function. Listeners are stored in a `Set` and notified in registration order.
+  - `useSpatialReady(): boolean` — React hook backed by `useSyncExternalStore`; consuming components automatically re-render on `false → true` transitions. In non-WebSpatial browsers (`detectSpatialRuntime() === null`), the hook short-circuits to a no-op subscriber and a constant `false` snapshot, so plain web users pay no per-render bookkeeping cost. SSR-safe: `useSyncExternalStore`'s `getServerSnapshot` argument is a module-level constant function returning `false`, which (per "SSR and hydration safety") makes hydration safe for both `await bootSpatial(); hydrateRoot()` and `hydrateRoot(); bootSpatial()` integration patterns.
+  - `onSpatialLoadError(cb): () => void` — multi-listener; returns an unsubscribe function. Listeners are stored in a `Set` and notified in registration order. MUST NOT be invoked during SSR (no load attempts happen there).
   - `WebSpatialBootError` — `Error` subclass carrying `cause` (the underlying `import()` error) and `attempt` (1-based count). Stored on `lastError` after each failed attempt.
 - Facades and user-side wrappers BOTH subscribe to readiness via the same `useSpatialReady()` hook. Subscription bookkeeping is tracked in the bridge's `readinessSubscribers` Set; the bridge notifies all subscribers on `false → true` transitions and (rarely) on `true → false` if a future feature ever resets readiness — v1 only flips once.
 - Internal-only symbols (`getSpatialImpl`, `loadSpatialImpl`, raw subscribe primitives) MUST be prefixed (e.g. `__internalGetSpatialImpl`) when re-exported from the package, so external consumers cannot accidentally depend on them.
@@ -111,6 +111,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   - `__internalSubscribeReadiness(cb)` adds `cb` to the bridge's `readinessSubscribers` Set and returns the unsubscribe.
   - `alwaysFalse` is a module-level constant returning `false`, doubling as both the SSR snapshot and the plain-web snapshot.
 - **Self-containment**: facade modules MUST NOT import (statically or dynamically) from `src/spatial/`, MUST NOT call `new Spatial()` / `new SpatialScene()` / similar core-sdk runtime constructors, and MUST NOT use any value that only resolves at runtime in the spatial chunk. The complete fallback rendering for every facade lives in the default entry's static module graph; this is asserted by an automated audit (see tasks).
+- **`'use client'` directive**: every facade module file MUST begin with `'use client'`. Facades use `useSpatialReady` (a hook) and therefore cannot be Server Components in RSC; the directive marks them as Client Component references. tsup / esbuild preserve top-level string directives in their output by default; the build verification (§13) MUST assert the directive remains in the published `dist/` files for every facade.
 - **Plain web fast path**: the `useSpatialReady` short-circuit means non-WebSpatial browsers never register a subscription with the bridge and never observe a readiness flip — they take a deterministic, single-render path to the documented fallback.
 - HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper using the raw `Comp` reference as the key; the real HOC's own cache lives inside the spatial chunk.
 - Per-component default fallback (full table is normative in the spec; summary here):
@@ -133,13 +134,13 @@ Therefore:
 
 **`useMetrics` placeholder design**:
 
-- Implemented as `packages/react/src/hooks-web/useMetrics.ts`.
-- Returns a frozen module-level singleton `{ pointToPhysical, physicalToPoint }` whose two function references are also module-level constants:
+- The placeholder constants (the `pointToPhysical` / `physicalToPoint` functions returning fixed-ratio values) live in a hooks-free module (e.g. `packages/react/src/hooks-web/useMetrics-placeholder.ts`). It is a plain function that returns a frozen module-level singleton `{ pointToPhysical, physicalToPoint }`:
   - `pointToPhysical(pt) => pt / 1360`
   - `physicalToPoint(m) => m * 1360`
 - The `1/1360` ratio matches today's `noRuntime.ts` web fallback (`packages/react/src/noRuntime.ts`) so consumers see no behavior change on upgrade.
 - Both function identities are stable for the lifetime of the page across all renders and across `bootSpatial()` calls. Consumers using these in `useEffect` dependency arrays do not get re-runs.
-- SSR-safe: the placeholder does not touch `window`, does not subscribe via `useSyncExternalStore`. The real `useMetrics` (in the spatial chunk) does subscribe; that's fine because by the time the spatial hook is invoked, `bootSpatial()` has resolved and `window` is available.
+- The **public** `useMetrics` exported from the default entry is a thin React hook that uses a `useState` initializer to pick "placeholder" vs "real" once per component instance (per the "no mid-life switch" rule); this hook lives in its own file (e.g. `packages/react/src/hooks-web/useMetrics.ts`) which begins with `'use client'`. The placeholder constants module does NOT carry the directive (it has no hooks) and remains server-callable.
+- SSR-safe: the placeholder constant module does not touch `window`. The public hook file uses `useState` and is therefore a Client Component in RSC; under SSR `useState` is supported by React and `isSpatialReady()` returns `false`, so the placeholder branch is selected and used identically across server and client.
 
 **No mid-life switch**: a component instance that first invoked a placeholder hook MUST keep invoking the placeholder for its entire lifetime, even if `isSpatialReady()` flips to `true`. The real hook implementation is picked up only when the component unmounts and remounts (e.g. via a `key` change, parent unmount, or page reload). This contract is what allows placeholders and real hooks to differ in their internal React Hook call sequences without violating the Rules of Hooks.
 
@@ -235,14 +236,25 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 1. Upgrade `@webspatial/react-sdk` to the new version.
 2. If `vite.config.ts` includes `@webspatial/vite-plugin`, remove it from the `plugins` array and uninstall the dependency. Old aliases to `@webspatial/react-sdk/web` or `/default` will otherwise fail to resolve.
-3. In the application entry (e.g. `main.tsx`), wrap rendering in `await bootSpatial()`:
+3. In the application entry (e.g. `main.tsx`), invoke `bootSpatial()`. Both timing patterns are supported because `useSpatialReady` is built on `useSyncExternalStore` and handles the SSR/CSR transition cleanly:
 
    ```tsx
+   // Option A — boot before render (no fallback flash; slower TTI in spatial runtimes)
    import { bootSpatial } from '@webspatial/react-sdk'
 
    await bootSpatial()
    ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
    ```
+
+   ```tsx
+   // Option B — render first, boot after (faster TTI; brief fallback flash before swap)
+   import { bootSpatial } from '@webspatial/react-sdk'
+
+   ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+   void bootSpatial()
+   ```
+
+   For SSR / hydration, Option A awaited before `hydrateRoot()` is hydration-safe (the spec requires `useSpatialReady` to render fallback during the hydration pass and only swap to real on the next commit). Option B with `bootSpatial()` invoked after `hydrateRoot()` is also safe and trades initial-hydrate speed for a one-render fallback flash.
 
 4. If you need a custom web rendering for a specific facade (e.g. an `<img>` poster instead of the default degraded `<model>` element), write a small wrapper that branches on `useSpatialReady()`:
 
