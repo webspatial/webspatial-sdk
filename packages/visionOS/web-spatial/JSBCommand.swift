@@ -52,6 +52,12 @@ struct CreateTexture: CommandDataProtocol {
     let url: String
 }
 
+struct UpdateTextureProperties: CommandDataProtocol {
+    static let commandType: String = "UpdateTextureProperties"
+    let id: String
+    let url: String?
+}
+
 struct CreateModelAsset: CommandDataProtocol {
     static let commandType: String = "CreateModelAsset"
     let url: String
@@ -150,6 +156,7 @@ struct UpdateUnlitMaterialProperties: CommandDataProtocol {
     static let commandType: String = "UpdateUnlitMaterialProperties"
     let id: String
     let color: String?
+    let textureId: String?
     let transparent: Bool?
     let opacity: Float?
 }
@@ -267,6 +274,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let loop: Bool?
     let animationPaused: Bool?
     let playbackRate: Double?
+    let currentTime: Double?
     let posterURL: String?
 }
 

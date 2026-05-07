@@ -270,12 +270,7 @@ describe('platform adapters', () => {
     await expect(platform.callJSB('c', '{}')).resolves.toMatchObject({
       success: true,
     })
-    await expect(
-      platform.callWebSpatialProtocol('s', '', '', ''),
-    ).resolves.toMatchObject({
-      success: true,
-    })
-    expect(platform.callWebSpatialProtocolSync('s', '', '', '')).toMatchObject({
+    expect(platform.openSpatialSceneSync('s', undefined)).toMatchObject({
       success: true,
     })
   })
@@ -328,7 +323,7 @@ describe('platform adapters', () => {
       './platform-adapter/vision-os/VisionOSPlatform'
     )
     const platform = new VisionOSPlatform()
-    const r = await platform.callWebSpatialProtocol('open', 'a=1')
+    const r = await platform.createNativeSpatialDiv()
 
     expect(r.success).toBe(true)
     expect(r.data.id).toBe(uuid)
@@ -475,6 +470,14 @@ describe('SpatializedElementCreator', () => {
     const windowProxy: any = {
       document: { head: { innerHTML: '' } },
     }
+    vi.doMock('./spatial-host', () => ({
+      createNativeSpatialDiv: vi.fn().mockResolvedValue({
+        success: true,
+        data: { id: 'w1', windowProxy },
+        errorCode: '',
+        errorMessage: '',
+      }),
+    }))
 
     vi.doMock('./JSBCommand', () => {
       class OkCommand {
@@ -540,6 +543,15 @@ describe('SpatializedElementCreator', () => {
   })
 
   it('createSpatialized2DElement throws when command fails', async () => {
+    vi.doMock('./spatial-host', () => ({
+      createNativeSpatialDiv: vi.fn().mockResolvedValue({
+        success: false,
+        data: undefined,
+        errorCode: 'E',
+        errorMessage: 'bad',
+      }),
+    }))
+
     vi.doMock('./JSBCommand', () => {
       class OkCommand {
         execute() {
@@ -943,9 +955,25 @@ describe('platform-adapter', () => {
     })
 
     const { createPlatform } = await import('./platform-adapter')
-    const p = createPlatform() as any
+    const p = await createPlatform()
     expect(typeof p.callJSB).toBe('function')
-    expect(typeof p.callWebSpatialProtocol).toBe('function')
-    expect(typeof p.callWebSpatialProtocolSync).toBe('function')
+    expect(typeof p.openSpatialSceneSync).toBe('function')
+    expect(typeof p.createNativeSpatialDiv).toBe('function')
+    expect(typeof p.createNativeAttachment).toBe('function')
+  })
+
+  it('createPlatformSync uses SSR sync noop in SSR env', async () => {
+    vi.resetModules()
+    vi.doMock('./ssr-polyfill', () => {
+      return { isSSREnv: () => true }
+    })
+
+    const { createPlatformSync } = await import(
+      './platform-adapter/createPlatformSync'
+    )
+    const p = createPlatformSync()
+    const r = p.openSpatialSceneSync('https://x', undefined)
+    expect(r.success).toBe(true)
+    expect(r.data).toBeUndefined()
   })
 })

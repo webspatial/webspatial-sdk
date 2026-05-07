@@ -105,7 +105,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     // value needs to be sent to clear the old value
     // TODO: Can native side handle null instead of ''
     spatializedElement.updateProperties({
-      modelURL: modelURL ?? '',
+      modelURL: modelURL ?? (spatializedElement.modelUrl ? '' : modelURL),
       sources,
       autoplay: autoPlay,
       loop,
@@ -221,6 +221,20 @@ function SpatializedStatic3DElementContainerBase(
             | undefined
           if (spatializedElement) {
             spatializedElement.playbackRate = value
+          }
+        },
+        get currentTime(): number {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.currentTime ?? 0
+        },
+        set currentTime(value: number) {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          if (spatializedElement) {
+            spatializedElement.currentTime = value
           }
         },
       }

@@ -136,4 +136,103 @@ describe('SpatializedStatic3DElement', () => {
     el.onReceiveEvent({ type: SpatialWebMsgType.modelloaded })
     await expect(p3).resolves.toBe(true)
   })
+
+  it('currentTime defaults to 0 before any sample', () => {
+    const el = new SpatializedStatic3DElement('ct1', 'a.glb')
+    expect(el.currentTime).toBe(0)
+  })
+
+  it('currentTime returns the anchor while paused', () => {
+    const el = new SpatializedStatic3DElement('ct2', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: true,
+        duration: 10,
+        currentTime: 4,
+        timestamp: Date.now(),
+      },
+    })
+    expect(el.currentTime).toBe(4)
+  })
+
+  it('currentTime extrapolates while playing using playbackRate', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000)
+    const el = new SpatializedStatic3DElement('ct3', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: false,
+        duration: 10,
+        currentTime: 2,
+        timestamp: 1_000,
+      },
+    })
+    nowSpy.mockReturnValue(2_000) // +1s real time
+    // default rate 1 → +1s animation time
+    expect(el.currentTime).toBe(3)
+    nowSpy.mockRestore()
+  })
+
+  it('currentTime clamps extrapolation to duration', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000)
+    const el = new SpatializedStatic3DElement('ct4', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: false,
+        duration: 5,
+        currentTime: 4,
+        timestamp: 1_000,
+      },
+    })
+    nowSpy.mockReturnValue(11_000) // +10s real time → would extrapolate to 14
+    expect(el.currentTime).toBe(5)
+    nowSpy.mockRestore()
+  })
+
+  it('setting currentTime optimistically updates the anchor', async () => {
+    const el = new SpatializedStatic3DElement('ct5', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: true,
+        duration: 10,
+        currentTime: 0,
+        timestamp: Date.now(),
+      },
+    })
+    el.currentTime = 7
+    expect(el.currentTime).toBe(7)
+  })
+
+  it('setting currentTime clamps negative values to 0', async () => {
+    const el = new SpatializedStatic3DElement('ct6', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: true,
+        duration: 10,
+        currentTime: 5,
+        timestamp: Date.now(),
+      },
+    })
+    el.currentTime = -3
+    expect(el.currentTime).toBe(0)
+  })
+
+  it('setting currentTime clamps values above duration', async () => {
+    const el = new SpatializedStatic3DElement('ct7', 'a.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: {
+        paused: true,
+        duration: 8,
+        currentTime: 0,
+        timestamp: Date.now(),
+      },
+    })
+    el.currentTime = 100
+    expect(el.currentTime).toBe(8)
+  })
 })
