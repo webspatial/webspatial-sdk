@@ -108,7 +108,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     // value needs to be sent to clear the old value
     // TODO: Can native side handle null instead of ''
     spatializedElement.updateProperties({
-      modelURL: modelURL ?? '',
+      modelURL: modelURL ?? (spatializedElement.modelUrl ? '' : modelURL),
       sources,
       autoplay: autoPlay,
       loop,

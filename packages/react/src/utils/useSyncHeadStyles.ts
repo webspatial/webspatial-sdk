@@ -7,24 +7,36 @@ interface Options {
   immediate?: boolean
 }
 
-function defaultShouldSync(mutations?: MutationRecord[] | null) {
-  if (!Array.isArray(mutations) || mutations.length === 0) return false
+type SyncTiming = 'immediate' | 'delayed'
+
+function getSyncTiming(mutations?: MutationRecord[] | null): SyncTiming | null {
+  if (!Array.isArray(mutations) || mutations.length === 0) return null
+  // Scan the whole batch and take the highest priority across all records.
+  // `immediate` (inline <style> changes) wins over `delayed` (<link rel=stylesheet>),
+  // so a mixed batch is never downgraded to `delayed` by record ordering.
+  let hasDelayed = false
   for (const mutation of mutations) {
+    if (mutation.type === 'characterData') {
+      const parent = mutation.target.parentElement
+      if (parent?.tagName === 'STYLE') return 'immediate'
+    }
+
     const nodes: Node[] = [
+      mutation.target,
       ...Array.from(mutation.addedNodes),
       ...Array.from(mutation.removedNodes),
     ]
     for (const node of nodes) {
       if (!(node instanceof Element)) continue
       const tag = node.tagName
-      if (tag === 'STYLE') return true
+      if (tag === 'STYLE') return 'immediate'
       if (tag === 'LINK') {
         const { rel } = node as HTMLLinkElement
-        if (rel && rel.toLowerCase() === 'stylesheet') return true
+        if (rel && rel.toLowerCase() === 'stylesheet') hasDelayed = true
       }
     }
   }
-  return false
+  return hasDelayed ? 'delayed' : null
 }
 
 export function useSyncHeadStyles(
@@ -32,16 +44,29 @@ export function useSyncHeadStyles(
   options?: Options,
 ) {
   const delayMs = 100
-  const subtree = options?.subtree ?? false
+  const subtree = options?.subtree ?? true
   const immediate = options?.immediate ?? true
 
   useEffect(() => {
     if (!childWindow) return
 
     let timer: number | undefined
-    const scheduleSync = () => {
+    let immediateQueued = false
+    let disposed = false
+    const scheduleSync = (timing: SyncTiming = 'delayed') => {
       if (timer) window.clearTimeout(timer)
+      if (timing === 'immediate') {
+        if (immediateQueued) return
+        immediateQueued = true
+        queueMicrotask(() => {
+          immediateQueued = false
+          if (disposed) return
+          syncParentHeadToChild(childWindow)
+        })
+        return
+      }
       timer = window.setTimeout(() => {
+        if (disposed) return
         syncParentHeadToChild(childWindow)
       }, delayMs)
     }
@@ -49,12 +74,18 @@ export function useSyncHeadStyles(
     if (immediate) scheduleSync()
 
     const observer = new MutationObserver(mutations => {
-      if (!defaultShouldSync(mutations)) return
-      scheduleSync()
+      const timing = getSyncTiming(mutations)
+      if (!timing) return
+      scheduleSync(timing)
     })
-    observer.observe(document.head, { childList: true, subtree })
+    observer.observe(document.head, {
+      childList: true,
+      characterData: true,
+      subtree,
+    })
 
     return () => {
+      disposed = true
       if (timer) window.clearTimeout(timer)
       observer.disconnect()
     }
