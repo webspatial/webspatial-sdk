@@ -5,7 +5,7 @@
 - [x] 1.3 增加非法动画配置的校验规则，并明确不支持 runtime 下的 warning 行为
 - [ ] 1.4 在 `AnimationConfig` 与 `AnimateTransformCommand` 类型中增加 `playbackRate` 字段，并增加校验（必须 > 0 且有限，默认值 1）
 - [ ] 1.5 在 `AnimationApi` 中增加 `api.finished` 布尔属性，反映最近一个会话是否已自然完成
-
+- [ ] 1.6 在 `AnimationApi` 中增加 `api.playState` 属性，返回 `'idle' | 'queued' | 'running' | 'paused' | 'finished'`；内部 delaying 状态映射为 `'running'`
 > NOTE: spec 发生变更：`cancel()` 语义从“停在 stop 点”改为“恢复到 from（省略 from 则恢复到起始快照）”。受影响的实现/测试/文档任务已重新打开以对齐新契约。
 
 ## 2. Core SDK 与命令链路
@@ -43,5 +43,6 @@
   - [ ] 5.1.10 cancel old 失败时阻止 start new（restart 与 animation prop 替换两条路径）
   - [ ] 5.1.11 `playbackRate` 校验（拒绝 0、负数、NaN、Infinity；默认值 1）及 native speed 映射
   - [ ] 5.1.12 `api.finished` 状态流转（初始 false、自然完成后 true、下次 `play()` 重置为 false、`cancel()` 后保持 false）
+  - [ ] 5.1.13 `api.playState` 各状态值正确性（idle→queued→running→paused→running→finished，以及 cancel→idle）
 - [ ] 5.2 更新 `docs/` 中相关文档，以及示例或 test-server 页面以覆盖新的动画 API *(needs realign: cancel 恢复到 from)*
 - [x] 5.3 每个涉及 public API 新增或修改的 PR 中附带 changeset entry，而不是最后统一补充

@@ -5,7 +5,7 @@
 - [x] 1.3 Add validation rules for invalid animation config and define warning behavior for unsupported runtimes
 - [ ] 1.4 Add `playbackRate` to `AnimationConfig` and `AnimateTransformCommand` types, with validation (must be > 0 and finite, default 1)
 - [ ] 1.5 Add `api.finished` boolean to `AnimationApi` that reflects whether the most recent session completed naturally
-
+- [ ] 1.6 Add `api.playState` to `AnimationApi` returning `'idle' | 'queued' | 'running' | 'paused' | 'finished'`; `delaying` internal state maps to `'running'`
 > NOTE: the spec changed: `cancel()` no longer preserves the stop point. It now restores `from`, or the session start snapshot when `from` is omitted. Affected implementation, test, and docs tasks have been reopened to realign with the updated contract.
 
 ## 2. Core SDK and command flow
@@ -43,5 +43,6 @@
   - [ ] 5.1.10 cancel-old failure blocks start-new (both restart and animation-prop replacement paths)
   - [ ] 5.1.11 `playbackRate` validation (reject 0, negative, NaN, Infinity; default 1) and native speed mapping
   - [ ] 5.1.12 `api.finished` state transitions (false initially, true after natural completion, reset to false on next `play()`, stays false after `cancel()`)
+  - [ ] 5.1.13 `api.playState` value correctness across all states (idle→queued→running→paused→running→finished, and cancel→idle)
 - [ ] 5.2 Update the relevant docs in `docs/` and any representative examples or test-server pages for the new animation API *(needs realign: cancel restores `from`)*
 - [x] 5.3 Include a changeset entry in each PR that adds or modifies public API surface, rather than deferring a single changeset to the end

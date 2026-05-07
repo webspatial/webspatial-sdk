@@ -6,7 +6,7 @@
 
 **目标：**
 
-- 围绕 `useAnimation(config)`、实体 `animation` prop 与 `AnimationApi.play/pause/cancel/finished` 定义稳定的对外 API。
+- 围绕 `useAnimation(config)`、实体 `animation` prop 与 `AnimationApi.play/pause/cancel/finished/playState` 定义稳定的对外 API。
 - 保持动画由 Native 驱动，避免依赖逐帧 JS 更新。
 - 在动画控制某个字段时，避免 React props 同步与动画对同一字段发生竞争。
 - 通过 `supports('useAnimation')` 文档化运行时能力检测。
@@ -134,6 +134,9 @@ interface AnimationApi {
 
   /** 当前是否处于暂停状态。 */
   readonly isPaused: boolean
+
+  /** 当前会话状态。 */
+  readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
   /** 最近一个当前有效会话是否已自然完成。 */
   readonly finished: boolean
