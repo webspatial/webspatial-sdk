@@ -17,7 +17,7 @@ The default entry MUST also contain the **complete** web-mode rendering for ever
 #### Scenario: Spatial-only identifiers are absent from default entry
 
 - **WHEN** the published `dist/index.js` is searched for spatial-only identifier names
-- **THEN** none of the following identifiers MUST appear in the file: `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `RealityRoot`, the real-implementation source of `withSpatialMonitor`, the real-implementation source of `withSpatialized2DElementContainer`, real-Model implementation symbols, real reality-hook implementation symbols
+- **THEN** none of the following identifiers MUST appear in the file (verified to exist in the source as spatial-only exports): `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `PortalSpatializedContainer`, `StandardSpatializedContainer`, `SpatialMonitor`, `ResourceRegistry`, `AttachmentRegistry`, the real-implementation function bodies of `withSpatialized2DElementContainer` / `withSpatialMonitor` (distinct from their facade re-exports), real-`Model` implementation symbols, and real reality-hook implementation symbols (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`)
 
 #### Scenario: Default entry contains complete fallback rendering for every facade
 
@@ -345,7 +345,7 @@ For each call:
 
 3. When `type === Model` (the public `Model` facade), the JSX runtime MUST NOT wrap or strip — `Model` handles its own runtime branching internally. This preserves today's AVP behavior.
 
-**Mutation policy**: the top-level `props` object passed to a JSX call is created fresh per render by React's JSX transform and MAY be mutated in place (delete attribute keys, reassign `className`). However, `props.style` MAY be a user-memoized object shared across renders or with sibling consumers; the runtime MUST clone `props.style` (shallow copy) before deleting the `enableXr` key, and MUST NOT modify the original `props.style` reference. This protects against (a) corrupting a memoized style object across renders, (b) mutating an `Object.freeze`d style object (which would throw in strict mode), and (c) cross-component aliasing of a shared style constant.
+**Mutation policy**: the top-level `props` object passed to a JSX call is created fresh per render by React's JSX transform and MAY be mutated in place (delete attribute keys, reassign `className`). However, `props.style` MAY be a user-memoized object shared across renders or with sibling consumers. When the `enableXr` key is present in `props.style`, the runtime MUST produce a new style object that omits the `enableXr` key (e.g. via shallow spread / object-rest destructuring) and reassign `props.style` to that new object; the runtime MUST NOT mutate the original `props.style` reference. This protects against (a) corrupting a memoized style object across renders, (b) mutating an `Object.freeze`d style object (which would throw in strict mode), and (c) cross-component aliasing of a shared style constant.
 
 **Marker source**: only `props.className` is recognized as a class-name source. The HTML-style `props.class` (rare in React) MUST NOT be recognized as a marker source in v1.
 
@@ -364,9 +364,9 @@ For each call:
 #### Scenario: enableXr style key triggers wrap and is stripped without mutating the user style object
 
 - **WHEN** an element is created with `style={someStyleRef}` where `someStyleRef` contains an `enableXr` key
-- **THEN** the runtime MUST clone `someStyleRef` (e.g. via spread) before producing a new style object
+- **THEN** the runtime MUST produce a new style object (e.g. via shallow spread / object-rest destructuring) that omits the `enableXr` key, and MUST reassign `props.style` to that new object
 - **AND** the new style object MUST NOT contain the `enableXr` key
-- **AND** the original `someStyleRef` MUST be unchanged after the JSX call (no `enableXr` deletion, no key reorder)
+- **AND** the original `someStyleRef` MUST be unchanged after the JSX call (no `enableXr` deletion, no key reorder); this MUST hold even when `someStyleRef` is `Object.freeze`d
 - **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
 
 #### Scenario: __enableXr__ class token triggers wrap and is stripped from className
