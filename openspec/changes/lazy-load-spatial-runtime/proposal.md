@@ -14,9 +14,9 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
 - **BREAKING** Remove the `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` subpath exports. Only `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, and the new `./spatial` remain.
 - **BREAKING** The default entry no longer ships spatial implementations. Applications running in a WebSpatial runtime MUST `await bootSpatial()` before initial render to load the spatial chunk; otherwise all spatial APIs render as web fallbacks.
 - Introduce a runtime **bridge singleton** (`getSpatialImpl()` / `loadSpatialImpl()` / `isSpatialReady()`) and a **boot helper** (`bootSpatial()`) in the default entry. The bridge dynamically imports `@webspatial/react-sdk/spatial` exactly once when invoked in a WebSpatial runtime.
-- Replace every public spatial component / HOC / hook export in the default entry with a **lightweight facade / placeholder**. Facades render fallback (`props.fallback` or per-component default) until `bootSpatial()` resolves; hooks return documented stable defaults.
+- Replace every public spatial component / HOC / hook export in the default entry with a **lightweight facade / placeholder**. Facades render their documented per-component default fallback until `bootSpatial()` resolves; hooks return documented stable defaults. Per-facade `props.fallback` is intentionally **not** part of the v1 API — customization is the application's responsibility via a small wrapper that branches on the public `useSpatialReady()` hook.
 - Move all real implementations (`Spatialized*Container*`, `withSpatial*`, `Reality`, `*Entity`, real `Model`, reality hooks) into `packages/react/src/spatial/` and expose them via a new `@webspatial/react-sdk/spatial` subpath that the bridge dynamically imports.
-- Patch the JSX runtime web variants (`jsx-runtime.web.ts`, `jsx-dev-runtime.web.ts`) to **strip** WebSpatial-only markers (`enable-xr`, `enable-xr-monitor`, `style.enableXr`, `__enableXr__` className token) before delegating to `react/jsx-runtime`, so plain browsers no longer warn about unknown attributes.
+- Replace the previously split `*.web.ts` JSX runtime files with a **single unified runtime** that **strips** WebSpatial-only markers (`enable-xr`, `enable-xr-monitor`, `style.enableXr`, `__enableXr__` className token) AND **wraps** the element type with the corresponding facade HOC. The unified runtime serves plain web, AVP, SSR, and RSC consistently, eliminating today's "unknown attribute" warnings on the `react-server` exports condition.
 - Delete the `dist/web` and `dist/default` build entries from `tsup.config.ts`; remove the `XR_ENV` `window.__webspatialsdk__` writes from banners (only version banners remain).
 - Add a hard size budget: `dist/index.js` gzip ≤ 8KB, enforced by a unit test.
 - Document that **`@webspatial/vite-plugin` is no longer required**. Old plugin configurations that alias `@webspatial/react-sdk` to `/web` or `/default` will fail to resolve after this change; users must remove or upgrade the plugin in lockstep with the SDK upgrade.
@@ -25,7 +25,7 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
 
 ### New Capabilities
 
-- `spatial-lazy-load`: Default-entry size budget; bridge / boot contract; facade and hook placeholder behavior; spatial chunk exposure and load semantics; JSX runtime web-variant attribute stripping; SSR / hydration behavior; plugin-free integration.
+- `spatial-lazy-load`: Default-entry size budget and self-containment; bridge / boot contract; per-component facade and hook-placeholder behavior; user-side wrapper hook (`useSpatialReady`); spatial chunk exposure and load semantics; unified JSX runtime that strips spatial markers and wraps with facade HOCs; SSR / hydration behavior; plugin-free integration.
 
 ### Modified Capabilities
 
@@ -34,11 +34,11 @@ A simpler, web-first-aligned architecture is to **defer spatial code from build 
 ## Impact
 
 - **`@webspatial/react-sdk`**
-  - New: `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `facades/*.tsx`, `hooks-web/*`, `spatial/index.ts`.
-  - Rewritten: `src/index.ts` to export only facades, hook placeholders, bridge, boot, JSX runtime, and types.
-  - `tsup.config.ts`: collapse to a single main entry plus a `spatial` entry; delete `dist/web` and `dist/default` configs; remove `XR_ENV` banner writes.
-  - `package.json` `exports`: hard remove `./web` and `./default`; add `./spatial`.
-  - JSX runtime web variants gain attribute-stripping logic.
+  - New: `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, `facades/*.tsx`, `hooks-web/useMetrics.ts`, `spatial/index.ts`. A `WebSpatialBootError` class also lands as part of the runtime layer.
+  - Rewritten: `src/index.ts` to export only facades, the `useMetrics` placeholder/real-selector, bridge-public surface (`isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `bootSpatial`), the unified JSX runtime, and type-only exports.
+  - `tsup.config.ts`: collapse to three entries (main, spatial, JSX runtime); delete `dist/web` / `dist/default` / `*.web.*` configs; remove `XR_ENV` banner writes.
+  - `package.json` `exports`: hard remove `./web` and `./default`; add `./spatial`; collapse `./jsx-runtime` and `./jsx-dev-runtime` to single mappings (drop the `react-server` conditional sub-key).
+  - JSX runtime: delete `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts`; the unified runtime in `jsx-runtime.ts` / `jsx-dev-runtime.ts` (via `jsx-shared.ts`) strips markers, wraps with facade HOCs, and clones `props.style` before removing the `enableXr` key.
 - **`@webspatial/core-sdk`**
   - No structural change. `noRuntime.ts` shim is no longer needed by react-sdk after this change but is left in place; cleanup is out of scope.
 - **In-house apps & tests** (`apps/test-server`, `packages/autoTest`, `tests/ci-test`)

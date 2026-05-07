@@ -1,22 +1,21 @@
 ## 1. Spec alignment and contract pinning
 
-- [ ] 1.1 Confirm `specs/spatial-lazy-load/spec.md` covers every public spatial component, HOC, and hook in the current default entry; reconcile any gaps before implementation starts
-- [ ] 1.2 Confirm `specs/runtime-capabilities/spec.md` delta is consistent with `core-sdk` getRuntime / `Spatial.runInSpatialWeb` semantics
-- [ ] 1.3 Document the per-component default fallback table (component → fallback render output) as an addendum to `proposal.md` or a referenced doc, used by both spec scenarios and tests
-- [ ] 1.4 Document the per-hook default-value table (hook → return value, ref/subscriber semantics) as an addendum used by both spec scenarios and tests
+- [ ] 1.1 Pre-implementation review checkpoint: confirm `specs/spatial-lazy-load/spec.md` covers every public spatial component, HOC, and hook in the current default entry; the per-component default fallback table (Component facades Requirement) and the public-hook table (Hook placeholders Requirement) are both normative within the spec and MUST be referenced from the README and migration guide (§10) rather than maintained as separate addenda
+- [ ] 1.2 Confirm `specs/runtime-capabilities/spec.md` delta is consistent with `core-sdk` `getRuntime()` / `Spatial.runInSpatialWeb()` semantics; in particular, the synchronous-snapshot guarantee MUST hold without code changes in core-sdk for v1
 
 ## 2. Runtime building blocks (bridge / boot / detect)
 
 - [ ] 2.1 Add `packages/react/src/runtime/detect.ts` exposing `detectSpatialRuntime(): 'visionos' | 'picoos' | null`; SSR-safe, synchronous; thin wrapper over `core-sdk` snapshot
-- [ ] 2.2 Add `packages/react/src/runtime/bridge.ts` with module-level singleton: `getSpatialImpl()`, `loadSpatialImpl()`, `isSpatialReady()`, `onSpatialLoadError(cb)`; dynamic import target is `@webspatial/react-sdk/spatial`
-- [ ] 2.3 Add `packages/react/src/runtime/boot.ts` exposing `bootSpatial(): Promise<void>`; web mode resolves immediately, spatial mode awaits `loadSpatialImpl()`
-- [ ] 2.4 Unit tests for the bridge: SSR safety (no `window`), concurrent loads share one promise, load failure invokes `onSpatialLoadError` once and leaves `isSpatialReady() === false`
-- [ ] 2.5 Unit tests for `bootSpatial`: idempotent across awaits, no network in non-WebSpatial browser, resolves only after spatial chunk lands in spatial mode (use a mocked dynamic import)
+- [ ] 2.2 Add `packages/react/src/runtime/bridge.ts` with module-level singleton: `getSpatialImpl()`, `loadSpatialImpl()`, `isSpatialReady()`, `onSpatialLoadError(cb)`; dynamic import target is `@webspatial/react-sdk/spatial`. Bridge MUST also expose internal readiness subscription primitives (`__internalSubscribeReadiness`, `__internalGetReadinessSnapshot`) backing a `readinessSubscribers: Set<() => void>`; on `false → true` (and reverse if ever applicable) transitions all subscribers MUST be notified. These primitives are consumed by `runtime/useSpatialReady.ts` (§4.1) and MUST NOT be part of the documented public API
+- [ ] 2.3 Add `packages/react/src/runtime/boot.ts` exposing `bootSpatial(): Promise<void>`; web/SSR mode resolves immediately without scheduling any dynamic import; spatial mode awaits `loadSpatialImpl()`. Implements idempotency-within-attempt + retry-on-demand-after-failure semantics per the `bootSpatial` Requirement
+- [ ] 2.4 Add the `WebSpatialBootError` class (e.g. `packages/react/src/runtime/errors.ts` or co-located with bridge): `Error` subclass; instances satisfy `name === 'WebSpatialBootError'`, set `cause` to the underlying `import()` error, expose `attempt: number` (1-based). Re-export from default entry as part of the public API surface
+- [ ] 2.5 Unit tests for the bridge: SSR safety (no `window`), concurrent loads share one promise, load failure invokes every registered `onSpatialLoadError` listener exactly once and leaves `isSpatialReady() === false`, `__internalSubscribeReadiness` notifies subscribers in registration order on `false → true` transitions
+- [ ] 2.6 Unit tests for `bootSpatial`: idempotent across awaits, no network in non-WebSpatial browser, resolves only after spatial chunk lands in spatial mode (use a mocked dynamic import); rejection is wrapped in `WebSpatialBootError` carrying `cause` and 1-based `attempt`; retry after rejection initiates a fresh `import()` and increments `attempt`
 
 ## 3. Spatial implementation subpath
 
 - [ ] 3.1 Create `packages/react/src/spatial/index.ts` as the consolidated spatial implementation barrel
-- [ ] 3.2 Move (or re-export from existing locations) the real implementations into the spatial barrel: `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `PortalSpatializedContainer`, `SpatializedContainer`, real `withSpatialized2DElementContainer`, real `withSpatialMonitor`, real `Model`, `Reality` and all `*Entity` components, `UnlitMaterial`, `ModelAsset`, real reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`), real `useMetrics`
+- [ ] 3.2 Move (or re-export from existing locations) the real implementations into the spatial barrel: `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `PortalSpatializedContainer`, `SpatializedContainer`, `StandardSpatializedContainer`, real `withSpatialized2DElementContainer`, real `withSpatialMonitor`, `SpatialMonitor`, real `Model`, `Reality` and all `*Entity` components, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset`, real reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`), real `useMetrics`
 - [ ] 3.3 Verify the spatial barrel does not import the bridge or any facade (one-way dependency: bridge → spatial, never the other way)
 
 ## 4. Facade components
