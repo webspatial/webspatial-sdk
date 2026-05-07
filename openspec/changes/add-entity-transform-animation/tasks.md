@@ -3,6 +3,8 @@
 - [x] 1.1 Add the `entity-transform-animation` and `runtime-capabilities` spec artifacts to the implementation plan and align naming with `supports('useAnimation')`
 - [x] 1.2 Define the public React and core SDK types for `useAnimation`, `AnimationApi`, entity `animation` prop, `AnimationError`, and animation result payloads
 - [x] 1.3 Add validation rules for invalid animation config and define warning behavior for unsupported runtimes
+- [ ] 1.4 Add `playbackRate` to `AnimationConfig` and `AnimateTransformCommand` types, with validation (must be > 0 and finite, default 1)
+- [ ] 1.5 Add `api.finished` boolean to `AnimationApi` that reflects whether the most recent session completed naturally
 
 > NOTE: the spec changed: `cancel()` no longer preserves the stop point. It now restores `from`, or the session start snapshot when `from` is omitted. Affected implementation, test, and docs tasks have been reopened to realign with the updated contract.
 
@@ -25,7 +27,7 @@
 - [x] 4.1 Add native scene-side animation session storage, command handling, and playback controller lifecycle management *(blocked by 2.1)*
 - [ ] 4.2 Implement native play, pause, resume, and cancel behavior plus completion / cancel / failure event emission with transform or error payloads *(needs realign: cancel restores `from` and changes canceled payload semantics)* *(blocked by 2.2, 4.1)*
 - [x] 4.3 Verify delay and loop semantics match the OpenSpec contract for reset looping and reverse looping
-
+- [ ] 4.4 Map `playbackRate` from the bridge command to `AnimationView.speed` on the native AVP side
 ## 5. Validation and documentation
 
 - [ ] 5.1 Add focused tests for:
@@ -34,10 +36,12 @@
   - [ ] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
   - [x] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
   - [x] 5.1.5 Same animation bound to multiple entities (throw)
-  - [ ] 5.1.6 Animation prop replacement (cancel old session → start new, onStop before onStart, cancel restores `from`) *(needs realign)*
+  - [ ] 5.1.6 Animation prop replacement (cancel old session → start new, onCancel before onStart, cancel restores `from`) *(needs realign)*
   - [x] 5.1.7 Pause during delay (remaining time preserved, `play()` continues)
   - [x] 5.1.8 Play before entity bound (queued state, isAnimating, cancel/pause while queued, bind-into-paused)
   - [ ] 5.1.9 Bridge failure recovery (session retains pre-failure state, onError invoked or console.error fallback, no completed/canceled after failed play)
   - [ ] 5.1.10 cancel-old failure blocks start-new (both restart and animation-prop replacement paths)
+  - [ ] 5.1.11 `playbackRate` validation (reject 0, negative, NaN, Infinity; default 1) and native speed mapping
+  - [ ] 5.1.12 `api.finished` state transitions (false initially, true after natural completion, reset to false on next `play()`, stays false after `cancel()`)
 - [ ] 5.2 Update the relevant docs in `docs/` and any representative examples or test-server pages for the new animation API *(needs realign: cancel restores `from`)*
 - [x] 5.3 Include a changeset entry in each PR that adds or modifies public API surface, rather than deferring a single changeset to the end

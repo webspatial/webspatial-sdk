@@ -76,6 +76,14 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
+  /**
+   * 播放速率倍数。默认：1
+   * 大于 1 加速；0 到 1 之间减速。
+   * 在会话创建时应用，整个会话期间保持不变。
+   * 对应 Native（AVP）侧的 AnimationView.speed 参数。
+   */
+  playbackRate?: number
+
   /** 会话成功建立后触发；首个状态可为 delaying、running，或 queued 期间 pause 导致的 paused。 */
   onStart?: () => void
 
@@ -83,7 +91,7 @@ interface AnimationConfig {
   onComplete?: (finalValues: TransformValues) => void
 
   /** 通过 api.cancel() 取消时触发，携带恢复后的 transform。 */
-  onStop?: (currentValues: TransformValues) => void
+  onCancel?: (currentValues: TransformValues) => void
 
   /**
    * bridge 或 native 异步操作失败时触发。
@@ -259,6 +267,22 @@ function CancelAndReset() {
 }
 ```
 
+
+### 开发者提示：暂停后 play() 使用原始配置恢复
+
+当动画处于暂停状态时，调用 `play()` 会使用**首次创建会话时的配置**从暂停处继续。
+如果需要应用更新后的配置（例如新的 `to` 目标或不同的 `duration`），应先调用
+`cancel()` 再调用 `play()`，以最新配置启动新会话。
+
+```tsx
+// ✅ 恢复已暂停的动画（使用原始配置）
+api.play()
+
+// ✅ 用新配置重新开始
+api.cancel()
+api.play() // 新会话使用 hook 中的最新配置
+```
+
 ## 跨层契约
 
 ### React SDK → Core SDK
@@ -292,6 +316,14 @@ interface AnimateTransformCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
+
+  /**
+   * 播放速率倍数。默认：1
+   * 大于 1 加速；0 到 1 之间减速。
+   * 在会话创建时应用，整个会话期间保持不变。
+   * 对应 Native（AVP）侧的 AnimationView.speed 参数。
+   */
+  playbackRate?: number
 }
 
 interface AnimateTransformResult {
@@ -358,7 +390,7 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
    - Native 负责动画会话、时序、delay、loop、pause/resume 状态。
    - JS 侧收到 completed/canceled 的 transform，用于触发回调并在 cancel 时观察恢复后的状态。
    - 备选方案：在 JS 侧模拟并逐帧通过 bridge 推送。否决原因：bridge 压力大、抖动风险高、与 RealityKit 驱动的评审方向不一致。
-   - **Cancel 语义：**调用 `cancel()` 时，实体恢复到该会话的 `from` 状态；若省略 `from`，则恢复到该会话首次 `play` 时捕获的起始快照。Native 侧在恢复完成后通过 canceled 事件回传该 transform，`onStop` 回调收到的也是恢复后的值。
+   - **Cancel 语义：**调用 `cancel()` 时，实体恢复到该会话的 `from` 状态；若省略 `from`，则恢复到该会话首次 `play` 时捕获的起始快照。Native 侧在恢复完成后通过 canceled 事件回传该 transform，`onCancel` 回调收到的也是恢复后的值。
 
 5. **transform 同步采用按字段抑制策略**
    - 当动画控制某个字段时，只抑制该字段的常规同步，避免与动画竞争。

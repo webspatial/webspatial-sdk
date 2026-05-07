@@ -76,6 +76,14 @@ interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
+  /**
+   * Playback speed multiplier. Default: 1
+   * Values > 1 speed up; values between 0 and 1 slow down.
+   * Applied at session creation time and remains constant for the session.
+   * Maps to AnimationView.speed on the native (AVP) side.
+   */
+  playbackRate?: number
+
   /** Called when the session is established successfully; the first state may be delaying, running, or paused after a queued pause. */
   onStart?: () => void
 
@@ -83,7 +91,7 @@ interface AnimationConfig {
   onComplete?: (finalValues: TransformValues) => void
 
   /** Called when playback is canceled via api.cancel(). Receives the restored transform. */
-  onStop?: (currentValues: TransformValues) => void
+  onCancel?: (currentValues: TransformValues) => void
 
   /**
    * Called when an asynchronous error occurs during a bridge or native operation.
@@ -259,6 +267,24 @@ function CancelAndReset() {
 }
 ```
 
+
+### Developer Tip: play() after pause resumes with original config
+
+When the animation is paused, calling `play()` resumes the **same session** with
+the config that was active when the session was first created. If you want to
+apply updated config (e.g. a new `to` target or different `duration`), call
+`cancel()` first and then `play()` to start a fresh session with the latest
+config.
+
+```tsx
+// ✅ Resume paused animation (uses original config)
+api.play()
+
+// ✅ Restart with new config
+api.cancel()
+api.play() // new session picks up latest config from hook
+```
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK
@@ -294,6 +320,8 @@ interface AnimateTransformCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
+  /** Playback speed multiplier. Default: 1. Maps to AnimationView.speed on AVP. */
+  playbackRate?: number
 }
 
 interface AnimateTransformResult {
@@ -360,7 +388,7 @@ For a given `animationId`:
    - Native playback owns the animation session, timing, delay, loop behavior, and pause / resume state.
    - JS receives completion and cancel results so callbacks can observe the actual final or restored transform from native state.
    - Alternative considered: emulate motion in JS and stream transform updates over the bridge. Rejected because it adds bridge traffic, risks jitter, and weakens parity with the reviewed RealityKit-based design.
-   - **Cancel semantics:** when `cancel()` is called, the entity restores to that session's `from` state; if `from` is omitted, it restores to the start snapshot captured at that session's first `play`. The native side reports that restored transform back via the canceled event, and `onStop` receives the restored value as well.
+   - **Cancel semantics:** when `cancel()` is called, the entity restores to that session's `from` state; if `from` is omitted, it restores to the start snapshot captured at that session's first `play`. The native side reports that restored transform back via the canceled event, and `onCancel` receives the restored value as well.
 
 5. **Entity transform synchronization uses per-field animation suppression**
    - While animation controls a specific field, ordinary transform syncing for that field is suppressed so React re-renders do not race the alive animation session controlling that field.

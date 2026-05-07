@@ -34,9 +34,9 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 - **GIVEN** 某个实体已经绑定 `animationA`，且可能存在 alive 会话
 - **WHEN** 该实体在后续渲染中将 `animation` prop 替换为 `animationB`，或将 `animation` prop 移除
-- **THEN** SDK MUST 先取消 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
+- **THEN** SDK MUST 先取消 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onCancel`
 - **AND** 若 `animationB` 存在且其 `autoStart` 为 `true`（或省略），SDK MUST 在停止旧会话后启动 `animationB` 对应的新会话，并触发 `animationB` 的 `onStart`
-- **AND** 旧会话的 `onStop` MUST 在新会话的 `onStart` 之前触发
+- **AND** 旧会话的 `onCancel` MUST 在新会话的 `onStart` 之前触发
 - **AND** 旧会话的 cancel 命令 MUST 先于新会话的 play 命令发送到 native bridge
 
 ---
@@ -81,7 +81,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 ### Requirement: 支持时序参数
 
-动画配置 MUST 支持 `duration`、`timingFunction`、`delay`、`autoStart`、`loop`，其中 `loop` 接受 `true` 或 `{ reverse?: boolean }`。
+动画配置 MUST 支持 `duration`、`timingFunction`、`delay`、`autoStart`、`loop` 与 `playbackRate`，其中 `loop` 接受 `true` 或 `{ reverse?: boolean }`，`playbackRate` 控制动画播放速度。
 
 #### Scenario: 默认自动播放
 
@@ -104,7 +104,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **AND** 若排队期间实体 transform 被外部更新，起始快照 MUST 以实际执行时刻的实体当前 transform 为准
 - **AND** 排队期间 `api.isAnimating` MUST 为 `true`
 - **AND** 排队的 play 所使用的 config MUST 以 `play()` 调用时刻的 config 为准，而非实体绑定时的 config
-- **AND** 若排队期间调用 `api.pause()` 或 `api.cancel()`，SDK MUST 按调用顺序处理：`cancel()` 取消排队的 play 并触发 `onStop`；`pause()` 使 play 在实体绑定后以 paused 状态启动
+- **AND** 若排队期间调用 `api.pause()` 或 `api.cancel()`，SDK MUST 按调用顺序处理：`cancel()` 取消排队的 play 并触发 `onCancel`；`pause()` 使 play 在实体绑定后以 paused 状态启动
 
 #### Scenario: queued 期间 pause 后绑定
 
@@ -133,9 +133,9 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 - **GIVEN** 动画会话处于 delay 阶段
 - **WHEN** 应用调用 `api.cancel()`
-- **THEN** `onStop` MUST 触发一次
+- **THEN** `onCancel` MUST 触发一次
 - **AND** 实体 MUST 恢复到该会话的 `from` 状态；若省略 `from`，则 MUST 恢复到该会话首次 `play` 时捕获的起始快照
-- **AND** `onStop` MUST 收到 cancel 完成后实体的 transform 状态
+- **AND** `onCancel` MUST 收到 cancel 完成后实体的 transform 状态
 
 ---
 
@@ -175,6 +175,16 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 | `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
 | `loop` | `true`、`false`、`undefined` 或 `{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
+| `playbackRate` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝。默认值：`1` |
+
+
+#### Scenario: 播放速率
+
+- **GIVEN** 动画配置将 `playbackRate` 设置为正有限数值
+- **WHEN** 播放开始
+- **THEN** 动画 MUST 以该倍速播放（如 `2` 表示两倍速，`0.5` 表示半速）
+- **AND** `playbackRate` MUST 在会话创建时应用，并在整个会话生命周期内保持不变
+- **AND** 若省略 `playbackRate`，默认值 MUST 为 `1`（正常速度）
 
 #### Scenario: transform 数值校验
 
@@ -268,27 +278,27 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 #### Scenario: cancel 回调
 
 - **WHEN** 应用调用 `api.cancel()`
-- **THEN** 配置的 `onStop` MUST 收到 cancel 完成后实体当前 transform 状态
+- **THEN** 配置的 `onCancel` MUST 收到 cancel 完成后实体当前 transform 状态
 
 #### Scenario: TransformValues 坐标空间与单位
 
-- **WHEN** `onComplete` 或 `onStop` 交付 `TransformValues` 数据
+- **WHEN** `onComplete` 或 `onCancel` 交付 `TransformValues` 数据
 - **THEN** 所有值 MUST 表示实体的 **local** transform
 - **AND** `rotation` 值 MUST 为**角度制**（degrees）的欧拉角，与 `AnimationConfig` 的输入约定一致
-- **AND** 对于 `onStop`，该值 MUST 表示 cancel 完成后恢复到的 transform
+- **AND** 对于 `onCancel`，该值 MUST 表示 cancel 完成后恢复到的 transform
 
 #### Scenario: 生命周期回调次数与互斥
 
 - **WHEN** `api.play()` 启动一个动画会话
 - **THEN** `onStart` MUST 对该会话至多触发一次
-- **AND** 该会话结束时，`onComplete` 与 `onStop` MUST 互斥，且各自 MUST 对该会话至多触发一次
+- **AND** 该会话结束时，`onComplete` 与 `onCancel` MUST 互斥，且各自 MUST 对该会话至多触发一次
 
 #### Scenario: onError 回调次数与和其他回调的关系
 
 - **WHEN** bridge 或 native 的异步命令失败
 - **THEN** `onError` MUST 对该失败命令至多触发一次
-- **AND** 若失败的是 `play` 命令，`onStart`、`onComplete`、`onStop` MUST 不得对该失败请求触发
-- **AND** 若失败的是 `pause` 或 `cancel` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onStop`
+- **AND** 若失败的是 `play` 命令，`onStart`、`onComplete`、`onCancel` MUST 不得对该失败请求触发
+- **AND** 若失败的是 `pause` 或 `cancel` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onCancel`
 
 #### Scenario: cancel old 失败时不得 start new
 
@@ -324,8 +334,8 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **GIVEN** 一个动画会话已经处于 `queued`、`delaying` 或 `running` 状态
 - **WHEN** 应用代码再次调用 `api.play()`
 - **THEN** SDK MUST 先取消已有会话，再用当前配置启动新会话
-- **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
-- **AND** 前一个会话的 `onStop` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 MUST 为 `true`
+- **AND** 前一个会话的 `onCancel` 回调 MUST 在新会话的 `onStart` 之前触发
+- **AND** 前一个会话的 `onCancel` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 MUST 为 `true`
 
 #### Scenario: 每次新会话 play 生成新的会话 id
 
@@ -348,7 +358,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **GIVEN** `supports('useAnimation')` 为 `false`
 - **WHEN** 应用代码调用 `api.play()`
 - **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
-- **AND** `onStart`、`onComplete`、`onStop`、`onError` MUST 不被触发
+- **AND** `onStart`、`onComplete`、`onCancel`、`onError` MUST 不被触发
 - **AND** `api.isAnimating` MUST 保持 `false`
 - **AND** `api.finished` MUST 保持 `false`
 
@@ -409,7 +419,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **GIVEN** 动画会话处于任意 alive 状态（queued、delaying、running 或 paused）
 - **WHEN** 实体组件卸载
 - **THEN** SDK MUST 停止 native 动画会话并释放相关资源
-- **AND** 生命周期回调（`onStart`、`onStop`、`onComplete`、`onError`）MUST 不得在卸载后触发
+- **AND** 生命周期回调（`onStart`、`onCancel`、`onComplete`、`onError`）MUST 不得在卸载后触发
 
 #### Scenario: delay 期间实体卸载
 
