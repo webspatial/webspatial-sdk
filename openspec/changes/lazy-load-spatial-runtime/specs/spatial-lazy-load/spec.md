@@ -477,14 +477,68 @@ Both `await bootSpatial(); hydrateRoot(...)` (boot before hydrate; bridge ready 
 
 Applications MUST be able to use `@webspatial/react-sdk` without any build plugin. The package MUST NOT depend on `@webspatial/vite-plugin` (or any peer plugin) to satisfy the size, lazy-load, or runtime contracts in this spec.
 
+**Bundler capability requirements** — the consuming bundler MUST support all three of:
+
+1. **ECMAScript modules**: the package is published as ESM (`"type": "module"`); CommonJS `require()` is not supported.
+2. **`exports` package.json field**: subpath resolution for `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, and `./spatial`.
+3. **Dynamic `import()` with code-splitting**: when the bridge invokes `import('@webspatial/react-sdk/spatial')`, the bundler MUST emit the spatial chunk as a separate output that is fetched on demand. Bundlers without code-splitting (e.g. bare esbuild without `splitting: true`) will inline the chunk into the main bundle; the SDK still functions correctly but the size-budget benefit defined by "Default entry MUST NOT bundle spatial implementation" is lost on the consumer side.
+
+Bundlers and frameworks that satisfy all three capabilities form the **non-normative tested-targets list** (maintained in the migration guide, not in this spec): Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`. Next.js App Router (Webpack mode) and Next.js Pages Router are the canonical tested framework targets.
+
+**Peer dependency contract** — the package's `peerDependencies` MUST list `react: ">=18.0"` (the version that introduced `useSyncExternalStore`, on which `useSpatialReady` depends). React 18.x and React 19+ both satisfy this; the `'use client'` directive used by hook-using files (per "SSR and hydration safety") is honored by React 18.0+ in RSC contexts and is a benign no-op everywhere else.
+
+**Out of scope for v1** — the following environments MAY work in practice but are NOT part of the v1 contract; failures there MUST be tracked as feature requests / follow-up issues, NOT v1 spec violations:
+
+- Module Federation / micro-frontend host-shared SDK setups
+- Next.js Turbopack (`next dev --turbo`, `next build --turbo`)
+- Webpack 4 and any other bundler without `exports` package.json field support
+- CommonJS-only consumer pipelines
+
 #### Scenario: Standalone Vite project
 
 - **WHEN** a Vite + React project depends only on `@webspatial/react-sdk` (no `@webspatial/vite-plugin`)
-- **THEN** the build MUST succeed
+- **THEN** the build MUST succeed without any SDK-specific bundler configuration
 - **AND** the size budget and lazy-load contracts in this spec MUST hold
+- **AND** the spatial chunk MUST be emitted as a separate output fetched only when `bootSpatial()` triggers it in a WebSpatial runtime
+
+#### Scenario: Webpack 5+ or Rspack project (capability-equivalent)
+
+- **WHEN** an application uses Webpack 5+ or Rspack as its bundler with default ESM and dynamic-import handling
+- **THEN** the build MUST succeed without any SDK-specific configuration
+- **AND** the spatial chunk MUST be emitted as a separate Webpack/Rspack chunk (e.g. via the framework's standard chunk-splitting heuristics)
+- **AND** Next.js App Router (which uses Webpack 5 by default) is the canonical tested framework instance for this Scenario
+
+#### Scenario: ESM-only consumption
+
+- **WHEN** a consumer attempts `require('@webspatial/react-sdk')` from a CommonJS module
+- **THEN** module resolution MUST fail (per Node.js rules for ESM-only packages)
+- **AND** the published `package.json` MUST set `"type": "module"` and MUST NOT publish CommonJS entry points
+- **AND** consumers in CommonJS pipelines MUST use dynamic `await import('@webspatial/react-sdk')` (a node feature outside this spec's contract; SDK does not provide a CommonJS interop shim)
+
+#### Scenario: Bundler without code-splitting still functions, but loses the size benefit
+
+- **WHEN** a bundler that does NOT support dynamic-import code-splitting processes an application using `@webspatial/react-sdk` (e.g. bare esbuild without `splitting: true`, or an analogous CommonJS-style bundler)
+- **THEN** the build MUST succeed
+- **AND** `bootSpatial()` MUST resolve correctly because the implementation has been functionally inlined into the main bundle (no network request occurs because the chunk does not exist as a separate file)
+- **AND** the per-application size benefit defined by "Default entry MUST NOT bundle spatial implementation" is lost on that application's bundle (a documented limitation of the consumer's bundler choice, NOT a violation of this spec)
+- **AND** the SDK-side `dist/index.js` size budget MUST still hold (this is enforced on the published package, independent of how a downstream bundler chooses to assemble the application)
+
+#### Scenario: React peer version
+
+- **WHEN** an application's installed React version is older than `18.0`
+- **THEN** `npm` / `pnpm` / `yarn` MUST surface the unmet peer-dependency requirement
+- **AND** the SDK MUST NOT advertise compatibility with such React versions
+- **AND** React 18.x and React 19+ both MUST work; the `'use client'` directive in hook-using files is honored by React 18+ RSC tooling and is benign in non-RSC environments
 
 #### Scenario: Removed legacy subpaths
 
 - **WHEN** an application or build plugin attempts to import `@webspatial/react-sdk/web` or `@webspatial/react-sdk/default`
 - **THEN** module resolution MUST fail (the subpaths are removed in this version)
 - **AND** the package CHANGELOG MUST mark the removal as a breaking change with a documented migration path
+
+#### Scenario: Out-of-scope environments may work but are not v1 contracts
+
+- **WHEN** an application uses one of the documented out-of-scope environments (Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only pipelines)
+- **THEN** the SDK MAY still work but this spec does NOT guarantee compatibility
+- **AND** breakage in these environments MUST be triaged as a feature-request follow-up issue, NOT as a v1 spec violation
+- **AND** the migration guide MUST link the relevant follow-up issue trackers (or note that none exists yet) so consumers can track future support
