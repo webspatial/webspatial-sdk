@@ -91,10 +91,10 @@ export function validateAnimationConfig(config: AnimationConfig): void {
     if (
       typeof config.playbackRate !== 'number' ||
       !isFinite(config.playbackRate) ||
-      config.playbackRate <= 0
+      config.playbackRate === 0
     ) {
       throw new Error(
-        '[useAnimation] config.playbackRate must be a positive finite number',
+        '[useAnimation] config.playbackRate must be a non-zero finite number',
       )
     }
   }

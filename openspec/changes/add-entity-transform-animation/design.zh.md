@@ -79,6 +79,8 @@ interface AnimationConfig {
   /**
    * 播放速率倍数。默认：1
    * 大于 1 加速；0 到 1 之间减速。
+   * 负值表示倒放。
+   * 必须非零且有限。
    * 在会话创建时应用，整个会话期间保持不变。
    * 对应 Native（AVP）侧的 AnimationView.speed 参数。
    */
@@ -323,6 +325,8 @@ interface AnimateTransformCommand {
   /**
    * 播放速率倍数。默认：1
    * 大于 1 加速；0 到 1 之间减速。
+   * 负值表示倒放。
+   * 必须非零且有限。
    * 在会话创建时应用，整个会话期间保持不变。
    * 对应 Native（AVP）侧的 AnimationView.speed 参数。
    */

@@ -42,7 +42,7 @@ Returns `[AnimatedProps, AnimationApi]`.
 | `timingFunction` | `TimingFunction` | `'easeInOut'` | Timing curve. |
 | `delay` | `number` | `0` | Delay in seconds before animation starts. |
 | `loop` | `boolean \| { reverse?: boolean }` | `false` | Enable looping. `true` for reset loop, `{ reverse: true }` for ping-pong. |
-| `playbackRate` | `number` | `1` | Speed multiplier. Must be a positive finite number. |
+| `playbackRate` | `number` | `1` | Speed multiplier. Negative values reverse playback. Must be non-zero and finite. |
 | `autoStart` | `boolean` | `true` | Start automatically when the entity is bound. |
 | `onStart` | `() => void` | — | Called when the animation begins playing. |
 | `onComplete` | `(transform: TransformValues) => void` | — | Called on natural completion with the final transform. |
@@ -114,11 +114,24 @@ api.play()
 
 Controls animation speed. Applied at session start and maps to `AnimationView.speed` on the native AVP layer.
 
+- `playbackRate > 1` — faster playback
+- `0 < playbackRate < 1` — slower playback
+- `playbackRate < 0` — reverse playback (animates from `to` back to `from`)
+- `playbackRate = 0` — **invalid** (throws)
+
 ```tsx
 const [animation, api] = useAnimation({
   to: { position: { x: 1, y: 0, z: 0 } },
   duration: 2.0,
   playbackRate: 2.0, // completes in 1 second
+})
+
+// Reverse playback
+const [reverseAnim, reverseApi] = useAnimation({
+  from: { position: { x: 0, y: 0, z: 0 } },
+  to: { position: { x: 1, y: 0, z: 0 } },
+  duration: 2.0,
+  playbackRate: -1, // plays from to → from in 2 seconds
 })
 ```
 

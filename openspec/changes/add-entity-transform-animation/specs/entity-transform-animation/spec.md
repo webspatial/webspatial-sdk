@@ -175,14 +175,15 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 | `delay` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
 | `timingFunction` | One of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | Any other string MUST be rejected |
 | `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | Other shapes MUST be rejected |
-| `playbackRate` | `> 0`, finite | `0`, negative, `NaN`, and `Infinity` MUST be rejected. Default: `1` |
+| `playbackRate` | non-zero, finite | `0`, `NaN`, and `Infinity` MUST be rejected. Negative values indicate reverse playback. Default: `1` |
 
 
 #### Scenario: Playback rate
 
-- **GIVEN** the animation config sets `playbackRate` to a positive finite number
+- **GIVEN** the animation config sets `playbackRate` to a non-zero finite number
 - **WHEN** playback starts
 - **THEN** the animation MUST play at that rate relative to normal speed (e.g. `2` means twice as fast, `0.5` means half speed)
+- **AND** negative values MUST play the animation in reverse (from `to` back towards `from`)
 - **AND** `playbackRate` MUST be applied at session creation time and remain constant for the duration of that session
 - **AND** if `playbackRate` is omitted, the default MUST be `1` (normal speed)
 

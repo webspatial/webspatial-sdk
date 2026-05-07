@@ -84,6 +84,8 @@ export interface AnimationConfig {
   /**
    * Playback speed multiplier. Default: 1
    * Values > 1 speed up; values between 0 and 1 slow down.
+   * Negative values play the animation in reverse.
+   * Must be non-zero and finite.
    * Applied at session creation time and remains constant for the session.
    * Maps to AnimationView.speed on the native (AVP) side.
    */

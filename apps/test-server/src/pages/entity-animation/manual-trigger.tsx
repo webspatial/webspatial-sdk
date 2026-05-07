@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import {
   BoxEntity,
   Reality,
@@ -15,12 +16,19 @@ import {
 
 export default function EntityAnimationManualTriggerPage() {
   const logger = useLog()
+  const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [posX, setPosX] = useState(0)
+
+  const resetEntityPos = useCallback(() => {
+    setPosX(0.12)
+  }, [logger])
 
   const [animation, api] = useAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,
     timingFunction: 'easeInOut',
+    playbackRate,
     autoStart: false,
     onStart: () => logger.log('onStart'),
     onComplete: value =>
@@ -32,7 +40,7 @@ export default function EntityAnimationManualTriggerPage() {
   return (
     <EntityAnimationPageShell
       title="Manual Trigger"
-      description="This case keeps autoStart disabled so playback is fully controlled through the API buttons."
+      description="This case keeps autoStart disabled so playback is fully controlled through the API buttons. Adjust playbackRate before pressing Play."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div className="flex flex-wrap gap-2">
@@ -40,7 +48,7 @@ export default function EntityAnimationManualTriggerPage() {
             className={btnPrimary}
             onClick={() => {
               api.play()
-              logger.log('play()')
+              logger.log(`play() rate=${playbackRate}`)
             }}
           >
             Play
@@ -63,13 +71,37 @@ export default function EntityAnimationManualTriggerPage() {
           >
             Cancel
           </button>
+          <button className={btnCls} onClick={resetEntityPos}>
+            X = 0.12
+          </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
           </button>
         </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <label className="text-xs text-gray-400">playbackRate:</label>
+          {[-1, 0.25, 0.5, 1, 2, 4].map(rate => (
+            <button
+              key={rate}
+              className={`px-2 py-1 text-xs rounded ${
+                playbackRate === rate
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300'
+              }`}
+              onClick={() => {
+                setPlaybackRate(rate)
+                logger.log(`setPlaybackRate(${rate})`)
+              }}
+            >
+              {rate}x
+            </button>
+          ))}
+        </div>
+
         <div className="mt-3 text-xs font-mono text-gray-500">
           isAnimating={String(api.isAnimating)} &nbsp; isPaused=
-          {String(api.isPaused)}
+          {String(api.isPaused)} &nbsp; playbackRate={playbackRate}
         </div>
         <Reality style={{ width: '100%', height: '220px' }}>
           <SceneGraph>
@@ -77,6 +109,7 @@ export default function EntityAnimationManualTriggerPage() {
               width={0.1}
               height={0.1}
               depth={0.1}
+              position={{ x: posX, y: 0, z: 0 }}
               animation={animation}
             />
           </SceneGraph>
