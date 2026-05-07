@@ -226,6 +226,39 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
   - Recommend users remove `@webspatial/vite-plugin` from `vite.config.ts` and uninstall it.
   - Ship a final plugin version that no-ops gracefully (alias/outDir/base ignored, deprecation warning logged) for users who upgrade in two steps.
 
+### 11. Bundler capability requirements and tested targets
+
+The "Plugin-free integration" Requirement uses a **capability-based** contract instead of a bundler enumeration. Three capabilities together cover the full surface needed for plugin-free operation:
+
+1. **ECMAScript modules** (`"type": "module"` in our package.json; consumer must support ESM imports).
+2. **`exports` package.json field** (consumer must resolve `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`).
+3. **Dynamic `import()` with code-splitting** (consumer must emit `dist/spatial.js` as a separate chunk fetched on demand).
+
+Why capability-based, not enumeration:
+
+- Bundler versions move fast; an enumeration grows stale.
+- Capability is the actual contract; "Vite ≥ 4" is a *consequence* of that bundler honoring the capability list.
+- A capability list is also what implementer-side validation tests can codify.
+
+Bundlers that satisfy all three capabilities map to the **non-normative tested-targets list** (maintained in the migration guide):
+
+- **Vite ≥ 4** — primary target; covered by `apps/test-server` migration follow-up and `packages/autoTest`.
+- **Webpack ≥ 5** — covered transitively by Next.js App Router / Pages Router (Webpack mode).
+- **Rollup ≥ 3** — basis for many SSR pipelines.
+- **Rspack ≥ 1** — Webpack-compatible, expected to "just work".
+- **esbuild ≥ 0.18 with `splitting: true`** — `apps/test-server` historically used bare esbuild; the migration follow-up needs to enable `splitting: true` to keep the size benefit.
+
+What we treat as **out of scope for v1**:
+
+- **Module Federation**: bridge singleton sharing across federated hosts is not specified; works in practice when SDK is dedupe'd by the bundler, but not part of the v1 contract.
+- **Next.js Turbopack**: `next dev --turbo` and `next build --turbo` use a different module resolver; we have no test fixture in this PR. May work but no guarantee.
+- **Webpack 4** (and any bundler without `exports` field support): the `exports` field is mandatory; older bundlers cannot resolve our subpaths.
+- **CommonJS-only consumer pipelines**: ESM-only by design.
+
+**Peer dependency**: `react: ">=18.0"` (the version that introduced `useSyncExternalStore`). The package does NOT pin a maximum React version; React 19+ works because the `'use client'` directive is also benign in non-RSC environments. `react-dom` peer matches the React version range.
+
+**Code-splitting fallback behavior**: when a consumer's bundler inlines the spatial chunk (because the bundler does not support dynamic-import code-splitting), the SDK still functions correctly. `bootSpatial()` resolves once the inlined chunk's module-level code has executed; facades and hooks behave as if it had been fetched. The size benefit is lost on the consumer's bundle, but the SDK-side `dist/index.js` size budget is still met (it is enforced on the published package, independent of consumer bundling). This is documented in the spec Scenario "Bundler without code-splitting still functions, but loses the size benefit" so users can self-diagnose.
+
 ## Risks / Trade-offs
 
 - **[Risk] Old `@webspatial/vite-plugin` configuration not removed in lockstep** → consumer build fails immediately ("Cannot resolve `@webspatial/react-sdk/web`"). **Mitigation**: BREAKING marker at the top of CHANGELOG; first item in the migration guide is the plugin removal diff; coordinated cross-repo deprecation issue filed before SDK release.
@@ -280,6 +313,13 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 - `import { ... } from '@webspatial/react-sdk/web'` → `import { ... } from '@webspatial/react-sdk'`
 - `import { ... } from '@webspatial/react-sdk/default'` → `import { ... } from '@webspatial/react-sdk'`
+
+**Bundler / framework compatibility checklist (per "Plugin-free integration"):**
+
+- ✅ Tested targets: Vite ≥ 4, Webpack ≥ 5 (incl. Next.js App Router and Pages Router in Webpack mode), Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`.
+- ⚠️ Best-effort, not v1 contracts: Next.js Turbopack, Module Federation host-shared SDK, Webpack 4, CommonJS-only consumer pipelines. These environments may work but failures there are tracked as feature requests, not v1 spec violations.
+- ❌ Required: ESM-only consumption (`require()` is not supported); React ≥ 18.0 (peer dep on `useSyncExternalStore`).
+- 💡 Note for esbuild users: enable `splitting: true` to preserve the lazy-load size benefit; without it the spatial chunk is inlined into the main bundle (functionally correct, but no size win).
 
 **For the in-house repo workflow:**
 
