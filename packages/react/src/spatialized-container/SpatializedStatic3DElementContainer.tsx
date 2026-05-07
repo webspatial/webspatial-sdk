@@ -19,10 +19,7 @@ import {
   SpatializedStatic3DElementRef,
 } from './types'
 import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
-import {
-  PortalInstanceObject,
-  PortalInstanceContext,
-} from './context/PortalInstanceContext'
+import { PortalInstanceContext } from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
