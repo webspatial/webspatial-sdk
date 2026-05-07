@@ -6,6 +6,8 @@
 
 The published default entry of `@webspatial/react-sdk` MUST contain only lightweight facades, hook placeholders, the runtime bridge, the boot helper, the JSX runtime web variants, and type-only exports. It MUST NOT contain any spatial implementation modules (containers, monitors, reality, entities, real `Model`, real reality hooks).
 
+The default entry MUST also contain the **complete** web-mode rendering for every public facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
+
 #### Scenario: Size budget on default entry
 
 - **WHEN** the published `dist/index.js` is gzipped
@@ -16,6 +18,12 @@ The published default entry of `@webspatial/react-sdk` MUST contain only lightwe
 
 - **WHEN** the published `dist/index.js` is searched for spatial-only identifier names
 - **THEN** none of the following identifiers MUST appear in the file: `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `RealityRoot`, the real-implementation source of `withSpatialMonitor`, the real-implementation source of `withSpatialized2DElementContainer`, real-Model implementation symbols, real reality-hook implementation symbols
+
+#### Scenario: Default entry contains complete fallback rendering for every facade
+
+- **WHEN** the published `dist/index.js` is loaded
+- **THEN** it MUST contain the rendering logic for every public facade's documented default fallback (Model degraded `<model>` tag, Reality placeholder `<div aria-hidden>`, entity / material / asset `null` rendering, HOC pass-through wrappers, and any other per-component default fallback listed in "Component facades")
+- **AND** rendering any facade in a non-WebSpatial browser MUST NOT require any additional module to be loaded over the network
 
 ---
 
@@ -36,11 +44,19 @@ The package MUST expose `@webspatial/react-sdk/spatial` as the single source of 
 - **THEN** the spatial chunk MUST be requested exactly once for the page lifetime
 - **AND** subsequent `bootSpatial()` calls MUST return the cached resolution result
 
+#### Scenario: Plain web users see final rendering at first render
+
+- **WHEN** an application is loaded in a non-WebSpatial browser (`detectSpatialRuntime() === null`)
+- **AND** `bootSpatial()` has been awaited per the recommended pattern (or has been omitted entirely)
+- **THEN** the first render of every facade MUST produce its documented per-component default fallback — which IS the user's final intended display in this environment
+- **AND** no further re-render to switch implementations MUST occur for the page lifetime
+- **AND** the spatial chunk MUST NOT be fetched, parsed, or evaluated
+
 ---
 
 ### Requirement: Bridge singleton
 
-The default entry MUST maintain an internal bridge module providing synchronous read (`getSpatialImpl()`), asynchronous load (`loadSpatialImpl()`), readiness check (`isSpatialReady()`), and error registration (`onSpatialLoadError(cb)`). `getSpatialImpl()` and `loadSpatialImpl()` MUST NOT be part of the documented application-facing public API. `isSpatialReady()` and `onSpatialLoadError(cb)` MUST be re-exported as public API alongside `bootSpatial()` (their contracts are specified in the `bootSpatial` requirement).
+The default entry MUST maintain an internal bridge module providing synchronous read (`getSpatialImpl()`), asynchronous load (`loadSpatialImpl()`), readiness check (`isSpatialReady()`), readiness subscription primitives, and error registration (`onSpatialLoadError(cb)`). `getSpatialImpl()`, `loadSpatialImpl()`, and the raw subscription primitives MUST NOT be part of the documented application-facing public API. `isSpatialReady()`, `useSpatialReady()`, and `onSpatialLoadError(cb)` MUST be re-exported as public API alongside `bootSpatial()` (their contracts are specified in the `bootSpatial` requirement).
 
 #### Scenario: Concurrent load requests share one promise
 
@@ -74,7 +90,8 @@ The default entry MUST maintain an internal bridge module providing synchronous 
 
 The default entry MUST also export:
 
-- `isSpatialReady(): boolean` — returns `true` only when the spatial chunk has been loaded successfully and the bridge has stored the implementation reference.
+- `isSpatialReady(): boolean` — synchronous read; returns `true` only when the spatial chunk has been loaded successfully and the bridge has stored the implementation reference.
+- `useSpatialReady(): boolean` — a React hook returning the current readiness, subscribed via `useSyncExternalStore` so consuming components automatically re-render when the bridge becomes ready. Implementations MUST short-circuit the subscription work when `detectSpatialRuntime() === null` so that non-WebSpatial browsers pay no per-render bookkeeping cost. Safe to call during SSR (returns `false`).
 - `onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void` — registers a callback invoked on every failed load attempt. Multiple callbacks MAY be registered concurrently; the returned function unsubscribes the corresponding callback. Callbacks MUST be invoked in registration order. Successful retries after a prior failure MUST NOT replay earlier errors to listeners.
 - `WebSpatialBootError` — an `Error` subclass used as the rejection value of `bootSpatial()` and the argument to `onSpatialLoadError` callbacks. Instances MUST satisfy `name === 'WebSpatialBootError'`, MUST set `cause` to the original error thrown by the dynamic `import()`, and MUST expose `attempt: number` (1-based) indicating which retry the failure corresponds to.
 
@@ -152,37 +169,64 @@ Recommended integration pattern (non-normative): applications SHOULD `await boot
 - **THEN** the spatial chunk MUST still be requested at most once for that load attempt
 - **AND** both invocations MUST receive the same resolution outcome
 
-#### Scenario: Dev-mode warning when boot is forgotten
+#### Scenario: Dev-mode warning when boot is forgotten in a WebSpatial runtime
 
 - **WHEN** a facade is rendered while `isSpatialReady()` is `false` and `bootSpatial()` has never been called
+- **AND** the runtime IS a WebSpatial runtime (`detectSpatialRuntime() !== null`)
 - **AND** the build is a development build (not production)
 - **THEN** the SDK MUST log a one-shot console warning indicating that `bootSpatial()` may not have been awaited
 - **AND** the warning MUST NOT be repeated on subsequent renders within the same page
+
+#### Scenario: No dev-mode warning in non-WebSpatial browsers
+
+- **WHEN** a facade is rendered while `isSpatialReady()` is `false` and `bootSpatial()` has never been called
+- **AND** the runtime is NOT a WebSpatial runtime (`detectSpatialRuntime() === null`)
+- **THEN** the SDK MUST NOT log a "boot was forgotten" warning, since the rendered fallback IS the user's final intended display in this environment
 
 ---
 
 ### Requirement: Component facades
 
-For every spatial React component or HOC publicly exported by `@webspatial/react-sdk`, the default entry MUST provide a facade with the same TypeScript signature. Facades MUST delegate to the real implementation via the bridge when `isSpatialReady()` is `true`, and MUST render a defined fallback otherwise.
+For every spatial React component or HOC publicly exported by `@webspatial/react-sdk`, the default entry MUST provide a facade with the same TypeScript signature. Facades MUST delegate to the real implementation via the bridge when `isSpatialReady()` is `true`, and MUST render the documented per-component default fallback otherwise.
 
-#### Scenario: Facade renders web fallback before boot completes
+Facades MUST NOT accept a generic `fallback` prop in v1; per-component default fallbacks are fixed by this Requirement and customization is the application's responsibility (using `useSpatialReady()` to write a wrapper component is the recommended pattern).
+
+Facade implementations MUST be self-contained within the default entry: they MUST NOT statically or dynamically import from `@webspatial/react-sdk/spatial`, MUST NOT call into runtime APIs that exist only in the spatial chunk, and MUST NOT instantiate `@webspatial/core-sdk` runtime classes during fallback rendering. The complete web-mode rendering for every facade MUST be reachable purely through the default entry's static module graph.
+
+Facade `displayName` MUST match the public component name (`Model`, `Reality`, `BoxEntity`, etc.). HOC wrapper facades MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention. Facades MUST NOT be wrapped in `React.memo` (props-identity comparison semantics are the real implementation's choice; the facade does not impose memoization).
+
+#### Per-component default fallback
+
+| Public name | Default fallback rendering in the default entry |
+| --- | --- |
+| `Model` | Strip spatial-only event props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) and the `spatialEventOptions` prop, then render `<model ref={ref} {...remainingProps} />`, preserving today's degraded behavior in plain browsers |
+| `Reality` | A single `<div aria-hidden="true" ref={ref}>` placeholder that preserves the layout box (className, style, and other layout-affecting props apply to the host); the React children subtree MUST NOT mount |
+| `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
+| `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
+| `SceneGraph` / `World` | `<>{children}</>` (transparent container in fallback mode) |
+| `withSpatialized2DElementContainer(Comp)` (HOC wrapper) | `<Comp {...passthroughProps} ref={ref} />` (strip spatial-event props, otherwise transparent) |
+| `withSpatialMonitor(El)` (HOC wrapper) | `<El {...passthroughProps} ref={ref} />` (transparent) |
+
+#### Scenario: Facade renders documented fallback while spatial implementation is unavailable
 
 - **WHEN** a facade is rendered while `isSpatialReady()` is `false`
-- **THEN** it MUST render `props.fallback` if provided
-- **AND** otherwise it MUST render its component-specific default fallback (documented per component)
+- **THEN** it MUST render the per-component default fallback specified in the table above
+- **AND** the rendering MUST NOT depend on any module outside the default entry
 - **AND** it MUST NOT trigger any dynamic import
+- **AND** the rendering MUST be the same regardless of why `isSpatialReady()` is `false` (non-WebSpatial browser, SSR, boot in flight, boot rejected, or boot never called)
 
 #### Scenario: Facade renders real implementation after boot in spatial runtime
 
 - **WHEN** `bootSpatial()` has resolved in a WebSpatial runtime
 - **AND** a facade is then rendered
 - **THEN** the facade MUST mount the real implementation from the spatial chunk
-- **AND** all props MUST be forwarded to the real implementation unchanged (excluding the `fallback` prop, which is consumed by the facade)
+- **AND** all props MUST be forwarded to the real implementation unchanged
 
 #### Scenario: HOC facade preserves wrapper-cache identity contract
 
 - **WHEN** `withSpatialized2DElementContainer(Comp)` or `withSpatialMonitor(Comp)` is invoked from the default entry with the same `Comp` reference more than once
 - **THEN** repeated invocations MUST return the same wrapper component reference
+- **AND** the cache key MUST be the raw `Comp` reference; structurally equivalent but distinct references MUST yield distinct wrappers
 - **AND** the cached wrapper component MUST itself behave as a facade (web fallback before boot, real implementation after boot)
 
 #### Scenario: Mounted facade switches to real implementation when bridge becomes ready
@@ -192,6 +236,14 @@ For every spatial React component or HOC publicly exported by `@webspatial/react
 - **THEN** the facade MUST re-render and mount the real implementation on the next React commit, without requiring an explicit parent re-render or a `key` change
 - **AND** any DOM identity preserved by the React reconciler (e.g. `ref` continuity) MUST be respected by the facade's switch logic
 
+#### Scenario: Model fallback renders degraded `<model>` tag
+
+- **WHEN** the `Model` facade renders in fallback mode
+- **THEN** it MUST render a native `<model>` element with the layout-affecting and asset-related props passed through (e.g. `src`, `style`, `className`)
+- **AND** spatial-only event handler props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) MUST be stripped before reaching the `<model>` element
+- **AND** the `spatialEventOptions` prop MUST be stripped
+- **AND** the forwarded `ref` MUST be attached to the `<model>` element
+
 #### Scenario: Reality fallback preserves layout
 
 - **WHEN** the `Reality` facade renders in fallback mode
@@ -199,6 +251,17 @@ For every spatial React component or HOC publicly exported by `@webspatial/react
 - **AND** the placeholder MUST NOT participate in keyboard focus
 - **AND** the placeholder MUST be excluded from the accessibility tree (`aria-hidden="true"`)
 - **AND** the `Reality` facade MUST NOT mount its React children subtree in fallback mode
+
+#### Scenario: Facade ref is null when fallback renders no host element
+
+- **WHEN** a facade renders fallback that returns `null` or a Fragment (e.g. `BoxEntity`, `UnlitMaterial`, `SceneGraph` with no children)
+- **THEN** any forwarded `ref.current` MUST be `null` (consistent with React's behavior when `forwardRef` resolves to no host node)
+
+#### Scenario: Facade displayName matches public name
+
+- **WHEN** a facade is inspected via React DevTools or `Component.displayName`
+- **THEN** its `displayName` MUST equal the public exported name (e.g. `Model`, `Reality`, `BoxEntity`)
+- **AND** HOC wrapper facades produced by `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention
 
 ---
 
