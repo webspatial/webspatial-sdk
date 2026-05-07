@@ -60,12 +60,13 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   - `getSpatialImpl(): SpatialNS | null` — synchronous read.
   - `loadSpatialImpl(): Promise<SpatialNS | null>` — performs the dynamic import in a WebSpatial runtime, resolves to `null` in web/SSR mode. Idempotent within a single attempt; after a rejection the next call may initiate a fresh attempt provided no other retry is in flight.
 - Public API re-exported from the default entry (contracts pinned in the `bootSpatial` Requirement):
-  - `isSpatialReady(): boolean`
+  - `isSpatialReady(): boolean` — synchronous read.
+  - `useSpatialReady(): boolean` — React hook backed by `useSyncExternalStore`; consuming components automatically re-render on `false → true` transitions. In non-WebSpatial browsers (`detectSpatialRuntime() === null`), the hook short-circuits to a no-op subscriber and a constant `false` snapshot, so plain web users pay no per-render bookkeeping cost. SSR-safe (returns `false`).
   - `onSpatialLoadError(cb): () => void` — multi-listener; returns an unsubscribe function. Listeners are stored in a `Set` and notified in registration order.
   - `WebSpatialBootError` — `Error` subclass carrying `cause` (the underlying `import()` error) and `attempt` (1-based count). Stored on `lastError` after each failed attempt.
-- Facades subscribe to bridge readiness changes via `useSyncExternalStore` (decision 4). Subscription bookkeeping is tracked in `readinessSubscribers`; the bridge notifies all subscribers on `false → true` transitions and (rarely) on `true → false` if a future feature ever resets readiness — v1 only flips once.
-- Internal-only symbols MUST be prefixed (e.g. `__internalGetSpatialImpl`) when re-exported from the package, so external consumers cannot accidentally depend on them.
-- The bridge does **not** import React. The `useSyncExternalStore` integration lives inside facades, not in the bridge module — keeping the bridge independently testable and SSR-safe.
+- Facades and user-side wrappers BOTH subscribe to readiness via the same `useSpatialReady()` hook. Subscription bookkeeping is tracked in the bridge's `readinessSubscribers` Set; the bridge notifies all subscribers on `false → true` transitions and (rarely) on `true → false` if a future feature ever resets readiness — v1 only flips once.
+- Internal-only symbols (`getSpatialImpl`, `loadSpatialImpl`, raw subscribe primitives) MUST be prefixed (e.g. `__internalGetSpatialImpl`) when re-exported from the package, so external consumers cannot accidentally depend on them.
+- The bridge module itself does **not** import React. The `useSyncExternalStore` integration lives in a separate `useSpatialReady` module — keeping the bridge independently testable and SSR-safe.
 
 ### 3. Boot helper as the single activation path
 
@@ -77,37 +78,49 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - **Error wrapping**: rejections are always thrown as `WebSpatialBootError` instances with `name === 'WebSpatialBootError'`, `cause` set to the original `import()` error, and `attempt: number`. This gives error reporters and ErrorBoundary code a stable type to filter on.
 - **Multi-listener error reporting**: `onSpatialLoadError(cb): () => void` accepts any number of callbacks; returns an unsubscribe. All listeners are notified in registration order on each failure. Successful retries do not replay earlier errors.
 - **No SDK timeout (v1)**: the bridge does not race `import()` against a wall-clock timer. Applications that need a timeout can wrap `bootSpatial()` in their own `Promise.race`. We can revisit if real-world deployments report hung-import scenarios.
-- **Console warning**: if a facade is rendered while `isSpatialReady() === false` and `bootSpatial()` has never been called, log a one-shot dev-mode warning. Silenced in production builds.
+- **Console warning**: if a facade is rendered while `isSpatialReady() === false` and `bootSpatial()` has never been called, log a one-shot dev-mode warning **only** when `detectSpatialRuntime() !== null`. In a non-WebSpatial browser the rendered fallback IS the user's final intended display, so the warning would be noise. Silenced in production builds across all environments.
 
 **Why one path, not two**: introducing `<SpatialBoundary>`/Suspense in the same change doubles the activation contract and complicates the hook story. With `bootSpatial()` as the single front door, the application is responsible for awaiting it before render in the recommended path. Late boot is still supported (facades subscribe to bridge readiness — see decision 4), but hooks deliberately do not switch mid-life: the placeholder a component first sees is the implementation it sees forever, switching only on remount. This eliminates Rules-of-Hooks risk without forcing placeholders to mimic real-hook call sequences.
 
 ### 4. Facade pattern for components and HOCs
 
-- For every public spatial React component, the default entry exports a facade with the same TypeScript signature.
-- Facades subscribe to bridge readiness through `useSyncExternalStore`, so a `false → true` transition automatically re-renders mounted facades to the real implementation:
+- For every public spatial React component, the default entry exports a facade with the same TypeScript signature. Facades **do not** accept a generic `fallback` prop in v1 — per-component default fallbacks are fixed (see the per-component table in the spec); customization is the application's responsibility via `useSpatialReady()` wrappers.
+- Facades subscribe to bridge readiness through the public `useSpatialReady()` hook, so a `false → true` transition automatically re-renders mounted facades to the real implementation:
 
   ```tsx
-  function useSpatialReady(): boolean {
-    return useSyncExternalStore(subscribeReadiness, getReadinessSnapshot, getServerReadinessSnapshot)
+  // Public hook (re-exported from default entry)
+  export function useSpatialReady(): boolean {
+    // Decided once per instance; non-WebSpatial branches use no-op subscribe
+    // + always-false snapshot, so plain web users pay no bookkeeping cost.
+    const [isWebOnly] = useState(() => detectSpatialRuntime() === null)
+    return useSyncExternalStore(
+      isWebOnly ? noopSubscribe : __internalSubscribeReadiness,
+      isWebOnly ? alwaysFalse : isSpatialReady,
+      alwaysFalse,
+    )
   }
 
+  // Facade
   export function Model(props: ModelProps) {
     const ready = useSpatialReady()
-    const impl = ready ? getSpatialImpl() : null
-    if (!impl) return props.fallback ?? defaultFallback(props)
-    return <impl.Model {...props} />
+    if (!ready) return renderModelFallback(props)        // <model ...>
+    return <getSpatialImpl()!.Model {...props} />
   }
   ```
 
-  - `subscribeReadiness(cb)` adds `cb` to the bridge's `readinessSubscribers` Set and returns the unsubscribe.
-  - `getServerReadinessSnapshot()` returns `false` so SSR always renders fallback (consistent with the SSR/hydration Requirement).
-- HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper; the real HOC's own cache lives inside the spatial chunk.
-- Per-component default fallback:
-  - `Model`, `*Entity`, `Material*`, `*Asset` → `null`
-  - `Reality` → a single `<div aria-hidden="true">` that preserves layout (matches the existing `runtime-capabilities` Reality fallback contract; not focusable, not in a11y tree, no children rendered).
-  - HOC-wrapped components → render the original `Comp` with passthrough props (the wrapper becomes a no-op identity in web mode).
-- Each facade accepts an optional `fallback?: ReactNode` prop that overrides the default. This is documented per component.
-- Facades MUST NOT use the `useSpatialReady` subscription to swap hook implementations — only the rendered component subtree. Hooks (decision 5) explicitly do not switch mid-life.
+  - `__internalSubscribeReadiness(cb)` adds `cb` to the bridge's `readinessSubscribers` Set and returns the unsubscribe.
+  - `alwaysFalse` is a module-level constant returning `false`, doubling as both the SSR snapshot and the plain-web snapshot.
+- **Self-containment**: facade modules MUST NOT import (statically or dynamically) from `src/spatial/`, MUST NOT call `new Spatial()` / `new SpatialScene()` / similar core-sdk runtime constructors, and MUST NOT use any value that only resolves at runtime in the spatial chunk. The complete fallback rendering for every facade lives in the default entry's static module graph; this is asserted by an automated audit (see tasks).
+- **Plain web fast path**: the `useSpatialReady` short-circuit means non-WebSpatial browsers never register a subscription with the bridge and never observe a readiness flip — they take a deterministic, single-render path to the documented fallback.
+- HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper using the raw `Comp` reference as the key; the real HOC's own cache lives inside the spatial chunk.
+- Per-component default fallback (full table is normative in the spec; summary here):
+  - `Model` → `<model ref {...modelProps}>` (degraded HTML element; spatial-only event props stripped) — preserves today's plain-browser behavior.
+  - `Reality` → single `<div aria-hidden="true">` placeholder; children NOT mounted (matches `runtime-capabilities` Reality fallback contract).
+  - `*Entity`, `Material*`, `Texture`, `*Asset` → `null`.
+  - `SceneGraph` / `World` → `<>{children}</>` (transparent container).
+  - HOC-wrapped components → `<Comp/El {...passthrough} ref/>` (transparent passthrough).
+- **Facade conventions**: `displayName` matches the public name (`Model`, `Reality`, `BoxEntity`); HOC wrapper facades follow the existing `WithSpatialMonitor(<inner>)` / `WithSpatialized2DElementContainer(<inner>)` naming. Facades are NOT wrapped in `React.memo`. In fallback paths that render `null` or a Fragment, forwarded `ref.current` is `null` (React-natural).
+- Facades MUST NOT use the readiness subscription to swap hook implementations — only the rendered component subtree. Hooks (decision 5) explicitly do not switch mid-life.
 
 ### 5. Hook placeholder protocol
 
@@ -163,8 +176,9 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 - A single `detectSpatialRuntime(): 'visionos' | 'picoos' | null` helper in `runtime/detect.ts`, thin wrapper over the existing core-sdk runtime snapshot.
 - Synchronous; no `await`, no network. Safe to call during SSR (returns `null` when `window` is unavailable).
-- Called only inside `bootSpatial()` (and inside a one-shot warning on first facade render in dev mode). Facades themselves never call `detectSpatialRuntime()` per render — they only consult the bridge.
+- Called by `bootSpatial()` to decide whether to schedule the dynamic import, by `useSpatialReady()` once per component instance (via `useState` initializer) to choose the no-op vs real subscriber path, and by the dev-mode forgot-to-boot warning gate. Facades themselves never call `detectSpatialRuntime()` per render — they only consult `useSpatialReady()`.
 - The result is treated as stable for the page lifetime, consistent with the existing `runtime-capabilities` decisions.
+- The dev-mode "boot was forgotten" warning is gated on `detectSpatialRuntime() !== null`; non-WebSpatial browsers never see this warning because the rendered fallback IS their final intended display.
 
 ### 8. tsup configuration changes
 

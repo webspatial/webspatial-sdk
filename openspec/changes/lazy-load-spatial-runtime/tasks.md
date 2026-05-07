@@ -21,12 +21,16 @@
 
 ## 4. Facade components
 
-- [ ] 4.1 Add `packages/react/src/facades/Model.tsx` — facade matching real `Model` props; default fallback `null`; consumes `props.fallback` when provided
-- [ ] 4.2 Add facade modules for: `Reality`, `BoxEntity`, `SphereEntity`, `ConeEntity`, `CylinderEntity`, `PlaneEntity`, `ModelEntity`, `AttachmentEntity`, `GeometryEntity`, `UnlitMaterial`, `ModelAsset`
-- [ ] 4.3 Implement `Reality` facade fallback as a single `<div aria-hidden="true">` host preserving className/style and excluding children (matches existing `runtime-capabilities` Reality fallback contract)
-- [ ] 4.4 Add HOC facades for `withSpatialized2DElementContainer` and `withSpatialMonitor`; cache wrapper components per input `Comp` to preserve identity contract; in fallback mode the wrapper renders `<Comp {...props} />` (passthrough)
-- [ ] 4.5 Add a one-shot dev-mode console warning helper used by facades when first rendered with `isSpatialReady() === false` and `bootSpatial()` has never been called; production builds tree-shake it
-- [ ] 4.6 Unit tests per facade: renders fallback when bridge empty; mounts real implementation when bridge populated (use a mocked spatial namespace)
+- [ ] 4.1 Add `packages/react/src/runtime/useSpatialReady.ts` exporting the `useSpatialReady(): boolean` public hook. Internally: decide once per component instance via `useState` initializer reading `detectSpatialRuntime()`; non-WebSpatial branches use no-op subscriber + `() => false` snapshot; WebSpatial branches subscribe via the bridge. Re-export from default entry. Both facades and user wrappers use this hook
+- [ ] 4.2 Add `packages/react/src/facades/Model.tsx` — facade matching real `Model` props (`ModelProps`). Default fallback: render `<model ref={ref} {...modelProps}/>` after stripping spatial-only event props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) and `spatialEventOptions`. **Do NOT accept** a `props.fallback` prop in v1
+- [ ] 4.3 Add facade modules with documented per-component default fallback (per spec table) for: `Reality`, `BoxEntity`/`Box`, `SphereEntity`/`Sphere`, `ConeEntity`/`Cone`, `CylinderEntity`/`Cylinder`, `PlaneEntity`/`Plane`, `ModelEntity`, `AttachmentEntity`, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset`, `SceneGraph`/`World`. None accept a `fallback` prop
+- [ ] 4.4 Implement `Reality` facade fallback as a single `<div aria-hidden="true" ref>` host preserving className/style and excluding children (matches existing `runtime-capabilities` Reality fallback contract)
+- [ ] 4.5 Add HOC facades for `withSpatialized2DElementContainer` and `withSpatialMonitor`; cache wrapper components per input `Comp` reference (raw identity, no normalization) to preserve identity contract; in fallback mode the wrapper renders `<Comp {...passthrough} ref={ref}/>` (passthrough). Wrapper `displayName` follows the `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` convention
+- [ ] 4.6 Set facade `displayName` to match the public exported name (`Model`, `Reality`, `BoxEntity`, etc.). Do **not** wrap any facade in `React.memo`
+- [ ] 4.7 Add a one-shot dev-mode console warning helper used by facades when first rendered with `isSpatialReady() === false` and `bootSpatial()` has never been called. Gate the warning on `detectSpatialRuntime() !== null` (do not warn in plain web). Production builds tree-shake the warning code
+- [ ] 4.8 Audit each facade implementation: assert no static or dynamic import from `src/spatial/`, no `new Spatial()` / `new SpatialScene()` / similar core-sdk runtime constructions, no top-level access to `@webspatial/core-sdk` runtime values. Codify this as a unit test that scans `dist/index.js` for forbidden symbols
+- [ ] 4.9 Unit tests per facade: renders documented per-component fallback when `isSpatialReady()` is `false`; mounts real implementation when bridge populated (use a mocked spatial namespace); ref forwarding works in both modes; `displayName` matches public name
+- [ ] 4.10 Unit test for `useSpatialReady`: in plain web (`detectSpatialRuntime() === null`), the hook does NOT register a subscription with the bridge (verify via spy on `__internalSubscribeReadiness`); always returns `false`. In WebSpatial runtime, registers a subscription and reflects bridge readiness flips
 
 ## 5. Hook placeholders
 
@@ -45,7 +49,7 @@
 
 ## 7. Default entry rewrite
 
-- [ ] 7.1 Rewrite `packages/react/src/index.ts` to export only: `WebSpatialRuntime`, `WebSpatialRuntimeError`, `CapabilityKey`, `enableDebugTool`, `convertCoordinate`, `useMetrics` (the placeholder-or-real selector defined in §5.2), all facades, `bootSpatial`, `isSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, JSX-related types, `version`. Internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) MUST NOT be exported here
+- [ ] 7.1 Rewrite `packages/react/src/index.ts` to export only: `WebSpatialRuntime`, `WebSpatialRuntimeError`, `CapabilityKey`, `enableDebugTool`, `convertCoordinate`, `useMetrics` (the placeholder-or-real selector defined in §5.2), all facades, `bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, JSX-related types, `version`. Internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) MUST NOT be exported here. The `props.fallback` prop is intentionally NOT part of the facade public API in v1
 - [ ] 7.2 Remove the top-level side-effect `if (typeof window !== 'undefined') initPolyfill()` from the default entry; polyfill installation moves into the spatial chunk's bootstrap (executed when the chunk loads)
 - [ ] 7.3 Verify no static import path from `src/index.ts` reaches `src/spatial/`; only the bridge's dynamic `import()` may
 - [ ] 7.4 Update `packages/react/src/jsx/jsx-shared.ts` to reflect that the AVP-side runtime no longer needs to externally import facades (the JSX-runtime web variant is now the only path; AVP-side spatializing happens via real components from `src/spatial/`); reconcile the existing self-import of `@webspatial/react-sdk` accordingly
@@ -68,10 +72,10 @@
 
 ## 10. Documentation and migration guide
 
-- [ ] 10.1 Add a "Web-first + spatial enhancement" section to `packages/react/README.md` covering: `bootSpatial()` quick-start, facade fallback semantics, hook fallback semantics, dev-mode warning behavior
-- [ ] 10.2 Add `docs/migration/lazy-load-spatial-runtime.md` covering: removed subpaths (`/web`, `/default`); required removal/uninstall of `@webspatial/vite-plugin`; mandatory `await bootSpatial()` in the application entry; SSR / hydration guidance; per-component fallback table
-- [ ] 10.3 Update public API documentation for each spatial component to describe its web fallback behavior and the optional `fallback?: ReactNode` prop
-- [ ] 10.4 Add a CHANGELOG entry marked **BREAKING** at the top, summarizing the subpath removal, the plugin retirement, and the boot requirement
+- [ ] 10.1 Add a "Web-first + spatial enhancement" section to `packages/react/README.md` covering: `bootSpatial()` quick-start, the per-component default fallback table, hook fallback semantics, the dev-mode warning behavior (including its WebSpatial-runtime-only gate), and a worked example of a user-side wrapper using `useSpatialReady()` for custom web rendering (e.g. poster-image override for `Model`)
+- [ ] 10.2 Add `docs/migration/lazy-load-spatial-runtime.md` covering: removed subpaths (`/web`, `/default`); required removal/uninstall of `@webspatial/vite-plugin`; mandatory `await bootSpatial()` in the application entry; SSR / hydration guidance; per-component fallback table; "how to customize web rendering" recipe showing the `useSpatialReady()` wrapper pattern
+- [ ] 10.3 Update public API documentation for each spatial component to describe its documented web fallback behavior. **Do NOT** document a `fallback` prop — it is intentionally not part of the v1 API
+- [ ] 10.4 Add a CHANGELOG entry marked **BREAKING** at the top, summarizing the subpath removal, the plugin retirement, the boot requirement, and the public API list (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`)
 
 ## 11. Cross-repo coordination (non-blocking)
 
