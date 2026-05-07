@@ -34,9 +34,9 @@ The SDK MUST provide an entity transform animation API consisting of a React `us
 
 - **GIVEN** an entity is already bound to `animationA`, and it may have an alive session
 - **WHEN** a later render replaces the entity's `animation` prop with `animationB`, or removes the `animation` prop
-- **THEN** the SDK MUST cancel the session for `animationA` first (if any) and invoke `animationA`'s `onStop`
+- **THEN** the SDK MUST cancel the session for `animationA` first (if any) and invoke `animationA`'s `onCancel`
 - **AND** if `animationB` exists and its `autoStart` is `true` (or omitted), the SDK MUST start a new session for `animationB` after stopping the old session and invoke `animationB`'s `onStart`
-- **AND** the old session’s `onStop` MUST fire before the new session’s `onStart`
+- **AND** the old session’s `onCancel` MUST fire before the new session’s `onStart`
 - **AND** the cancel command for the old session MUST be sent to the native bridge before the play command for the new session
 
 ---
@@ -81,7 +81,7 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 
 ### Requirement: Support playback timing options
 
-The animation config MUST support `duration`, `timingFunction`, `delay`, `autoStart`, and `loop`, where `loop` accepts either `true` or `{ reverse?: boolean }`.
+The animation config MUST support `duration`, `timingFunction`, `delay`, `autoStart`, `loop`, and `playbackRate`, where `loop` accepts either `true` or `{ reverse?: boolean }` and `playbackRate` controls animation speed.
 
 #### Scenario: Auto-start by default
 
@@ -104,7 +104,7 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **AND** if the entity transform is updated externally while queued, the start snapshot MUST use the entity's current transform at the execution moment
 - **AND** `api.isAnimating` MUST be `true` while the request is queued
 - **AND** the config used for the queued play MUST be the config at the time `play()` was called, not at the time the entity is bound
-- **AND** if `api.pause()` or `api.cancel()` is called while the request is queued, the SDK MUST process them in call order: `cancel()` cancels the queued play and fires `onStop`; `pause()` causes the play to start in paused state once the entity is bound
+- **AND** if `api.pause()` or `api.cancel()` is called while the request is queued, the SDK MUST process them in call order: `cancel()` cancels the queued play and fires `onCancel`; `pause()` causes the play to start in paused state once the entity is bound
 
 #### Scenario: Bind after pausing while queued
 
@@ -133,9 +133,9 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 
 - **GIVEN** an animation session is in the delay phase
 - **WHEN** application code calls `api.cancel()`
-- **THEN** `onStop` MUST fire once
+- **THEN** `onCancel` MUST fire once
 - **AND** the entity MUST restore to that session's `from` state; if `from` is omitted, it MUST restore to the start snapshot captured at that session's first `play`
-- **AND** `onStop` MUST receive the entity's transform state after cancel completes
+- **AND** `onCancel` MUST receive the entity's transform state after cancel completes
 
 ---
 
@@ -175,6 +175,16 @@ The SDK MUST enforce the following ranges at validation time and throw on violat
 | `delay` | `>= 0`, finite | Negative, `NaN`, and `Infinity` MUST be rejected |
 | `timingFunction` | One of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | Any other string MUST be rejected |
 | `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | Other shapes MUST be rejected |
+| `playbackRate` | `> 0`, finite | `0`, negative, `NaN`, and `Infinity` MUST be rejected. Default: `1` |
+
+
+#### Scenario: Playback rate
+
+- **GIVEN** the animation config sets `playbackRate` to a positive finite number
+- **WHEN** playback starts
+- **THEN** the animation MUST play at that rate relative to normal speed (e.g. `2` means twice as fast, `0.5` means half speed)
+- **AND** `playbackRate` MUST be applied at session creation time and remain constant for the duration of that session
+- **AND** if `playbackRate` is omitted, the default MUST be `1` (normal speed)
 
 #### Scenario: Transform value validation
 
@@ -268,27 +278,27 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 #### Scenario: Cancel callback
 
 - **WHEN** application code calls `api.cancel()`
-- **THEN** the configured `onStop` callback MUST receive the entity's current transform state after cancel completes
+- **THEN** the configured `onCancel` callback MUST receive the entity's current transform state after cancel completes
 
 #### Scenario: TransformValues coordinate space and units
 
-- **WHEN** `onComplete` or `onStop` delivers a `TransformValues` payload
+- **WHEN** `onComplete` or `onCancel` delivers a `TransformValues` payload
 - **THEN** all values MUST represent the entity's **local** transform
 - **AND** `rotation` values MUST be Euler angles in **degrees**, consistent with the input convention of `AnimationConfig`
-- **AND** for `onStop`, that value MUST represent the restored transform after cancel completes
+- **AND** for `onCancel`, that value MUST represent the restored transform after cancel completes
 
 #### Scenario: Callback invocation count and exclusivity
 
 - **WHEN** `api.play()` starts an animation session
 - **THEN** `onStart` MUST be invoked at most once for that session
-- **AND** when the session ends, `onComplete` and `onStop` MUST be mutually exclusive, and each MUST be invoked at most once for that session
+- **AND** when the session ends, `onComplete` and `onCancel` MUST be mutually exclusive, and each MUST be invoked at most once for that session
 
 #### Scenario: onError callback count and relation to other callbacks
 
 - **WHEN** an asynchronous bridge or native command fails
 - **THEN** `onError` MUST be invoked at most once for that failed command
-- **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onStop` MUST NOT be invoked for that failed request
-- **AND** if the failed command is `pause` or `cancel`, the failure itself MUST NOT trigger `onComplete` or `onStop`
+- **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onCancel` MUST NOT be invoked for that failed request
+- **AND** if the failed command is `pause` or `cancel`, the failure itself MUST NOT trigger `onComplete` or `onCancel`
 
 #### Scenario: cancel-old failure MUST block start-new
 
@@ -324,8 +334,8 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 - **GIVEN** an animation session is already `queued`, `delaying`, or `running`
 - **WHEN** application code calls `api.play()` again
 - **THEN** the SDK MUST cancel the existing session first and start a new session with the current config
-- **AND** the `onStop` callback for the previous session MUST fire before the new session’s `onStart`
-- **AND** `api.isAnimating` MUST be `false` when the previous session’s `onStop` fires, and MUST be `true` when the new session’s `onStart` fires
+- **AND** the `onCancel` callback for the previous session MUST fire before the new session’s `onStart`
+- **AND** `api.isAnimating` MUST be `false` when the previous session’s `onCancel` fires, and MUST be `true` when the new session’s `onStart` fires
 
 #### Scenario: Each new-session play generates a new session id
 
@@ -348,7 +358,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 - **GIVEN** `supports('useAnimation')` is `false`
 - **WHEN** application code calls `api.play()`
 - **THEN** the call MUST be a no-op (no error thrown, no native command sent)
-- **AND** `onStart`, `onComplete`, `onStop`, and `onError` MUST NOT be invoked
+- **AND** `onStart`, `onComplete`, `onCancel`, and `onError` MUST NOT be invoked
 - **AND** `api.isAnimating` MUST remain `false`
 - **AND** `api.finished` MUST remain `false`
 
@@ -409,7 +419,7 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 - **GIVEN** an animation session is in any alive state (queued, delaying, running, or paused)
 - **WHEN** the entity component unmounts
 - **THEN** the SDK MUST stop the native animation session and release associated resources
-- **AND** lifecycle callbacks (`onStart`, `onStop`, `onComplete`, `onError`) MUST NOT fire after unmount
+- **AND** lifecycle callbacks (`onStart`, `onCancel`, `onComplete`, `onError`) MUST NOT fire after unmount
 
 #### Scenario: Entity unmounts during delay
 

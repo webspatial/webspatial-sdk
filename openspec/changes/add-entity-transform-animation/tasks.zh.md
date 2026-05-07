@@ -3,6 +3,8 @@
 - [x] 1.1 将 `entity-transform-animation` 与 `runtime-capabilities` 的 spec 纳入实现计划，并统一命名到 `supports('useAnimation')`
 - [x] 1.2 定义 `useAnimation`、`AnimationApi`、实体 `animation` prop、`AnimationError` 与动画结果回传的对外类型（React 与 Core SDK）
 - [x] 1.3 增加非法动画配置的校验规则，并明确不支持 runtime 下的 warning 行为
+- [ ] 1.4 在 `AnimationConfig` 与 `AnimateTransformCommand` 类型中增加 `playbackRate` 字段，并增加校验（必须 > 0 且有限，默认值 1）
+- [ ] 1.5 在 `AnimationApi` 中增加 `api.finished` 布尔属性，反映最近一个会话是否已自然完成
 
 > NOTE: spec 发生变更：`cancel()` 语义从“停在 stop 点”改为“恢复到 from（省略 from 则恢复到起始快照）”。受影响的实现/测试/文档任务已重新打开以对齐新契约。
 
@@ -25,7 +27,7 @@
 - [x] 4.1 增加 Native scene 侧的动画会话存储、命令处理与播放控制器生命周期管理 *(blocked by 2.1)*
 - [ ] 4.2 实现 Native play/pause/resume/cancel，并发送 completed / canceled / failed 事件与对应 transform 或错误 payload *(needs realign: cancel 恢复到 from + canceled payload)* *(blocked by 2.2, 4.1)*
 - [x] 4.3 校验 delay 与 loop 的语义与 OpenSpec 契约一致（reset loop 与 reverse loop）
-
+- [ ] 4.4 将 bridge 命令中的 `playbackRate` 映射到 Native AVP 侧的 `AnimationView.speed`
 ## 5. 验证与文档
 
 - [ ] 5.1 增加聚焦测试：
@@ -34,10 +36,12 @@
   - [ ] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
   - [x] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
   - [x] 5.1.5 同一动画绑定多个实体（抛错）
-  - [ ] 5.1.6 动画 prop 替换（取消旧会话 → 启动新会话，onStop 先于 onStart） *(needs realign: cancel 恢复到 from)*
+  - [ ] 5.1.6 动画 prop 替换（取消旧会话 → 启动新会话，onCancel 先于 onStart） *(needs realign: cancel 恢复到 from)*
   - [x] 5.1.7 delay 期间暂停（剩余时间保留，`play()` 继续）
   - [x] 5.1.8 实体绑定前 play（queued 状态、isAnimating、queued 时 cancel/pause、绑定后直接 paused）
   - [ ] 5.1.9 Bridge 失败恢复（会话保留失败前状态、onError 触发或 console.error 兜底、play 失败不再 completed/canceled）
   - [ ] 5.1.10 cancel old 失败时阻止 start new（restart 与 animation prop 替换两条路径）
+  - [ ] 5.1.11 `playbackRate` 校验（拒绝 0、负数、NaN、Infinity；默认值 1）及 native speed 映射
+  - [ ] 5.1.12 `api.finished` 状态流转（初始 false、自然完成后 true、下次 `play()` 重置为 false、`cancel()` 后保持 false）
 - [ ] 5.2 更新 `docs/` 中相关文档，以及示例或 test-server 页面以覆盖新的动画 API *(needs realign: cancel 恢复到 from)*
 - [x] 5.3 每个涉及 public API 新增或修改的 PR 中附带 changeset entry，而不是最后统一补充

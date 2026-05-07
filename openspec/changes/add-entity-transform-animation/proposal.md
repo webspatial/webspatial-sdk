@@ -41,7 +41,7 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
 
 ### New Capabilities
 
-- `entity-transform-animation`: Declarative and imperative animation of entity transform properties (position, rotation, scale only; non-transform properties such as material, opacity, and color are out of scope), including `onStart`, `onComplete`, `onStop`, `onError`, and React integration rules.
+- `entity-transform-animation`: Declarative and imperative animation of entity transform properties (position, rotation, scale only; non-transform properties such as material, opacity, and color are out of scope), including `onStart`, `onComplete`, `onCancel`, `onError`, and React integration rules.
 
 ### Modified Capabilities
 
