@@ -5,12 +5,15 @@ struct SpatializedStatic3DView: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
-    @State private var asset: Model3DAsset?
-    @State private var source: String?
-    @State private var isLoading = false
+    @State private var loadState: LoadState = .idle
 
     private var spatializedStatic3DElement: SpatializedStatic3DElement {
         return spatializedElement as! SpatializedStatic3DElement
+    }
+
+    private var asset: Model3DAsset? {
+        if case let .loaded(asset, _) = loadState { return asset }
+        return nil
     }
 
     func onLoadSuccess(src: String) {
@@ -34,9 +37,10 @@ struct SpatializedStatic3DView: View {
         let enableGesture = spatializedElement.enableGesture
         if !spatializedStatic3DElement.allSources.isEmpty {
             Group {
-                if isLoading {
+                switch loadState {
+                case .idle, .loading:
                     posterView { ProgressView() }
-                } else if let asset, let source {
+                case let .loaded(asset, _):
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
                             .resizable(true)
@@ -45,15 +49,10 @@ struct SpatializedStatic3DView: View {
                                 contentMode: .fit
                             )
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
-                            .onAppear {
-                                self.onLoadSuccess(src: source)
-                            }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
-                } else {
-                    posterView { Text("") }.onAppear {
-                        self.onLoadFailure()
-                    }
+                case .failed:
+                    posterView {}
                 }
             }
             .scaleEffect(
@@ -178,18 +177,23 @@ struct SpatializedStatic3DView: View {
     }
 
     private func loadSources() async {
-        isLoading = true
+        loadState = .loading
         let result = await loadSources(spatializedStatic3DElement.allSources)
-        asset = result?.asset
-        source = result?.url.absoluteString
-        if spatializedStatic3DElement.autoplay {
-            // If animationPaused didn't change then SwiftUI will not trigger onChange so manually trigger playback
-            // This happens when play is called before load and autoplay is enabled
-            if spatializedStatic3DElement.animationPaused {
-                spatializedStatic3DElement.animationPaused = false
-            } else { onPlayback(isPaused: false) }
+        guard !Task.isCancelled else { return }
+        if let result {
+            loadState = .loaded(result.asset, result.url.absoluteString)
+            onLoadSuccess(src: result.url.absoluteString)
+            if spatializedStatic3DElement.autoplay {
+                // If animationPaused didn't change then SwiftUI will not trigger onChange so manually trigger playback
+                // This happens when play is called before load and autoplay is enabled
+                if spatializedStatic3DElement.animationPaused {
+                    spatializedStatic3DElement.animationPaused = false
+                } else { onPlayback(isPaused: false) }
+            }
+        } else {
+            loadState = .failed
+            onLoadFailure()
         }
-        isLoading = false
     }
 
     /// Attempts to load from each source in order, returning the first success.
@@ -208,4 +212,11 @@ struct SpatializedStatic3DView: View {
 
 private func localOrRemoteURL(url: String) -> URL? {
     URL(string: url.hasPrefix("file://") ? pwaManager.getLocalResourceURL(url: url) : url)
+}
+
+private enum LoadState {
+    case idle
+    case loading
+    case loaded(Model3DAsset, String)
+    case failed
 }
