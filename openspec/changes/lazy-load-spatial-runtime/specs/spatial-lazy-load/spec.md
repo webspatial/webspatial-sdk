@@ -204,23 +204,45 @@ For every spatial React component or HOC publicly exported by `@webspatial/react
 
 ### Requirement: Hook placeholders
 
-For every spatial Hook publicly exported by `@webspatial/react-sdk`, the default entry MUST provide a placeholder that is invoked unconditionally per render and returns a documented stable default value. Real hook implementations MUST be loaded only after `bootSpatial()` resolves and MUST NOT be invoked during the placeholder phase.
+For every spatial Hook publicly exported from the default entry of `@webspatial/react-sdk`, the default entry MUST provide a placeholder that is invoked unconditionally per render and returns a documented stable default value. Real hook implementations MUST be loaded only after `bootSpatial()` resolves and MUST NOT be invoked during the placeholder phase.
+
+Internal hooks consumed only by spatial components (the `useEntity` family, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) are NOT publicly exported and MUST NOT appear in the default entry. They live in `@webspatial/react-sdk/spatial` and ship with the spatial chunk; they have no placeholder and MUST be unreachable from the default entry.
 
 A given component instance MUST consistently use either the placeholder hook (web mode) or the real hook (spatial mode) for its entire lifetime. The SDK MUST NOT switch between placeholder and real hook implementations within a single component instance, even if `isSpatialReady()` transitions from `false` to `true` during that instance's lifetime. Switching to the real hook implementation MUST happen only when the component is unmounted and remounted (for example via a `key` change, a parent unmount, or a fresh page load).
 
-#### Scenario: Hook placeholder returns documented default in web mode
+#### Public spatial Hooks and their documented web-mode defaults
 
-- **WHEN** a Hook placeholder is invoked while `isSpatialReady()` is `false`
-- **THEN** the placeholder MUST return its documented default value (per-Hook contract)
-- **AND** it MUST NOT throw
-- **AND** it MUST NOT trigger network requests
-- **AND** it MUST NOT subscribe to runtime events
+| Hook         | Signature                                                                                                                  | Web-mode return value                                                                                                                                                                                                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useMetrics` | `() => { pointToPhysical: (pt: number, opts?: object) => number; physicalToPoint: (m: number, opts?: object) => number }` | An object whose `pointToPhysical` and `physicalToPoint` properties are module-level constant function references. `pointToPhysical(pt) === pt / 1360`. `physicalToPoint(m) === m * 1360`. The two function identities MUST remain stable across all renders and all `bootSpatial()` calls during the page lifetime. |
 
-#### Scenario: Real Hook is used only after boot in spatial runtime
+#### Scenario: useMetrics placeholder returns the documented fallback values
+
+- **WHEN** `useMetrics()` is invoked in a non-WebSpatial browser, during SSR, or before `bootSpatial()` has resolved
+- **THEN** the returned object MUST expose `pointToPhysical` and `physicalToPoint` matching the table above
+- **AND** `pointToPhysical(0)` MUST equal `0`
+- **AND** `pointToPhysical(1360)` MUST equal `1`
+- **AND** `physicalToPoint(1)` MUST equal `1360`
+- **AND** the call MUST NOT throw, MUST NOT schedule a network request, MUST NOT subscribe to a `window`-scoped external store
+
+#### Scenario: useMetrics function identities are stable across renders
+
+- **WHEN** a component invokes `useMetrics()` across multiple renders while `isSpatialReady()` remains `false`
+- **THEN** the `pointToPhysical` reference returned in render N MUST be `===` the `pointToPhysical` returned in render N-1
+- **AND** the `physicalToPoint` reference returned in render N MUST be `===` the `physicalToPoint` returned in render N-1
+
+#### Scenario: useMetrics is SSR-safe
+
+- **WHEN** `useMetrics()` is invoked in an environment without `window` (e.g. under `renderToString` / `renderToPipeableStream`)
+- **THEN** it MUST NOT throw
+- **AND** the placeholder MUST return the same constant functions documented in the table above
+- **AND** if the implementation uses `useSyncExternalStore`, it MUST provide a `getServerSnapshot` that returns a stable value without touching `window`
+
+#### Scenario: Real hook is used only after boot in spatial runtime
 
 - **WHEN** `bootSpatial()` has resolved in a WebSpatial runtime
-- **AND** a component that calls the Hook is mounted
-- **THEN** the real Hook MUST be invoked
+- **AND** a component that calls a public spatial hook is mounted for the first time
+- **THEN** the real hook implementation from the spatial chunk MUST be invoked
 
 #### Scenario: Hook implementation does not switch mid-life
 
@@ -231,9 +253,16 @@ A given component instance MUST consistently use either the placeholder hook (we
 
 #### Scenario: Remount picks up the real hook implementation
 
-- **WHEN** a component using a spatial hook unmounts after `isSpatialReady()` has become `true`
+- **WHEN** a component using a public spatial hook unmounts after `isSpatialReady()` has become `true`
 - **AND** the same component (or a new instance with a different React `key`) mounts again
 - **THEN** the new instance MUST invoke the real hook implementation from the spatial chunk
+
+#### Scenario: New publicly exported spatial hooks must define documented defaults
+
+- **WHEN** a future SDK version adds a new spatial Hook to the default entry's public exports
+- **THEN** the table in this Requirement MUST be updated with that Hook's signature and its documented web-mode default value
+- **AND** an automated test in the react-sdk package MUST verify the placeholder against those documented defaults
+- **AND** the new placeholder MUST satisfy the SSR-safety, identity-stability, and no-mid-life-switch constraints already defined for `useMetrics`
 
 ---
 
