@@ -161,16 +161,26 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 **Future hooks**: if a future SDK version adds a new publicly exported spatial hook, the spec table in "Requirement: Hook placeholders" MUST be updated and a corresponding placeholder + tests landed in the same change.
 
-### 6. JSX runtime web variants strip spatial markers
+### 6. JSX runtime: single unified runtime that strips and wraps with facade HOCs
 
-- `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts` currently re-export `react/jsx-runtime` directly, leaving WebSpatial-only props on the element. Plain browsers warn about unknown attributes, and `style.enableXr` leaks through to the DOM.
-- New behavior: a small inline helper strips, in this order:
-  1. `enable-xr` from props
-  2. `enable-xr-monitor` from props
-  3. `enableXr` key from `style` if `style` is an object
-  4. `__enableXr__` token from `className` if it appears as a whitespace-delimited token
-- Mutation policy: **mutate the props object in place**, matching the existing AVP-side `replaceToSpatialPrimitiveType` behavior (see `packages/react/src/jsx/jsx-shared.ts`). Both runtimes treat props as freshly constructed by React's JSX transform; this is the convention already in use.
-- After stripping, delegate to `react/jsx-runtime`'s `jsx`, `jsxs`, `jsxDEV`, `Fragment` exports unchanged.
+**Today's split**: there are two JSX runtime files. `jsx-runtime.ts` (delegated to `jsx-shared.ts`) strips markers AND wraps with the **real** HOCs (`withSpatialized2DElementContainer` / `withSpatialMonitor`). `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts` simply re-export `react/jsx-runtime` and do nothing — leaking markers to the DOM in plain browsers (today's silent bug, primarily affecting RSC users via the `react-server` exports condition).
+
+**After this change**: a **single** unified runtime serves all environments. The previously split `*.web.ts` files are deleted.
+
+- The unified runtime lives at `packages/react/src/jsx/jsx-runtime.ts` and `jsx-dev-runtime.ts` (or its current shared module `jsx-shared.ts`). It performs strip + wrap in the same pass; the HOC targets become the **facade** versions (already exported from the default entry by "Component facades"). The facade chooses between web fallback and real spatial container at render time via the bridge — so the JSX runtime no longer needs an environment-aware variant.
+- Markers and corresponding wraps:
+  1. `enable-xr` prop → strip + wrap with `withSpatialized2DElementContainer(type)` facade
+  2. `enable-xr-monitor` prop → strip + wrap with `withSpatialMonitor(type)` facade
+  3. `enableXr` key inside `props.style` → strip + wrap with `withSpatialized2DElementContainer(type)` facade
+  4. `__enableXr__` token inside `props.className` → strip + wrap with `withSpatialized2DElementContainer(type)` facade
+- **`Model` bypass**: `if (type === Model) return type;` — `Model` handles its own runtime branching internally; matches today's AVP-side behavior in `jsx-shared.ts`.
+- **Mutation policy**:
+  - The top-level `props` object is fresh per render (created by React's JSX transform); deleting attribute keys (e.g. `enable-xr`) and reassigning `props.className` is safe.
+  - **`props.style` MUST be cloned (shallow spread) before deleting `enableXr`**. Today's `jsx-shared.ts` mutates `props.style` directly, which corrupts user-memoized style objects (a real, latent bug) and would throw when the user has `Object.freeze`d the style. This change clones first.
+- **Marker source**: only `props.className` is recognized. `props.class` (HTML-style alternative) is intentionally not recognized in v1 — kept consistent with current AVP behavior.
+- **SSR**: the runtime contains no `window` access; strip + wrap work the same on server and client. Because `useSpatialReady()` returns `false` during SSR, the wrapped facade renders its documented fallback — server HTML is clean, client hydration matches.
+- **`react-server` exports condition**: removed in `package.json`. The unified runtime IS RSC-safe (no `window` touch, no spatial chunk static import); a separate `react-server` mapping is no longer needed and would only add maintenance surface.
+- **A1 (today's `*.web.ts` does not strip) auto-resolves**: the buggy file is deleted; nothing on `react-server` path remains to leak markers. No separate bug-fix PR is needed.
 
 ### 7. Spatial runtime detection
 
@@ -185,11 +195,12 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 - `packages/react/tsup.config.ts` reduces from four entries to three:
   - Main entry: `src/index.ts` → `dist/index.js`
   - Spatial entry: `src/spatial/index.ts` → `dist/spatial.js` (separate output file so dynamic `import('./spatial')` resolves to a distinct chunk that downstream bundlers can keep separate)
-  - JSX runtime entries: `src/jsx/jsx-runtime.ts`, `src/jsx/jsx-dev-runtime.ts` (web variants only — there is only one runtime path now) → `dist/jsx/*.js`
+  - JSX runtime entries: `src/jsx/jsx-runtime.ts`, `src/jsx/jsx-dev-runtime.ts` → `dist/jsx/*.js` (single unified runtime — see decision 6; `*.web.ts` siblings are deleted)
 - Delete the `dist/web` and `dist/default` configurations entirely.
 - Delete the `XR_ENV` lines from the banners; only `react-sdk-version` remains.
 - The dynamic `import('../spatial')` inside `bridge.ts` resolves at runtime to `@webspatial/react-sdk/spatial` (the published subpath), so consumer bundlers see a real subpath import and can split the chunk.
 - The spatial entry has `noExternal` for any spatial-only internal deps but keeps `@webspatial/core-sdk` and `react` external (consumer-provided).
+- `package.json` `exports` for `./jsx-runtime` and `./jsx-dev-runtime` collapse to a single mapping each (no `react-server` conditional sub-key), since the unified runtime is RSC-safe and there is no longer a "stripped-only" companion file to point at.
 
 ### 9. Size budget enforcement
 
