@@ -14,7 +14,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - Preserve application-level import ergonomics: `import { Model, Reality, useEntity } from '@webspatial/react-sdk'` continues to work in source.
 - Spatial implementations are loaded over the network **only** in a WebSpatial runtime, **only once** per page lifetime, and **only** via `bootSpatial()`.
 - Hooks in the default entry are safe to call unconditionally and return documented stable defaults in web mode (no Rules-of-Hooks violations).
-- JSX runtime web variants strip `enable-xr` / `enable-xr-monitor` / `style.enableXr` / `__enableXr__` className token before delegating to React, eliminating "unknown attribute" warnings in plain browsers.
+- The unified JSX runtime strips `enable-xr` / `enable-xr-monitor` / `style.enableXr` / `__enableXr__` className token AND wraps the element type with the corresponding facade HOC, eliminating "unknown attribute" warnings in plain browsers and preserving today's AVP-side `<div enable-xr/>` → spatial-container behavior.
 - The package works correctly **without** any build plugin; `@webspatial/vite-plugin` is no longer a required dependency.
 
 **Non-Goals:**
@@ -31,10 +31,10 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 ### 1. Package structure and entry layout
 
 - `@webspatial/react-sdk` `'.'` (default entry) contains only:
-  - `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`
-  - `facades/*.tsx` — facade React components for every spatial component / HOC
+  - `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, plus the `WebSpatialBootError` class (co-located with bridge or in `runtime/errors.ts`)
+  - `facades/*.tsx` — facade React components for every public spatial component / HOC
   - `hooks-web/useMetrics.ts` — the only public spatial-hook placeholder today (see decision 5 for the reasoning; future public hooks add new files here)
-  - JSX runtime web variants (with attribute stripping)
+  - JSX runtime: unified `jsx-runtime.ts` / `jsx-dev-runtime.ts` (with marker stripping AND facade-HOC wrapping; see decision 6)
   - Type-only exports (props, refs, event types)
 - `@webspatial/react-sdk/spatial` is a new subpath whose module is the single source of truth for the real spatial implementation: `Spatialized*Container*`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, `Reality`, all `*Entity` components, real `Model`, real `useMetrics`, and all internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`). Internal reality hooks are not re-exported from the spatial barrel either — they are consumed by the spatial components within the same chunk.
 - The `./web` and `./default` subpaths are **hard removed** from `package.json` `exports`. Old plugin configurations that alias to those paths will fail to resolve and surface the upgrade requirement loudly.
@@ -244,7 +244,18 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
    ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
    ```
 
-4. If any facade prop is missing a sensible default fallback, pass `fallback={<Poster />}` or similar.
+4. If you need a custom web rendering for a specific facade (e.g. an `<img>` poster instead of the default degraded `<model>` element), write a small wrapper that branches on `useSpatialReady()`:
+
+   ```tsx
+   import { Model, useSpatialReady } from '@webspatial/react-sdk'
+
+   export function ProductModel({ posterSrc, ...props }) {
+     const ready = useSpatialReady()
+     return ready ? <Model {...props} /> : <img src={posterSrc} />
+   }
+   ```
+
+   Per-facade `fallback` props are intentionally not part of the v1 API — wrappers using `useSpatialReady()` are the supported customization path.
 
 **For applications using the old subpaths directly:**
 
@@ -262,7 +273,8 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 ## Open Questions
 
 - Final number for the gzip size budget. 8KB is the design target; the test will be added with the *measured* number once the implementation lands, with an assertion comment that the design target is 8KB.
-- Whether `<SpatialBoundary>` should be added in a follow-up change. Not required by current product needs; track as a separate issue if user feedback shows demand.
 - Whether to expose `getBootStatus(): 'idle' | 'loading' | 'ready' | 'failed'` (a more granular state-machine query) in addition to `isSpatialReady()`. Skipped in v1 — `isSpatialReady()` plus rejection of `bootSpatial()` plus `onSpatialLoadError(cb)` covers known use cases; revisit if applications request finer state.
 - Whether `bootSpatial()` should accept a `{ timeoutMs }` option. v1 says no (applications can `Promise.race` themselves); revisit if real-world deployments report hung-import scenarios.
 - How aggressively to tighten the size budget after the initial release. A reasonable cadence is to revisit once per minor release based on actual `dist/index.js` measurements.
+
+(Note: a `<SpatialBoundary>` Suspense-style integration is explicitly listed as a Non-Goal for v1; it is not an open question for this change. A follow-up change can add it without breaking current callers if user feedback shows demand.)
