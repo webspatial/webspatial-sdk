@@ -19,10 +19,6 @@ export default function EntityAnimationManualTriggerPage() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [posX, setPosX] = useState(0)
 
-  const resetEntityPos = useCallback(() => {
-    setPosX(0.12)
-  }, [logger])
-
   const [animation, api] = useAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
@@ -71,8 +67,26 @@ export default function EntityAnimationManualTriggerPage() {
           >
             Cancel
           </button>
-          <button className={btnCls} onClick={resetEntityPos}>
-            X = 0.12
+          <button
+            className={btnCls}
+            onClick={() => {
+              setPosX(prev => {
+                const next = Math.round((prev + 0.1) * 1000) / 1000
+                logger.log(`setPosX(${next})`)
+                return next
+              })
+            }}
+          >
+            X += 0.1
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              setPosX(0)
+              logger.log('setPosX(0)')
+            }}
+          >
+            X = 0
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
@@ -101,7 +115,8 @@ export default function EntityAnimationManualTriggerPage() {
 
         <div className="mt-3 text-xs font-mono text-gray-500">
           isAnimating={String(api.isAnimating)} &nbsp; isPaused=
-          {String(api.isPaused)} &nbsp; playbackRate={playbackRate}
+          {String(api.isPaused)} &nbsp; playbackRate={playbackRate} &nbsp; posX=
+          {posX}
         </div>
         <Reality style={{ width: '100%', height: '220px' }}>
           <SceneGraph>
