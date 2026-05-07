@@ -26,12 +26,12 @@ const [animation, api] = useAnimation({
 <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
 ```
 
-The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, `resume()`, and `stop()` give imperative control when needed, while `onError` surfaces asynchronous bridge/native failures.
+The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, and `cancel()` give imperative control when needed, with `play()` resuming the current session after a pause, while `onError` surfaces asynchronous bridge/native failures.
 
 ## What Changes
 
 - Add a new entity transform animation capability centered on a React `useAnimation(config)` hook and an `animation` prop for entity components.
-- Add imperative playback controls with `play`, `pause`, `resume`, and `stop`, plus `onStart`, natural completion, `stop`, and `onError` lifecycle / error callbacks.
+- Add imperative playback controls with `play`, `pause`, and `cancel`, plus `finished`, `onStart`, natural completion, cancellation that restores `from`, and `onError` lifecycle / error callbacks.
 - Define timing behavior for `duration`, `timingFunction`, `delay`, `autoStart`, and `loop` with reverse support aligned with the reviewed API direction.
 - Define the cross-layer contract for React, core SDK, JSBridge, and native playback so animations run natively and do not fight normal transform updates.
 - Clarify that the `animation` prop is only accepted by entity components that integrate with the `SpatialEntity` abstraction (e.g. `BoxEntity`, `ModelEntity`), not by `SpatialDiv` or non-entity components; this restriction is enforced statically through TypeScript type definitions. At runtime, if `useAnimation` is used on an entity that is never rendered under `Reality` / `SceneGraph` (i.e. never bound to a `SpatialEntity` context), playback enters the `queued` state and remains there until the entity binds or is unmounted.
@@ -52,5 +52,5 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, and the visionOS native bridge / scene runtime.
 - **Public API**: New `useAnimation` hook, entity `animation` prop, and animation playback methods.
 - **Documentation**: Update the entity animation docs and capability documentation.
-- **Validation**: Add coverage for runtime capability checks, React API behavior, JSBridge command flow, native completion / stop events, and asynchronous error callback behavior.
+- **Validation**: Add coverage for runtime capability checks, React API behavior, JSBridge command flow, native completion / cancel events, and asynchronous error callback behavior.
 - **Breaking changes**: None. This change is purely additive.

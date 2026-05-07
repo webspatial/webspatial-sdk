@@ -8,7 +8,7 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 - **WHEN** 应用代码调用 `useAnimation(config)`
 - **THEN** Hook MUST 返回二元组 `[animation, api]`
-- **AND** `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`isAnimating`、`isPaused`
+- **AND** `api` MUST 暴露 `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`finished`
 
 #### Scenario: 实体 animation prop
 
@@ -34,10 +34,10 @@ SDK MUST 提供实体 Transform 动画 API，由 React `useAnimation(config)` Ho
 
 - **GIVEN** 某个实体已经绑定 `animationA`，且可能存在 alive 会话
 - **WHEN** 该实体在后续渲染中将 `animation` prop 替换为 `animationB`，或将 `animation` prop 移除
-- **THEN** SDK MUST 先停止 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
+- **THEN** SDK MUST 先取消 `animationA` 对应的会话（若存在），并触发 `animationA` 的 `onStop`
 - **AND** 若 `animationB` 存在且其 `autoStart` 为 `true`（或省略），SDK MUST 在停止旧会话后启动 `animationB` 对应的新会话，并触发 `animationB` 的 `onStart`
 - **AND** 旧会话的 `onStop` MUST 在新会话的 `onStart` 之前触发
-- **AND** 旧会话的 stop 命令 MUST 先于新会话的 play 命令发送到 native bridge
+- **AND** 旧会话的 cancel 命令 MUST 先于新会话的 play 命令发送到 native bridge
 
 ---
 
@@ -104,7 +104,7 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **AND** 若排队期间实体 transform 被外部更新，起始快照 MUST 以实际执行时刻的实体当前 transform 为准
 - **AND** 排队期间 `api.isAnimating` MUST 为 `true`
 - **AND** 排队的 play 所使用的 config MUST 以 `play()` 调用时刻的 config 为准，而非实体绑定时的 config
-- **AND** 若排队期间调用 `api.pause()` 或 `api.stop()`，SDK MUST 按调用顺序处理：`stop()` 取消排队的 play 并触发 `onStop`；`pause()` 使 play 在实体绑定后以 paused 状态启动
+- **AND** 若排队期间调用 `api.pause()` 或 `api.cancel()`，SDK MUST 按调用顺序处理：`cancel()` 取消排队的 play 并触发 `onStop`；`pause()` 使 play 在实体绑定后以 paused 状态启动
 
 #### Scenario: queued 期间 pause 后绑定
 
@@ -127,14 +127,15 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **GIVEN** 动画配置设置了正数 `delay`，且播放已请求
 - **WHEN** 应用代码在 delay 期间调用 `api.pause()`
 - **THEN** 剩余 delay 时间 MUST 被保留
-- **AND** 当 `api.resume()` 被调用时，delay MUST 从暂停处继续，而不是从完整 delay 时长重新开始
+- **AND** 当 `api.play()` 被调用时，delay MUST 从暂停处继续，而不是从完整 delay 时长重新开始
 
-#### Scenario: delay 期间 stop
+#### Scenario: delay 期间 cancel
 
 - **GIVEN** 动画会话处于 delay 阶段
-- **WHEN** 应用调用 `api.stop()`
+- **WHEN** 应用调用 `api.cancel()`
 - **THEN** `onStop` MUST 触发一次
-- **AND** `onStop` MUST 收到 stop 时刻实体当前 transform 状态
+- **AND** 实体 MUST 恢复到该会话的 `from` 状态；若省略 `from`，则 MUST 恢复到该会话首次 `play` 时捕获的起始快照
+- **AND** `onStop` MUST 收到 cancel 完成后实体的 transform 状态
 
 ---
 
@@ -187,21 +188,22 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 ---
 
-### Requirement: 定义 isAnimating 状态语义
+### Requirement: 定义 isAnimating 与 finished 状态语义
 
-会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。idle 状态（无会话或会话已结束）时为 **not alive**。`isAnimating` 反映会话是否在积极推进，而非是否 alive。`isPaused` 反映会话是否被冻结但仍然 alive。
+会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。idle 状态（无会话、会话已取消，或尚未自然完成）时为 **not alive**。`isAnimating` 反映会话是否在积极推进，而非是否 alive。`isPaused` 反映会话是否被冻结但仍然 alive。`finished` 反映最近一个当前有效会话是否已自然完成；它 MUST 只在非循环动画自然完成后变为 `true`，并在后续 `play()` 启动新会话或 `cancel()` 时重置为 `false`。
 
-`api.isAnimating` 和 `api.isPaused` MUST 按以下模型反映动画会话状态：
+`api.isAnimating`、`api.isPaused` 和 `api.finished` MUST 按以下模型反映动画会话状态：
 
-| 状态 | `isAnimating` | `isPaused` | 说明 |
-|---|---|---|---|
-| idle | `false` | `false` | 无会话，或会话已结束 |
-| queued | `true` | `false` | 实体未绑定时调用 `play()`，等待绑定 |
-| delaying | `true` | `false` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
-| running | `true` | `false` | 视觉运动进行中 |
-| paused | `false` | `true` | 通过 `api.pause()` 暂停 |
+| 状态 | `isAnimating` | `isPaused` | `finished` | 说明 |
+|---|---|---|---|---|
+| idle | `false` | `false` | `false` | 无会话、会话已取消，或尚未开始 |
+| queued | `true` | `false` | `false` | 实体未绑定时调用 `play()`，等待绑定 |
+| delaying | `true` | `false` | `false` | 已调用 `play()`，delay 期间，视觉运动尚未开始 |
+| running | `true` | `false` | `false` | 视觉运动进行中 |
+| paused | `false` | `true` | `false` | 通过 `api.pause()` 暂停 |
+| finished | `false` | `false` | `true` | 非循环动画自然完成 |
 
-当 `isAnimating || isPaused` 为 `true` 时会话存在（alive）。`pause()`、`resume()`、`stop()` 的 no-op 条件为 `!isAnimating && !isPaused`（即无 alive 会话）。
+当 `isAnimating || isPaused` 为 `true` 时会话存在（alive）。`pause()` 与 `cancel()` 的 no-op 条件为 `!isAnimating && !isPaused`（即无 alive 会话）。当处于 `paused` 状态时，`play()` MUST 继续当前会话，而不是新建会话。
 
 #### Scenario: delay 期间 isAnimating
 
@@ -215,16 +217,28 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 调用 `api.pause()`
 - **THEN** `api.isAnimating` MUST 为 `false`
 
-#### Scenario: stop 或自然完成后 isAnimating
+#### Scenario: cancel 或自然完成后 isAnimating
 
-- **WHEN** 动画会话通过 `api.stop()` 或自然完成结束
+- **WHEN** 动画会话通过 `api.cancel()` 或自然完成结束
 - **THEN** `api.isAnimating` MUST 在任何生命周期回调触发前为 `false`
+
+#### Scenario: 自然完成后 finished
+
+- **GIVEN** 一个非循环动画自然播放结束
+- **WHEN** 会话进入终止状态
+- **THEN** `api.finished` MUST 在 `onComplete` 触发前变为 `true`
+
+#### Scenario: cancel 或新 play 后 finished 重置
+
+- **GIVEN** `api.finished` 当前为 `true` 或会话处于 alive 状态
+- **WHEN** 应用调用 `api.cancel()`，或随后调用 `api.play()` 启动新的播放
+- **THEN** `api.finished` MUST 变为 `false`
 
 ---
 
 ### Requirement: 提供命令式播放生命周期
 
-播放 API MUST 允许应用启动、暂停、恢复、停止动画会话，并 MUST 提供 start、自然完成、stop 的生命周期回调，以及异步错误回调。
+播放 API MUST 允许应用启动、暂停、通过 `play()` 恢复，以及取消动画会话，并 MUST 提供 start、自然完成、恢复到 `from` 的取消生命周期回调，以及异步错误回调。
 
 #### Scenario: onStart 回调
 
@@ -233,10 +247,10 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **AND** 若该请求在 `queued` 阶段尚未完成绑定，`onStart` MUST 不得提前触发
 - **AND** 若该请求在会话成功建立之前失败，`onStart` MUST 不得触发
 
-#### Scenario: pause 与 resume
+#### Scenario: pause 与 play 恢复
 
 - **GIVEN** 一个动画会话处于 alive 状态
-- **WHEN** 应用先调用 `api.pause()`，再调用 `api.resume()`
+- **WHEN** 应用先调用 `api.pause()`，再调用 `api.play()`
 - **THEN** MUST 从暂停进度继续同一会话，而不是启动一个新会话
 
 #### Scenario: config 变更仅影响下次 play
@@ -251,16 +265,17 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** 一个非循环动画自然播放结束
 - **THEN** 配置的 `onComplete` MUST 收到来自播放结果的实体最终 transform 状态
 
-#### Scenario: stop 回调
+#### Scenario: cancel 回调
 
-- **WHEN** 应用调用 `api.stop()`
-- **THEN** 配置的 `onStop` MUST 收到 stop 时刻实体当前 transform 状态
+- **WHEN** 应用调用 `api.cancel()`
+- **THEN** 配置的 `onStop` MUST 收到 cancel 完成后实体当前 transform 状态
 
 #### Scenario: TransformValues 坐标空间与单位
 
 - **WHEN** `onComplete` 或 `onStop` 交付 `TransformValues` 数据
 - **THEN** 所有值 MUST 表示实体的 **local** transform
 - **AND** `rotation` 值 MUST 为**角度制**（degrees）的欧拉角，与 `AnimationConfig` 的输入约定一致
+- **AND** 对于 `onStop`，该值 MUST 表示 cancel 完成后恢复到的 transform
 
 #### Scenario: 生命周期回调次数与互斥
 
@@ -273,12 +288,12 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** bridge 或 native 的异步命令失败
 - **THEN** `onError` MUST 对该失败命令至多触发一次
 - **AND** 若失败的是 `play` 命令，`onStart`、`onComplete`、`onStop` MUST 不得对该失败请求触发
-- **AND** 若失败的是 `pause`、`resume` 或 `stop` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onStop`
+- **AND** 若失败的是 `pause` 或 `cancel` 命令，该失败本身 MUST 不得触发 `onComplete` 或 `onStop`
 
-#### Scenario: stop old 失败时不得 start new
+#### Scenario: cancel old 失败时不得 start new
 
 - **GIVEN** SDK 正在执行“先停止旧会话，再启动新会话”的链路
-- **WHEN** 停止旧会话的 `stop` 命令异步失败
+- **WHEN** 取消旧会话的 `cancel` 命令异步失败
 - **THEN** SDK MUST 调用 `onError`
 - **AND** 旧会话 MUST 保持失败前状态
 - **AND** SDK MUST NOT 启动新会话
@@ -287,28 +302,36 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 #### Scenario: 非法状态下的控制方法为 no-op
 
 - **GIVEN** 当前不存在 alive session（`isAnimating` 为 `false` 且 `isPaused` 为 `false`）
-- **WHEN** 应用调用 `api.pause()`、`api.resume()` 或 `api.stop()`
+- **WHEN** 应用调用 `api.pause()` 或 `api.cancel()`
 - **THEN** 这些调用 MUST 为 no-op（不抛错、不触发生命周期回调、不发送 native 命令）
 
 #### Scenario: 控制命令按调用顺序串行化
 
-- **GIVEN** 一个 hook 实例在短时间内连续调用 `play`、`pause`、`resume`、`stop` 等控制方法
+- **GIVEN** 一个 hook 实例在短时间内连续调用 `play`、`pause`、`cancel` 等控制方法
 - **WHEN** SDK 将控制命令发送到 Native 层
 - **THEN** SDK MUST 按调用顺序向 native bridge 发送这些命令，且 bridge MUST 以相同顺序交付给 native
 
-#### Scenario: 已有 alive 会话时调用 play
+#### Scenario: paused 会话时调用 play
 
-- **GIVEN** 一个动画会话已经处于 alive 状态（`queued`、`delaying`、`running` 或 `paused`）
+- **GIVEN** 一个动画会话处于 `paused` 状态
+- **WHEN** 应用代码调用 `api.play()`
+- **THEN** SDK MUST 从暂停进度继续该同一会话，而不是启动新会话
+- **AND** SDK MUST NOT 生成新的 `animationId`
+- **AND** 该次 `play()` MUST NOT 再次触发 `onStart`
+
+#### Scenario: 已有非 paused 的 alive 会话时调用 play
+
+- **GIVEN** 一个动画会话已经处于 `queued`、`delaying` 或 `running` 状态
 - **WHEN** 应用代码再次调用 `api.play()`
-- **THEN** SDK MUST 先停止已有会话，再用当前配置启动新会话
+- **THEN** SDK MUST 先取消已有会话，再用当前配置启动新会话
 - **AND** 前一个会话的 `onStop` 回调 MUST 在新会话的 `onStart` 之前触发
 - **AND** 前一个会话的 `onStop` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 MUST 为 `true`
 
-#### Scenario: 每次 play 生成新的会话 id
+#### Scenario: 每次新会话 play 生成新的会话 id
 
-- **WHEN** `api.play()` 启动一个新的动画会话
+- **WHEN** `api.play()` 启动一个新的动画会话，而不是恢复一个已暂停会话
 - **THEN** SDK MUST 为该会话生成一个新的全局唯一 `animationId`
-- **AND** 后续对该会话的 `pause`、`resume`、`stop` MUST 作用于该 `animationId` 对应的会话
+- **AND** 后续对该会话的 `pause`、恢复态 `play` 与 `cancel` MUST 作用于该 `animationId` 对应的会话
 
 ---
 
@@ -327,6 +350,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
 - **AND** `onStart`、`onComplete`、`onStop`、`onError` MUST 不被触发
 - **AND** `api.isAnimating` MUST 保持 `false`
+- **AND** `api.finished` MUST 保持 `false`
 
 #### Scenario: play 时 bridge 或 native 异步失败
 
@@ -335,16 +359,16 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** SDK MUST 不得将会话推进到 alive 状态
-- **AND** 对该 `animationId`，后续 MUST 不得再收到 `_completed` 或 `_stopped`
+- **AND** 对该 `animationId`，后续 MUST 不得再收到 `_completed` 或 `_canceled`
 
-#### Scenario: pause/resume/stop 时 bridge 或 native 异步失败
+#### Scenario: pause/cancel 时 bridge 或 native 异步失败
 
 - **GIVEN** `supports('useAnimation')` 为 `true` 且存在 alive 会话
-- **WHEN** SDK 在执行 `pause`、`resume` 或 `stop` 命令时收到来自 Native 或 JSBridge 的失败结果
+- **WHEN** SDK 在执行 `pause` 或 `cancel` 命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
 - **AND** 会话 MUST 保持在失败命令之前的状态，允许应用代码重试或采取其他操作
-- **AND** 该失败 MUST 不得终止该 alive 会话；后续仍 MAY 正常收到 `_completed` 或 `_stopped`
+- **AND** 该失败 MUST 不得终止该 alive 会话；后续仍 MAY 正常收到 `_completed` 或 `_canceled`
 
 ---
 
@@ -364,16 +388,17 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 #### Scenario: 动画结束后释放抑制
 
 - **GIVEN** 一个动画会话正在控制 `position`
-- **WHEN** 动画会话通过自然完成或 `api.stop()` 结束
+- **WHEN** 动画会话通过自然完成或 `api.cancel()` 结束
 - **THEN** SDK MUST 在触发生命周期回调之前释放对 `position` 的抑制
 - **AND** 对 `position` 的常规 transform 同步 MUST 在回调之后的下一个 React 渲染周期恢复，并以该渲染周期中的最新 props 值为准
 
-#### Scenario: stop 保持 stop 点的 transform
+#### Scenario: cancel 恢复到 from transform
 
 - **GIVEN** 一个动画会话处于 alive 状态且实体正在播放中间态
-- **WHEN** 应用调用 `api.stop()`
-- **THEN** 实体 MUST 保持在当前播放中间态（stop 点）
-- **AND** 实体 MUST 不得跳转到 `from` 或 `to`
+- **WHEN** 应用调用 `api.cancel()`
+- **THEN** 实体 MUST 恢复到该会话的 `from` transform
+- **AND** 当该会话省略 `from` 时，实体 MUST 恢复到该会话首次 `play` 时捕获的起始快照
+- **AND** 实体 MUST 不得停留在 cancel 时刻的中间态，也 MUST 不得跳转到 `to`
 
 ---
 

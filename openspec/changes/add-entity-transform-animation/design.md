@@ -6,11 +6,11 @@ See the proposal for full motivation. In short: entity transform updates are cur
 
 **Goals:**
 
-- Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/resume/stop`.
+- Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/cancel/finished`.
 - Keep playback native-driven so transform animation does not depend on per-frame JS updates.
 - Prevent React prop synchronization from fighting an alive animation session for the same transform field.
 - Document runtime capability detection with `supports('useAnimation')`.
-- Keep the design testable across React, core command flow, and native completion / stop behavior.
+- Keep the design testable across React, core command flow, and native completion / cancel behavior.
 
 **Non-Goals:**
 
@@ -82,7 +82,7 @@ interface AnimationConfig {
   /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
   onComplete?: (finalValues: TransformValues) => void
 
-  /** Called when playback is stopped via api.stop(). Receives the transform at the stop point. */
+  /** Called when playback is canceled via api.cancel(). Receives the restored transform. */
   onStop?: (currentValues: TransformValues) => void
 
   /**
@@ -99,8 +99,8 @@ interface AnimationConfig {
 interface AnimationError {
   /** The session that encountered the error. */
   animationId: string
-  /** The command that failed. */
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  /** The bridge command that failed. */
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   /** Optional machine-readable error code. */
   code?: string
   /** Human-readable failure reason. */
@@ -112,23 +112,23 @@ interface AnimationError {
 
 ```typescript
 interface AnimationApi {
-  /** Start (or restart) the animation. */
+  /** Start the animation, or continue it from paused progress. */
   play(): void
 
   /** Pause the animation at the current progress. */
   pause(): void
 
-  /** Resume a paused animation from where it left off. */
-  resume(): void
-
-  /** Stop the animation. The entity stays at the stop-point transform. */
-  stop(): void
+  /** Cancel the animation and restore `from`, or the start snapshot when `from` is omitted. */
+  cancel(): void
 
   /** Whether the session is currently queued, delaying, or running (false while paused or idle). */
   readonly isAnimating: boolean
 
   /** Whether the animation is currently paused. */
   readonly isPaused: boolean
+
+  /** Whether the most recent current session completed naturally. */
+  readonly finished: boolean
 }
 ```
 
@@ -195,9 +195,9 @@ function TapToMove() {
 }
 ```
 
-### Continuous reverse loop with pause / resume
+### Continuous reverse loop with pause / continue
 
-Infinite back-and-forth rotation. Tap toggles pause and resume.
+Infinite back-and-forth rotation. Tap toggles pause and continue.
 
 ```tsx
 function SpinningModel() {
@@ -213,7 +213,7 @@ function SpinningModel() {
     <Reality
       onSpatialTap={() => {
         if (api.isPaused) {
-          api.resume()
+          api.play()
         } else if (api.isAnimating) {
           api.pause()
         } else {
@@ -229,32 +229,27 @@ function SpinningModel() {
 }
 ```
 
-### Stop and sync state
+### Cancel and reset state
 
-During playback, the animation takes over `position` and ordinary prop updates are suppressed. After `stop()`, control returns to the `position` prop. `onStop` syncs the stop-point transform back into React state so the entity does not jump.
+During playback, the animation takes over `position` and ordinary prop updates are suppressed. After `cancel()`, the entity restores `from`, or the session start snapshot when `from` is omitted, so there is usually no need to sync the in-flight transform back into React state.
 
 ```tsx
-function StopAndSync() {
-  const [pos, setPos] = useState<Vec3>({ x: 0, y: 0, z: -2 })
-
+function CancelAndReset() {
   const [animation, api] = useAnimation({
+    from: { position: { x: 0, y: 0, z: -2 } },
     to: { position: { x: 2, y: 2, z: -2 } },
     duration: 3.0,
     autoStart: false,
-    onStop: (current) => {
-      if (current.position) setPos(current.position)
-    },
   })
 
   return (
     <>
       <button onClick={() => api.play()}>Play</button>
-      <button onClick={() => api.stop()}>Stop</button>
+      <button onClick={() => api.cancel()}>Cancel</button>
       <Reality>
         <SceneGraph>
           <BoxEntity
             width={0.3} height={0.3} depth={0.3}
-            position={pos}
             animation={animation}
           />
         </SceneGraph>
@@ -268,14 +263,14 @@ function StopAndSync() {
 
 ### React SDK → Core SDK
 
-React calls one method on `SpatialEntity` to drive the full animation lifecycle:
+React calls one method on `SpatialEntity` to drive the full animation lifecycle. Public `api.play()` resumes the current session when it is paused; the React SDK MAY translate that into an internal `resume` command, but that detail is not exposed to applications:
 
 ```typescript
 interface SpatialEntity {
   /**
    * For a `play` command, resolves with an `AnimateTransformResult` that
-   * carries `finished` and `stopped` promises for the new session.
-   * For `pause`, `resume`, and `stop` commands, resolves with `void`
+   * carries `finished` and `canceled` promises for the new session.
+   * For `pause`, `resume`, and `cancel` commands, resolves with `void`
    * once the command has been acknowledged by native (no new result object).
    */
   animateTransform(command: AnimateTransformCommand & { type: 'play' }): Promise<AnimateTransformResult>
@@ -285,12 +280,12 @@ interface SpatialEntity {
 interface AnimateTransformCommand {
   /**
    * Identifies the animation session. A new globally-unique `animationId`
-   * MUST be generated for each `play` command. `pause`, `resume`, and `stop`
+   * MUST be generated for each `play` command. `pause`, `resume`, and `cancel`
    * commands MUST reuse the `animationId` from the `play` command that
    * created the session.
    */
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop'
+  type: 'play' | 'pause' | 'resume' | 'cancel'
   /** Required when type is 'play'; ignored otherwise. */
   entityId?: string
   toTransform?: Float4x4
@@ -306,20 +301,20 @@ interface AnimateTransformResult {
   /** Resolves when a non-looping animation completes naturally. Never resolves for infinite loops. */
   finished: Promise<TransformValues>
   /**
-   * Resolves when the animation is stopped via stop().
-   * After stop, `finished` MUST remain pending (not rejected).
+   * Resolves when the animation is canceled and restored to `from`.
+   * After cancel, `finished` MUST remain pending (not rejected).
    */
-  stopped: Promise<TransformValues>
+  canceled: Promise<TransformValues>
 }
 ```
 
 React SDK is responsible for converting `AnimationConfig` (Vec3 + Euler degrees) to `Float4x4` before calling `animateTransform`.
 
-Core SDK is responsible for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before resolving `finished` / `stopped` and before invoking lifecycle callbacks.
+Core SDK is responsible for converting native `Float4x4` payloads back to `TransformValues` (Vec3 + degrees) before resolving `finished` / `canceled` and before invoking lifecycle callbacks.
 
-If the entity unmounts while an alive session exists, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `stopped` (and MUST NOT invoke lifecycle callbacks after unmount).
+If the entity unmounts while an alive session exists, the SDK MUST stop/cancel the native session but MUST NOT resolve `finished` or `canceled` (and MUST NOT invoke lifecycle callbacks after unmount).
 
-`animateTransform(...)` MAY reject only when a command cannot be submitted before native accepts it. Once command submission succeeds, any later asynchronous failure MUST be reported through the `{animationId}_failed` event instead of through the `finished` / `stopped` promises.
+`animateTransform(...)` MAY reject only when a command cannot be submitted before native accepts it. Once command submission succeeds, any later asynchronous failure MUST be reported through the `{animationId}_failed` event instead of through the `finished` / `canceled` promises.
 
 ### Core SDK ↔ Native (JSBridge)
 
@@ -330,24 +325,24 @@ If the entity unmounts while an alive session exists, the SDK MUST stop/cancel t
 | Event name | Trigger | Payload |
 |---|---|---|
 | `{animationId}_completed` | Animation finishes naturally (all loops done) | `TransformValues` — final transform (converted by Core from native `Float4x4`) |
-| `{animationId}_stopped` | `stop()` called | `TransformValues` — stop-point transform (converted by Core from native `Float4x4`) |
-| `{animationId}_failed` | An asynchronous `play` / `pause` / `resume` / `stop` failure occurs | `AnimationError` — at least `animationId`, `command`, and `reason`, with optional `code` |
+| `{animationId}_canceled` | `cancel()` called | `TransformValues` — restored `from` transform, or the start snapshot if `from` is omitted (converted by Core from native `Float4x4`) |
+| `{animationId}_failed` | An asynchronous `play` / `pause` / `resume` / `cancel` failure occurs | `AnimationError` — at least `animationId`, `command`, and `reason`, with optional `code` |
 
-`_completed`, `_stopped`, and `_failed` listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal or failure event fires before listeners are ready.
+`_completed`, `_canceled`, and `_failed` listeners MUST be registered before sending the `play` command to avoid race conditions where a terminal or failure event fires before listeners are ready.
 
 `animationId` MUST be globally unique within a runtime process so event names do not collide across entities or sessions.
 
 For a given `animationId`:
 
-- After `play` establishes a session successfully, native MUST emit exactly one terminal event (`_completed` or `_stopped`) and they MUST be mutually exclusive.
-- If `play` fails asynchronously, native MUST emit `_failed` at most once and MUST NOT emit `_completed` or `_stopped` afterward.
-- If `pause`, `resume`, or `stop` fails asynchronously, native MUST emit `_failed` at most once for that failed command; the session remains in its pre-failure state and MAY still emit `_completed` or `_stopped` later.
+- After `play` establishes a session successfully, native MUST emit exactly one terminal event (`_completed` or `_canceled`) and they MUST be mutually exclusive.
+- If `play` fails asynchronously, native MUST emit `_failed` at most once and MUST NOT emit `_completed` or `_canceled` afterward.
+- If `pause`, `resume`, or `cancel` fails asynchronously, native MUST emit `_failed` at most once for that failed command; the session remains in its pre-failure state and MAY still emit `_completed` or `_canceled` later.
 
 ## Decisions
 
 1. **Public API uses `useAnimation` plus an entity `animation` prop**
    - The reviewed docs prefer an explicit `animation` prop over spreading animation data into normal entity props.
-   - `AnimationApi.play()` replaces `start()` so the imperative verbs align better with existing media-style control surfaces.
+   - The public verbs are `play()`, `pause()`, and `cancel()`, with `play()` also resuming a paused session so the API reads closer to the Web Animation API.
    - The `animation` prop is only accepted by entity components that integrate with the `SpatialEntity` abstraction; this restriction is enforced statically through TypeScript types rather than expanded runtime checks on non-entity components. At runtime, if the entity is never rendered under `Reality` / `SceneGraph`, playback enters `queued` and remains there until the entity binds or unmounts.
    - Alternative considered: spread returned animated props directly onto the entity. Rejected because it mixes hidden animation metadata with normal entity props and makes collisions harder to reason about.
 
@@ -358,20 +353,20 @@ For a given `animationId`:
    - Alternative considered: put the full config on the entity prop. Rejected because it couples render payload and control payload, and it increases accidental re-render churn.
 
 3. **Core and native layers use a unified animation command contract**
-   - The latest reviewed design consolidates play, pause, resume, and stop into one animation command with a `type` discriminator instead of four separate commands.
+   - The latest reviewed design consolidates play, pause, resume, and cancel into one animation command with a `type` discriminator instead of four separate commands.
    - This reduces JSBridge registration overhead, keeps control flow centralized, and matches the fact that all operations address one animation session identified by `animationId`.
    - Alternative considered: separate command types per action. Rejected because it duplicates registration and parsing without improving the public contract.
 4. **Playback runs on the native side and reports terminal transform state back to JS**
    - Native playback owns the animation session, timing, delay, loop behavior, and pause / resume state.
-   - JS receives completion and stop results so callbacks can observe the actual final or current transform from native state.
+   - JS receives completion and cancel results so callbacks can observe the actual final or restored transform from native state.
    - Alternative considered: emulate motion in JS and stream transform updates over the bridge. Rejected because it adds bridge traffic, risks jitter, and weakens parity with the reviewed RealityKit-based design.
-   - **Stop semantics:** when `stop()` is called, the entity freezes at its current in-flight transform (the stop point), not at `from` or `to`. The native side reads `entity.transform` at that instant, reports it back via the stopped event, and the `onStop` callback delivers that value so JS state can be synced.
+   - **Cancel semantics:** when `cancel()` is called, the entity restores to that session's `from` state; if `from` is omitted, it restores to the start snapshot captured at that session's first `play`. The native side reports that restored transform back via the canceled event, and `onStop` receives the restored value as well.
 
 5. **Entity transform synchronization uses per-field animation suppression**
    - While animation controls a specific field, ordinary transform syncing for that field is suppressed so React re-renders do not race the alive animation session controlling that field.
    - Untargeted transform fields continue to behave exactly as they do today.
    - Alternative considered: freeze all transform syncing while any alive animation session exists. Rejected because it unnecessarily blocks unrelated transform updates.
-   - **Suppression release timing:** field-level suppression is lifted when the animation session ends (via completion or stop). The `__animating` flags are cleared before the lifecycle callback fires, so the next React render cycle after the callback will resume ordinary transform synchronization for the previously animated fields.
+   - **Suppression release timing:** field-level suppression is lifted when the animation session ends (via completion or cancel). The `__animating` flags are cleared before the lifecycle callback fires, so the next React render cycle after the callback will resume ordinary transform synchronization for the previously animated fields.
 
 6. **Capability detection is explicit and top-level**
    - `supports('useAnimation')` documents whether the end-to-end animation feature is available in the current runtime.
@@ -393,25 +388,25 @@ For a given `animationId`:
    - This minimizes duplicated logic and keeps transform synchronization behavior consistent across entity types.
 
 10. **Asynchronous bridge errors surface via `onError` callback, not throw**
-    - `play()`, `pause()`, `resume()`, and `stop()` remain synchronous `void` methods. Errors that occur asynchronously during the bridge/native round-trip are delivered through the `onError` callback on `AnimationConfig` (or `console.error` if `onError` is not provided).
+    - `play()`, `pause()`, and `cancel()` remain synchronous `void` methods. Errors that occur asynchronously during the bridge/native round-trip are delivered through the `onError` callback on `AnimationConfig` (or `console.error` if `onError` is not provided).
     - Synchronous `throw` is reserved for programmer errors detectable at call time (invalid config, multi-entity bind).
     - This separates two error categories: (1) developer mistakes caught immediately via throw, (2) runtime/infrastructure failures reported asynchronously via callback.
     - Native reports asynchronous failures via the `{animationId}_failed` event. The payload contains at least `animationId`, `command`, and `reason`, and MAY include a machine-readable `code`.
-    - A failed `play` means the session never became alive, so `_completed` / `_stopped` must not follow. A failed `pause`, `resume`, or `stop` affects only that command attempt and leaves the session in its pre-failure state.
+    - A failed `play` means the session never became alive, so `_completed` / `_canceled` must not follow. A failed `pause`, `resume`, or `cancel` affects only that command attempt and leaves the session in its pre-failure state. If the failure happens while `play()` is resuming a paused session, the bridge/native `AnimationError.command` MUST surface as `resume`.
     - react-spring has no `onError` equivalent because its animations run entirely in JS with no remote failure path. Our architecture delegates playback to native via JSBridge, introducing a real async failure mode that requires an explicit error channel.
     - Alternative considered: change the API to `play(): Promise<void>`. Rejected because it forces every call site to handle Promises, increases ceremony for the common success path, and diverges from the fire-and-forget style of react-spring's imperative API.
 
-11. **A failed stop-old step MUST block start-new**
-    - For `play()`-driven restart and animation-prop replacement flows, if stopping the old session fails, the SDK MUST surface `onError` and preserve the old session's pre-failure state.
+11. **A failed cancel-old step MUST block start-new**
+    - For `play()`-driven restart and animation-prop replacement flows, if canceling the old session fails, the SDK MUST surface `onError` and preserve the old session's pre-failure state.
     - In that failure case, the SDK MUST NOT start the new session and MUST NOT fire the new session's `onStart`.
 
 ## Risks / Trade-offs
 
 - **Risk:** API drift between reviewed docs and implementation -> **Mitigation:** lock the OpenSpec contract around `play`, `animation` prop, `loop`, and lifecycle callbacks before editing code.
 - **Risk:** React re-renders still leak competing transform updates -> **Mitigation:** add targeted tests for mixed animated and non-animated fields and wire suppression at the entity transform sync boundary.
-- **Risk:** Native playback edge cases around delay, stop, and completion ordering -> **Mitigation:** keep a single animation session record keyed by `animationId` and verify callback ordering in tests.
+- **Risk:** Native playback edge cases around delay, cancel, and completion ordering -> **Mitigation:** keep a single animation session record keyed by `animationId` and verify callback ordering in tests.
 - **Risk:** Runtime support differs across environments -> **Mitigation:** gate the feature with `supports('useAnimation')` and document conservative false behavior.
-- **Risk:** Bridge overhead could accumulate for complex animation orchestration -> **Mitigation:** a single play command equals 1 bridge call; during playback there are zero per-frame bridge calls; terminal events add at most 1 callback per session (completion or stop). Total bridge traffic per animation lifecycle is bounded at 2–3 calls regardless of duration or frame count.
+- **Risk:** Bridge overhead could accumulate for complex animation orchestration -> **Mitigation:** a single play command equals 1 bridge call; during playback there are zero per-frame bridge calls; terminal events add at most 1 callback per session (completion or cancel). Total bridge traffic per animation lifecycle is bounded at 2–3 calls regardless of duration or frame count.
 - **Risk:** Rotation behavior surprises developers for large angles -> **Mitigation:** document the limitation and keep the first version scoped to the reviewed transform behavior.
 
 ## Migration Plan
