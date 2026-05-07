@@ -30,14 +30,11 @@
 
 ## 5. Hook placeholders
 
-- [ ] 5.1 Add `packages/react/src/hooks-web/useEntity.ts` returning a frozen inert entity descriptor; no subscriptions
-- [ ] 5.2 Add `packages/react/src/hooks-web/useEntityRef.ts` returning a `ref` whose `.current` stays `null`
-- [ ] 5.3 Add `packages/react/src/hooks-web/useEntityTransform.ts` returning identity transform
-- [ ] 5.4 Add `packages/react/src/hooks-web/useEntityEvent.ts` and `useRealityEvents.ts` as no-op subscribe placeholders
-- [ ] 5.5 Add `packages/react/src/hooks-web/useEntityId.ts` returning a stable id derived from React `useId`
-- [ ] 5.6 Add `packages/react/src/hooks-web/useMetrics.ts` returning an inert metrics snapshot
-- [ ] 5.7 Public default-entry hook exports MUST resolve to placeholders when `isSpatialReady() === false` and to real hooks when `true`; document that mid-render switching is the application's responsibility (avoid via `await bootSpatial()` before render)
-- [ ] 5.8 Unit tests per hook: placeholder returns documented default; placeholder does not throw or subscribe; switching to real hook between renders is exercised against a mock spatial namespace
+- [ ] 5.1 Add `packages/react/src/hooks-web/useMetrics.ts`. Export a frozen module-level singleton `{ pointToPhysical, physicalToPoint }` whose two function references are also module-level constants: `pointToPhysical(pt) => pt / 1360`, `physicalToPoint(m) => m * 1360`. SSR-safe (no `window` access, no `useSyncExternalStore` subscription)
+- [ ] 5.2 Update the default-entry `useMetrics` re-export so that selection between placeholder and real implementation happens **once per component instance** (e.g. `useState` initializer reading `isSpatialReady()` at first render) and never flips for that instance's lifetime
+- [ ] 5.3 Confirm internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) are NOT exported from `src/index.ts` or `src/reality/index.tsx` (current state), and ensure they ship inside `src/spatial/` along with the components that consume them. Add a unit test that asserts these names are not present in `dist/index.js`
+- [ ] 5.4 Unit tests for `useMetrics` placeholder: returns documented constants (assertion-grade values: `pointToPhysical(0) === 0`, `pointToPhysical(1360) === 1`, `physicalToPoint(1) === 1360`); function identities `===` stable across renders; SSR invocation via `renderToString` does not throw and returns the same constants
+- [ ] 5.5 Document in `packages/react/README.md` and/or migration guide: `useMetrics` resolves to placeholder unless `bootSpatial()` is awaited before the consuming component first mounts; remount required to switch to real implementation
 
 ## 6. JSX runtime web variants strip spatial markers
 
@@ -48,7 +45,7 @@
 
 ## 7. Default entry rewrite
 
-- [ ] 7.1 Rewrite `packages/react/src/index.ts` to export only: `WebSpatialRuntime`, `WebSpatialRuntimeError`, `CapabilityKey`, `enableDebugTool`, `convertCoordinate`, `useMetrics` (placeholder), all facades, all hook placeholders, `bootSpatial`, JSX-related types, `version`
+- [ ] 7.1 Rewrite `packages/react/src/index.ts` to export only: `WebSpatialRuntime`, `WebSpatialRuntimeError`, `CapabilityKey`, `enableDebugTool`, `convertCoordinate`, `useMetrics` (the placeholder-or-real selector defined in §5.2), all facades, `bootSpatial`, `isSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, JSX-related types, `version`. Internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) MUST NOT be exported here
 - [ ] 7.2 Remove the top-level side-effect `if (typeof window !== 'undefined') initPolyfill()` from the default entry; polyfill installation moves into the spatial chunk's bootstrap (executed when the chunk loads)
 - [ ] 7.3 Verify no static import path from `src/index.ts` reaches `src/spatial/`; only the bridge's dynamic `import()` may
 - [ ] 7.4 Update `packages/react/src/jsx/jsx-shared.ts` to reflect that the AVP-side runtime no longer needs to externally import facades (the JSX-runtime web variant is now the only path; AVP-side spatializing happens via real components from `src/spatial/`); reconcile the existing self-import of `@webspatial/react-sdk` accordingly
