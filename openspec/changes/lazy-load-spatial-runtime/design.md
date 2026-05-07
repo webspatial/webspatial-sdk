@@ -33,7 +33,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - `@webspatial/react-sdk` `'.'` (default entry) contains only:
   - `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, plus the `WebSpatialBootError` class (co-located with bridge or in `runtime/errors.ts`)
   - `facades/*.tsx` — facade React components for every public spatial component / HOC
-  - `hooks-web/useMetrics.ts` — the only public spatial-hook placeholder today (see decision 5 for the reasoning; future public hooks add new files here)
+  - `hooks-web/useMetrics-placeholder.ts` — placeholder constants module (no React hooks, no `'use client'` directive); `hooks-web/useMetrics.ts` — the public `useMetrics` hook (begins with `'use client'`, picks placeholder vs real once per instance per decision 5). Future public hooks add their own pair of files here following the same split convention.
   - JSX runtime: unified `jsx-runtime.ts` / `jsx-dev-runtime.ts` (with marker stripping AND facade-HOC wrapping; see decision 6)
   - Type-only exports (props, refs, event types)
 - `@webspatial/react-sdk/spatial` is a new subpath whose module is the single source of truth for the real spatial implementation: `Spatialized*Container*`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, `Reality`, all `*Entity` components, real `Model`, real `useMetrics`, and all internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`). Internal reality hooks are not re-exported from the spatial barrel either — they are consumed by the spatial components within the same chunk.
@@ -147,16 +147,23 @@ Therefore:
 **Implementation strategy** (non-normative, reflecting decision 4's facade subscription model):
 
 ```tsx
-// packages/react/src/index.ts (default-entry public export)
-import { useMetrics as useMetricsPlaceholder } from './hooks-web/useMetrics'
-import { getSpatialImpl, isSpatialReady } from './runtime/bridge'
+// packages/react/src/hooks-web/useMetrics.ts (the public default-entry hook)
+'use client'
+
+import { useState } from 'react'
+import { useMetricsPlaceholder } from './useMetrics-placeholder'
+import { getSpatialImpl, isSpatialReady } from '../runtime/bridge'
 
 export function useMetrics(): ReturnType<typeof useMetricsPlaceholder> {
   // Decided once at first render of the component instance; never flips mid-life.
-  const [impl] = useState(() => (isSpatialReady() ? getSpatialImpl()!.useMetrics : useMetricsPlaceholder))
+  const [impl] = useState(() =>
+    isSpatialReady() ? getSpatialImpl()!.useMetrics : useMetricsPlaceholder,
+  )
   return impl()
 }
 ```
+
+The default entry's `src/index.ts` re-exports this `useMetrics` as-is; it does not re-implement the selector logic.
 
 If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder mode for the entire page lifetime — consistent web-fallback behavior, no runtime crash. Facades will still flip (decision 4), but `useMetrics` inside any already-mounted component keeps returning the placeholder values until that component remounts.
 
@@ -224,7 +231,7 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 - **[Risk] Old `@webspatial/vite-plugin` configuration not removed in lockstep** → consumer build fails immediately ("Cannot resolve `@webspatial/react-sdk/web`"). **Mitigation**: BREAKING marker at the top of CHANGELOG; first item in the migration guide is the plugin removal diff; coordinated cross-repo deprecation issue filed before SDK release.
 - **[Risk] Application forgets to call `bootSpatial()` in a WebSpatial runtime** → all spatial APIs silently render web fallbacks for the entire session. **Mitigation**: dev-mode one-shot console warning when a facade renders before bridge is ready; README "Quick start" example always shows the boot call; integration test in the follow-up in-house migration verifies the boot path.
 - **[Risk] Downstream bundlers that do not support code splitting** (older esbuild configs without `splitting: true`, certain CommonJS pipelines) inline the spatial chunk back into the main bundle. The dynamic-import optimization is silently lost. **Mitigation**: document the requirement (Vite, Rollup, Webpack 5+, Rspack work out-of-box; bare esbuild needs `splitting: true`); the in-house migration follow-up will exercise this on `apps/test-server` (currently bare esbuild).
-- **[Risk] SSR / hydration mismatch** between server-rendered fallback and client-rendered real implementation → React logs hydration warnings or visually janks. **Mitigation**: contract that the first client render after hydration MUST still render fallback (i.e. `bootSpatial()` is awaited *before* `ReactDOM.hydrateRoot`); migration guide flags this; spec includes a hydration scenario.
+- **[Risk] SSR / hydration mismatch** between server-rendered fallback and client-rendered real implementation → React logs hydration warnings or visually janks. **Mitigation**: `useSpatialReady` is implemented with `useSyncExternalStore` and a stable `getServerSnapshot` returning `false`; this guarantees the hydration pass renders fallback (matching server output) and only swaps to the real implementation on the next React commit, regardless of whether `bootSpatial()` was awaited before, after, or never relative to `hydrateRoot()`. The migration guide documents both timing options; the "SSR and hydration safety" Requirement pins the contracts (`'use client'` directive on facades, `getServerSnapshot` stability, deterministic-props responsibility, etc.).
 - **[Risk] Dynamic import of the spatial chunk fails over the network** → application enters a "boot rejected" state. **Mitigation**: `bootSpatial()` rejects with the underlying error; `onSpatialLoadError(cb)` lets the application report and recover (e.g. retry or hard-refresh prompt); facades stay in fallback mode (no broken half-state).
 - **[Risk] Bundle size budget too aggressive (8KB gzip)** → blocks landing if the initial implementation exceeds it slightly. **Mitigation**: budget is enforced by a test that can be tightened over time; if first measurement is e.g. 9KB, land at the measured value and tighten in a follow-up; `Goals` section commits to ≤ 8KB as the *target*, not a launch blocker.
 - **[Risk] In-house apps still alias to source** and therefore do not exercise the published `dist/spatial.js` chunk → regressions in the published chunk go undetected by this change. **Mitigation**: explicit follow-up task to migrate them; this change is intentionally scoped narrowly to keep PR reviewable.
