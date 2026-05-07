@@ -58,6 +58,8 @@ export class PortalInstanceObject {
 
   // cachedTransformVisibilityInfo used for cache transform visibility info
   private cachedTransformVisibilityInfo?: CachedTransformVisibilityInfo
+  private transformUpdateInFlight = false
+  private pendingTransformMatrix: DOMMatrix | null = null
   get transformMatrix() {
     return this.cachedTransformVisibilityInfo?.transformMatrix
   }
@@ -269,12 +271,52 @@ export class PortalInstanceObject {
     })
 
     // update transform
-    spatializedElement.updateTransform(this.transformMatrix!)
+    this.scheduleSpatializedElementTransformUpdate(
+      spatializedElement,
+      this.transformMatrix!,
+    )
 
     // assign spatializedElement to dom
     Object.assign(this.dom, {
       __spatializedElement: spatializedElement,
     })
+  }
+
+  private scheduleSpatializedElementTransformUpdate(
+    spatializedElement: SpatializedElement,
+    matrix: DOMMatrix,
+  ) {
+    this.pendingTransformMatrix = new DOMMatrix(
+      Array.from(matrix.toFloat64Array()),
+    )
+
+    if (this.transformUpdateInFlight) {
+      return
+    }
+
+    this.flushPendingTransformUpdate(spatializedElement)
+  }
+
+  private flushPendingTransformUpdate(spatializedElement: SpatializedElement) {
+    const matrix = this.pendingTransformMatrix
+    if (!matrix || spatializedElement.isDestroyed) {
+      this.pendingTransformMatrix = null
+      return
+    }
+
+    this.pendingTransformMatrix = null
+    this.transformUpdateInFlight = true
+
+    Promise.resolve(spatializedElement.updateTransform(matrix))
+      .catch(error => {
+        console.error('Failed to update spatialized element transform', error)
+      })
+      .finally(() => {
+        this.transformUpdateInFlight = false
+        if (this.pendingTransformMatrix && !spatializedElement.isDestroyed) {
+          this.flushPendingTransformUpdate(spatializedElement)
+        }
+      })
   }
 }
 

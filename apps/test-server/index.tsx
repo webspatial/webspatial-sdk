@@ -69,6 +69,7 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import TranslateZRafRepro from './src/pages/translateZ-raf-repro/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -240,6 +241,10 @@ function App() {
                 <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route path="/visible-test" element={<VisibleTest />} />
+                <Route
+                  path="/translatez-raf-repro"
+                  element={<TranslateZRafRepro />}
+                />
                 <Route
                   path="/head-style-sync"
                   element={<HeadStyleSyncPage />}

@@ -100,6 +100,7 @@ export const routes = [
       { path: '/transform-verify', label: 'Transform Verify' },
       { path: '/static-3d-model', label: 'Static 3D Model' },
       { path: '/visible-test', label: 'Visible Test' },
+      { path: '/translatez-raf-repro', label: 'translateZ RAF Repro' },
     ],
   },
   {

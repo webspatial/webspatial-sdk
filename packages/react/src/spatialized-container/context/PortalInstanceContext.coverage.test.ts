@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 class DOMMatrixPolyfill {
+  input?: unknown
+
+  constructor(input?: unknown) {
+    this.input = input
+  }
+
   translate(x = 0, y = 0) {
     ;(this as any)._tx = ((this as any)._tx ?? 0) + x
     ;(this as any)._ty = ((this as any)._ty ?? 0) + y
@@ -20,6 +26,12 @@ class DOMMatrixPolyfill {
   }
 
   toFloat64Array() {
+    if (Array.isArray(this.input)) {
+      return new Float64Array(this.input as number[])
+    }
+    if (typeof this.input === 'number') {
+      return new Float64Array(16).fill(this.input)
+    }
     return new Float64Array(16)
   }
 }
@@ -123,6 +135,71 @@ describe('PortalInstanceObject', () => {
 
     expect((dom as any).__spatializedElement).toBe(spatializedElement)
     expect(typeof (dom as any).__innerSpatializedElement).toBe('function')
+  })
+
+  it('coalesces transform updates while bridge updates are in flight', async () => {
+    const { PortalInstanceObject } = await import('./PortalInstanceContext')
+    const computedStyle = makeComputedStyle({
+      position: 'fixed',
+      opacity: '1',
+      display: 'block',
+      '--xr-z-index': '0',
+      '--xr-back': '0',
+      '--xr-depth': '0',
+      'transform-origin': '0 0',
+      width: '100',
+      height: '50',
+    })
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue(computedStyle)
+
+    const callbacks: Record<string, any> = {}
+    const containerObject = {
+      onSpatialTransformVisibilityChange: vi.fn((id: string, cb: any) => {
+        callbacks[id] = cb
+      }),
+      offSpatialTransformVisibilityChange: vi.fn(),
+      querySpatialDomBySpatialId: vi.fn(),
+      queryParentSpatialDomBySpatialId: vi.fn(),
+    } as any
+
+    const dom = document.createElement('div')
+    dom.getBoundingClientRect = () => new DOMRect(0, 0, 100, 50)
+    containerObject.querySpatialDomBySpatialId.mockReturnValue(dom)
+
+    let resolveFirst!: () => void
+    const firstUpdate = new Promise<void>(resolve => {
+      resolveFirst = resolve
+    })
+    const spatializedElement = {
+      isDestroyed: false,
+      updateProperties: vi.fn(),
+      updateTransform: vi.fn(() => firstUpdate),
+    } as any
+
+    const portal = new PortalInstanceObject('sid', containerObject, null)
+    portal.init()
+    portal.attachSpatializedElement(spatializedElement)
+
+    const matrix = (value: number) =>
+      Array.from(new Float64Array(16).fill(value))
+
+    callbacks.sid({ transform: matrix(1), visibility: 'visible' })
+    portal.notify2DFrameChange()
+    callbacks.sid({ transform: matrix(2), visibility: 'visible' })
+    callbacks.sid({ transform: matrix(3), visibility: 'visible' })
+
+    expect(spatializedElement.updateTransform).toHaveBeenCalledTimes(1)
+
+    spatializedElement.updateTransform.mockResolvedValue(undefined)
+    resolveFirst()
+    await firstUpdate
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(spatializedElement.updateTransform).toHaveBeenCalledTimes(2)
+    const latestMatrix = spatializedElement.updateTransform.mock.calls[1]?.[0]
+    expect(Array.from(latestMatrix.toFloat64Array())).toEqual(
+      Array.from(new Float64Array(16).fill(3)),
+    )
   })
 
   it('adds fixed or root portal elements to scene', async () => {
