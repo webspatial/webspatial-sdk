@@ -68,6 +68,7 @@
 - [ ] 8.4 Update `packages/react/package.json` `main` and `types` to point at the new `dist/index.js` and `dist/index.d.ts`
 - [ ] 8.5 Verify `tsup` emits `dist/spatial.js` as a separate file (not inlined into `dist/index.js`) and that the dynamic `import()` from the bridge resolves to the published subpath
 - [ ] 8.6 Update `packages/react/tsconfig.json` `paths` to remove any `@webspatial/react-sdk/web` or `/default` entries; ensure `@webspatial/react-sdk` resolves to `./src` (unchanged)
+- [ ] 8.7 Declare the `peerDependencies` contract in `packages/react/package.json`: `react: ">=18.0"`, `react-dom: ">=18.0"` (matches the `useSyncExternalStore` baseline required by `useSpatialReady` per the "Plugin-free integration" Requirement). Verify `peerDependenciesMeta` reflects whether either peer is optional (today both are marked optional; revisit if RSC contracts require otherwise)
 
 ## 9. Size budget enforcement
 
@@ -82,6 +83,7 @@
 - [ ] 10.2 Add `docs/migration/lazy-load-spatial-runtime.md` covering: removed subpaths (`/web`, `/default`); required removal/uninstall of `@webspatial/vite-plugin`; mandatory `await bootSpatial()` in the application entry; SSR / hydration guidance; per-component fallback table; "how to customize web rendering" recipe showing the `useSpatialReady()` wrapper pattern
 - [ ] 10.3 Update public API documentation for each spatial component to describe its documented web fallback behavior. **Do NOT** document a `fallback` prop — it is intentionally not part of the v1 API
 - [ ] 10.4 Add a CHANGELOG entry marked **BREAKING** at the top, summarizing the subpath removal, the plugin retirement, the boot requirement, and the public API list (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`)
+- [ ] 10.5 Maintain a "Bundler compatibility" section in `docs/migration/lazy-load-spatial-runtime.md` (and link from `packages/react/README.md`) listing: the three normative capability requirements (ESM, `exports`, dynamic-import code-splitting); the tested-targets list (Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 + splitting); Next.js App Router / Pages Router as canonical framework targets; the out-of-scope list (Turbopack, Module Federation, Webpack 4, CommonJS-only consumers); the esbuild splitting note (function correct without `splitting: true`, size benefit lost)
 
 ## 11. Cross-repo coordination (non-blocking)
 
@@ -96,6 +98,9 @@
 - [ ] 12.3 Migrate `tests/ci-test` to consume `dist` and validate spatial behavior in the AVP simulator with the new boot path
 - [ ] 12.4 Evaluate splitting the spatial chunk further (reality / container / model) once real-world load profiles are measured
 - [ ] 12.5 Evaluate adding a `<SpatialBoundary>` Suspense-style integration in a future change if user feedback shows demand
+- [ ] 12.6 Add a minimal Webpack 5 (or Rspack) consumer fixture under `tests/` that builds the SDK and asserts (a) the spatial chunk emits as a separate output, (b) `bootSpatial()` triggers a chunk fetch only in spatial runtime, (c) the build succeeds without `@webspatial/vite-plugin`. Vite is already covered by `packages/autoTest`; this fixture closes the Webpack-side gap declared in the "Plugin-free integration" Requirement
+- [ ] 12.7 Investigate Next.js Turbopack compatibility (`next dev --turbo`, `next build --turbo`); if compatible, lift it from "out of scope" to a tested target in a follow-up change. If incompatible, document the specific incompatibility (e.g. dynamic-import quirk, `'use client'` handling) and link the upstream Next.js / Turbopack issue
+- [ ] 12.8 Investigate Module Federation host-shared SDK behavior (single bridge singleton across federated hosts vs per-host singletons); if there is real consumer demand, write a fixture and lift from "out of scope" in a follow-up change
 
 ## 13. SSR / hydration validation
 
