@@ -1381,7 +1381,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             }
             animationManager.handleResume(command: command, entity: entity, resolve: resolve)
 
-        case "stop":
+        case "cancel":
             guard let session = animationManager.getSession(command.animationId),
                   let entity: SpatialEntity = findSpatialObject(session.entityId)
             else {
@@ -1389,7 +1389,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 resolve(.success(nil))
                 return
             }
-            animationManager.handleStop(command: command, entity: entity, resolve: resolve)
+            animationManager.handleCancel(command: command, entity: entity, resolve: resolve)
 
         default:
             resolve(.failure(JsbError(code: .TypeError, message: "AnimateTransform: unknown command type '\(command.type)'")))

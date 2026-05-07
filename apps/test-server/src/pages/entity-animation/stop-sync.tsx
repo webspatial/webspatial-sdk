@@ -15,7 +15,7 @@ import {
   useLog,
 } from './shared'
 
-export default function EntityAnimationStopSyncPage() {
+export default function EntityAnimationCancelSyncPage() {
   const logger = useLog()
   const [position, setPosition] = useState<Vec3>({ x: 0, y: 0.5, z: 0 })
 
@@ -28,19 +28,19 @@ export default function EntityAnimationStopSyncPage() {
     onStart: () => logger.log('onStart'),
     onComplete: value => {
       logger.log(`onComplete pos=${fmtVec3(value.position)}`)
-      if (value.position) setPosition(value.position)
+      // if (value.position) setPosition(value.position)
     },
-    onStop: value => {
-      logger.log(`onStop pos=${fmtVec3(value.position)}`)
-      if (value.position) setPosition(value.position)
+    onCancel: value => {
+      logger.log(`onCancel pos=${fmtVec3(value.position)}`)
+      // if (value.position) setPosition(value.position)
     },
     onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
   })
 
   return (
     <EntityAnimationPageShell
-      title="Stop and Sync State"
-      description="Stop the animation mid-flight and mirror the reported position back into React state so the next render stays stable."
+      title="Cancel and Sync State"
+      description="Cancel the animation and mirror the restored from-position back into React state so the next render stays stable."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div className="flex flex-wrap gap-2">
@@ -56,11 +56,11 @@ export default function EntityAnimationStopSyncPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.stop()
-              logger.log('stop()')
+              api.cancel()
+              logger.log('cancel()')
             }}
           >
-            Stop
+            Cancel
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log

@@ -3,6 +3,7 @@ import { SpatialEntity, supports, composeSRT } from '@webspatial/core-sdk'
 import type {
   AnimatedPropsInternal,
   AnimationConfig,
+  AnimationPlayState,
   AnimationApi,
   AnimatedProps,
   AnimateTransformCommand,
@@ -18,7 +19,13 @@ import {
 
 // ---- Internal types ----
 
-type SessionState = 'idle' | 'queued' | 'delaying' | 'running' | 'paused'
+type SessionState =
+  | 'idle'
+  | 'queued'
+  | 'delaying'
+  | 'running'
+  | 'paused'
+  | 'finished'
 
 interface AnimationSession {
   animationId: string
@@ -80,6 +87,7 @@ export function useAnimation(
   const entityRef = useRef<SpatialEntity | null>(null)
   const unmountedRef = useRef(false)
   const warnedRef = useRef(false)
+  const finishedRef = useRef(false)
 
   // ---- Command queue for serializing bridge calls ----
   const commandQueueRef = useRef<Promise<void>>(Promise.resolve())
@@ -124,6 +132,7 @@ export function useAnimation(
         timingFunction: cfg.timingFunction ?? 'easeInOut',
         delay: cfg.delay ?? 0,
         loop: cfg.loop,
+        playbackRate: cfg.playbackRate,
       }
 
       // Build toTransform from the fields in to
@@ -170,19 +179,25 @@ export function useAnimation(
         // Listen for terminal events
         result.finished.then((values: TransformValues) => {
           if (sessionRef.current !== session || session.unmounted) return
-          session.state = 'idle'
+          session.state = 'finished'
+          finishedRef.current = true
           sessionRef.current = null
           if (!session.unmounted && cfg.onComplete) {
             cfg.onComplete(values)
           }
         })
 
-        result.stopped.then((values: TransformValues) => {
-          if (sessionRef.current !== session || session.unmounted) return
-          session.state = 'idle'
-          sessionRef.current = null
-          if (!session.unmounted && cfg.onStop) {
-            cfg.onStop(values)
+        result.canceled.then((values: TransformValues) => {
+          if (session.unmounted) return
+          // sessionRef may already be null if doCancel's enqueueCommand resolved
+          // before this event arrived — that's fine, proceed with cleanup.
+          if (sessionRef.current === session) {
+            session.state = 'idle'
+            sessionRef.current = null
+          }
+          finishedRef.current = false
+          if (cfg.onCancel) {
+            cfg.onCancel(values)
           }
         })
 
@@ -209,11 +224,11 @@ export function useAnimation(
     [toMatrix, reportError],
   )
 
-  // ---- Core: stop session ----
-  const doStop = useCallback(
+  // ---- Core: cancel session ----
+  const doCancel = useCallback(
     async (session: AnimationSession, entity: SpatialEntity) => {
       if (session.state === 'queued') {
-        // Not yet sent to native, just cancel
+        // Not yet sent to native, just cancel locally
         session.state = 'idle'
         return
       }
@@ -221,12 +236,12 @@ export function useAnimation(
       try {
         await entity.animateTransform({
           animationId: session.animationId,
-          type: 'stop',
+          type: 'cancel',
         })
       } catch (err: any) {
         reportError({
           animationId: session.animationId,
-          command: 'stop',
+          command: 'cancel',
           reason: err?.message ?? String(err),
         })
         throw err // propagate to block start-new
@@ -249,9 +264,57 @@ export function useAnimation(
       return
     }
 
-    const cfg = configRef.current
+    const currentSession = sessionRef.current
     const entity = entityRef.current
-    const prevSession = sessionRef.current
+
+    // Already playing or queued — calling play() again is a no-op (Web Animation API semantics).
+    if (
+      currentSession &&
+      (currentSession.state === 'running' ||
+        currentSession.state === 'delaying' ||
+        currentSession.state === 'queued')
+    ) {
+      return
+    }
+
+    // If paused, resume the same session instead of creating a new one
+    if (currentSession && currentSession.state === 'paused') {
+      if (currentSession.queuedPause) {
+        // Was paused while queued — undo the queued pause
+        currentSession.queuedPause = false
+        currentSession.state = 'queued'
+        return
+      }
+
+      enqueueCommand(async () => {
+        if (
+          !entity ||
+          currentSession !== sessionRef.current ||
+          currentSession.unmounted
+        )
+          return
+        if (currentSession.state !== 'paused') return
+
+        try {
+          await entity.animateTransform({
+            animationId: currentSession.animationId,
+            type: 'resume',
+          })
+          currentSession.state = 'running'
+        } catch (err: any) {
+          reportError({
+            animationId: currentSession.animationId,
+            command: 'resume',
+            reason: err?.message ?? String(err),
+          })
+        }
+      })
+      return
+    }
+
+    // Start a new session
+    const cfg = configRef.current
+    const prevSession = currentSession
 
     const newSession: AnimationSession = {
       animationId: nextAnimationId(),
@@ -260,27 +323,32 @@ export function useAnimation(
       config: { ...cfg },
     }
 
+    // Reset finished flag on new play
+    finishedRef.current = false
+
     enqueueCommand(async () => {
       if (unmountedRef.current) return
 
-      // Stop previous session first
-      if (prevSession && prevSession.state !== 'idle') {
+      // Cancel previous session first
+      if (
+        prevSession &&
+        prevSession.state !== 'idle' &&
+        prevSession.state !== 'finished'
+      ) {
         try {
           if (entity) {
-            await doStop(prevSession, entity)
+            await doCancel(prevSession, entity)
           }
           prevSession.state = 'idle'
-          if (!prevSession.unmounted && prevSession.config.onStop) {
-            // For stop-before-play, we don't have native transform values
-            // The spec says onStop fires with current transform state
-            prevSession.config.onStop({
+          if (!prevSession.unmounted && prevSession.config.onCancel) {
+            prevSession.config.onCancel({
               position: entity?.position,
               rotation: entity?.rotation,
               scale: entity?.scale,
             })
           }
         } catch {
-          // stop-old failure blocks start-new
+          // cancel-old failure blocks start-new
           return
         }
       }
@@ -292,7 +360,7 @@ export function useAnimation(
       }
       // else: stays queued, will play on bind
     })
-  }, [enqueueCommand, doStop, doPlay])
+  }, [enqueueCommand, doCancel, doPlay, reportError])
 
   const pause = useCallback(() => {
     const session = sessionRef.current
@@ -326,49 +394,17 @@ export function useAnimation(
     })
   }, [enqueueCommand, reportError])
 
-  const resume = useCallback(() => {
-    const session = sessionRef.current
-    if (!session || session.state !== 'paused') return
-    const entity = entityRef.current
-
-    if (session.queuedPause) {
-      // Was paused while queued — undo the queued pause
-      session.queuedPause = false
-      session.state = 'queued'
-      return
-    }
-
-    enqueueCommand(async () => {
-      if (!entity || session !== sessionRef.current || session.unmounted) return
-      if (session.state !== 'paused') return
-
-      try {
-        await entity.animateTransform({
-          animationId: session.animationId,
-          type: 'resume',
-        })
-        session.state = 'running'
-      } catch (err: any) {
-        reportError({
-          animationId: session.animationId,
-          command: 'resume',
-          reason: err?.message ?? String(err),
-        })
-      }
-    })
-  }, [enqueueCommand, reportError])
-
-  const stop = useCallback(() => {
+  const cancel = useCallback(() => {
     const session = sessionRef.current
     if (!session) return
-    if (session.state === 'idle') return
+    if (session.state === 'idle' || session.state === 'finished') return
     const entity = entityRef.current
 
     if (session.state === 'queued') {
       session.state = 'idle'
       sessionRef.current = null
-      if (session.config.onStop) {
-        session.config.onStop({
+      if (session.config.onCancel) {
+        session.config.onCancel({
           position: entity?.position,
           rotation: entity?.rotation,
           scale: entity?.scale,
@@ -379,26 +415,40 @@ export function useAnimation(
 
     enqueueCommand(async () => {
       if (!entity || session !== sessionRef.current || session.unmounted) return
-      if (session.state === 'idle') return
+      if (session.state === 'idle' || session.state === 'finished') return
 
       try {
-        await doStop(session, entity)
+        await doCancel(session, entity)
         session.state = 'idle'
         sessionRef.current = null
-        // onStop will be triggered by the stopped promise in doPlay
+
+        // Eagerly restore entity to the from-transform on the JS side.
+        // This guarantees visual restoration even if the native cancel event
+        // is delayed or the native layer does not restore the transform.
+        const cfg = session.config
+        const restoreValues: TransformValues = {}
+        if (cfg.from) {
+          if (cfg.from.position) restoreValues.position = cfg.from.position
+          if (cfg.from.rotation) restoreValues.rotation = cfg.from.rotation
+          if (cfg.from.scale) restoreValues.scale = cfg.from.scale
+        }
+        if (Object.keys(restoreValues).length > 0) {
+          await entity.updateTransform(restoreValues)
+        }
+
+        // onCancel will also be triggered by the canceled promise in doPlay
       } catch {
-        // error already reported in doStop
+        // error already reported in doCancel
       }
     })
-  }, [enqueueCommand, doStop])
+  }, [enqueueCommand, doCancel])
 
   // ---- Build AnimationApi ----
   const api: AnimationApi = useMemo(
     () => ({
       play,
       pause,
-      resume,
-      stop,
+      cancel,
       get isAnimating() {
         const s = sessionRef.current
         if (!s) return false
@@ -413,8 +463,29 @@ export function useAnimation(
         if (!s) return false
         return s.state === 'paused'
       },
+      get playState(): AnimationPlayState {
+        const s = sessionRef.current
+        if (!s) return finishedRef.current ? 'finished' : 'idle'
+        switch (s.state) {
+          case 'queued':
+            return 'queued'
+          case 'delaying':
+          case 'running':
+            return 'running'
+          case 'paused':
+            return 'paused'
+          case 'finished':
+            return 'finished'
+          case 'idle':
+          default:
+            return 'idle'
+        }
+      },
+      get finished() {
+        return finishedRef.current
+      },
     }),
-    [play, pause, resume, stop],
+    [play, pause, cancel],
   )
 
   // ---- Build AnimatedProps ----
@@ -466,7 +537,7 @@ export function useAnimation(
         entity
           .animateTransform({
             animationId: session.animationId,
-            type: 'stop',
+            type: 'cancel',
           })
           .catch(() => {})
         entity.cleanupAnimationListeners(session.animationId)

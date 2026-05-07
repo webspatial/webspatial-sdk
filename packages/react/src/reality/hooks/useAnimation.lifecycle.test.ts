@@ -29,7 +29,7 @@ const { useAnimation } = await import('./useAnimation')
 
 function createMockEntity(id = 'test-entity-1') {
   let finishedResolve: ((v: TransformValues) => void) | null = null
-  let stoppedResolve: ((v: TransformValues) => void) | null = null
+  let canceledResolve: ((v: TransformValues) => void) | null = null
   let failedResolve: ((e: AnimationError) => void) | null = null
 
   const entity = {
@@ -43,13 +43,13 @@ function createMockEntity(id = 'test-entity-1') {
         const finished = new Promise<TransformValues>(r => {
           finishedResolve = r
         })
-        const stopped = new Promise<TransformValues>(r => {
-          stoppedResolve = r
+        const canceled = new Promise<TransformValues>(r => {
+          canceledResolve = r
         })
         const failed = new Promise<AnimationError>(r => {
           failedResolve = r
         })
-        return { finished, stopped, failed }
+        return { finished, canceled, failed }
       }
       return undefined
     }),
@@ -67,8 +67,8 @@ function createMockEntity(id = 'test-entity-1') {
         },
       )
     },
-    stopAnimation: (transform?: TransformValues) => {
-      stoppedResolve?.(
+    cancelAnimation: (transform?: TransformValues) => {
+      canceledResolve?.(
         transform ?? {
           position: { x: 0.5, y: 0, z: 0 },
           rotation: { x: 0, y: 0, z: 0 },
@@ -176,7 +176,7 @@ describe('5.1.2 React playback lifecycle', () => {
       expect(onStart).toHaveBeenCalledTimes(1)
     })
 
-    test('queued-pause then bind then resume triggers play', async () => {
+    test('queued-pause then bind then play resumes session', async () => {
       const onStart = vi.fn()
       const { entity } = createMockEntity()
 
@@ -184,7 +184,7 @@ describe('5.1.2 React playback lifecycle', () => {
         if (cmd.type === 'play') {
           return {
             finished: new Promise(() => {}),
-            stopped: new Promise(() => {}),
+            canceled: new Promise(() => {}),
             failed: new Promise(() => {}),
           }
         }
@@ -214,9 +214,9 @@ describe('5.1.2 React playback lifecycle', () => {
       await flushPromises()
       expect(onStart).not.toHaveBeenCalled()
 
-      // Resume — now it should play
+      // play() resumes the paused session
       act(() => {
-        result.current[1].resume()
+        result.current[1].play()
       })
       await flushPromises()
 
@@ -259,13 +259,13 @@ describe('5.1.2 React playback lifecycle', () => {
     })
   })
 
-  describe('onStop callback', () => {
-    test('onStop fires with current transform when stopped', async () => {
-      const onStop = vi.fn()
-      const { entity, stopAnimation } = createMockEntity()
+  describe('onCancel callback', () => {
+    test('onCancel fires with restored transform when canceled', async () => {
+      const onCancel = vi.fn()
+      const { entity, cancelAnimation } = createMockEntity()
 
       const { result } = renderHook(() =>
-        useAnimation({ ...baseConfig, autoStart: false, onStop }),
+        useAnimation({ ...baseConfig, autoStart: false, onCancel }),
       )
 
       act(() => {
@@ -282,12 +282,12 @@ describe('5.1.2 React playback lifecycle', () => {
         scale: { x: 1, y: 1, z: 1 },
       }
       act(() => {
-        stopAnimation(currentTransform)
+        cancelAnimation(currentTransform)
       })
       await flushPromises()
 
-      expect(onStop).toHaveBeenCalledTimes(1)
-      expect(onStop).toHaveBeenCalledWith(currentTransform)
+      expect(onCancel).toHaveBeenCalledTimes(1)
+      expect(onCancel).toHaveBeenCalledWith(currentTransform)
       expect(result.current[1].isAnimating).toBe(false)
     })
   })
@@ -356,13 +356,13 @@ describe('5.1.2 React playback lifecycle', () => {
   })
 
   describe('mutual exclusivity', () => {
-    test('only one session active — new play stops old', async () => {
-      const onStop = vi.fn()
+    test('play() while running is a no-op (Web Animation API semantics)', async () => {
+      const onCancel = vi.fn()
       const onStart = vi.fn()
       const { entity } = createMockEntity()
 
       const { result } = renderHook(() =>
-        useAnimation({ ...baseConfig, autoStart: false, onStop, onStart }),
+        useAnimation({ ...baseConfig, autoStart: false, onCancel, onStart }),
       )
 
       act(() => {
@@ -375,14 +375,14 @@ describe('5.1.2 React playback lifecycle', () => {
       await flushPromises()
       expect(onStart).toHaveBeenCalledTimes(1)
 
-      // Second play
+      // Second play — is a no-op because already running
       act(() => {
         result.current[1].play()
       })
       await flushPromises()
 
-      expect(onStop).toHaveBeenCalledTimes(1)
-      expect(onStart).toHaveBeenCalledTimes(2)
+      expect(onCancel).not.toHaveBeenCalled()
+      expect(onStart).toHaveBeenCalledTimes(1) // not called again
     })
   })
 
@@ -420,7 +420,7 @@ describe('5.1.2 React playback lifecycle', () => {
 // ============================================================
 
 describe('5.1.4 Command and event ordering', () => {
-  test('commands serialize in call order (play → pause → resume)', async () => {
+  test('commands serialize in call order (play → pause → play/resume)', async () => {
     const { entity } = createMockEntity()
     const commandOrder: string[] = []
 
@@ -429,7 +429,7 @@ describe('5.1.4 Command and event ordering', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
@@ -456,16 +456,16 @@ describe('5.1.4 Command and event ordering', () => {
     })
     await flushPromises()
 
-    // Now resume
+    // Now play (resumes paused session)
     act(() => {
-      result.current[1].resume()
+      result.current[1].play()
     })
     await flushPromises()
 
     expect(commandOrder).toEqual(['play', 'pause', 'resume'])
   })
 
-  test('rapid play-stop-play sequences serialize correctly', async () => {
+  test('rapid play-cancel-play sequences serialize correctly', async () => {
     const { entity } = createMockEntity()
     const commandOrder: string[] = []
 
@@ -474,7 +474,7 @@ describe('5.1.4 Command and event ordering', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
@@ -495,7 +495,7 @@ describe('5.1.4 Command and event ordering', () => {
     await flushPromises()
 
     act(() => {
-      result.current[1].stop()
+      result.current[1].cancel()
     })
     await flushPromises()
 
@@ -504,7 +504,7 @@ describe('5.1.4 Command and event ordering', () => {
     })
     await flushPromises()
 
-    expect(commandOrder).toEqual(['play', 'stop', 'play'])
+    expect(commandOrder).toEqual(['play', 'cancel', 'play'])
   })
 
   test('bridge calls are not interleaved across concurrent ops', async () => {
@@ -517,7 +517,7 @@ describe('5.1.4 Command and event ordering', () => {
         commandOrder.push('play')
         return Promise.resolve({
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         })
       }
@@ -531,6 +531,10 @@ describe('5.1.4 Command and event ordering', () => {
       }
       if (cmd.type === 'resume') {
         commandOrder.push('resume')
+        return Promise.resolve(undefined)
+      }
+      if (cmd.type === 'cancel') {
+        commandOrder.push('cancel')
         return Promise.resolve(undefined)
       }
       return Promise.resolve(undefined)
@@ -570,9 +574,9 @@ describe('5.1.4 Command and event ordering', () => {
     expect(commandOrder).toEqual(['play', 'pause'])
     expect(result.current[1].isPaused).toBe(true)
 
-    // Now resume (after pause has completed)
+    // Now play (resumes after pause has completed)
     act(() => {
-      result.current[1].resume()
+      result.current[1].play()
     })
     await flushPromises()
 
@@ -585,9 +589,9 @@ describe('5.1.4 Command and event ordering', () => {
 // Task 5.1.6 — Animation prop replacement tests
 // ============================================================
 
-describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
-  test('replacing animation stops old session before starting new', async () => {
-    const { entity } = createMockEntity()
+describe('5.1.6 Animation prop replacement (cancel old → start new)', () => {
+  test('cancel then play starts a new session (cancel-old before start-new)', async () => {
+    const { entity, cancelAnimation } = createMockEntity()
     const callOrder: string[] = []
 
     entity.animateTransform = vi.fn(async (cmd: any) => {
@@ -595,7 +599,10 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise<any>(r => {
+            // Store for external trigger
+            ;(entity as any).__cancelResolve = r
+          }),
           failed: new Promise(() => {}),
         }
       }
@@ -615,16 +622,24 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
     })
     await flushPromises()
 
-    // Second play replaces
+    // Cancel then play — cancel-old then start-new
+    act(() => {
+      result.current[1].cancel()
+    })
+    await act(async () => {
+      ;(entity as any).__cancelResolve?.({ position: { x: 0, y: 0, z: 0 } })
+      await new Promise(r => setTimeout(r, 0))
+    })
+
     act(() => {
       result.current[1].play()
     })
     await flushPromises()
 
-    expect(callOrder).toEqual(['play', 'stop', 'play'])
+    expect(callOrder).toEqual(['play', 'cancel', 'play'])
   })
 
-  test('onStop fires before onStart when replacing animation', async () => {
+  test('onCancel fires before onStart when cancel+play replaces animation', async () => {
     const events: string[] = []
     const { entity } = createMockEntity()
 
@@ -632,7 +647,9 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise<any>(r => {
+            ;(entity as any).__cancelResolve = r
+          }),
           failed: new Promise(() => {}),
         }
       }
@@ -643,7 +660,7 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
       useAnimation({
         ...baseConfig,
         autoStart: false,
-        onStop: () => events.push('stop'),
+        onCancel: () => events.push('cancel'),
         onStart: () => events.push('start'),
       }),
     )
@@ -658,38 +675,43 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
     await flushPromises()
     expect(events).toEqual(['start'])
 
-    // Replace
+    // Cancel then play
+    act(() => {
+      result.current[1].cancel()
+    })
+    await act(async () => {
+      ;(entity as any).__cancelResolve?.({ position: { x: 0, y: 0, z: 0 } })
+      await new Promise(r => setTimeout(r, 0))
+    })
+
     act(() => {
       result.current[1].play()
     })
     await flushPromises()
 
-    expect(events).toEqual(['start', 'stop', 'start'])
+    expect(events).toEqual(['start', 'cancel', 'start'])
   })
 
-  test('stop failure on old animation blocks start of new', async () => {
+  test('play() while running is no-op even if cancel would have failed', async () => {
     const onStart = vi.fn()
-    const onError = vi.fn()
     const { entity } = createMockEntity()
 
-    let stopCount = 0
     entity.animateTransform = vi.fn(async (cmd: any) => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
-      if (cmd.type === 'stop') {
-        stopCount++
+      if (cmd.type === 'cancel') {
         throw new Error('Bridge communication failed')
       }
       return undefined
     })
 
     const { result } = renderHook(() =>
-      useAnimation({ ...baseConfig, autoStart: false, onStart, onError }),
+      useAnimation({ ...baseConfig, autoStart: false, onStart }),
     )
 
     act(() => {
@@ -702,14 +724,13 @@ describe('5.1.6 Animation prop replacement (stop old → start new)', () => {
     await flushPromises()
     expect(onStart).toHaveBeenCalledTimes(1)
 
-    // Second play — stop-old will fail
+    // play() while running is a no-op — never reaches cancel-old logic
     act(() => {
       result.current[1].play()
     })
     await flushPromises()
 
-    expect(onStart).toHaveBeenCalledTimes(1) // blocked
-    expect(stopCount).toBe(1)
+    expect(onStart).toHaveBeenCalledTimes(1) // not called again
   })
 })
 
@@ -733,7 +754,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
@@ -764,7 +785,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
     expect(commands).toContain('pause')
   })
 
-  test('resume after delay-phase pause sends resume to native', async () => {
+  test('play after delay-phase pause sends resume to native', async () => {
     const { entity } = createMockEntity()
     const commands: string[] = []
 
@@ -773,7 +794,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
@@ -799,7 +820,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
     await flushPromises()
 
     act(() => {
-      result.current[1].resume()
+      result.current[1].play()
     })
     await flushPromises()
 
@@ -808,7 +829,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
     expect(commands).toEqual(['play', 'pause', 'resume'])
   })
 
-  test('stop during delay phase sends stop command', async () => {
+  test('cancel during delay phase sends cancel command', async () => {
     const { entity } = createMockEntity()
     const commands: string[] = []
 
@@ -817,7 +838,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }
@@ -838,12 +859,12 @@ describe('5.1.7 Delay phase pause and resume', () => {
     await flushPromises()
 
     act(() => {
-      result.current[1].stop()
+      result.current[1].cancel()
     })
     await flushPromises()
 
     expect(result.current[1].isAnimating).toBe(false)
-    expect(commands).toContain('stop')
+    expect(commands).toContain('cancel')
   })
 
   test('animation with delay=0 transitions directly to running', async () => {
@@ -854,7 +875,7 @@ describe('5.1.7 Delay phase pause and resume', () => {
       if (cmd.type === 'play') {
         return {
           finished: new Promise(() => {}),
-          stopped: new Promise(() => {}),
+          canceled: new Promise(() => {}),
           failed: new Promise(() => {}),
         }
       }

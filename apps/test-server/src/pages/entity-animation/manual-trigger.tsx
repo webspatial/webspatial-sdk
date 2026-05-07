@@ -19,13 +19,13 @@ export default function EntityAnimationManualTriggerPage() {
   const [animation, api] = useAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
-    duration: 1.0,
+    duration: 3.0,
     timingFunction: 'easeInOut',
     autoStart: false,
     onStart: () => logger.log('onStart'),
     onComplete: value =>
       logger.log(`onComplete pos=${fmtVec3(value.position)}`),
-    onStop: value => logger.log(`onStop pos=${fmtVec3(value.position)}`),
+    onCancel: value => logger.log(`onCancel pos=${fmtVec3(value.position)}`),
     onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
   })
 
@@ -48,11 +48,20 @@ export default function EntityAnimationManualTriggerPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.stop()
-              logger.log('stop()')
+              api.pause()
+              logger.log('pause()')
             }}
           >
-            Stop
+            Pause
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.cancel()
+              logger.log('cancel()')
+            }}
+          >
+            Cancel
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log

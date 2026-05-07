@@ -60,8 +60,9 @@ describe('useAnimation hook', () => {
       // AnimationApi shape
       expect(typeof api.play).toBe('function')
       expect(typeof api.pause).toBe('function')
-      expect(typeof api.resume).toBe('function')
-      expect(typeof api.stop).toBe('function')
+      expect(typeof api.cancel).toBe('function')
+      expect(typeof api.playState).toBe('string')
+      expect(typeof api.finished).toBe('boolean')
       expect(typeof api.isAnimating).toBe('boolean')
       expect(typeof api.isPaused).toBe('boolean')
     })
@@ -148,7 +149,7 @@ describe('useAnimation hook', () => {
     })
   })
 
-  describe('play/stop lifecycle (without entity)', () => {
+  describe('play/cancel lifecycle (without entity)', () => {
     test('play transitions to isAnimating (queued)', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
@@ -163,10 +164,10 @@ describe('useAnimation hook', () => {
       expect(result.current[1].isAnimating).toBe(true)
     })
 
-    test('stop cancels queued session', async () => {
-      const onStop = vi.fn()
+    test('cancel cancels queued session', async () => {
+      const onCancel = vi.fn()
       const { result } = renderHook(() =>
-        useAnimation({ ...baseConfig, autoStart: false, onStop }),
+        useAnimation({ ...baseConfig, autoStart: false, onCancel }),
       )
 
       act(() => {
@@ -176,14 +177,14 @@ describe('useAnimation hook', () => {
       expect(result.current[1].isAnimating).toBe(true)
 
       act(() => {
-        result.current[1].stop()
+        result.current[1].cancel()
       })
       expect(result.current[1].isAnimating).toBe(false)
-      expect(onStop).toHaveBeenCalledTimes(1)
+      expect(onCancel).toHaveBeenCalledTimes(1)
     })
   })
 
-  describe('pause/resume lifecycle (without entity)', () => {
+  describe('pause/play-resume lifecycle (without entity)', () => {
     test('pause on queued session transitions to isPaused', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
@@ -204,7 +205,7 @@ describe('useAnimation hook', () => {
       expect(result.current[1].isAnimating).toBe(false)
     })
 
-    test('resume from queued-paused returns to queued', async () => {
+    test('play from queued-paused returns to queued', async () => {
       const { result } = renderHook(() =>
         useAnimation({ ...baseConfig, autoStart: false }),
       )
@@ -219,7 +220,7 @@ describe('useAnimation hook', () => {
       expect(result.current[1].isPaused).toBe(true)
 
       act(() => {
-        result.current[1].resume()
+        result.current[1].play()
       })
       expect(result.current[1].isPaused).toBe(false)
       expect(result.current[1].isAnimating).toBe(true)

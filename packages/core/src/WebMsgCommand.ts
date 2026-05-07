@@ -111,16 +111,16 @@ export interface AnimationCompletedEventPayload {
   transform: number[]
 }
 
-export interface AnimationStoppedEventPayload {
-  type: 'stopped'
-  /** Column-major 4x4 matrix (16 numbers) representing the stop-point native transform. */
+export interface AnimationCanceledEventPayload {
+  type: 'canceled'
+  /** Column-major 4x4 matrix (16 numbers) representing the restored transform after cancel. */
   transform: number[]
 }
 
 export interface AnimationFailedEventPayload {
   type: 'failed'
   animationId: string
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   code?: string
   reason: string
 }

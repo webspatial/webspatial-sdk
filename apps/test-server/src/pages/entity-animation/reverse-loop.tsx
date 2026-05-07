@@ -27,8 +27,8 @@ export default function EntityAnimationReverseLoopPage() {
 
   const toggle = () => {
     if (api.isPaused) {
-      api.resume()
-      logger.log('resume()')
+      api.play()
+      logger.log('play() [resume]')
       return
     }
 
@@ -55,11 +55,11 @@ export default function EntityAnimationReverseLoopPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.stop()
-              logger.log('stop()')
+              api.cancel()
+              logger.log('cancel()')
             }}
           >
-            Stop
+            Cancel
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log

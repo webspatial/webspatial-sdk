@@ -36,8 +36,8 @@ export default function EntityAnimationResetLoopPage() {
             className={btnPrimary}
             onClick={() => {
               if (api.isAnimating) {
-                api.stop()
-                logger.log('stop()')
+                api.cancel()
+                logger.log('cancel()')
                 return
               }
 
@@ -45,7 +45,7 @@ export default function EntityAnimationResetLoopPage() {
               logger.log('play()')
             }}
           >
-            {api.isAnimating ? 'Stop' : 'Play'}
+            {api.isAnimating ? 'Cancel' : 'Play'}
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log

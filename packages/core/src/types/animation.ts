@@ -14,7 +14,7 @@ export const VALID_TIMING_FUNCTIONS: readonly TimingFunction[] = [
 // ---- Transform values ----
 
 /**
- * Transform values used in animation callbacks (`onComplete`, `onStop`).
+ * Transform values used in animation callbacks (`onComplete`, `onCancel`).
  * Rotation values are Euler angles in **degrees**, matching the input convention
  * of `AnimationConfig` and the entity `rotation` prop.
  */
@@ -23,6 +23,20 @@ export interface TransformValues {
   rotation?: Vec3
   scale?: Vec3
 }
+
+// ---- Play state ----
+
+/**
+ * Represents the current state of an animation session as exposed by
+ * `api.playState`. The internal `delaying` state maps to `'running'`
+ * because from the developer's perspective the session is actively progressing.
+ */
+export type AnimationPlayState =
+  | 'idle'
+  | 'queued'
+  | 'running'
+  | 'paused'
+  | 'finished'
 
 // ---- Animation config ----
 
@@ -67,14 +81,22 @@ export interface AnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
+  /**
+   * Playback speed multiplier. Default: 1
+   * Values > 1 speed up; values between 0 and 1 slow down.
+   * Applied at session creation time and remains constant for the session.
+   * Maps to AnimationView.speed on the native (AVP) side.
+   */
+  playbackRate?: number
+
   /** Called when the session is established successfully. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. */
   onComplete?: (finalValues: TransformValues) => void
 
-  /** Called when playback is stopped via api.stop(). */
-  onStop?: (currentValues: TransformValues) => void
+  /** Called when playback is canceled via api.cancel(). Receives the restored transform. */
+  onCancel?: (currentValues: TransformValues) => void
 
   /**
    * Called when an asynchronous error occurs during a bridge or native operation.
@@ -89,7 +111,7 @@ export interface AnimationError {
   /** The session that encountered the error. */
   animationId: string
   /** The command that failed. */
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   /** Optional machine-readable error code. */
   code?: string
   /** Human-readable failure reason. */
@@ -99,23 +121,26 @@ export interface AnimationError {
 // ---- Animation API (returned by useAnimation) ----
 
 export interface AnimationApi {
-  /** Start (or restart) the animation. */
+  /** Start the animation, or continue it from paused progress. */
   play(): void
 
   /** Pause the animation at the current progress. */
   pause(): void
 
-  /** Resume a paused animation from where it left off. */
-  resume(): void
+  /** Cancel the animation and restore `from`, or the start snapshot when `from` is omitted. */
+  cancel(): void
 
-  /** Stop the animation. The entity stays at the stop-point transform. */
-  stop(): void
-
-  /** Whether the session is currently queued, delaying, or running. */
+  /** Whether the session is currently queued, delaying, or running (false while paused or idle). */
   readonly isAnimating: boolean
 
   /** Whether the animation is currently paused. */
   readonly isPaused: boolean
+
+  /** Current session state. */
+  readonly playState: AnimationPlayState
+
+  /** Whether the most recent current session completed naturally. */
+  readonly finished: boolean
 }
 
 // ---- Animated props (opaque, passed to entity `animation` prop) ----
@@ -151,7 +176,7 @@ export interface AnimateTransformCommand {
    * `play` command; `pause`, `resume`, and `stop` reuse the session's id.
    */
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop'
+  type: 'play' | 'pause' | 'resume' | 'cancel'
   /** Required when type is 'play'; ignored otherwise. */
   entityId?: string
   toTransform?: Float4x4
@@ -160,6 +185,8 @@ export interface AnimateTransformCommand {
   timingFunction?: TimingFunction
   delay?: number
   loop?: boolean | { reverse?: boolean }
+  /** Playback speed multiplier. Default: 1. Maps to AnimationView.speed on AVP. */
+  playbackRate?: number
 }
 
 /**
@@ -169,8 +196,11 @@ export interface AnimateTransformResult {
   animationId: string
   /** Resolves when a non-looping animation completes naturally. */
   finished: Promise<TransformValues>
-  /** Resolves when the animation is stopped via stop(). */
-  stopped: Promise<TransformValues>
+  /**
+   * Resolves when the animation is canceled and restored to `from`.
+   * After cancel, `finished` MUST remain pending (not rejected).
+   */
+  canceled: Promise<TransformValues>
 }
 
 // ---- Internal animated props (cross-layer communication) ----

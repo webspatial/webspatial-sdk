@@ -331,13 +331,21 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **AND** SDK MUST NOT 生成新的 `animationId`
 - **AND** 该次 `play()` MUST NOT 再次触发 `onStart`
 
-#### Scenario: 已有非 paused 的 alive 会话时调用 play
+#### Scenario: 已有非 paused 的 alive 会话时调用 play（running/delaying 状态）
 
-- **GIVEN** 一个动画会话已经处于 `queued`、`delaying` 或 `running` 状态
+- **GIVEN** 一个动画会话已经处于 `delaying` 或 `running` 状态
 - **WHEN** 应用代码再次调用 `api.play()`
-- **THEN** SDK MUST 先取消已有会话，再用当前配置启动新会话
-- **AND** 前一个会话的 `onCancel` 回调 MUST 在新会话的 `onStart` 之前触发
-- **AND** 前一个会话的 `onCancel` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 MUST 为 `true`
+- **THEN** 该调用 MUST 为**空操作**（不抛错、不触发生命周期回调、不发送原生命令、不创建新会话）
+- **AND** 已有会话 MUST 继续不受干扰地运行
+- **AND** 若要重新开始动画，应用代码 MUST 显式先调用 `api.cancel()` 再调用 `api.play()`
+
+> **设计理由：** 此行为与 Web Animation API 对齐——对一个已在播放的 animation 调用 `play()` 是空操作。
+
+#### Scenario: queued 状态时调用 play
+
+- **GIVEN** 一个动画会话处于 `queued` 状态（play 在 entity 绑定前调用）
+- **WHEN** 应用代码再次调用 `api.play()`
+- **THEN** 该调用 MUST 为空操作——已排队的会话保持不变，将在 entity 绑定后开始
 
 #### Scenario: 每次新会话 play 生成新的会话 id
 
