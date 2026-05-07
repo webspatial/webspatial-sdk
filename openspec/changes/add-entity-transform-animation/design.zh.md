@@ -6,11 +6,11 @@
 
 **目标：**
 
-- 围绕 `useAnimation(config)`、实体 `animation` prop 与 `AnimationApi.play/pause/resume/stop` 定义稳定的对外 API。
+- 围绕 `useAnimation(config)`、实体 `animation` prop 与 `AnimationApi.play/pause/cancel/finished` 定义稳定的对外 API。
 - 保持动画由 Native 驱动，避免依赖逐帧 JS 更新。
 - 在动画控制某个字段时，避免 React props 同步与动画对同一字段发生竞争。
 - 通过 `supports('useAnimation')` 文档化运行时能力检测。
-- 使该设计在 React、Core 命令流与 Native 完成/停止行为上可测试、可验证。
+- 使该设计在 React、Core 命令流与 Native 完成/取消行为上可测试、可验证。
 
 **非目标：**
 
@@ -82,7 +82,7 @@ interface AnimationConfig {
   /** 非循环动画自然结束时触发，携带 Native 侧最终 transform。 */
   onComplete?: (finalValues: TransformValues) => void
 
-  /** 通过 api.stop() 停止时触发，携带 stop 点的 transform。 */
+  /** 通过 api.cancel() 取消时触发，携带恢复后的 transform。 */
   onStop?: (currentValues: TransformValues) => void
 
   /**
@@ -99,8 +99,8 @@ interface AnimationConfig {
 interface AnimationError {
   /** 发生错误的会话。 */
   animationId: string
-  /** 失败的命令。 */
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  /** 失败的 bridge 命令。 */
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   /** 可选的机器可读错误码。 */
   code?: string
   /** 人类可读的失败原因。 */
@@ -112,23 +112,23 @@ interface AnimationError {
 
 ```typescript
 interface AnimationApi {
-  /** 启动（或重新启动）动画。 */
+  /** 启动动画；若当前处于 paused，则从暂停处继续。 */
   play(): void
 
   /** 在当前进度暂停。 */
   pause(): void
 
-  /** 从暂停处恢复。 */
-  resume(): void
-
-  /** 停止动画，实体保持在 stop 点。 */
-  stop(): void
+  /** 取消动画，实体恢复到 `from`；若省略 `from` 则恢复到起始快照。 */
+  cancel(): void
 
   /** 当前是否处于 queued、delaying 或 running 状态（paused 或 idle 时为 false）。 */
   readonly isAnimating: boolean
 
   /** 当前是否处于暂停状态。 */
   readonly isPaused: boolean
+
+  /** 最近一个当前有效会话是否已自然完成。 */
+  readonly finished: boolean
 }
 ```
 
@@ -195,9 +195,9 @@ function TapToMove() {
 }
 ```
 
-### 持续反向循环 + 暂停 / 恢复
+### 持续反向循环 + 暂停 / 继续
 
-无限往返旋转，点击切换暂停和恢复。
+无限往返旋转，点击切换暂停和继续。
 
 ```tsx
 function SpinningModel() {
@@ -213,7 +213,7 @@ function SpinningModel() {
     <Reality
       onSpatialTap={() => {
         if (api.isPaused) {
-          api.resume()
+          api.play()
         } else if (api.isAnimating) {
           api.pause()
         } else {
@@ -229,32 +229,27 @@ function SpinningModel() {
 }
 ```
 
-### 停止并同步状态
+### 取消并恢复初始状态
 
-播放期间，animation 接管 `position`，普通 prop 更新被抑制。`stop()` 后控制权回到 `position` prop。`onStop` 将 stop 点的 transform 同步回 React state，避免实体跳变。
+播放期间，animation 接管 `position`，普通 prop 更新被抑制。`cancel()` 后实体恢复到 `from`（若省略 `from` 则恢复到起始快照），因此通常不需要再把中间态同步回 React state。
 
 ```tsx
-function StopAndSync() {
-  const [pos, setPos] = useState<Vec3>({ x: 0, y: 0, z: -2 })
-
+function CancelAndReset() {
   const [animation, api] = useAnimation({
+    from: { position: { x: 0, y: 0, z: -2 } },
     to: { position: { x: 2, y: 2, z: -2 } },
     duration: 3.0,
     autoStart: false,
-    onStop: (current) => {
-      if (current.position) setPos(current.position)
-    },
   })
 
   return (
     <>
       <button onClick={() => api.play()}>Play</button>
-      <button onClick={() => api.stop()}>Stop</button>
+      <button onClick={() => api.cancel()}>Cancel</button>
       <Reality>
         <SceneGraph>
           <BoxEntity
             width={0.3} height={0.3} depth={0.3}
-            position={pos}
             animation={animation}
           />
         </SceneGraph>
@@ -268,13 +263,13 @@ function StopAndSync() {
 
 ### React SDK → Core SDK
 
-React 通过 `SpatialEntity` 上的一个方法驱动完整的动画生命周期：
+React 通过 `SpatialEntity` 上的一个方法驱动完整的动画生命周期。对外暴露的 `api.play()` 在 paused 状态下恢复当前会话；React SDK MAY 将该调用翻译为内部 `resume` 命令，但该细节不对应用暴露：
 
 ```typescript
 interface SpatialEntity {
   /**
    * `play` 命令返回 `AnimateTransformResult`，携带该会话的 `finished` 和
-   * `stopped` Promise。`pause`、`resume`、`stop` 命令返回 `void`，
+   * `canceled` Promise。`pause`、`resume`、`cancel` 命令返回 `void`，
    * 表示 native 已确认收到该命令（不产生新的 result 对象）。
    */
   animateTransform(command: AnimateTransformCommand & { type: 'play' }): Promise<AnimateTransformResult>
@@ -284,11 +279,11 @@ interface SpatialEntity {
 interface AnimateTransformCommand {
   /**
    * 标识动画会话。每次 `play` 命令 MUST 生成一个新的全局唯一
-   * `animationId`。`pause`、`resume` 和 `stop` 命令 MUST 复用创建
+   * `animationId`。`pause`、`resume` 和 `cancel` 命令 MUST 复用创建
    * 该会话的 `play` 命令所生成的 `animationId`。
    */
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop'
+  type: 'play' | 'pause' | 'resume' | 'cancel'
   /** type 为 'play' 时必填，其他类型忽略。 */
   entityId?: string
   toTransform?: Float4x4
@@ -304,20 +299,20 @@ interface AnimateTransformResult {
   /** 非循环动画自然完成时 resolve；无限循环时永不 resolve。 */
   finished: Promise<TransformValues>
   /**
-   * 通过 stop() 停止时 resolve。
-   * stop 之后 `finished` MUST 保持 pending（不 reject）。
+   * 通过 cancel() 取消并恢复到 `from` 时 resolve。
+   * cancel 之后 `finished` MUST 保持 pending（不 reject）。
    */
-  stopped: Promise<TransformValues>
+  canceled: Promise<TransformValues>
 }
 ```
 
 React SDK 负责在调用 `animateTransform` 之前将 `AnimationConfig`（Vec3 + 角度制欧拉角）转换为 `Float4x4`。
 
-Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制），并在 resolve `finished` / `stopped` 以及触发生命周期回调之前完成该转换。
+Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValues`（Vec3 + 角度制），并在 resolve `finished` / `canceled` 以及触发生命周期回调之前完成该转换。
 
-若实体在 alive 会话存在期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `stopped`（且 MUST 不得在卸载后触发生命周期回调）。
+若实体在 alive 会话存在期间卸载，SDK MUST 停止或取消 Native 会话，但 MUST 不得 resolve `finished` 或 `canceled`（且 MUST 不得在卸载后触发生命周期回调）。
 
-`animateTransform(...)` MAY 仅在命令无法提交到 Native 之前 reject。命令一旦被成功提交，之后发生的异步失败 MUST 通过 `{animationId}_failed` 事件上报，而不是通过 `finished` / `stopped` Promise 暴露。
+`animateTransform(...)` MAY 仅在命令无法提交到 Native 之前 reject。命令一旦被成功提交，之后发生的异步失败 MUST 通过 `{animationId}_failed` 事件上报，而不是通过 `finished` / `canceled` Promise 暴露。
 
 ### Core SDK ↔ Native（JSBridge）
 
@@ -328,24 +323,24 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
 | 事件名 | 触发时机 | Payload |
 |---|---|---|
 | `{animationId}_completed` | 动画自然结束（所有循环完成） | `TransformValues` — 最终 transform（由 Core 从 Native `Float4x4` 转换） |
-| `{animationId}_stopped` | 调用 `stop()` | `TransformValues` — stop 点 transform（由 Core 从 Native `Float4x4` 转换） |
-| `{animationId}_failed` | 某次 `play` / `pause` / `resume` / `stop` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
+| `{animationId}_canceled` | 调用 `cancel()` | `TransformValues` — 恢复到的 `from` transform，若省略 `from` 则为起始快照（由 Core 从 Native `Float4x4` 转换） |
+| `{animationId}_failed` | 某次 `play` / `pause` / `resume` / `cancel` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
 
-`_completed`、`_stopped`、`_failed` 事件监听 MUST 在发送 `play` 命令前完成注册，避免终止或失败事件在监听就绪前触发导致的竞态。
+`_completed`、`_canceled`、`_failed` 事件监听 MUST 在发送 `play` 命令前完成注册，避免终止或失败事件在监听就绪前触发导致的竞态。
 
 `animationId` MUST 在同一 runtime 进程内全局唯一，避免不同实体或不同会话的事件名发生冲突。
 
 对于同一个 `animationId`：
 
-- `play` 成功建立会话后，Native MUST 只发送一个终止事件（`_completed` 或 `_stopped`），且二者 MUST 互斥。
-- 若 `play` 异步失败，Native MUST 至多发送一次 `_failed`，且之后 MUST 不得再发送 `_completed` 或 `_stopped`。
-- 若 `pause`、`resume` 或 `stop` 异步失败，Native MUST 至多为该失败命令发送一次 `_failed`；会话保持失败前状态，之后仍 MAY 正常发送 `_completed` 或 `_stopped`。
+- `play` 成功建立会话后，Native MUST 只发送一个终止事件（`_completed` 或 `_canceled`），且二者 MUST 互斥。
+- 若 `play` 异步失败，Native MUST 至多发送一次 `_failed`，且之后 MUST 不得再发送 `_completed` 或 `_canceled`。
+- 若 `pause`、`resume` 或 `cancel` 异步失败，Native MUST 至多为该失败命令发送一次 `_failed`；会话保持失败前状态，之后仍 MAY 正常发送 `_completed` 或 `_canceled`。
 
 ## 关键决策
 
 1. **对外 API 以 `useAnimation` + 实体 `animation` prop 为入口**
    - 评审方向偏向明确的 `animation` prop，而不是把动画数据 spread 到实体普通 props 上。
-   - 命令式入口采用 `AnimationApi.play()` 替代 `start()`，使动词语义与常见媒体控制更一致。
+   - 命令式入口采用 `AnimationApi.play()` / `pause()` / `cancel()`；其中 `play()` 在 paused 状态下恢复同一会话，使动词语义更接近 Web Animation API。
    - `animation` prop 仅被接入 `SpatialEntity` 抽象的 Entity 组件接受；范围限制通过 TypeScript 类型定义在编译期静态保证，不额外扩大到非 Entity 组件的运行时校验。在运行时，若实体从未渲染在 `Reality` / `SceneGraph` 下，播放将进入 `queued` 状态，直到实体绑定或被卸载。
    - 备选方案：直接 spread 返回的 animated props 到实体。否决原因：隐藏字段会混入实体 props，容易发生冲突，语义也不清晰。
 
@@ -356,20 +351,20 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
    - 备选方案：把完整 config 放到实体 prop。否决原因：渲染与控制耦合、易产生不必要的 re-render。
 
 3. **Core 与 Native 采用统一的动画命令契约**
-   - 最新评审设计倾向用一个 Animation command + `type` 来区分 play/pause/resume/stop，而不是四个独立命令。
+   - 最新评审设计倾向用一个 Animation command + `type` 来区分 play/pause/resume/cancel，而不是四个独立命令。
    - 好处：减少 JSBridge 注册点，控制流更集中，所有操作都围绕 `animationId` 会话展开。
    - 备选方案：每个动作一个命令。否决原因：重复注册与解析，收益有限。
 4. **动画在 Native 侧播放，并把终态 transform 回传到 JS**
    - Native 负责动画会话、时序、delay、loop、pause/resume 状态。
-   - JS 侧收到 completed/stopped 的 transform，用于触发回调并在 stop 时同步状态。
+   - JS 侧收到 completed/canceled 的 transform，用于触发回调并在 cancel 时观察恢复后的状态。
    - 备选方案：在 JS 侧模拟并逐帧通过 bridge 推送。否决原因：bridge 压力大、抖动风险高、与 RealityKit 驱动的评审方向不一致。
-   - **Stop 语义：**调用 `stop()` 时，实体冻结在当前播放中间态（stop 点），而不是回到 `from` 或跳到 `to`。Native 侧读取当时的 `entity.transform`，通过 stopped 事件回传，`onStop` 回调将该值交给 JS 侧以便同步状态。
+   - **Cancel 语义：**调用 `cancel()` 时，实体恢复到该会话的 `from` 状态；若省略 `from`，则恢复到该会话首次 `play` 时捕获的起始快照。Native 侧在恢复完成后通过 canceled 事件回传该 transform，`onStop` 回调收到的也是恢复后的值。
 
 5. **transform 同步采用按字段抑制策略**
    - 当动画控制某个字段时，只抑制该字段的常规同步，避免与动画竞争。
    - 未被动画控制的字段保持现有行为，不受影响。
    - 备选方案：任意字段动画中就冻结全部 transform 同步。否决原因：会无谓阻断与动画无关的更新。
-   - **抑制解除时机：**字段级抑制在动画会话结束时（completion 或 stop）解除。`__animating` flags 在生命周期回调触发前被清除，因此回调之后的下一个 React 渲染周期将恢复对先前被动画控制字段的常规 transform 同步。
+   - **抑制解除时机：**字段级抑制在动画会话结束时（completion 或 cancel）解除。`__animating` flags 在生命周期回调触发前被清除，因此回调之后的下一个 React 渲染周期将恢复对先前被动画控制字段的常规 transform 同步。
 
 6. **能力检测采用明确的 top-level key**
    - 通过 `supports('useAnimation')` 表达端到端动画能力是否可用。
@@ -391,25 +386,25 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
    - 这样可以减少重复逻辑，并保持不同实体类型的 transform 同步行为一致。
 
 10. **异步 bridge 错误通过 `onError` 回调暴露，而非 throw**
-    - `play()`、`pause()`、`resume()`、`stop()` 保持同步 `void` 签名。bridge/native 往返中发生的异步错误通过 `AnimationConfig` 上的 `onError` 回调送达（若未配置 `onError`，则通过 `console.error` 输出）。
+    - `play()`、`pause()`、`cancel()` 保持同步 `void` 签名。bridge/native 往返中发生的异步错误通过 `AnimationConfig` 上的 `onError` 回调送达（若未配置 `onError`，则通过 `console.error` 输出）。
     - 同步 `throw` 仅用于调用时即可检测的 programmer error（非法 config、多实体绑定）。
     - 这将错误分为两类：(1) 开发时错误，通过 throw 立即暴露；(2) 运行时/基础设施故障，通过回调异步上报。
     - Native 通过 `{animationId}_failed` 事件上报异步失败，payload 至少包含 `animationId`、`command`、`reason`，可选机器可读的 `code`。
-    - `play` 失败表示会话未成功建立，因此后续不得再发送 `_completed` / `_stopped`；`pause`、`resume`、`stop` 失败只影响该次控制命令，会话保持失败前状态。
+    - `play` 失败表示会话未成功建立，因此后续不得再发送 `_completed` / `_canceled`；`pause`、`resume`、`cancel` 失败只影响该次控制命令，会话保持失败前状态。若失败发生在 paused 后的 `play()` 恢复路径，bridge / native 上报的 `AnimationError.command` MUST 表示为 `resume`。
     - react-spring 没有 `onError` 等价物，因为其动画完全在 JS 端运算，不存在远端失败路径。我们的架构将播放委托给 native 并经由 JSBridge，引入了真实的异步失败模式，因此需要显式的错误通道。
     - 备选方案：将 API 改为 `play(): Promise<void>`。否决原因：迫使所有调用点处理 Promise，增加了成功路径的开销，且偏离了 react-spring 命令式 API 的 fire-and-forget 风格。
 
-11. **旧会话停止失败时不得启动新会话**
-    - 对于 `play()` 触发的 restart，或同一实体替换 `animation` prop 触发的 stop-old/start-new，若停止旧会话失败，SDK MUST 触发 `onError` 并保持旧会话失败前状态。
+11. **旧会话取消失败时不得启动新会话**
+    - 对于 `play()` 触发的 restart，或同一实体替换 `animation` prop 触发的 cancel-old/start-new，若取消旧会话失败，SDK MUST 触发 `onError` 并保持旧会话失败前状态。
     - 在这种失败情况下，SDK MUST NOT 启动新会话，也 MUST NOT 触发新会话的 `onStart`。
 
 ## 风险 / 权衡
 
 - **风险：**评审文档与最终实现 API 漂移 -> **缓解：**先用 OpenSpec 固化 `play`、`animation` prop、`loop` 与生命周期回调的契约，再进入代码阶段。
 - **风险：**React re-render 仍可能发送竞争的 transform 更新 -> **缓解：**为混合字段（部分动画/部分非动画）增加针对性测试，并在实体 transform 同步边界实现字段级抑制。
-- **风险：**Native 在 delay、stop、completed 的事件顺序存在边界情况 -> **缓解：**以 `animationId` 维护单会话记录，并用测试覆盖事件顺序与回调触发。
+- **风险：**Native 在 delay、cancel、completed 的事件顺序存在边界情况 -> **缓解：**以 `animationId` 维护单会话记录，并用测试覆盖事件顺序与回调触发。
 - **风险：**不同 runtime 支持差异导致行为不一致 -> **缓解：**用 `supports('useAnimation')` gate，并文档化保守返回 false 的策略。
-- **风险：**Bridge 开销在复杂动画编排中可能累积 -> **缓解：**单次 play = 1 次 bridge 调用；播放期间零逐帧 bridge 调用；终态事件最多 1 次回调（completion 或 stop）。每个动画生命周期的 bridge 总流量不超过 2–3 次调用，与时长和帧数无关。
+- **风险：**Bridge 开销在复杂动画编排中可能累积 -> **缓解：**单次 play = 1 次 bridge 调用；播放期间零逐帧 bridge 调用；终态事件最多 1 次回调（completion 或 cancel）。每个动画生命周期的 bridge 总流量不超过 2–3 次调用，与时长和帧数无关。
 - **风险：**大角度旋转行为可能让开发者困惑 -> **缓解：**明确文档化限制，第一版只覆盖评审范围内的 transform 动画行为。
 
 ## 发布与回滚
