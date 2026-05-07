@@ -329,38 +329,79 @@ A given component instance MUST consistently use either the placeholder hook (we
 
 ---
 
-### Requirement: JSX runtime web variant strips spatial markers
+### Requirement: JSX runtime strips spatial markers and wraps with facade HOCs
 
-The web variants of the JSX runtime (`jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts`) MUST remove WebSpatial-only markers from props before delegating to React's JSX runtime. Removal MUST happen for every JSX call site (`jsx`, `jsxs`, `jsxDEV`).
+The package MUST expose a single unified JSX runtime (`jsx-runtime` and `jsx-dev-runtime` subpaths). The previously separate `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts` files MUST be removed; one runtime serves both plain web and WebSpatial environments. The runtime MUST act on every JSX call site (`jsx`, `jsxs`, `jsxDEV`).
 
-#### Scenario: enable-xr attribute is stripped
+For each call:
 
-- **WHEN** an element is created with the `enable-xr` prop in the web variant
-- **THEN** the prop MUST be removed before reaching React
-- **AND** the element MUST be created as a plain DOM element with no spatial wrapping
+1. **Strip** the WebSpatial-only markers from props before delegating to React's JSX runtime: the `enable-xr` prop, the `enable-xr-monitor` prop, the `enableXr` key inside `props.style`, and the `__enableXr__` token inside `props.className`.
 
-#### Scenario: enable-xr-monitor attribute is stripped
+2. **Wrap** the element type with the corresponding **facade HOC** from the default entry when a marker is present:
+   - `enable-xr` / `style.enableXr` / `__enableXr__` → `withSpatialized2DElementContainer(type)`
+   - `enable-xr-monitor` → `withSpatialMonitor(type)`
 
-- **WHEN** an element is created with the `enable-xr-monitor` prop in the web variant
-- **THEN** the prop MUST be removed before reaching React
-- **AND** the element MUST be created as a plain DOM element with no monitor wrapping
+   The facade HOCs (defined by "Component facades") decide at render time whether to render the per-component fallback (web) or the real spatialized container (spatial runtime). The JSX runtime MUST NOT statically or dynamically import from `@webspatial/react-sdk/spatial`; it relies entirely on the facade indirection for spatial behavior.
 
-#### Scenario: enableXr style key is stripped
+3. When `type === Model` (the public `Model` facade), the JSX runtime MUST NOT wrap or strip — `Model` handles its own runtime branching internally. This preserves today's AVP behavior.
 
-- **WHEN** an element is created with `style={{ enableXr: true, ... }}` in the web variant
-- **THEN** the `enableXr` key MUST be removed from the style object
-- **AND** other style keys MUST pass through unchanged
+**Mutation policy**: the top-level `props` object passed to a JSX call is created fresh per render by React's JSX transform and MAY be mutated in place (delete attribute keys, reassign `className`). However, `props.style` MAY be a user-memoized object shared across renders or with sibling consumers; the runtime MUST clone `props.style` (shallow copy) before deleting the `enableXr` key, and MUST NOT modify the original `props.style` reference. This protects against (a) corrupting a memoized style object across renders, (b) mutating an `Object.freeze`d style object (which would throw in strict mode), and (c) cross-component aliasing of a shared style constant.
 
-#### Scenario: __enableXr__ class token is stripped
+**Marker source**: only `props.className` is recognized as a class-name source. The HTML-style `props.class` (rare in React) MUST NOT be recognized as a marker source in v1.
 
-- **WHEN** an element is created with a `className` containing the `__enableXr__` token in the web variant
-- **THEN** the token MUST be removed from the className string
-- **AND** other class tokens MUST be preserved with original ordering
+#### Scenario: enable-xr triggers facade wrap and prop is stripped
+
+- **WHEN** an element is created with the `enable-xr` prop
+- **THEN** the prop MUST be removed from props before delegating to React
+- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)` (the facade HOC version)
+
+#### Scenario: enable-xr-monitor triggers monitor facade wrap and prop is stripped
+
+- **WHEN** an element is created with the `enable-xr-monitor` prop
+- **THEN** the prop MUST be removed from props before delegating to React
+- **AND** the element type passed to React MUST be `withSpatialMonitor(type)` (the facade HOC version)
+
+#### Scenario: enableXr style key triggers wrap and is stripped without mutating the user style object
+
+- **WHEN** an element is created with `style={someStyleRef}` where `someStyleRef` contains an `enableXr` key
+- **THEN** the runtime MUST clone `someStyleRef` (e.g. via spread) before producing a new style object
+- **AND** the new style object MUST NOT contain the `enableXr` key
+- **AND** the original `someStyleRef` MUST be unchanged after the JSX call (no `enableXr` deletion, no key reorder)
+- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+
+#### Scenario: __enableXr__ class token triggers wrap and is stripped from className
+
+- **WHEN** an element is created with a `className` string containing the `__enableXr__` token (whitespace-delimited)
+- **THEN** the token MUST be removed from the className string before delegating to React
+- **AND** the remaining class tokens MUST preserve original ordering and whitespace handling
+- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+
+#### Scenario: HTML class attribute is not recognized as a marker source
+
+- **WHEN** an element is created with `class="__enableXr__"` (the HTML-style attribute name) instead of `className`
+- **THEN** the JSX runtime MUST NOT recognize `props.class` as a marker source
+- **AND** props pass through to React unchanged (React itself decides how to handle a non-canonical `class` prop)
+
+#### Scenario: Model type bypasses JSX runtime wrapping and stripping
+
+- **WHEN** an element is created with `type === Model` (the public `Model` facade)
+- **THEN** the JSX runtime MUST NOT strip any markers from props
+- **AND** the JSX runtime MUST NOT wrap the type with any facade HOC
+- **AND** props pass through to React unchanged
 
 #### Scenario: No marker present is a no-op
 
 - **WHEN** an element is created without any of the documented WebSpatial markers
-- **THEN** the web JSX runtime MUST forward props to `react/jsx-runtime` without modification
+- **THEN** the JSX runtime MUST forward props to React's JSX runtime without modification
+- **AND** it MUST NOT clone `props.style`, MUST NOT split `className`, MUST NOT reassign any prop
+
+#### Scenario: SSR strips and wraps identically to client-side rendering
+
+- **WHEN** the JSX runtime is invoked during server-side rendering (e.g. `renderToString`, `renderToPipeableStream`, RSC)
+- **THEN** the same strip + wrap rules MUST apply
+- **AND** the resulting server-rendered HTML MUST NOT contain the `enable-xr` attribute, the `enable-xr-monitor` attribute, the `enableXr` style key, or the `__enableXr__` class token
+- **AND** subsequent client-side hydration MUST NOT report a hydration mismatch caused by these markers
+- **AND** because `useSpatialReady()` returns `false` during SSR (per "Bridge singleton"), the wrapped facade HOC MUST render its documented fallback during SSR — not the real spatialized container
 
 ---
 
