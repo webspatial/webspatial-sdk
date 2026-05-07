@@ -33,10 +33,10 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - `@webspatial/react-sdk` `'.'` (default entry) contains only:
   - `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`
   - `facades/*.tsx` — facade React components for every spatial component / HOC
-  - `hooks-web/*.ts` — placeholder implementations for every spatial hook
+  - `hooks-web/useMetrics.ts` — the only public spatial-hook placeholder today (see decision 5 for the reasoning; future public hooks add new files here)
   - JSX runtime web variants (with attribute stripping)
   - Type-only exports (props, refs, event types)
-- `@webspatial/react-sdk/spatial` is a new subpath whose module is the single source of truth for the real spatial implementation: `Spatialized*Container*`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, `Reality`, all `*Entity` components, real `Model`, all real reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`).
+- `@webspatial/react-sdk/spatial` is a new subpath whose module is the single source of truth for the real spatial implementation: `Spatialized*Container*`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, `Reality`, all `*Entity` components, real `Model`, real `useMetrics`, and all internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`). Internal reality hooks are not re-exported from the spatial barrel either — they are consumed by the spatial components within the same chunk.
 - The `./web` and `./default` subpaths are **hard removed** from `package.json` `exports`. Old plugin configurations that alias to those paths will fail to resolve and surface the upgrade requirement loudly.
 
 **Why hard-cut instead of a transition window**: a transition window keeps two import shapes valid, prolongs the maintenance tax, and lets old plugin configurations silently bypass the lazy-load contract. The breaking change is small (two import strings) and discoverable at build time, so a clean cut is cheaper overall.
@@ -111,16 +111,42 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 
 ### 5. Hook placeholder protocol
 
-- Every spatial Hook publicly exported has a placeholder in `hooks-web/`. Placeholders are invoked unconditionally per render and return documented stable defaults:
-  - `useEntity` → returns a stable inert entity descriptor object (frozen)
-  - `useEntityRef` → returns a `ref` whose `.current` stays `null`
-  - `useEntityTransform` → returns identity transform
-  - `useEntityEvent` / `useRealityEvents` → no-op subscribe (registers nothing)
-  - `useEntityId` → returns a stable id derived from React `useId`
-  - `useMetrics` → returns an empty / inert metrics snapshot
-- **No mid-life switch**: a component instance that first invoked a placeholder hook MUST keep invoking the placeholder for its entire lifetime, even if `isSpatialReady()` flips to `true`. The real hook implementation is picked up only when the component unmounts and remounts (e.g. via a `key` change, parent unmount, or page reload). This contract is what allows placeholders and real hooks to differ in their internal React Hook call sequences without violating the Rules of Hooks.
-- The default-entry hook export resolves to either the placeholder or the real hook **at the moment the component first mounts** (decided by checking `isSpatialReady()` once per instance, e.g. via a `useState` initializer). Subsequent renders of that instance keep the same choice.
-- If `bootSpatial()` is not awaited (misuse): all hooks remain in placeholder mode for the entire page lifetime — consistent web-fallback behavior, no runtime crash. Facades will still flip (decision 4), but the spatial hooks inside any already-mounted component will keep returning placeholder values until that component remounts.
+**Public hook surface**: the only spatial hook publicly exported from the default entry today is `useMetrics`. The reality-side hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) are **internal** — `packages/react/src/reality/index.tsx` does not re-export them, and a sweep of the in-house consumers (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) confirms no caller imports them directly. They are consumed only by spatial components (`Reality`, `*Entity`, `Model`).
+
+Therefore:
+
+- The `useEntity*` / `useRealityEvents` / `useForceUpdate` family ships **inside the spatial chunk** alongside the components that consume them. They have no placeholder and are not reachable from the default entry.
+- Only `useMetrics` needs a placeholder.
+
+**`useMetrics` placeholder design**:
+
+- Implemented as `packages/react/src/hooks-web/useMetrics.ts`.
+- Returns a frozen module-level singleton `{ pointToPhysical, physicalToPoint }` whose two function references are also module-level constants:
+  - `pointToPhysical(pt) => pt / 1360`
+  - `physicalToPoint(m) => m * 1360`
+- The `1/1360` ratio matches today's `noRuntime.ts` web fallback (`packages/react/src/noRuntime.ts`) so consumers see no behavior change on upgrade.
+- Both function identities are stable for the lifetime of the page across all renders and across `bootSpatial()` calls. Consumers using these in `useEffect` dependency arrays do not get re-runs.
+- SSR-safe: the placeholder does not touch `window`, does not subscribe via `useSyncExternalStore`. The real `useMetrics` (in the spatial chunk) does subscribe; that's fine because by the time the spatial hook is invoked, `bootSpatial()` has resolved and `window` is available.
+
+**No mid-life switch**: a component instance that first invoked a placeholder hook MUST keep invoking the placeholder for its entire lifetime, even if `isSpatialReady()` flips to `true`. The real hook implementation is picked up only when the component unmounts and remounts (e.g. via a `key` change, parent unmount, or page reload). This contract is what allows placeholders and real hooks to differ in their internal React Hook call sequences without violating the Rules of Hooks.
+
+**Implementation strategy** (non-normative, reflecting decision 4's facade subscription model):
+
+```tsx
+// packages/react/src/index.ts (default-entry public export)
+import { useMetrics as useMetricsPlaceholder } from './hooks-web/useMetrics'
+import { getSpatialImpl, isSpatialReady } from './runtime/bridge'
+
+export function useMetrics(): ReturnType<typeof useMetricsPlaceholder> {
+  // Decided once at first render of the component instance; never flips mid-life.
+  const [impl] = useState(() => (isSpatialReady() ? getSpatialImpl()!.useMetrics : useMetricsPlaceholder))
+  return impl()
+}
+```
+
+If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder mode for the entire page lifetime — consistent web-fallback behavior, no runtime crash. Facades will still flip (decision 4), but `useMetrics` inside any already-mounted component keeps returning the placeholder values until that component remounts.
+
+**Future hooks**: if a future SDK version adds a new publicly exported spatial hook, the spec table in "Requirement: Hook placeholders" MUST be updated and a corresponding placeholder + tests landed in the same change.
 
 ### 6. JSX runtime web variants strip spatial markers
 
