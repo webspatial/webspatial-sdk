@@ -289,6 +289,42 @@ These count toward the `dist/index.js` 8KB gzipped size budget. The largest cont
 
 **Why not move Group B into the spatial chunk?** The session-aware utilities are commonly called *before* `bootSpatial()` in the application lifecycle (e.g., `WebSpatialRuntime.supports('Model')` to decide whether to bother booting at all; `initScene` declaring scene type at app entry). Putting them in the lazy-loaded chunk would introduce a chicken-and-egg loop. Their cost in the default entry is small and predictable; keeping them there is the correct trade-off.
 
+### 13. Size budget framing — typical-case marginal delta as the product contract
+
+The "8 KB" headline number lives in two places in the spec, and they are different measurements with different purposes:
+
+1. **Product-level contract** (the user-facing measurement): the marginal gzipped bytes that `import { Model, bootSpatial }`-style usage of the SDK adds to a downstream application's bundle, including any transitive bytes from `@webspatial/core-sdk`. This is what the developer perceives as "the cost of adding the SDK". Pinned in spec by the "Marginal bundle delta on a typical consumer" Scenario; enforced by a CI fixture (Vite ≥ 4 minimal consumer per "Plugin-free integration") in `tasks.md §9`.
+2. **SDK-side proxy** (the build-time check): the gzipped byte count of `dist/index.js` on its own. This is fast, deterministic, and runs every time tsup rebuilds the SDK. Pinned in spec by the "SDK-side `dist/index.js` size proxy" Scenario.
+
+We keep both because they answer different questions. The proxy catches "did the SDK package itself bloat?" inside the SDK's own test suite, with no fixture infrastructure required. The marginal-delta fixture catches "what does the consumer actually pay?" — including transitive `core-sdk` bytes and bundler tree-shaking effectiveness — that the proxy by itself cannot see.
+
+**Why typical case, not worst case?**
+
+- "Worst case" (`import * as W` with non-static access, or `import '@webspatial/react-sdk'` side-effect import, or explicit named imports of every export) projects to roughly 9–11 KB gzipped marginal at the SDK structure pinned by this spec. Hitting 8 KB across all worst-case shapes is **possible** in v2 (would require splitting the capability table or merging facades) but would be significant additional work without proportional product value.
+- Typical real-world usage is named-import of one or a few primitives. Per estimation: `import { Model }` → ~3–4 KB; `import { Model, bootSpatial }` → ~3–5 KB; "商品页 with several entities + hooks" → ~5–7 KB. Comfortably within 8 KB.
+- A worst-case 8 KB target makes the typical 95% of users pay (in design constraint complexity) for the long-tail 5% of users who write `import *`. We instead pin the typical-case contract and document the worst-case explicitly as informational.
+
+**Why declare `"sideEffects": false`?**
+
+Bundlers default to "if I cannot prove this barrel module has no side effects, I conservatively keep every module reachable from it". For a 19-named-export barrel like ours, that pessimistic default means tree-shaking does almost nothing — `import { Model }` ends up paying for `Reality`, `BoxEntity`, every facade, every hook, every utility. Marginal delta jumps to worst-case territory.
+
+The fix is the published `package.json` `"sideEffects": false` declaration. With it, modern bundlers (Vite ≥ 4, Webpack 5+, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18) eliminate every barrel re-export the consumer does not actually use. This is what makes the "typical case 3–5 KB" projection achievable.
+
+For `"sideEffects": false` to be safe, every module in the default-entry static graph must actually be free of top-level side effects — otherwise declaring `false` produces silently broken builds (the side effect runs in some bundlers and not others). The spec's "Tree-shake friendliness" Requirement pins this discipline:
+
+- The current top-level `if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts` is the **only** known top-level side effect today; `tasks.md §7.2` already removes it (deferred into the spatial chunk's bootstrap). Once removed, the default entry is side-effect-free.
+- Future additions need to follow the same rule: install side effects on demand inside functions, not at module top level.
+
+**Why not measure now (during the spec PR)?**
+
+The lazy-load architecture has zero source code lines yet — only spec / docs in `openspec/changes/lazy-load-spatial-runtime/`. Any size measurement against the current `packages/react/src/` would measure the **old** dual-build SDK (≈ 124 KB), which has no relationship to the lazy-load post-implementation marginal. Three options were considered for getting real numbers:
+
+- Estimate from source-file structure with typical compression ratios (what this design records as "3–5 KB typical / 9–11 KB worst case"). ±30–50% accuracy.
+- Build a minimal scaffold of the lazy-load architecture (empty facades, bridge skeleton, boot stub) and measure that. ±10% accuracy, ~half-day work, but introduces source code into the spec PR.
+- Wait for the real implementation. Exact numbers, but only available at the end of `tasks.md §1–§9`.
+
+We chose **estimate now, calibrate during implementation**: the 8 KB target enters spec as the design intent, and `tasks.md §12.9` is a pre-v1-release calibration task that runs the fixture against the real build and decides whether to tighten the budget (e.g. to 6 KB if measured at 4 KB) or to surface optimization work (if measured > 8 KB).
+
 ## Risks / Trade-offs
 
 - **[Risk] Old `@webspatial/vite-plugin` configuration not removed in lockstep** → consumer build fails immediately ("Cannot resolve `@webspatial/react-sdk/web`"). **Mitigation**: BREAKING marker at the top of CHANGELOG; first item in the migration guide is the plugin removal diff; coordinated cross-repo deprecation issue filed before SDK release.
