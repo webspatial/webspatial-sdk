@@ -261,7 +261,14 @@ What we treat as **out of scope for v1**:
 - **Webpack 4** (and any bundler without `exports` field support): the `exports` field is mandatory; older bundlers cannot resolve our subpaths.
 - **CommonJS-only consumer pipelines**: ESM-only by design.
 
-**Peer dependency**: `react: ">=18.0"` (the version that introduced `useSyncExternalStore`). The package does NOT pin a maximum React version; React 19+ works because the `'use client'` directive is also benign in non-RSC environments. `react-dom` peer matches the React version range.
+**Peer dependency**: `react: ">=18.0"` and `react-dom: ">=18.0"` (the version that introduced `useSyncExternalStore`). Both peers are **required, not optional** — `peerDependenciesMeta.<peer>.optional` MUST be `false` (or the entries absent). The package does NOT pin a maximum React version; React 19+ works because the `'use client'` directive is also benign in non-RSC environments.
+
+The current `packages/react/package.json` has `peerDependenciesMeta.react.optional = true` and `peerDependenciesMeta["react-dom"].optional = true`, dating from the dual-build era when a consumer might in theory import only the JSX-runtime alias. Lazy-load v1 makes the React surface (facades, hooks, JSX runtime, `useSpatialReady`) the package's primary value — the optional flag is now misleading and contradicts the spec's "Plugin-free integration" Requirement. Rationale captured in `tasks.md §8.7`; flipping to `optional: false` is part of the build-config phase, not this doc-only PR.
+
+**Why hard peer over alternatives** (rejected during pre-implementation review):
+
+- *Keep optional + spec note*: leaves the `react.optional = true` claim on the package alongside a spec that says "React is required for the primary use case". Makes consumer environment diagnosis harder (unmet-peer warning is the cleanest signal).
+- *Split a `@webspatial/react-sdk/runtime` subpath that doesn't need React*: would let "React-less consumers" use `bootSpatial`, `WebSpatialRuntime.supports`, `initScene`, etc. without React. Real demand for this is unproven (in-tree consumers all use React; package name itself is `@webspatial/**react**-sdk`). Tracked as a future follow-up if external demand surfaces.
 
 **Code-splitting fallback behavior**: when a consumer's bundler inlines the spatial chunk (because the bundler does not support dynamic-import code-splitting), the SDK still functions correctly. `bootSpatial()` resolves once the inlined chunk's module-level code has executed; facades and hooks behave as if it had been fetched. The size benefit is lost on the consumer's bundle, but the SDK-side `dist/index.js` size budget is still met (it is enforced on the published package, independent of consumer bundling). This is documented in the spec Scenario "Bundler without code-splitting still functions, but loses the size benefit" so users can self-diagnose.
 
