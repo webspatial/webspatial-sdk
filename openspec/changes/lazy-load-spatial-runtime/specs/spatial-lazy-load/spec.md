@@ -523,7 +523,9 @@ Applications MUST be able to use `@webspatial/react-sdk` without any build plugi
 
 Bundlers and frameworks that satisfy all three capabilities form the **non-normative tested-targets list** (maintained in the migration guide, not in this spec): Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`. Next.js App Router (Webpack mode) and Next.js Pages Router are the canonical tested framework targets.
 
-**Peer dependency contract** — the package's `peerDependencies` MUST list `react: ">=18.0"` (the version that introduced `useSyncExternalStore`, on which `useSpatialReady` depends). React 18.x and React 19+ both satisfy this; the `'use client'` directive used by hook-using files (per "SSR and hydration safety") is honored by React 18.0+ in RSC contexts and is a benign no-op everywhere else.
+**Peer dependency contract** — the package's `peerDependencies` MUST list `react: ">=18.0"` and `react-dom: ">=18.0"` (the version that introduced `useSyncExternalStore`, on which `useSpatialReady` depends). Both peers MUST be **required** (`peerDependenciesMeta.<peer>.optional` MUST be `false` or absent — `optional: true` is forbidden in v1). React 18.x and React 19+ both satisfy the version constraint; the `'use client'` directive used by hook-using files (per "SSR and hydration safety") is honored by React 18.0+ in RSC contexts and is a benign no-op everywhere else.
+
+The hard-peer decision reflects the v1 product reality: the default entry's primary surface is React-bound (facades, hooks, JSX runtime). Group B / C utilities (`bootSpatial`, `WebSpatialRuntime.supports`, `initScene`, `convertCoordinate`, etc.) are React-agnostic individually, but the package as a whole exists to deliver React integration; "use the package without React" is not a v1 contract. Future versions MAY publish a separate React-less subpath (e.g. `@webspatial/react-sdk/runtime`) if real consumer demand surfaces — see `tasks.md §12` follow-ups.
 
 **Out of scope for v1** — the following environments MAY work in practice but are NOT part of the v1 contract; failures there MUST be tracked as feature requests / follow-up issues, NOT v1 spec violations:
 
@@ -561,12 +563,25 @@ Bundlers and frameworks that satisfy all three capabilities form the **non-norma
 - **AND** the per-application size benefit defined by "Default entry MUST NOT bundle spatial implementation" is lost on that application's bundle (a documented limitation of the consumer's bundler choice, NOT a violation of this spec)
 - **AND** the SDK-side `dist/index.js` size budget MUST still hold (this is enforced on the published package, independent of how a downstream bundler chooses to assemble the application)
 
-#### Scenario: React peer version
+#### Scenario: React peer is required (hard peer)
 
-- **WHEN** an application's installed React version is older than `18.0`
-- **THEN** `npm` / `pnpm` / `yarn` MUST surface the unmet peer-dependency requirement
-- **AND** the SDK MUST NOT advertise compatibility with such React versions
+- **WHEN** the published `packages/react/package.json` is inspected
+- **THEN** `peerDependencies.react` MUST be `">=18.0"` and `peerDependencies["react-dom"]` MUST be `">=18.0"`
+- **AND** `peerDependenciesMeta.react.optional` and `peerDependenciesMeta["react-dom"].optional` MUST be `false` (or the entries MUST be absent, since `false` is the npm/pnpm/yarn default)
+- **AND** an SDK-side test MUST assert these declarations match expectations and fail when either peer is mistakenly marked optional
+
+#### Scenario: Missing or older React surfaces an unmet peer
+
+- **WHEN** an application's installed React version is older than `18.0`, OR React is not installed at all
+- **THEN** `npm` / `pnpm` / `yarn` MUST surface the unmet (or version-mismatched) peer-dependency requirement at install time
+- **AND** the SDK MUST NOT advertise compatibility with React versions older than `18.0`
 - **AND** React 18.x and React 19+ both MUST work; the `'use client'` directive in hook-using files is honored by React 18+ RSC tooling and is benign in non-RSC environments
+
+#### Scenario: React-less use is not a v1 contract
+
+- **WHEN** a consumer attempts to use only the React-agnostic subset of the package's API (e.g. `bootSpatial`, `WebSpatialRuntime.supports`, `initScene`, `convertCoordinate`) without installing React
+- **THEN** the SDK does NOT guarantee this works in v1 — the unmet peer warning MUST surface, and the consumer SHOULD install React even if unused
+- **AND** breakage in this scenario is NOT a v1 spec violation; it is tracked as a feature request for a future React-less subpath (e.g. `@webspatial/react-sdk/runtime`) per `tasks.md §12` follow-ups
 
 #### Scenario: Removed legacy subpaths
 
