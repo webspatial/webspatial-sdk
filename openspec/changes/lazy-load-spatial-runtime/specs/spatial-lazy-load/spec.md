@@ -4,7 +4,16 @@
 
 ### Requirement: Default entry MUST NOT bundle spatial implementation
 
-The published default entry of `@webspatial/react-sdk` MUST contain only lightweight facades, hook placeholders, the runtime bridge, the boot helper, the JSX runtime web variants, and type-only exports. It MUST NOT contain any spatial implementation modules (containers, monitors, reality, entities, real `Model`, real reality hooks).
+The published default entry of `@webspatial/react-sdk` MUST contain only:
+
+- Lightweight facades for every public spatial component / HOC (per "Component facades")
+- Hook placeholders for every public spatial hook (per "Hook placeholders")
+- The runtime bridge, the boot helper, and the public readiness API (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`)
+- The unified JSX runtime (per "JSX runtime strips spatial markers and wraps with facade HOCs")
+- Stateless utility APIs and pure re-exports (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry")
+- Type-only exports
+
+It MUST NOT contain any spatial implementation modules (containers, monitors, reality, entities, real `Model`, real reality hooks).
 
 The default entry MUST also contain the **complete** web-mode rendering for every public facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
 
