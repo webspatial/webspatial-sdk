@@ -231,7 +231,7 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 | --- | --- |
 | `Model` | Strip spatial-only event props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) and the `spatialEventOptions` prop, then render `<model ref={ref} {...remainingProps} />`, preserving today's degraded behavior in plain browsers |
 | `Reality` | A single `<div aria-hidden="true" ref={ref}>` placeholder that preserves the layout box (className, style, and other layout-affecting props apply to the host); the React children subtree MUST NOT mount |
-| `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
+| `Entity` (the base entity class users may instantiate or subclass), `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
 | `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
 | `SceneGraph` / `World` | `<>{children}</>` (transparent container in fallback mode) |
 | `withSpatialized2DElementContainer(Comp)` (HOC wrapper) | `<Comp {...passthroughProps} ref={ref} />` (strip spatial-event props, otherwise transparent) |
@@ -569,6 +569,22 @@ Bundlers and frameworks that satisfy all three capabilities form the **non-norma
 - **WHEN** an application or build plugin attempts to import `@webspatial/react-sdk/web` or `@webspatial/react-sdk/default`
 - **THEN** module resolution MUST fail (the subpaths are removed in this version)
 - **AND** the package CHANGELOG MUST mark the removal as a breaking change with a documented migration path
+
+#### Scenario: Spatial container internals are no longer publicly exported
+
+- **WHEN** an application attempts a named import of any of the following identifiers from the default entry: `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`
+- **THEN** the import MUST fail at TypeScript compile time (the names are not in the public type surface) and at runtime (the names are not bound on the default entry's namespace object)
+- **AND** these identifiers MUST live only inside `@webspatial/react-sdk/spatial` as implementation internals consumed by facades and HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`)
+- **AND** the package CHANGELOG MUST mark the removal as a breaking change with the migration path "use `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` instead of constructing containers / monitors directly"
+- **AND** an automated test MUST verify these identifiers are absent from `dist/index.js` per "Spatial-only identifiers are absent from default entry"
+
+#### Scenario: createElement export is deprecated
+
+- **WHEN** an application imports `createElement` from `@webspatial/react-sdk` (used historically with the classic JSX transform — `tsconfig` `"jsx": "react"` plus `"jsxFactory": "createElement"`)
+- **THEN** the import MUST continue to function in v1 with the same strip + facade-HOC wrap behavior as the unified JSX runtime (per "JSX runtime strips spatial markers and wraps with facade HOCs")
+- **AND** the export MUST carry an `@deprecated` JSDoc annotation pointing users at the new JSX transform (`tsconfig` `"jsx": "react-jsx"` / babel `runtime: "automatic"`), which routes through the `./jsx-runtime` and `./jsx-dev-runtime` package.json `exports` mappings
+- **AND** the package CHANGELOG MUST announce v2 removal so consumers have a migration window
+- **AND** the v2 removal is OUT OF SCOPE for this change; only the deprecation flag, JSDoc, and CHANGELOG note land in v1
 
 #### Scenario: Out-of-scope environments may work but are not v1 contracts
 
