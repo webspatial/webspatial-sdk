@@ -4,13 +4,6 @@ import type { Vec3 } from './types'
 
 export type TimingFunction = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
 
-export const VALID_TIMING_FUNCTIONS: readonly TimingFunction[] = [
-  'linear',
-  'easeIn',
-  'easeOut',
-  'easeInOut',
-] as const
-
 // ---- Transform values ----
 
 /**

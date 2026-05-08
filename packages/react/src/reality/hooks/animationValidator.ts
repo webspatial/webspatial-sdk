@@ -1,7 +1,12 @@
-import type { AnimationConfig } from '@webspatial/core-sdk'
-import { VALID_TIMING_FUNCTIONS } from '@webspatial/core-sdk'
-import type { Vec3 } from '@webspatial/core-sdk'
+import type { AnimationConfig, Vec3 } from '@webspatial/core-sdk'
 
+// Defined locally to avoid pulling runtime-dependent code via noRuntime alias
+const VALID_TIMING_FUNCTIONS = [
+  'linear',
+  'easeIn',
+  'easeOut',
+  'easeInOut',
+] as const
 /**
  * Validate an AnimationConfig at call time.
  * Throws on programmer errors so they surface immediately.
