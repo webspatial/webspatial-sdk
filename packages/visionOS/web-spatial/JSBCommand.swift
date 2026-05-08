@@ -16,6 +16,7 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedStatic3DElement"
     let modelURL: String?
     let sources: [ModelSource]?
+    let loading: String?
 }
 
 struct CreateSpatializedDynamic3DElement: CommandDataProtocol {
@@ -276,6 +277,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let playbackRate: Double?
     let currentTime: Double?
     let posterURL: String?
+    let loading: String?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
