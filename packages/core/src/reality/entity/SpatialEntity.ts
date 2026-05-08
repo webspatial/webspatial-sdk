@@ -28,7 +28,7 @@ import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
-import { decomposeTransformMatrix } from '../../utils'
+import { decomposeSRT } from '../../utils'
 import {
   ObjectDestroyMsg,
   SpatialDragEndMsg,
@@ -175,7 +175,7 @@ export class SpatialEntity extends SpatialObject {
         `${animationId}_completed`,
         (data: AnimationCompletedEventPayload) => {
           cleanup()
-          const values = decomposeTransformMatrix(data.transform)
+          const values = decomposeSRT(data.transform)
           // Update local entity state to match the native final transform
           if (values.position) this.position = values.position
           if (values.rotation) this.rotation = values.rotation
@@ -188,7 +188,7 @@ export class SpatialEntity extends SpatialObject {
         `${animationId}_canceled`,
         (data: AnimationCanceledEventPayload) => {
           cleanup()
-          const values = decomposeTransformMatrix(data.transform)
+          const values = decomposeSRT(data.transform)
           if (values.position) this.position = values.position
           if (values.rotation) this.rotation = values.rotation
           if (values.scale) this.scale = values.scale

@@ -91,7 +91,7 @@ export function deepCloneJSON<T>(value: T): T {
  * - Scale from the lengths of the first three column vectors
  * - Rotation from the normalised upper-3x3 → Euler XYZ in degrees
  */
-export function decomposeTransformMatrix(m: number[]): TransformValues {
+export function decomposeSRT(m: number[]): TransformValues {
   // Translation
   const position: Vec3 = { x: m[12], y: m[13], z: m[14] }
 

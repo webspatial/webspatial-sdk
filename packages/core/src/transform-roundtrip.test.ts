@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { composeSRT, decomposeTransformMatrix } from './utils'
+import { composeSRT, decomposeSRT } from './utils'
 
 function approxEqual(a: number, b: number, eps = 1e-6) {
   return Math.abs(a - b) < eps
 }
 
-describe('composeSRT / decomposeTransformMatrix round-trip', () => {
+describe('composeSRT / decomposeSRT round-trip', () => {
   test('identity transform round-trips', () => {
     const pos = { x: 0, y: 0, z: 0 }
     const rot = { x: 0, y: 0, z: 0 }
@@ -13,7 +13,7 @@ describe('composeSRT / decomposeTransformMatrix round-trip', () => {
 
     const matrix = composeSRT(pos, rot, scl)
     const arr = Array.from(matrix.toFloat64Array())
-    const result = decomposeTransformMatrix(arr)
+    const result = decomposeSRT(arr)
 
     expect(approxEqual(result.position!.x, 0)).toBe(true)
     expect(approxEqual(result.position!.y, 0)).toBe(true)
@@ -33,7 +33,7 @@ describe('composeSRT / decomposeTransformMatrix round-trip', () => {
 
     const matrix = composeSRT(pos, rot, scl)
     const arr = Array.from(matrix.toFloat64Array())
-    const result = decomposeTransformMatrix(arr)
+    const result = decomposeSRT(arr)
 
     expect(approxEqual(result.position!.x, 3)).toBe(true)
     expect(approxEqual(result.position!.y, -5)).toBe(true)
@@ -47,7 +47,7 @@ describe('composeSRT / decomposeTransformMatrix round-trip', () => {
 
     const matrix = composeSRT(pos, rot, scl)
     const arr = Array.from(matrix.toFloat64Array())
-    const result = decomposeTransformMatrix(arr)
+    const result = decomposeSRT(arr)
 
     expect(approxEqual(result.scale!.x, 2)).toBe(true)
     expect(approxEqual(result.scale!.y, 0.5)).toBe(true)
@@ -61,7 +61,7 @@ describe('composeSRT / decomposeTransformMatrix round-trip', () => {
 
     const matrix = composeSRT(pos, rot, scl)
     const arr = Array.from(matrix.toFloat64Array())
-    const result = decomposeTransformMatrix(arr)
+    const result = decomposeSRT(arr)
 
     expect(approxEqual(result.rotation!.x, 0)).toBe(true)
     expect(approxEqual(result.rotation!.y, 45)).toBe(true)
@@ -75,7 +75,7 @@ describe('composeSRT / decomposeTransformMatrix round-trip', () => {
 
     const matrix = composeSRT(pos, rot, scl)
     const arr = Array.from(matrix.toFloat64Array())
-    const result = decomposeTransformMatrix(arr)
+    const result = decomposeSRT(arr)
 
     expect(approxEqual(result.position!.x, 1)).toBe(true)
     expect(approxEqual(result.position!.y, 2)).toBe(true)
