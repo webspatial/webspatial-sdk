@@ -15,15 +15,33 @@ The public API shape, feature-detection contract, and cross-layer behavior need 
 ## At a Glance
 
 ```tsx
-// Minimal usage — surrounding <Reality> and <SceneGraph> omitted for brevity
-const [animation, api] = useAnimation({
-  to: { position: { x: 0, y: 1.5, z: -2 } },
-  duration: 0.6,
-  timingFunction: 'easeOut',
-})
+import {
+  Reality,
+  SceneGraph,
+  BoxEntity,
+  useAnimation,
+} from '@webspatial/react-sdk'
 
-// Inside a <SceneGraph>:
-<BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+function AnimatedBox() {
+  const [animation, api] = useAnimation({
+    to: { position: { x: 0, y: 1.5, z: -2 } },
+    duration: 0.6,
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality style={{ width: '100%', height: '600px', '--xr-depth': 150 }}>
+      <SceneGraph>
+        <BoxEntity
+          width={0.3}
+          height={0.3}
+          depth={0.3}
+          animation={animation}
+        />
+      </SceneGraph>
+    </Reality>
+  )
+}
 ```
 
 The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, and `cancel()` give imperative control when needed, with `play()` resuming the current session after a pause, while `onError` surfaces asynchronous bridge/native failures.

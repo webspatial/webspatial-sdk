@@ -272,6 +272,76 @@ function CancelAndReset() {
 }
 ```
 
+### 使用 playbackRate 控制播放速率
+
+通过 `playbackRate` 调整动画的播放速度。大于 1 加速，0 到 1 之间减速，负值表示倒放。
+`playbackRate` 在会话创建时应用，整个会话期间保持不变；如需更改速率，需 `cancel()` 后重新 `play()`。
+
+```tsx
+function FastEntry() {
+  const [animation] = useAnimation({
+    from: { position: { x: 0, y: -1, z: -2 }, scale: { x: 0.1, y: 0.1, z: 0.1 } },
+    to:   { position: { x: 0, y: 1, z: -2 },  scale: { x: 1, y: 1, z: 1 } },
+    duration: 1.0,
+    playbackRate: 2.0, // 以 2 倍速播放，实际耗时 0.5 秒
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### 通过 playState 响应动画状态
+
+`api.playState` 提供当前会话的精确状态：`idle`、`queued`、`running`、`paused` 或 `finished`。
+适合在 UI 中根据动画状态显示不同反馈，或在不同状态下执行不同操作。
+
+```tsx
+function StateAwareBox() {
+  const [animation, api] = useAnimation({
+    from: { position: { x: -1, y: 0, z: -2 } },
+    to:   { position: { x: 1, y: 0, z: -2 } },
+    duration: 1.0,
+    autoStart: false,
+  })
+
+  const label = {
+    idle: 'Ready',
+    queued: 'Queued',
+    running: 'Playing',
+    paused: 'Paused',
+    finished: 'Done',
+  }[api.playState]
+
+  return (
+    <>
+      <div className="controls">
+        <span>State: {label}</span>
+        <button onClick={() => api.play()} disabled={api.playState === 'running'}>
+          Play
+        </button>
+        <button onClick={() => api.pause()} disabled={api.playState !== 'running'}>
+          Pause
+        </button>
+        <button onClick={() => api.cancel()} disabled={api.playState === 'idle'}>
+          Cancel
+        </button>
+      </div>
+      <Reality>
+        <SceneGraph>
+          <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+        </SceneGraph>
+      </Reality>
+    </>
+  )
+}
+```
 
 ### 开发者提示：暂停后 play() 使用原始配置恢复
 
