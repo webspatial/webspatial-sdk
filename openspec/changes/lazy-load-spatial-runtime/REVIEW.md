@@ -201,10 +201,10 @@ The PR was incrementally refined through multiple design-decision passes plus co
 
 | PR | Branch (suggested) | Tasks | Risk | Why separate |
 | --- | --- | --- | --- | --- |
-| 1. Foundation | `feat/lazy-load-foundation` | §1 + §2 + §3 | Low — additive only; default entry behavior unchanged | Bridge / boot / detect / errors / `useSpatialReady` are net-new modules; `src/spatial/index.ts` is a bridge-facing namespace. Nothing user-visible flips |
+| 1. Foundation | `feat/lazy-load-foundation` | §1 + §2 + §3.2 + §3.4 | Low — additive only; default entry behavior unchanged | Bridge / boot / detect / errors / `useSpatialReady` are net-new modules; `src/spatial/index.ts` is a bridge-facing namespace that initially re-exports from existing implementation locations. Nothing user-visible flips |
 | 2. Facades + hook placeholders | `feat/lazy-load-facades` | §4 + §5 | Medium — many small new files; default entry not yet wired to use them | Each facade ≤ 50 LOC and independently unit-testable; isolating these from §6 / §7 keeps the diff readable |
-| 3. Unified JSX runtime | `feat/lazy-load-jsx-runtime` | §6 | Medium — fixes a latent `props.style` mutation bug + deletes `*.web.ts` variants | Bug-fix character; should NOT wait on the BREAKING switchover |
-| 4. Default entry switchover (BREAKING) | `feat/lazy-load-default-entry` | §7 | **High** — entire BREAKING release activates here | One PR's worth of focused review attention on the user-visible changes: 4 internals removed; `createElement` `@deprecated`; top-level `initPolyfill()` deleted; facades go live |
+| 3. Unified JSX runtime | `feat/lazy-load-jsx-runtime` | §6 | Medium — fixes a latent `props.style` mutation bug + deletes `*.web.ts` variants | Depends on PR 2 because `jsx-shared.ts` must point at facade HOCs. Bug-fix character; should NOT wait on the BREAKING switchover |
+| 4. Default entry switchover (BREAKING) | `feat/lazy-load-default-entry` | §3.1 + §3.3 + §7 | **High** — entire BREAKING release activates here | One PR's worth of focused review attention on the user-visible changes: 4 internals removed; `createElement` `@deprecated`; top-level `initPolyfill()` deleted; facades go live; real spatial modules are moved/organized here instead of in PR 1 |
 | 5. Build config + size enforcement | `feat/lazy-load-build-size` | §8 + §9 | Medium — tsup rewrite + fixture infrastructure | Marginal-delta fixture (Vite consumer with `app-base` / `app-typical` / `app-namespace`) requires the published `dist/` from §8 |
 | 6. Validation + docs | `feat/lazy-load-validation-docs` | §10 + §13 + §14 + §15 | Low | Polish: SSR / hydration tests, stateless utility tests, facade ↔ real-impl unsupported parity tests, README, migration guide, CHANGELOG |
 | Follow-ups (parallel) | per-task branches | §11 + §12 | Low / mixed | Cross-repo plugin deprecation (`§11`); autoTest migration (`§12.2`); Webpack fixture (`§12.6`); Turbopack investigation (`§12.7`); Module Federation (`§12.8`); pre-v1 budget calibration (`§12.9`, **v1 release blocker** — must run before tagging v1 to confirm or adjust the 8 KB target) |
@@ -226,7 +226,7 @@ PR 1 (Foundation)
                              →  §12.8 Module Federation
 ```
 
-PR 1, 2, 3 may all merge to `main` without breaking the existing build because the default entry is not yet rewired to consume facades — `src/spatial/`, the bridge, and the new facades exist as dead code paths. PR 4 is the actual cutover; pick a low-traffic merge window so any consumer-side breakage surfaces with someone available to triage.
+PR 1, 2, 3 may all merge to `main` without breaking the existing build because the default entry is not yet rewired to consume facades — `src/spatial/`, the bridge, and the new facades exist as dead code paths. In PR 1, `src/spatial/index.ts` should be a thin bridge-facing namespace that re-exports from the existing implementation locations; do **not** move real implementation files yet. PR 4 is the actual cutover and the right place for §3.1 / §3.3 movement or namespace tightening; pick a low-traffic merge window so any consumer-side breakage surfaces with someone available to triage.
 
 ### Acceptance criteria template
 
