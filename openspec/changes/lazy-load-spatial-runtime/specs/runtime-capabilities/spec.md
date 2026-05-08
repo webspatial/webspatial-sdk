@@ -8,8 +8,10 @@ The WebSpatial SDK MUST maintain an internal read-only runtime snapshot (for exa
 
 The snapshot MUST contain at minimum:
 
-- `type`: `'visionos' | 'picoos' | null`
+- `type`: `'visionos' | 'picoos' | 'puppeteer' | null`
 - `shellVersion`: `string | null`
+
+The `'puppeteer'` value indicates a Puppeteer-driven test harness UA (matched case-sensitively on the substring `Puppeteer` in `navigator.userAgent`). For purposes of capability resolution and the spatial-lazy-load bridge, `'puppeteer'` MUST be treated as a spatial-runtime equivalent (see the "Detection helper used by lazy-load bridge" Scenario): `supports()` returns `true` for any documented capability key, and `bootSpatial()` MUST schedule a dynamic import of the spatial chunk. This is intentional so end-to-end CI coverage (`packages/autoTest`) exercises the real `import('@webspatial/react-sdk/spatial')` path.
 
 #### Scenario: UA parsing
 
@@ -17,6 +19,13 @@ The snapshot MUST contain at minimum:
 - **THEN** parser MUST use it as shell version
 - **AND** parser MUST NOT map to internal `visionos` unless UA also indicates a Mac-class platform (for example substring `Mac OS X`, case-insensitive)
 - **AND** parser SHOULD support `PicoWebApp/<version>` for Pico OS browser-mode runtimes
+
+#### Scenario: Puppeteer runtime detection
+
+- **WHEN** UA contains the substring `Puppeteer` (matching the gate at `packages/core/src/runtime/userAgent.ts:42`)
+- **THEN** the snapshot's `type` MUST be `'puppeteer'`
+- **AND** this MUST take precedence over `WSAppShell` / `PicoWebApp` token detection so a Puppeteer harness session that also injects `WSAppShell/<version>` (as `packages/autoTest/src/runtime/puppeteerRunner.ts:365` does) is still classified as `'puppeteer'`
+- **AND** if the UA also contains a shell-version token, the parsed value MUST be reported on `shellVersion`; otherwise `shellVersion` MAY be `null`
 
 #### Scenario: SSR or no window
 
@@ -84,12 +93,19 @@ In a non-WebSpatial browser (internal runtime `type === null`) the SDK MUST reso
 
 #### Scenario: supports gating for facades
 
-- **WHEN** `supports('Model')` (or any other spatial-dependent key) is called in a non-WebSpatial browser
+- **WHEN** `supports('Model')` (or any other spatial-dependent key) is called in a non-WebSpatial browser (`type: null`)
 - **THEN** the result MUST be `false`
 - **AND** the runtime snapshot MUST report `type: null`
+
+#### Scenario: supports in puppeteer harness
+
+- **WHEN** `supports('Model')` (or any other documented capability key) is called in the puppeteer harness (`type: 'puppeteer'`)
+- **THEN** the result MUST be `true` (matching the existing `packages/core/src/runtime/supports.ts:84-86` short-circuit)
+- **AND** this is intentional: puppeteer bypasses capability gating so the autoTest harness exercises spatial code paths end-to-end without per-capability stubs
 
 #### Scenario: Detection helper used by lazy-load bridge
 
 - **WHEN** the spatial-lazy-load bridge consults the runtime snapshot to decide whether `bootSpatial()` should trigger `import('@webspatial/react-sdk/spatial')`
-- **THEN** a non-WebSpatial browser MUST cause the bridge to skip the dynamic import
+- **THEN** a non-spatial runtime (snapshot `type === null`) MUST cause the bridge to skip the dynamic import
+- **AND** any spatial-equivalent runtime (`'visionos'`, `'picoos'`, OR `'puppeteer'`) MUST cause the bridge to schedule the dynamic import
 - **AND** the decision MUST be reachable synchronously without scheduling network requests
