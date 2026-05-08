@@ -63,7 +63,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   - `isSpatialReady(): boolean` — synchronous read.
   - `useSpatialReady(): boolean` — React hook backed by `useSyncExternalStore`; consuming components automatically re-render on `false → true` transitions. In non-WebSpatial browsers (`detectSpatialRuntime() === null`), the hook short-circuits to a no-op subscriber and a constant `false` snapshot, so plain web users pay no per-render bookkeeping cost. SSR-safe: `useSyncExternalStore`'s `getServerSnapshot` argument is a module-level constant function returning `false`, which (per "SSR and hydration safety") makes hydration safe for both `await bootSpatial(); hydrateRoot()` and `hydrateRoot(); bootSpatial()` integration patterns.
   - `onSpatialLoadError(cb): () => void` — multi-listener; returns an unsubscribe function. Listeners are stored in a `Set` and notified in registration order. MUST NOT be invoked during SSR (no load attempts happen there).
-  - `WebSpatialBootError` — `Error` subclass carrying `cause` (the underlying `import()` error) and `attempt` (1-based count). Stored on `lastError` after each failed attempt.
+  - `WebSpatialBootError` — `Error` subclass carrying `cause` (the underlying `import()` error) and `attempt` (1-based count). Stored on `lastError` after each failed attempt. The wrapping is performed inside `loadSpatialImpl()` *before* the rejection bubbles up to `bootSpatial()` or to error listeners, so all observable failure paths surface a `WebSpatialBootError` (never the raw `import()` error).
 - Facades and user-side wrappers BOTH subscribe to readiness via the same `useSpatialReady()` hook. Subscription bookkeeping is tracked in the bridge's `readinessSubscribers` Set; the bridge notifies all subscribers on `false → true` transitions and (rarely) on `true → false` if a future feature ever resets readiness — v1 only flips once.
 - Internal-only symbols (`getSpatialImpl`, `loadSpatialImpl`, raw subscribe primitives) MUST be prefixed (e.g. `__internalGetSpatialImpl`) when re-exported from the package, so external consumers cannot accidentally depend on them.
 - The bridge module itself does **not** import React. The `useSyncExternalStore` integration lives in a separate `useSpatialReady` module — keeping the bridge independently testable and SSR-safe.
@@ -350,7 +350,12 @@ We chose **estimate now, calibrate during implementation**: the 8 KB target ente
 3. In the application entry (e.g. `main.tsx`), invoke `bootSpatial()`. Both timing patterns are supported because `useSpatialReady` is built on `useSyncExternalStore` and handles the SSR/CSR transition cleanly:
 
    ```tsx
-   // Option A — boot before render (no fallback flash; slower TTI in spatial runtimes)
+   // Option A — boot before render (CSR only; no fallback flash; slower TTI in spatial runtimes)
+   //
+   // SSR caveat: if the page uses `hydrateRoot(...)` instead of `createRoot(...).render(...)`,
+   // the hydration pass still renders fallback to match the server-rendered HTML; the swap
+   // to real implementations happens on the post-hydration commit. The fallback flash is
+   // visible regardless of boot timing in the SSR path.
    import { bootSpatial } from '@webspatial/react-sdk'
 
    await bootSpatial()
@@ -359,13 +364,16 @@ We chose **estimate now, calibrate during implementation**: the 8 KB target ente
 
    ```tsx
    // Option B — render first, boot after (faster TTI; brief fallback flash before swap)
+   //
+   // SSR note: behaves identically to Option A under hydrate (both produce a hydration-pass
+   // fallback render then swap on the next commit). Differences only show in pure CSR.
    import { bootSpatial } from '@webspatial/react-sdk'
 
    ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
    void bootSpatial()
    ```
 
-   For SSR / hydration, Option A awaited before `hydrateRoot()` is hydration-safe (the spec requires `useSpatialReady` to render fallback during the hydration pass and only swap to real on the next commit). Option B with `bootSpatial()` invoked after `hydrateRoot()` is also safe and trades initial-hydrate speed for a one-render fallback flash.
+   For SSR / hydration, both options are hydration-safe (the spec requires `useSpatialReady` to render fallback during the hydration pass and only swap to real on the next commit). The SSR fallback-to-real swap is NOT avoidable by either timing — the difference is only that boot-before starts the spatial chunk fetch in parallel with HTML streaming, while boot-after defers the fetch until after the page is interactive.
 
 4. If you need a custom web rendering for a specific facade (e.g. an `<img>` poster instead of the default degraded `<model>` element), write a small wrapper that branches on `useSpatialReady()`:
 

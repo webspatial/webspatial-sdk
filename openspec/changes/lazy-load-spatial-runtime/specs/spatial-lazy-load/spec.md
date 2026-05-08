@@ -64,11 +64,12 @@ The package MUST expose `@webspatial/react-sdk/spatial` as the single source of 
 - **THEN** the spatial chunk MUST NOT be requested over the network
 - **AND** facades and hook placeholders MUST continue to render web fallbacks without scheduling any dynamic import
 
-#### Scenario: Spatial runtime loads spatial chunk at most once
+#### Scenario: Spatial runtime caches the successful load
 
-- **WHEN** an application runs in a WebSpatial runtime and `bootSpatial()` is awaited one or more times
-- **THEN** the spatial chunk MUST be requested exactly once for the page lifetime
-- **AND** subsequent `bootSpatial()` calls MUST return the cached resolution result
+- **WHEN** an application runs in a WebSpatial runtime and `bootSpatial()` is awaited and resolves successfully one or more times
+- **THEN** the spatial chunk MUST be requested at most once **after the first successful load**, for the remainder of the page lifetime
+- **AND** every subsequent `bootSpatial()` call MUST return the cached successful resolution result without scheduling additional network requests
+- **AND** failure paths are governed by the "Boot retry after a failure" Scenario in the `bootSpatial` Requirement, which explicitly permits a fresh `import()` after a prior rejection — that retry does NOT violate this caching contract
 
 #### Scenario: Plain web users see final rendering at first render
 
@@ -101,10 +102,11 @@ The default entry MUST maintain an internal bridge module providing synchronous 
 #### Scenario: Spatial chunk load failure is observable
 
 - **WHEN** the dynamic `import('@webspatial/react-sdk/spatial')` rejects (e.g. network error)
-- **THEN** `loadSpatialImpl()` MUST reject with the underlying error
-- **AND** the registered `onSpatialLoadError(cb)` callback (if any) MUST be invoked exactly once with that error
+- **THEN** `loadSpatialImpl()` MUST reject with a `WebSpatialBootError` whose `cause` is set to the underlying `import()` error and whose `attempt` is the 1-based attempt count
+- **AND** every callback registered via `onSpatialLoadError(cb)` MUST be invoked exactly once with that same `WebSpatialBootError` instance
 - **AND** `isSpatialReady()` MUST remain `false`
 - **AND** facades MUST continue to render fallback content without throwing
+- **AND** the wrapping into `WebSpatialBootError` MUST happen inside `loadSpatialImpl()` so that downstream consumers (`bootSpatial()`, listener callbacks) never observe the raw `import()` error directly; the underlying error remains accessible via `error.cause` for diagnostics
 
 ---
 
@@ -118,7 +120,7 @@ The default entry MUST also export:
 
 - `isSpatialReady(): boolean` — synchronous read; returns `true` only when the spatial chunk has been loaded successfully and the bridge has stored the implementation reference.
 - `useSpatialReady(): boolean` — a React hook returning the current readiness, subscribed via `useSyncExternalStore` so consuming components automatically re-render when the bridge becomes ready. Implementations MUST short-circuit the subscription work when `detectSpatialRuntime() === null` so that non-WebSpatial browsers pay no per-render bookkeeping cost. Safe to call during SSR (returns `false`).
-- `onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void` — registers a callback invoked on every failed load attempt. Multiple callbacks MAY be registered concurrently; the returned function unsubscribes the corresponding callback. Callbacks MUST be invoked in registration order. Successful retries after a prior failure MUST NOT replay earlier errors to listeners.
+- `onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void` — registers a callback invoked on every failed load attempt. Multiple callbacks MAY be registered concurrently; the returned function unsubscribes the corresponding callback. Callbacks MUST be invoked in registration order. Successful retries after a prior failure MUST NOT replay earlier errors to listeners. The wrapping into `WebSpatialBootError` is performed inside the bridge's internal `loadSpatialImpl()` (per "Bridge singleton"); listeners always receive the same `WebSpatialBootError` instance that `bootSpatial()` would reject with.
 - `WebSpatialBootError` — an `Error` subclass used as the rejection value of `bootSpatial()` and the argument to `onSpatialLoadError` callbacks. Instances MUST satisfy `name === 'WebSpatialBootError'`, MUST set `cause` to the original error thrown by the dynamic `import()`, and MUST expose `attempt: number` (1-based) indicating which retry the failure corresponds to.
 
 Recommended integration pattern (non-normative): applications SHOULD `await bootSpatial()` before invoking `ReactDOM.createRoot(...).render(...)` so that facades and hook placeholders never render in spatial runtimes. Calling `bootSpatial()` later is permitted; mounted facades will switch to the real implementation on the next React commit (see "Component facades"), but components that called spatial hook placeholders during their prior renders MUST remount to pick up the real hook implementations (see "Hook placeholders").
@@ -444,7 +446,13 @@ To make hydration safe, the SDK MUST follow these constraints:
 - **`getServerSnapshot` stability**: the `getServerSnapshot` argument passed to `useSyncExternalStore` inside `useSpatialReady` MUST be a single module-level constant function returning `false`. It MUST NOT be a fresh closure created per call (which would trigger React's "Snapshot is unstable" warning). The same module-level constant MAY also serve as the plain-web `getSnapshot` (per the `useSpatialReady` short-circuit) since both must report `false`.
 - **Deterministic facade rendering**: given identical props, a facade's fallback rendering MUST produce identical DOM across renders and across server/client. The SDK only guarantees mismatch-free hydration when (a) facade props are identical between server and client, and (b) `useSpatialReady` follows the `useSyncExternalStore` constraint above.
 
-Both `await bootSpatial(); hydrateRoot(...)` (boot before hydrate; bridge ready when hydrate starts) and `hydrateRoot(...); bootSpatial()` (hydrate first, boot after) MUST be supported. The `useSyncExternalStore`-based `useSpatialReady` makes both timings hydration-safe; applications choose based on UX preference (boot-before avoids a fallback-to-real DOM swap; boot-after gets faster initial hydrate).
+Both `await bootSpatial(); hydrateRoot(...)` (boot before hydrate; bridge ready when hydrate starts) and `hydrateRoot(...); bootSpatial()` (hydrate first, boot after) MUST be supported. The `useSyncExternalStore`-based `useSpatialReady` makes both timings hydration-safe — but the "fallback flash" trade-off differs by rendering path:
+
+- **Pure CSR path** (`await bootSpatial(); createRoot(...).render(...)`): the first React commit calls `getSnapshot()` (returning `true` since the bridge is already ready) and renders real spatial implementations directly. No fallback-to-real DOM swap occurs.
+- **SSR + hydrate path with boot BEFORE hydrate** (`await bootSpatial()` followed by `hydrateRoot(...)`, with `await bootSpatial(); renderToString(...)` on the server): the **client hydration pass** still uses `getServerSnapshot()` returning `false` (per "First client render matches server render regardless of boot timing"), so the first client render produces fallback DOM matching the server-rendered HTML; the swap to real implementations happens on the next React commit. Hydration is mismatch-safe but the fallback-to-real swap is NOT avoidable in this path.
+- **SSR + hydrate path with boot AFTER hydrate** (`hydrateRoot(...); void bootSpatial()`): hydration pass renders fallback (matching server); on `bootSpatial()` resolution the next commit swaps to real. Trades faster initial hydration for a slightly later swap point compared to boot-before.
+
+Applications choose between SSR boot-before and SSR boot-after based on whether they want the spatial chunk fetch to start in parallel with HTML streaming (boot-before) or after the page is interactive (boot-after); the visible fallback-to-real swap is identical in both SSR sub-cases.
 
 #### Scenario: Server render does not touch spatial chunk and does not invoke error listeners
 
@@ -646,7 +654,17 @@ The contract has three normative parts:
 
 1. **`"sideEffects": false` declaration** — the published `package.json` MUST declare `"sideEffects": false` (or a precise allow-list of files that genuinely need side effects, kept as small as possible). Without this declaration, modern bundlers conservatively retain every module reachable from the barrel, defeating the named-import cost budget.
 
-2. **No top-level side effects** — every module in the default entry's static graph MUST NOT execute any code at module top-level beyond ES `import` / `export` declarations and pure constant / function declarations. Specifically forbidden at top level: function calls (e.g. `initPolyfill()`), assignments to globals (e.g. `window.something = ...`), and any other expression with observable side effects. Side effects MUST be deferred into functions invoked on demand (e.g. `bootSpatial()`, `enableDebugTool()`).
+2. **No top-level observable side effects** — every module in the default entry's static graph MUST NOT execute any expression with **observable** side effects at module top level. "Observable" means visible from outside the module: writes to globals (`window.x = ...`, `globalThis.x = ...`), mutation of imported bindings, network requests, DOM manipulation, registration of event listeners on global objects, or calls to imported functions whose execution mutates external state.
+
+   Module-private pure initialization is **explicitly permitted**, including:
+   - Module-level data structure construction (`const cache = new Map()`, `const subscribers = new Set()`)
+   - React factory calls intended by their library to be tree-shakable: `forwardRef(impl)`, `memo(component)`, `createContext(default)`, `lazy(loader)`
+   - Any expression annotated with the `/* @__PURE__ */` magic comment
+   - Numeric / string / object-literal constant initializers that do not invoke imported functions
+
+   These are permitted because their result is a module-local value that vanishes from the consumer's bundle when the module itself is tree-shaken away; bundlers (Vite, Webpack 5+, Rollup, Rspack, esbuild) recognize them via `/* @__PURE__ */` annotations or per-package side-effect heuristics.
+
+   Side effects with externally visible consequences MUST be deferred into functions invoked on demand (e.g. `bootSpatial()`, `enableDebugTool()`).
 
 3. **Re-export shape** — the barrel `src/index.ts` SHOULD prefer named re-exports (`export { Model } from './facades/Model'`) over wildcard re-exports (`export * from './facades'`) where practical, to reduce ambiguity for bundler tree-shaking heuristics. Wildcard re-exports remain acceptable for type-only re-exports (`export type * from ...`) since types vanish at runtime.
 
@@ -656,12 +674,27 @@ The contract has three normative parts:
 - **THEN** it MUST contain `"sideEffects": false` OR a precise allow-list array containing only files that legitimately have side effects
 - **AND** an SDK-side test MUST assert this field exists with a value other than `true`
 
-#### Scenario: No top-level side effects in default-entry modules
+#### Scenario: No observable top-level side effects in default-entry modules
 
 - **WHEN** any module in `packages/react/src/` reachable from `src/index.ts` (the default entry) is statically analyzed
-- **THEN** the module body at top level MUST contain only `import` / `export` declarations, type declarations, function definitions, class definitions, and pure constant initializers
-- **AND** the module MUST NOT execute function calls, assignments to non-local variables, or any other expression with observable side effects at top level
+- **THEN** the module body at top level MUST NOT contain any of the following:
+  - Conditional or unconditional statements that perform writes to globals (e.g. `window.x = ...`, `globalThis.x = ...`)
+  - Bare function-call statements that mutate external state (e.g. `initPolyfill()`, `attachListener(window, ...)`)
+  - `import` for side effects only (`import 'some-side-effect-module'`)
+  - Expression statements whose evaluation is not annotated `/* @__PURE__ */` and is not a known tree-shakable React factory call
 - **AND** the existing top-level `if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts` MUST be removed (this is also tracked in `tasks.md §7.2`); polyfill installation moves into the spatial chunk's bootstrap
+
+#### Scenario: Module-private pure initialization is permitted
+
+- **WHEN** a module in the default entry's static graph contains top-level expressions that produce module-local values without observable external effects
+- **THEN** the following patterns MUST be permitted by the `tasks.md §9.6` lint:
+  - `const Component = forwardRef<...>((props, ref) => { ... })`
+  - `const wrapperCache = new Map<Component, Component>()`
+  - `const readinessSubscribers = new Set<() => void>()`
+  - `const SpatialContext = createContext<Bridge | null>(null)`
+  - `const Memoized = /* @__PURE__ */ memo(BaseComponent)`
+  - `const alwaysFalse = () => false`
+- **AND** these MUST NOT be flagged as side-effect violations because their results are module-local values that vanish from the consumer bundle when the parent module is tree-shaken
 
 #### Scenario: Named re-export preferred over wildcard for runtime values
 
