@@ -84,14 +84,24 @@ interface SpatialDivAnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
+  /**
+   * Playback rate multiplier. Default: 1
+   * Values > 1 speed up; 0 to 1 slow down.
+   * Negative values indicate reverse playback.
+   * Must be non-zero and finite.
+   * Applied at session creation time and remains constant for the session lifetime.
+   * Maps to the native (AVP) AnimationView.speed parameter.
+   */
+  playbackRate?: number
+
   /** Called when the session is successfully established. First state can be delaying, running, or paused due to queued pause. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives native final values. */
   onComplete?: (finalValues: SpatialDivAnimatedValues) => void
 
-  /** Called when stopped via api.stop(). Receives stop-point values. */
-  onStop?: (currentValues: SpatialDivAnimatedValues) => void
+  /** Called when canceled via api.cancel(). Receives the restored values. */
+  onCancel?: (currentValues: SpatialDivAnimatedValues) => void
 
   /**
    * Called on asynchronous bridge/native failures.
@@ -108,7 +118,7 @@ interface AnimationError {
   /** The session id that failed. */
   animationId: string
   /** The command that failed. */
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   /** Optional machine-readable code. */
   code?: string
   /** Human-readable reason. */
@@ -120,23 +130,26 @@ interface AnimationError {
 
 ```typescript
 interface AnimationApi {
-  /** Start (or restart) playback. */
+  /** Start the animation, or continue it from paused progress. */
   play(): void
 
-  /** Pause at current progress. */
+  /** Pause the animation at the current progress. */
   pause(): void
 
-  /** Resume from pause. */
-  resume(): void
+  /** Cancel the animation and restore `from`, or the start snapshot when `from` is omitted. */
+  cancel(): void
 
-  /** Stop playback. The SpatialDiv remains at the stop point. */
-  stop(): void
-
-  /** True when state is queued, delaying, or running (false when paused). */
+  /** Whether the session is currently queued, delaying, or running (false while paused or idle). */
   readonly isAnimating: boolean
 
-  /** True when paused. */
+  /** Whether the animation is currently paused. */
   readonly isPaused: boolean
+
+  /** Current session state. */
+  readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+
+  /** Whether the most recent current session completed naturally. */
+  readonly finished: boolean
 }
 ```
 
@@ -172,9 +185,9 @@ function FadeInCard() {
 }
 ```
 
-### Manual Play With Stop Size Sync
+### Manual Play With Cancel Size Sync
 
-Set `autoStart: false` and start on interaction. Use `onStop` to sync React state so DOM sizing matches the native final size when desired.
+Set `autoStart: false` and start on interaction. Use `onCancel` to sync React state so DOM sizing matches the native restored size when desired.
 
 ```jsx
 function ResizePanel() {
@@ -184,9 +197,9 @@ function ResizePanel() {
     to: { width: 400, height: 300 },
     duration: 1.0,
     autoStart: false,
-    onStop: (current) => {
-      if (current.width != null && current.height != null) {
-        setSize({ width: current.width, height: current.height })
+    onCancel: (restored) => {
+      if (restored.width != null && restored.height != null) {
+        setSize({ width: restored.width, height: restored.height })
       }
     },
   })
@@ -194,7 +207,7 @@ function ResizePanel() {
   return (
     <>
       <button onClick={() => api.play()}>Expand</button>
-      <button onClick={() => api.stop()}>Stop</button>
+      <button onClick={() => api.cancel()}>Cancel</button>
       <div
         enable-xr
         animation={animation}
@@ -209,7 +222,7 @@ function ResizePanel() {
 
 ### Looping Float Effect
 
-Use `transform.translate.y` and `loop: { reverse: true }` to float up and down infinitely. Tap to toggle pause/resume.
+Use `transform.translate.y` and `loop: { reverse: true }` to float up and down infinitely. Tap to toggle pause/play.
 
 ```jsx
 function FloatingBadge() {
@@ -227,7 +240,7 @@ function FloatingBadge() {
       animation={animation}
       onClick={() => {
         if (api.isPaused) {
-          api.resume()
+          api.play()
         } else if (api.isAnimating) {
           api.pause()
         } else {
@@ -254,16 +267,16 @@ interface Spatialized2DElement {
 }
 ```
 
-`animateSpatialDiv()` returns `AnimateSpatialDivResult` when `command.type` is `'play'`. For `'pause'`, `'resume'`, and `'stop'`, it returns `void`.
+`animateSpatialDiv()` returns `AnimateSpatialDivResult` when `command.type` is `'play'`. For `'pause'`, `'resume'`, and `'cancel'`, it returns `void`.
 
 ```typescript
 interface AnimateSpatialDivCommand {
   /**
    * Identifies the animation session. Each `play` MUST generate a new globally unique `animationId`.
-   * `pause`, `resume`, and `stop` MUST reuse the `animationId` created by the `play` for that session.
+   * `pause`, `resume`, and `cancel` MUST reuse the `animationId` created by the `play` for that session.
    */
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop'
+  type: 'play' | 'pause' | 'resume' | 'cancel'
   /** Required for 'play'; ignored for other types. */
   elementId?: string
   to?: SpatialDivAnimatedValues
@@ -272,6 +285,8 @@ interface AnimateSpatialDivCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
+  /** Playback speed multiplier. Default: 1. Maps to AnimationView.speed on AVP. */
+  playbackRate?: number
 }
 
 interface AnimateSpatialDivResult {
@@ -279,16 +294,16 @@ interface AnimateSpatialDivResult {
   /** Resolves when a non-looping animation completes naturally. Never resolves for infinite loops. */
   finished: Promise<SpatialDivAnimatedValues>
   /**
-   * Resolves when stopped via stop().
-   * After stop, `finished` MUST remain pending (MUST NOT reject).
+   * Resolves when canceled via cancel().
+   * After cancel, `finished` MUST remain pending (MUST NOT reject).
    */
-  stopped: Promise<SpatialDivAnimatedValues>
+  canceled: Promise<SpatialDivAnimatedValues>
 }
 ```
 
-If the element unmounts during an alive session, the SDK MUST stop/cancel the native session, but MUST NOT resolve `finished` or `stopped`, and MUST NOT call lifecycle callbacks after unmount.
+If the element unmounts during an alive session, the SDK MUST cancel the native session, but MUST NOT resolve `finished` or `canceled`, and MUST NOT call lifecycle callbacks after unmount.
 
-`animateSpatialDiv(...)` MAY reject only when the command cannot be submitted (before native accepts it). Once submitted, asynchronous failures MUST be reported via `{animationId}_failed`, not via `finished` / `stopped`.
+`animateSpatialDiv(...)` MAY reject only when the command cannot be submitted (before native accepts it). Once submitted, asynchronous failures MUST be reported via `{animationId}_failed`, not via `finished` / `canceled`.
 
 ### Core SDK ↔ Native (JSBridge)
 
@@ -299,18 +314,18 @@ If the element unmounts during an alive session, the SDK MUST stop/cancel the na
 | Event | When | Payload |
 |---|---|---|
 | `{animationId}_completed` | Natural completion (after all loops) | `SpatialDivAnimatedValues` — native final values |
-| `{animationId}_stopped` | `stop()` is invoked | `SpatialDivAnimatedValues` — stop-point values |
-| `{animationId}_failed` | Async failure of `play` / `pause` / `resume` / `stop` | `AnimationError` — includes at least `animationId`, `command`, `reason`, optional `code` |
+| `{animationId}_canceled` | `cancel()` is invoked | `SpatialDivAnimatedValues` — restored values |
+| `{animationId}_failed` | Async failure of `play` / `pause` / `resume` / `cancel` | `AnimationError` — includes at least `animationId`, `command`, `reason`, optional `code` |
 
-Listeners for `_completed`, `_stopped`, and `_failed` MUST be registered before sending `play`, to avoid races where terminal/failure events arrive before listeners are ready.
+Listeners for `_completed`, `_canceled`, and `_failed` MUST be registered before sending `play`, to avoid races where terminal/failure events arrive before listeners are ready.
 
 `animationId` MUST be globally unique within the runtime process to avoid event name collisions across elements or sessions.
 
 For a given `animationId`:
 
-- After `play` successfully establishes a session, native MUST emit exactly one terminal event (`_completed` or `_stopped`), and they MUST be mutually exclusive.
-- If `play` fails asynchronously, native MUST emit at most one `_failed`, and MUST NOT subsequently emit `_completed` or `_stopped`.
-- If `pause`, `resume`, or `stop` fails asynchronously, native MUST emit at most one `_failed` for that failed command; the session remains in the pre-failure state, and `_completed` or `_stopped` MAY still arrive later.
+- After `play` successfully establishes a session, native MUST emit exactly one terminal event (`_completed` or `_canceled`), and they MUST be mutually exclusive.
+- If `play` fails asynchronously, native MUST emit at most one `_failed`, and MUST NOT subsequently emit `_completed` or `_canceled`.
+- If `pause`, `resume`, or `cancel` fails asynchronously, native MUST emit at most one `_failed` for that failed command; the session remains in the pre-failure state, and `_completed` or `_canceled` MAY still arrive later.
 
 ## Decisions
 
@@ -337,14 +352,14 @@ For a given `animationId`:
 
    Alternative B: add a `target` discriminator to config immediately. Rejected because it increases ceremony and is not needed while keys do not collide.
 
-2. **Use a dedicated runtime key `supports('spatialDivAnimation')`**
+2. **Use a dedicated runtime key `supports('useSpatialDivAnimation')`**
 
    Although `SpatialDiv` animation reuses the hook name `useAnimation`, its capability detection does not reuse the entity proposal's `supports('useAnimation')`. Native dependencies, applicable component scope, and shipping timelines may differ; sharing one top-level key would couple the two.
 
    Therefore:
 
    - `supports('useAnimation')` remains for entity transform animation
-   - `supports('spatialDivAnimation')` indicates `SpatialDiv` whitelisted property animation
+   - `supports('useSpatialDivAnimation')` indicates `SpatialDiv` whitelisted property animation
    - A runtime MAY support only one of them
 
    Alternative: introduce sub-tokens such as `supports('useAnimation', ['spatial-div'])`. Rejected for now because the existing entity proposal defines `supports('useAnimation')` as a single key with no sub-token semantics, and changing that contract increases coordination and compatibility risk.
@@ -379,7 +394,7 @@ For a given `animationId`:
 
    - `width` / `height` animation updates native `Spatialized2DElement` size
    - It does not automatically mutate DOM CSS `width` / `height`
-   - If an app wants DOM state to match the native end state, it should sync React state in `onComplete` / `onStop`
+   - If an app wants DOM state to match the native end state, it should sync React state in `onComplete` / `onCancel`
 
    Alternative: write DOM styles during animation. Rejected because it pulls animation back into the browser layout system (reflow risk) and cannot guarantee strict consistency with native playback.
 
@@ -398,21 +413,19 @@ For a given `animationId`:
    This means that if the app changes CSS rotate/scale during a translation animation, those changes are delayed until the session ends. This is an intentional v1 trade-off.
 
 7. **Lifecycle and error semantics match entity animation**
-
-   The semantics of `play`, `pause`, `resume`, `stop`, `isAnimating`, `isPaused`, `onStart`, `onComplete`, `onStop`, and `onError` match the entity animation proposal to minimize behavioral divergence within the SDK.
+   The semantics of `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `playState`, `finished`, `onStart`, `onComplete`, `onCancel`, and `onError` match the entity animation proposal to minimize behavioral divergence within the SDK.
 
    - `play()` remains synchronous `void`
    - Asynchronous bridge/native failures surface via `onError`
-   - `stop()` keeps the stop point (no snap back to `from`)
+   - `cancel()` restores `from` (or the start snapshot when `from` is omitted), consistent with entity animation's `cancel()` semantics
    - `loop: true` is reset loop; `loop: { reverse: true }` is reverse loop
 
    Alternative: define a Promise-based control API for `SpatialDiv`. Rejected because it breaks API consistency with entity animation.
 
-   **`onComplete` / `onStop` return scope:** The `SpatialDivAnimatedValues` in callbacks contains only the final or stop-point values for fields declared in `to`; fields not controlled by the animation do not appear in the return value. This is consistent with the entity animation `TransformValues` callback behavior.
+   **`onComplete` / `onCancel` return scope:** The `SpatialDivAnimatedValues` in callbacks contains only the final or restored values for fields declared in `to`; fields not controlled by the animation do not appear in the return value. This is consistent with the entity animation `TransformValues` callback behavior.
 
-8. **If stop-old fails, MUST block start-new**
-
-   For `play()` re-entry and animation prop replacement, if the stop-old command fails asynchronously, the SDK MUST report via `onError` and keep the old session in its pre-failure state. In that case, the SDK MUST NOT start a new session and the new session's `onStart` MUST NOT fire.
+8. **If cancel-old fails, MUST block start-new**
+   For `play()` re-entry and animation prop replacement, if the cancel-old command fails asynchronously, the SDK MUST report via `onError` and keep the old session in its pre-failure state. In that case, the SDK MUST NOT start a new session and the new session's `onStart` MUST NOT fire.
 
 9. **Config updates do not affect alive sessions**
 
@@ -421,9 +434,9 @@ For a given `animationId`:
 ## Risks / Trade-offs
 
 - **Transform-wide suppression freezes regular rotate/scale updates during animation** -> Document as a v1 limitation; reserve finer-grained transform composition for later versions.
-- **`width` / `height` animation may temporarily diverge native size from DOM layout box** -> Return final values via `onComplete` / `onStop`, and document that apps decide whether to sync React state.
+- **`width` / `height` animation may temporarily diverge native size from DOM layout box** -> Return final values via `onComplete` / `onCancel`, and document that apps decide whether to sync React state.
 - **A dedicated capability key adds a small mental overhead** -> But enables independent shipping/rollback from entity animation, which reduces overall risk.
 - **`SpatialDiv` animation touches multiple layers (React, core, bridge, native)** -> Use a unified session command, a single failure event model, and focused tests to reduce cross-layer drift.
-- **If the app does not sync React state in `onComplete` / `onStop` after animation ends, regular sync resumption may push stale values to native, causing a visual "flash-back"** -> Consistent with entity animation behavior. Document and demonstrate in examples that apps MUST manually sync state in callbacks to preserve animation end state.
+- **If the app does not sync React state in `onComplete` / `onCancel` after animation ends, regular sync resumption may push stale values to native, causing a visual "flash-back"** -> Consistent with entity animation behavior. Document and demonstrate in examples that apps MUST manually sync state in callbacks to preserve animation end state.
 - **v1 assumes a React synchronous rendering model** -> Suppression release and regular sync resumption depend on "the next React render after callbacks." Under Concurrent Mode / Suspense, render timing may be non-deterministic. This is a known limitation. XR apps currently do not enable Concurrent Mode; if needed in the future, it should be addressed at the SDK sync infrastructure level.
 - **Sharing the `useAnimation` entrypoint introduces minor entity-side changes** -> Limited to an entrypoint if/else, a `__kind` field, and binding validation; entity core logic remains unchanged. If keys collide in the future, introduce an explicit discriminator.
