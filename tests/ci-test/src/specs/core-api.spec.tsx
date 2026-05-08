@@ -20,7 +20,7 @@ describe('Core API', function () {
       session?.getSpatialScene().updateSpatialProperties({
         material: 'translucent',
       })
-    } catch (error) {
+    } catch {
       fail('setBackgroundStyle failed')
     }
 
@@ -33,7 +33,7 @@ describe('Core API', function () {
     try {
       const windowProxy = window.open('/testPage.html')
       windowProxy?.close()
-    } catch (error) {
+    } catch {
       fail('failed')
     }
   })
