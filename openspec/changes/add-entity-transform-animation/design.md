@@ -361,6 +361,206 @@ function StateAwareBox() {
 }
 ```
 
+## Animation State Machine
+
+The animation session lifecycle is defined by five states and their transition rules:
+
+### State Definitions
+
+| State | Meaning | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|---|
+| `idle` | Initial state; `play()` not yet called or session terminated | `false` | `false` | `false` |
+| `queued` | Entity not yet bound to a RealityKit scene; waiting for binding | `true` | `false` | `false` |
+| `running` | Animation is playing (includes delay waiting period) | `true` | `false` | `false` |
+| `paused` | Animation is paused; can be resumed from current progress | `false` | `true` | `false` |
+| `finished` | Non-looping animation completed naturally | `false` | `false` | `true` |
+
+### State Transition Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle : useAnimation initialized
+    idle --> queued : play with unbound entity
+    idle --> running : play with bound entity
+    queued --> running : entity binds to scene
+    queued --> paused : pause called while queued
+    running --> paused : pause
+    running --> finished : non-looping animation completes
+    paused --> running : play resumes
+    finished --> idle : cancel or new play
+    queued --> idle : cancel
+    paused --> idle : cancel
+    running --> idle : cancel
+```
+
+### Transition Rules
+
+- **idle → queued**: `play()` called while entity is not yet rendered under `Reality` / `SceneGraph`; animation enters queued waiting.
+- **idle → running**: `play()` called while entity is bound; native session established successfully.
+- **queued → running**: Entity mounts to the scene and automatically transitions to playing.
+- **queued → paused**: `pause()` called during queued state; entity will start in paused state after binding.
+- **running → paused**: `pause()` called; native `AnimationPlaybackController.pause()`.
+- **running → finished**: Non-looping animation completes naturally; native sends `_completed` event.
+- **paused → running**: `play()` resumes; native `AnimationPlaybackController.resume()`.
+- **Any alive state → idle**: `cancel()` called; entity restores to `from` (or start snapshot); native sends `_canceled` event.
+- **finished → idle**: `cancel()` called or a new `play()` starts a fresh session.
+
+## API Call Sequences
+
+### play Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.play
+    Hook->>Hook: Generate new animationId
+    Hook->>Hook: Register _completed / _canceled / _failed listeners
+    Hook->>Core: animateTransform type: play
+    Core->>Bridge: Serialize AnimateTransformCommand
+    Bridge->>Native: play command
+    Native->>Native: Create EntityAnimationSession
+    Native->>Native: Set fromTransform on entity
+    Native->>Native: Build FromToByAnimation + AnimationView
+    Native->>Native: entity.playAnimation startsPaused: false
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve AnimateTransformResult
+    Hook->>Hook: playState = running
+    Hook->>App: onStart callback
+
+    alt Non-looping animation completes naturally
+        Native->>Native: PlaybackCompleted event
+        Native->>Bridge: animationId_completed + finalTransform
+        Bridge->>Core: Event dispatch
+        Core->>Core: Float4x4 to TransformValues
+        Core->>Hook: resolve finished Promise
+        Hook->>Hook: playState = finished
+        Hook->>App: onComplete callback
+    end
+```
+
+### pause Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.pause
+    Hook->>Core: animateTransform type: pause
+    Core->>Bridge: Serialize AnimateTransformCommand
+    Bridge->>Native: pause command
+    Native->>Native: session.markPaused
+    Native->>Native: playbackController.pause
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = paused
+
+    Note over Native: RealityKit supports pause during delay phase
+    Note over Native: Animation will not advance until resume
+```
+
+### play after pause (resume) Sequence
+
+When the animation is in the `paused` state, calling `play()` resumes the same session. The React SDK translates the public `play()` into an internal `resume` command, but this detail is not exposed to applications.
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    Note over Hook: Current playState = paused
+
+    App->>Hook: api.play
+    Hook->>Hook: Detect paused state, translate to resume
+    Hook->>Core: animateTransform type: resume
+    Core->>Bridge: Serialize AnimateTransformCommand
+    Bridge->>Native: resume command
+    Native->>Native: Verify session.isPaused
+    Native->>Native: session.markResumed
+    Native->>Native: playbackController.resume
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = running
+
+    Note over Hook: Resumes with the config from when the session was first created
+    Note over Hook: onStart is NOT fired because the session is not re-established
+```
+
+### cancel Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.cancel
+    Hook->>Core: animateTransform type: cancel
+    Core->>Bridge: Serialize AnimateTransformCommand
+    Bridge->>Native: cancel command
+    Native->>Native: session.markCanceled
+    Native->>Native: playbackController.stop
+    Native->>Native: entity.stopAllAnimations
+    Native->>Native: entity.move to: fromTransform duration: 0
+    Native->>Bridge: animationId_canceled + restoredTransform
+    Bridge->>Core: Event dispatch
+    Native-->>Bridge: resolve success
+    Core->>Core: Float4x4 to TransformValues
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve canceled Promise
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = idle
+    Hook->>App: onCancel callback
+
+    Note over Native: cancel restores to from or start snapshot
+    Note over Native: Uses move to duration: 0 to bypass bind-point restriction
+```
+
+## Native visionOS Implementation Overview
+
+The native side of this design is built on the RealityKit animation framework. The core mapping is as follows:
+
+### RealityKit API Mapping
+
+| Design Concept | RealityKit API | Description |
+|---|---|---|
+| Animation definition | `FromToByAnimation<Transform>` | Transform animation from `from` to `to`, supporting timing and repeatMode |
+| Delay and speed | `AnimationView` | Wraps animation resource, providing `delay` and `speed` parameters |
+| Playback control | `AnimationPlaybackController` | Provides `pause()` / `resume()` / `stop()` methods |
+| Completion detection | `AnimationEvents.PlaybackCompleted` | Scene event subscription to detect natural completion of non-looping animations |
+| Easing curves | `AnimationTimingFunction` | Supports `.linear` / `.easeIn` / `.easeOut` / `.easeInOut` |
+| Loop mode | `AnimationRepeatMode` | `.none` play once, `.repeat` reset loop, `.autoReverse` reverse loop |
+| Execute animation | `Entity.playAnimation` | Plays an AnimationResource on an entity |
+| Restore position | `Entity.move(to:relativeTo:duration:0)` | Zero-duration animation bypasses bind-point restriction, safely sets transform |
+
+### Key Implementation Details
+
+1. **Animation construction**: `FromToByAnimation<Transform>` defines the from→to transform animation, wrapped by `AnimationView` to apply `delay` and `speed`, then compiled into a playable resource via `AnimationResource.generate(with:)`.
+
+2. **Playback and control**: `entity.playAnimation()` returns an `AnimationPlaybackController`; subsequent `pause()` / `resume()` / `stop()` calls all go through this controller. RealityKit supports pause and resume even during the delay phase.
+
+3. **Cancel restore mechanism**: When `cancel()` is called, the controller is `stop()`ped, `stopAllAnimations()` removes all animation resources, then `entity.move(to:duration:0)` restores the entity to its `from` position. Direct assignment to `entity.transform.matrix` is rejected by RealityKit's bind-point system, so a zero-duration animation is used to safely take over bind-point ownership.
+
+4. **Completion events**: Non-looping animations subscribe to completion via `scene.subscribe(to: AnimationEvents.PlaybackCompleted.self)`; looping animations do not subscribe since they never complete naturally.
+
+5. **Session management**: `EntityAnimationManager` manages all active sessions keyed by `animationId`, with at most one active session per entity at any time. Sessions are automatically cleaned up when an entity is unmounted.
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK

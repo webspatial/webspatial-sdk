@@ -358,6 +358,206 @@ api.cancel()
 api.play() // 新会话使用 hook 中的最新配置
 ```
 
+## 动画状态机
+
+动画会话的生命周期由以下五个状态及转换规则定义：
+
+### 状态定义
+
+| 状态 | 含义 | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|---|
+| `idle` | 初始状态，尚未调用 `play()` 或会话已终止 | `false` | `false` | `false` |
+| `queued` | 实体尚未绑定到 RealityKit 场景，等待绑定 | `true` | `false` | `false` |
+| `running` | 动画正在播放（含 delay 等待期） | `true` | `false` | `false` |
+| `paused` | 动画已暂停，可从当前进度恢复 | `false` | `true` | `false` |
+| `finished` | 非循环动画自然完成 | `false` | `false` | `true` |
+
+### 状态转换图
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle : useAnimation 初始化
+    idle --> queued : play 且实体未绑定
+    idle --> running : play 且实体已绑定
+    queued --> running : 实体绑定到场景
+    queued --> paused : pause 在 queued 期间调用
+    running --> paused : pause
+    running --> finished : 非循环动画自然完成
+    paused --> running : play 恢复
+    finished --> idle : cancel 或重新 play
+    queued --> idle : cancel
+    paused --> idle : cancel
+    running --> idle : cancel
+```
+
+### 转换规则
+
+- **idle → queued**：调用 `play()` 时实体尚未绑定到 `Reality` / `SceneGraph`，动画进入排队等待。
+- **idle → running**：调用 `play()` 时实体已绑定，Native 会话成功建立。
+- **queued → running**：实体挂载到场景后自动转为播放。
+- **queued → paused**：在 queued 期间调用 `pause()`，实体绑定后将以 paused 状态开始。
+- **running → paused**：调用 `pause()`，Native 侧 `AnimationPlaybackController.pause()`。
+- **running → finished**：非循环动画自然播放完成，Native 发送 `_completed` 事件。
+- **paused → running**：调用 `play()` 恢复，Native 侧 `AnimationPlaybackController.resume()`。
+- **任意 alive 状态 → idle**：调用 `cancel()`，实体恢复到 `from`（或起始快照），Native 发送 `_canceled` 事件。
+- **finished → idle**：调用 `cancel()` 或再次 `play()` 启动新会话。
+
+## API 调用时序
+
+### play 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.play
+    Hook->>Hook: 生成新 animationId
+    Hook->>Hook: 注册 _completed / _canceled / _failed 事件监听
+    Hook->>Core: animateTransform type: play
+    Core->>Bridge: 序列化 AnimateTransformCommand
+    Bridge->>Native: play 命令
+    Native->>Native: 创建 EntityAnimationSession
+    Native->>Native: 设置 fromTransform 到实体
+    Native->>Native: 构建 FromToByAnimation + AnimationView
+    Native->>Native: entity.playAnimation startsPaused: false
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve AnimateTransformResult
+    Hook->>Hook: playState = running
+    Hook->>App: onStart 回调
+
+    alt 非循环动画自然完成
+        Native->>Native: PlaybackCompleted 事件
+        Native->>Bridge: animationId_completed + finalTransform
+        Bridge->>Core: 事件分发
+        Core->>Core: Float4x4 转 TransformValues
+        Core->>Hook: resolve finished Promise
+        Hook->>Hook: playState = finished
+        Hook->>App: onComplete 回调
+    end
+```
+
+### pause 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.pause
+    Hook->>Core: animateTransform type: pause
+    Core->>Bridge: 序列化 AnimateTransformCommand
+    Bridge->>Native: pause 命令
+    Native->>Native: session.markPaused
+    Native->>Native: playbackController.pause
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = paused
+
+    Note over Native: RealityKit 在 delay 阶段也可暂停
+    Note over Native: 暂停后动画不会继续推进直到 resume
+```
+
+### pause 后 play 恢复时序
+
+当动画处于 `paused` 状态时，调用 `play()` 会恢复同一会话。React SDK 将对外 `play()` 翻译为内部 `resume` 命令，但该细节不对应用暴露。
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    Note over Hook: 当前 playState = paused
+
+    App->>Hook: api.play
+    Hook->>Hook: 检测到 paused 状态，翻译为 resume
+    Hook->>Core: animateTransform type: resume
+    Core->>Bridge: 序列化 AnimateTransformCommand
+    Bridge->>Native: resume 命令
+    Native->>Native: 校验 session.isPaused
+    Native->>Native: session.markResumed
+    Native->>Native: playbackController.resume
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = running
+
+    Note over Hook: 使用首次创建会话时的配置恢复
+    Note over Hook: 不触发 onStart，因为会话未重新建立
+```
+
+### cancel 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native visionOS
+
+    App->>Hook: api.cancel
+    Hook->>Core: animateTransform type: cancel
+    Core->>Bridge: 序列化 AnimateTransformCommand
+    Bridge->>Native: cancel 命令
+    Native->>Native: session.markCanceled
+    Native->>Native: playbackController.stop
+    Native->>Native: entity.stopAllAnimations
+    Native->>Native: entity.move to: fromTransform duration: 0
+    Native->>Bridge: animationId_canceled + restoredTransform
+    Bridge->>Core: 事件分发
+    Native-->>Bridge: resolve success
+    Core->>Core: Float4x4 转 TransformValues
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve canceled Promise
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = idle
+    Hook->>App: onCancel 回调
+
+    Note over Native: cancel 恢复到 from 或起始快照
+    Note over Native: 使用 move to duration: 0 绕过 bind-point 限制
+```
+
+## Native visionOS 实现概述
+
+本设计的 Native 侧基于 RealityKit 动画框架实现，核心映射关系如下：
+
+### RealityKit API 映射
+
+| 设计概念 | RealityKit API | 说明 |
+|---|---|---|
+| 动画定义 | `FromToByAnimation<Transform>` | 从 from 到 to 的 transform 动画，支持 timing 和 repeatMode |
+| 延迟与速率 | `AnimationView` | 包装动画资源，提供 `delay` 和 `speed` 参数 |
+| 播放控制 | `AnimationPlaybackController` | 提供 `pause()` / `resume()` / `stop()` 方法 |
+| 完成检测 | `AnimationEvents.PlaybackCompleted` | 通过 Scene 事件订阅检测非循环动画自然完成 |
+| 缓动曲线 | `AnimationTimingFunction` | 支持 `.linear` / `.easeIn` / `.easeOut` / `.easeInOut` |
+| 循环模式 | `AnimationRepeatMode` | `.none` 播放一次、`.repeat` 重置循环、`.autoReverse` 反向循环 |
+| 执行动画 | `Entity.playAnimation` | 在实体上播放 AnimationResource |
+| 恢复位置 | `Entity.move(to:relativeTo:duration:0)` | 零时长动画绕过 bind-point 限制，安全设置 transform |
+
+### 关键实现细节
+
+1. **动画构建**：`FromToByAnimation<Transform>` 定义 from→to 的 transform 动画，通过 `AnimationView` 包装以应用 `delay` 和 `speed`，最终通过 `AnimationResource.generate(with:)` 生成可播放资源。
+
+2. **播放与控制**：`entity.playAnimation()` 返回 `AnimationPlaybackController`，后续 `pause()` / `resume()` / `stop()` 均通过该控制器执行。RealityKit 在 delay 阶段也支持暂停和恢复。
+
+3. **Cancel 恢复机制**：调用 `cancel()` 时，先 `stop()` 控制器并 `stopAllAnimations()` 移除所有动画资源，再通过 `entity.move(to:duration:0)` 恢复到 `from` 位置。直接赋值 `entity.transform.matrix` 会被 RealityKit 的 bind-point 系统拒绝，因此使用零时长动画来安全接管 bind-point 所有权。
+
+4. **完成事件**：非循环动画通过 `scene.subscribe(to: AnimationEvents.PlaybackCompleted.self)` 订阅完成事件；循环动画不订阅，因为其永不自然完成。
+
+5. **会话管理**：`EntityAnimationManager` 以 `animationId` 为键管理所有活跃会话，每个实体同一时刻最多一个活跃会话。实体卸载时自动清理关联会话。
+
 ## 跨层契约
 
 ### React SDK → Core SDK
