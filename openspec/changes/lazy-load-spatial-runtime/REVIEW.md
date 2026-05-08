@@ -37,7 +37,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | 8 | SSR and hydration safety | 7 | Any React 18+ SSR API; `'use client'` on facades; `useSyncExternalStore` for hydration; both boot timings safe |
 | 9 | Plugin-free integration | 7 | Capability contract (ESM + `exports` + code-splitting); React peer ≥ 18.0; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
 | 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
-| 11 | Tree-shake friendliness | 4 | `package.json` `"sideEffects": false`; no top-level side effects in default-entry modules; named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
+| 11 | Tree-shake friendliness | 5 | `package.json` `"sideEffects": false`; no **observable** top-level side effects (module-private pure init like `forwardRef` / `new Map` / `createContext` explicitly permitted); named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
 
 Plus an updated `runtime-capabilities` MODIFIED delta: the "Unsupported behavior contracts" Requirement now states hooks/utility functions MUST gracefully degrade (not throw) — replaces the prior contradictory "MUST throw" scenario for `useMetrics` and `convertCoordinate`.
 
