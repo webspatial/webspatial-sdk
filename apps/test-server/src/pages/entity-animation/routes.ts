@@ -36,4 +36,9 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
     label: 'Reset Loop',
     description: 'Loop by resetting back to the from state each cycle.',
   },
+  {
+    path: '/entity-animation/play-state',
+    label: 'PlayState Inspector',
+    description: 'Verify api.playState transitions across the full lifecycle.',
+  },
 ]

@@ -307,6 +307,7 @@ export function useAnimation(
             type: 'resume',
           })
           currentSession.state = 'running'
+          bumpSyncVersion()
         } catch (err: any) {
           reportError({
             animationId: currentSession.animationId,
@@ -360,6 +361,7 @@ export function useAnimation(
       }
 
       sessionRef.current = newSession
+      bumpSyncVersion()
 
       if (entity) {
         await doPlay(newSession, entity)
@@ -377,6 +379,7 @@ export function useAnimation(
     if (session.state === 'queued') {
       session.queuedPause = true
       session.state = 'paused'
+      bumpSyncVersion()
       return
     }
 
@@ -390,6 +393,7 @@ export function useAnimation(
           type: 'pause',
         })
         session.state = 'paused'
+        bumpSyncVersion()
       } catch (err: any) {
         reportError({
           animationId: session.animationId,
@@ -416,6 +420,7 @@ export function useAnimation(
           scale: entity?.scale,
         })
       }
+      bumpSyncVersion()
       return
     }
 
