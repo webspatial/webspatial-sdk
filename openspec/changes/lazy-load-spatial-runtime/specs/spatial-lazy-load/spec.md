@@ -8,11 +8,28 @@ The published default entry of `@webspatial/react-sdk` MUST contain only lightwe
 
 The default entry MUST also contain the **complete** web-mode rendering for every public facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
 
-#### Scenario: Size budget on default entry
+**Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` (and its peer `@webspatial/core-sdk`) to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **8 KB** compared to the same application without the SDK. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
 
-- **WHEN** the published `dist/index.js` is gzipped
-- **THEN** the size MUST be at most 8192 bytes (8KB)
-- **AND** the budget is enforced by an automated test that fails the build when exceeded
+#### Scenario: Marginal bundle delta on a typical consumer (product-level contract)
+
+- **WHEN** a downstream application imports the SDK using the recommended named-import pattern (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'` and uses `<Model />` plus `await bootSpatial()` per the migration guide)
+- **AND** the application is built with one of the documented compatible bundlers (per "Plugin-free integration"), with `@webspatial/core-sdk` installed as a peer dependency
+- **THEN** the marginal gzipped bundle delta — the difference between the application bundle with the SDK imported and the same application bundle without the SDK imported — MUST be at most 8192 bytes (8 KB)
+- **AND** the measurement MUST include any bytes from `@webspatial/core-sdk` that the bundler pulls into the application bundle as a transitive consequence of importing `@webspatial/react-sdk`
+- **AND** the budget MUST be enforced by a CI fixture (a minimal Vite + React project under `tests/` or similar) that fails the build when exceeded
+
+#### Scenario: SDK-side `dist/index.js` size proxy
+
+- **WHEN** the published `dist/index.js` is gzipped on its own (independent of any consumer build)
+- **THEN** the size MUST be at most 8192 bytes (8 KB)
+- **AND** this proxy is a necessary-but-not-sufficient condition for the marginal-delta contract; it is enforced at SDK build time so regressions surface inside the SDK's own test suite without requiring a fixture build
+
+#### Scenario: Worst-case namespace / full-barrel import is informational
+
+- **WHEN** a downstream application uses `import * as W from '@webspatial/react-sdk'` with non-static property access, side-effect-only `import '@webspatial/react-sdk'`, or explicit named-import of every public export at once
+- **THEN** the marginal gzipped bundle delta MAY exceed 8 KB (typical worst case projected at 9–11 KB before tree-shaking gains)
+- **AND** this is NOT a v1 spec violation; it is a documented limitation of the consumer's import shape
+- **AND** the migration guide MUST recommend named imports of only the spatial primitives the application actually uses
 
 #### Scenario: Spatial-only identifiers are absent from default entry
 
@@ -609,3 +626,42 @@ These APIs split into two groups by mechanism:
 - **WHEN** the `dist/index.js` size budget is measured (per "Default entry MUST NOT bundle spatial implementation")
 - **THEN** the published Group B utility implementations and Group C constants / helpers MUST be counted within the gzipped budget
 - **AND** they MUST NOT be split into a separate chunk to circumvent the budget
+
+---
+
+### Requirement: Tree-shake friendliness
+
+The marginal-bundle-delta budget pinned by "Default entry MUST NOT bundle spatial implementation" depends on consumer bundlers tree-shaking unused exports out of the SDK's barrel. The SDK MUST publish itself in a way that lets standard ESM tree-shaking in Vite, Webpack 5+, Rollup, and Rspack reach the per-API granularity the budget assumes (named imports paying only for the named API's transitive dependencies, not for the full barrel).
+
+The contract has three normative parts:
+
+1. **`"sideEffects": false` declaration** — the published `package.json` MUST declare `"sideEffects": false` (or a precise allow-list of files that genuinely need side effects, kept as small as possible). Without this declaration, modern bundlers conservatively retain every module reachable from the barrel, defeating the named-import cost budget.
+
+2. **No top-level side effects** — every module in the default entry's static graph MUST NOT execute any code at module top-level beyond ES `import` / `export` declarations and pure constant / function declarations. Specifically forbidden at top level: function calls (e.g. `initPolyfill()`), assignments to globals (e.g. `window.something = ...`), and any other expression with observable side effects. Side effects MUST be deferred into functions invoked on demand (e.g. `bootSpatial()`, `enableDebugTool()`).
+
+3. **Re-export shape** — the barrel `src/index.ts` SHOULD prefer named re-exports (`export { Model } from './facades/Model'`) over wildcard re-exports (`export * from './facades'`) where practical, to reduce ambiguity for bundler tree-shaking heuristics. Wildcard re-exports remain acceptable for type-only re-exports (`export type * from ...`) since types vanish at runtime.
+
+#### Scenario: Published package declares sideEffects: false
+
+- **WHEN** the published `packages/react/dist/package.json` (or the package.json published to the registry) is inspected
+- **THEN** it MUST contain `"sideEffects": false` OR a precise allow-list array containing only files that legitimately have side effects
+- **AND** an SDK-side test MUST assert this field exists with a value other than `true`
+
+#### Scenario: No top-level side effects in default-entry modules
+
+- **WHEN** any module in `packages/react/src/` reachable from `src/index.ts` (the default entry) is statically analyzed
+- **THEN** the module body at top level MUST contain only `import` / `export` declarations, type declarations, function definitions, class definitions, and pure constant initializers
+- **AND** the module MUST NOT execute function calls, assignments to non-local variables, or any other expression with observable side effects at top level
+- **AND** the existing top-level `if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts` MUST be removed (this is also tracked in `tasks.md §7.2`); polyfill installation moves into the spatial chunk's bootstrap
+
+#### Scenario: Named re-export preferred over wildcard for runtime values
+
+- **WHEN** the barrel `src/index.ts` re-exports a runtime value (function, class, component)
+- **THEN** the re-export SHOULD use the explicit named form `export { name } from './module'` rather than `export * from './module'`
+- **AND** wildcard re-exports MAY be used for type-only re-exports because TypeScript types do not affect runtime tree-shaking
+
+#### Scenario: Tree-shake validation in fixture
+
+- **WHEN** the marginal-delta CI fixture (per "Default entry MUST NOT bundle spatial implementation") builds two consumer applications — one importing `Model` only, one importing the full set of public APIs — and compares their gzipped sizes
+- **THEN** the `Model`-only application's marginal delta MUST be substantially smaller than the all-imports application's marginal delta (a tree-shaking effectiveness check; a flat ratio close to 1.0 indicates broken tree-shaking even if the absolute number passes)
+- **AND** the recommended "named imports the user actually uses" pattern MUST satisfy the 8 KB budget per "Default entry MUST NOT bundle spatial implementation"
