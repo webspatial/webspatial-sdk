@@ -84,14 +84,24 @@ interface SpatialDivAnimationConfig {
    */
   loop?: boolean | { reverse?: boolean }
 
+  /**
+   * 播放速率倍数。默认：1
+   * 大于 1 加速；0 到 1 之间减速。
+   * 负值表示倒放。
+   * 必须非零且有限。
+   * 在会话创建时应用，整个会话期间保持不变。
+   * 对应 Native（AVP）侧的 AnimationView.speed 参数。
+   */
+  playbackRate?: number
+
   /** 会话建立成功后调用；首态可以是 delaying、running 或因 queued pause 导致的 paused。 */
   onStart?: () => void
 
   /** 非循环动画自然完成时调用。接收 native 终态值。 */
   onComplete?: (finalValues: SpatialDivAnimatedValues) => void
 
-  /** 通过 api.stop() 停止播放时调用。接收 stop 点值。 */
-  onStop?: (currentValues: SpatialDivAnimatedValues) => void
+  /** 通过 api.cancel() 取消时调用，携带恢复后的值。 */
+  onCancel?: (currentValues: SpatialDivAnimatedValues) => void
 
   /**
    * bridge 或 native 操作发生异步错误时调用。
@@ -108,7 +118,7 @@ interface AnimationError {
   /** 遇到错误的会话 id。 */
   animationId: string
   /** 失败的命令。 */
-  command: 'play' | 'pause' | 'resume' | 'stop'
+  command: 'play' | 'pause' | 'resume' | 'cancel'
   /** 可选的机器可读错误码。 */
   code?: string
   /** 人类可读的失败原因。 */
@@ -120,23 +130,26 @@ interface AnimationError {
 
 ```typescript
 interface AnimationApi {
-  /** 启动（或重新启动）动画。 */
+  /** 启动动画；若当前处于 paused，则从暂停处继续。 */
   play(): void
 
-  /** 在当前进度暂停动画。 */
+  /** 在当前进度暂停。 */
   pause(): void
 
-  /** 从暂停点恢复动画。 */
-  resume(): void
+  /** 取消动画，恢复到 `from`；若省略 `from` 则恢复到起始快照。 */
+  cancel(): void
 
-  /** 停止动画。SpatialDiv 保持在 stop 点。 */
-  stop(): void
-
-  /** 动画当前是否处于 queued、delaying 或 running 状态（paused 时为 false）。 */
+  /** 当前是否处于 queued、delaying 或 running 状态（paused 或 idle 时为 false）。 */
   readonly isAnimating: boolean
 
-  /** 动画当前是否被暂停。 */
+  /** 当前是否处于暂停状态。 */
   readonly isPaused: boolean
+
+  /** 当前会话状态。 */
+  readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+
+  /** 最近一个当前有效会话是否已自然完成。 */
+  readonly finished: boolean
 }
 ```
 
@@ -172,9 +185,9 @@ function FadeInCard() {
 }
 ```
 
-### 手动触发 + Stop 同步尺寸
+### 手动触发 + Cancel 同步尺寸
 
-设置 `autoStart: false`，点击按钮后播放。`onStop` 中手动同步 React state 以保持 DOM 与 native 尺寸一致。
+设置 `autoStart: false`，点击按钮后播放。`onCancel` 中手动同步 React state 以保持 DOM 与 native 恢复尺寸一致。
 
 ```jsx
 function ResizePanel() {
@@ -184,9 +197,9 @@ function ResizePanel() {
     to: { width: 400, height: 300 },
     duration: 1.0,
     autoStart: false,
-    onStop: (current) => {
-      if (current.width != null && current.height != null) {
-        setSize({ width: current.width, height: current.height })
+    onCancel: (restored) => {
+      if (restored.width != null && restored.height != null) {
+        setSize({ width: restored.width, height: restored.height })
       }
     },
   })
@@ -194,7 +207,7 @@ function ResizePanel() {
   return (
     <>
       <button onClick={() => api.play()}>Expand</button>
-      <button onClick={() => api.stop()}>Stop</button>
+      <button onClick={() => api.cancel()}>Cancel</button>
       <div
         enable-xr
         animation={animation}
@@ -227,7 +240,7 @@ function FloatingBadge() {
       animation={animation}
       onClick={() => {
         if (api.isPaused) {
-          api.resume()
+          api.play()
         } else if (api.isAnimating) {
           api.pause()
         } else {
@@ -254,16 +267,16 @@ interface Spatialized2DElement {
 }
 ```
 
-`animateSpatialDiv()` 当 `command.type` 为 `'play'` 时返回 `AnimateSpatialDivResult`，其他类型（`'pause'` / `'resume'` / `'stop'`）返回 `void`。
+`animateSpatialDiv()` 当 `command.type` 为 `'play'` 时返回 `AnimateSpatialDivResult`，其他类型（`'pause'` / `'resume'` / `'cancel'`）返回 `void`。
 
 ```typescript
 interface AnimateSpatialDivCommand {
   /**
    * 标识动画会话。每次 `play` 命令 MUST 生成一个新的全局唯一 `animationId`。
-   * `pause`、`resume`、`stop` MUST 复用创建该会话的 `play` 命令的 `animationId`。
+   * `pause`、`resume`、`cancel` MUST 复用创建该会话的 `play` 命令的 `animationId`。
    */
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop'
+  type: 'play' | 'pause' | 'resume' | 'cancel'
   /** type 为 'play' 时必填；其他类型忽略。 */
   elementId?: string
   to?: SpatialDivAnimatedValues
@@ -272,6 +285,8 @@ interface AnimateSpatialDivCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
+  /** 播放速率倍数。默认值：1。对应 AVP 侧 AnimationView.speed。 */
+  playbackRate?: number
 }
 
 interface AnimateSpatialDivResult {
@@ -279,16 +294,16 @@ interface AnimateSpatialDivResult {
   /** 非循环动画自然完成时 resolve。无限循环时永不 resolve。 */
   finished: Promise<SpatialDivAnimatedValues>
   /**
-   * 动画通过 stop() 停止时 resolve。
-   * stop 后，`finished` MUST 保持 pending（不得 reject）。
+   * 动画通过 cancel() 取消时 resolve。
+   * cancel 后，`finished` MUST 保持 pending（不得 reject）。
    */
-  stopped: Promise<SpatialDivAnimatedValues>
+  canceled: Promise<SpatialDivAnimatedValues>
 }
 ```
 
-如果元素在 alive 会话期间卸载，SDK MUST 停止/取消 native 会话，但 MUST NOT resolve `finished` 或 `stopped`（且 MUST NOT 在卸载后调用生命周期回调）。
+如果元素在 alive 会话期间卸载，SDK MUST 取消 native 会话，但 MUST NOT resolve `finished` 或 `canceled`（且 MUST NOT 在卸载后调用生命周期回调）。
 
-`animateSpatialDiv(...)` MAY 仅在命令无法提交（native 接受前）时 reject。一旦命令提交成功，后续的异步失败 MUST 通过 `{animationId}_failed` 事件上报，而不是通过 `finished` / `stopped` promise。
+`animateSpatialDiv(...)` MAY 仅在命令无法提交（native 接受前）时 reject。一旦命令提交成功，后续的异步失败 MUST 通过 `{animationId}_failed` 事件上报，而不是通过 `finished` / `canceled` promise。
 
 ### Core SDK ↔ Native (JSBridge)
 
@@ -299,18 +314,18 @@ interface AnimateSpatialDivResult {
 | 事件名 | 触发条件 | Payload |
 |---|---|---|
 | `{animationId}_completed` | 动画自然完成（所有循环结束） | `SpatialDivAnimatedValues` — native 终态值 |
-| `{animationId}_stopped` | 调用 `stop()` | `SpatialDivAnimatedValues` — stop 点值 |
-| `{animationId}_failed` | `play` / `pause` / `resume` / `stop` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
+| `{animationId}_canceled` | 调用 `cancel()` | `SpatialDivAnimatedValues` — 恢复后的值 |
+| `{animationId}_failed` | `play` / `pause` / `resume` / `cancel` 异步失败 | `AnimationError` — 至少包含 `animationId`、`command`、`reason`，可选 `code` |
 
-`_completed`、`_stopped`、`_failed` 的 listener MUST 在发送 `play` 命令之前注册，以避免终态或失败事件在 listener 就绪前触发的竞态。
+`_completed`、`_canceled`、`_failed` 的 listener MUST 在发送 `play` 命令之前注册，以避免终态或失败事件在 listener 就绪前触发的竞态。
 
 `animationId` MUST 在 runtime 进程内全局唯一，确保事件名不会跨元素或跨会话碰撞。
 
 对于给定的 `animationId`：
 
-- `play` 成功建立会话后，native MUST 恰好发出一个终态事件（`_completed` 或 `_stopped`），两者 MUST 互斥。
-- 若 `play` 异步失败，native MUST 至多发出一次 `_failed`，且 MUST NOT 随后发出 `_completed` 或 `_stopped`。
-- 若 `pause`、`resume`、`stop` 异步失败，native MUST 为该失败命令至多发出一次 `_failed`；会话保持失败前状态，后续仍 MAY 发出 `_completed` 或 `_stopped`。
+- `play` 成功建立会话后，native MUST 恰好发出一个终态事件（`_completed` 或 `_canceled`），两者 MUST 互斥。
+- 若 `play` 异步失败，native MUST 至多发出一次 `_failed`，且 MUST NOT 随后发出 `_completed` 或 `_canceled`。
+- 若 `pause`、`resume`、`cancel` 异步失败，native MUST 为该失败命令至多发出一次 `_failed`；会话保持失败前状态，后续仍 MAY 发出 `_completed` 或 `_canceled`。
 
 ## 决策
 
@@ -337,14 +352,14 @@ interface AnimateSpatialDivResult {
 
    备选方案 B 是在 config 上直接加 `target` discriminator。否决原因是增加了使用侧仪式感，且当前 key 不碰撞，不需要额外消歧。
 
-2. **运行时能力检测使用独立 key `supports('spatialDivAnimation')`**
+2. **运行时能力检测使用独立 key `supports('useSpatialDivAnimation')`**
 
    虽然 `SpatialDiv` 动画也复用 `useAnimation` 这个 hook 名称，但 capability 检测不复用实体提案中的 `supports('useAnimation')`。原因是两者的 native 依赖、可用组件范围和上线节奏可能不同，强行共用一个 top-level key 会把两个能力绑死在一起。
 
    因此：
 
    - `supports('useAnimation')` 继续保留给实体 transform 动画提案
-   - `supports('spatialDivAnimation')` 专门表示 `SpatialDiv` 白名单属性动画
+   - `supports('useSpatialDivAnimation')` 专门表示 `SpatialDiv` 白名单属性动画
    - 某个 runtime MAY 仅支持其一
 
    备选方案是为 `useAnimation` 引入 sub-token，例如 `supports('useAnimation', ['spatial-div'])`。否决原因是当前仓库中实体动画提案已经把 `supports('useAnimation')` 定义成单一 key，新的 sub-token 语义会与该提案产生额外协调成本。
@@ -379,7 +394,7 @@ interface AnimateSpatialDivResult {
 
    - `width` / `height` 动画改变 native 中 `Spatialized2DElement` 的尺寸
    - 它不会自动修改 DOM 元素的 CSS `width` / `height`
-   - 若应用希望动画结束后让 DOM 侧状态与 native 终态保持一致，应在 `onComplete` / `onStop` 中手动同步 React state
+   - 若应用希望动画结束后让 DOM 侧状态与 native 终态保持一致，应在 `onComplete` / `onCancel` 中手动同步 React state
 
    备选方案是动画期间同步改写 DOM style。否决原因是这会把动画重新拉回浏览器布局系统，既无法避免 reflow，也无法保证 native 播放与 DOM 状态严格一致。
 
@@ -398,21 +413,19 @@ interface AnimateSpatialDivResult {
    这意味着动画期间若应用还在修改 CSS rotate / scale，也会被延后到会话结束后生效。这是有意接受的 v1 权衡。
 
 7. **生命周期和错误语义完全对齐实体动画**
-
-   `play`、`pause`、`resume`、`stop`、`isAnimating`、`isPaused`、`onStart`、`onComplete`、`onStop`、`onError` 的含义与实体动画提案保持一致，以减少同一 SDK 内两套动画能力在行为上的差异。
+   `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`playState`、`finished`、`onStart`、`onComplete`、`onCancel`、`onError` 的含义与实体动画提案保持一致，以减少同一 SDK 内两套动画能力在行为上的差异。
 
    - `play()` 仍为同步 `void`
    - 异步 bridge / native 失败通过 `onError` 暴露
-   - `stop()` 保持 stop 点，不回退到 `from`
+   - `cancel()` 恢复到 `from`（省略 `from` 时恢复到起始快照），与实体动画的 `cancel()` 语义一致
    - `loop: true` 表示 reset 循环，`loop: { reverse: true }` 表示 reverse 循环
 
    备选方案是给 `SpatialDiv` 单独定义 Promise 风格控制 API。否决原因是这会破坏与实体动画之间的 API 一致性。
 
-   **`onComplete` / `onStop` 返回值范围：** 回调中的 `SpatialDivAnimatedValues` 仅包含 `to` 中声明的字段对应的终态或 stop 点值；未被动画控制的字段不会出现在返回值中。这与实体动画的 `TransformValues` 回调行为一致。
+   **`onComplete` / `onCancel` 返回值范围：** 回调中的 `SpatialDivAnimatedValues` 仅包含 `to` 中声明的字段对应的终态或恢复值；未被动画控制的字段不会出现在返回值中。这与实体动画的 `TransformValues` 回调行为一致。
 
-8. **stop-old 失败时 MUST 阻止 start-new**
-
-   对于 `play()` 驱动的重入和 animation prop 替换场景，如果停止旧会话的命令异步失败，SDK MUST 通过 `onError` 上报，并保持旧会话的失败前状态。在该失败情况下，SDK MUST NOT 启动新会话，且新会话的 `onStart` MUST NOT 触发。
+8. **cancel-old 失败时 MUST 阻止 start-new**
+   对于 `play()` 驱动的重入和 animation prop 替换场景，如果取消旧会话的命令异步失败，SDK MUST 通过 `onError` 上报，并保持旧会话的失败前状态。在该失败情况下，SDK MUST NOT 启动新会话，且新会话的 `onStart` MUST NOT 触发。
 
 9. **Config 更新不影响 alive 会话**
 
@@ -421,9 +434,9 @@ interface AnimateSpatialDivResult {
 ## 风险 / 权衡
 
 - **动画期间整体抑制 transform 会冻结普通 rotate / scale 更新** -> 通过 spec 明确这是第一版限制，并将更细粒度的 transform 组合留给后续版本。
-- **`width` / `height` 动画可能让 native 尺寸与 DOM 布局盒暂时不一致** -> 通过 `onComplete` / `onStop` 返回终态，并在文档中明确需要应用自行决定是否同步 React state。
+- **`width` / `height` 动画可能让 native 尺寸与 DOM 布局盒暂时不一致** -> 通过 `onComplete` / `onCancel` 返回终态，并在文档中明确需要应用自行决定是否同步 React state。
 - **独立 capability key 会增加一点心智负担** -> 但它换来了与实体动画独立发布、独立回滚的能力，整体风险更小。
 - **`SpatialDiv` 动画会同时触达 React、core、bridge 和 native 多层** -> 用统一会话命令、单一失败事件模型和聚焦测试用例降低跨层行为漂移风险。
 - **共用 `useAnimation` 入口引入轻微的 entity 侧改动** -> 仅限入口 if/else 分支、`__kind` 字段和绑定校验，entity 核心逻辑不变。若未来 key 碰撞需引入显式 discriminator。
-- **动画结束后若应用未在 `onComplete` / `onStop` 中同步 React state，常规同步恢复时可能将旧值推到 native，造成视觉"闪回"** -> 与实体动画行为一致。通过文档和示例明确告知开发者：如需保持动画终态，MUST 在回调中手动同步 state。
+- **动画结束后若应用未在 `onComplete` / `onCancel` 中同步 React state，常规同步恢复时可能将旧值推到 native，造成视觉"闪回"** -> 与实体动画行为一致。通过文档和示例明确告知开发者：如需保持动画终态，MUST 在回调中手动同步 state。
 - **v1 假设 React 同步渲染模型** -> 抑制释放与常规同步恢复依赖"回调后的下一个 React 渲染周期"。在 Concurrent Mode / Suspense 下渲染时机可能不确定，属于已知限制。XR 应用目前基本不启用 Concurrent Mode，如未来有需求应在 SDK 同步基础设施层统一解决。
