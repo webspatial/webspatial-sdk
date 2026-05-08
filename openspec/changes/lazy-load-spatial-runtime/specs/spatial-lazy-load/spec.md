@@ -1,5 +1,9 @@
 # Spatial lazy load (WebSpatial React SDK)
 
+## Terminology
+
+Throughout this spec, **"WebSpatial runtime"** means a runtime classified by the `runtime-capabilities` spec's "Internal runtime snapshot" Requirement as `type !== null` — i.e. one of `'visionos'`, `'picoos'`, or `'puppeteer'` (the test-harness equivalent that exists for end-to-end CI coverage of `bootSpatial()`; see `packages/autoTest`). **"Non-WebSpatial browser"** means `type === null` (plain browsers and SSR without Puppeteer instrumentation). The `'puppeteer'` runtime is treated identically to `'visionos'` / `'picoos'` for all bridge / boot / facade decisions in this spec; the differences only show up in product-level capability detection (`supports()`, per `runtime-capabilities`) and in the autoTest CI harness.
+
 ## ADDED Requirements
 
 ### Requirement: Default entry MUST NOT bundle spatial implementation

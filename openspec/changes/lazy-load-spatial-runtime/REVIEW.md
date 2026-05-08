@@ -100,6 +100,17 @@ convertCoordinate, initScene, SSRProvider, getAbsoluteUrl, version
 | Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only | ⚠️ Out of scope for v1 (may work, no contract) |
 | ESM consumption, React ≥ 18.0 | ❌ Required (CJS unsupported; React < 18 unmet peer dep) |
 
+## Runtime classification matrix
+
+How the bridge / facades / `supports()` behave per `runtime-capabilities` snapshot `type`:
+
+| `type` | UA gate | `bootSpatial()` behavior | `supports()` behavior | Facade renders |
+| --- | --- | --- | --- | --- |
+| `'visionos'` | `WSAppShell/<v>` + `Mac OS X` | Loads `@webspatial/react-sdk/spatial` via dynamic import | Per `core-sdk` capability table at the matched shell version | Real spatial after boot resolves |
+| `'picoos'` | `PicoWebApp/<v>` or `PicoBrowser` | Same as `'visionos'` | Same | Same |
+| `'puppeteer'` | UA contains `Puppeteer` (precedence over `WSAppShell`) | Same as `'visionos'` (so autoTest exercises the chunk-fetch path) | `true` for any documented capability key | Real spatial after boot resolves |
+| `null` | Plain browser / SSR / any other UA | No-op (resolves immediately) | `false` for spatial-dependent keys | Documented per-component fallback |
+
 ## Decisions to ratify (BREAKING items)
 
 Reviewers, please confirm or push back on these BREAKING decisions:
@@ -113,6 +124,8 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 - [ ] **`"sideEffects": false`** declaration on the published `package.json` plus removal of all top-level side effects (notably the existing `if (typeof window) initPolyfill()`) is required to make tree-shaking actually achieve the marginal-delta budget. Pinned by the new "Tree-shake friendliness" Requirement.
 - [ ] **`'use client'` directive** required on every facade and every public hook file (RSC compatibility).
 - [ ] **Stateless utility APIs (Group B / C)** stay in the default entry and are NOT lazy-loaded. Group B (`initScene`, `convertCoordinate`, `enableDebugTool`) gracefully degrades via `core-sdk` session detection without `bootSpatial()`. The `runtime-capabilities` "Unsupported behavior contracts" Requirement is MODIFIED so hooks/utility APIs gracefully degrade rather than throw — resolving a prior pre-existing contradiction with the actual implementation.
+- [ ] **API surface triage** (pre-implementation): four internal containers / monitors (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) are BREAKING-removed from the default entry — the supported usage is the HOCs `withSpatialized2DElementContainer` / `withSpatialMonitor`. `Entity` (the base entity class) is retained as a public facade. `createElement` is `@deprecated` in v1 with v2 removal scheduled; in-tree consumers verified zero (no apps/packages/tests import it).
+- [ ] **Puppeteer is a first-class spatial-equivalent runtime in v1.** The `runtime-capabilities` snapshot type `'puppeteer'` (already produced by `core-sdk`'s UA parser since runtime-feature-detection landed) is now explicitly recognized by the lazy-load bridge: `bootSpatial()` schedules a real `import('@webspatial/react-sdk/spatial')` in puppeteer mode, so `packages/autoTest` exercises the chunk-fetch path end-to-end. Alternatives considered and rejected: (B) bridge no-op + test-only `__internalSetSpatialImpl` hook; (C) v1 keeps puppeteer out of the spec.
 
 ## Open questions for reviewer input
 
