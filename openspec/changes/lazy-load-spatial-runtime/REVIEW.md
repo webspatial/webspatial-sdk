@@ -52,9 +52,9 @@ onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void
 class WebSpatialBootError extends Error { cause: unknown; attempt: number }
 
 // Spatial components (facades) — same TypeScript signatures as before
-Model, Reality, BoxEntity, SphereEntity, ConeEntity, CylinderEntity, PlaneEntity,
-ModelEntity, AttachmentEntity, UnlitMaterial, Material, Texture, ModelAsset,
-AttachmentAsset, SceneGraph
+Model, Reality, Entity, BoxEntity, SphereEntity, ConeEntity, CylinderEntity,
+PlaneEntity, ModelEntity, AttachmentEntity, UnlitMaterial, Material, Texture,
+ModelAsset, AttachmentAsset, SceneGraph, World
 
 // HOCs (facade wrappers)
 withSpatialized2DElementContainer, withSpatialMonitor
@@ -65,6 +65,13 @@ useMetrics  // public, with placeholder/real selection per instance
 // Existing (unchanged)
 WebSpatialRuntime, WebSpatialRuntimeError, CapabilityKey, enableDebugTool,
 convertCoordinate, initScene, SSRProvider, getAbsoluteUrl, version
+
+// Deprecated in v1, removal planned for v2
+createElement
+
+// Removed from default entry
+SpatializedContainer, Spatialized2DElementContainer,
+SpatializedStatic3DElementContainer, SpatialMonitor
 ```
 
 ### Coverage map (which Requirement covers which API)
@@ -87,8 +94,8 @@ convertCoordinate, initScene, SSRProvider, getAbsoluteUrl, version
 | --- | --- |
 | `Model` | `<model ref {...remainingProps} />` (spatial event props stripped) |
 | `Reality` | `<div aria-hidden="true" ref>` placeholder; children NOT mounted |
-| `*Entity` family, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
-| `SceneGraph` / `World` | `<>{children}</>` (transparent) |
+| `Entity`, `*Entity` family, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
+| `SceneGraph` / `World` alias | `<>{children}</>` (transparent) |
 | HOC wrappers | `<Comp/El {...passthrough} ref />` (transparent passthrough) |
 
 ## Bundler compatibility matrix
@@ -124,7 +131,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 - [ ] **`"sideEffects": false`** declaration on the published `package.json` plus removal of all top-level side effects (notably the existing `if (typeof window) initPolyfill()`) is required to make tree-shaking actually achieve the marginal-delta budget. Pinned by the new "Tree-shake friendliness" Requirement.
 - [ ] **`'use client'` directive** required on every facade and every public hook file (RSC compatibility).
 - [ ] **Stateless utility APIs (Group B / C)** stay in the default entry and are NOT lazy-loaded. Group B (`initScene`, `convertCoordinate`, `enableDebugTool`) gracefully degrades via `core-sdk` session detection without `bootSpatial()`. The `runtime-capabilities` "Unsupported behavior contracts" Requirement is MODIFIED so hooks/utility APIs gracefully degrade rather than throw — resolving a prior pre-existing contradiction with the actual implementation.
-- [ ] **API surface triage** (pre-implementation): four internal containers / monitors (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) are BREAKING-removed from the default entry — the supported usage is the HOCs `withSpatialized2DElementContainer` / `withSpatialMonitor`. `Entity` (the base entity class) is retained as a public facade. `createElement` is `@deprecated` in v1 with v2 removal scheduled; in-tree consumers verified zero (no apps/packages/tests import it).
+- [ ] **API surface triage** (pre-implementation): four internal containers / monitors (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) are BREAKING-removed from the default entry — the supported usage is the HOCs `withSpatialized2DElementContainer` / `withSpatialMonitor`. `Entity` (the base Entity component / empty transform group) is retained as a public facade. `createElement` is `@deprecated` in v1 with v2 removal scheduled; in-tree consumers verified zero (no apps/packages/tests import it).
 - [ ] **Puppeteer is a first-class spatial-equivalent runtime in v1.** The `runtime-capabilities` snapshot type `'puppeteer'` (already produced by `core-sdk`'s UA parser since runtime-feature-detection landed) is now explicitly recognized by the lazy-load bridge: `bootSpatial()` schedules a real `import('@webspatial/react-sdk/spatial')` in puppeteer mode, so `packages/autoTest` exercises the chunk-fetch path end-to-end. Alternatives considered and rejected: (B) bridge no-op + test-only `__internalSetSpatialImpl` hook; (C) v1 keeps puppeteer out of the spec.
 - [ ] **React (and `react-dom`) is a hard peer dependency.** `peerDependencies.react: ">=18.0"` + `peerDependenciesMeta.react.optional = false` (currently `true` in `packages/react/package.json:62-65`, flipped during `tasks.md §8.7`). Lazy-load v1 makes the React surface (facades, hooks, JSX runtime, `useSpatialReady`) the package's primary value — the optional flag is now misleading. Alternatives considered and rejected: (B) keep optional + spec note (leaves the contradiction); (C) split a React-less `@webspatial/react-sdk/runtime` subpath (no proven external demand; tracked as a follow-up if real consumers surface).
 
@@ -159,4 +166,65 @@ The PR was incrementally refined through multiple design-decision passes plus co
 
 ---
 
-**No source code is touched in this PR.** Implementation will follow in subsequent PRs aligned with `tasks.md`. The recommended split is `§1 + §2` as a foundation PR, `§3 + §4 + §5 + §6 + §7` as the core feature PR, and `§8 + §9 + §10 + §13 + §14` as the build / size budget / SSR validation / stateless-utility validation / docs PR. `§11 / §12` are non-blocking follow-ups.
+## Implementation roadmap
+
+**No source code is touched in this PR.** Once this spec is ratified and merged to `main`, implementation should land via **6 sequential PRs + 1 follow-up wave**, each branched off `main`. Tasks are pinned in `tasks.md`; this section is the suggested PR boundary so reviewers do not face a 2000-LOC BREAKING switchover in a single diff.
+
+### PR boundary
+
+| PR | Branch (suggested) | Tasks | Risk | Why separate |
+| --- | --- | --- | --- | --- |
+| 1. Foundation | `feat/lazy-load-foundation` | §1 + §2 + §3 | Low — additive only; default entry behavior unchanged | Bridge / boot / detect / errors / `useSpatialReady` are net-new modules; `src/spatial/index.ts` is a bridge-facing namespace. Nothing user-visible flips |
+| 2. Facades + hook placeholders | `feat/lazy-load-facades` | §4 + §5 | Medium — many small new files; default entry not yet wired to use them | Each facade ≤ 50 LOC and independently unit-testable; isolating these from §6 / §7 keeps the diff readable |
+| 3. Unified JSX runtime | `feat/lazy-load-jsx-runtime` | §6 | Medium — fixes a latent `props.style` mutation bug + deletes `*.web.ts` variants | Bug-fix character; should NOT wait on the BREAKING switchover |
+| 4. Default entry switchover (BREAKING) | `feat/lazy-load-default-entry` | §7 | **High** — entire BREAKING release activates here | One PR's worth of focused review attention on the user-visible changes: 4 internals removed; `createElement` `@deprecated`; top-level `initPolyfill()` deleted; facades go live |
+| 5. Build config + size enforcement | `feat/lazy-load-build-size` | §8 + §9 | Medium — tsup rewrite + fixture infrastructure | Marginal-delta fixture (Vite consumer with `app-base` / `app-typical` / `app-namespace`) requires the published `dist/` from §8 |
+| 6. Validation + docs | `feat/lazy-load-validation-docs` | §10 + §13 + §14 | Low | Polish: SSR / hydration tests, stateless utility tests, README, migration guide, CHANGELOG |
+| Follow-ups (parallel) | per-task branches | §11 + §12 | Low / mixed | Cross-repo plugin deprecation (`§11`); autoTest migration (`§12.2`); Webpack fixture (`§12.6`); Turbopack investigation (`§12.7`); Module Federation (`§12.8`); pre-v1 budget calibration (`§12.9`, **v1 release blocker** — must run before tagging v1 to confirm or adjust the 8 KB target) |
+
+### Dependency graph
+
+```
+PR 1 (Foundation)
+  ├── PR 2 (Facades + Hooks)        ← depends on §2 bridge / useSpatialReady
+  └── PR 3 (JSX runtime fix)        ← depends on §4 facade HOCs; merge after PR 2
+        └──> PR 4 (Default switch BREAKING)
+              ├──> PR 5 (Build + Size)
+              └──> PR 6 (Validation + Docs)
+
+[Follow-up wave, parallel after PR 4 lands]
+  §11 vite-plugin cross-repo deprecation
+  §12.2 autoTest migration  →  §12.9 budget calibration (v1 release blocker)
+  §12.6 Webpack fixture     →  §12.7 Turbopack
+                             →  §12.8 Module Federation
+```
+
+PR 1, 2, 3 may all merge to `main` without breaking the existing build because the default entry is not yet rewired to consume facades — `src/spatial/`, the bridge, and the new facades exist as dead code paths. PR 4 is the actual cutover; pick a low-traffic merge window so any consumer-side breakage surfaces with someone available to triage.
+
+### Acceptance criteria template
+
+Each implementation PR should reference back to the spec via `tasks.md` and the relevant Scenarios. Suggested PR description shape:
+
+> Implements `tasks.md §X + §Y` from spec PR #1170.
+>
+> **Acceptance criteria**
+> - [ ] `bootSpatial()` resolves immediately under SSR (no dynamic import scheduled), per `spec.md` "Boot is a no-op during SSR" Scenario
+> - [ ] `loadSpatialImpl()` rejection is wrapped into `WebSpatialBootError` before reaching listeners, per `spec.md` "Spatial chunk load failure is observable" Scenario
+> - [ ] (...one bullet per Scenario this PR satisfies)
+>
+> **Out of scope** (deferred)
+> - Size-budget enforcement → PR 5
+> - SSR / hydration validation tests → PR 6
+
+### Spec amendments during implementation
+
+If implementation reveals a gap, **do NOT modify the spec from inside an implementation PR**. Either:
+
+- (preferred, while this PR `#1170` is still under review) push the amendment as a new commit to the `openspec/lazy-load-spatial-runtime` branch
+- (after this PR merges) open a new OpenSpec change documenting the amendment, then resume the affected implementation PR
+
+This keeps "code review" and "spec amendment review" as two separable signals on `main`.
+
+### Archive
+
+Once all implementation PRs land and CI is green, run `openspec archive lazy-load-spatial-runtime` (per `.codex/skills/openspec-archive-change/SKILL.md`) to move `openspec/changes/lazy-load-spatial-runtime/` into `openspec/archive/<date>-lazy-load-spatial-runtime/`. The change becomes part of the canonical spec history.
