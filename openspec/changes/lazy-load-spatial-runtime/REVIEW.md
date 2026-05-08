@@ -4,7 +4,7 @@
 
 This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/default`) + alias-switching plugin" architecture with a **runtime lazy-load model**:
 
-- One small default bundle for everyone (≤ 8KB gzip target on `dist/index.js`)
+- One small default bundle for everyone — **≤ 8KB gzipped marginal delta** added to a typical consumer app (e.g. `import { Model, bootSpatial }`), with `dist/index.js` ≤ 8KB as the SDK-side proxy
 - Spatial implementation lives in a separate `@webspatial/react-sdk/spatial` chunk, loaded dynamically via `await bootSpatial()` only inside a WebSpatial runtime
 - Plain web users see documented per-component fallbacks (e.g. `Model` → degraded `<model>` tag) without any extra network requests
 - `@webspatial/vite-plugin` becomes redundant — the SDK works against any bundler that supports ESM + `exports` + dynamic-import code-splitting
@@ -16,18 +16,18 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | Artifact | What it answers |
 | --- | --- |
 | `proposal.md` | Why this change & high-level "What Changes" |
-| `design.md` | How — 11 design decisions, risks, migration plan, open questions |
-| `tasks.md` | 13 sections / 70+ implementation tasks |
-| `specs/spatial-lazy-load/spec.md` | New capability — 9 normative Requirements + many Scenarios |
+| `design.md` | How — 13 design decisions, risks, migration plan, open questions |
+| `tasks.md` | 14 sections / 80+ implementation tasks |
+| `specs/spatial-lazy-load/spec.md` | New capability — 11 normative Requirements + many Scenarios |
 | `specs/runtime-capabilities/spec.md` | Delta to existing capability — 1 MODIFIED + 1 ADDED |
 
 `openspec validate lazy-load-spatial-runtime --strict` passes.
 
-## The 10 Requirements at a glance
+## The 11 Requirements at a glance
 
 | # | Requirement | Scenarios | Anchor concern |
 | --- | --- | --- | --- |
-| 1 | Default entry MUST NOT bundle spatial implementation | 3 | 8KB gzip budget; symbol absence; complete fallback rendering self-contained in default entry |
+| 1 | Default entry MUST NOT bundle spatial implementation | 5 | Marginal delta ≤ 8KB on typical consumer (product contract); SDK-side `dist/index.js` ≤ 8KB proxy; worst-case namespace import is informational; symbol absence; complete fallback rendering self-contained in default entry |
 | 2 | Spatial implementation MUST live in a dynamically importable subpath | 3 | `import('@webspatial/react-sdk/spatial')`; web never fetches; spatial fetches once |
 | 3 | Bridge singleton | 3 | `getSpatialImpl` / `loadSpatialImpl` / SSR safety / load-failure observable |
 | 4 | `bootSpatial` is the only activation path | 12 | Single API; idempotent; retry-on-demand; multi-listener `onSpatialLoadError`; `WebSpatialBootError` shape; multi-root sharing; StrictMode safe |
@@ -37,6 +37,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | 8 | SSR and hydration safety | 7 | Any React 18+ SSR API; `'use client'` on facades; `useSyncExternalStore` for hydration; both boot timings safe |
 | 9 | Plugin-free integration | 7 | Capability contract (ESM + `exports` + code-splitting); React peer ≥ 18.0; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
 | 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
+| 11 | Tree-shake friendliness | 4 | `package.json` `"sideEffects": false`; no top-level side effects in default-entry modules; named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
 
 Plus an updated `runtime-capabilities` MODIFIED delta: the "Unsupported behavior contracts" Requirement now states hooks/utility functions MUST gracefully degrade (not throw) — replaces the prior contradictory "MUST throw" scenario for `useMetrics` and `convertCoordinate`.
 
@@ -108,7 +109,8 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 - [ ] **Per-facade `props.fallback` is intentionally NOT a v1 API.** Customization via user-side `useSpatialReady()` wrappers.
 - [ ] **`@webspatial/vite-plugin` retired** in a follow-up cross-repo issue (not blocking this PR).
 - [ ] **In-house apps (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) are NOT migrated** in this change; tracked as follow-up tasks in §12.
-- [ ] **8KB gzip size budget** on `dist/index.js` — target, not launch-blocker; first measurement may land at actual value with a TODO to tighten.
+- [ ] **8KB gzip size budget framed as marginal delta on a typical consumer** (`import { Model, bootSpatial }` usage) — the user-facing product contract. The SDK-side `dist/index.js` ≤ 8KB is a proxy. Worst-case namespace imports MAY exceed; documented as informational. Calibration follow-up (`tasks.md §12.9`) tightens or files optimization issues against measured reality before v1.
+- [ ] **`"sideEffects": false`** declaration on the published `package.json` plus removal of all top-level side effects (notably the existing `if (typeof window) initPolyfill()`) is required to make tree-shaking actually achieve the marginal-delta budget. Pinned by the new "Tree-shake friendliness" Requirement.
 - [ ] **`'use client'` directive** required on every facade and every public hook file (RSC compatibility).
 - [ ] **Stateless utility APIs (Group B / C)** stay in the default entry and are NOT lazy-loaded. Group B (`initScene`, `convertCoordinate`, `enableDebugTool`) gracefully degrades via `core-sdk` session detection without `bootSpatial()`. The `runtime-capabilities` "Unsupported behavior contracts" Requirement is MODIFIED so hooks/utility APIs gracefully degrade rather than throw — resolving a prior pre-existing contradiction with the actual implementation.
 
@@ -116,7 +118,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 
 (Tracked in `design.md` Open Questions; revisit after the first measurement / user-feedback wave)
 
-- Final number for the gzip size budget (target 8KB)
+- Final number for the gzip size budget (target 8KB marginal-delta on typical consumer; calibrate against real measurements during implementation per `tasks.md §12.9`)
 - Whether to expose `getBootStatus()` for finer state (v1 says no)
 - Whether `bootSpatial({ timeoutMs })` should be a v1 option (v1 says no)
 - Cadence for tightening size budget after release
@@ -124,9 +126,9 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 ## Recommended review path
 
 1. Skim **`proposal.md`** (~50 lines) for "Why" and "What Changes" first.
-2. Read **`spec.md`** Requirements 4 → 5 → 6 → 7 → 8 → 9 in that order — these are where the contract gets specific. Requirements 1, 2, 3 are short and sit above.
-3. Skim **`design.md`** decisions 1–11 — each decision points back at the relevant spec Requirement.
-4. Skim **`tasks.md`** §1–§13 to gauge implementation scope. §13 is SSR validation specifically.
+2. Read **`spec.md`** Requirements 4 → 5 → 6 → 7 → 8 → 9 in that order — these are where the contract gets specific. Requirements 1, 2, 3 are short and sit above; Requirement 11 (Tree-shake friendliness) is a small but normative addition behind Requirement 1.
+3. Skim **`design.md`** decisions 1–13 — each decision points back at the relevant spec Requirement. Decision 13 (Size budget framing) explains the marginal-delta vs proxy split.
+4. Skim **`tasks.md`** §1–§14 to gauge implementation scope. §9 is size-budget enforcement (proxy + marginal-delta fixture + sideEffects + tree-shake check), §12.9 is the pre-v1 budget calibration follow-up, §13 is SSR validation, §14 is stateless-utility validation.
 5. Optionally read **`specs/runtime-capabilities/spec.md`** delta if you maintain `runtime-capabilities`.
 
 ## Validate locally
@@ -137,10 +139,10 @@ openspec status --change lazy-load-spatial-runtime
 openspec show lazy-load-spatial-runtime           # interactive view
 ```
 
-## Commit history (11 commits)
+## Commit history
 
-The PR was incrementally refined through 8 design-decision passes plus 3 consistency reviews. Each commit message documents a self-contained refinement; `git log --oneline` is a usable secondary index if you want to read the spec's evolution.
+The PR was incrementally refined through multiple design-decision passes plus consistency reviews. Each commit message documents a self-contained refinement; `git log --oneline` is a usable secondary index if you want to read the spec's evolution.
 
 ---
 
-**No source code is touched in this PR.** Implementation will follow in subsequent PRs aligned with `tasks.md`. The recommended split is `§1 + §2` as a foundation PR, `§3 + §4 + §5 + §6 + §7` as the core feature PR, and `§8 + §9 + §10 + §13` as the build / size budget / SSR validation / docs PR. `§11 / §12` are non-blocking follow-ups.
+**No source code is touched in this PR.** Implementation will follow in subsequent PRs aligned with `tasks.md`. The recommended split is `§1 + §2` as a foundation PR, `§3 + §4 + §5 + §6 + §7` as the core feature PR, and `§8 + §9 + §10 + §13 + §14` as the build / size budget / SSR validation / stateless-utility validation / docs PR. `§11 / §12` are non-blocking follow-ups.
