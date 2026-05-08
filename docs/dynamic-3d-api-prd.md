@@ -294,7 +294,7 @@ const [animation, api] = useAnimation({
 | `loop` | `boolean \| { reverse: true }` | `false` | `true` = reset loop; `{ reverse: true }` = ping-pong |
 | `onStart` | `() => void` | — | Called when native playback actually begins |
 | `onComplete` | `() => void` | — | Called on natural completion |
-| `onStop` | `() => void` | — | Called when `stop()` is invoked |
+| `onCancel` | `() => void` | — | Called when `cancel()` is invoked |
 | `onError` | `(err: AnimationError) => void` | — | Called on bridge or native failure |
 
 **Imperative API (`api`):**

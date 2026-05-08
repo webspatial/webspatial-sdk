@@ -21,7 +21,7 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
     description: 'Reverse loop rotation with pause/play (resume) and cancel.',
   },
   {
-    path: '/entity-animation/stop-sync',
+    path: '/entity-animation/cancel-sync',
     label: 'Cancel and Sync State',
     description:
       'Sync React state with the cancel restore point to avoid jumps.',

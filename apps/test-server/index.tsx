@@ -73,7 +73,7 @@ import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
 import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
-import EntityAnimationStopSyncPage from './src/pages/entity-animation/cancel-sync'
+import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
@@ -154,8 +154,8 @@ function App() {
                   element={<EntityAnimationReverseLoopPage />}
                 />
                 <Route
-                  path="/entity-animation/stop-sync"
-                  element={<EntityAnimationStopSyncPage />}
+                  path="/entity-animation/cancel-sync"
+                  element={<EntityAnimationCancelSyncPage />}
                 />
                 <Route
                   path="/entity-animation/capability-check"

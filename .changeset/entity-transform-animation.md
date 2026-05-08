@@ -13,7 +13,7 @@ Add entity transform animation API (`useAnimation` hook, `animation` prop, and n
 - `supports('useAnimation')` capability key added (currently disabled; will be enabled when native shell ships support).
 
 **React SDK**
-- `useAnimation(config)` hook returns `[AnimatedProps, AnimationApi]` with declarative config validation, `autoStart`, `delay`, `loop` (including reverse), `timingFunction`, and lifecycle callbacks (`onStart`, `onComplete`, `onStop`, `onError`).
+- `useAnimation(config)` hook returns `[AnimatedProps, AnimationApi]` with declarative config validation, `autoStart`, `delay`, `loop` (including reverse), `timingFunction`, and lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`).
 - Entity components (`BoxEntity`, `SphereEntity`, etc.) accept an `animation` prop that binds animated transforms and suppresses competing ordinary transform updates for animated fields.
 - Transform suppression logic ensures non-animated fields still update normally during an active animation session.
 
