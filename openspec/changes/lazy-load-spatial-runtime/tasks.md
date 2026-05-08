@@ -69,7 +69,13 @@
 - [ ] 8.4 Update `packages/react/package.json` `main` and `types` to point at the new `dist/index.js` and `dist/index.d.ts`
 - [ ] 8.5 Verify `tsup` emits `dist/spatial.js` as a separate file (not inlined into `dist/index.js`) and that the dynamic `import()` from the bridge resolves to the published subpath
 - [ ] 8.6 Update `packages/react/tsconfig.json` `paths` to remove any `@webspatial/react-sdk/web` or `/default` entries; ensure `@webspatial/react-sdk` resolves to `./src` (unchanged)
-- [ ] 8.7 Declare the `peerDependencies` contract in `packages/react/package.json`: `react: ">=18.0"`, `react-dom: ">=18.0"` (matches the `useSyncExternalStore` baseline required by `useSpatialReady` per the "Plugin-free integration" Requirement). Verify `peerDependenciesMeta` reflects whether either peer is optional (today both are marked optional; revisit if RSC contracts require otherwise)
+- [ ] 8.7 Declare the `peerDependencies` contract in `packages/react/package.json` as **required, hard peer** (per "React peer is required (hard peer)" Scenario):
+  - `peerDependencies.react`: `">=18.0"` (matches the `useSyncExternalStore` baseline required by `useSpatialReady` per "Plugin-free integration")
+  - `peerDependencies["react-dom"]`: `">=18.0"`
+  - `peerDependenciesMeta.react.optional`: MUST be set to `false` (currently `true` in `packages/react/package.json:62` — flip during this task)
+  - `peerDependenciesMeta["react-dom"].optional`: MUST be set to `false` (currently `true` in `packages/react/package.json:65` — flip during this task)
+  - Alternative: remove the `react` / `react-dom` entries from `peerDependenciesMeta` entirely (since the npm/pnpm/yarn default is `optional: false`). Either form satisfies the spec
+- [ ] 8.8 Add an SDK-side test that loads the published `packages/react/dist/package.json` (or the source `packages/react/package.json` if the publish pipeline does not rewrite it) and asserts `peerDependenciesMeta.react.optional !== true` and `peerDependenciesMeta["react-dom"].optional !== true`. Per "React peer is required (hard peer)" Scenario
 
 ## 9. Size budget enforcement
 
