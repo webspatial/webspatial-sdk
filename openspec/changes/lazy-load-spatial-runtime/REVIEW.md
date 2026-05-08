@@ -19,7 +19,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | `design.md` | How — 13 design decisions, risks, migration plan, open questions |
 | `tasks.md` | 15 sections / 90+ implementation tasks |
 | `specs/spatial-lazy-load/spec.md` | New capability — 11 normative Requirements + many Scenarios |
-| `specs/runtime-capabilities/spec.md` | Delta to existing capability — 1 MODIFIED + 1 ADDED |
+| `specs/runtime-capabilities/spec.md` | Delta to existing capability — 2 MODIFIED + 1 ADDED |
 
 `openspec validate lazy-load-spatial-runtime --strict` passes.
 
@@ -30,12 +30,12 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | 1 | Default entry MUST NOT bundle spatial implementation | 5 | Marginal delta ≤ 8KB on typical consumer (product contract); SDK-side `dist/index.js` ≤ 8KB proxy; worst-case namespace import is informational; symbol absence; complete fallback rendering self-contained in default entry |
 | 2 | Spatial implementation MUST live in a dynamically importable subpath | 3 | `import('@webspatial/react-sdk/spatial')`; web never fetches; spatial fetches once |
 | 3 | Bridge singleton | 3 | `getSpatialImpl` / `loadSpatialImpl` / SSR safety / load-failure observable |
-| 4 | `bootSpatial` is the only activation path | 12 | Single API; idempotent; retry-on-demand; multi-listener `onSpatialLoadError`; `WebSpatialBootError` shape; multi-root sharing; StrictMode safe |
+| 4 | `bootSpatial` is the only activation path | 13 | Single API; idempotent; retry-on-demand; multi-listener `onSpatialLoadError`; `WebSpatialBootError` shape; multi-root sharing; StrictMode safe; dev-mode warning differential (warn in WebSpatial when boot forgotten; silent in plain web) |
 | 5 | Component facades | 8 | Per-component default fallback table (normative); `'use client'`; `displayName`; no `React.memo`; HOC cache identity |
 | 6 | Hook placeholders | 7 | Public surface = only `useMetrics` (1/1360 ratio); no mid-life switch; remount picks up real impl |
 | 7 | JSX runtime strips spatial markers and wraps with facade HOCs | 8 | Single unified runtime; strip + wrap; `Model` bypass; clone `props.style`; `className` only (not `class`); SSR equivalence |
 | 8 | SSR and hydration safety | 7 | Any React 18+ SSR API; `'use client'` on facades; `useSyncExternalStore` for hydration; both boot timings safe |
-| 9 | Plugin-free integration | 7 | Capability contract (ESM + `exports` + code-splitting); React peer ≥ 18.0; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
+| 9 | Plugin-free integration | 11 | Capability contract (ESM + `exports` + code-splitting); React **hard peer** ≥ 18.0 (`optional: false`); React-less use NOT a v1 contract; bundler-without-splitting still functions; legacy `/web` `/default` subpaths removed; spatial container internals removal; `createElement` deprecation; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
 | 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
 | 11 | Tree-shake friendliness | 5 | `package.json` `"sideEffects": false`; no **observable** top-level side effects (module-private pure init like `forwardRef` / `new Map` / `createContext` explicitly permitted); named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
 
@@ -109,21 +109,21 @@ The two paths are physically separate code (boot bundle vs spatial chunk) and **
 
 | API | Path 1 fallback (Scenario 1) | Path 1 pinned by | Path 2 fallback (Scenario 2) | Path 2 pinned by | Status |
 | --- | --- | --- | --- | --- | --- |
-| `Model` | `<model ref {...rest}/>` (spatial event props stripped) | `spatial-lazy-load` "Model fallback renders degraded `<model>` tag" | Same — native `<model>` with props passthrough | `runtime-capabilities` "Model exception fallback" | ✅ Aligned |
-| `Reality` | `<div aria-hidden="true" ref>`, children NOT mounted | `spatial-lazy-load` "Reality fallback preserves layout" | Same — `<div aria-hidden>` placeholder, layout preserved, no child mount | `runtime-capabilities` "Reality unsupported fallback" | ✅ Aligned |
+| `Model` | `<model ref {...rest}/>` (spatial event props stripped) | `spatial-lazy-load` "Model fallback renders degraded `<model>` tag" | Same — native `<model>` with props passthrough | `runtime-capabilities` "`Model` exception fallback" | ✅ Aligned |
+| `Reality` | `<div aria-hidden="true" ref>`, children NOT mounted | `spatial-lazy-load` "Reality fallback preserves layout" | Same — `<div aria-hidden>` placeholder, layout preserved, no child mount | `runtime-capabilities` "`Reality` unsupported fallback" | ✅ Aligned |
 | `Entity` / `*Entity` family | `null` | `spatial-lazy-load` "Component facades" + facade table | "MUST NOT render corresponding DOM/entity node" — implies `null` | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
 | `UnlitMaterial` / `Material` / `Texture` / `*Asset` | `null` | facade table | Same (entity-rendering contract above) | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
 | `SceneGraph` / `World` | `<>{children}</>` (transparent) | facade table | **Not explicitly pinned** today | — | ⚠️ Gap — `tasks.md §15.3` parity test asserts alignment; v1.x amendment opens a `runtime-capabilities` Scenario |
 | `withSpatialized2DElementContainer(Comp)` | `<Comp {...passthrough} ref/>` | facade table | **Not explicitly pinned** | — | ⚠️ Same gap as SceneGraph |
 | `withSpatialMonitor(El)` | `<El {...passthrough} ref/>` | facade table | **Not explicitly pinned** | — | ⚠️ Same gap |
-| `useMetrics` | 1/1360 ratio + identity-stable functions | `spatial-lazy-load` "Hook placeholders" + "useMetrics placeholder returns the documented fallback values" | Identical 1/1360 ratio; MAY emit one-shot `console.warn` | `runtime-capabilities` "useMetrics graceful degradation" | ✅ Aligned |
-| `initScene` / `convertCoordinate` / `enableDebugTool` | Group B utilities — Path 1 = Path 2 by construction (route through `core-sdk getSession()`; both null-session paths are the same code) | `spatial-lazy-load` "Stateless utility APIs..." Requirement | Same code path | `runtime-capabilities` "convertCoordinate graceful degradation" + Group B contracts | ✅ Aligned (single path, no parity risk) |
+| `useMetrics` | 1/1360 ratio + identity-stable functions | `spatial-lazy-load` "Hook placeholders" + "useMetrics placeholder returns the documented fallback values" | Identical 1/1360 ratio; MAY emit one-shot `console.warn` | `runtime-capabilities` "`useMetrics` graceful degradation" | ✅ Aligned |
+| `initScene` / `convertCoordinate` / `enableDebugTool` | Group B utilities — Path 1 = Path 2 by construction (route through `core-sdk getSession()`; both null-session paths are the same code) | `spatial-lazy-load` "Stateless utility APIs..." Requirement | Same code path | `runtime-capabilities` "`convertCoordinate` graceful degradation" + Group B contracts | ✅ Aligned (single path, no parity risk) |
 | `WebSpatialRuntime.supports`, `getAbsoluteUrl`, `SSRProvider`, `version`, `WebSpatialRuntimeError`, `CapabilityKey` | Group C — no feature-gating concept; not a "two-scenario" API | `spatial-lazy-load` "Stateless utility APIs..." Requirement | (n/a — pure data / re-exports) | — | n/a |
 | `bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `createElement` | Infrastructure — not "feature-gated" APIs | (n/a) | (n/a) | — | n/a |
 
 **Why the audit matters**: Path 1 and Path 2 are written by different commits, in different files, in different bundles. Without parity tests, a future facade tweak (e.g. changing `Reality`'s placeholder from `<div>` to `<span>`) can silently leave the real-impl unsupported branch in the spatial chunk emitting a different DOM. `tasks.md §15` adds a parametrized parity-test harness that mounts each facade in both contexts and asserts the rendered HTML is structurally identical — caught at unit-test time, not in production.
 
-**Console-warning policy differential** (intentional difference between Path 1 and Path 2): non-WebSpatial Path 1 MUST NOT emit `console.warn` for boot-was-forgotten or capability-unsupported (the user's plain browser is the intended environment; warnings are noise). WebSpatial-runtime Path 2 MAY emit one-shot `console.warn` per page per affected API. Pinned by `spec.md` "No dev-mode warning in non-WebSpatial browsers" Scenario plus `runtime-capabilities` "useMetrics graceful degradation" Scenario; verified by `tasks.md §15.5`.
+**Console-warning policy differential** (intentional difference between Path 1 and Path 2): non-WebSpatial Path 1 MUST NOT emit `console.warn` for boot-was-forgotten or capability-unsupported (the user's plain browser is the intended environment; warnings are noise). WebSpatial-runtime Path 2 MAY emit one-shot `console.warn` per page per affected API. Pinned by `spec.md` "No dev-mode warning in non-WebSpatial browsers" Scenario plus `runtime-capabilities` "`useMetrics` graceful degradation" Scenario; verified by `tasks.md §15.5`.
 
 ## Bundler compatibility matrix
 
