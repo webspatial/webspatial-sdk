@@ -94,3 +94,18 @@ export const PhysicalMetrics = {
   }),
   subscribe: (cb: any) => () => {},
 }
+// --- Web bundle: browser-only utilities (no native runtime needed) ---
+
+/** Compose position/rotation/scale into a 4x4 transform matrix.
+ *  Uses browser-native DOMMatrix — works without the native runtime. */
+export function composeSRT(
+  position: { x: number; y: number; z: number },
+  rotation: { x: number; y: number; z: number },
+  scale: { x: number; y: number; z: number },
+) {
+  let m = new DOMMatrix()
+  m = m.translate(position.x, position.y, position.z)
+  m = m.rotate(rotation.x, rotation.y, rotation.z)
+  m = m.scale(scale.x, scale.y, scale.z)
+  return m
+}
