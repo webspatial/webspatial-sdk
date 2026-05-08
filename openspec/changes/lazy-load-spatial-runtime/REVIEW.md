@@ -17,7 +17,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | --- | --- |
 | `proposal.md` | Why this change & high-level "What Changes" |
 | `design.md` | How — 13 design decisions, risks, migration plan, open questions |
-| `tasks.md` | 14 sections / 80+ implementation tasks |
+| `tasks.md` | 15 sections / 90+ implementation tasks |
 | `specs/spatial-lazy-load/spec.md` | New capability — 11 normative Requirements + many Scenarios |
 | `specs/runtime-capabilities/spec.md` | Delta to existing capability — 1 MODIFIED + 1 ADDED |
 
@@ -98,6 +98,33 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | `SceneGraph` / `World` alias | `<>{children}</>` (transparent) |
 | HOC wrappers | `<Comp/El {...passthrough} ref />` (transparent passthrough) |
 
+## Two-scenario behavior contract audit
+
+After lazy-load, every Group A public API has **TWO independent unsupported-behavior code paths**:
+
+- **Path 1 — boot-bundle facade fallback** (lives in default entry): exercised when `isSpatialReady() === false` for any reason — non-WebSpatial browser, SSR, boot in flight, boot rejected, boot never called. Pinned by `spec.md` "Component facades" / "Hook placeholders".
+- **Path 2 — spatial-chunk real-impl unsupported fallback** (lives in `@webspatial/react-sdk/spatial`): exercised when `bootSpatial()` HAS resolved AND the real implementation is mounted, but the underlying capability check returns `false` (e.g. shell version too old). Pinned by `runtime-capabilities` "Unsupported behavior contracts".
+
+The two paths are physically separate code (boot bundle vs spatial chunk) and **MUST produce structurally identical observable behavior** unless explicitly differentiated (only `console.warn` policy differs — Path 1 silent, Path 2 MAY warn). This audit table is the reviewer's checklist:
+
+| API | Path 1 fallback (Scenario 1) | Path 1 pinned by | Path 2 fallback (Scenario 2) | Path 2 pinned by | Status |
+| --- | --- | --- | --- | --- | --- |
+| `Model` | `<model ref {...rest}/>` (spatial event props stripped) | `spatial-lazy-load` "Model fallback renders degraded `<model>` tag" | Same — native `<model>` with props passthrough | `runtime-capabilities` "Model exception fallback" | ✅ Aligned |
+| `Reality` | `<div aria-hidden="true" ref>`, children NOT mounted | `spatial-lazy-load` "Reality fallback preserves layout" | Same — `<div aria-hidden>` placeholder, layout preserved, no child mount | `runtime-capabilities` "Reality unsupported fallback" | ✅ Aligned |
+| `Entity` / `*Entity` family | `null` | `spatial-lazy-load` "Component facades" + facade table | "MUST NOT render corresponding DOM/entity node" — implies `null` | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
+| `UnlitMaterial` / `Material` / `Texture` / `*Asset` | `null` | facade table | Same (entity-rendering contract above) | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
+| `SceneGraph` / `World` | `<>{children}</>` (transparent) | facade table | **Not explicitly pinned** today | — | ⚠️ Gap — `tasks.md §15.3` parity test asserts alignment; v1.x amendment opens a `runtime-capabilities` Scenario |
+| `withSpatialized2DElementContainer(Comp)` | `<Comp {...passthrough} ref/>` | facade table | **Not explicitly pinned** | — | ⚠️ Same gap as SceneGraph |
+| `withSpatialMonitor(El)` | `<El {...passthrough} ref/>` | facade table | **Not explicitly pinned** | — | ⚠️ Same gap |
+| `useMetrics` | 1/1360 ratio + identity-stable functions | `spatial-lazy-load` "Hook placeholders" + "useMetrics placeholder returns the documented fallback values" | Identical 1/1360 ratio; MAY emit one-shot `console.warn` | `runtime-capabilities` "useMetrics graceful degradation" | ✅ Aligned |
+| `initScene` / `convertCoordinate` / `enableDebugTool` | Group B utilities — Path 1 = Path 2 by construction (route through `core-sdk getSession()`; both null-session paths are the same code) | `spatial-lazy-load` "Stateless utility APIs..." Requirement | Same code path | `runtime-capabilities` "convertCoordinate graceful degradation" + Group B contracts | ✅ Aligned (single path, no parity risk) |
+| `WebSpatialRuntime.supports`, `getAbsoluteUrl`, `SSRProvider`, `version`, `WebSpatialRuntimeError`, `CapabilityKey` | Group C — no feature-gating concept; not a "two-scenario" API | `spatial-lazy-load` "Stateless utility APIs..." Requirement | (n/a — pure data / re-exports) | — | n/a |
+| `bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `createElement` | Infrastructure — not "feature-gated" APIs | (n/a) | (n/a) | — | n/a |
+
+**Why the audit matters**: Path 1 and Path 2 are written by different commits, in different files, in different bundles. Without parity tests, a future facade tweak (e.g. changing `Reality`'s placeholder from `<div>` to `<span>`) can silently leave the real-impl unsupported branch in the spatial chunk emitting a different DOM. `tasks.md §15` adds a parametrized parity-test harness that mounts each facade in both contexts and asserts the rendered HTML is structurally identical — caught at unit-test time, not in production.
+
+**Console-warning policy differential** (intentional difference between Path 1 and Path 2): non-WebSpatial Path 1 MUST NOT emit `console.warn` for boot-was-forgotten or capability-unsupported (the user's plain browser is the intended environment; warnings are noise). WebSpatial-runtime Path 2 MAY emit one-shot `console.warn` per page per affected API. Pinned by `spec.md` "No dev-mode warning in non-WebSpatial browsers" Scenario plus `runtime-capabilities` "useMetrics graceful degradation" Scenario; verified by `tasks.md §15.5`.
+
 ## Bundler compatibility matrix
 
 | | Status |
@@ -149,7 +176,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 1. Skim **`proposal.md`** (~50 lines) for "Why" and "What Changes" first.
 2. Read **`spec.md`** Requirements 4 → 5 → 6 → 7 → 8 → 9 in that order — these are where the contract gets specific. Requirements 1, 2, 3 are short and sit above; Requirement 11 (Tree-shake friendliness) is a small but normative addition behind Requirement 1.
 3. Skim **`design.md`** decisions 1–13 — each decision points back at the relevant spec Requirement. Decision 13 (Size budget framing) explains the marginal-delta vs proxy split.
-4. Skim **`tasks.md`** §1–§14 to gauge implementation scope. §9 is size-budget enforcement (proxy + marginal-delta fixture + sideEffects + tree-shake check), §12.9 is the pre-v1 budget calibration follow-up, §13 is SSR validation, §14 is stateless-utility validation.
+4. Skim **`tasks.md`** §1–§15 to gauge implementation scope. §9 is size-budget enforcement (proxy + marginal-delta fixture + sideEffects + tree-shake check), §12.9 is the pre-v1 budget calibration follow-up, §13 is SSR validation, §14 is stateless-utility validation, §15 is the new facade ↔ real-impl unsupported parity validation.
 5. Optionally read **`specs/runtime-capabilities/spec.md`** delta if you maintain `runtime-capabilities`.
 
 ## Validate locally
@@ -179,7 +206,7 @@ The PR was incrementally refined through multiple design-decision passes plus co
 | 3. Unified JSX runtime | `feat/lazy-load-jsx-runtime` | §6 | Medium — fixes a latent `props.style` mutation bug + deletes `*.web.ts` variants | Bug-fix character; should NOT wait on the BREAKING switchover |
 | 4. Default entry switchover (BREAKING) | `feat/lazy-load-default-entry` | §7 | **High** — entire BREAKING release activates here | One PR's worth of focused review attention on the user-visible changes: 4 internals removed; `createElement` `@deprecated`; top-level `initPolyfill()` deleted; facades go live |
 | 5. Build config + size enforcement | `feat/lazy-load-build-size` | §8 + §9 | Medium — tsup rewrite + fixture infrastructure | Marginal-delta fixture (Vite consumer with `app-base` / `app-typical` / `app-namespace`) requires the published `dist/` from §8 |
-| 6. Validation + docs | `feat/lazy-load-validation-docs` | §10 + §13 + §14 | Low | Polish: SSR / hydration tests, stateless utility tests, README, migration guide, CHANGELOG |
+| 6. Validation + docs | `feat/lazy-load-validation-docs` | §10 + §13 + §14 + §15 | Low | Polish: SSR / hydration tests, stateless utility tests, facade ↔ real-impl unsupported parity tests, README, migration guide, CHANGELOG |
 | Follow-ups (parallel) | per-task branches | §11 + §12 | Low / mixed | Cross-repo plugin deprecation (`§11`); autoTest migration (`§12.2`); Webpack fixture (`§12.6`); Turbopack investigation (`§12.7`); Module Federation (`§12.8`); pre-v1 budget calibration (`§12.9`, **v1 release blocker** — must run before tagging v1 to confirm or adjust the 8 KB target) |
 
 ### Dependency graph
