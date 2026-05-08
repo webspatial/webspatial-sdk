@@ -290,6 +290,77 @@ api.cancel()
 api.play() // new session picks up latest config from hook
 ```
 
+### Controlling playback speed with playbackRate
+
+Use `playbackRate` to adjust animation speed. Values > 1 speed up, values between 0 and 1 slow down, and negative values play in reverse.
+`playbackRate` is applied at session creation and remains constant for the session; to change the rate, `cancel()` and then `play()` again.
+
+```tsx
+function FastEntry() {
+  const [animation] = useAnimation({
+    from: { position: { x: 0, y: -1, z: -2 }, scale: { x: 0.1, y: 0.1, z: 0.1 } },
+    to:   { position: { x: 0, y: 1, z: -2 },  scale: { x: 1, y: 1, z: 1 } },
+    duration: 1.0,
+    playbackRate: 2.0, // plays at 2x speed, effective duration 0.5s
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+### Reacting to animation state with playState
+
+`api.playState` provides the precise current session state: `idle`, `queued`, `running`, `paused`, or `finished`.
+Use it to show different UI feedback depending on the animation state, or to conditionally enable/disable controls.
+
+```tsx
+function StateAwareBox() {
+  const [animation, api] = useAnimation({
+    from: { position: { x: -1, y: 0, z: -2 } },
+    to:   { position: { x: 1, y: 0, z: -2 } },
+    duration: 1.0,
+    autoStart: false,
+  })
+
+  const label = {
+    idle: 'Ready',
+    queued: 'Queued',
+    running: 'Playing',
+    paused: 'Paused',
+    finished: 'Done',
+  }[api.playState]
+
+  return (
+    <>
+      <div className="controls">
+        <span>State: {label}</span>
+        <button onClick={() => api.play()} disabled={api.playState === 'running'}>
+          Play
+        </button>
+        <button onClick={() => api.pause()} disabled={api.playState !== 'running'}>
+          Pause
+        </button>
+        <button onClick={() => api.cancel()} disabled={api.playState === 'idle'}>
+          Cancel
+        </button>
+      </div>
+      <Reality>
+        <SceneGraph>
+          <BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+        </SceneGraph>
+      </Reality>
+    </>
+  )
+}
+```
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK

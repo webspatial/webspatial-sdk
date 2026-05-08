@@ -15,15 +15,33 @@ API 外形、feature detection 契约和跨层行为需要在编码前达成一�
 ## 一览
 
 ```tsx
-// 最小用法 — 外层 <Reality> 与 <SceneGraph> 省略
-const [animation, api] = useAnimation({
-  to: { position: { x: 0, y: 1.5, z: -2 } },
-  duration: 0.6,
-  timingFunction: 'easeOut',
-})
+import {
+  Reality,
+  SceneGraph,
+  BoxEntity,
+  useAnimation,
+} from '@webspatial/react-sdk'
 
-// 在 <SceneGraph> 内部：
-<BoxEntity width={0.3} height={0.3} depth={0.3} animation={animation} />
+function AnimatedBox() {
+  const [animation, api] = useAnimation({
+    to: { position: { x: 0, y: 1.5, z: -2 } },
+    duration: 0.6,
+    timingFunction: 'easeOut',
+  })
+
+  return (
+    <Reality style={{ width: '100%', height: '600px', '--xr-depth': 150 }}>
+      <SceneGraph>
+        <BoxEntity
+          width={0.3}
+          height={0.3}
+          depth={0.3}
+          animation={animation}
+        />
+      </SceneGraph>
+    </Reality>
+  )
+}
 ```
 
 Hook 声明动画意图，播放由 Native 以 90 fps 执行。需要时可通过 `api.play()`、`pause()`、`cancel()` 命令式控制；其中 paused 后再次 `play()` 会继续当前会话，并通过 `onError` 接收 bridge/native 异步失败。
