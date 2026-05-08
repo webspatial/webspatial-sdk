@@ -261,6 +261,34 @@ What we treat as **out of scope for v1**:
 
 **Code-splitting fallback behavior**: when a consumer's bundler inlines the spatial chunk (because the bundler does not support dynamic-import code-splitting), the SDK still functions correctly. `bootSpatial()` resolves once the inlined chunk's module-level code has executed; facades and hooks behave as if it had been fetched. The size benefit is lost on the consumer's bundle, but the SDK-side `dist/index.js` size budget is still met (it is enforced on the published package, independent of consumer bundling). This is documented in the spec Scenario "Bundler without code-splitting still functions, but loses the size benefit" so users can self-diagnose.
 
+### 12. Stateless utility APIs are independent of the spatial chunk
+
+A subset of the public API is **not** part of the lazy-load architecture. These APIs live in the default entry's static module graph and work without `bootSpatial()` or any bridge / facade / placeholder machinery. The `spatial-lazy-load` spec pins the contract in the "Stateless utility APIs and pure re-exports remain in the default entry" Requirement. Two mechanisms divide them:
+
+**Group B — session-aware utilities** route through `@webspatial/core-sdk`'s `getSession()`, which encodes the WebSpatial-runtime-or-not check via UA detection inside core-sdk:
+
+- `initScene(name, callback, options?)` → `getSession()?.initScene(...)`. Noops when no session.
+- `convertCoordinate(position, { from, to })` → `getSession()?.getSpatialScene().convertCoordinate(...)`. Returns input position when no session, with optional `console.warn` (graceful per `runtime-capabilities`'s "Unsupported behavior contracts" MODIFIED Requirement).
+- `enableDebugTool()` → `isSSREnv()` early-return; otherwise attaches diagnostic helpers to `window`.
+
+These have no React state to manage; no `useSyncExternalStore` subscription; no need to wait for the spatial chunk. They also do not need `'use client'` directives because they are not React hooks and have no client-only React API surface (`enableDebugTool` does touch `window`, but is invoked imperatively from app code, not at component render time).
+
+**Subtle consequence worth flagging**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see facades render fallback (the react-sdk bridge is not ready) **yet** still get correct behavior from session-aware utilities (Group B goes through `core-sdk` session detection, which is independent of the react-sdk bridge). This is intentional — `bootSpatial()` only governs the react-sdk spatial chunk, not the core-sdk session lifecycle — and is documented for reviewers in `REVIEW.md` and the spec's Stateless utilities Requirement.
+
+**Group C — pure constants, type re-exports, React Context** with no runtime spatial dependency:
+
+- `WebSpatialRuntime.supports(name, tokens?)` — capability table lookup; pure data.
+- `WebSpatialRuntimeError` — `Error` subclass re-exported from `core-sdk`.
+- `CapabilityKey` — TypeScript type re-export.
+- `SSRProvider` — React Context provider with no spatial dependency.
+- `getAbsoluteUrl(url)` — pure URL helper, SSR-safe.
+- `version` — string constant injected at build time.
+- Component / Hook / Entity / Model type-only re-exports (`SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`, etc.).
+
+These count toward the `dist/index.js` 8KB gzipped size budget. The largest contributor is the `core-sdk` capability table consumed by `WebSpatialRuntime.supports` (~1–2 KB gzipped after dead-code elimination); everything else in Group C is bytes-level. The size budget enforcement in `tasks.md §9.1` measures the published `dist/index.js` as a whole and naturally captures this contribution.
+
+**Why not move Group B into the spatial chunk?** The session-aware utilities are commonly called *before* `bootSpatial()` in the application lifecycle (e.g., `WebSpatialRuntime.supports('Model')` to decide whether to bother booting at all; `initScene` declaring scene type at app entry). Putting them in the lazy-loaded chunk would introduce a chicken-and-egg loop. Their cost in the default entry is small and predictable; keeping them there is the correct trade-off.
+
 ## Risks / Trade-offs
 
 - **[Risk] Old `@webspatial/vite-plugin` configuration not removed in lockstep** → consumer build fails immediately ("Cannot resolve `@webspatial/react-sdk/web`"). **Mitigation**: BREAKING marker at the top of CHANGELOG; first item in the migration guide is the plugin removal diff; coordinated cross-repo deprecation issue filed before SDK release.

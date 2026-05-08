@@ -542,3 +542,70 @@ Bundlers and frameworks that satisfy all three capabilities form the **non-norma
 - **THEN** the SDK MAY still work but this spec does NOT guarantee compatibility
 - **AND** breakage in these environments MUST be triaged as a feature-request follow-up issue, NOT as a v1 spec violation
 - **AND** the migration guide MUST link the relevant follow-up issue trackers (or note that none exists yet) so consumers can track future support
+
+---
+
+### Requirement: Stateless utility APIs and pure re-exports remain in the default entry
+
+A subset of the public API consists of **stateless utility functions, pure constants, and type re-exports** that are independent of `@webspatial/react-sdk/spatial`. They MUST live in the default entry's static module graph, MUST NOT participate in the bridge / facade / placeholder pattern, MUST NOT statically or dynamically import from `@webspatial/react-sdk/spatial`, and MUST function correctly without `bootSpatial()` ever being called.
+
+These APIs split into two groups by mechanism:
+
+**Group B — session-aware utilities** wrap `@webspatial/core-sdk`'s `getSession()` (which encodes the WebSpatial-runtime-or-not check via UA detection). They gracefully degrade when no `SpatialSession` is reachable, per the `runtime-capabilities` spec's "Unsupported behavior contracts" Requirement.
+
+| API | Behavior when no session is reachable |
+| --- | --- |
+| `initScene(name, callback, options?)` | Returns `undefined` without side effects (the underlying `getSession()?.initScene(...)` is a no-op) |
+| `convertCoordinate(position, { from, to })` | Resolves with `position` unchanged; MAY emit a one-shot `console.warn` (pinned in `runtime-capabilities` "Unsupported behavior contracts" Requirement) |
+| `enableDebugTool()` | Returns immediately when `isSSREnv()` is `true`; in WebSpatial runtime attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window`; in non-WebSpatial runtime the `getSession()` calls inside the diagnostic helpers themselves no-op |
+
+**Group C — pure constants, type re-exports, and React Context**:
+
+| API | Description |
+| --- | --- |
+| `WebSpatialRuntime.supports(name, tokens?)` | Synchronous capability lookup against the `core-sdk` capability table. Pure data, no spatial chunk dependency. Behavior pinned by the `runtime-capabilities` spec. |
+| `WebSpatialRuntimeError` | Re-export of an `Error` subclass from `@webspatial/core-sdk`. |
+| `CapabilityKey` | TypeScript type re-export from `@webspatial/core-sdk`. Compile-time only. |
+| `SSRProvider` | A React Context provider; carries no spatial dependency. |
+| `getAbsoluteUrl(url)` | Resolves a relative URL against `window.location.href`; SSR-safe (returns input unchanged when `window` is unavailable). |
+| `version` | A `string` constant injected at build time via `__WEBSPATIAL_REACT_SDK_VERSION__`. |
+| Component / Hook / Entity / Model type-only re-exports (e.g. `SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`) | Compile-time only; no runtime presence. |
+
+**Subtle consequence**: an application running in a WebSpatial runtime that does NOT call `bootSpatial()` will see facades render their fallback (the bridge is not ready) yet still get session-aware utility behavior (because Group B goes through `core-sdk` directly, not through the react-sdk bridge). This is intentional and documented; it is not a contradiction with the `bootSpatial` activation contract because Group B utilities never claim to participate in that contract.
+
+#### Scenario: Group B utilities work without `bootSpatial()`
+
+- **WHEN** an application invokes `initScene(...)`, `convertCoordinate(...)`, or `enableDebugTool()`
+- **AND** has not awaited `bootSpatial()`
+- **THEN** the calls MUST behave per the `runtime-capabilities` spec's "Unsupported behavior contracts" Requirement (graceful degradation: noop / return input / SSR-safe noop)
+- **AND** the spatial chunk MUST NOT be loaded as a side effect of these calls
+
+#### Scenario: `WebSpatialRuntime.supports` works without `bootSpatial()`
+
+- **WHEN** an application calls `WebSpatialRuntime.supports('Model')` (or any other capability key) at any point in the page lifetime
+- **THEN** the call MUST resolve synchronously against the `core-sdk` capability table without scheduling any dynamic import
+- **AND** the result MUST follow the `runtime-capabilities` Requirement contracts (`false` in non-WebSpatial browsers; `true` / `false` per the shell-version capability table in WebSpatial runtimes)
+
+#### Scenario: Group C pure helpers are SSR-safe and side-effect free
+
+- **WHEN** `getAbsoluteUrl(url)` is invoked in an environment without `window`
+- **THEN** it MUST return `url` unchanged
+- **AND** it MUST NOT throw
+
+- **WHEN** `SSRProvider` is rendered during SSR
+- **THEN** it MUST NOT trigger any dynamic import
+- **AND** it MUST NOT depend on any spatial chunk symbol
+
+- **WHEN** `WebSpatialRuntimeError` is constructed or thrown by application code
+- **THEN** it MUST behave as a standard `Error` subclass (re-exported from `core-sdk`) without requiring the spatial chunk
+
+#### Scenario: Type-only re-exports vanish at runtime
+
+- **WHEN** the published `dist/index.js` is inspected for runtime values
+- **THEN** TypeScript type-only re-exports (e.g. `SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`) MUST contribute zero runtime bytes (consistent with `export type` semantics in tsup output)
+
+#### Scenario: Stateless utilities are part of the default-entry size budget
+
+- **WHEN** the `dist/index.js` size budget is measured (per "Default entry MUST NOT bundle spatial implementation")
+- **THEN** the published Group B utility implementations and Group C constants / helpers MUST be counted within the gzipped budget
+- **AND** they MUST NOT be split into a separate chunk to circumvent the budget

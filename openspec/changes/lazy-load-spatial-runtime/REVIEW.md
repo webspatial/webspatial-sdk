@@ -23,7 +23,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 
 `openspec validate lazy-load-spatial-runtime --strict` passes.
 
-## The 9 Requirements at a glance
+## The 10 Requirements at a glance
 
 | # | Requirement | Scenarios | Anchor concern |
 | --- | --- | --- | --- |
@@ -36,6 +36,9 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | 7 | JSX runtime strips spatial markers and wraps with facade HOCs | 8 | Single unified runtime; strip + wrap; `Model` bypass; clone `props.style`; `className` only (not `class`); SSR equivalence |
 | 8 | SSR and hydration safety | 7 | Any React 18+ SSR API; `'use client'` on facades; `useSyncExternalStore` for hydration; both boot timings safe |
 | 9 | Plugin-free integration | 7 | Capability contract (ESM + `exports` + code-splitting); React peer ≥ 18.0; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
+| 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
+
+Plus an updated `runtime-capabilities` MODIFIED delta: the "Unsupported behavior contracts" Requirement now states hooks/utility functions MUST gracefully degrade (not throw) — replaces the prior contradictory "MUST throw" scenario for `useMetrics` and `convertCoordinate`.
 
 ## Public API surface (final, all from `@webspatial/react-sdk`)
 
@@ -60,8 +63,22 @@ useMetrics  // public, with placeholder/real selection per instance
 
 // Existing (unchanged)
 WebSpatialRuntime, WebSpatialRuntimeError, CapabilityKey, enableDebugTool,
-convertCoordinate
+convertCoordinate, initScene, SSRProvider, getAbsoluteUrl, version
 ```
+
+### Coverage map (which Requirement covers which API)
+
+| Group | API | Lazy-load treatment | Pinned by |
+| --- | --- | --- | --- |
+| **A** (lazy-loaded) | `Model`, `Reality`, `*Entity`, materials/assets, `SceneGraph`, HOCs | Facade pattern (default entry) + real impl in spatial chunk | "Component facades" |
+| **A** | `useMetrics` | Placeholder + per-instance selector | "Hook placeholders" + `runtime-capabilities` MODIFIED |
+| **A** | `createElement` (JSX runtime) | Single unified runtime; strip + facade-HOC wrap | "JSX runtime strips spatial markers and wraps with facade HOCs" |
+| **B** (session-aware) | `initScene` | Wraps `core-sdk getSession()`; gracefully degrades | "Stateless utility APIs and pure re-exports" |
+| **B** | `convertCoordinate` | Wraps `core-sdk getSession()`; returns input + warn when no session | "Stateless utility APIs" + `runtime-capabilities` MODIFIED |
+| **B** | `enableDebugTool` | SSR-safe noop; attaches diagnostics in WebSpatial runtime | "Stateless utility APIs" |
+| **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `SSRProvider`, `getAbsoluteUrl`, `version`, type-only re-exports | Live in default entry; counted toward 8KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
+
+**Subtle consequence to call out**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see Group A facades render fallback (the bridge is not ready) **yet** Group B utilities still work correctly (they go through `core-sdk`'s session detection, independent of the react-sdk bridge). This is intentional — `bootSpatial()` only governs the react-sdk spatial chunk, not the core-sdk session lifecycle.
 
 ## Per-component default fallback (normative, from spec)
 
@@ -93,6 +110,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 - [ ] **In-house apps (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) are NOT migrated** in this change; tracked as follow-up tasks in §12.
 - [ ] **8KB gzip size budget** on `dist/index.js` — target, not launch-blocker; first measurement may land at actual value with a TODO to tighten.
 - [ ] **`'use client'` directive** required on every facade and every public hook file (RSC compatibility).
+- [ ] **Stateless utility APIs (Group B / C)** stay in the default entry and are NOT lazy-loaded. Group B (`initScene`, `convertCoordinate`, `enableDebugTool`) gracefully degrades via `core-sdk` session detection without `bootSpatial()`. The `runtime-capabilities` "Unsupported behavior contracts" Requirement is MODIFIED so hooks/utility APIs gracefully degrade rather than throw — resolving a prior pre-existing contradiction with the actual implementation.
 
 ## Open questions for reviewer input
 
