@@ -8,7 +8,7 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 
 - **WHEN** application code calls `useAnimation(config)` for `SpatialDiv`
 - **THEN** the hook MUST return a tuple `[animation, api]`
-- **AND** `api` MUST expose `play`, `pause`, `resume`, `stop`, `isAnimating`, and `isPaused`
+- **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
 #### Scenario: Bind animation prop to SpatialDiv
 
@@ -33,10 +33,10 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 
 - **GIVEN** a `SpatialDiv` is bound to `animationA` and may have an alive session
 - **WHEN** a later render replaces the element's `animation` prop with `animationB`, or removes the `animation` prop
-- **THEN** the SDK MUST first stop `animationA`'s session (if any) and invoke `animationA`'s `onStop`
-- **AND** if `animationB` exists and its `autoStart` is `true` (or omitted), the SDK MUST start a new session for `animationB` after stopping the old one, and invoke `animationB`'s `onStart`
-- **AND** the old session's `onStop` MUST fire before the new session's `onStart`
-- **AND** the old session's stop command MUST be sent to the native bridge before the new session's play command
+- **THEN** the SDK MUST first cancel `animationA`'s session (if any) and invoke `animationA`'s `onCancel`
+- **AND** if `animationB` exists and its `autoStart` is `true` (or omitted), the SDK MUST start a new session for `animationB` after canceling the old one, and invoke `animationB`'s `onStart`
+- **AND** the old session's `onCancel` MUST fire before the new session's `onStart`
+- **AND** the old session's cancel command MUST be sent to the native bridge before the new session's play command
 
 #### Scenario: Entity and SpatialDiv animation objects are not interchangeable
 
@@ -133,7 +133,7 @@ A session is **alive** when it is in any of these states: queued, delaying, runn
 | running | `true` | `false` | visible motion is in progress |
 | paused | `false` | `true` | session is paused via `api.pause()` |
 
-A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()`, `resume()`, and `stop()` are no-op when `!isAnimating && !isPaused` (no alive session).
+A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()` and `cancel()` are no-op when `!isAnimating && !isPaused` (no alive session).
 
 #### Scenario: isAnimating is true during delay
 
@@ -148,9 +148,9 @@ A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()`, `re
 - **THEN** `api.isAnimating` MUST be `false`
 - **AND** `api.isPaused` MUST be `true`
 
-#### Scenario: isAnimating is false after stop or natural completion
+#### Scenario: isAnimating is false after cancel or natural completion
 
-- **WHEN** the session ends via `api.stop()` or natural completion
+- **WHEN** the session ends via `api.cancel()` or natural completion
 - **THEN** `api.isAnimating` MUST become `false` before any lifecycle callback fires
 - **AND** `api.isPaused` MUST be `false`
 
@@ -158,7 +158,7 @@ A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()`, `re
 
 ### Requirement: Provide imperative playback and lifecycle
 
-The playback API MUST allow applications to start, pause, resume, and stop `SpatialDiv` animation sessions, and MUST provide `onStart`, `onComplete`, `onStop`, and `onError` lifecycle callbacks.
+The playback API MUST allow applications to start, pause, and cancel `SpatialDiv` animation sessions, and MUST provide `onStart`, `onComplete`, `onCancel`, and `onError` lifecycle callbacks.
 
 #### Scenario: Default autoStart
 
@@ -183,7 +183,7 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 - **AND** the snapshot MUST cover only fields declared in `to`; fields absent from `to` MUST NOT be snapshotted or affected by the session
 - **AND** `api.isAnimating` MUST be `true` while the request is queued
 - **AND** the queued play MUST use the config at `play()` call time (not at bind time)
-- **AND** if `api.stop()` is called while queued, the SDK MUST cancel the queued play and invoke `onStop`
+- **AND** if `api.cancel()` is called while queued, the SDK MUST cancel the queued play and invoke `onCancel`
 - **AND** if `api.pause()` is called while queued, the session MUST be established in paused state after binding
 
 #### Scenario: pause during queued then bind
@@ -202,27 +202,27 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 - **AND** if the request is still queued (element not yet bound), `onStart` MUST NOT fire early
 - **AND** if the request fails before the session is established, `onStart` MUST NOT fire
 
-#### Scenario: pause and resume during delay
+#### Scenario: pause and play during delay
 
 - **GIVEN** the config sets a positive `delay` and playback has been requested
-- **WHEN** application code calls `api.pause()` and later `api.resume()`
+- **WHEN** application code calls `api.pause()` and later `api.play()`
 - **THEN** the remaining delay time MUST be preserved
-- **AND** after resume, delay MUST continue from the paused point (not restart the full delay)
+- **AND** after play, delay MUST continue from the paused point (not restart the full delay)
 
-#### Scenario: stop after pausing during delay
+#### Scenario: cancel after pausing during delay
 
 - **GIVEN** the session is in the delay phase
 - **AND** application code calls `api.pause()`
-- **WHEN** application code later calls `api.stop()`
-- **THEN** `onStop` MUST fire once
-- **AND** `onStop` MUST receive the element's current values at the stop moment
+- **WHEN** application code later calls `api.cancel()`
+- **THEN** `onCancel` MUST fire once
+- **AND** `onCancel` MUST receive the restored values
 
-#### Scenario: stop during delay
+#### Scenario: cancel during delay
 
 - **GIVEN** the session is in the delay phase
-- **WHEN** application code calls `api.stop()`
-- **THEN** `onStop` MUST fire once
-- **AND** `onStop` MUST receive the element's current values at the stop moment
+- **WHEN** application code calls `api.cancel()`
+- **THEN** `onCancel` MUST fire once
+- **AND** `onCancel` MUST receive the restored values
 
 #### Scenario: Reset loop
 
@@ -244,21 +244,21 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 - **THEN** `onComplete` MUST receive the native final values
 - **AND** the returned `SpatialDivAnimatedValues` MUST contain only the final values for fields declared in `to`; fields not declared in `to` MUST NOT appear in the return value
 
-#### Scenario: Stop callback
+#### Scenario: Cancel callback
 
-- **WHEN** application code calls `api.stop()`
-- **THEN** `onStop` MUST receive the native stop-point values
-- **AND** the returned `SpatialDivAnimatedValues` MUST contain only the stop-point values for fields declared in `to`; fields not declared in `to` MUST NOT appear in the return value
+- **WHEN** application code calls `api.cancel()`
+- **THEN** `onCancel` MUST receive the restored values
+- **AND** the returned `SpatialDivAnimatedValues` MUST contain only the restored values for fields declared in `to`; fields not declared in `to` MUST NOT appear in the return value
 
 #### Scenario: Callback mutual exclusion and counts
 
 - **WHEN** `api.play()` starts an animation session
 - **THEN** `onStart` MUST be called at most once for that session
-- **AND** when the session ends, `onComplete` and `onStop` MUST be mutually exclusive and each called at most once for that session
+- **AND** when the session ends, `onComplete` and `onCancel` MUST be mutually exclusive and each called at most once for that session
 
 #### Scenario: Asynchronous failure callback
 
-- **WHEN** bridge or native fails asynchronously for `play`, `pause`, `resume`, or `stop`
+- **WHEN** bridge or native fails asynchronously for `play`, `pause`, `resume`, or `cancel`
 - **THEN** the SDK MUST call `onError` with an `AnimationError` containing `animationId`, `command`, and `reason`
 - **AND** if `onError` is not provided, the SDK MUST log via `console.error`
 
@@ -266,8 +266,8 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 
 - **WHEN** an asynchronous bridge/native command fails
 - **THEN** `onError` MUST be called at most once for that failed command
-- **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onStop` MUST NOT be called
-- **AND** if the failed command is `pause`, `resume`, or `stop`, that failure MUST NOT itself trigger `onComplete` or `onStop`
+- **AND** if the failed command is `play`, `onStart`, `onComplete`, and `onCancel` MUST NOT be called
+- **AND** if the failed command is `pause`, `resume`, or `cancel`, that failure MUST NOT itself trigger `onComplete` or `onCancel`
 
 #### Scenario: Config updates do not affect alive sessions
 
@@ -280,20 +280,20 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 
 - **GIVEN** an alive session exists (queued, delaying, running, or paused)
 - **WHEN** application code calls `api.play()` again
-- **THEN** the SDK MUST stop the existing session first, then start a new session using the current config
-- **AND** the previous session's `onStop` MUST fire before the new session's `onStart`
-- **AND** `api.isAnimating` MUST be `false` when the previous `onStop` fires, and MUST be `true` when the new `onStart` fires
+- **THEN** the SDK MUST cancel the existing session first, then start a new session using the current config
+- **AND** the previous session's `onCancel` MUST fire before the new session's `onStart`
+- **AND** `api.isAnimating` MUST be `false` when the previous `onCancel` fires, and MUST be `true` when the new `onStart` fires
 
 #### Scenario: Each play generates a new session id
 
 - **WHEN** `api.play()` starts a new animation session
 - **THEN** the SDK MUST generate a new globally unique `animationId` for that session
-- **AND** subsequent `pause`, `resume`, and `stop` calls MUST use that `animationId`
+- **AND** subsequent `pause` and `cancel` calls MUST use that `animationId`
 
-#### Scenario: stop-old failure MUST block start-new
+#### Scenario: cancel-old failure MUST block start-new
 
-- **GIVEN** the SDK is executing the stop-old → start-new flow
-- **WHEN** the old session's stop command fails asynchronously
+- **GIVEN** the SDK is executing the cancel-old → start-new flow
+- **WHEN** the old session's cancel command fails asynchronously
 - **THEN** the SDK MUST call `onError`
 - **AND** the old session MUST remain in its pre-failure state
 - **AND** the SDK MUST NOT start the new session
@@ -301,14 +301,14 @@ The playback API MUST allow applications to start, pause, resume, and stop `Spat
 
 #### Scenario: Serialize control commands
 
-- **GIVEN** a hook instance calls `play`, `pause`, `resume`, and `stop` rapidly
+- **GIVEN** a hook instance calls `play`, `pause`, and `cancel` rapidly
 - **WHEN** the SDK sends control commands to native
 - **THEN** the SDK MUST send commands to the native bridge in call order, and the bridge MUST deliver them to native in the same order
 
 #### Scenario: Control methods are no-op when no alive session exists
 
 - **GIVEN** there is no alive session (`isAnimating` is `false` and `isPaused` is `false`)
-- **WHEN** application code calls `api.pause()`, `api.resume()`, or `api.stop()`
+- **WHEN** application code calls `api.pause()` or `api.cancel()`
 - **THEN** the call MUST be a no-op (no throw, no lifecycle callbacks, no native commands)
 
 ---
@@ -336,63 +336,63 @@ When an animation session controls a `SpatialDiv` field, the SDK MUST prevent re
 #### Scenario: Suppression release timing
 
 - **GIVEN** a session controls some fields
-- **WHEN** the session ends via natural completion or `api.stop()`
+- **WHEN** the session ends via natural completion or `api.cancel()`
 - **THEN** the SDK MUST release suppression flags before lifecycle callbacks fire
 - **AND** the next React render after callbacks MUST resume regular sync
 
-#### Scenario: stop keeps the stop point
+#### Scenario: cancel restores to from
 
 - **GIVEN** a session is in a mid-state
-- **WHEN** application code calls `api.stop()`
-- **THEN** the `SpatialDiv` MUST remain at the stop point
-- **AND** the SDK MUST NOT snap it back to `from` or jump directly to `to`
+- **WHEN** application code calls `api.cancel()`
+- **THEN** the `SpatialDiv` MUST be restored to `from` (or the start snapshot when `from` is omitted)
+- **AND** the SDK MUST NOT leave it at the cancel point
 
 #### Scenario: width and height are not written back to DOM automatically
 
 - **GIVEN** a session controls `width` or `height`
-- **WHEN** the animation completes naturally or is stopped
-- **THEN** the native final size MUST be returned via `onComplete` or `onStop`
+- **WHEN** the animation completes naturally or is canceled
+- **THEN** the native final size MUST be returned via `onComplete` or `onCancel`
 - **AND** the SDK MUST NOT automatically modify the DOM element's CSS layout size
 
 ---
 
 ### Requirement: Behavior in unsupported runtimes
 
-When `supports('spatialDivAnimation')` is `false`, the `SpatialDiv` animation API MUST provide stable and conservative fallback behavior.
+When `supports('useSpatialDivAnimation')` is `false`, the `SpatialDiv` animation API MUST provide stable and conservative fallback behavior.
 
 #### Scenario: Warning when using the hook
 
-- **GIVEN** `supports('spatialDivAnimation')` is `false`
+- **GIVEN** `supports('useSpatialDivAnimation')` is `false`
 - **WHEN** application code still attempts to use `useAnimation(config)` for `SpatialDiv`
 - **THEN** the SDK MUST emit a warning
 - **AND** the warning MUST be emitted at most once per hook instance
 
 #### Scenario: play is a no-op when unsupported
 
-- **GIVEN** `supports('spatialDivAnimation')` is `false`
+- **GIVEN** `supports('useSpatialDivAnimation')` is `false`
 - **WHEN** application code calls `api.play()`
 - **THEN** the call MUST be a no-op
 - **AND** the SDK MUST NOT send native commands
-- **AND** `onStart`, `onComplete`, `onStop`, and `onError` MUST NOT be triggered
+- **AND** `onStart`, `onComplete`, `onCancel`, and `onError` MUST NOT be triggered
 - **AND** `api.isAnimating` MUST remain `false`
 
 #### Scenario: Async bridge/native failure on play
 
-- **GIVEN** `supports('spatialDivAnimation')` is `true`
+- **GIVEN** `supports('useSpatialDivAnimation')` is `true`
 - **WHEN** the SDK receives a failure result from native or JSBridge while executing a play request
 - **THEN** the SDK MUST call `onError` with an `AnimationError` containing `animationId`, command type, and a human-readable reason
 - **AND** if `onError` is not provided, the SDK MUST log via `console.error`
 - **AND** the SDK MUST NOT transition the session into an alive state
-- **AND** the `animationId` MUST NOT subsequently receive `_completed` or `_stopped`
+- **AND** the `animationId` MUST NOT subsequently receive `_completed` or `_canceled`
 
-#### Scenario: Async bridge/native failure on pause/resume/stop
+#### Scenario: Async bridge/native failure on pause/cancel
 
-- **GIVEN** `supports('spatialDivAnimation')` is `true` and there is an alive session
-- **WHEN** the SDK receives a failure result from native or JSBridge while executing `pause`, `resume`, or `stop`
+- **GIVEN** `supports('useSpatialDivAnimation')` is `true` and there is an alive session
+- **WHEN** the SDK receives a failure result from native or JSBridge while executing `pause`, `resume`, or `cancel`
 - **THEN** the SDK MUST call `onError`
 - **AND** if `onError` is not provided, the SDK MUST log via `console.error`
 - **AND** the session MUST remain in its pre-failure state, allowing retries or other actions
-- **AND** the failure MUST NOT terminate the alive session; `_completed` or `_stopped` MAY still arrive later
+- **AND** the failure MUST NOT terminate the alive session; `_completed` or `_canceled` MAY still arrive later
 
 ---
 
@@ -405,7 +405,7 @@ The SDK MUST stop or cancel alive animation sessions when a `SpatialDiv` unmount
 - **GIVEN** the session is queued, delaying, running, or paused
 - **WHEN** the target `SpatialDiv` unmounts
 - **THEN** the SDK MUST stop or cancel the session
-- **AND** after unmount, the SDK MUST NOT trigger `onStart`, `onComplete`, `onStop`, or `onError`
+- **AND** after unmount, the SDK MUST NOT trigger `onStart`, `onComplete`, `onCancel`, or `onError`
 
 #### Scenario: Unmount during delay
 
