@@ -51,6 +51,16 @@ jobs:
           path: ~/.cache/puppeteer
           key: ${{ runner.os }}-puppeteer-${{ hashFiles('pnpm-lock.yaml') }}
 
+      - name: Prune incomplete Puppeteer Chrome cache
+        run: |
+          if [ -d "$HOME/.cache/puppeteer/chrome" ]; then
+            find "$HOME/.cache/puppeteer/chrome" -mindepth 1 -maxdepth 1 -type d | while read -r browser_dir; do
+              if [ ! -x "$browser_dir/chrome-linux64/chrome" ]; then
+                rm -rf "$browser_dir"
+              fi
+            done
+          fi
+
       - name: Install Chrome for Puppeteer
         run: pnpm --filter autotest exec puppeteer browsers install chrome
 

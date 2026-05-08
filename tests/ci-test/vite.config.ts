@@ -1,19 +1,20 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import path from 'path'
 import react from '@vitejs/plugin-react'
+import corePkg from '../../packages/core/package.json'
+import reactPkg from '../../packages/react/package.json'
 
 const packagesBasePath = '../../packages'
 const XRSDKBaseDir = path.join(__dirname, packagesBasePath)
 
-const corePkg = require(`../../packages/core/package.json`)
-const reactPkg = require(`../../packages/react/package.json`)
-
-const tsconfig: any = {
+const tsconfig = {
   compilerOptions: {
     jsx: 'react-jsx',
     jsxImportSource: '@webspatial/react-sdk/jsx',
   },
-}
+} satisfies NonNullable<
+  Exclude<NonNullable<UserConfig['esbuild']>, false>['tsconfigRaw']
+>
 
 export default defineConfig({
   // root: './',
