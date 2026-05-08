@@ -5,12 +5,12 @@
 
 ## 2. Runtime building blocks (bridge / boot / detect)
 
-- [ ] 2.1 Add `packages/react/src/runtime/detect.ts` exposing `detectSpatialRuntime(): 'visionos' | 'picoos' | null`; SSR-safe, synchronous; thin wrapper over `core-sdk` snapshot
+- [ ] 2.1 Add `packages/react/src/runtime/detect.ts` exposing `detectSpatialRuntime(): 'visionos' | 'picoos' | 'puppeteer' | null`; SSR-safe, synchronous; thin wrapper over `core-sdk` snapshot. `'puppeteer'` flows through the spatial-equivalent path identically to `'visionos'` / `'picoos'` per the `runtime-capabilities` "Puppeteer runtime detection" Scenario (see §12.2 for end-to-end coverage in autoTest)
 - [ ] 2.2 Add `packages/react/src/runtime/bridge.ts` with module-level singleton: `getSpatialImpl()`, `loadSpatialImpl()`, `isSpatialReady()`, `onSpatialLoadError(cb)`; dynamic import target is `@webspatial/react-sdk/spatial`. Bridge MUST also expose internal readiness subscription primitives (`__internalSubscribeReadiness`, `__internalGetReadinessSnapshot`) backing a `readinessSubscribers: Set<() => void>`; on `false → true` (and reverse if ever applicable) transitions all subscribers MUST be notified. These primitives are consumed by `runtime/useSpatialReady.ts` (§4.1) and MUST NOT be part of the documented public API
 - [ ] 2.3 Add `packages/react/src/runtime/boot.ts` exposing `bootSpatial(): Promise<void>`; web/SSR mode resolves immediately without scheduling any dynamic import; spatial mode awaits `loadSpatialImpl()`. Implements idempotency-within-attempt + retry-on-demand-after-failure semantics per the `bootSpatial` Requirement
 - [ ] 2.4 Add the `WebSpatialBootError` class (e.g. `packages/react/src/runtime/errors.ts` or co-located with bridge): `Error` subclass; instances satisfy `name === 'WebSpatialBootError'`, set `cause` to the underlying `import()` error, expose `attempt: number` (1-based). Re-export from default entry as part of the public API surface
-- [ ] 2.5 Unit tests for the bridge: SSR safety (no `window`), concurrent loads share one promise, load failure invokes every registered `onSpatialLoadError` listener exactly once and leaves `isSpatialReady() === false`, `__internalSubscribeReadiness` notifies subscribers in registration order on `false → true` transitions
-- [ ] 2.6 Unit tests for `bootSpatial`: idempotent across awaits, no network in non-WebSpatial browser, resolves only after spatial chunk lands in spatial mode (use a mocked dynamic import); rejection is wrapped in `WebSpatialBootError` carrying `cause` and 1-based `attempt`; retry after rejection initiates a fresh `import()` and increments `attempt`
+- [ ] 2.5 Unit tests for the bridge: SSR safety (no `window`), concurrent loads share one promise, load failure invokes every registered `onSpatialLoadError` listener exactly once and leaves `isSpatialReady() === false`, `__internalSubscribeReadiness` notifies subscribers in registration order on `false → true` transitions; under a UA stub containing `Puppeteer`, `detectSpatialRuntime()` returns `'puppeteer'` and the bridge schedules `import()` per "Detection helper used by lazy-load bridge"
+- [ ] 2.6 Unit tests for `bootSpatial`: idempotent across awaits, no network in non-WebSpatial browser, resolves only after spatial chunk lands in spatial mode (use a mocked dynamic import); rejection is wrapped in `WebSpatialBootError` carrying `cause` and 1-based `attempt`; retry after rejection initiates a fresh `import()` and increments `attempt`; under a UA stub containing `Puppeteer`, `bootSpatial()` resolves only after the mocked spatial chunk lands (NOT a no-op like in plain web)
 
 ## 3. Spatial implementation subpath
 
@@ -112,7 +112,11 @@ There are two normative size measurements per the spec's "Default entry MUST NOT
 ## 12. Follow-ups (non-blocking)
 
 - [ ] 12.1 Migrate `apps/test-server` to consume `dist` and call `bootSpatial()`; switch from bare `esbuild` to a build pipeline that supports code splitting, or accept inlined spatial chunk
-- [ ] 12.2 Migrate `packages/autoTest` to use `bootSpatial()` and add Puppeteer cases asserting (a) web mode never requests `dist/spatial.js`, (b) AVP mode requests it exactly once
+- [ ] 12.2 Migrate `packages/autoTest` to use `bootSpatial()` in `src/testApp/main.tsx`. The autoTest harness modifies UA to include `Puppeteer` (see `packages/autoTest/src/runtime/puppeteerRunner.ts:365`), which `core-sdk` classifies as `type: 'puppeteer'` — a spatial-equivalent runtime per the `runtime-capabilities` "Puppeteer runtime detection" Scenario. Add cases asserting:
+  - (a) plain web mode (no `Puppeteer` UA, no `WSAppShell`) never requests `dist/spatial.js`
+  - (b) Puppeteer mode requests `dist/spatial.js` exactly once on the first `bootSpatial()` call (cached per "Spatial runtime caches the successful load")
+  - (c) `await bootSpatial()` in `main.tsx` resolves before facades first render real implementations
+  - (d) navigation between routes (autoTest uses `react-router-dom`) does NOT re-request the chunk (single-page caching)
 - [ ] 12.3 Migrate `tests/ci-test` to consume `dist` and validate spatial behavior in the AVP simulator with the new boot path
 - [ ] 12.4 Evaluate splitting the spatial chunk further (reality / container / model) once real-world load profiles are measured
 - [ ] 12.5 Evaluate adding a `<SpatialBoundary>` Suspense-style integration in a future change if user feedback shows demand

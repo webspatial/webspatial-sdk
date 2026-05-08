@@ -192,7 +192,7 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 ### 7. Spatial runtime detection
 
-- A single `detectSpatialRuntime(): 'visionos' | 'picoos' | null` helper in `runtime/detect.ts`, thin wrapper over the existing core-sdk runtime snapshot.
+- A single `detectSpatialRuntime(): 'visionos' | 'picoos' | 'puppeteer' | null` helper in `runtime/detect.ts`, thin wrapper over the existing core-sdk runtime snapshot. The `'puppeteer'` value indicates a Puppeteer-driven test harness UA and MUST be treated identically to `'visionos'` / `'picoos'` for bridge / boot / facade decisions (per `runtime-capabilities` spec's "Detection helper used by lazy-load bridge" Scenario); this is intentional so `packages/autoTest` exercises the real `import('@webspatial/react-sdk/spatial')` path end-to-end. Internally facades branch on `detectSpatialRuntime() === null` vs non-null, so the `'puppeteer'` value flows through the spatial-equivalent path automatically with no per-call special-casing.
 - Synchronous; no `await`, no network. Safe to call during SSR (returns `null` when `window` is unavailable).
 - Called by `bootSpatial()` to decide whether to schedule the dynamic import, by `useSpatialReady()` once per component instance (via `useState` initializer) to choose the no-op vs real subscriber path, and by the dev-mode forgot-to-boot warning gate. Facades themselves never call `detectSpatialRuntime()` per render — they only consult `useSpatialReady()`.
 - The result is treated as stable for the page lifetime, consistent with the existing `runtime-capabilities` decisions.
