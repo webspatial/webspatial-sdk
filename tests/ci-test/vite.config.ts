@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import path from 'path'
 import react from '@vitejs/plugin-react'
 import corePkg from '../../packages/core/package.json'
@@ -13,8 +13,8 @@ const tsconfig = {
     jsxImportSource: '@webspatial/react-sdk/jsx',
   },
 } satisfies NonNullable<
-  Parameters<typeof defineConfig>[0]
->['esbuild']['tsconfigRaw']
+  Exclude<NonNullable<UserConfig['esbuild']>, false>['tsconfigRaw']
+>
 
 export default defineConfig({
   // root: './',
