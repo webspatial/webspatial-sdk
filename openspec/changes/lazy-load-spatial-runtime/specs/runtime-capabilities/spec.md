@@ -30,6 +30,52 @@ The snapshot MUST contain at minimum:
 - **THEN** the runtime snapshot MUST be obtainable synchronously without `await`
 - **AND** the result MUST be stable across reads in the same page lifetime (consistent with the "Repeated reads" scenario for `supports`)
 
+### Requirement: Unsupported behavior contracts
+
+For APIs documented as runtime-gated, unsupported calls/reads MUST follow documented fallback behavior. The fallback pattern depends on the API kind:
+
+- **Hooks and utility functions** MUST gracefully degrade — return safe documented default values (optionally with a one-shot `console.warn` for diagnostic value), but MUST NOT throw.
+- **Components** MUST render their per-component fallback (see the `spatial-lazy-load` spec's "Component facades" Requirement for the lazy-load era; the per-component scenarios below additionally pin `Reality` and `Model`).
+- **Object members** MAY be absent (`in === false`, property read `undefined`).
+
+#### Scenario: `useMetrics` graceful degradation
+
+- **WHEN** `supports('useMetrics')` is `false`
+- **THEN** calling `useMetrics()` MUST NOT throw
+- **AND** the returned object MUST match the `spatial-lazy-load` spec's "Hook placeholders" Requirement: `pointToPhysical(pt) === pt / 1360` and `physicalToPoint(m) === m * 1360` with stable function identities
+
+#### Scenario: `convertCoordinate` graceful degradation
+
+- **WHEN** `supports('convertCoordinate')` is `false`, or no `SpatialSession` is available, or no `SpatialScene` is reachable from the input refs
+- **THEN** calling `convertCoordinate(position, { from, to })` MUST resolve with `position` unchanged
+- **AND** the SDK MAY emit a one-shot `console.warn` with diagnostic context
+- **AND** the call MUST NOT throw
+
+#### Scenario: Unsupported HTML component rendering
+
+- **WHEN** a non-Model, non-`Reality` HTML capability key resolves to `false` (including `Material`, `AttachmentAsset` / `AttachmentEntity`, and other component keys not covered by dedicated scenarios)
+- **THEN** SDK fallback MUST not render corresponding DOM/entity node and MUST not execute dependent runtime side effects
+
+#### Scenario: `Reality` unsupported fallback
+
+- **WHEN** `supports('Reality')` is `false`
+- **THEN** SDK MUST NOT create or attach the spatialized Reality root entity and MUST NOT execute dependent runtime side effects
+- **AND** SDK MUST render exactly one host placeholder `div` that preserves the layout box (layout-affecting props such as `className`, `style`, and other attributes that participate in CSS layout MUST apply to that host so authored layout is preserved)
+- **AND** that placeholder MUST be visually hidden from users
+- **AND** that placeholder MUST NOT participate in keyboard focus (for example it MUST NOT be focusable and MUST NOT use a positive `tabIndex`)
+- **AND** that placeholder MUST be excluded from the accessibility tree (for example `aria-hidden="true"`)
+- **AND** `Reality` MUST NOT render its React child subtree (no `children` mount)
+
+#### Scenario: `Model` exception fallback
+
+- **WHEN** `supports('Model')` is `false`
+- **THEN** fallback MUST render native `<model>` with props passthrough
+
+#### Scenario: Unsupported model JS members
+
+- **WHEN** a model JS sub-capability resolves to `false`
+- **THEN** corresponding member on simulated model element MUST be absent (`in` check false, property read `undefined`)
+
 ## ADDED Requirements
 
 ### Requirement: Spatial-dependent capabilities are false in non-WebSpatial browsers
