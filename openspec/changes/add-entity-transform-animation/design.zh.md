@@ -558,6 +558,90 @@ sequenceDiagram
 
 5. **会话管理**：`EntityAnimationManager` 以 `animationId` 为键管理所有活跃会话，每个实体同一时刻最多一个活跃会话。实体卸载时自动清理关联会话。
 
+
+## Native PicoOS 实现概述
+
+PicoOS 端基于 PICO Spatial SDK 动画框架实现，与 visionOS 侧保持相同的语义与行为契约。运行时通过 WebView JSBridge 接收 `AnimateTransform` 命令，内部映射到 Spatial SDK 的 Tween Animation 体系。
+
+### PICO Spatial SDK API 映射
+
+| 设计概念 | PICO Spatial SDK API | 说明 |
+|---|---|---|
+| 动画定义 | `TweenAnimation.createTweenAnimation()` | 创建补间动画，指定 from/to Transform、duration、easeType |
+| 绑定目标 | `AnimationBindTarget.bindTransform()` | 将动画绑定到实体的 transform 属性 |
+| 生成资源 | `AnimationResource.generateWithTweenAnimation()` | 从 TweenAnimation 生成可播放的 AnimationResource |
+| 播放控制 | `AnimationPlaybackController` | `entity.playAnimation()` 返回，提供 `pause()` / `resume()` / `stop()` |
+| 完成检测 | `AnimationEvents.Completed` | 通过 `Scene.subscribe(AnimationEvents.Completed, entity, null)` 订阅 |
+| 缓动曲线 | `EaseType` | `LINEAR` / `EASE_IN` / `EASE_OUT` / `EASE_INOUT` |
+| 循环模式 | `RepeatMode` + `repeatCount` | `NONE` 单次、`RESTART` 重置循环、`REVERSE` 反向循环；`repeatCount = -1` 表示无限 |
+| 执行动画 | `Entity.playAnimation()` | 在实体上播放 AnimationResource，返回 controller |
+| 恢复位置 | 直接设置 `entity.transform` | Cancel 时通过矩阵赋值恢复到 from 状态 |
+
+### 关键实现细节
+
+1. **动画构建**：通过 `TweenAnimation.createTweenAnimation()` 指定起止 Transform（column-major 4×4 矩阵）、`duration`、`easeType`，再经 `AnimationBindTarget.bindTransform()` 绑定到实体 transform，最后 `AnimationResource.generateWithTweenAnimation()` 生成可播放资源。
+
+2. **播放与控制**：`entity.playAnimation(resource)` 返回 `AnimationPlaybackController`，后续通过该控制器执行 `pause()` / `resume()` / `stop()`。
+
+3. **Cancel 恢复机制**：调用 cancel 时，先 `stop()` 控制器停止动画，再直接将 `entity.transform` 设回 `fromTransform` 矩阵。PicoOS 不存在 visionOS 的 bind-point 限制，因此可直接赋值恢复。恢复后通过 `sendWebMsg` 发送 `{animationId}_canceled` 事件。
+
+4. **完成事件**：非循环动画通过 `scene.subscribe(AnimationEvents.Completed::class.java, entity, null)` 订阅完成事件，在回调中校验 `event.playbackController` 引用一致性以过滤非当前会话的事件。循环动画不订阅。
+
+5. **会话管理**：`EntityAnimationManager` 以 `animationId` 为键管理所有活跃 `EntityAnimationSession`，每个实体同一时刻最多一个活跃会话（新 play 会自动 cancel 旧会话）。实体卸载时通过 `cancelAllForEntity()` 清理。
+
+6. **JSB 路由**：命令类名 `AnimateTransform` 与 JS 端 `commandType` 字段完全一致，通过 `JSBManager` 的 `Class.simpleName` 路由机制自动分发。
+
+### PicoOS 版本要求
+
+- **最低版本**：PicoWebApp Runtime `0.2.2`（UA 标识 `PicoWebApp/0.2.2`）
+- **能力检测**：`supports(useAnimation)` 在 picoOS capability table 中从 `0.2.2` 版本开始返回 `true`
+
+## 跨平台兼容性对照
+
+以下表格对比 visionOS (AVP) 与 PicoOS 两个平台在 Entity Transform Animation 实现上的差异：
+
+### 能力与版本
+
+| 维度 | visionOS (AVP) | PicoOS |
+|---|---|---|
+| 最低支持版本 | visionOS 1.5+ | PicoWebApp 0.2.2+ |
+| 能力检测 | `supports(useAnimation)` → `true` | `supports(useAnimation)` → `true` (≥ 0.2.2) |
+| SDK 依赖 | RealityKit (Apple) | PICO Spatial SDK 0.10.3+ |
+| 开发语言 | Swift | Kotlin |
+
+### 动画功能对照
+
+| 功能 | visionOS (AVP) | PicoOS |
+|---|---|---|
+| 动画属性 | position / rotation / scale | position / rotation / scale |
+| 缓动曲线 | linear / easeIn / easeOut / easeInOut | linear / easeIn / easeOut / easeInOut |
+| 循环模式 | none / repeat / autoReverse | none / restart / reverse |
+| 无限循环 | `repeatCount = 0` 表示无限 | `repeatCount = -1` 表示无限 |
+| 延迟 (delay) | `AnimationView.delay` | `TweenAnimation` duration offset |
+| 播放速率 (playbackRate) | `AnimationView.speed` | `AnimationPlaybackController.speed` |
+| Pause / Resume | `controller.pause()` / `.resume()` | `controller.pause()` / `.resume()` |
+| Cancel 恢复 | `entity.move(to:duration:0)` 零时长动画 | 直接设置 `entity.transform` 矩阵 |
+| 完成事件 | `AnimationEvents.PlaybackCompleted` | `AnimationEvents.Completed` |
+
+### JSBridge 协议对照
+
+| 协议要素 | visionOS (AVP) | PicoOS |
+|---|---|---|
+| 命令名 | `AnimateTransform` | `AnimateTransform` |
+| 命令类型 | `play` / `pause` / `resume` / `cancel` | `play` / `pause` / `resume` / `cancel` |
+| Transform 格式 | column-major Float4x4 (16 Double) | column-major Float4x4 (16 Double) |
+| 完成事件名 | `{animationId}_completed` | `{animationId}_completed` |
+| 取消事件名 | `{animationId}_canceled` | `{animationId}_canceled` |
+| 失败事件名 | `{animationId}_failed` | `{animationId}_failed` |
+
+### 平台差异与注意事项
+
+1. **Cancel 恢复方式**：visionOS 受 RealityKit bind-point 系统限制，不能直接赋值 transform，需使用 `entity.move(to:duration:0)` 零时长动画绕过；PicoOS 无此限制，直接设置 `entity.transform` 即可。
+2. **无限循环表达**：visionOS 用 `repeatCount = 0` 表示无限循环（RealityKit 约定），PicoOS 用 `repeatCount = -1`（PICO SDK 约定）。
+3. **速率控制层级**：visionOS 在 `AnimationView` 包装层设置 `speed`；PicoOS 在 `AnimationPlaybackController` 上设置（两者对外行为一致）。
+4. **事件名差异**：visionOS 完成事件类型为 `AnimationEvents.PlaybackCompleted`，PicoOS 为 `AnimationEvents.Completed`（均映射到相同的 JSBridge 事件名 `_completed`）。
+5. **Transform 同步**：两个平台均遵循相同的字段级抑制策略——动画控制的字段在会话期间抑制 React props 同步。
+
 ## 跨层契约
 
 ### React SDK → Core SDK
