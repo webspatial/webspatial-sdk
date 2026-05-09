@@ -282,6 +282,13 @@ export function useSpatialDivAnimation(
       const session = sessionRef.current
       if (!session || session.state === 'idle') return
 
+      // If already finished, just reset state without sending cancel to native
+      if (session.state === 'finished') {
+        sessionRef.current = null
+        forceUpdate()
+        return
+      }
+
       const element = elementRef.current
       if (!element) {
         // Not yet bound; just reset

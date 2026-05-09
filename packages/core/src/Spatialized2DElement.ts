@@ -87,17 +87,23 @@ export class Spatialized2DElement extends SpatializedElement {
 
       SpatialWebEvent.addEventReceiver(
         `${animationId}_completed`,
-        (data: { finalValues: SpatialDivAnimatedValues }) => {
+        (data: any) => {
           cleanup()
-          resolveFinished(data.finalValues)
+          // Native sends { type, values } - extract values as finalValues
+          const finalValues: SpatialDivAnimatedValues =
+            data?.finalValues ?? data?.values ?? data ?? {}
+          resolveFinished(finalValues)
         },
       )
 
       SpatialWebEvent.addEventReceiver(
         `${animationId}_canceled`,
-        (data: { currentValues: SpatialDivAnimatedValues }) => {
+        (data: any) => {
           cleanup()
-          resolveCancel(data.currentValues)
+          // Native sends { type, values } - extract values as currentValues
+          const currentValues: SpatialDivAnimatedValues =
+            data?.currentValues ?? data?.values ?? data ?? {}
+          resolveCancel(currentValues)
         },
       )
 
