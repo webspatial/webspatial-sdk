@@ -1,7 +1,58 @@
+## Phase 0: POC Verification (opacity single-property, architecture feasibility)
+
+**Goal**: Run the complete vertical chain with a single `opacity` property to verify `CADisplayLink` frame-driven architecture feasibility and suppression mechanism. This phase does not pursue feature completeness — only architecture path validation.
+
+**Priority rationale**: Both independent feasibility assessments (`feasibility-visionOS.md` and `feasibility-visionOS-analysis.md`) confirm suppression is the first blocking point, while CADisplayLink interpolation itself has low technical uncertainty. Therefore the POC validates both simultaneously.
+
+### 0.1 Suppression Infrastructure
+
+- [ ] 0.1.1 Introduce field-level suppression flag in `PortalInstanceObject` for `opacity` (`_suppressedFields: Set<string>`); during alive session, `updateSpatializedElementProperties()` skips suppressed fields
+- [ ] 0.1.2 Verify: during suppression, React-side CSS opacity change → native does not respond; after suppression release → normal sync resumes
+
+### 0.2 Native Animation Engine Skeleton
+
+- [ ] 0.2.1 Create `SpatialDivAnimationSession.swift`: holds `CADisplayLink`, implements `play()` / `pause()` / `resume()` / `cancel()` / `invalidate()` state machine
+- [ ] 0.2.2 Create `SpatialDivAnimationManager.swift`: manages sessions keyed by `animationId`, at most one active session per element
+- [ ] 0.2.3 Implement cubic approximation interpolation for 4 `timingFunction` variants
+- [ ] 0.2.4 Implement `opacity` frame-driven interpolation: per-frame `lerp(from.opacity, to.opacity, easedProgress)` → write to `SpatializedElement.opacity`
+
+### 0.3 Bridge Command Minimal Set
+
+- [ ] 0.3.1 Add `AnimateSpatialized2DElement` command struct (play/pause/resume/cancel type + opacity from/to + duration + timingFunction only)
+- [ ] 0.3.2 Register the command in `SpatialScene.setupJSBListeners()`, dispatch to `SpatialDivAnimationManager`
+- [ ] 0.3.3 Implement `{animationId}_completed` / `{animationId}_canceled` event callbacks
+
+### 0.4 End-to-End Chain Verification
+
+- [ ] 0.4.1 JS-side manually constructs play command → native opacity animation visible
+- [ ] 0.4.2 Animation completes → `_completed` event returns to JS, finalValues.opacity correct
+- [ ] 0.4.3 `cancel()` → opacity instantly restores to from, `_canceled` event returns
+- [ ] 0.4.4 `pause()` → opacity freezes at intermediate value; `resume()` → continues from pause point
+- [ ] 0.4.5 During animation, JS-side modifies opacity → native does not respond (suppression active)
+- [ ] 0.4.6 After animation ends → normal opacity sync resumes
+
+### 0.5 Performance Verification
+
+- [ ] 0.5.1 Opacity 0→1 animation smooth with no frame drops at 90Hz (visionOS frame rate)
+- [ ] 0.5.2 3 simultaneous SpatialDiv opacity animations do not interfere with each other
+- [ ] 0.5.3 `@Observable` per-frame property writes do not trigger excessive SwiftUI redraws (verify via Instruments)
+
+### Go/No-Go Criteria
+
+| Condition | Pass → | Fail → |
+|---|---|---|
+| 0.4.1–0.4.6 all pass | Proceed to Phase 1 | Analyze failure cause, adjust architecture |
+| Systematic stuttering at 90Hz | — | Evaluate dropping to 60fps or switching to `TimelineView` approach |
+| `@Observable` per-frame writes cause large-scale SwiftUI redraws | — | Evaluate batch write optimization or `objectWillChange` throttling |
+| Flash-back unavoidable after suppression release | — | Evaluate delayed release strategy or forced state sync |
+
+---
+
+
 ## 1. Public API And Capability Contract
 
 - [ ] 1.1 Define `SpatialDiv` `useAnimation` config types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), return types (`SpatialDivAnimatedProps`, `AnimationApi`), and `AnimationError`, covering `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, `height`. Specify default `duration = 0.3`, `playbackRate = 1`, and validate `opacity` in inclusive `[0, 1]`.
-- [ ] 1.2 Implement entity vs SpatialDiv auto-routing at the `useAnimation` entrypoint based on the `config.to` key set, keeping the entity path unchanged (only add a top-level if/else and internal `__kind` tag).
+- [ ] 1.2 Implement "dual-path unconditional call + active short-circuit" dispatch in `useAnimation`: top-level `resolveAnimationKind(config)` determines kind; `useEntityAnimation(config, active)` and `useSpatialDivAnimation(config, active)` called unconditionally in parallel (satisfying Rules of Hooks); inactive side effects short-circuit returning noop API
   - **Depends on** 1.1 (needs SpatialDiv config type definitions)
 - [ ] 1.3 Add public typing for the `animation` prop on spatialized HTML nodes and restrict it to the `enable-xr` path; add `__kind` binding validation (throw when binding entity animation to SpatialDiv or vice versa).
   - **Depends on** 1.2 (needs the `__kind` tagging mechanism)
