@@ -29,6 +29,7 @@ import {
 } from './types/types'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type { AnimateSpatialDivCommand } from './types/spatialDivAnimation'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -695,4 +696,42 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
       ...this.options,
     }
   }
+}
+
+export class AnimateSpatialDivJSBCommand extends JSBCommand {
+  commandType = 'AnimateSpatialized2DElement'
+
+  constructor(private command: AnimateSpatialDivCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, elementId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (elementId !== undefined) params.elementId = elementId
+
+    if (type === 'play') {
+      if (this.command.to !== undefined) params.to = this.command.to
+      if (this.command.from !== undefined) params.from = this.command.from
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+    }
+
+    return params
+  }
+}
+
+// TODO: Can crypto.randomUUID be used instead including in dev environments without https
+function uuid(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
 }
