@@ -1,6 +1,6 @@
 /**
  * Versioned capability rows transcribed from the product matrix (`capability-matrix.template.md`).
- * visionOS **WSAppShell/1.5.0** & **1.6.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** — see matrix in OpenSpec / product docs.
+ * visionOS **WSAppShell/1.5.0** & **1.6.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** — see matrix in OpenSpec / product docs.
  *
  * **picoOS** rows use dedicated builders (alpha2.0 / alpha2.1 subtokens); visionOS rows are separate.
  */
@@ -92,6 +92,16 @@ function matrixPico_0_1_2_Flags(): Record<string, boolean> {
   return flags
 }
 
+/**
+ * picoOS **PicoWebApp/0.2.2** — entity transform animation support.
+ * Inherits from 0.1.2 and enables `useAnimation`.
+ */
+function matrixPico_0_2_2_Flags(): Record<string, boolean> {
+  const flags = matrixPico_0_1_2_Flags()
+  flags['useAnimation'] = true
+  return flags
+}
+
 function visionOsRow_1_5_0(): CapabilityVersionRow {
   return { version: '1.5.0', flags: matrixVision_1_5_0_Flags() }
 }
@@ -108,10 +118,14 @@ function picoOsRow_0_1_2(): CapabilityVersionRow {
   return { version: '0.1.2', flags: matrixPico_0_1_2_Flags() }
 }
 
+function picoOsRow_0_2_2(): CapabilityVersionRow {
+  return { version: '0.2.2', flags: matrixPico_0_2_2_Flags() }
+}
+
 export const CAPABILITY_TABLE: {
   visionos: CapabilityVersionRow[]
   picoos: CapabilityVersionRow[]
 } = {
   visionos: [visionOsRow_1_5_0(), visionOsRow_1_6_0()],
-  picoos: [picoOsRow_0_1_1(), picoOsRow_0_1_2()],
+  picoos: [picoOsRow_0_1_1(), picoOsRow_0_1_2(), picoOsRow_0_2_2()],
 }
