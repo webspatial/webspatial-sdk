@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
@@ -9,11 +10,15 @@ import {
 
 export default function OpacityFadePage() {
   const { lines, log, clear } = useLog()
+  const divRef = useRef<HTMLDivElement>(null)
+  const suppressionTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  )
 
   const [animation, api] = useAnimation({
-    from: { opacity: 0.2 },
-    to: { opacity: 1.0 },
-    duration: 0.8,
+    from: { opacity: 1.0 },
+    to: { opacity: 0.2 },
+    duration: 2.0,
     timingFunction: 'easeInOut',
     autoStart: false,
     onStart: () => log('opacity: onStart'),
@@ -24,12 +29,37 @@ export default function OpacityFadePage() {
     onError: (err: any) => log(`opacity: onError → ${err.reason}`),
   } as any)
 
+  const startSuppressionTest = () => {
+    // Play animation first
+    ;(api as any).play()
+    log('suppression: started animation + CSS interference')
+
+    // Every 200ms, forcibly set CSS opacity to 0.9
+    // If suppression works, native should ignore these and continue smooth animation
+    let tick = 0
+    suppressionTimerRef.current = setInterval(() => {
+      tick++
+      if (divRef.current) {
+        const interferenceValue = tick % 2 === 0 ? '0.9' : '0.5'
+        divRef.current.style.opacity = interferenceValue
+        log(`suppression: set CSS opacity=${interferenceValue} (tick ${tick})`)
+      }
+      if (tick >= 8) {
+        if (suppressionTimerRef.current) {
+          clearInterval(suppressionTimerRef.current)
+          suppressionTimerRef.current = null
+        }
+        log('suppression: stopped CSS interference')
+      }
+    }, 200)
+  }
+
   return (
     <SpatialDivAnimationPageShell
       title="Opacity Fade"
       description={
         <>
-          Opacity 1.0→0.2 over 0.8s with easeInOut. Uses{' '}
+          Opacity 1.0→0.2 over 2s with easeInOut. Uses{' '}
           <code className="text-cyan-300">useAnimation</code> — auto-dispatches
           to SpatialDiv path since <code>opacity</code> is a SpatialDiv key.
         </>
@@ -37,13 +67,13 @@ export default function OpacityFadePage() {
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
+          ref={divRef}
           enable-xr
           animation={animation}
           style={{
             width: 250,
             height: 150,
             background: 'linear-gradient(135deg, #1e5f3a, #2d8754)',
-            // opacity: 1.0, // default opacity is 1.0
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
@@ -66,6 +96,12 @@ export default function OpacityFadePage() {
           <button className={btnCls} onClick={() => (api as any).cancel()}>
             Cancel
           </button>
+          <button
+            className={btnCls + ' !bg-yellow-700 !text-white'}
+            onClick={startSuppressionTest}
+          >
+            Suppression Test
+          </button>
           <button className={btnCls} onClick={clear}>
             Clear Log
           </button>
@@ -74,6 +110,10 @@ export default function OpacityFadePage() {
           playState:{' '}
           <code className="text-cyan-300">{(api as any).playState}</code>
         </div>
+        <p className="text-xs text-gray-600 mt-1">
+          Suppression Test: plays animation then rapidly changes CSS opacity.
+          Native should ignore CSS changes and animate smoothly.
+        </p>
         <Log lines={lines} />
       </section>
     </SpatialDivAnimationPageShell>
