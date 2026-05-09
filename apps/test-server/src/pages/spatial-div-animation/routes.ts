@@ -30,4 +30,19 @@ export const spatialDivAnimationRoutes: SpatialDivAnimationRoute[] = [
     label: 'Playback Rate (2×)',
     description: '2× speed animation completing a 2s anim in ~1s.',
   },
+  {
+    path: '/spatial-div-animation/depth',
+    label: 'Depth',
+    description: 'Depth 0→100 over 1.5s, adding volumetric depth.',
+  },
+  {
+    path: '/spatial-div-animation/back-offset',
+    label: 'Back Offset',
+    description: 'Back 0→150 over 1.5s, pushing element away from user.',
+  },
+  {
+    path: '/spatial-div-animation/transform-translate',
+    label: 'Transform Translate',
+    description: 'Translate (0,0,0)→(100,50,-80) over 2s in 3D space.',
+  },
 ]
