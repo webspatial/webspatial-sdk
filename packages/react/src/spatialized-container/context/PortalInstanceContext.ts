@@ -42,7 +42,13 @@ export class PortalInstanceObject {
    * Pass null to release suppression (resume normal sync).
    */
   setSuppressedFields(fields: Set<string> | null) {
+    const hadSuppression =
+      this._suppressedFields !== null && this._suppressedFields.size > 0
     this._suppressedFields = fields
+    // When suppression is released, force a sync so DOM values override native animation end values
+    if (hadSuppression && (fields === null || fields.size === 0)) {
+      this.updateSpatializedElementProperties()
+    }
   }
 
   /**
