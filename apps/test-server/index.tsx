@@ -83,6 +83,9 @@ import SpatialDivSizeExpandPage from './src/pages/spatial-div-animation/size-exp
 import SpatialDivOpacityFadePage from './src/pages/spatial-div-animation/opacity-fade'
 import SpatialDivCombinedDelayPage from './src/pages/spatial-div-animation/combined-delay'
 import SpatialDivPlaybackRatePage from './src/pages/spatial-div-animation/playback-rate'
+import SpatialDivDepthPage from './src/pages/spatial-div-animation/depth'
+import SpatialDivBackOffsetPage from './src/pages/spatial-div-animation/back-offset'
+import SpatialDivTransformTranslatePage from './src/pages/spatial-div-animation/transform-translate'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -198,6 +201,18 @@ function App() {
                 <Route
                   path="/spatial-div-animation/playback-rate"
                   element={<SpatialDivPlaybackRatePage />}
+                />
+                <Route
+                  path="/spatial-div-animation/depth"
+                  element={<SpatialDivDepthPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/back-offset"
+                  element={<SpatialDivBackOffsetPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/transform-translate"
+                  element={<SpatialDivTransformTranslatePage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
