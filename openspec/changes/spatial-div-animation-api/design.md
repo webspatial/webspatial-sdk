@@ -162,6 +162,32 @@ All whitelisted values use numeric inputs:
 - `back`, `depth`, `width`, `height`, `transform.translate.x/y/z`: pixel semantics consistent with existing SpatialDiv behavior
 - `opacity`: inclusive range `[0, 1]`
 
+### Internal Hook Dispatch Design
+
+`useAnimation` is the single public entry point. Since React Rules of Hooks forbid calling Hooks inside conditional branches, the implementation uses a **"dual-path unconditional call + active short-circuit"** pattern to dispatch between entity and SpatialDiv paths:
+
+```typescript
+export function useAnimation(config: AnimationConfig) {
+  // ① Top-level pure computation — determine animation kind (no Hook calls)
+  const kind = resolveAnimationKind(config);
+
+  // ② Both internal Hooks called unconditionally, satisfying Rules of Hooks
+  const entityResult = useEntityAnimation(config, kind === 'entity');
+  const spatialDivResult = useSpatialDivAnimation(config, kind === 'spatialDiv');
+
+  // ③ Return the active side's result
+  return kind === 'entity' ? entityResult : spatialDivResult;
+}
+```
+
+**Design rationale:**
+
+1. **Mutual exclusion**: `resolveAnimationKind` matches the key set in `config.to` against whitelists — entity path keys (`position`, `rotation`, `scale`) and SpatialDiv path keys (`back`, `opacity`, `depth`, `width`, `height`, `transform.translate.*`) are mutually exclusive; co-presence throws.
+2. **Inactive-side short-circuit**: `useSpatialDivAnimation(config, active=false)` still declares all `useState` / `useRef` calls (keeping Hook call order stable), but `useEffect` bodies short-circuit via `if (!active) return` — no Bridge session is established, no CADisplayLink is started. The returned API is a no-op stub.
+3. **Zero extra overhead**: The inactive side occupies only a few ref/state slots in memory with no side-effect execution, negligible for frame-level animation performance.
+4. **Extensible**: Adding a third path in the future (e.g., WebGL layer animation) requires only a new `useXxxAnimation(config, kind === 'xxx')` line in `useAnimation` — callers remain unaffected.
+
+
 ## Usage Examples
 
 ### SpatialDiv Entrance Animation
@@ -326,6 +352,55 @@ For a given `animationId`:
 - After `play` successfully establishes a session, native MUST emit exactly one terminal event (`_completed` or `_canceled`), and they MUST be mutually exclusive.
 - If `play` fails asynchronously, native MUST emit at most one `_failed`, and MUST NOT subsequently emit `_completed` or `_canceled`.
 - If `pause`, `resume`, or `cancel` fails asynchronously, native MUST emit at most one `_failed` for that failed command; the session remains in the pre-failure state, and `_completed` or `_canceled` MAY still arrive later.
+
+
+## Native visionOS Implementation Overview
+
+### Architecture Selection
+
+The rendering layer of `SpatialDiv` is based on SwiftUI Views (WKWebView container), fundamentally different from the Entity animation path that uses RealityKit's `FromToByAnimation<Transform>` + `AnimationPlaybackController`. SwiftUI does not provide an equivalent imperative animation playback control API (no pause/resume/cancel/precise completion detection), so the native side must build its own frame-driven animation engine.
+
+**Candidate evaluation:**
+
+| Candidate | Supports pause/resume | Supports cancel-restore | Precise completion callback | Decoupled from View lifecycle | Decision |
+|---|---|---|---|---|---|
+| `withAnimation` + iOS 17 completion | No | No | Partial | Yes | **Rejected**: Cannot pause/resume/cancel; fails core control semantics |
+| `TimelineView(.animation)` | Indirectly | Yes | Yes | No (tied to View body) | **Backup**: Viable but must run within View hierarchy; unsuitable for standalone Manager |
+| visionOS 26 `Entity.animate` / `content.animate` | No | No | No | Yes | **Rejected**: Only applies to RealityKit Entities, not SwiftUI Views; no playback control |
+| **`CADisplayLink` manual frame driving** | **Native support** | **Native support** | **Native support** | **Yes** | **Adopted** |
+
+Reasons for choosing `CADisplayLink`:
+
+- **Imperative control naturally aligned**: `isPaused = true/false` implements pause/resume in one line, `invalidate()` implements stop — directly maps to the proposal's play/pause/cancel semantics
+- **Decoupled from SwiftUI View**: Can run in a standalone Swift class independent of View lifecycle, naturally suited for encapsulation as `SpatialDivAnimationSession`
+- **Symmetric with Entity animation architecture**: Entity side has `EntityAnimationManager` / `EntityAnimationSession`; SpatialDiv side establishes symmetric `SpatialDivAnimationManager` / `SpatialDivAnimationSession`
+- **Clear property write path**: `SpatializedElement` is an `@Observable` object; all whitelisted properties (`opacity`, `backOffset`, `depth`, `width`, `height`, `transform`) already exist as `var` — direct assignment triggers SwiftUI view updates
+
+### Core Mapping
+
+| Design Concept | Entity Animation (implemented) | SpatialDiv Animation (this proposal) |
+|---|---|---|
+| Animation definition | `FromToByAnimation<Transform>` | `SpatialDivAnimationSession` (holds CADisplayLink + from/to/duration config) |
+| Playback control | `AnimationPlaybackController.pause()/resume()/stop()` | `CADisplayLink.isPaused` + `invalidate()` |
+| Completion detection | `AnimationEvents.PlaybackCompleted` (Scene event subscription) | Manual check: elapsed >= duration |
+| Easing curves | `AnimationTimingFunction` | Manual cubic approximation (4 timingFunction variants) |
+| Loop modes | `AnimationRepeatMode` | Session-internal elapsed modulo (reset) or direction flip (reverse) |
+| Cancel restore | `entity.move(to:duration:0)` (bypasses bind-point) | Direct `@Observable` property assignment (no bind-point restriction) |
+| Delay & rate | `AnimationView.delay` / `AnimationView.speed` | Session-internal elapsed calculation: subtract delay, multiply by playbackRate |
+| Session management | `EntityAnimationManager` (keyed by animationId) | `SpatialDivAnimationManager` (keyed by animationId, at most one active session per element) |
+| Property interpolation | RealityKit built-in Transform interpolation | Manual `lerp(from, to, easedProgress)` per-field scalar interpolation |
+
+### Key Implementation Details
+
+1. **Frame driving**: `CADisplayLink` fires at visionOS 90Hz frame rate. Each frame computes `elapsed → progress → easedProgress → lerp`, writes results to `SpatializedElement`'s `@Observable` properties; SwiftUI automatically responds and updates visuals.
+
+2. **Pause/Resume**: On `pause()`, record current `elapsed` and set `displayLink.isPaused = true`; on `resume()`, adjust `startTime` so elapsed continues from the pause point, then restore `displayLink.isPaused = false`.
+
+3. **Cancel restore**: Directly assign `@Observable` properties to `from` (or initial snapshot), `invalidate()` the displayLink, emit `_canceled` event. Simpler than Entity animation's `entity.move(to:duration:0)` — SwiftUI `@Observable` assignment takes effect immediately without bypassing bind-points.
+
+4. **Transform decomposition**: v1 only supports `translate` subfields, and the entire transform is suppressed during animation. Only the translation component needs to be extracted from the current `AffineTransform3D` at session start; only the translation column is modified during animation — no complex matrix decomposition/recomposition needed.
+
+5. **Width/Height risk**: Changing `SpatializedElement.width/height` causes SwiftUI's `.frame(width:height:)` to respond automatically, but WKWebView internals may produce brief reflow flicker. This is a known v1 risk requiring POC validation.
 
 ## Decisions
 
