@@ -27,6 +27,37 @@ describe('SpatialContainerRefProxy', () => {
     expect(parent.contains(ref.current)).toBe(true)
   })
 
+  // Regression test for https://github.com/webspatial/webspatial-sdk/issues/1067
+  // Native APIs like ResizeObserver/IntersectionObserver brand-check `Element`
+  // and reject ECMAScript Proxy wrappers that lack the host internal slot.
+  it('ref.current passes Element brand checks (e.g. ResizeObserver.observe)', () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+
+    expect(ref.current).toBeInstanceOf(window.Element)
+    expect(ref.current).toBeInstanceOf(window.HTMLElement)
+
+    class FakeResizeObserver {
+      observe(target: unknown) {
+        if (!(target instanceof window.Element)) {
+          throw new TypeError(
+            "Argument 1 ('target') to ResizeObserver.observe must be an instance of Element",
+          )
+        }
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+
+    const ro = new FakeResizeObserver()
+    expect(() => ro.observe(ref.current)).not.toThrow()
+  })
+
   it('proxies style visibility/transform to task container', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)
