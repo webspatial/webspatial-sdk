@@ -162,6 +162,32 @@ interface AnimationApi {
 - `back`、`depth`、`width`、`height`、`transform.translate.x/y/z`：使用与现有 SpatialDiv 一致的像素语义
 - `opacity`：`[0, 1]` 闭区间
 
+
+### Hook 内部分派设计
+
+`useAnimation` 是面向开发者的统一入口。由于 React Rules of Hooks 禁止在条件分支内调用 Hook，内部采用 **"双路无条件调用 + active 短路"** 模式实现 entity / SpatialDiv 分叉：
+
+```typescript
+export function useAnimation(config: AnimationConfig) {
+  // ① 顶层纯计算，确定动画 kind（不涉及 Hook 调用）
+  const kind = resolveAnimationKind(config);
+
+  // ② 两套内部 Hook 无条件调用，满足 Rules of Hooks
+  const entityResult = useEntityAnimation(config, kind === 'entity');
+  const spatialDivResult = useSpatialDivAnimation(config, kind === 'spatialDiv');
+
+  // ③ 返回激活侧的结果
+  return kind === 'entity' ? entityResult : spatialDivResult;
+}
+```
+
+**设计要点：**
+
+1. **互斥判定**：`resolveAnimationKind` 根据 `config.to` 的 key 集合做白名单匹配——entity 路径 key（`position`、`rotation`、`scale`）与 SpatialDiv 路径 key（`back`、`opacity`、`depth`、`width`、`height`、`transform.translate.*`）互斥，同时出现时抛错。
+2. **非激活侧短路**：`useSpatialDivAnimation(config, active=false)` 内部所有 `useState` / `useRef` 正常声明（保持 Hook 调用顺序稳定），但 `useEffect` 通过 `if (!active) return` 短路，不建立 Bridge 会话、不启动 CADisplayLink。返回值为 noop API。
+3. **零额外开销**：非激活侧仅占几个 ref/state slot 的内存，无副作用执行，对动画帧级性能无影响。
+4. **可扩展**：未来新增第三条路径（如 WebGL layer 动画）时，只需在 `useAnimation` 中新增一行 `useXxxAnimation(config, kind === 'xxx')` 即可，调用方无感。
+
 ## 用法示例
 
 ### SpatialDiv 入场动画
