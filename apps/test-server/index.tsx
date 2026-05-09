@@ -83,6 +83,11 @@ import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/cap
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
 import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
+import SpatialDivFadeInEntrancePage from './src/pages/spatial-div-animation/fade-in-entrance'
+import SpatialDivSizeExpandPage from './src/pages/spatial-div-animation/size-expand'
+import SpatialDivOpacityFadePage from './src/pages/spatial-div-animation/opacity-fade'
+import SpatialDivCombinedDelayPage from './src/pages/spatial-div-animation/combined-delay'
+import SpatialDivPlaybackRatePage from './src/pages/spatial-div-animation/playback-rate'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -233,6 +238,26 @@ function App() {
                 <Route
                   path="/spatial-div-animation"
                   element={<SpatialDivAnimationPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/fade-in-entrance"
+                  element={<SpatialDivFadeInEntrancePage />}
+                />
+                <Route
+                  path="/spatial-div-animation/size-expand"
+                  element={<SpatialDivSizeExpandPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/opacity-fade"
+                  element={<SpatialDivOpacityFadePage />}
+                />
+                <Route
+                  path="/spatial-div-animation/combined-delay"
+                  element={<SpatialDivCombinedDelayPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/playback-rate"
+                  element={<SpatialDivPlaybackRatePage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
