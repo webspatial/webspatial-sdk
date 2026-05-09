@@ -7,7 +7,7 @@ import QuartzCore
 /// Uses a single shared CADisplayLink to drive all animations at display refresh rate (90Hz on visionOS).
 /// Properties are interpolated per-frame and applied directly to SpatializedElement @Observable vars,
 /// which triggers SwiftUI view updates automatically.
-class SpatialDivAnimationManager {
+class SpatialDivAnimationManager: NSObject {
     /// Active sessions keyed by animationId.
     private var sessions: [String: SpatialDivAnimationSession] = [:]
 
@@ -19,6 +19,7 @@ class SpatialDivAnimationManager {
 
     init(scene: SpatialScene? = nil) {
         self.scene = scene
+        super.init()
     }
 
     // MARK: - Session Management
