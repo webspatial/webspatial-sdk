@@ -281,6 +281,169 @@ function FloatingBadge() {
 }
 ```
 
+
+## 动画状态机
+
+动画会话的生命周期由以下五个状态及转换规则定义：
+
+### 状态定义
+
+| 状态 | 含义 | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|---|
+| `idle` | 初始状态，尚未调用 `play()` 或会话已终止 | `false` | `false` | `false` |
+| `queued` | SpatialDiv 尚未挂载完成（animation prop 未绑定到 native 元素），等待绑定 | `true` | `false` | `false` |
+| `running` | 动画正在播放（含 delay 等待期） | `true` | `false` | `false` |
+| `paused` | 动画已暂停，可从当前进度恢复 | `false` | `true` | `false` |
+| `finished` | 非循环动画自然完成 | `false` | `false` | `true` |
+
+### 状态转换图
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle : useAnimation 初始化
+    idle --> queued : play 且 SpatialDiv 未挂载
+    idle --> running : play 且 SpatialDiv 已挂载
+    queued --> running : SpatialDiv 挂载完成（animation prop 绑定）
+    queued --> paused : pause 在 queued 期间调用
+    running --> paused : pause
+    running --> finished : 非循环动画自然完成
+    paused --> running : play 恢复
+    finished --> idle : cancel 或重新 play
+    queued --> idle : cancel
+    paused --> idle : cancel
+    running --> idle : cancel
+```
+
+### 转换规则
+
+- **idle → queued**：调用 `play()` 时 SpatialDiv 的 `animation` prop 尚未绑定到 native 元素（组件未挂载或 bridge 未就绪），动画进入排队等待。
+- **idle → running**：调用 `play()` 时 SpatialDiv 已挂载且 bridge 就绪，Native 会话成功建立，CADisplayLink 启动。
+- **queued → running**：SpatialDiv 挂载完成后自动发送 play 命令转为播放。
+- **queued → paused**：在 queued 期间调用 `pause()`，挂载完成后将以 paused 状态开始（CADisplayLink 创建后立即 `isPaused = true`）。
+- **running → paused**：调用 `pause()`，Native 侧 `displayLink.isPaused = true`，记录当前 elapsed。
+- **running → finished**：非循环动画自然播放完成（elapsed >= duration），Native 发送 `_completed` 事件。
+- **paused → running**：调用 `play()` 恢复，Native 侧修正 startTime 并恢复 `displayLink.isPaused = false`。
+- **任意 alive 状态 → idle**：调用 `cancel()`，`@Observable` 属性恢复到 `from`（或起始快照），`displayLink.invalidate()`，Native 发送 `_canceled` 事件。
+- **finished → idle**：调用 `cancel()` 清理，或再次 `play()` 启动新会话。
+
+## API 调用时序
+
+### play 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.play()
+    Hook->>Hook: 生成新 animationId
+    Hook->>Hook: 注册 _completed / _canceled / _failed 事件监听
+    Hook->>Core: animateSpatialDiv({ type: 'play', ... })
+    Core->>Bridge: 序列化 AnimateSpatialized2DElement 命令
+    Bridge->>Native: play 命令
+    Native->>Native: 创建 SpatialDivAnimationSession
+    Native->>Native: 快照当前属性值作为 from（若未指定）
+    Native->>Native: 设置 suppression（标记 opacity 字段抑制）
+    Native->>Native: 创建 CADisplayLink，启动帧驱动
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve AnimateSpatialDivResult
+    Hook->>Hook: playState = running
+    Hook->>App: onStart 回调
+
+    loop 每帧（90Hz）
+        Native->>Native: elapsed → progress → easedProgress → lerp
+        Native->>Native: 写入 @Observable 属性
+    end
+
+    alt 非循环动画自然完成
+        Native->>Native: elapsed >= duration
+        Native->>Native: 写入最终值，释放 suppression
+        Native->>Native: displayLink.invalidate()
+        Native->>Bridge: {animationId}_completed + finalValues
+        Bridge->>Core: 事件分发
+        Core->>Hook: resolve finished
+        Hook->>Hook: playState = finished
+        Hook->>App: onComplete(finalValues) 回调
+    end
+```
+
+### pause 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.pause()
+    Hook->>Core: animateSpatialDiv({ type: 'pause', animationId })
+    Core->>Bridge: 序列化 pause 命令
+    Bridge->>Native: pause 命令
+    Native->>Native: 记录当前 elapsed
+    Native->>Native: displayLink.isPaused = true
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = paused
+```
+
+### pause 后 play 恢复时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.play()（paused 状态下）
+    Hook->>Core: animateSpatialDiv({ type: 'resume', animationId })
+    Core->>Bridge: 序列化 resume 命令
+    Bridge->>Native: resume 命令
+    Native->>Native: 修正 startTime = now - savedElapsed
+    Native->>Native: displayLink.isPaused = false
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = running
+
+    loop 每帧（从暂停点继续）
+        Native->>Native: elapsed → progress → easedProgress → lerp
+        Native->>Native: 写入 @Observable 属性
+    end
+```
+
+### cancel 时序
+
+```mermaid
+sequenceDiagram
+    participant App as 应用代码
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.cancel()
+    Hook->>Core: animateSpatialDiv({ type: 'cancel', animationId })
+    Core->>Bridge: 序列化 cancel 命令
+    Bridge->>Native: cancel 命令
+    Native->>Native: 将 @Observable 属性赋值为 from（恢复起始值）
+    Native->>Native: displayLink.invalidate()
+    Native->>Native: 释放 suppression
+    Native->>Bridge: {animationId}_canceled + currentValues
+    Bridge->>Core: 事件分发
+    Core->>Hook: canceled 事件
+    Hook->>Hook: playState = idle
+    Hook->>App: onCancel(currentValues) 回调
+```
+
 ## 跨层契约
 
 ### React SDK → Core SDK
