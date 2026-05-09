@@ -281,6 +281,169 @@ function FloatingBadge() {
 }
 ```
 
+
+## Animation State Machine
+
+The animation session lifecycle is defined by five states and the following transition rules:
+
+### State Definitions
+
+| State | Meaning | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|---|
+| `idle` | Initial state; `play()` not yet called or session terminated | `false` | `false` | `false` |
+| `queued` | SpatialDiv not yet mounted (animation prop not bound to native element); waiting | `true` | `false` | `false` |
+| `running` | Animation playing (includes delay wait period) | `true` | `false` | `false` |
+| `paused` | Animation paused; can resume from current progress | `false` | `true` | `false` |
+| `finished` | Non-looping animation completed naturally | `false` | `false` | `true` |
+
+### State Transition Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle : useAnimation initialized
+    idle --> queued : play and SpatialDiv not mounted
+    idle --> running : play and SpatialDiv mounted
+    queued --> running : SpatialDiv mount complete (animation prop bound)
+    queued --> paused : pause called during queued
+    running --> paused : pause
+    running --> finished : non-looping animation completes
+    paused --> running : play resumes
+    finished --> idle : cancel or re-play
+    queued --> idle : cancel
+    paused --> idle : cancel
+    running --> idle : cancel
+```
+
+### Transition Rules
+
+- **idle → queued**: `play()` called but SpatialDiv's `animation` prop not yet bound to a native element (component unmounted or bridge not ready); animation enters queue.
+- **idle → running**: `play()` called with SpatialDiv mounted and bridge ready; native session established, CADisplayLink started.
+- **queued → running**: After SpatialDiv mounts, play command automatically sent; transitions to playing.
+- **queued → paused**: `pause()` called during queued; after mount completes, starts in paused state (CADisplayLink created with `isPaused = true`).
+- **running → paused**: `pause()` called; native side sets `displayLink.isPaused = true`, records current elapsed.
+- **running → finished**: Non-looping animation completes naturally (elapsed >= duration); native emits `_completed` event.
+- **paused → running**: `play()` resumes; native side adjusts startTime and restores `displayLink.isPaused = false`.
+- **Any alive state → idle**: `cancel()` called; `@Observable` properties restored to `from` (or initial snapshot), `displayLink.invalidate()`, native emits `_canceled` event.
+- **finished → idle**: `cancel()` to clean up, or `play()` again to start a new session.
+
+## API Call Sequence
+
+### play Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.play()
+    Hook->>Hook: Generate new animationId
+    Hook->>Hook: Register _completed / _canceled / _failed listeners
+    Hook->>Core: animateSpatialDiv({ type: 'play', ... })
+    Core->>Bridge: Serialize AnimateSpatialized2DElement command
+    Bridge->>Native: play command
+    Native->>Native: Create SpatialDivAnimationSession
+    Native->>Native: Snapshot current property values as from (if unspecified)
+    Native->>Native: Set suppression (mark opacity field suppressed)
+    Native->>Native: Create CADisplayLink, start frame driving
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve AnimateSpatialDivResult
+    Hook->>Hook: playState = running
+    Hook->>App: onStart callback
+
+    loop Per frame (90Hz)
+        Native->>Native: elapsed → progress → easedProgress → lerp
+        Native->>Native: Write to @Observable property
+    end
+
+    alt Non-looping animation completes
+        Native->>Native: elapsed >= duration
+        Native->>Native: Write final value, release suppression
+        Native->>Native: displayLink.invalidate()
+        Native->>Bridge: {animationId}_completed + finalValues
+        Bridge->>Core: Event dispatch
+        Core->>Hook: resolve finished
+        Hook->>Hook: playState = finished
+        Hook->>App: onComplete(finalValues) callback
+    end
+```
+
+### pause Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.pause()
+    Hook->>Core: animateSpatialDiv({ type: 'pause', animationId })
+    Core->>Bridge: Serialize pause command
+    Bridge->>Native: pause command
+    Native->>Native: Record current elapsed
+    Native->>Native: displayLink.isPaused = true
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = paused
+```
+
+### pause → play Resume Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.play() (from paused state)
+    Hook->>Core: animateSpatialDiv({ type: 'resume', animationId })
+    Core->>Bridge: Serialize resume command
+    Bridge->>Native: resume command
+    Native->>Native: Adjust startTime = now - savedElapsed
+    Native->>Native: displayLink.isPaused = false
+    Native-->>Bridge: resolve success
+    Bridge-->>Core: resolve void
+    Core-->>Hook: resolve void
+    Hook->>Hook: playState = running
+
+    loop Per frame (continues from pause point)
+        Native->>Native: elapsed → progress → easedProgress → lerp
+        Native->>Native: Write to @Observable property
+    end
+```
+
+### cancel Sequence
+
+```mermaid
+sequenceDiagram
+    participant App as Application Code
+    participant Hook as useAnimation Hook
+    participant Core as Core SDK
+    participant Bridge as JSBridge
+    participant Native as Native SpatialDivAnimationManager
+
+    App->>Hook: api.cancel()
+    Hook->>Core: animateSpatialDiv({ type: 'cancel', animationId })
+    Core->>Bridge: Serialize cancel command
+    Bridge->>Native: cancel command
+    Native->>Native: Assign @Observable properties to from (restore initial values)
+    Native->>Native: displayLink.invalidate()
+    Native->>Native: Release suppression
+    Native->>Bridge: {animationId}_canceled + currentValues
+    Bridge->>Core: Event dispatch
+    Core->>Hook: canceled event
+    Hook->>Hook: playState = idle
+    Hook->>App: onCancel(currentValues) callback
+```
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK
