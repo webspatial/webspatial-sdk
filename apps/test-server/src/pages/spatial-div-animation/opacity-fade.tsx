@@ -11,8 +11,8 @@ export default function OpacityFadePage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { opacity: 1.0 },
-    to: { opacity: 0.2 },
+    from: { opacity: 0.2 },
+    to: { opacity: 1.0 },
     duration: 0.8,
     timingFunction: 'easeInOut',
     autoStart: false,
@@ -43,6 +43,7 @@ export default function OpacityFadePage() {
             width: 250,
             height: 150,
             background: 'linear-gradient(135deg, #1e5f3a, #2d8754)',
+            // opacity: 1.0, // default opacity is 1.0
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
