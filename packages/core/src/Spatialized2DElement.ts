@@ -1,7 +1,15 @@
 import {
   AddSpatializedElementToSpatialized2DElement,
+  AnimateSpatialDivJSBCommand,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
+import { SpatialWebEvent } from './SpatialWebEvent'
+import type {
+  AnimateSpatialDivCommand,
+  AnimateSpatialDivResult,
+  SpatialDivAnimatedValues,
+  SpatialDivAnimationError,
+} from './types/spatialDivAnimation'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
@@ -47,5 +55,97 @@ export class Spatialized2DElement extends SpatializedElement {
       this,
       element,
     ).execute()
+  }
+
+  // ---- SpatialDiv Animation ----
+
+  animateSpatialDiv(
+    command: AnimateSpatialDivCommand & { type: 'play' },
+  ): Promise<AnimateSpatialDivResult>
+  animateSpatialDiv(command: AnimateSpatialDivCommand): Promise<void>
+  async animateSpatialDiv(
+    command: AnimateSpatialDivCommand,
+  ): Promise<AnimateSpatialDivResult | void> {
+    const { animationId, type } = command
+
+    if (type === 'play') {
+      let resolveFinished!: (val: SpatialDivAnimatedValues) => void
+      let resolveCancel!: (val: SpatialDivAnimatedValues) => void
+
+      const finished = new Promise<SpatialDivAnimatedValues>(r => {
+        resolveFinished = r
+      })
+      const canceled = new Promise<SpatialDivAnimatedValues>(r => {
+        resolveCancel = r
+      })
+
+      const cleanup = () => {
+        SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+      }
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_completed`,
+        (data: { finalValues: SpatialDivAnimatedValues }) => {
+          cleanup()
+          resolveFinished(data.finalValues)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_canceled`,
+        (data: { currentValues: SpatialDivAnimatedValues }) => {
+          cleanup()
+          resolveCancel(data.currentValues)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_failed`,
+        (data: {
+          animationId: string
+          command: string
+          code?: string
+          reason: string
+        }) => {
+          cleanup()
+          // Failed events are handled by the hook layer
+        },
+      )
+
+      const playCommand: AnimateSpatialDivCommand = {
+        ...command,
+        elementId: command.elementId ?? this.id,
+      }
+
+      const result = await new AnimateSpatialDivJSBCommand(
+        playCommand,
+      ).execute()
+      if (!result.success) {
+        cleanup()
+        throw new Error(
+          result.errorMessage ??
+            'AnimateSpatialized2DElement play command failed',
+        )
+      }
+
+      return { animationId, finished, canceled }
+    }
+
+    // pause / resume / cancel
+    const result = await new AnimateSpatialDivJSBCommand(command).execute()
+    if (!result.success) {
+      throw new Error(
+        result.errorMessage ??
+          `AnimateSpatialized2DElement ${type} command failed`,
+      )
+    }
+  }
+
+  cleanupSpatialDivAnimationListeners(animationId: string) {
+    SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
   }
 }
