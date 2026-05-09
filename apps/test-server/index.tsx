@@ -79,6 +79,7 @@ import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-s
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -182,6 +183,10 @@ function App() {
                 <Route
                   path="/entity-animation/play-state"
                   element={<EntityAnimationPlayStatePage />}
+                />
+                <Route
+                  path="/spatial-div-animation"
+                  element={<SpatialDivAnimationPage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
