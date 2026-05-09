@@ -1,4 +1,3 @@
-import { hijackGetComputedStyle } from './hooks/useDomProxy'
 import { injectSpatialDefaultStyle } from './StandardSpatializedContainer'
 import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
 
@@ -36,7 +35,6 @@ export {
 } from './types'
 
 export function initPolyfill() {
-  hijackGetComputedStyle()
   injectSpatialDefaultStyle()
   initCSSParserDivContainer()
 }

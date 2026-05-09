@@ -1,6 +1,6 @@
 import * as core from '@webspatial/core-sdk'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { hijackGetComputedStyle, SpatialContainerRefProxy } from './useDomProxy'
+import { SpatialContainerRefProxy } from './useDomProxy'
 import { SpatialCustomStyleVars } from '../types'
 
 /** Class mirror uses queueMicrotask coalescing; flush before asserting on task.className. */
@@ -9,19 +9,22 @@ async function flushClassSyncMicrotasks() {
 }
 
 describe('SpatialContainerRefProxy', () => {
-  it('writes ref only when both doms exist', () => {
+  it('writes the native dom element as ref only when both doms exist', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)
 
     const dom = document.createElement('div')
     const task = document.createElement('div')
+    const parent = document.createElement('section')
+    parent.appendChild(dom)
 
     proxy.updateStandardSpatializedContainerDom(dom)
     expect(ref.current).toBe(null)
 
     proxy.updateTransformVisibilityTaskContainerDom(task)
-    expect(ref.current).not.toBe(null)
-    expect((ref.current as any).__raw).toBe(dom)
+    expect(ref.current).toBe(dom)
+    expect(ref.current).toBeInstanceOf(window.Node)
+    expect(parent.contains(ref.current)).toBe(true)
   })
 
   it('proxies style visibility/transform to task container', () => {
@@ -83,8 +86,8 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.style.getPropertyValue('transform')).toBe('translateX(10px)')
     expect(task.style.getPropertyValue('visibility')).toBe('visible')
     expect(dom.style.getPropertyValue('color')).toBe('red')
-    expect(dom.style.getPropertyValue('transform')).toBe('none')
-    expect(dom.style.getPropertyValue('visibility')).toBe('hidden')
+    expect(dom.getAttribute('style')).toContain('transform: none')
+    expect(dom.getAttribute('style')).toContain('visibility: hidden')
   })
 
   it('intercepts removeAttribute for style and class', async () => {
@@ -108,8 +111,8 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.style.transform).toBe('translateX(1px)')
 
     domProxy.removeAttribute('style')
-    expect(dom.style.getPropertyValue('visibility')).toBe('hidden')
-    expect(dom.style.getPropertyValue('transform')).toBe('none')
+    expect(dom.getAttribute('style')).toContain('visibility: hidden')
+    expect(dom.getAttribute('style')).toContain('transform: none')
     expect(task.style.getPropertyValue('visibility')).toBe('')
     expect(task.style.getPropertyValue('transform')).toBe('')
 
@@ -239,27 +242,5 @@ describe('spatialized ref: xrClientDepth / xrOffsetBack', () => {
     expect('xrOffsetBack' in domProxy).toBe(true)
     expect(domProxy.xrClientDepth).toBe('9px')
     expect(domProxy.xrOffsetBack).toBe('8px')
-  })
-})
-
-describe('hijackGetComputedStyle', () => {
-  it('routes proxy elements to raw dom', () => {
-    const raw = vi.fn().mockReturnValue({} as any)
-    const orig = window.getComputedStyle
-    window.getComputedStyle = raw as any
-
-    hijackGetComputedStyle()
-
-    const ref = { current: null as any }
-    const proxy = new SpatialContainerRefProxy<any>(ref)
-    const dom = document.createElement('div')
-    const task = document.createElement('div')
-    proxy.updateStandardSpatializedContainerDom(dom)
-    proxy.updateTransformVisibilityTaskContainerDom(task)
-
-    window.getComputedStyle(ref.current as any)
-    expect(raw).toHaveBeenCalledWith(dom, undefined)
-
-    window.getComputedStyle = orig
   })
 })

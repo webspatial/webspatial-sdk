@@ -34,8 +34,8 @@ function resolveSpatialObjectId(target: CoordinateConvertible): string | null {
     return maybeEntity.entity?.id ?? null
   }
 
-  // SpatializedElementRef / ModelRef -> DOM proxy to underlying SpatializedElement.id
-  const dom: any = (target as any)?.__raw ?? (target as any)
+  // SpatializedElementRef / ModelRef -> underlying SpatializedElement.id
+  const dom: any = target as any
   if (dom && typeof dom === 'object') {
     const spatializedElement =
       dom.__spatializedElement ?? dom.__innerSpatializedElement?.()

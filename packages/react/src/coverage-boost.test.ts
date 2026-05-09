@@ -1740,7 +1740,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     const onLoad = vi.fn()
     const onError = vi.fn()
     const portalInstanceObject = {
-      dom: { __targetProxy: { tid: 1 } },
+      dom: { tid: 1 },
     } as any
 
     const { SpatializedStatic3DElementContainer } = await import(
@@ -1847,7 +1847,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     render(
       React.createElement(
         PortalInstanceContext.Provider,
-        { value: { dom: { __targetProxy: {} } } as any },
+        { value: { dom: {} } as any },
         React.createElement(SpatializedStatic3DElementContainer as any, {
           src: '/m2.glb',
         }),

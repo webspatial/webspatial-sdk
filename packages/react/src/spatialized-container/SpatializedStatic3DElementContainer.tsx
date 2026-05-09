@@ -118,7 +118,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
+            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
@@ -132,7 +132,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
+            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
