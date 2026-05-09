@@ -1,53 +1,71 @@
-## Phase 0: POC 验证（opacity 单属性，架构可行性）
+## Phase 0: POC 验证（opacity 单属性，端到端）
 
-**目标**：用 `opacity` 一个属性跑通完整纵向链路，验证 `CADisplayLink` 帧驱动架构可行性与 suppression 机制。本阶段不追求功能完整，只追求架构路径验证。
+**目标**：用 `opacity` 一个属性跑通完整纵向链路，验证 native `CADisplayLink` 帧驱动架构可行性与 suppression 机制。
+
+**执行策略**：
+
+- **Core SDK + React SDK**：直接写正式实现（API 层无争议，不会返工）
+- **Native (visionOS)**：按设计方案先实现一版，等测试页面验证可行性后再扩展到其余属性
+- **testServer**：新增测试页面，供手动验证端到端链路
 
 **优先级依据**：两份独立可行性评估（`feasibility-visionOS.md` 与 `feasibility-visionOS-analysis.md`）均确认 suppression 是第一阻塞点，而 CADisplayLink 插值本身技术不确定性低。因此 POC 同时验证这两件事。
 
-### 0.1 Suppression 基础设施
+### 0.1 React SDK — useAnimation SpatialDiv 分支（正式实现）
 
-- [ ] 0.1.1 在 `PortalInstanceObject` 中为 `opacity` 引入字段级抑制标记（`_suppressedFields: Set<string>`），alive 会话期间 `updateSpatializedElementProperties()` 跳过被抑制字段
-- [ ] 0.1.2 验证抑制期间 React 侧修改 CSS opacity → native 不响应；抑制释放后 → 恢复常规同步
+- [ ] 0.1.1 实现 `resolveAnimationKind(config)` 互斥判定 + `useSpatialDivAnimation(config, active)` 骨架（双路无条件调用模式）
+- [ ] 0.1.2 实现 `SpatialDivAnimationConfig` 校验逻辑（白名单、数值范围、timingFunction、loop 结构、entity/SpatialDiv key 互斥）
+- [ ] 0.1.3 实现 `SpatialDivAnimatedProps` 生成与 `animation` prop 绑定（仅 opacity 字段 live，其余字段 stub）
+- [ ] 0.1.4 实现 `AnimationApi`（play/pause/cancel/isAnimating/isPaused/playState/finished）— 通过 core-sdk 发命令、监听事件更新状态
 
-### 0.2 Native 动画引擎骨架
+### 0.2 Core SDK — Bridge 会话流程（正式实现）
 
-- [ ] 0.2.1 新建 `SpatialDivAnimationSession.swift`：持有 `CADisplayLink`，实现 `play()` / `pause()` / `resume()` / `cancel()` / `invalidate()` 状态机
-- [ ] 0.2.2 新建 `SpatialDivAnimationManager.swift`：以 `animationId` 为 key 管理 sessions，每个 element 至多一个 active session
-- [ ] 0.2.3 实现 4 种 `timingFunction` 的 cubic 近似插值函数
-- [ ] 0.2.4 实现 `opacity` 的帧驱动插值：每帧 `lerp(from.opacity, to.opacity, easedProgress)` → 写入 `SpatializedElement.opacity`
+- [ ] 0.2.1 在 `Spatialized2DElement` 中新增 `animateSpatialDiv(command)` 方法，封装 play/pause/resume/cancel 命令发送
+- [ ] 0.2.2 定义 `AnimateSpatialized2DElement` JSBridge 命令结构（type + from/to + duration + timingFunction + delay + loop + playbackRate）
+- [ ] 0.2.3 注册 `{animationId}_completed` / `{animationId}_canceled` / `{animationId}_failed` 事件监听，回调到 React 层
 
-### 0.3 Bridge 命令最小集
+### 0.3 Native — Suppression 基础设施
 
-- [ ] 0.3.1 新增 `AnimateSpatialized2DElement` 命令 struct（仅含 play/pause/resume/cancel type + opacity from/to + duration + timingFunction）
-- [ ] 0.3.2 在 `SpatialScene.setupJSBListeners()` 中注册该命令，分发到 `SpatialDivAnimationManager`
-- [ ] 0.3.3 实现 `{animationId}_completed` / `{animationId}_canceled` 事件回传
+- [ ] 0.3.1 在 `PortalInstanceObject`（或对应 Swift 侧）为 `opacity` 引入字段级抑制标记（`_suppressedFields: Set<string>`），alive 会话期间 `updateSpatializedElementProperties()` 跳过被抑制字段
+- [ ] 0.3.2 验证抑制期间 React 侧修改 CSS opacity → native 不响应；抑制释放后 → 恢复常规同步
 
-### 0.4 端到端链路验证
+### 0.4 Native — 动画引擎骨架
 
-- [ ] 0.4.1 JS 侧手动构造 play 命令 → native opacity 动画可见
-- [ ] 0.4.2 动画完成 → `_completed` 事件回传 JS，finalValues.opacity 正确
-- [ ] 0.4.3 `cancel()` → opacity 瞬间恢复到 from，`_canceled` 事件回传
-- [ ] 0.4.4 `pause()` → opacity 冻结在中间值；`resume()` → 从暂停点继续
-- [ ] 0.4.5 动画期间 JS 侧修改 opacity → native 不响应（suppression 生效）
-- [ ] 0.4.6 动画结束后 → 恢复常规 opacity 同步
+- [ ] 0.4.1 新建 `SpatialDivAnimationSession.swift`：持有 `CADisplayLink`，实现 `play()` / `pause()` / `resume()` / `cancel()` / `invalidate()` 状态机
+- [ ] 0.4.2 新建 `SpatialDivAnimationManager.swift`：以 `animationId` 为 key 管理 sessions，每个 element 至多一个 active session
+- [ ] 0.4.3 实现 4 种 `timingFunction` 的 cubic 近似插值函数
+- [ ] 0.4.4 实现 `opacity` 帧驱动插值：每帧 `lerp(from.opacity, to.opacity, easedProgress)` → 写入 `SpatializedElement.opacity`
 
-### 0.5 性能验证
+### 0.5 Native — Bridge 命令注册
 
-- [ ] 0.5.1 90Hz（visionOS 帧率）下 opacity 0→1 动画流畅无掉帧
-- [ ] 0.5.2 同时启动 3 个 SpatialDiv 的 opacity 动画不互相干扰
-- [ ] 0.5.3 `@Observable` 属性每帧写入不触发 SwiftUI 过度重绘（通过 Instruments 验证）
+- [ ] 0.5.1 在 `SpatialScene.setupJSBListeners()` 中注册 `AnimateSpatialized2DElement` 命令，分发到 `SpatialDivAnimationManager`
+- [ ] 0.5.2 实现 `{animationId}_completed` / `{animationId}_canceled` 事件回传 JS
+
+### 0.6 testServer — 测试页面
+
+- [ ] 0.6.1 新增 `poc-spatial-div-animation.html` 测试页面：含 SpatialDiv 容器 + Play/Pause/Resume/Cancel 按钮 + 事件日志面板
+- [ ] 0.6.2 页面通过 `useAnimation` hook（正式 API）触发 opacity 动画，展示完整 DX 流程
+- [ ] 0.6.3 页面包含 suppression 验证：动画期间自动修改 CSS opacity，观察 native 是否忽略
+
+### 0.7 端到端验证（手动，由你跑测试页面）
+
+- [ ] 0.7.1 Play → native opacity 动画可见
+- [ ] 0.7.2 动画完成 → `onComplete` 回调触发，finalValues.opacity 正确
+- [ ] 0.7.3 Cancel → opacity 瞬间恢复到 from，`onCancel` 回调触发
+- [ ] 0.7.4 Pause → opacity 冻结在中间值；Resume → 从暂停点继续
+- [ ] 0.7.5 动画期间 suppression 生效（JS 修改 opacity 不影响动画）
+- [ ] 0.7.6 动画结束后恢复常规 opacity 同步
+- [ ] 0.7.7 90Hz 下 opacity 0→1 动画流畅无明显掉帧
 
 ### Go/No-Go 判据
 
 | 条件 | 通过 → | 不通过 → |
 |---|---|---|
-| 0.4.1–0.4.6 全部通过 | 进入 Phase 1 | 分析失败原因，调整架构 |
+| 0.7.1–0.7.6 全部通过 | 扩展到其余白名单属性 | 分析失败原因，调整 native 架构 |
 | 90Hz 下系统性卡顿 | — | 评估降帧到 60fps 或切换 `TimelineView` 方案 |
 | `@Observable` 每帧写入导致 SwiftUI 大面积重绘 | — | 评估批量写入优化或 `objectWillChange` 节流 |
 | Suppression 释放后闪回无法避免 | — | 评估延迟释放策略或强制 state 同步 |
 
 ---
-
 
 ## 1. 公开 API 与能力契约
 

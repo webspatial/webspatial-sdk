@@ -1,53 +1,71 @@
-## Phase 0: POC Verification (opacity single-property, architecture feasibility)
+## Phase 0: POC Verification (opacity single-property, end-to-end)
 
-**Goal**: Run the complete vertical chain with a single `opacity` property to verify `CADisplayLink` frame-driven architecture feasibility and suppression mechanism. This phase does not pursue feature completeness — only architecture path validation.
+**Goal**: Run the complete vertical chain with a single `opacity` property to verify native `CADisplayLink` frame-driven architecture feasibility and suppression mechanism.
+
+**Execution strategy**:
+
+- **Core SDK + React SDK**: Ship formal implementation (API layer is uncontroversial, no rework expected)
+- **Native (visionOS)**: Implement first version per design; await test page validation before extending to remaining properties
+- **testServer**: Add test page for manual end-to-end verification
 
 **Priority rationale**: Both independent feasibility assessments (`feasibility-visionOS.md` and `feasibility-visionOS-analysis.md`) confirm suppression is the first blocking point, while CADisplayLink interpolation itself has low technical uncertainty. Therefore the POC validates both simultaneously.
 
-### 0.1 Suppression Infrastructure
+### 0.1 React SDK — useAnimation SpatialDiv Branch (formal implementation)
 
-- [ ] 0.1.1 Introduce field-level suppression flag in `PortalInstanceObject` for `opacity` (`_suppressedFields: Set<string>`); during alive session, `updateSpatializedElementProperties()` skips suppressed fields
-- [ ] 0.1.2 Verify: during suppression, React-side CSS opacity change → native does not respond; after suppression release → normal sync resumes
+- [ ] 0.1.1 Implement `resolveAnimationKind(config)` mutual exclusion check + `useSpatialDivAnimation(config, active)` skeleton (dual-path unconditional call pattern)
+- [ ] 0.1.2 Implement `SpatialDivAnimationConfig` validation (whitelist, numeric ranges, timingFunction, loop structure, entity/SpatialDiv key mutual exclusion)
+- [ ] 0.1.3 Implement `SpatialDivAnimatedProps` generation and `animation` prop binding (only opacity field live, rest stubbed)
+- [ ] 0.1.4 Implement `AnimationApi` (play/pause/cancel/isAnimating/isPaused/playState/finished) — sends commands via core-sdk, listens to events to update state
 
-### 0.2 Native Animation Engine Skeleton
+### 0.2 Core SDK — Bridge Session Flow (formal implementation)
 
-- [ ] 0.2.1 Create `SpatialDivAnimationSession.swift`: holds `CADisplayLink`, implements `play()` / `pause()` / `resume()` / `cancel()` / `invalidate()` state machine
-- [ ] 0.2.2 Create `SpatialDivAnimationManager.swift`: manages sessions keyed by `animationId`, at most one active session per element
-- [ ] 0.2.3 Implement cubic approximation interpolation for 4 `timingFunction` variants
-- [ ] 0.2.4 Implement `opacity` frame-driven interpolation: per-frame `lerp(from.opacity, to.opacity, easedProgress)` → write to `SpatializedElement.opacity`
+- [ ] 0.2.1 Add `animateSpatialDiv(command)` method to `Spatialized2DElement`, encapsulating play/pause/resume/cancel command dispatch
+- [ ] 0.2.2 Define `AnimateSpatialized2DElement` JSBridge command structure (type + from/to + duration + timingFunction + delay + loop + playbackRate)
+- [ ] 0.2.3 Register `{animationId}_completed` / `{animationId}_canceled` / `{animationId}_failed` event listeners, callback to React layer
 
-### 0.3 Bridge Command Minimal Set
+### 0.3 Native — Suppression Infrastructure
 
-- [ ] 0.3.1 Add `AnimateSpatialized2DElement` command struct (play/pause/resume/cancel type + opacity from/to + duration + timingFunction only)
-- [ ] 0.3.2 Register the command in `SpatialScene.setupJSBListeners()`, dispatch to `SpatialDivAnimationManager`
-- [ ] 0.3.3 Implement `{animationId}_completed` / `{animationId}_canceled` event callbacks
+- [ ] 0.3.1 Introduce field-level suppression flag for `opacity` in `PortalInstanceObject` (or Swift-side equivalent) (`_suppressedFields: Set<string>`); during alive session `updateSpatializedElementProperties()` skips suppressed fields
+- [ ] 0.3.2 Verify: during suppression, React-side CSS opacity change → native does not respond; after release → normal sync resumes
 
-### 0.4 End-to-End Chain Verification
+### 0.4 Native — Animation Engine Skeleton
 
-- [ ] 0.4.1 JS-side manually constructs play command → native opacity animation visible
-- [ ] 0.4.2 Animation completes → `_completed` event returns to JS, finalValues.opacity correct
-- [ ] 0.4.3 `cancel()` → opacity instantly restores to from, `_canceled` event returns
-- [ ] 0.4.4 `pause()` → opacity freezes at intermediate value; `resume()` → continues from pause point
-- [ ] 0.4.5 During animation, JS-side modifies opacity → native does not respond (suppression active)
-- [ ] 0.4.6 After animation ends → normal opacity sync resumes
+- [ ] 0.4.1 Create `SpatialDivAnimationSession.swift`: holds `CADisplayLink`, implements `play()` / `pause()` / `resume()` / `cancel()` / `invalidate()` state machine
+- [ ] 0.4.2 Create `SpatialDivAnimationManager.swift`: manages sessions keyed by `animationId`, at most one active session per element
+- [ ] 0.4.3 Implement cubic approximation interpolation for 4 `timingFunction` variants
+- [ ] 0.4.4 Implement `opacity` frame-driven interpolation: per-frame `lerp(from.opacity, to.opacity, easedProgress)` → write to `SpatializedElement.opacity`
 
-### 0.5 Performance Verification
+### 0.5 Native — Bridge Command Registration
 
-- [ ] 0.5.1 Opacity 0→1 animation smooth with no frame drops at 90Hz (visionOS frame rate)
-- [ ] 0.5.2 3 simultaneous SpatialDiv opacity animations do not interfere with each other
-- [ ] 0.5.3 `@Observable` per-frame property writes do not trigger excessive SwiftUI redraws (verify via Instruments)
+- [ ] 0.5.1 Register `AnimateSpatialized2DElement` command in `SpatialScene.setupJSBListeners()`, dispatch to `SpatialDivAnimationManager`
+- [ ] 0.5.2 Implement `{animationId}_completed` / `{animationId}_canceled` event callbacks to JS
+
+### 0.6 testServer — Test Page
+
+- [ ] 0.6.1 Add `poc-spatial-div-animation.html` test page: SpatialDiv container + Play/Pause/Resume/Cancel buttons + event log panel
+- [ ] 0.6.2 Page uses `useAnimation` hook (formal API) to trigger opacity animation, demonstrating full DX flow
+- [ ] 0.6.3 Page includes suppression verification: auto-modifies CSS opacity during animation, observe whether native ignores it
+
+### 0.7 End-to-End Verification (manual, run by you on test page)
+
+- [ ] 0.7.1 Play → native opacity animation visible
+- [ ] 0.7.2 Animation completes → `onComplete` callback fires, finalValues.opacity correct
+- [ ] 0.7.3 Cancel → opacity instantly restores to from, `onCancel` callback fires
+- [ ] 0.7.4 Pause → opacity freezes at intermediate value; Resume → continues from pause point
+- [ ] 0.7.5 Suppression active during animation (JS opacity modification does not affect animation)
+- [ ] 0.7.6 Normal opacity sync resumes after animation ends
+- [ ] 0.7.7 Opacity 0→1 animation smooth with no visible frame drops at 90Hz
 
 ### Go/No-Go Criteria
 
 | Condition | Pass → | Fail → |
 |---|---|---|
-| 0.4.1–0.4.6 all pass | Proceed to Phase 1 | Analyze failure cause, adjust architecture |
+| 0.7.1–0.7.6 all pass | Extend to remaining whitelisted properties | Analyze failure cause, adjust native architecture |
 | Systematic stuttering at 90Hz | — | Evaluate dropping to 60fps or switching to `TimelineView` approach |
 | `@Observable` per-frame writes cause large-scale SwiftUI redraws | — | Evaluate batch write optimization or `objectWillChange` throttling |
 | Flash-back unavoidable after suppression release | — | Evaluate delayed release strategy or forced state sync |
 
 ---
-
 
 ## 1. Public API And Capability Contract
 
