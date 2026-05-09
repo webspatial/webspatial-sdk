@@ -6,8 +6,8 @@ import type {
   SpatialDivAnimationApi,
   SpatialDivAnimatedProps,
 } from '@webspatial/core-sdk'
-import { useEntityAnimation } from './useAnimation'
-import { useSpatialDivAnimation } from './useSpatialDivAnimation'
+import { useEntityAnimation } from './reality/hooks/useAnimation'
+import { useSpatialDivAnimation } from './spatialized-container/hooks/useSpatialDivAnimation'
 
 // Keys that belong to entity animation
 const ENTITY_KEYS = new Set(['position', 'rotation', 'scale'])
@@ -51,6 +51,12 @@ export function resolveAnimationKind(config: {
  * Unified `useAnimation` entry point.
  * Dispatches to entity or SpatialDiv animation based on config.to keys.
  */
+export function useAnimation(
+  config: SpatialDivAnimationConfig,
+): [SpatialDivAnimatedProps, SpatialDivAnimationApi]
+export function useAnimation(
+  config: AnimationConfig,
+): [AnimatedProps, AnimationApi]
 export function useAnimation(
   config: AnimationConfig | SpatialDivAnimationConfig,
 ): [
