@@ -1,9 +1,5 @@
 import { useCallback, useState } from 'react'
-import {
-  useAnimation,
-  useSpatialDivAnimation,
-  enableDebugTool,
-} from '@webspatial/react-sdk'
+import { useAnimation, enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
@@ -67,10 +63,9 @@ function FadeInEntranceTest() {
       </h2>
       <p className="text-sm text-gray-400 mb-4">
         Back offset -50→0 and opacity 0→1 with easeOut over 0.6s. Auto-starts on
-        mount (element bind).
+        element bind.
       </p>
 
-      {/* The actual SpatialDiv element */}
       <div
         enable-xr
         animation={animation}
@@ -181,34 +176,34 @@ function SizeExpandTest() {
   )
 }
 
-// ─── Test 3: Opacity Pulse (useSpatialDivAnimation directly) ──────────────────
+// ─── Test 3: Opacity Fade ─────────────────────────────────────────────────────
 
-function OpacityPulseTest() {
+function OpacityFadeTest() {
   const { lines, log, clear } = useLog()
 
-  const [animation, api] = useSpatialDivAnimation({
+  const [animation, api] = useAnimation({
     from: { opacity: 1.0 },
     to: { opacity: 0.2 },
     duration: 0.8,
     timingFunction: 'easeInOut',
     autoStart: false,
-    onStart: () => log('pulse: onStart'),
-    onComplete: values =>
-      log(`pulse: onComplete → opacity=${values.opacity?.toFixed(2)}`),
-    onCancel: values =>
-      log(`pulse: onCancel → opacity=${values.opacity?.toFixed(2)}`),
-    onError: err => log(`pulse: onError → ${err.reason}`),
-  })
+    onStart: () => log('opacity: onStart'),
+    onComplete: (values: any) =>
+      log(`opacity: onComplete → opacity=${values.opacity?.toFixed(2)}`),
+    onCancel: (values: any) =>
+      log(`opacity: onCancel → opacity=${values.opacity?.toFixed(2)}`),
+    onError: (err: any) => log(`opacity: onError → ${err.reason}`),
+  } as any)
 
   return (
     <section className="rounded-2xl border border-gray-800 bg-[#111] p-5">
       <h2 className="text-lg font-semibold text-gray-100 mb-2">
-        3. Opacity Animation (useSpatialDivAnimation)
+        3. Opacity Fade
       </h2>
       <p className="text-sm text-gray-400 mb-4">
-        Directly using{' '}
-        <code className="text-cyan-300">useSpatialDivAnimation</code>. Opacity
-        1.0→0.2 over 0.8s.
+        Opacity 1.0→0.2 over 0.8s with easeInOut. Uses{' '}
+        <code className="text-cyan-300">useAnimation</code> — auto-dispatches to
+        SpatialDiv path since <code>opacity</code> is a SpatialDiv key.
       </p>
 
       <div
@@ -228,16 +223,16 @@ function OpacityPulseTest() {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        <button className={btnPrimary} onClick={() => api.play()}>
+        <button className={btnPrimary} onClick={() => (api as any).play()}>
           Play
         </button>
-        <button className={btnCls} onClick={() => api.pause()}>
+        <button className={btnCls} onClick={() => (api as any).pause()}>
           Pause
         </button>
-        <button className={btnCls} onClick={() => api.play()}>
+        <button className={btnCls} onClick={() => (api as any).play()}>
           Resume
         </button>
-        <button className={btnCls} onClick={() => api.cancel()}>
+        <button className={btnCls} onClick={() => (api as any).cancel()}>
           Cancel
         </button>
         <button className={btnCls} onClick={clear}>
@@ -245,7 +240,8 @@ function OpacityPulseTest() {
         </button>
       </div>
       <div className="text-xs text-gray-500 mt-2">
-        playState: <code className="text-cyan-300">{api.playState}</code>
+        playState:{' '}
+        <code className="text-cyan-300">{(api as any).playState}</code>
       </div>
       <Log lines={lines} />
     </section>
@@ -257,7 +253,7 @@ function OpacityPulseTest() {
 function CombinedDelayTest() {
   const { lines, log, clear } = useLog()
 
-  const [animation, api] = useSpatialDivAnimation({
+  const [animation, api] = useAnimation({
     from: { width: 200, height: 120, opacity: 0.3, depth: 0 },
     to: { width: 350, height: 200, opacity: 1.0, depth: 60 },
     duration: 1.2,
@@ -265,16 +261,16 @@ function CombinedDelayTest() {
     timingFunction: 'easeInOut',
     autoStart: false,
     onStart: () => log('combined: onStart (after 500ms delay)'),
-    onComplete: values =>
+    onComplete: (values: any) =>
       log(
         `combined: onComplete → w=${values.width?.toFixed(0)} h=${values.height?.toFixed(0)} o=${values.opacity?.toFixed(2)} d=${values.depth?.toFixed(0)}`,
       ),
-    onCancel: values =>
+    onCancel: (values: any) =>
       log(
         `combined: onCancel → w=${values.width?.toFixed(0)} o=${values.opacity?.toFixed(2)}`,
       ),
-    onError: err => log(`combined: onError → ${err.reason}`),
-  })
+    onError: (err: any) => log(`combined: onError → ${err.reason}`),
+  } as any)
 
   return (
     <section className="rounded-2xl border border-gray-800 bg-[#111] p-5">
@@ -303,16 +299,16 @@ function CombinedDelayTest() {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        <button className={btnPrimary} onClick={() => api.play()}>
+        <button className={btnPrimary} onClick={() => (api as any).play()}>
           Play
         </button>
-        <button className={btnCls} onClick={() => api.pause()}>
+        <button className={btnCls} onClick={() => (api as any).pause()}>
           Pause
         </button>
-        <button className={btnCls} onClick={() => api.play()}>
+        <button className={btnCls} onClick={() => (api as any).play()}>
           Resume
         </button>
-        <button className={btnCls} onClick={() => api.cancel()}>
+        <button className={btnCls} onClick={() => (api as any).cancel()}>
           Cancel
         </button>
         <button className={btnCls} onClick={clear}>
@@ -320,7 +316,8 @@ function CombinedDelayTest() {
         </button>
       </div>
       <div className="text-xs text-gray-500 mt-2">
-        playState: <code className="text-cyan-300">{api.playState}</code>
+        playState:{' '}
+        <code className="text-cyan-300">{(api as any).playState}</code>
       </div>
       <Log lines={lines} />
     </section>
@@ -332,7 +329,7 @@ function CombinedDelayTest() {
 function PlaybackRateTest() {
   const { lines, log, clear } = useLog()
 
-  const [animation, api] = useSpatialDivAnimation({
+  const [animation, api] = useAnimation({
     from: { width: 150, opacity: 1.0 },
     to: { width: 450, opacity: 0.4 },
     duration: 2.0,
@@ -340,12 +337,12 @@ function PlaybackRateTest() {
     playbackRate: 2.0,
     autoStart: false,
     onStart: () => log('rate: onStart (2x speed, effective 1s)'),
-    onComplete: values =>
+    onComplete: (values: any) =>
       log(
         `rate: onComplete → w=${values.width?.toFixed(0)} o=${values.opacity?.toFixed(2)}`,
       ),
-    onError: err => log(`rate: onError → ${err.reason}`),
-  })
+    onError: (err: any) => log(`rate: onError → ${err.reason}`),
+  } as any)
 
   return (
     <section className="rounded-2xl border border-gray-800 bg-[#111] p-5">
@@ -374,10 +371,10 @@ function PlaybackRateTest() {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        <button className={btnPrimary} onClick={() => api.play()}>
+        <button className={btnPrimary} onClick={() => (api as any).play()}>
           Play
         </button>
-        <button className={btnCls} onClick={() => api.cancel()}>
+        <button className={btnCls} onClick={() => (api as any).cancel()}>
           Cancel
         </button>
         <button className={btnCls} onClick={clear}>
@@ -385,7 +382,8 @@ function PlaybackRateTest() {
         </button>
       </div>
       <div className="text-xs text-gray-500 mt-2">
-        playState: <code className="text-cyan-300">{api.playState}</code>
+        playState:{' '}
+        <code className="text-cyan-300">{(api as any).playState}</code>
       </div>
       <Log lines={lines} />
     </section>
@@ -401,11 +399,12 @@ export default function SpatialDivAnimationPage() {
         <h1 className="mb-2 text-2xl font-bold">SpatialDiv Animation (POC)</h1>
         <p className="mb-2 max-w-3xl text-sm text-gray-400">
           Test page for SpatialDiv animation via{' '}
+          <code className="text-cyan-300">useAnimation</code> +{' '}
           <code className="text-cyan-300">
             {'<div enable-xr animation={...}>'}
           </code>
-          . Animations target SpatialDiv properties (width, height, depth,
-          opacity, back) and run natively at 90Hz via CADisplayLink.
+          . The hook auto-dispatches to the SpatialDiv path based on{' '}
+          <code>to</code> key set (opacity, width, height, depth, back).
         </p>
         <p className="mb-8 max-w-3xl text-xs text-gray-500">
           Requires the WebSpatial visionOS runtime with{' '}
@@ -417,7 +416,7 @@ export default function SpatialDivAnimationPage() {
         <div className="space-y-6">
           <FadeInEntranceTest />
           <SizeExpandTest />
-          <OpacityPulseTest />
+          <OpacityFadeTest />
           <CombinedDelayTest />
           <PlaybackRateTest />
         </div>
@@ -445,7 +444,7 @@ export default function SpatialDivAnimationPage() {
             <li>Playback rate: 2× speed completes a 2s animation in ~1s.</li>
             <li>
               Suppression: during animation, DOM sync does not overwrite
-              animated properties (no jumps visible).
+              animated properties (no visual jumps).
             </li>
             <li>
               All lifecycle callbacks (onStart, onComplete, onCancel, onError)
