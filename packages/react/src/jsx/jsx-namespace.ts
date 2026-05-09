@@ -12,6 +12,7 @@ import {
   type SpatialContentReadyCallback,
   //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
+import type { SpatialDivAnimatedProps } from '@webspatial/core-sdk'
 
 import 'react'
 
@@ -110,6 +111,7 @@ export namespace WebSpatialJSX {
   type BaseSpatialIntrinsic = {
     style?: React.CSSProperties
     'enable-xr'?: boolean
+    animation?: SpatialDivAnimatedProps
     onSpatialTap?: (e: SpatialTapEvent) => void
     onSpatialDragStart?: (e: SpatialDragStartEvent) => void
     onSpatialDrag?: (e: SpatialDragEvent) => void
