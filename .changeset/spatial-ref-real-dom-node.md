@@ -2,6 +2,13 @@
 '@webspatial/react-sdk': patch
 ---
 
-Make spatial container `ref.current` a real DOM node. The standard host element is no longer wrapped in a `Proxy`; spatial behavior (style proxy for `transform` / `visibility`, auto-applied `xr-spatial-default` className, `xrClientDepth` / `xrOffsetBack` accessors, `extraRefProps`) is now installed on the underlying `HTMLElement` via `Object.defineProperty`.
+`ref.current` on spatial containers (`SpatialDiv`, `Model`, `Spatialized2DElementContainer`, `Reality` entities) is now the real underlying `HTMLElement` instead of a `Proxy` wrapper. As a result:
 
-This fixes native DOM API usage on `ref.current` (`instanceof Node`, `parent.contains`, `getComputedStyle`, `MutationObserver`, etc.) and removes the need for the global `getComputedStyle` hijack and the private `__raw` / `__targetProxy` indirection. As a side effect, `el.removeAttribute('id' /* or any non-spatial name */)` now correctly delegates to the native call instead of being silently dropped.
+- `ref.current instanceof HTMLElement` (and `instanceof Node`) is `true`.
+- `parent.contains(ref.current)`, `document.querySelector(...) === ref.current`, `MutationObserver.observe(ref.current)`, and `getComputedStyle(ref.current)` work without any polyfill.
+- `ref.current.removeAttribute('id' /* or any name other than 'style' / 'class' */)` now correctly removes the attribute — previously it was silently dropped.
+- `ref.current.style.setProperty('transform', value, 'important')` now preserves the `priority` argument when forwarding to the spatial transform layer.
+
+Spatial behavior (auto `xr-spatial-default` className, `style.transform` / `style.visibility` proxying, `xrClientDepth` / `xrOffsetBack` accessors, `extraRefProps`) is unchanged.
+
+Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.
