@@ -52,7 +52,7 @@
 ## 1. 公开 API 与能力契约
 
 - [ ] 1.1 定义 `SpatialDiv` 版本的 `useAnimation` 配置类型（`SpatialDivAnimationConfig`、`SpatialDivAnimatedValues`）、返回类型（`SpatialDivAnimatedProps`、`AnimationApi`）与 `AnimationError` 形状，覆盖 `back`、`transform.translate.x/y/z`、`opacity`、`depth`、`width`、`height`，明确 `duration` 默认值为 `0.3`，`playbackRate` 默认值为 `1`，`opacity` 校验范围为 `[0, 1]` 闭区间
-- [ ] 1.2 在 `useAnimation` hook 入口实现基于 `config.to` key 集合的 entity / SpatialDiv 自动分叉逻辑，确保 entity 路径代码不受改动（仅新增外层 if/else 分支和 `__kind` 标记）
+- [ ] 1.2 在 `useAnimation` hook 入口实现"双路无条件调用 + active 短路"分派模式：顶层 `resolveAnimationKind(config)` 判定 kind，`useEntityAnimation(config, active)` 与 `useSpatialDivAnimation(config, active)` 无条件并列调用（满足 Rules of Hooks），非激活侧 effect 短路返回 noop API
   - **依赖** 1.1（需要 SpatialDiv 配置类型定义）
 - [ ] 1.3 为空间化 HTML 节点补充 `animation` prop 的对外类型，并约束其仅在 `enable-xr` 链路上生效；在绑定阶段增加 `__kind` 校验（entity animation 绑到 SpatialDiv 或反之时抛错）
   - **依赖** 1.2（需要 `__kind` 标记机制就绪）
