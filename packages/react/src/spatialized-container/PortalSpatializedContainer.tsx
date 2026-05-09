@@ -3,6 +3,8 @@ import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
+import { Spatialized2DElement } from '@webspatial/core-sdk'
+import type { SpatialDivAnimatedPropsInternal } from '@webspatial/core-sdk'
 import {
   PortalSpatializedContainerProps,
   SpatialContentReadyCallback,
@@ -99,6 +101,14 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     ...restProps
   } = props
 
+  // Extract animation prop for SpatialDiv animation binding
+  const animation = (restProps as any).animation as
+    | SpatialDivAnimatedPropsInternal
+    | undefined
+  if (animation) {
+    delete (restProps as any).animation
+  }
+
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
   )!
@@ -132,6 +142,49 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContainerObject,
     spatializedElement,
   )
+  // ---- SpatialDiv Animation Binding ----
+  // When animation prop is present and spatializedElement is available,
+  // call __setElement to bind the element to the animation hook.
+  useEffect(() => {
+    if (!animation || !spatializedElement) return
+
+    const animProps = animation as SpatialDivAnimatedPropsInternal & {
+      __setElement?: (el: Spatialized2DElement | null) => void
+    }
+
+    // Bind element to animation hook
+    if (animProps.__setElement) {
+      animProps.__setElement(
+        spatializedElement as unknown as Spatialized2DElement,
+      )
+    }
+
+    // Set suppressed fields on the portal instance to prevent DOM sync
+    // from overwriting animation intermediate values
+    const suppressedFields = animProps.__getSuppressedFields?.()
+    if (suppressedFields) {
+      portalInstanceObject.setSuppressedFields(suppressedFields)
+    }
+
+    return () => {
+      // Unbind on cleanup
+      if (animProps.__onUnbind) {
+        animProps.__onUnbind()
+      }
+      if (animProps.__setElement) {
+        animProps.__setElement(null)
+      }
+      portalInstanceObject.setSuppressedFields(null)
+    }
+  }, [animation, spatializedElement, portalInstanceObject])
+
+  // Keep suppressed fields in sync with animation state changes
+  useEffect(() => {
+    if (!animation || !spatializedElement) return
+    const animProps = animation as SpatialDivAnimatedPropsInternal
+    const suppressedFields = animProps.__getSuppressedFields?.()
+    portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
+  })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(
     portalInstanceObject,
