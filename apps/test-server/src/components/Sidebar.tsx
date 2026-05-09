@@ -65,6 +65,7 @@ export const routes = [
     ],
   },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
+  { path: '/spatial-div-animation', label: 'SpatialDiv Animation' },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',
