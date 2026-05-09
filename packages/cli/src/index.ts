@@ -12,7 +12,7 @@ import { launch } from './lib/cmds/launch'
 import { shutdown } from './lib/cmds/shutdown'
 import { test } from './lib/cmds/test'
 
-const MIN_SUPPORTED_NODE_MAJOR = 20
+const MIN_SUPPORTED_NODE_MAJOR = 22
 
 module.exports = async (): Promise<void> => {
   if (major(process.versions.node) < MIN_SUPPORTED_NODE_MAJOR) {
