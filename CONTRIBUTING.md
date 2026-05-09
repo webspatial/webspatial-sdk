@@ -6,7 +6,7 @@ Thank you for your interest in contributing to WebSpatial! This document provide
 
 ### Required Tools
 
-- [NodeJS/NPM](https://nodejs.org/en/download/package-manager) to run local test website
+- [Node.js 22+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
 - [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
 
@@ -30,10 +30,10 @@ git clone https://github.com/webspatial/webspatial-sdk.git
 cd webspatial-sdk
 ```
 
-2. Install pnpm and setup the project:
+2. Enable pnpm:
 ```sh
-npm install pnpm -g
-pnpm setup
+corepack enable
+corepack prepare pnpm@9.0.0 --activate
 ```
 
 3. Install packages and link to workspace for local development:

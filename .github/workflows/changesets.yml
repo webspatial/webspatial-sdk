@@ -35,7 +35,7 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: 22
           registry-url: 'https://registry.npmjs.org'
           cache: "pnpm"
 
