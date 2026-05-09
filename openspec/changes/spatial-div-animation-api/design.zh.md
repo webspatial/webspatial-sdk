@@ -327,6 +327,54 @@ interface AnimateSpatialDivResult {
 - 若 `play` 异步失败，native MUST 至多发出一次 `_failed`，且 MUST NOT 随后发出 `_completed` 或 `_canceled`。
 - 若 `pause`、`resume`、`cancel` 异步失败，native MUST 为该失败命令至多发出一次 `_failed`；会话保持失败前状态，后续仍 MAY 发出 `_completed` 或 `_canceled`。
 
+## Native visionOS 实现概述
+
+### 架构选型
+
+`SpatialDiv` 的渲染层基于 SwiftUI View（WKWebView 容器），与 Entity 动画基于 RealityKit `FromToByAnimation<Transform>` + `AnimationPlaybackController` 的路径根本不同。SwiftUI 不提供等价的命令式动画播放控制 API（无 pause/resume/cancel/精确完成检测），因此 native 侧需要自建帧驱动动画引擎。
+
+**候选方案评估：**
+
+| 候选方案 | 满足 pause/resume | 满足 cancel 恢复 | 满足精确完成回调 | 与 View 生命周期解耦 | 决策 |
+|---|---|---|---|---|---|
+| `withAnimation` + iOS 17 completion | 否 | 否 | 部分 | 是 | **否决**：无法暂停/恢复/取消，不满足提案核心控制语义 |
+| `TimelineView(.animation)` | 间接可行 | 可行 | 可行 | 否（绑定 View body） | **备选**：可行但需要在 View 体系内运行，不适合独立 Manager |
+| visionOS 26 `Entity.animate` / `content.animate` | 否 | 否 | 否 | 是 | **否决**：仅适用于 RealityKit Entity，不适用于 SwiftUI View；且无播放控制 |
+| **`CADisplayLink` 手动帧驱动** | **原生支持** | **原生支持** | **原生支持** | **是** | **采用** |
+
+选择 `CADisplayLink` 的原因：
+
+- **命令式控制天然对齐**：`isPaused = true/false` 一行实现暂停/恢复，`invalidate()` 实现停止，与提案的 play/pause/cancel 语义直接映射
+- **与 SwiftUI View 解耦**：可在独立 Swift 类中运行，不依赖 View 生命周期，天然适合封装为 `SpatialDivAnimationSession`
+- **与 Entity 动画架构对称**：Entity 侧有 `EntityAnimationManager` / `EntityAnimationSession`，SpatialDiv 侧建立对称的 `SpatialDivAnimationManager` / `SpatialDivAnimationSession`
+- **属性写入路径清晰**：`SpatializedElement` 是 `@Observable` 对象，所有白名单属性（`opacity`、`backOffset`、`depth`、`width`、`height`、`transform`）已作为 `var` 存在，直接赋值即可触发 SwiftUI 视图更新
+
+### 核心映射
+
+| 设计概念 | Entity 动画（已实现） | SpatialDiv 动画（本提案） |
+|---|---|---|
+| 动画定义 | `FromToByAnimation<Transform>` | `SpatialDivAnimationSession`（持有 CADisplayLink + from/to/duration 配置） |
+| 播放控制 | `AnimationPlaybackController.pause()/resume()/stop()` | `CADisplayLink.isPaused` + `invalidate()` |
+| 完成检测 | `AnimationEvents.PlaybackCompleted`（Scene 事件订阅） | elapsed >= duration 时手动判定 |
+| 缓动曲线 | `AnimationTimingFunction` | 手动实现 cubic 近似（4 种 timingFunction） |
+| 循环模式 | `AnimationRepeatMode` | Session 内 elapsed 取模（reset）或方向翻转（reverse） |
+| Cancel 恢复 | `entity.move(to:duration:0)`（绕过 bind-point） | 直接赋值 `@Observable` 属性（无 bind-point 限制） |
+| 延迟与速率 | `AnimationView.delay` / `AnimationView.speed` | Session 内 elapsed 计算时扣除 delay、乘以 playbackRate |
+| 会话管理 | `EntityAnimationManager`（以 animationId 为 key） | `SpatialDivAnimationManager`（以 animationId 为 key，每元素至多一个 active session） |
+| 属性插值 | RealityKit 内置 Transform 插值 | 手动 `lerp(from, to, easedProgress)` 逐字段标量插值 |
+
+### 关键实现细节
+
+1. **帧驱动**：`CADisplayLink` 以 visionOS 90Hz 帧率回调。每帧计算 `elapsed → progress → easedProgress → lerp`，将结果写入 `SpatializedElement` 的 `@Observable` 属性，SwiftUI 自动响应变化并更新视觉。
+
+2. **暂停/恢复**：`pause()` 时记录当前 `elapsed` 并设置 `displayLink.isPaused = true`；`resume()` 时修正 `startTime` 使 elapsed 从暂停点继续，再恢复 `displayLink.isPaused = false`。
+
+3. **Cancel 恢复**：直接将 `@Observable` 属性赋值为 `from`（或起始快照），`invalidate()` 销毁 displayLink，发送 `_canceled` 事件。与 Entity 动画的 `entity.move(to:duration:0)` 相比更简单——SwiftUI `@Observable` 对象赋值即生效，无需绕过 bind-point。
+
+4. **Transform 分解**：v1 仅支持 `translate` 子字段，且动画期间 transform 整体抑制。因此只需在会话开始时提取当前 `AffineTransform3D` 的平移分量，动画期间仅修改平移列，不需要复杂的矩阵分解/重组。
+
+5. **Width/Height 风险**：改变 `SpatializedElement.width/height` 时，SwiftUI 的 `.frame(width:height:)` 会自动响应，但 WKWebView 内部可能产生短暂重排闪烁。此为 v1 已知风险，需通过 POC 实测验证。
+
 ## 决策
 
 1. **复用同一个 `useAnimation` 家族，通过 `config.to` 的 key 集合在 hook 入口自动分叉**
