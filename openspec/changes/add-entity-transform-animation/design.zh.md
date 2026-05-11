@@ -147,7 +147,41 @@ interface AnimationApi {
 
 ### AnimatedProps
 
-Hook 返回元组的第一个元素，不透明对象。直接传给实体的 `animation` prop 即可，应用代码无需读取或修改其内容。
+Hook 返回元组的第一个元素。对应用代码而言是不透明对象，直接传给实体的 `animation` prop 即可。内部携带跨层通信所需的元数据：
+
+```typescript
+/**
+ * 动画对象——由 useAnimation 创建，传递给实体 animation prop。
+ * 应用代码不应直接读取或修改其字段（所有字段均为 @internal）。
+ */
+interface AnimatedProps {
+  /** @internal 唯一标识此动画对象实例 */
+  readonly __animationObjectId: string
+  /** @internal 本次动画控制的 transform 字段列表 */
+  readonly __animatedFields: readonly ('position' | 'rotation' | 'scale')[]
+  /** @internal 当前是否存在 alive 的动画会话 */
+  readonly __animating: boolean
+}
+
+/**
+ * @internal
+ * 实体层内部使用的扩展接口，用于绑定/解绑动画并查询被抑制的 transform 字段。
+ * 应用代码不应直接使用此接口。
+ */
+interface AnimatedPropsInternal extends AnimatedProps {
+  /** 当实体实例可用时由实体层调用，建立动画 → 实体绑定 */
+  __bind: (entity: SpatialEntity) => void
+  /** 当实体销毁或 animation prop 变更时由实体层调用，解除绑定 */
+  __unbind: () => void
+  /** 返回当前被 alive 会话抑制的 transform 字段，无会话时返回 null */
+  __getSuppressedFields: () => readonly ('position' | 'rotation' | 'scale')[] | null
+}
+```
+
+- `__animatedFields`：由 `config.to` 中声明了 `position`/`rotation`/`scale` 的字段决定，在 hook 创建时确定。
+- `__animating`：当存在 alive 会话（queued/delaying/running/paused）时为 `true`，实体层据此决定是否抑制对应字段的 React props 同步。
+- `__bind`/`__unbind`：实体组件在 mount/unmount 或 animation prop 变更时调用，确保动画会话与实体生命周期绑定。
+- `__getSuppressedFields`：实体层在执行 transform 同步前调用，跳过被动画控制的字段。
 
 ### TransformValues
 
