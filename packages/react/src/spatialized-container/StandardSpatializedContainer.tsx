@@ -85,14 +85,20 @@ export function StandardSpatializedContainerBase(
   // layer. If we wrote `transform: translateZ(0)` inline here, React's commit
   // would hit that proxy and clobber the user's value on the probe
   // (https://github.com/webspatial/webspatial-sdk/pull/1194).
+  //
+  // The SDK-controlled `data-xr-host` / `data-xr-transform-active` attributes
+  // are placed AFTER `restProps` so user-supplied values cannot override
+  // them — losing `data-xr-host` would un-hide the 2D placeholder, and
+  // forcing `data-xr-transform-active` would diverge the host's stacking
+  // state from the spatial transform watcher.
   return (
     <Component
       ref={refInternalCallback}
       style={inStyle}
       className={classNames}
+      {...restProps}
       data-xr-host=""
       data-xr-transform-active={transformExist ? '' : undefined}
-      {...restProps}
     />
   )
 }

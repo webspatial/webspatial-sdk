@@ -667,6 +667,54 @@ describe('StandardSpatializedContainer', () => {
     r.unmount()
   })
 
+  // PR #1194 review (P2 from Codex): user-supplied props must not clobber
+  // SDK-controlled `data-xr-host` / `data-xr-transform-active` attributes,
+  // otherwise the 2D placeholder could un-hide or the stacking-context
+  // state could diverge from the spatial transform watcher.
+  it('SDK data attributes are not overridable via spatial element props', () => {
+    let handler: ((v: any) => void) | undefined
+    const spatializedContainerObject = {
+      onSpatialTransformVisibilityChange: vi.fn((_id: string, fn: any) => {
+        handler = fn
+        fn({ transform: 'none', visibility: 'visible' })
+      }),
+      offSpatialTransformVisibilityChange: vi.fn(),
+    } as any
+
+    const props: any = {
+      component: 'div',
+      inStandardSpatializedContainer: true,
+      [SpatialID]: 's2',
+      // These are exactly the values that would break the SDK contract
+      // if they were applied to the host: undefined would drop
+      // `data-xr-host` (un-hiding the placeholder) and a hard-coded value
+      // for `data-xr-transform-active` would force the translateZ stacking
+      // state regardless of the spatial transform watcher.
+      'data-xr-host': undefined,
+      'data-xr-transform-active': 'forced',
+    }
+
+    const r = render(
+      React.createElement(
+        SpatializedContainerContext.Provider,
+        { value: spatializedContainerObject },
+        React.createElement(StandardSpatializedContainer, props),
+      ),
+    )
+
+    const el = r.container.querySelector('div') as HTMLDivElement
+    expect(el).toBeTruthy()
+    expect(el.getAttribute('data-xr-host')).toBe('')
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(false)
+
+    act(() => {
+      handler?.({ transform: 'matrix(1,0,0,1,0,0)', visibility: 'visible' })
+    })
+    expect(el.getAttribute('data-xr-transform-active')).toBe('')
+
+    r.unmount()
+  })
+
   it('injectSpatialDefaultStyle adds style tag with class-scoped data-xr-host rules', () => {
     const before = document.head.querySelectorAll('style').length
     injectSpatialDefaultStyle()
