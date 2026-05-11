@@ -52,12 +52,31 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       return
     }
     this.standardClassObserver = new MutationObserver(() => {
+      // The hidden-placeholder CSS rule is scoped to
+      // `.xr-spatial-default[data-xr-host]`, so any native path that strips
+      // the class (`setAttribute('class', …)`, `classList.remove(...)`,
+      // `classList.replace(...)`, third-party DOM helpers) would un-hide the
+      // 2D host. The className descriptor only intercepts `el.className =`
+      // assignment; restore the class here so all attribute-mutation paths
+      // converge on the same invariant.
+      this.ensureSpatialDefaultClass()
       this.scheduleSyncTransformClassFromStandard()
     })
     this.standardClassObserver.observe(this.standardRawDom, {
       attributes: true,
       attributeFilter: ['class'],
     })
+  }
+
+  private ensureSpatialDefaultClass() {
+    const dom = this.standardRawDom
+    if (!dom) return
+    const cls = dom.getAttribute('class') ?? ''
+    if (cls.indexOf('xr-spatial-default') !== -1) return
+    dom.setAttribute(
+      'class',
+      cls ? `${cls} xr-spatial-default` : 'xr-spatial-default',
+    )
   }
 
   /**

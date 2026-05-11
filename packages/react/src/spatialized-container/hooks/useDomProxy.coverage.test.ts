@@ -225,6 +225,44 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.className).toBe(dom.className)
   })
 
+  // PR #1194 review (P2 from Codex): the className descriptor only intercepts
+  // `el.className =` assignments; native paths like setAttribute, classList
+  // and third-party DOM helpers must not be able to strip the spatial class
+  // because the hidden-placeholder CSS now depends on it.
+  it('restores xr-spatial-default after native class mutations strip it', async () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    const domProxy = ref.current as any
+
+    domProxy.className = 'a'
+    expect(dom.className).toContain('xr-spatial-default')
+
+    // classList.remove bypasses the className descriptor.
+    dom.classList.remove('xr-spatial-default')
+    await flushClassSyncMicrotasks()
+    expect(dom.className).toContain('xr-spatial-default')
+    expect(task.className).toBe(dom.className)
+
+    // setAttribute also bypasses the descriptor.
+    dom.setAttribute('class', 'b')
+    await flushClassSyncMicrotasks()
+    expect(dom.className).toContain('xr-spatial-default')
+    expect(dom.className).toContain('b')
+    expect(task.className).toBe(dom.className)
+
+    // classList.replace, the typical "swap classes" helper.
+    dom.classList.replace('xr-spatial-default', 'c')
+    await flushClassSyncMicrotasks()
+    expect(dom.className).toContain('xr-spatial-default')
+    expect(dom.className).toContain('c')
+    expect(task.className).toBe(dom.className)
+  })
+
   it('deduplicates repeated null callback ref dispatches', () => {
     const fn = vi.fn()
     const proxy = new SpatialContainerRefProxy<any>(fn as any)
