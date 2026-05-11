@@ -561,6 +561,90 @@ The native side of this design is built on the RealityKit animation framework. T
 
 5. **Session management**: `EntityAnimationManager` manages all active sessions keyed by `animationId`, with at most one active session per entity at any time. Sessions are automatically cleaned up when an entity is unmounted.
 
+
+## Native PicoOS Implementation Overview
+
+The PicoOS side is built on the PICO Spatial SDK animation framework, maintaining the same semantic and behavioral contract as the visionOS side. At runtime, it receives `AnimateTransform` commands via WebView JSBridge and maps them internally to the Spatial SDK's Tween Animation system.
+
+### PICO Spatial SDK API Mapping
+
+| Design Concept | PICO Spatial SDK API | Description |
+|---|---|---|
+| Animation definition | `TweenAnimation.createTweenAnimation()` | Creates a tween animation specifying from/to Transform, duration, easeType |
+| Bind target | `AnimationBindTarget.bindTransform()` | Binds the animation to the entity's transform property |
+| Generate resource | `AnimationResource.generateWithTweenAnimation()` | Generates a playable AnimationResource from TweenAnimation |
+| Playback control | `AnimationPlaybackController` | Returned by `entity.playAnimation()`, provides `pause()` / `resume()` / `stop()` |
+| Completion detection | `AnimationEvents.Completed` | Subscribed via `Scene.subscribe(AnimationEvents.Completed, entity, null)` |
+| Easing curves | `EaseType` | `LINEAR` / `EASE_IN` / `EASE_OUT` / `EASE_INOUT` |
+| Loop mode | `RepeatMode` + `repeatCount` | `NONE` play once, `RESTART` reset loop, `REVERSE` reverse loop; `repeatCount = -1` for infinite |
+| Execute animation | `Entity.playAnimation()` | Plays an AnimationResource on an entity, returns controller |
+| Restore position | Direct `entity.transform` assignment | On cancel, restores to from state via matrix assignment |
+
+### Key Implementation Details
+
+1. **Animation construction**: `TweenAnimation.createTweenAnimation()` specifies start/end Transform (column-major 4×4 matrix), `duration`, and `easeType`. The animation is then bound to the entity's transform via `AnimationBindTarget.bindTransform()`, and finally `AnimationResource.generateWithTweenAnimation()` generates the playable resource.
+
+2. **Playback and control**: `entity.playAnimation(resource)` returns an `AnimationPlaybackController`; subsequent `pause()` / `resume()` / `stop()` calls all go through this controller.
+
+3. **Cancel restore mechanism**: When cancel is called, the controller is `stop()`ped first, then `entity.transform` is directly set back to `fromTransform`. PicoOS does not have the visionOS bind-point restriction, so direct assignment works. After restoration, a `{animationId}_canceled` event is sent via `sendWebMsg`.
+
+4. **Completion events**: Non-looping animations subscribe to completion via `scene.subscribe(AnimationEvents.Completed::class.java, entity, null)`, validating `event.playbackController` reference consistency in the callback to filter events from non-current sessions. Looping animations do not subscribe.
+
+5. **Session management**: `EntityAnimationManager` manages all active `EntityAnimationSession` instances keyed by `animationId`, with at most one active session per entity (a new play automatically cancels the old session). Cleanup via `cancelAllForEntity()` is performed when an entity is unmounted.
+
+6. **JSB routing**: The command class name `AnimateTransform` matches the JS-side `commandType` field exactly, and is automatically dispatched via `JSBManager`'s `Class.simpleName` routing mechanism.
+
+### PicoOS Version Requirements
+
+- **Minimum version**: PicoWebApp Runtime `0.2.2` (UA identifier `PicoWebApp/0.2.2`)
+- **Capability detection**: `supports(useAnimation)` returns `true` in the picoOS capability table starting from version `0.2.2`
+
+## Cross-Platform Compatibility
+
+The following tables compare the visionOS (AVP) and PicoOS implementations of Entity Transform Animation:
+
+### Capabilities and Versions
+
+| Dimension | visionOS (AVP) | PicoOS |
+|---|---|---|
+| Minimum supported version | visionOS 1.5+ | PicoWebApp 0.2.2+ |
+| Capability detection | `supports(useAnimation)` → `true` | `supports(useAnimation)` → `true` (≥ 0.2.2) |
+| SDK dependency | RealityKit (Apple) | PICO Spatial SDK 0.10.3+ |
+| Development language | Swift | Kotlin |
+
+### Animation Feature Comparison
+
+| Feature | visionOS (AVP) | PicoOS |
+|---|---|---|
+| Animated properties | position / rotation / scale | position / rotation / scale |
+| Easing curves | linear / easeIn / easeOut / easeInOut | linear / easeIn / easeOut / easeInOut |
+| Loop modes | none / repeat / autoReverse | none / restart / reverse |
+| Infinite loop | `repeatMode = .repeat` / `.autoReverse` implicitly infinite | `repeatCount = -1` for infinite |
+| Delay | `AnimationView.delay` | `TweenAnimation` duration offset |
+| Playback rate | `AnimationView.speed` | `AnimationPlaybackController.speed` |
+| Pause / Resume | `controller.pause()` / `.resume()` | `controller.pause()` / `.resume()` |
+| Cancel restore | `entity.move(to:duration:0)` zero-duration animation | Direct `entity.transform` matrix assignment |
+| Completion event | `AnimationEvents.PlaybackCompleted` | `AnimationEvents.Completed` |
+
+### JSBridge Protocol Comparison
+
+| Protocol Element | visionOS (AVP) | PicoOS |
+|---|---|---|
+| Command name | `AnimateTransform` | `AnimateTransform` |
+| Command types | `play` / `pause` / `resume` / `cancel` | `play` / `pause` / `resume` / `cancel` |
+| Transform format | column-major Float4x4 (16 Double) | column-major Float4x4 (16 Double) |
+| Completion event name | `{animationId}_completed` | `{animationId}_completed` |
+| Cancel event name | `{animationId}_canceled` | `{animationId}_canceled` |
+| Failure event name | `{animationId}_failed` | `{animationId}_failed` |
+
+### Platform Differences and Notes
+
+1. **Cancel restore approach**: visionOS cannot directly assign transform due to RealityKit's bind-point system restriction; it uses `entity.move(to:duration:0)` zero-duration animation as a workaround. PicoOS has no such restriction and directly sets `entity.transform`.
+2. **Infinite loop expression**: visionOS expresses infinite looping directly via `AnimationRepeatMode.repeat` / `.autoReverse` (setting repeatMode implicitly means infinite repetition, no repeatCount field). PicoOS uses `repeatCount = -1` (PICO SDK convention).
+3. **Speed control layer**: visionOS sets `speed` at the `AnimationView` wrapper layer; PicoOS sets it on `AnimationPlaybackController` (both yield identical external behavior).
+4. **Event name differences**: visionOS completion event type is `AnimationEvents.PlaybackCompleted`, PicoOS uses `AnimationEvents.Completed` (both map to the same JSBridge event name `_completed`).
+5. **Transform synchronization**: Both platforms follow the same per-field suppression strategy — fields controlled by animation suppress React props synchronization during the session.
+
 ## Cross-Layer Contracts
 
 ### React SDK → Core SDK
