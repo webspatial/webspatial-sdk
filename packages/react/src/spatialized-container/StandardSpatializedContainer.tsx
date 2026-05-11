@@ -1,3 +1,8 @@
+// Renders the standard host: the visible 2D placeholder of a spatial
+// container. The host is permanently hidden via class-scoped CSS rules
+// (`.xr-spatial-default[data-xr-host]`) and exposed to consumers as
+// `ref.current`. See `./ARCHITECTURE.md` for the invariants this component
+// must preserve and the reasoning behind the data-attribute / CSS approach.
 import {
   SpatializedElementRef,
   SpatialTransformVisibility,

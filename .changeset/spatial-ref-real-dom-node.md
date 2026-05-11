@@ -13,4 +13,6 @@ Spatial behavior (auto `xr-spatial-default` className, `style.transform` / `styl
 
 Internally, the standard host's hidden-placeholder appearance (`visibility: hidden`, `transition: none`, `transform: none | translateZ(0)`) is no longer written as inline style — it is now applied via CSS rules keyed on the new `data-xr-host` and `data-xr-transform-active` attributes. This is required so that React commits do not write through the spatial style proxy and clobber the user's `style.transform` value on the probe. Visual behavior is unchanged.
 
+The architectural invariants behind the standard-host / probe split, the spatial style proxy, and the `xr-spatial-default` / `data-xr-host` contracts are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` for future maintainers.
+
 Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.

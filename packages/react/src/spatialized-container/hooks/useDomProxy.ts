@@ -3,6 +3,23 @@ import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { supports } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
 
+/**
+ * Owns the spatialized behavior installed on the standard host element and
+ * keeps the host ↔ probe pair (`StandardSpatializedContainer` ↔
+ * `TransformVisibilityTaskContainer`) in sync.
+ *
+ * The host is exposed to consumers as `ref.current` — a real `HTMLElement` —
+ * with property descriptors layered on via `Object.defineProperty` (style,
+ * className, removeAttribute, xrClientDepth, xrOffsetBack, extraRefProps).
+ * `style.transform` / `style.visibility` writes are forwarded to the probe
+ * so they reach the platform via `useSpatialTransformVisibility`.
+ *
+ * Several non-trivial invariants must hold for the hidden-host CSS rules to
+ * keep working — `xr-spatial-default` always present as a class token,
+ * `data-xr-host` always present, transform/visibility never written inline
+ * on the host. See `../ARCHITECTURE.md` (Invariants) for the full list and
+ * the reasoning behind each.
+ */
 export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   /** Raw Standard host element (styled root). Used to mirror class onto the transform probe. */
