@@ -20,7 +20,7 @@ env:
 
 jobs:
   publish-beta:
-    if: github.repository == 'webspatial/webspatial-sdk'
+    if: github.repository == 'webspatial/webspatial-sdk' && github.ref == 'refs/heads/main'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
