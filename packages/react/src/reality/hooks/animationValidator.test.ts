@@ -161,6 +161,51 @@ describe('animationValidator', () => {
         }),
       ).toThrow('from.position components must be finite numbers')
     })
+
+    test('throws if playbackRate is 0', () => {
+      expect(() =>
+        validateAnimationConfig({
+          to: { position: { x: 1, y: 0, z: 0 } },
+          playbackRate: 0,
+        }),
+      ).toThrow('playbackRate must be a positive finite number')
+    })
+
+    test('throws if playbackRate is negative', () => {
+      expect(() =>
+        validateAnimationConfig({
+          to: { position: { x: 1, y: 0, z: 0 } },
+          playbackRate: -1,
+        }),
+      ).toThrow('playbackRate must be a positive finite number')
+    })
+
+    test('throws if playbackRate is NaN', () => {
+      expect(() =>
+        validateAnimationConfig({
+          to: { position: { x: 1, y: 0, z: 0 } },
+          playbackRate: NaN,
+        }),
+      ).toThrow('playbackRate must be a positive finite number')
+    })
+
+    test('throws if playbackRate is Infinity', () => {
+      expect(() =>
+        validateAnimationConfig({
+          to: { position: { x: 1, y: 0, z: 0 } },
+          playbackRate: Infinity,
+        }),
+      ).toThrow('playbackRate must be a positive finite number')
+    })
+
+    test('accepts valid playbackRate', () => {
+      expect(() =>
+        validateAnimationConfig({
+          to: { position: { x: 1, y: 0, z: 0 } },
+          playbackRate: 2,
+        }),
+      ).not.toThrow()
+    })
   })
 
   describe('getAnimatedFields', () => {
