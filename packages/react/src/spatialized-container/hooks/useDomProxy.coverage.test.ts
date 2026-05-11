@@ -58,6 +58,36 @@ describe('SpatialContainerRefProxy', () => {
     expect(() => ro.observe(ref.current)).not.toThrow()
   })
 
+  // Regression test for the bug Codex flagged on
+  // https://github.com/webspatial/webspatial-sdk/pull/1194 :
+  // Because the style proxy is installed directly on the standard host element
+  // (which React owns), any inline `style.transform = …` write that React
+  // performs during a commit would be redirected to the probe and would
+  // clobber the user's spatial transform. The fix in
+  // StandardSpatializedContainer is to drive `transform` / `visibility` /
+  // `transition` via CSS rules keyed on a `data-xr-host` attribute, which
+  // React applies through `setAttribute` (bypassing the style proxy).
+  // This test pins that contract: writes through `setAttribute` on the host
+  // must not perturb the probe's inline style.
+  it('host data-* attribute writes do not clobber probe transform', () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const host = document.createElement('div')
+    const probe = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(host)
+    proxy.updateTransformVisibilityTaskContainerDom(probe)
+
+    ref.current.style.transform = 'rotate(45deg)'
+    expect(probe.style.getPropertyValue('transform')).toBe('rotate(45deg)')
+
+    host.setAttribute('data-xr-host', '')
+    host.setAttribute('data-xr-transform-active', '')
+
+    expect(probe.style.getPropertyValue('transform')).toBe('rotate(45deg)')
+    expect(host.getAttribute('style')).toBeNull()
+  })
+
   it('proxies style visibility/transform to task container', () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)

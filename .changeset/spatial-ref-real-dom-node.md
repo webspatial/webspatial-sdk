@@ -11,4 +11,6 @@
 
 Spatial behavior (auto `xr-spatial-default` className, `style.transform` / `style.visibility` proxying, `xrClientDepth` / `xrOffsetBack` accessors, `extraRefProps`) is unchanged.
 
+Internally, the standard host's hidden-placeholder appearance (`visibility: hidden`, `transition: none`, `transform: none | translateZ(0)`) is no longer written as inline style — it is now applied via CSS rules keyed on the new `data-xr-host` and `data-xr-transform-active` attributes. This is required so that React commits do not write through the spatial style proxy and clobber the user's `style.transform` value on the probe. Visual behavior is unchanged.
+
 Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.

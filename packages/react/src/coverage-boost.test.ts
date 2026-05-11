@@ -617,7 +617,7 @@ describe('spatialized-container-monitor', () => {
 })
 
 describe('StandardSpatializedContainer', () => {
-  it('applies default style and reacts to transform visibility updates', () => {
+  it('applies default class + data attributes and toggles data-xr-transform-active', () => {
     let handler: ((v: any) => void) | undefined
     const spatializedContainerObject = {
       onSpatialTransformVisibilityChange: vi.fn((id: string, fn: any) => {
@@ -646,25 +646,36 @@ describe('StandardSpatializedContainer', () => {
     expect(el).toBeTruthy()
     expect(el.className).toContain('xr-spatial-default')
     expect(el.className).toContain('c')
-    expect(el.style.visibility).toBe('hidden')
-    expect(el.style.transition).toBe('none')
-    expect(el.style.transform).toBe('none')
+    expect(el.getAttribute('data-xr-host')).toBe('')
+
+    // Spatial host appearance is now driven by CSS rules on `data-xr-host`
+    // rather than inline style; otherwise React commits would clobber the
+    // probe via styleProxy. Inline transform/visibility/transition must be
+    // empty on the host.
+    expect(el.style.transform).toBe('')
+    expect(el.style.visibility).toBe('')
+    expect(el.style.transition).toBe('')
+
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(false)
 
     act(() => {
       handler?.({ transform: [], visibility: 'visible' })
     })
-    expect(el.style.transform).toContain('translateZ')
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(true)
+    expect(el.style.transform).toBe('')
 
     r.unmount()
   })
 
-  it('injectSpatialDefaultStyle adds style tag into head', () => {
+  it('injectSpatialDefaultStyle adds style tag with data-xr-host rules', () => {
     const before = document.head.querySelectorAll('style').length
     injectSpatialDefaultStyle()
     const after = document.head.querySelectorAll('style').length
     expect(after).toBe(before + 1)
     const last = document.head.querySelectorAll('style')[after - 1]
     expect(last?.innerHTML).toContain('xr-spatial-default')
+    expect(last?.innerHTML).toContain('[data-xr-host]')
+    expect(last?.innerHTML).toContain('translateZ(0)')
   })
 })
 
