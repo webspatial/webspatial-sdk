@@ -116,37 +116,81 @@ export const StandardSpatializedContainer = forwardRef(
   },
 ) => React.ReactElement | null
 
-export function injectSpatialDefaultStyle() {
-  // inject xr-spatial-default style to head
-  //
-  // The hidden-host rules apply only to the visible 2D placeholder
-  // (StandardSpatializedContainer's host element). They are intentionally
-  // NOT written as inline style on that element — see the comment in
-  // StandardSpatializedContainerBase. The selector is scoped via
-  // `.xr-spatial-default` (always present on a spatial host) so that
-  // unrelated DOM that happens to carry a `data-xr-host` attribute is not
-  // affected. `!important` matches the previous inline-style behavior
-  // where user-supplied inline visibility/transform could not override the
-  // host's hidden / stacking-context state. The class observer mirrors
-  // `class` (not `data-*`) onto the probe, so the probe never matches
-  // because it lacks `data-xr-host`.
-  const styleElement = document.createElement('style')
+/**
+ * The hidden-host rules apply only to the visible 2D placeholder
+ * (StandardSpatializedContainer's host element). They are intentionally
+ * NOT written as inline style on that element — see the comment in
+ * StandardSpatializedContainerBase. The selector is scoped via
+ * `.xr-spatial-default` (always present on a spatial host) so that
+ * unrelated DOM that happens to carry a `data-xr-host` attribute is not
+ * affected. `!important` matches the previous inline-style behavior
+ * where user-supplied inline visibility/transform could not override the
+ * host's hidden / stacking-context state. The class observer mirrors
+ * `class` (not `data-*`) onto the probe, so the probe never matches
+ * because it lacks `data-xr-host`.
+ */
+const SPATIAL_DEFAULT_STYLE_CSS = `
+  :where(.xr-spatial-default) {
+    --xr-back: 0;
+    --xr-depth: 0;
+    --xr-z-index: 0;
+    --xr-background-material: none;
+  }
+  .xr-spatial-default[data-xr-host] {
+    visibility: hidden !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  .xr-spatial-default[data-xr-host][data-xr-transform-active] {
+    transform: translateZ(0) !important;
+  }
+`
+
+/**
+ * Marker attribute used to dedupe injected stylesheets per root.
+ * Anyone querying for `style[data-xr-spatial-default-style]` should be able
+ * to find the SDK's stylesheet and skip re-injecting.
+ */
+const SPATIAL_DEFAULT_STYLE_MARKER = 'data-xr-spatial-default-style'
+
+/**
+ * Idempotently install the spatial default stylesheet into a tree root.
+ *
+ * Document-level stylesheets do not cross shadow boundaries, so a spatial
+ * container rendered inside a `ShadowRoot` would miss the
+ * `.xr-spatial-default[data-xr-host]` hiding rule and show the bare 2D
+ * placeholder. Calling this for each host's root (Document or ShadowRoot)
+ * keeps the rules reachable wherever the host actually lives.
+ *
+ * Safe to call repeatedly for the same root — uses an attribute marker on
+ * the inserted `<style>` element to short-circuit duplicates.
+ */
+export function ensureSpatialDefaultStyleInRoot(root: Document | ShadowRoot) {
+  const queryRoot = root === document ? document.head : root
+  if (queryRoot.querySelector(`style[${SPATIAL_DEFAULT_STYLE_MARKER}]`)) {
+    return
+  }
+  const ownerDoc =
+    root === document
+      ? document
+      : (root as ShadowRoot).ownerDocument || document
+  const styleElement = ownerDoc.createElement('style')
   styleElement.type = 'text/css'
-  styleElement.innerHTML = `
-    :where(.xr-spatial-default) {
-      --xr-back: 0;
-      --xr-depth: 0;
-      --xr-z-index: 0;
-      --xr-background-material: none;
-    }
-    .xr-spatial-default[data-xr-host] {
-      visibility: hidden !important;
-      transition: none !important;
-      transform: none !important;
-    }
-    .xr-spatial-default[data-xr-host][data-xr-transform-active] {
-      transform: translateZ(0) !important;
-    }
-  `
-  document.head.appendChild(styleElement)
+  styleElement.setAttribute(SPATIAL_DEFAULT_STYLE_MARKER, '')
+  styleElement.innerHTML = SPATIAL_DEFAULT_STYLE_CSS
+  if (root === document) {
+    document.head.appendChild(styleElement)
+  } else {
+    ;(root as ShadowRoot).appendChild(styleElement)
+  }
+}
+
+/**
+ * Polyfill entry point: ensure the document carries the spatial default
+ * stylesheet. Hosts mounted inside shadow roots are covered by a separate
+ * per-mount call from `SpatialContainerRefProxy`. Kept as a stable export
+ * because it is referenced by `initPolyfill`.
+ */
+export function injectSpatialDefaultStyle() {
+  ensureSpatialDefaultStyleInRoot(document)
 }

@@ -2,6 +2,7 @@ import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
 import { supports } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
+import { ensureSpatialDefaultStyleInRoot } from '../StandardSpatializedContainer'
 
 /**
  * Owns the spatialized behavior installed on the standard host element and
@@ -155,6 +156,17 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
     this.standardRawDom = dom
     this.domProxy = dom as SpatializedElementRef<T>
     this.installSpatialRefBehavior(dom as SpatializedElementRef<T>)
+
+    // Make sure the spatial default stylesheet is reachable from this host.
+    // initPolyfill() injects it into `document`, but document-level rules do
+    // not cross shadow boundaries — so a host mounted inside a ShadowRoot
+    // would otherwise miss the `.xr-spatial-default[data-xr-host]` hiding
+    // rule (and the spatial CSS variable defaults). The helper is idempotent
+    // per root.
+    const root = dom.getRootNode()
+    if (root === document || root instanceof ShadowRoot) {
+      ensureSpatialDefaultStyleInRoot(root as Document | ShadowRoot)
+    }
 
     this.updateDomProxyToRef()
 

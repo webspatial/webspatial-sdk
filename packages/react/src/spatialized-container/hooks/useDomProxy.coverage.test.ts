@@ -351,6 +351,52 @@ describe('SpatialContainerRefProxy', () => {
 
     expect((ref.current as any).foo).toBe('bar')
   })
+
+  // PR #1194 review (P2 from Codex): document-level stylesheets do not
+  // cross shadow boundaries, so a spatial container mounted inside a
+  // ShadowRoot would lose the `.xr-spatial-default[data-xr-host]` hiding
+  // rule and show the bare 2D placeholder. The proxy must inject the
+  // stylesheet into the host's actual root tree on attach.
+  it('injects spatial default stylesheet into the host shadow root', () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+
+    const shadowMount = document.createElement('div')
+    document.body.appendChild(shadowMount)
+    const shadowRoot = shadowMount.attachShadow({ mode: 'open' })
+
+    const host = document.createElement('div')
+    shadowRoot.appendChild(host)
+    const task = document.createElement('div')
+
+    expect(
+      shadowRoot.querySelector('style[data-xr-spatial-default-style]'),
+    ).toBeNull()
+
+    proxy.updateStandardSpatializedContainerDom(host)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+
+    const injected = shadowRoot.querySelector(
+      'style[data-xr-spatial-default-style]',
+    )
+    expect(injected).not.toBeNull()
+    expect(injected?.innerHTML).toContain('.xr-spatial-default[data-xr-host]')
+    expect(injected?.innerHTML).toContain('translateZ(0)')
+
+    // Idempotent: a second mount into the same shadow root must not add a
+    // second copy.
+    const host2 = document.createElement('div')
+    shadowRoot.appendChild(host2)
+    const proxy2 = new SpatialContainerRefProxy<any>({ current: null })
+    proxy2.updateStandardSpatializedContainerDom(host2)
+
+    expect(
+      shadowRoot.querySelectorAll('style[data-xr-spatial-default-style]')
+        .length,
+    ).toBe(1)
+
+    document.body.removeChild(shadowMount)
+  })
 })
 
 describe('spatialized ref: xrClientDepth / xrOffsetBack', () => {

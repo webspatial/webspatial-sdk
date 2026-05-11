@@ -164,6 +164,12 @@ These are the contracts the rest of the architecture **depends on**. Future code
 
 - The proxy is over `dom.style` itself; reads of non-spatial properties pass through with `Reflect.get`. This guarantees that `getComputedStyle`, layout, and CSS variable resolution remain identical to a vanilla `HTMLElement`.
 
+### I7. The hidden-host stylesheet must be reachable from each host's tree root
+
+- **Why:** I1–I5 all rely on the CSS rules in `injectSpatialDefaultStyle` (the spatial CSS variable defaults and the class-scoped hiding rules). Document-level stylesheets do not cross shadow boundaries, so a host mounted inside a `ShadowRoot` would otherwise miss them and show the bare 2D placeholder.
+- **Enforced by:** `SpatialContainerRefProxy.updateStandardSpatializedContainerDom` calls `ensureSpatialDefaultStyleInRoot(dom.getRootNode())` whenever a non-null host is attached. The helper is **idempotent per root** via the `data-xr-spatial-default-style` marker attribute on the inserted `<style>` element, so per-mount calls never accumulate duplicates.
+- **Why per-mount, not just `initPolyfill`:** the document is covered by `initPolyfill` at module load, but shadow roots are created at runtime by host applications (web components, micro-frontends, design-system shadow wrappers). The polyfill cannot eagerly enumerate every shadow root that will ever exist; piggy-backing on host attach is the cheapest way to react to them.
+
 ## Anti-patterns (do **not** do these)
 
 These are the patterns Codex review on [PR #1194](https://github.com/webspatial/webspatial-sdk/pull/1194) explicitly caught. Each maps to one or more of the invariants above.
@@ -176,6 +182,7 @@ These are the patterns Codex review on [PR #1194](https://github.com/webspatial/
 | Use `indexOf('xr-spatial-default')` to test class presence | I1 — false positive on `foo-xr-spatial-default-theme` | PR #1194 P2 |
 | Trust `el.className =` to be the only class write path | I1 — `setAttribute('class', …)` / `classList.remove(...)` / `classList.replace(...)` bypass it | PR #1194 P2 |
 | Drop `xr-spatial-default` when `className = ''` | I1 — un-hides the host | PR #1194 P2 |
+| Trust the document-level stylesheet to apply inside shadow roots | I7 — shadow boundaries do not let document CSS through; the host shows the bare 2D placeholder | PR #1194 P2 |
 
 ## Test coverage map
 
@@ -192,7 +199,9 @@ Each invariant has at least one regression test pinned in this directory:
 | Class invariant: `className = ''` keeps token (I1) | `useDomProxy.coverage.test.ts` — *"preserves xr-spatial-default when className is cleared"* |
 | Class invariant: native paths self-heal (I1) | `useDomProxy.coverage.test.ts` — *"restores xr-spatial-default after native class mutations strip it"* |
 | Class invariant: token, not substring (I1) | `useDomProxy.coverage.test.ts` — *"treats xr-spatial-default as a class token, not a substring"* |
-| CSS rule is class-scoped, not global (I2) | `coverage-boost.test.ts` — *"injectSpatialDefaultStyle adds style tag with class-scoped data-xr-host rules"* |
+| CSS rule is class-scoped, not global (I2) | `coverage-boost.test.ts` — *"injectSpatialDefaultStyle is idempotent and emits class-scoped data-xr-host rules"* |
+| Stylesheet injected per host root incl. shadow roots (I7) | `useDomProxy.coverage.test.ts` — *"injects spatial default stylesheet into the host shadow root"* |
+| Stylesheet injection is idempotent per root (I7) | `coverage-boost.test.ts` — same as above (asserts `length === 1` after three calls) |
 
 ## Quick reference for new contributors
 
@@ -204,4 +213,5 @@ If you are adding behavior to the standard host:
 4. **For class-token tests, use `classList.contains` / `classList.add`.** Never `indexOf`.
 5. **For class-attribute mutations from any source, assume someone bypasses the descriptor.** Rely on the `MutationObserver` self-heal in `SpatialContainerRefProxy.attachStandardClassObserver`.
 6. **For new SDK-controlled CSS rules**, scope them via `.xr-spatial-default[data-xr-host]` (or stricter) so unrelated DOM is unaffected. Add `!important` only when the contract truly requires "user CSS cannot override us".
-7. **Add at least one regression test per new invariant**, and update the table above.
+7. **Bundle any new SDK-controlled CSS into `injectSpatialDefaultStyle` / `ensureSpatialDefaultStyleInRoot`** so it ships into the same per-root injection path. Don't add a parallel global `<style>`; that path skips shadow roots.
+8. **Add at least one regression test per new invariant**, and update the table above.

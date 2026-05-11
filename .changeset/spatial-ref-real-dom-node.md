@@ -13,6 +13,8 @@ Spatial behavior (auto `xr-spatial-default` className, `style.transform` / `styl
 
 Internally, the standard host's hidden-placeholder appearance (`visibility: hidden`, `transition: none`, `transform: none | translateZ(0)`) is no longer written as inline style — it is now applied via CSS rules keyed on the new `data-xr-host` and `data-xr-transform-active` attributes. This is required so that React commits do not write through the spatial style proxy and clobber the user's `style.transform` value on the probe. Visual behavior is unchanged.
 
+The hidden-host stylesheet is now injected into each host's containing tree root on mount (including `ShadowRoot`s used by web components / micro-frontends / shadow-isolated design systems). Without this, the document-level stylesheet would not cross shadow boundaries and the bare 2D placeholder would show through — a side-effect of moving the hidden-placeholder rules out of inline style. The injection is idempotent per root via a `data-xr-spatial-default-style` marker on the `<style>` element. As an incidental fix, the `--xr-back` / `--xr-depth` / `--xr-z-index` / `--xr-background-material` defaults now also reach spatial containers mounted inside shadow roots.
+
 The architectural invariants behind the standard-host / probe split, the spatial style proxy, and the `xr-spatial-default` / `data-xr-host` contracts are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` for future maintainers.
 
 Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.
