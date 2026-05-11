@@ -182,6 +182,31 @@ describe('SpatialContainerRefProxy', () => {
     expect(domProxy.className).toBe('xr-spatial-default')
   })
 
+  // PR #1194 review (P2 from Codex): clearing className imperatively must keep
+  // `xr-spatial-default`, otherwise the host loses both the spatial CSS vars
+  // and the `.xr-spatial-default[data-xr-host]` hidden-placeholder rule.
+  it('preserves xr-spatial-default when className is cleared', async () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    const domProxy = ref.current as any
+
+    domProxy.className = 'foo bar'
+    expect(dom.className).toContain('xr-spatial-default')
+
+    domProxy.className = ''
+    expect(dom.className).toBe('xr-spatial-default')
+    await flushClassSyncMicrotasks()
+    expect(task.className).toBe('xr-spatial-default')
+
+    domProxy.className = 'baz'
+    expect(dom.className).toBe('baz xr-spatial-default')
+  })
+
   it('syncs classList changes to task container', async () => {
     const ref = { current: null as any }
     const proxy = new SpatialContainerRefProxy<any>(ref)

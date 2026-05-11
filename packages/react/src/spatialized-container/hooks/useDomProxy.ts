@@ -267,9 +267,13 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
         return dom.getAttribute('class') ?? ''
       },
       set(value) {
+        // Always preserve `xr-spatial-default`. Without it the host loses
+        // both the spatial CSS vars and the `.xr-spatial-default[data-xr-host]`
+        // hidden-placeholder rule, which would un-hide the 2D host. Mirror
+        // the symmetry already provided by removeAttribute('class').
         let next = String(value)
-        if (next && next.indexOf('xr-spatial-default') === -1) {
-          next = `${next} xr-spatial-default`
+        if (next.indexOf('xr-spatial-default') === -1) {
+          next = next ? `${next} xr-spatial-default` : 'xr-spatial-default'
         }
         dom.setAttribute('class', next)
         self.scheduleSyncTransformClassFromStandard()
