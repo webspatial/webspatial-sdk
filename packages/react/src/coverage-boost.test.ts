@@ -667,14 +667,16 @@ describe('StandardSpatializedContainer', () => {
     r.unmount()
   })
 
-  it('injectSpatialDefaultStyle adds style tag with data-xr-host rules', () => {
+  it('injectSpatialDefaultStyle adds style tag with class-scoped data-xr-host rules', () => {
     const before = document.head.querySelectorAll('style').length
     injectSpatialDefaultStyle()
     const after = document.head.querySelectorAll('style').length
     expect(after).toBe(before + 1)
     const last = document.head.querySelectorAll('style')[after - 1]
     expect(last?.innerHTML).toContain('xr-spatial-default')
-    expect(last?.innerHTML).toContain('[data-xr-host]')
+    // Hidden-host rules are scoped to the spatial class so unrelated DOM
+    // carrying `data-xr-host` is not affected.
+    expect(last?.innerHTML).toContain('.xr-spatial-default[data-xr-host]')
     expect(last?.innerHTML).toContain('translateZ(0)')
   })
 })
