@@ -95,7 +95,7 @@ export default function EntityAnimationManualTriggerPage() {
 
         <div className="mt-4 flex items-center gap-3">
           <label className="text-xs text-gray-400">playbackRate:</label>
-          {[-1, 0.25, 0.5, 1, 2, 4].map(rate => (
+          {[0.25, 0.5, 1, 2, 4].map(rate => (
             <button
               key={rate}
               className={`px-2 py-1 text-xs rounded ${

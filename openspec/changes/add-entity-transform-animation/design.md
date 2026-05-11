@@ -79,8 +79,7 @@ interface AnimationConfig {
   /**
    * Playback speed multiplier. Default: 1
    * Values > 1 speed up; values between 0 and 1 slow down.
-   * Negative values play the animation in reverse.
-   * Must be non-zero and finite.
+   * Must be a positive finite number (> 0).
    * Applied at session creation time and remains constant for the session.
    * Maps to AnimationView.speed on the native (AVP) side.
    */
@@ -327,7 +326,7 @@ api.play() // new session picks up latest config from hook
 
 ### Controlling playback speed with playbackRate
 
-Use `playbackRate` to adjust animation speed. Values > 1 speed up, values between 0 and 1 slow down, and negative values play in reverse.
+Use `playbackRate` to adjust animation speed. Values > 1 speed up, values between 0 and 1 slow down. Must be positive.
 `playbackRate` is applied at session creation and remains constant for the session; to change the rate, `cancel()` and then `play()` again.
 
 ```tsx
@@ -715,7 +714,7 @@ interface AnimateTransformCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
-  /** Playback speed multiplier. Default: 1. Maps to AnimationView.speed on AVP. */
+  /** Playback speed multiplier. Default: 1. Must be positive (> 0). Maps to AnimationView.speed on AVP. */
   playbackRate?: number
 }
 

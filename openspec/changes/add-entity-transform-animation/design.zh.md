@@ -79,8 +79,7 @@ interface AnimationConfig {
   /**
    * 播放速率倍数。默认：1
    * 大于 1 加速；0 到 1 之间减速。
-   * 负值表示倒放。
-   * 必须非零且有限。
+   * 必须为正有限数（> 0）。
    * 在会话创建时应用，整个会话期间保持不变。
    * 对应 Native（AVP）侧的 AnimationView.speed 参数。
    */
@@ -308,7 +307,7 @@ function CancelAndReset() {
 
 ### 使用 playbackRate 控制播放速率
 
-通过 `playbackRate` 调整动画的播放速度。大于 1 加速，0 到 1 之间减速，负值表示倒放。
+通过 `playbackRate` 调整动画的播放速度。大于 1 加速，0 到 1 之间减速。必须为正数。
 `playbackRate` 在会话创建时应用，整个会话期间保持不变；如需更改速率，需 `cancel()` 后重新 `play()`。
 
 ```tsx
@@ -713,8 +712,7 @@ interface AnimateTransformCommand {
   /**
    * 播放速率倍数。默认：1
    * 大于 1 加速；0 到 1 之间减速。
-   * 负值表示倒放。
-   * 必须非零且有限。
+   * 必须为正有限数（> 0）。
    * 在会话创建时应用，整个会话期间保持不变。
    * 对应 Native（AVP）侧的 AnimationView.speed 参数。
    */
