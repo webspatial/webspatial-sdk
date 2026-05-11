@@ -147,7 +147,42 @@ interface AnimationApi {
 
 ### AnimatedProps
 
-Opaque object returned as the first tuple element. Pass it directly to the entity's `animation` prop — application code should not read or modify its contents.
+Opaque object returned as the first tuple element. Pass it directly to the entity's `animation` prop. Internally it carries metadata required for cross-layer communication:
+
+```typescript
+/**
+ * Animation object — created by useAnimation, passed to the entity animation prop.
+ * Application code should not read or modify its fields (all fields are @internal).
+ */
+interface AnimatedProps {
+  /** @internal Unique identifier for this animation object instance */
+  readonly __animationObjectId: string
+  /** @internal Transform fields controlled by this animation */
+  readonly __animatedFields: readonly ('position' | 'rotation' | 'scale')[]
+  /** @internal Whether an alive animation session currently exists */
+  readonly __animating: boolean
+}
+
+/**
+ * @internal
+ * Extended interface used internally by the entity layer to bind/unbind
+ * animations and query suppressed transform fields.
+ * Application code should never use this interface directly.
+ */
+interface AnimatedPropsInternal extends AnimatedProps {
+  /** Called by the entity layer when the entity instance becomes available */
+  __bind: (entity: SpatialEntity) => void
+  /** Called by the entity layer when the entity is destroyed or animation prop changes */
+  __unbind: () => void
+  /** Returns transform fields currently suppressed by an alive session, or null */
+  __getSuppressedFields: () => readonly ('position' | 'rotation' | 'scale')[] | null
+}
+```
+
+- `__animatedFields`: Determined by which of `position`/`rotation`/`scale` are declared in `config.to`; fixed at hook creation time.
+- `__animating`: `true` when an alive session exists (queued/delaying/running/paused); the entity layer uses this to decide whether to suppress React props synchronization for the corresponding fields.
+- `__bind`/`__unbind`: Called by the entity component on mount/unmount or animation prop changes, ensuring the animation session is bound to the entity lifecycle.
+- `__getSuppressedFields`: Called by the entity layer before performing transform synchronization, to skip fields controlled by the animation.
 
 ### TransformValues
 
