@@ -263,6 +263,33 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.className).toBe(dom.className)
   })
 
+  // PR #1194 review (P2 from Codex): the spatial class invariant is checked
+  // as a class TOKEN, not a substring. A value like `foo-xr-spatial-default`
+  // contains the literal substring but is not the real class token, so the
+  // CSS selector `.xr-spatial-default` would not match and the placeholder
+  // would un-hide. The className setter and the observer self-heal must
+  // both append the real token in this case.
+  it('treats xr-spatial-default as a class token, not a substring', async () => {
+    const ref = { current: null as any }
+    const proxy = new SpatialContainerRefProxy<any>(ref)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    proxy.updateStandardSpatializedContainerDom(dom)
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    const domProxy = ref.current as any
+
+    domProxy.className = 'foo-xr-spatial-default-theme'
+    expect(dom.classList.contains('xr-spatial-default')).toBe(true)
+    expect(dom.classList.contains('foo-xr-spatial-default-theme')).toBe(true)
+
+    dom.setAttribute('class', 'bar-xr-spatial-default-extra')
+    await flushClassSyncMicrotasks()
+    expect(dom.classList.contains('xr-spatial-default')).toBe(true)
+    expect(dom.classList.contains('bar-xr-spatial-default-extra')).toBe(true)
+    expect(task.className).toBe(dom.className)
+  })
+
   it('deduplicates repeated null callback ref dispatches', () => {
     const fn = vi.fn()
     const proxy = new SpatialContainerRefProxy<any>(fn as any)

@@ -71,12 +71,12 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private ensureSpatialDefaultClass() {
     const dom = this.standardRawDom
     if (!dom) return
-    const cls = dom.getAttribute('class') ?? ''
-    if (cls.indexOf('xr-spatial-default') !== -1) return
-    dom.setAttribute(
-      'class',
-      cls ? `${cls} xr-spatial-default` : 'xr-spatial-default',
-    )
+    // Token-based check via classList rather than `indexOf('xr-spatial-default')`,
+    // so a class like `foo-xr-spatial-default-theme` does not satisfy the
+    // invariant — the CSS rule is keyed on the real `.xr-spatial-default`
+    // class token, not a substring.
+    if (dom.classList.contains('xr-spatial-default')) return
+    dom.classList.add('xr-spatial-default')
   }
 
   /**
@@ -286,15 +286,17 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
         return dom.getAttribute('class') ?? ''
       },
       set(value) {
-        // Always preserve `xr-spatial-default`. Without it the host loses
-        // both the spatial CSS vars and the `.xr-spatial-default[data-xr-host]`
-        // hidden-placeholder rule, which would un-hide the 2D host. Mirror
-        // the symmetry already provided by removeAttribute('class').
-        let next = String(value)
-        if (next.indexOf('xr-spatial-default') === -1) {
-          next = next ? `${next} xr-spatial-default` : 'xr-spatial-default'
+        // Always preserve the real `xr-spatial-default` class token. Without
+        // it the host loses both the spatial CSS vars and the
+        // `.xr-spatial-default[data-xr-host]` hidden-placeholder rule, which
+        // would un-hide the 2D host. Apply the value first, then re-append
+        // via classList (which uses spec-correct token semantics) so values
+        // like `foo-xr-spatial-default-theme` — substring-matching but not a
+        // real token — still trigger restoration.
+        dom.setAttribute('class', String(value))
+        if (!dom.classList.contains('xr-spatial-default')) {
+          dom.classList.add('xr-spatial-default')
         }
-        dom.setAttribute('class', next)
         self.scheduleSyncTransformClassFromStandard()
       },
     })
