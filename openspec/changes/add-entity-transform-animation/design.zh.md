@@ -616,7 +616,7 @@ PicoOS 端基于 PICO Spatial SDK 动画框架实现，与 visionOS 侧保持相
 | 动画属性 | position / rotation / scale | position / rotation / scale |
 | 缓动曲线 | linear / easeIn / easeOut / easeInOut | linear / easeIn / easeOut / easeInOut |
 | 循环模式 | none / repeat / autoReverse | none / restart / reverse |
-| 无限循环 | `repeatCount = 0` 表示无限 | `repeatCount = -1` 表示无限 |
+| 无限循环 | `repeatMode = .repeat` / `.autoReverse` 隐式无限 | `repeatCount = -1` 表示无限 |
 | 延迟 (delay) | `AnimationView.delay` | `TweenAnimation` duration offset |
 | 播放速率 (playbackRate) | `AnimationView.speed` | `AnimationPlaybackController.speed` |
 | Pause / Resume | `controller.pause()` / `.resume()` | `controller.pause()` / `.resume()` |
@@ -637,7 +637,7 @@ PicoOS 端基于 PICO Spatial SDK 动画框架实现，与 visionOS 侧保持相
 ### 平台差异与注意事项
 
 1. **Cancel 恢复方式**：visionOS 受 RealityKit bind-point 系统限制，不能直接赋值 transform，需使用 `entity.move(to:duration:0)` 零时长动画绕过；PicoOS 无此限制，直接设置 `entity.transform` 即可。
-2. **无限循环表达**：visionOS 用 `repeatCount = 0` 表示无限循环（RealityKit 约定），PicoOS 用 `repeatCount = -1`（PICO SDK 约定）。
+2. **无限循环表达**：visionOS 通过 `AnimationRepeatMode.repeat` / `.autoReverse` 直接表达无限循环（设置 repeatMode 即隐含无限重复，无 repeatCount 字段），PicoOS 用 `repeatCount = -1`（PICO SDK 约定）。
 3. **速率控制层级**：visionOS 在 `AnimationView` 包装层设置 `speed`；PicoOS 在 `AnimationPlaybackController` 上设置（两者对外行为一致）。
 4. **事件名差异**：visionOS 完成事件类型为 `AnimationEvents.PlaybackCompleted`，PicoOS 为 `AnimationEvents.Completed`（均映射到相同的 JSBridge 事件名 `_completed`）。
 5. **Transform 同步**：两个平台均遵循相同的字段级抑制策略——动画控制的字段在会话期间抑制 React props 同步。
