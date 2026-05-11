@@ -184,6 +184,16 @@ These are the patterns Codex review on [PR #1194](https://github.com/webspatial/
 | Drop `xr-spatial-default` when `className = ''` | I1 — un-hides the host | PR #1194 P2 |
 | Trust the document-level stylesheet to apply inside shadow roots | I7 — shadow boundaries do not let document CSS through; the host shows the bare 2D placeholder | PR #1194 P2 |
 
+## Known limitations
+
+### iframe / foreign-Document hosts ([#1197](https://github.com/webspatial/webspatial-sdk/issues/1197))
+
+The per-mount stylesheet injection in `SpatialContainerRefProxy.updateStandardSpatializedContainerDom` currently uses `root === document` to detect Document roots, which only matches the **module's own global document**. A spatial host rendered (or portaled) into a same-origin `<iframe>`'s `contentDocument` — or any other foreign `Document` instance — would not get the stylesheet, and the bare 2D placeholder would show through.
+
+This is a niche scenario (it requires React + WebSpatial inside an iframe, not just the iframe itself), and was deliberately deferred from PR #1194 to keep scope focused. The fix path is described in #1197 (switch the discriminator from `root === document` to `root.nodeType === 9`, plus a regression test against `iframe.contentDocument`).
+
+**Workaround in the meantime:** call `injectSpatialDefaultStyle()` once from inside the iframe's own realm (e.g. an entry script that runs there). Cross-origin iframes are out of scope — the SDK cannot reach across origins anyway.
+
 ## Test coverage map
 
 Each invariant has at least one regression test pinned in this directory:

@@ -15,6 +15,8 @@ Internally, the standard host's hidden-placeholder appearance (`visibility: hidd
 
 The hidden-host stylesheet is now injected into each host's containing tree root on mount (including `ShadowRoot`s used by web components / micro-frontends / shadow-isolated design systems). Without this, the document-level stylesheet would not cross shadow boundaries and the bare 2D placeholder would show through — a side-effect of moving the hidden-placeholder rules out of inline style. The injection is idempotent per root via a `data-xr-spatial-default-style` marker on the `<style>` element. As an incidental fix, the `--xr-back` / `--xr-depth` / `--xr-z-index` / `--xr-background-material` defaults now also reach spatial containers mounted inside shadow roots.
 
+Known limitation: the per-mount injection is currently keyed on `root === document` and so does not cover spatial hosts mounted inside same-origin iframes / other foreign `Document` instances — those will see the bare 2D placeholder until [#1197](https://github.com/webspatial/webspatial-sdk/issues/1197) ships. As a workaround, call `injectSpatialDefaultStyle()` once from inside the iframe's own realm.
+
 The architectural invariants behind the standard-host / probe split, the spatial style proxy, and the `xr-spatial-default` / `data-xr-host` contracts are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` for future maintainers.
 
 Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.
