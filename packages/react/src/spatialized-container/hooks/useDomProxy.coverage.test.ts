@@ -290,6 +290,42 @@ describe('SpatialContainerRefProxy', () => {
     expect(task.className).toBe(dom.className)
   })
 
+  // PR #1194 review (P2 from Codex): the class observer must be attached
+  // BEFORE the ref is published to user code. Otherwise a user-supplied
+  // callback ref that synchronously mutates the class via a native API
+  // (setAttribute / classList) lands its MutationRecord before the
+  // observer starts watching, escaping the self-heal — and the spatial
+  // class invariant gets quietly dropped on the first mount.
+  it('attaches class observer before publishing the ref so user-side native mutations self-heal', async () => {
+    let refDispatchedWith: HTMLElement | null = null
+    const ref = (el: HTMLElement | null) => {
+      refDispatchedWith = el
+      if (el) {
+        // Native APIs bypass the className descriptor, so only the
+        // observer self-heal can restore xr-spatial-default in time.
+        el.setAttribute('class', 'user-set-class')
+      }
+    }
+    const proxy = new SpatialContainerRefProxy<any>(ref as any)
+    const dom = document.createElement('div')
+    const task = document.createElement('div')
+
+    // Reverse the typical React mount order so the ref is actually
+    // published from inside updateStandardSpatializedContainerDom (probe
+    // is already set), which is the exact path where the race lived.
+    proxy.updateTransformVisibilityTaskContainerDom(task)
+    proxy.updateStandardSpatializedContainerDom(dom)
+
+    expect(refDispatchedWith).toBe(dom)
+    expect(dom.getAttribute('class')).toBe('user-set-class')
+
+    await flushClassSyncMicrotasks()
+
+    expect(dom.classList.contains('xr-spatial-default')).toBe(true)
+    expect(dom.classList.contains('user-set-class')).toBe(true)
+    expect(task.className).toBe(dom.className)
+  })
+
   it('deduplicates repeated null callback ref dispatches', () => {
     const fn = vi.fn()
     const proxy = new SpatialContainerRefProxy<any>(fn as any)

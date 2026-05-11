@@ -136,7 +136,7 @@ These are the contracts the rest of the architecture **depends on**. Future code
 - **Enforced at three layers:**
   1. **JSX render** in [`StandardSpatializedContainer.tsx`](./StandardSpatializedContainer.tsx) always merges `xr-spatial-default` into the className prop.
   2. **`className` descriptor** in [`hooks/useDomProxy.ts`](./hooks/useDomProxy.ts) re-appends the token via `classList.add` after applying the user's value.
-  3. **MutationObserver self-heal** (`SpatialContainerRefProxy.ensureSpatialDefaultClass`) re-appends if any native path (`setAttribute('class', …)`, `classList.remove(...)`, `classList.replace(...)`, third-party DOM helpers) strips it — see [Flow 2](#flow-2--class-invariant-self-heal). Asynchronous (one microtask) but bounded; no paint occurs in between.
+  3. **MutationObserver self-heal** (`SpatialContainerRefProxy.ensureSpatialDefaultClass`) re-appends if any native path (`setAttribute('class', …)`, `classList.remove(...)`, `classList.replace(...)`, third-party DOM helpers) strips it — see [Flow 2](#flow-2--class-invariant-self-heal). Asynchronous (one microtask) but bounded; no paint occurs in between. The observer is **attached before the ref is published to user code** so synchronous native-API mutations performed inside a user callback ref are still caught.
 - **Token vs substring:** the check **MUST** use `classList.contains` / `classList.add`, never `indexOf`, otherwise values like `foo-xr-spatial-default-theme` would falsely satisfy the invariant. The CSS selector keys on the token, not the substring.
 
 ### I2. The host always carries `data-xr-host=""`
@@ -183,6 +183,7 @@ These are the patterns Codex review on [PR #1194](https://github.com/webspatial/
 | Trust `el.className =` to be the only class write path | I1 — `setAttribute('class', …)` / `classList.remove(...)` / `classList.replace(...)` bypass it | PR #1194 P2 |
 | Drop `xr-spatial-default` when `className = ''` | I1 — un-hides the host | PR #1194 P2 |
 | Trust the document-level stylesheet to apply inside shadow roots | I7 — shadow boundaries do not let document CSS through; the host shows the bare 2D placeholder | PR #1194 P2 |
+| Publish the ref before attaching the class observer | I1 — synchronous user-side class mutations from a callback ref escape the self-heal | PR #1194 P2 |
 
 ## Known limitations
 
@@ -209,6 +210,7 @@ Each invariant has at least one regression test pinned in this directory:
 | Class invariant: `className = ''` keeps token (I1) | `useDomProxy.coverage.test.ts` — *"preserves xr-spatial-default when className is cleared"* |
 | Class invariant: native paths self-heal (I1) | `useDomProxy.coverage.test.ts` — *"restores xr-spatial-default after native class mutations strip it"* |
 | Class invariant: token, not substring (I1) | `useDomProxy.coverage.test.ts` — *"treats xr-spatial-default as a class token, not a substring"* |
+| Class observer attached before ref publish (I1) | `useDomProxy.coverage.test.ts` — *"attaches class observer before publishing the ref so user-side native mutations self-heal"* |
 | CSS rule is class-scoped, not global (I2) | `coverage-boost.test.ts` — *"injectSpatialDefaultStyle is idempotent and emits class-scoped data-xr-host rules"* |
 | Stylesheet injected per host root incl. shadow roots (I7) | `useDomProxy.coverage.test.ts` — *"injects spatial default stylesheet into the host shadow root"* |
 | Stylesheet injection is idempotent per root (I7) | `coverage-boost.test.ts` — same as above (asserts `length === 1` after three calls) |

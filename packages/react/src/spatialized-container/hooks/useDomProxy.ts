@@ -168,9 +168,16 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       ensureSpatialDefaultStyleInRoot(root as Document | ShadowRoot)
     }
 
-    this.updateDomProxyToRef()
-
+    // Attach the class observer BEFORE publishing the ref. If a user-supplied
+    // callback ref synchronously mutates the class via a native API that
+    // bypasses the className descriptor (`node.setAttribute('class', …)`,
+    // `node.classList.remove('xr-spatial-default')`, …), the resulting
+    // MutationRecord must reach the self-heal in `attachStandardClassObserver`
+    // — otherwise xr-spatial-default would be lost without restoration and
+    // the host would un-hide. Do not reorder these two calls without a
+    // regression test.
     this.attachStandardClassObserver()
+    this.updateDomProxyToRef()
     this.scheduleSyncTransformClassFromStandard()
   }
 
