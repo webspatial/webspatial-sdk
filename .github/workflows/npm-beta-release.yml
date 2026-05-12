@@ -1,0 +1,74 @@
+name: NPM beta release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # Required for npm trusted publishing / OIDC
+
+concurrency:
+  group: npm-beta-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: true
+  SKIP_SIMPLE_GIT_HOOKS: 1
+
+jobs:
+  publish-beta:
+    if: github.repository == 'webspatial/webspatial-sdk' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changesets
+        id: changesets
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup pnpm
+        if: steps.changesets.outputs.has_changesets == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node.js
+        if: steps.changesets.outputs.has_changesets == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Update npm
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: npm install -g npm@'>=11.5.1'
+
+      - name: Install dependencies
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Version packages for beta snapshot
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: pnpm exec changeset version --snapshot beta --snapshot-prerelease-template "{tag}-{commit}"
+
+      - name: Build packages
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: pnpm run buildPackages
+
+      - name: Publish packages to npm beta
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: pnpm exec changeset publish --tag beta --no-git-tag
+        env:
+          # Use OIDC for npm authentication instead of NPM_TOKEN.
+          NPM_TOKEN: ''
