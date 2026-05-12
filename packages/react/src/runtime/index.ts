@@ -1,4 +1,4 @@
-export { bootSpatial } from './boot'
+export { bootSpatial, hasBootSpatialBeenCalled } from './boot'
 export {
   getSpatialImpl,
   isSpatialReady,

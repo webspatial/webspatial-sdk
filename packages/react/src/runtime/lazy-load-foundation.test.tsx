@@ -9,7 +9,7 @@ import {
   onSpatialLoadError,
   type SpatialImplementation,
 } from './bridge'
-import { bootSpatial } from './boot'
+import { __resetBootStateForTests, bootSpatial } from './boot'
 import { detectSpatialRuntime } from './detect'
 import { WebSpatialBootError } from './errors'
 import { useSpatialReady } from './useSpatialReady'
@@ -35,12 +35,14 @@ describe('lazy-load runtime foundation', () => {
   beforeEach(() => {
     vi.unstubAllGlobals()
     __resetSpatialBridgeForTests()
+    __resetBootStateForTests()
     setPlainWebUserAgent()
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
     __resetSpatialBridgeForTests()
+    __resetBootStateForTests()
   })
 
   it('detectSpatialRuntime is SSR safe and returns null without window', () => {
