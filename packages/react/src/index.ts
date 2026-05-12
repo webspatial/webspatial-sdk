@@ -43,7 +43,7 @@ export type { CapabilityKey } from '@webspatial/core-sdk'
 export { enableDebugTool } from './utils'
 export { convertCoordinate } from './utils/convertCoordinate'
 export { getAbsoluteUrl } from './utils/urlUtils'
-export * from './initScene'
+export { initScene } from './initScene'
 
 // --- SSR --------------------------------------------------------------------
 export { SSRProvider } from './ssr'

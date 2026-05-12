@@ -1,17 +1,16 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
 import reactJSXRuntime from 'react/jsx-runtime'
 import { createElement as reactCreateElement } from 'react'
-// Note: README in this folder asks us to import via the package name
-// (`@webspatial/react-sdk`) so the jsx-runtime bundle stays slim by treating
-// the SDK as external. We intentionally switch to a relative import in PR 3
-// of the lazy-load roll-out (per spatial-lazy-load spec tasks.md §6.2): the
-// JSX runtime MUST resolve `Model`, `withSpatialized2DElementContainer`, and
-// `withSpatialMonitor` to the **facade** versions defined in `../facades`,
-// regardless of what `@webspatial/react-sdk` currently re-exports from the
-// default entry. PR 4 rewires `src/index.ts` to surface facades and PR 5
-// stops marking the package name as external in the jsx bundle's tsup config
-// (per tasks.md §7.4 / §8.1), at which point either import shape resolves to
-// the same module identity.
+// `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` MUST
+// resolve to the **facade** versions defined in `../facades` (not to a real
+// spatial implementation). Per spatial-lazy-load spec `tasks.md` §6.2 the
+// JSX runtime delegates spatial vs. fallback rendering to the facade HOCs;
+// the JSX runtime itself NEVER imports from `../spatial/`, NEVER calls
+// `bootSpatial()`, and never schedules a dynamic import. After §8.1's tsup
+// rewrite the JSX runtime, the default entry, and the spatial chunk all
+// share a single tsup pass with `splitting: true`, so this relative import
+// collapses into the same shared chunk that the default entry uses for the
+// facades — no duplicate facade copy ships per JSX bundle.
 import {
   Model,
   Reality,
