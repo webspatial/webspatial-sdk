@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { shallowEqualVec3, shallowEqualRotation } from '../utils/equal'
 
 describe('transform suppression utilities', () => {

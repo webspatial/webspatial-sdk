@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type {
   AnimatedPropsInternal,
@@ -591,7 +591,7 @@ describe('5.1.4 Command and event ordering', () => {
 
 describe('5.1.6 Animation prop replacement (cancel old → start new)', () => {
   test('cancel then play starts a new session (cancel-old before start-new)', async () => {
-    const { entity, cancelAnimation } = createMockEntity()
+    const { entity } = createMockEntity()
     const callOrder: string[] = []
 
     entity.animateTransform = vi.fn(async (cmd: any) => {

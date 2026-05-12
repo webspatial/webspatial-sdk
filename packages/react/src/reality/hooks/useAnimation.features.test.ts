@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type {
   AnimatedPropsInternal,
