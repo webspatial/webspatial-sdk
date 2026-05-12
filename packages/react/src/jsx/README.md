@@ -1,9 +1,16 @@
 ## notice
 
-files inside this folder should not use relative path to import files from `src`, use package name instead.
+`jsx-shared.ts` imports `Model`, `withSpatialized2DElementContainer`, and
+`withSpatialMonitor` from `../facades` (relative path) so the JSX runtime
+resolves them to the **facade** versions, per spatial-lazy-load spec
+`tasks.md` §6.2 / §7.4. The JSX runtime, the default entry barrel, and the
+spatial chunk all build in a single `tsup` pass with `splitting: true`
+(`packages/react/tsup.config.ts`), so the facade module is hoisted into a
+shared chunk that both consumers reuse — there is no duplicate facade copy
+per JSX bundle.
 
-### Lazy-load roll-out exception (transitional)
-
-`jsx-shared.ts` intentionally imports `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` from `../facades` (relative path) per spatial-lazy-load spec `tasks.md` §6.2 — the JSX runtime MUST resolve those symbols to the **facade** versions, which are not yet re-exported by the default entry while PR 3 of the roll-out is in flight. PR 4 rewires `src/index.ts` to surface facades and PR 5 stops marking `@webspatial/react-sdk` as external in the JSX bundle's `tsup` config (per `tasks.md` §7.4 / §8.1), restoring this folder's "import via package name" convention.
-
-`jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts` re-export the unified runtime as a transitional no-op; the files themselves are deleted in PR 5 alongside the corresponding `tsup` entry and `react-server` `exports` conditional drops.
+The previously-shipped strip-only siblings `jsx-runtime.web.ts` and
+`jsx-dev-runtime.web.ts`, plus the `react-server` `exports` conditional in
+`packages/react/package.json`, were removed in PR 5 of the lazy-load
+roll-out. The single unified runtime now serves plain web, AVP, SSR, and
+RSC consumers.
