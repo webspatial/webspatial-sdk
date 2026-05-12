@@ -45,6 +45,9 @@ jobs:
       - name: Test React compatibility
         run: pnpm run test:react-compat
 
+      - name: Test size budget (marginal-delta consumer fixture)
+        run: pnpm run test:size-budget
+
       - name: Test changeset
         run: npx changeset version
       
