@@ -50,9 +50,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
-      - name: Update npm
+      - name: Install npm with trusted publishing support
         if: steps.changesets.outputs.has_changesets == 'true'
-        run: npm install -g npm@'>=11.5.1'
+        run: |
+          pnpm add --global npm@11.5.1
+          hash -r
+          node --version
+          npm --version
+          node -e "const version = require('child_process').execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim().split('.').map(Number); if (version[0] < 11 || (version[0] === 11 && version[1] < 5)) { throw new Error('npm >= 11.5.1 is required for trusted publishing'); }"
 
       - name: Install dependencies
         if: steps.changesets.outputs.has_changesets == 'true'
