@@ -8,7 +8,20 @@ import type { Vec3 } from '@webspatial/core-sdk'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
-import { getSession } from './getSession'
+import { getSpatialImpl } from '../runtime/bridge'
+
+
+// Per the lazy-load proposal `tasks.md §12.9` ("Pre-v1 budget calibration"),
+// `convertCoordinate` no longer statically imports `getSession` from
+// `./getSession`. That import would pull `Spatial` + `SpatialSession`
+// (and through `SpatialSession`, the entire spatial creator class graph
+// + `scene-polyfill`) into the default-entry bundle. The function's
+// existing graceful-degradation contract (`if (!spatialScene) return
+// position`) extends naturally to the bridge-routed lookup: before
+// `await bootSpatial()` resolves, `getSpatialImpl()` returns `null`
+// and we return the input position unchanged — same observable behavior
+// as the previous "no spatial session" branch, just reached via the
+// dynamic-import bridge instead of a static import.
 
 type CoordinateConvertible =
   | Window
@@ -19,7 +32,7 @@ type CoordinateConvertible =
 function resolveSpatialObjectId(target: CoordinateConvertible): string | null {
   // window -> current spatial scene id which is empty string
   if (typeof window !== 'undefined' && target === window) {
-    const scene = getSession()?.getSpatialScene()
+    const scene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
     return scene?.id ?? ''
   }
 
@@ -60,7 +73,7 @@ export async function convertCoordinate(
       return position
     }
 
-    const spatialScene = getSession()?.getSpatialScene()
+    const spatialScene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
     if (!spatialScene) return position
     const ret = await spatialScene.convertCoordinate(position, fromId, toId)
     return ret ?? position
