@@ -40,7 +40,12 @@ export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
 export type { CapabilityKey } from '@webspatial/core-sdk'
 
 // --- Stateless utilities (Group B: gracefully degrade via core-sdk session) --
-export { enableDebugTool } from './utils'
+// `enableDebugTool` is imported from its source file (NOT from `./utils`)
+// so the `./utils/index.ts` barrel — which still re-exports `getSession`
+// for spatial-chunk callers — does NOT enter the default-entry static
+// module graph. This protects against bundler heuristics that may pull
+// barrel re-exports as a unit. Per `tasks.md §12.9` calibration follow-up.
+export { enableDebugTool } from './utils/debugTool'
 export { convertCoordinate } from './utils/convertCoordinate'
 export { getAbsoluteUrl } from './utils/urlUtils'
 export { initScene } from './initScene'
