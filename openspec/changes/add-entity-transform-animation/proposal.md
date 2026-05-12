@@ -52,7 +52,14 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
 - Add imperative playback controls with `play`, `pause`, and `cancel`, plus `finished`, `onStart`, natural completion, cancellation that restores `from`, and `onError` lifecycle / error callbacks.
 - Define timing behavior for `duration`, `timingFunction`, `delay`, `autoStart`, and `loop` with reverse support aligned with the reviewed API direction.
 - Define the cross-layer contract for React, core SDK, JSBridge, and native playback so animations run natively and do not fight normal transform updates.
-- Clarify that the `animation` prop is only accepted by entity components that integrate with the `SpatialEntity` abstraction (e.g. `BoxEntity`, `ModelEntity`), not by `SpatialDiv` or non-entity components; this restriction is enforced statically through TypeScript type definitions. At runtime, if `useAnimation` is used on an entity that is never rendered under `Reality` / `SceneGraph` (i.e. never bound to a `SpatialEntity` context), playback enters the `queued` state and remains there until the entity binds or is unmounted.
+- Define the scope of the `animation` prop with separate static and runtime guarantees:
+  - **Static (TypeScript) guarantee**: The `animation` prop is only exposed in the type definitions of entity components that integrate with the `SpatialEntity` abstraction (e.g. `BoxEntity`, `ModelEntity`). Non-entity components (`SpatialDiv`, plain HTML elements) and non-Reality-entity `Model` components do not include this prop in their types, so passing it is a compile-time error. Note that TypeScript **cannot** statically prove that an entity component is actually rendered inside a `Reality` / `SceneGraph` subtree — this is a runtime concern.
+  - **Runtime behavior when entity is unbound**: If a component with `useAnimation` is rendered outside `Reality` / `SceneGraph` (i.e. it never binds to a `SpatialEntity` context), the following behavior applies:
+    - `api.play()` transitions `playState` to `queued` and remains there until either the entity binds to a `SpatialEntity` context (at which point playback starts normally) or the component unmounts (at which point the queued session is discarded).
+    - `api.pause()` and `api.cancel()` are no-ops while in the `queued` state.
+    - `api.isAnimating` remains `false`; `api.playState` stays `'queued'`.
+    - No lifecycle callbacks (`onStart`, `onComplete`, `onCancel`) fire while unbound; `onError` is not triggered either, since the absence of a bound entity is a valid waiting state, not an error.
+    - On unmount, any queued session is silently cleaned up with no callbacks.
 - Extend runtime capability documentation so applications can query `supports('useAnimation')` before relying on the animation API.
 
 ## Capabilities
