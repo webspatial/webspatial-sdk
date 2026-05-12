@@ -58,27 +58,33 @@ export type AttachmentAssetProps = {
   children?: ReactNode
 }
 
-export const UnlitMaterial = createNullFacade<UnlitMaterialProps>(
-  'UnlitMaterial',
-  impl => impl.UnlitMaterial,
-)
+// `/* @__PURE__ */` annotations on the factory calls so the consumer
+// bundler tree-shakes unused asset / material facades and the
+// spatial-lazy-load §9.6 lint accepts them as module-private pure
+// initialization.
+export const UnlitMaterial =
+  /* @__PURE__ */ createNullFacade<UnlitMaterialProps>(
+    'UnlitMaterial',
+    impl => impl.UnlitMaterial,
+  )
 
-export const Material = createNullFacade<MaterialProps>(
+export const Material = /* @__PURE__ */ createNullFacade<MaterialProps>(
   'Material',
   impl => impl.Material,
 )
 
-export const Texture = createNullFacade<TextureProps>(
+export const Texture = /* @__PURE__ */ createNullFacade<TextureProps>(
   'Texture',
   impl => impl.Texture,
 )
 
-export const ModelAsset = createNullFacade<ModelAssetProps>(
+export const ModelAsset = /* @__PURE__ */ createNullFacade<ModelAssetProps>(
   'ModelAsset',
   impl => impl.ModelAsset,
 )
 
-export const AttachmentAsset = createNullFacade<AttachmentAssetProps>(
-  'AttachmentAsset',
-  impl => impl.AttachmentAsset,
-)
+export const AttachmentAsset =
+  /* @__PURE__ */ createNullFacade<AttachmentAssetProps>(
+    'AttachmentAsset',
+    impl => impl.AttachmentAsset,
+  )

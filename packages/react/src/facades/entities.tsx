@@ -93,39 +93,50 @@ export type AttachmentEntityProps = {
   size: { width: number; height: number }
 }
 
-export const Entity = createEntityRefFacade<EntityFacadeProps>(
+// `/* @__PURE__ */` annotations on each factory call: tells the consumer
+// bundler (and the spatial-lazy-load §9.6 lint) that the factory invocation
+// has no observable side effect, so unused entity facades can be tree-shaken
+// out of the consumer bundle. The factories themselves only call
+// `forwardRef` / set `displayName` — both module-private pure operations.
+export const Entity = /* @__PURE__ */ createEntityRefFacade<EntityFacadeProps>(
   'Entity',
   impl => impl.Entity,
 )
-export const BoxEntity = createEntityRefFacade<BoxEntityProps>(
+export const BoxEntity = /* @__PURE__ */ createEntityRefFacade<BoxEntityProps>(
   'BoxEntity',
   impl => impl.BoxEntity,
 )
-export const SphereEntity = createEntityRefFacade<SphereEntityProps>(
-  'SphereEntity',
-  impl => impl.SphereEntity,
-)
-export const ConeEntity = createEntityRefFacade<ConeEntityProps>(
-  'ConeEntity',
-  impl => impl.ConeEntity,
-)
-export const CylinderEntity = createEntityRefFacade<CylinderEntityProps>(
-  'CylinderEntity',
-  impl => impl.CylinderEntity,
-)
-export const PlaneEntity = createEntityRefFacade<PlaneEntityProps>(
-  'PlaneEntity',
-  impl => impl.PlaneEntity,
-)
-export const ModelEntity = createEntityRefFacade<ModelEntityProps>(
-  'ModelEntity',
-  impl => impl.ModelEntity,
-)
+export const SphereEntity =
+  /* @__PURE__ */ createEntityRefFacade<SphereEntityProps>(
+    'SphereEntity',
+    impl => impl.SphereEntity,
+  )
+export const ConeEntity =
+  /* @__PURE__ */ createEntityRefFacade<ConeEntityProps>(
+    'ConeEntity',
+    impl => impl.ConeEntity,
+  )
+export const CylinderEntity =
+  /* @__PURE__ */ createEntityRefFacade<CylinderEntityProps>(
+    'CylinderEntity',
+    impl => impl.CylinderEntity,
+  )
+export const PlaneEntity =
+  /* @__PURE__ */ createEntityRefFacade<PlaneEntityProps>(
+    'PlaneEntity',
+    impl => impl.PlaneEntity,
+  )
+export const ModelEntity =
+  /* @__PURE__ */ createEntityRefFacade<ModelEntityProps>(
+    'ModelEntity',
+    impl => impl.ModelEntity,
+  )
 
-export const AttachmentEntity = createNullFacade<AttachmentEntityProps>(
-  'AttachmentEntity',
-  impl => impl.AttachmentEntity,
-)
+export const AttachmentEntity =
+  /* @__PURE__ */ createNullFacade<AttachmentEntityProps>(
+    'AttachmentEntity',
+    impl => impl.AttachmentEntity,
+  )
 
 // Public aliases mirror src/reality/components/index.tsx.
 export {
