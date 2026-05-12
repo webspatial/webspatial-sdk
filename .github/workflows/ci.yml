@@ -8,6 +8,10 @@ on:
       - stable
   pull_request:
 
+permissions:
+  contents: read
+  statuses: write
+
 env:
   CI: true
   SKIP_SIMPLE_GIT_HOOKS: 1
