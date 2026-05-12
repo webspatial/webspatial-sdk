@@ -9,10 +9,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./install-polyfills": {
+      "types": "./dist/install-polyfills.d.ts",
+      "import": "./dist/install-polyfills.js"
+    },
+    "./package.json": "./package.json"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/install-polyfills.js",
+    "./src/install-polyfills.ts"
+  ],
   "scripts": {
     "test": "vitest run",
     "lint": "tsc -p ./tsconfig.json",

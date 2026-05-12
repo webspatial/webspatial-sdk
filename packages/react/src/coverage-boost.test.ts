@@ -1604,10 +1604,17 @@ describe('utils/debugTool', () => {
     vi.resetModules()
 
     const inspect = vi.fn().mockResolvedValue({ a: 1 })
-    vi.doMock('./utils/getSession', () => {
+    // After the §12.9 calibration follow-up, `enableDebugTool` no longer
+    // statically imports `./utils/getSession` (that import statically
+    // pulled `Spatial` + `SpatialSession` into the default-entry bundle).
+    // The debug tool now routes through `getSpatialImpl()?.getSession?.()`,
+    // so the test mocks the bridge instead.
+    vi.doMock('./runtime/bridge', () => {
       return {
-        getSession: () => ({
-          getSpatialScene: () => ({ inspect }),
+        getSpatialImpl: () => ({
+          getSession: () => ({
+            getSpatialScene: () => ({ inspect }),
+          }),
         }),
       }
     })
