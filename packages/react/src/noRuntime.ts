@@ -94,3 +94,24 @@ export const PhysicalMetrics = {
   }),
   subscribe: (cb: any) => () => {},
 }
+
+// Mirrors `@webspatial/core-sdk`'s runtime-detection surface so the lazy-load
+// foundation (`runtime/detect.ts`) can resolve under the legacy "web variant"
+// tsup build (which substitutes `@webspatial/core-sdk` with this shim). The
+// shim always reports "no spatial runtime detected" — that is the contract
+// for the plain-browser bundle — so consumers fall back to web-only paths.
+// PR 5's tsup config rewrite drops this substitution entirely; this shim
+// becomes dead code at that point but is kept so PR 1–4 each build cleanly
+// in isolation (bisect-friendly).
+export type WebSpatialRuntimeType = 'visionos' | 'picoos' | 'puppeteer' | null
+
+export type WebSpatialRuntimeSnapshot = {
+  type: WebSpatialRuntimeType
+  shellVersion: string | null
+}
+
+export function computeRuntimeFromUserAgent(
+  _userAgent: string | undefined,
+): WebSpatialRuntimeSnapshot {
+  return { type: null, shellVersion: null }
+}
