@@ -29,13 +29,28 @@ assertIncludes(
 )
 assertIncludes(
   betaWorkflow,
-  'pnpm add --global npm@11.5.1',
-  'npm beta release workflow must install the trusted-publishing npm CLI via pnpm.',
+  'node-version: 24',
+  'npm beta release workflow must use Node 24 so the active npm CLI supports trusted publishing.',
+)
+assertIncludes(
+  betaWorkflow,
+  "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'",
+  'npm beta release workflow must opt into the Node 24 JavaScript action runtime.',
+)
+assertExcludes(
+  betaWorkflow,
+  'pnpm add --global npm',
+  'npm beta release workflow must not install npm into pnpm global storage.',
 )
 assertExcludes(
   betaWorkflow,
   'npm install -g npm',
-  'npm beta release workflow must not use npm to upgrade npm.',
+  'npm beta release workflow must not self-upgrade the runner-provided npm CLI.',
+)
+assertIncludes(
+  betaWorkflow,
+  "execFileSync('npm', ['--version']",
+  'npm beta release workflow must verify the active npm CLI version after upgrade.',
 )
 assertIncludes(
   betaWorkflow,
