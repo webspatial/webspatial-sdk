@@ -105,10 +105,8 @@ export function decomposeSRT(m: number[]): TransformValues {
   const r00 = sx !== 0 ? m[0] / sx : 0
   const r10 = sx !== 0 ? m[1] / sx : 0
   const r20 = sx !== 0 ? m[2] / sx : 0
-  const r01 = sy !== 0 ? m[4] / sy : 0
   const r11 = sy !== 0 ? m[5] / sy : 0
   const r21 = sy !== 0 ? m[6] / sy : 0
-  const r02 = sz !== 0 ? m[8] / sz : 0
   const r12 = sz !== 0 ? m[9] / sz : 0
   const r22 = sz !== 0 ? m[10] / sz : 0
 

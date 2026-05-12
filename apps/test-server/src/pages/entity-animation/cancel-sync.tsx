@@ -28,11 +28,9 @@ export default function EntityAnimationCancelSyncPage() {
     onStart: () => logger.log('onStart'),
     onComplete: value => {
       logger.log(`onComplete pos=${fmtVec3(value.position)}`)
-      // if (value.position) setPosition(value.position)
     },
     onCancel: value => {
       logger.log(`onCancel pos=${fmtVec3(value.position)}`)
-      // if (value.position) setPosition(value.position)
     },
     onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
   })
