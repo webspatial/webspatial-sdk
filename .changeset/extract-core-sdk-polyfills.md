@@ -1,0 +1,25 @@
+---
+'@webspatial/core-sdk': patch
+'@webspatial/react-sdk': patch
+---
+
+§12.9 budget calibration follow-up for `openspec/lazy-load-spatial-runtime`. Closes the 11 KB strict-budget gap that PR 5 (`feat/lazy-load-build-size`) shipped against the 8192-byte marginal-delta contract. The measured `app-typical` consumer-side gzipped delta drops from **19433 → 1588 bytes** (≈ 92 % reduction; 6604 bytes of headroom against the strict budget). Tree-shake effectiveness ratio rises from **1.11× (broken) → 3.31× (healthy)**, squarely inside the spec's 2–3× target range. The temporary `REGRESSION_GUARD_BYTES = 24576` ceiling shipped in PR 5 is removed; the §9.2 fixture now enforces the strict 8 KB cap directly per spec.
+
+**`@webspatial/core-sdk`** — three coordinated changes:
+
+1. **Polyfill side effect extracted to a dedicated subpath**. The previous top-level `if (UA contains 'WebSpatial/') { injectSceneHook(); spatialWindowPolyfill(); }` block lived in `src/index.ts`. ESM bundlers cannot tree-shake observable top-level side effects, so every consumer of the package statically bundled `scene-polyfill.ts` (~636 LoC) + `spatial-window-polyfill.ts` (~182 LoC) regardless of whether they actually ran in a WebSpatial browser. The side effect is now a dedicated `@webspatial/core-sdk/install-polyfills` ESM subpath (`./dist/install-polyfills.js`); `src/index.ts` is side-effect-free. Direct-browser (IIFE) consumers retain the historical auto-install behavior via a separate `iife-entry.ts` bundle target. `@webspatial/react-sdk` opts in from inside its spatial chunk so the polyfill installs only when `bootSpatial()` resolves.
+
+2. **ESM build switched from `bundle: true` to `bundle: false`**. The previous single-file `dist/index.js` (97 KB raw) used an internal `__export` runtime helper to implement the wildcard re-exports (`export * from './reality'`, etc.) — which **defeated** consumer tree-shaking because Rollup / Vite / esbuild could no longer statically determine which named exports were reachable from a given consumer call site. Even minimal consumer imports (`import { isSSREnv } from '@webspatial/core-sdk'`) ended up bundling `Spatial`, `SpatialSession`, all geometry creators, `scene-polyfill`, etc. The new build emits one output file per source file (`dist/index.js` is now 1089 bytes — pure re-exports), so consumer bundlers can tree-shake at file granularity. The IIFE build keeps `bundle: true` (IIFE format requires a single self-contained file).
+
+3. **`package.json` `exports` adds the new subpath**: `./install-polyfills` → `./dist/install-polyfills.js` (with matching `.d.ts`). `./package.json` also added for convention.
+
+**Compatibility note**: this is a non-breaking change for `@webspatial/react-sdk` (its imports of named exports continue to resolve identically through the new flat `dist/`), and a behavior-compatible change for direct-browser IIFE consumers (the `iife-entry.ts` preserves auto-install). Downstream ESM consumers that bare-imported `@webspatial/core-sdk` and implicitly relied on the polyfill side effect MUST add `import '@webspatial/core-sdk/install-polyfills'` after upgrading. `@webspatial/react-sdk` is the only known consumer in this category.
+
+**`@webspatial/react-sdk`** — three default-entry utilities re-routed through the bridge:
+
+- `enableDebugTool`, `convertCoordinate`, and `initScene` previously imported `getSession` directly from `src/utils/getSession.ts`. That static import pulled `Spatial` and `SpatialSession` into the default-entry static graph; through `SpatialSession`'s class body it transitively pulled every spatial creator class (`SpatialBoxGeometry`, `SpatialSphereGeometry`, `SpatialEntity`, `realityCreator`, `Attachment`, etc.) and the `scene-polyfill` module. After this PR they call `getSpatialImpl()?.getSession?.()` instead — the spatial implementation only becomes reachable through the bridge's dynamic `import('./spatial')`, exactly as the lazy-load architecture intends.
+- `src/spatial/index.ts` now `import '@webspatial/core-sdk/install-polyfills'` at the top (so the polyfill installs when the spatial chunk loads) AND re-exports `getSession` (so the bridge proxy in the default entry can route to it).
+- `src/index.ts` switches `export { enableDebugTool } from './utils'` → `from './utils/debugTool'` to avoid pulling the `./utils/index.ts` barrel into the default-entry static graph (the barrel still legitimately re-exports `getSession` for spatial-chunk callers).
+- `enableDebugTool` behavior change: `window.inspectCurrentSpatialScene()` invoked before `await bootSpatial()` resolves now throws a descriptive error pointing at `bootSpatial()` instead of throwing via the previous `getSession()!` non-null assertion. Behavior in WebSpatial mode after boot is unchanged.
+
+**Test impact**: `pnpm --filter @webspatial/react-sdk test` remains 288 / 288 green (one test mock updated to mock `./runtime/bridge` instead of `./utils/getSession`). `pnpm --filter @webspatial/core-sdk test` is 110 / 110 green. `pnpm run test:size-budget` reports the new 1588-byte typical delta + 3.31× tree-shake ratio.

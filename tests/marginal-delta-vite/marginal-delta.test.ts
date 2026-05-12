@@ -42,28 +42,30 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 // the spec's "Marginal bundle delta on a typical consumer" Scenario:
 // `app-typical` MUST be ≤ 8192 bytes gzipped over `app-base`.
 //
-// `REGRESSION_GUARD_BYTES` is the higher cap actually enforced in CI today.
-// Per spec `tasks.md §12.9` ("Pre-v1 budget calibration") and the
-// "8192-byte number in this PR is a design intent, not a measured
-// reality" wording in spec.md, the SDK ships PR 5 ABOVE the strict
-// budget — pulling `@webspatial/core-sdk`'s UA parser + capability
-// table + `Spatial` / `SpatialSession` runtime classes via `getSession()`
-// alone is more than 8 KB gzipped. The §12.9 follow-up calibrates the
-// budget against measured reality before tagging v1, either by:
+// PR 5 originally shipped this fixture with a temporary
+// `REGRESSION_GUARD_BYTES = 24_576` ceiling because the measured delta
+// was ~19 KB (`@webspatial/core-sdk`'s tsup config used `bundle: true,
+// splitting: false`, which collapsed the entire SDK into one giant
+// bundle whose internal `__export` runtime helper for wildcard
+// re-exports defeated consumer tree-shaking). The §12.9 calibration
+// follow-up landed in a sibling PR (`feat/extract-core-sdk-polyfills`)
+// that:
+//   1. extracted the polyfill side effect from `core-sdk/index.ts` to
+//      `@webspatial/core-sdk/install-polyfills`,
+//   2. routed the default-entry utilities (`enableDebugTool`,
+//      `convertCoordinate`, `initScene`) through the bridge instead of
+//      directly statically importing `getSession()`,
+//   3. switched `core-sdk`'s ESM build to `bundle: false` so per-file
+//      tree-shaking actually works downstream.
 //
-//   (a) optimizing the SDK / `core-sdk` (extracting the capability
-//       table, lazy-loading `Spatial`, switching to a smaller error
-//       helper, etc.) until the strict budget holds, OR
-//   (b) opening a deferred-budget exception with explicit sign-off
-//       from the v1 release approver and tightening this guard.
-//
-// Until then we use `REGRESSION_GUARD_BYTES` to catch NEW growth (any
-// regression beyond ~10 % of today's measured value would push past
-// the guard and fail CI), and we surface the strict-budget gap as
-// informational telemetry so reviewers see the calibration headroom
-// without re-running anything by hand.
+// After those three changes, the measured `app-typical` delta dropped
+// from 19433 bytes to ~1600 bytes (a ~92 % reduction, well under the
+// strict 8 KB budget) and the tree-shake ratio rose from 1.11× to
+// ~3.3× (squarely inside the spec's healthy 2–3× range). The temporary
+// regression-guard ceiling was therefore dropped: this assertion now
+// enforces the strict 8 KB budget directly, exactly as `tasks.md §9.2`
+// pins.
 const STRICT_BUDGET_BYTES = 8192
-const REGRESSION_GUARD_BYTES = 24_576 // 24 KB; revisit in §12.9 calibration.
 
 // Sanity-check that the SDK has been built before we run — the fixture
 // uses the workspace symlink, which serves `dist/` files via the
@@ -224,28 +226,17 @@ describe('marginal-delta — consumer-side bundle measurement (spec tasks.md §9
     expect(measurements['app-base']!.totalGzipBytes).toBeGreaterThan(0)
   })
 
-  it('app-typical (named imports) marginal sync delta — regression guard (§9.2 + §12.9)', () => {
+  it('app-typical (named imports) marginal sync delta is at most 8192 bytes (§9.2)', () => {
     const baseSync = measurements['app-base']!.totalGzipBytes
     const typicalSync = measurements['app-typical']!.totalGzipBytes
     const delta = typicalSync - baseSync
-    const strictHeadroom = STRICT_BUDGET_BYTES - delta
-    const guardHeadroom = REGRESSION_GUARD_BYTES - delta
+    const headroom = STRICT_BUDGET_BYTES - delta
     // eslint-disable-next-line no-console
     console.log(
       `[marginal-delta] app-typical sync delta = ${delta} bytes ` +
-        `(strict-budget ${STRICT_BUDGET_BYTES}; strict-headroom ${strictHeadroom}; ` +
-        `regression-guard ${REGRESSION_GUARD_BYTES}; guard-headroom ${guardHeadroom})`,
+        `(strict-budget ${STRICT_BUDGET_BYTES}; headroom ${headroom})`,
     )
-    if (delta > STRICT_BUDGET_BYTES) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[marginal-delta] app-typical delta (${delta} bytes) EXCEEDS the spec's 8192-byte strict budget. ` +
-          `Per spec tasks.md §12.9 ("Pre-v1 budget calibration"), this is a known v1-release blocker — ` +
-          `tracked separately from PR 5. Likely optimization candidates: extracting the capability table from ` +
-          `core-sdk, deduplicating facade scaffolding, switching to a smaller error-construction helper.`,
-      )
-    }
-    expect(delta).toBeLessThanOrEqual(REGRESSION_GUARD_BYTES)
+    expect(delta).toBeLessThanOrEqual(STRICT_BUDGET_BYTES)
   })
 
   it('app-namespace marginal sync delta is strictly larger than app-typical (§9.3 — tree-shake check)', () => {
