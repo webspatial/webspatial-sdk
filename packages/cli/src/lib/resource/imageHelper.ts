@@ -1,10 +1,14 @@
-import { Jimp } from 'jimp'
+import * as JimpModule from 'jimp'
 import sharp = require('sharp')
 import { Resvg, ResvgRenderOptions } from '@resvg/resvg-js'
 
 export class ImageHelper {
   public static createImg(size: number): any {
-    return new Jimp({ width: size, height: size, color: 0x00000000 })
+    return new JimpModule.Jimp({
+      width: size,
+      height: size,
+      color: 0x00000000,
+    })
   }
   public static async webp2PngBuffer(buffer: Buffer): Promise<Buffer> {
     return await sharp(buffer).toFormat('png').toBuffer()

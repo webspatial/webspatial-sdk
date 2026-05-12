@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { fetchUtils } from '../utils/FetchUtils-1'
 import { CustomError } from '../utils/CustomError'
-import { Jimp } from 'jimp'
+import * as JimpModule from 'jimp'
 import { ImageHelper } from './imageHelper'
 
 export async function loadJsonFromNet(
@@ -120,11 +120,11 @@ export async function loadImageFromNet(src: string): Promise<any> {
   if (contentType.startsWith('image/webp')) {
     body = await ImageHelper.webp2PngBuffer(body)
   }
-  return await Jimp.read(Buffer.from(body))
+  return await JimpModule.Jimp.read(Buffer.from(body))
 }
 
 export async function loadImageFromDisk(src: string): Promise<any> {
-  return await Jimp.read(src)
+  return await JimpModule.Jimp.read(src)
 }
 
 export async function loadFileString(url: String): Promise<string> {
