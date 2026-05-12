@@ -20,7 +20,8 @@ env:
 
 jobs:
   version:
-    if: github.repository == 'webspatial/webspatial-sdk' && github.ref == 'refs/heads/stable'
+    # Stable release stays push-only: workflow_dispatch on stable must not publish versions.
+    if: github.repository == 'webspatial/webspatial-sdk' && github.ref == 'refs/heads/stable' && github.event_name == 'push'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     outputs:
