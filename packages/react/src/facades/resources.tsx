@@ -12,6 +12,13 @@ type SpatialImpl = NonNullable<ReturnType<typeof getSpatialImpl>>
  * Factory for material / texture / asset facades. Fallback is `null` per
  * spec's per-component fallback table ("Unsupported HTML component
  * rendering" Scenario in runtime-capabilities + facade table).
+ *
+ * **PARITY (spec tasks.md §15.6)**: this Path 1 fallback is pinned by
+ * `runtime-capabilities` "Unsupported HTML component rendering"
+ * Scenario. Real-impl Path 2 alignment for materials / textures / assets
+ * is tracked under §15.8 (see `src/__tests__/parity.test.tsx`
+ * "Material / Texture / *Asset parity" `it.todo`). Do not modify this
+ * Path 1 `null` fallback without first aligning the real-impl branch.
  */
 function createNullFacade<P>(
   componentName: string,

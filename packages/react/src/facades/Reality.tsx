@@ -15,6 +15,15 @@ export type { RealityProps }
  * ready (preserving the layout box and excluding the React children
  * subtree, per spec) and delegates to the real `Reality` once boot
  * resolves in a WebSpatial runtime.
+ *
+ * **PARITY (spec tasks.md §15.6)**: this Path 1 fallback is pinned
+ * verbatim by `runtime-capabilities` "`Reality` unsupported fallback"
+ * Scenario. The real-impl Path 2 in `src/reality/components/Reality.tsx`
+ * does NOT yet render this placeholder — it currently mounts nothing
+ * when `getSession()` returns null. Drift is tracked under §15.8 as an
+ * OpenSpec follow-up (see `src/__tests__/parity.test.tsx` "Reality
+ * parity" `it.todo`). Do not modify this Path 1 fallback without first
+ * aligning the real-impl branch.
  */
 function RealityFacadeImpl(
   props: RealityProps,

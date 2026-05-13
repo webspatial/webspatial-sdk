@@ -39,6 +39,12 @@ const facadeCache = new Map<ElementType, ComponentType<any>>()
  * HOC produced via `getSpatialImpl()!.withSpatialized2DElementContainer`
  * (the real HOC has its own internal cache, so `RealHOC(Component)`
  * returns a stable reference across renders).
+ *
+ * **PARITY (spec tasks.md §15.6)**: Path 2 unpinned in
+ * `runtime-capabilities` today; tracked under §15.8 (see
+ * `src/__tests__/parity.test.tsx` "withSpatialized2DElementContainer …
+ * parity" `it.todo`). Keep this transparent-passthrough fallback in sync
+ * with whatever the real-impl unsupported branch later commits to.
  */
 export function withSpatialized2DElementContainer<P extends ElementType>(
   Component: P,
