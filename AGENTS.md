@@ -7,6 +7,7 @@ This repository is a `pnpm` workspace monorepo that ships WebSpatial SDK package
 - `packages/*`: published packages (Core SDK, React SDK, Builder CLI, platform shells).
 - `apps/test-server`: local dev site and demo pages used during development.
 - `tests/ci-test`: CI/e2e harness (Mocha/Chai) that runs against the Apple Vision Pro simulator.
+- `tests/autoTest`: Puppeteer-based browser automation suite for WebSpatial demo pages.
 - `tools/scripts`: repo scripts used by CI and pre-commit checks.
 
 ## Quick Start (Local)
@@ -29,6 +30,11 @@ From repo root:
 
 - Build all `@webspatial/*` packages: `npm run buildPackages`
 
+### Run Browser Auto Tests
+
+- From repo root: `npm run test:auto`
+- Setup local browser auto test dependencies: `npm run test:auto:setup-local`
+
 ### Run CI/E2E Harness
 
 - From repo root: `npm run ciTest`
@@ -47,4 +53,5 @@ From repo root:
 - Root scripts: `package.json`.
 - Dev server docs: `apps/test-server/README.md`.
 - E2E harness docs: `tests/ci-test/README.md`.
+- Browser auto test docs: `tests/autoTest/README.md`.
 - Contributor setup: `CONTRIBUTING.md`.

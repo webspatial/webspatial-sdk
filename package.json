@@ -16,6 +16,8 @@
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\"",
     "test:workflows": "node tools/scripts/check-release-workflows.js",
     "test:react-compat": "pnpm --filter react18-compat test && pnpm --filter react19-compat test",
+    "test:auto": "cd tests/autoTest/ && pnpm run test",
+    "test:auto:setup-local": "cd tests/autoTest/ && pnpm run setup-local",
     "ciTest": "cd tests/ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
