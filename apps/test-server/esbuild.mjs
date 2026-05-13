@@ -46,7 +46,6 @@ const buildOptions = {
   sourcemap: !isBuild,
   plugins,
   define: {
-    'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV ?? ''),
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
