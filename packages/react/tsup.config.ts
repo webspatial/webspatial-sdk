@@ -25,6 +25,8 @@
 // and shared modules that both `index` and the JSX runtime touch (notably
 // the facades + the strip helper) collapse into a small shared chunk emitted
 // alongside the entries.
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig, type Options } from 'tsup'
 import { version } from './package.json'
 
@@ -103,5 +105,35 @@ export default defineConfig([
       'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
     },
     outDir: 'dist',
+    onSuccess: async () => {
+      // Per spatial-lazy-load spec "SSR and hydration safety" Requirement
+      // ("Client-component directive" bullet) + tasks.md §13.1: the public
+      // default-entry MUST carry `'use client'` so RSC bundlers (Next.js
+      // App Router) treat `@webspatial/react-sdk` as a Client Component
+      // boundary — without it, server components that import a facade
+      // would attempt to render React hooks server-side and fail.
+      //
+      // Splitting (`splitting: true`, §8.1) merges multiple source files
+      // into shared chunks, so esbuild cannot preserve a per-source-file
+      // `'use client'` at chunk boundaries. The pragmatic answer is to
+      // inject the directive at the public RSC boundary (`dist/index.js`)
+      // — the only file consumer-side bundlers see directly. Internal
+      // chunks (`dist/chunk-*.js`) are reached transitively, already
+      // inside the client subgraph by the time React's RSC compiler
+      // walks them.
+      //
+      // Negative cases per the same Requirement / spec preamble:
+      //   - `dist/jsx/jsx-runtime.js`, `dist/jsx/jsx-dev-runtime.js`
+      //     do NOT use React hooks → MUST NOT carry the directive
+      //   - `dist/spatial.js` is the dynamic-import target (NOT a static
+      //     RSC entry) → MUST NOT carry the directive
+      // The §13.1 build-output assertion enforces both polarities.
+      const indexPath = resolve(__dirname, 'dist/index.js')
+      const current = readFileSync(indexPath, 'utf8')
+      const directive = `'use client';\n`
+      if (!current.startsWith(directive.trimEnd())) {
+        writeFileSync(indexPath, directive + current)
+      }
+    },
   },
 ])
