@@ -24,6 +24,16 @@ type SpatialImpl = NonNullable<ReturnType<typeof getSpatialImpl>>
  * renders the real implementation only after `bootSpatial()` resolves in
  * a WebSpatial runtime. Per spec "Component facades" Requirement +
  * per-component fallback table.
+ *
+ * **PARITY (spec tasks.md §15.6)**: this Path 1 fallback is pinned
+ * by `runtime-capabilities` "Unsupported HTML component rendering"
+ * Scenario ("MUST not render corresponding DOM/entity node"). Real
+ * `*Entity` components (`src/reality/components/*Entity.tsx`) currently
+ * throw when `useRealityContext()` is null instead of rendering null,
+ * which is a real-impl drift tracked under §15.8 (see
+ * `src/__tests__/parity.test.tsx` "Entity-class parity" `it.todo`).
+ * Do not modify this Path 1 `null` fallback without first aligning the
+ * real-impl branch.
  */
 function createEntityRefFacade<P>(
   componentName: string,
