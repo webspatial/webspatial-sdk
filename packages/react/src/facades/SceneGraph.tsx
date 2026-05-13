@@ -16,6 +16,12 @@ export type SceneGraphProps = {
  * falling back via its own facade. Per spec per-component fallback
  * table ("`SceneGraph` / `World` → `<>{children}</>` (transparent
  * container)").
+ *
+ * **PARITY (spec tasks.md §15.6)**: Path 2 unpinned in
+ * `runtime-capabilities` today; the parity test is tracked as `it.todo`
+ * under §15.8 (see `src/__tests__/parity.test.tsx`). Once the real-impl
+ * unsupported branch lands or the spec amendment defines it, the
+ * existing transparent-children behavior here MUST stay aligned.
  */
 export function SceneGraph({ children }: SceneGraphProps) {
   const ready = useSpatialReady()

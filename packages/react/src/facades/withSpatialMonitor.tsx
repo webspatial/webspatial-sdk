@@ -17,6 +17,12 @@ const facadeCache = new Map<ElementType, ComponentType<any>>()
  * passthrough). After boot the wrapper delegates to the real
  * `withSpatialMonitor(El)` HOC, which has its own internal cache so
  * repeated calls return a stable reference.
+ *
+ * **PARITY (spec tasks.md §15.6)**: Path 2 unpinned in
+ * `runtime-capabilities` today; tracked under §15.8 (see
+ * `src/__tests__/parity.test.tsx` "withSpatialMonitor … parity"
+ * `it.todo`). Keep this transparent-passthrough fallback in sync with
+ * whatever the real-impl unsupported branch later commits to.
  */
 export function withSpatialMonitor(El: ElementType): ElementType {
   const cached = facadeCache.get(El)

@@ -17,6 +17,14 @@ export type { ModelProps, ModelRef }
  * Per spatial-lazy-load spec "Component facades" + "Model fallback
  * renders degraded `<model>` tag" Scenarios. Not wrapped in
  * `React.memo` (per facade conventions).
+ *
+ * **PARITY (spec tasks.md §15.6)**: this Path 1 fallback MUST stay
+ * structurally identical to the real-impl Path 2 unsupported branch in
+ * `src/Model.tsx` (the `enable-xr={false}` / `!Spatial.runInSpatialWeb()`
+ * gate), per `runtime-capabilities` "`Model` exception fallback"
+ * Scenario. Verified by `src/__tests__/parity.test.tsx` ("Model parity"
+ * suite); changes to either path MUST update both paths or the parity
+ * test will fail.
  */
 function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const ready = useSpatialReady()
