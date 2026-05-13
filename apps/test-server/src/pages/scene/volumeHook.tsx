@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import { initScene } from '@webspatial/react-sdk'
+import { bootEntry } from '../../lib/bootEntry'
 
 window.xrCurrentSceneType = 'volume'
 window.xrCurrentSceneDefaults = async () => {
@@ -265,22 +265,4 @@ function App() {
 
 export default App
 
-function mount() {
-  let root = document.getElementById('root')
-  if (!root) {
-    root = document.createElement('div')
-    root.id = 'root'
-    document.body.appendChild(root)
-  }
-  ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  )
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mount)
-} else {
-  mount()
-}
+bootEntry(<App />)

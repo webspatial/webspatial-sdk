@@ -1,5 +1,5 @@
-import { createRoot } from 'react-dom/client'
+import { bootEntry } from '../../../../lib/bootEntry'
 import './index.css'
 import App from './App.tsx'
 
-createRoot(document.getElementById('root')!).render(<App />)
+bootEntry(<App />, { strictMode: false })

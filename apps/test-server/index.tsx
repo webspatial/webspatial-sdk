@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
-import ReactDOM from 'react-dom/client'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { bootEntry } from './src/lib/bootEntry'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
 // Static route registry: add your test component here to expose it in the SPA
@@ -257,22 +257,8 @@ function App() {
   )
 }
 
-const init = () => {
-  const rootElement = document.getElementById('root')
-  if (!rootElement) {
-    console.error('Root element not found')
-    return
-  }
-
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  )
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init)
-} else {
-  init()
-}
+// `bootEntry` awaits `bootSpatial()` before mounting so the lazy-loaded
+// spatial chunk lands before the first React commit in WebSpatial runtimes.
+// In plain web browsers `bootSpatial()` resolves on the next microtask and
+// the user sees no perceptible delay.
+bootEntry(<App />)
