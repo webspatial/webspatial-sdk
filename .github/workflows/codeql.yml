@@ -55,7 +55,9 @@ jobs:
       - name: Install visionOS simulator runtime
         run: |
           xcodebuild -downloadPlatform visionOS
+          xcrun simctl create "CodeQL Apple Vision Pro" "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro" "com.apple.CoreSimulator.SimRuntime.xrOS-26-2"
           xcrun simctl list runtimes
+          xcrun simctl list devices available
           xcrun simctl list devicetypes
 
       - name: Initialize CodeQL
