@@ -6,8 +6,13 @@ export type SpatialAppModelProps = {
 }
 
 export type SpatialAppProps = {
-  /** Which SDK entry this page was bundled from (lazy default vs eager). */
-  mode: 'lazy' | 'eager'
+  /**
+   * Which fixture variant this page is.
+   * - `lazy` — default package entry + real `bootSpatial()`.
+   * - `eager-boot` — `@webspatial/react-sdk/eager` + still `await bootSpatial()` (migration parity).
+   * - `eager-lean` — eager entry only; no `bootSpatial()` call (typical spatial-only app).
+   */
+  mode: 'lazy' | 'eager-boot' | 'eager-lean'
   /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
   Model: React.ComponentType<SpatialAppModelProps>
 }
@@ -33,10 +38,15 @@ const cellStyle = {
   '--xr-background-material': 'thin',
 } as React.CSSProperties
 
+const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
+  lazy: 'Lazy default entry',
+  'eager-boot': 'Eager entry + await bootSpatial()',
+  'eager-lean': 'Eager entry, no bootSpatial()',
+}
+
 export function SpatialApp({ mode, Model }: SpatialAppProps) {
-  const otherHref = mode === 'lazy' ? '/eager.html' : '/'
-  const otherLabel =
-    mode === 'lazy' ? 'Open eager entry fixture' : 'Open lazy entry fixture'
+  const entryImport =
+    mode === 'lazy' ? '@webspatial/react-sdk' : '@webspatial/react-sdk/eager'
 
   return (
     <main
@@ -46,17 +56,25 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
         color: '#222',
       }}
     >
-      <p style={{ marginBottom: 16 }}>
-        <a href={otherHref}>{otherLabel}</a>
-        {' · '}
-        <span>
-          Entry:{' '}
-          <code>
-            {mode === 'lazy'
-              ? '@webspatial/react-sdk'
-              : '@webspatial/react-sdk/eager'}
-          </code>
-        </span>
+      <nav
+        style={{
+          marginBottom: 16,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          alignItems: 'center',
+        }}
+      >
+        <a href="/">Lazy default</a>
+        <span aria-hidden="true">|</span>
+        <a href="/eager.html">Eager + bootSpatial()</a>
+        <span aria-hidden="true">|</span>
+        <a href="/eager-lean.html">Eager, no boot</a>
+      </nav>
+      <p style={{ marginBottom: 8 }}>
+        <strong>Current:</strong> {fixtureTitles[mode]}
+        {' — '}
+        <code>{entryImport}</code>
       </p>
 
       <h1>WebSpatial Vite Min ({mode})</h1>
