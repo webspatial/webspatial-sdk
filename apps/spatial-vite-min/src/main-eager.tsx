@@ -28,7 +28,7 @@ async function start(): Promise<void> {
   if (!el) throw new Error('#root not found')
   createRoot(el).render(
     <React.StrictMode>
-      <SpatialApp mode="eager" Model={Model} />
+      <SpatialApp mode="eager-boot" Model={Model} />
     </React.StrictMode>,
   )
 }
