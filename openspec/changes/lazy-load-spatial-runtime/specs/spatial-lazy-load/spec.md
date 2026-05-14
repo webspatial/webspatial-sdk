@@ -742,3 +742,118 @@ The contract has three normative parts:
 - **WHEN** the marginal-delta CI fixture (per "Default entry MUST NOT bundle spatial implementation") builds two consumer applications — one importing `Model` only, one importing the full set of public APIs — and compares their gzipped sizes
 - **THEN** the `Model`-only application's marginal delta MUST be substantially smaller than the all-imports application's marginal delta (a tree-shaking effectiveness check; a flat ratio close to 1.0 indicates broken tree-shaking even if the absolute number passes)
 - **AND** the recommended "named imports the user actually uses" pattern MUST satisfy the 8 KB budget per "Default entry MUST NOT bundle spatial implementation"
+
+---
+
+### Requirement: Eager-mode entry for spatial-only consumers
+
+The package MUST expose a second published subpath, `@webspatial/react-sdk/eager`, in parallel with the lazy-load default entry (`@webspatial/react-sdk`). The eager entry MUST statically link the spatial implementation into the consumer's bundle so that consumers who target spatial-only runtimes (internal AVP / Pico enterprise apps, App Store apps shipped to fixed spatial devices, deeply spatial-first product surfaces) pay one network request instead of two and skip the `bootSpatial()` round-trip entirely.
+
+The eager entry MUST re-export the same TypeScript surface as the default entry — the named-export set MUST be a strict superset (no facade name MAY be missing, no hook name MAY be missing, no stateless utility MAY be missing) — so consumer code can migrate from the default entry to the eager entry by changing only the import root.
+
+Within that named-export set:
+
+- **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, the HOC wrappers, `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks.
+- **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `getAbsoluteUrl`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `version`, `createElement`, type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths.
+- **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`) MUST be exposed as **compatibility stubs** so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below.
+
+The eager entry MUST install the same polyfills as the spatial chunk (the `@webspatial/core-sdk/install-polyfills` side effect and the `initPolyfill()` container bootstrap) at module-evaluation time, since by definition the eager entry IS the spatial chunk for these consumers and there is no `bootSpatial()` to defer the install to.
+
+The eager entry MUST coexist with the lazy-load default entry without polluting it: the default entry's marginal-delta budget (per "Default entry MUST NOT bundle spatial implementation") MUST hold byte-identically before and after the eager entry's existence, validated by the existing §9.2 fixture (which imports the default entry, not the eager entry).
+
+#### Scenario: Single network request — no `/spatial` chunk fetched
+
+- **WHEN** a consumer imports `@webspatial/react-sdk/eager` and renders a tree containing facades / hooks
+- **THEN** the spatial implementation MUST be statically linked into the consumer's main bundle by the consumer's bundler
+- **AND** no second network request to `@webspatial/react-sdk/spatial` MUST occur for the page lifetime
+- **AND** the polyfill side effects (`@webspatial/core-sdk/install-polyfills`, the `initPolyfill()` container bootstrap) MUST install at eager-entry module-evaluation time, before the first React render
+
+#### Scenario: Spatial primitives mount real implementations on first render
+
+- **WHEN** a consumer imports `Model` (or any other spatial primitive) from `@webspatial/react-sdk/eager` and renders it for the first time
+- **THEN** the rendered tree MUST contain the real spatial implementation, not the facade fallback
+- **AND** no facade-to-real swap MUST occur on a subsequent commit — the eager entry's first commit IS the real implementation
+- **AND** this MUST hold even when the consumer never calls `bootSpatial()`
+
+#### Scenario: `bootSpatial()` compatibility stub is a no-op
+
+- **WHEN** a consumer calls `bootSpatial()` after importing from the eager entry
+- **THEN** the call MUST return `Promise.resolve()` immediately (no dynamic import, no network request, no error)
+- **AND** development builds MAY log a one-shot `console.warn` indicating that `bootSpatial()` is unnecessary on the eager entry
+- **AND** the warning MUST NOT fire repeatedly within the same page lifetime
+
+#### Scenario: `isSpatialReady` / `useSpatialReady` always report ready
+
+- **WHEN** a consumer calls `isSpatialReady()` after importing from the eager entry
+- **THEN** it MUST return `true` immediately (synchronous read; reflects that the spatial implementation is statically linked)
+
+- **WHEN** a consumer calls `useSpatialReady()` after importing from the eager entry
+- **THEN** it MUST return `true` on the first and every subsequent render
+- **AND** the hook implementation MUST remain SSR-safe (return `true` consistently across `getServerSnapshot` and `getSnapshot`) so the eager entry imposes no hydration mismatch even though it reports a different readiness value than the lazy-load default entry's SSR pass
+
+#### Scenario: `onSpatialLoadError` registers but never fires
+
+- **WHEN** a consumer calls `onSpatialLoadError(cb)` after importing from the eager entry
+- **THEN** the registration MUST succeed and return a valid unsubscribe function
+- **AND** the callback MUST never be invoked (eager entry has no dynamic load and therefore no load failure)
+- **AND** `WebSpatialBootError` MUST remain importable for type-narrowing convenience but MUST never be thrown by the eager entry's stubs
+
+#### Scenario: Default entry's marginal-delta budget is not affected by eager entry's existence
+
+- **WHEN** the §9.2 marginal-delta CI fixture builds `app-typical` (which imports `{ Model, bootSpatial }` from the **default** entry, not the eager entry)
+- **THEN** the measured marginal sync delta MUST hold the same `≤ 8192 bytes` cap as before this Requirement was introduced
+- **AND** publishing the eager entry MUST NOT add even one byte to the default entry's published `dist/index.js`
+- **AND** the consumer's bundler MUST NOT reach the eager entry's static spatial implementation through any import chain rooted at the default entry
+
+#### Scenario: Eager entry has its own size-budget proxy
+
+- **WHEN** the published `dist/eager.js` is gzipped on its own (independent of any consumer build)
+- **THEN** the size MUST be at most 30720 bytes (30 KB), acknowledging that the eager entry inlines the full spatial implementation that the lazy-load default entry pushes into the dynamic `dist/spatial.js` chunk
+- **AND** this proxy is a fail-fast SDK-side check; the consumer-side measurement is approximated by the gzipped sum of the eager entry's static-import closure (currently bounded by the lazy-load `dist/spatial.js` chunk size at parity)
+
+#### Scenario: Migration from default to eager is import-root-only
+
+- **WHEN** an application written against the lazy-load default entry replaces every `from '@webspatial/react-sdk'` (and `from '@webspatial/react-sdk/spatial'` if any) with `from '@webspatial/react-sdk/eager'`
+- **THEN** the application MUST type-check, build, and run without any other source change
+- **AND** behavior MUST converge to "single-request load, no boot indirection" per the Scenarios above
+- **AND** existing `await bootSpatial()` calls MUST become no-ops without breaking control flow
+
+#### Scenario: Mixed-import shape is not supported
+
+- **WHEN** a consumer imports the same symbol name (e.g. `Model`) from both the default entry and the eager entry within the same application bundle
+- **THEN** the SDK does NOT guarantee well-defined behavior; the two imports resolve to physically different module instances (facade vs real-impl)
+- **AND** development builds SHOULD log a one-shot `console.warn` if the SDK can detect this at runtime (e.g. via a probe that runs at eager-entry module evaluation and inspects the default entry's bridge state)
+- **AND** the migration guide MUST document this limitation: consumers MUST pick one entry per application bundle
+
+---
+
+### Requirement: Two distribution forms share packaging hygiene
+
+This change introduces two distribution forms — the lazy-load default entry (`@webspatial/react-sdk`) and the eager-mode entry (`@webspatial/react-sdk/eager`) — that target two different consumer profiles. A subset of this spec's contracts is **product-orthogonal packaging hygiene** that MUST hold for both forms regardless of the consumer's choice. Recognizing this explicitly means future changes that adjust the lazy / eager balance (e.g. removing one form entirely, adding a third form like an SSR-only entry) MUST NOT silently weaken the underlying SDK quality bar.
+
+The packaging-hygiene contracts that apply to both forms are:
+
+- **Tree-shake friendliness** (the entire "Tree-shake friendliness" Requirement): `"sideEffects"` allowlist correctness, no top-level observable side effects in any module reachable from any published entry, named re-export discipline. The SDK's `package.json` `"sideEffects"` field MUST be precise enough that consumer bundlers can tree-shake unreached code from BOTH the default entry's static graph AND the eager entry's static graph.
+- **Plugin-free integration** (the entire "Plugin-free integration" Requirement): both forms MUST work without `@webspatial/vite-plugin` or any peer plugin. Both forms MUST be ESM-only. The bundler-capability requirements (ESM, `exports` field, dynamic-import code-splitting) apply to both, though the eager entry does NOT require code-splitting (it has no dynamic `import()` boundary). The peer-dependency contract (`react: ">=18.0"`, `react-dom: ">=18.0"`, both required and not optional) applies to both.
+- **Stateless utility APIs and pure re-exports** (the entire "Stateless utility APIs and pure re-exports remain in the default entry" Requirement): both forms MUST expose the same Group B + Group C surface, with the same SSR-safety, side-effect-free, and runtime-graceful-degradation guarantees. The eager entry SHOULD re-export these by reference from the default entry rather than redeclare, to keep the contracts byte-identical.
+- **JSX runtime** (the entire "JSX runtime strips spatial markers and wraps with facade HOCs" Requirement): the unified `./jsx-runtime` and `./jsx-dev-runtime` subpaths MUST work with both consumer entries unchanged. The runtime's strip + facade-HOC-wrap behavior MUST NOT depend on which entry the consumer's `<Model>` / `<div enable-xr>` references resolve to. (In the eager entry the wrapped facade HOC's first render commits the real implementation directly; in the lazy entry it commits the fallback first.)
+- **SSR and hydration safety** (the entire "SSR and hydration safety" Requirement, with the modification that the eager entry's `useSpatialReady()` returns `true` consistently): both forms MUST honor the `'use client'` directive on hook-using files, MUST be safe under React 18+ SSR APIs (`renderToString`, `renderToPipeableStream`, `renderToReadableStream`, RSC client-component import), and MUST NOT cause hydration mismatches when their props are deterministic across server and client.
+- **Type-only re-exports vanish at runtime** (per the corresponding Scenario inside "Stateless utility APIs and pure re-exports remain in the default entry"): both forms MUST emit zero runtime bytes for type-only re-exports.
+
+The contracts that are **specific to the lazy-load default entry** and do NOT apply to the eager entry are:
+
+- The 8 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry has its own 30 KB budget per "Eager-mode entry for spatial-only consumers".
+- The dynamic-import boundary, bridge singleton, and `bootSpatial()` activation contract — the eager entry replaces these with compatibility stubs per "Eager-mode entry for spatial-only consumers".
+- The facade fallback rendering, hook placeholder values, and dev-mode "boot was forgotten" warning — the eager entry's facades are real implementations from first render, so there is no fallback to render and no warning to issue.
+
+#### Scenario: Hygiene contracts hold for both default and eager entries
+
+- **WHEN** the SDK is published with both `@webspatial/react-sdk` (default entry) and `@webspatial/react-sdk/eager` subpaths
+- **THEN** for each of the hygiene contracts enumerated in this Requirement's preamble, an SDK-side test MUST verify that contract for both `dist/index.js` and `dist/eager.js`
+- **AND** introducing the eager entry MUST NOT require any change to the contract specifications themselves — only the test suite is extended to assert them against both entries
+
+#### Scenario: Future change adjusting the lazy / eager balance does not weaken hygiene
+
+- **WHEN** a future change proposes to add, remove, or restructure a distribution form (e.g. adding an SSR-only entry, removing the lazy-load entry if product feedback shows it unused, splitting the eager entry by capability)
+- **THEN** the change proposal MUST explicitly enumerate which packaging-hygiene contracts from this Requirement's preamble continue to hold and which (if any) need updating
+- **AND** removing or weakening any hygiene contract MUST be a separately-justified breaking change with its own CHANGELOG entry, NOT a side effect of the distribution-form restructuring

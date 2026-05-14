@@ -202,17 +202,48 @@ describe('dist identifier scan — spatial-only identifiers absent from default 
     expect(report.files.length).toBeGreaterThan(0)
   })
 
-  it('positive control: dist/spatial.js DOES contain at least one forbidden identifier (sanity-check)', () => {
-    // If `dist/spatial.js` ever stops containing the internal constructors,
-    // either the spatial chunk has been gutted (regression) OR the
-    // identifier list above has drifted from what `core-sdk` exposes and
-    // needs maintaining. Either way this assertion forces the
-    // investigation.
-    const source = readFileSync(spatialJsPath, 'utf8')
+  it('positive control: spatial chunk closure DOES contain at least one forbidden identifier (sanity-check)', () => {
+    // If the spatial chunk's closure ever stops containing the internal
+    // constructors, either the spatial chunk has been gutted (regression)
+    // OR the identifier list above has drifted from what `core-sdk`
+    // exposes and needs maintaining. Either way this assertion forces
+    // the investigation.
+    //
+    // NOTE: with `splitting: true` (per `tsup.config.ts`) AND the eager
+    // entry now also pulling the spatial implementation (per spec §16),
+    // the actual spatial implementation no longer lives in `dist/spatial.js`
+    // itself — it has been hoisted into shared chunks reachable from
+    // BOTH `dist/spatial.js` and `dist/eager.js`. We therefore walk
+    // `dist/spatial.js`'s static-import closure (same primitive used by
+    // the negative-control test above) and check the union for forbidden
+    // identifiers.
+    const visited = new Set<string>()
+    const queue: string[] = [spatialJsPath]
+    while (queue.length > 0) {
+      const file = queue.shift()!
+      if (visited.has(file)) continue
+      visited.add(file)
+      if (!existsSync(file)) continue
+      const source = readFileSync(file, 'utf8')
+      for (const spec of findStaticImportPaths(source)) {
+        const resolved = resolve(dirname(file), spec)
+        queue.push(resolved)
+      }
+    }
+    const allSource = [...visited]
+      .filter(f => existsSync(f))
+      .map(f => readFileSync(f, 'utf8'))
+      .join('\n')
     const present = FORBIDDEN_IDENTIFIERS.filter(id => {
       const re = new RegExp(`(?<![A-Za-z0-9_$])${id}(?![A-Za-z0-9_$])`)
-      return re.test(source)
+      return re.test(allSource)
     })
-    expect(present.length).toBeGreaterThan(0)
+    const walked = [...visited].map(f =>
+      f.startsWith(distDir + '/') ? f.slice(distDir.length + 1) : f,
+    )
+    expect(
+      present.length,
+      `Expected the dist/spatial.js closure to contain at least one of the spatial-only identifiers (${FORBIDDEN_IDENTIFIERS.slice(0, 4).join(', ')}, ...). Closure walked: [${walked.join(', ')}]`,
+    ).toBeGreaterThan(0)
   })
 })
