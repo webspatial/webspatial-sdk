@@ -1,5 +1,10 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Lazy-load v1 deliberately removes the need for `@webspatial/vite-plugin`:
 // the SDK's runtime detection + facade pattern replaces what the plugin
@@ -14,6 +19,14 @@ import react from '@vitejs/plugin-react'
 // host element with `withSpatialized2DElementContainer`.
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        index: path.resolve(__dirname, 'index.html'),
+        eager: path.resolve(__dirname, 'eager.html'),
+      },
+    },
+  },
   optimizeDeps: {
     // Pre-bundle React + ReactDOM so dev mode doesn't waterfall; the SDK
     // is left out so Vite re-resolves it through workspace symlinks on
