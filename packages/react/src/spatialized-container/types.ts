@@ -2,6 +2,7 @@ import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
 import {
   CubeInfo,
+  ModelLoadingMode,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
@@ -104,6 +105,7 @@ export type SpatializedStatic3DContainerProps =
       poster?: string
       autoPlay?: boolean
       loop?: boolean
+      loading?: ModelLoadingMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
@@ -116,6 +118,7 @@ export type SpatializedStatic3DContentProps = {
   poster?: string
   autoPlay?: boolean
   loop?: boolean
+  loading?: ModelLoadingMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void

@@ -1,6 +1,7 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
 import {
+  ModelLoadingMode,
   ModelSource,
   SpatializedStatic3DElementProperties,
 } from './types/types'
@@ -24,11 +25,18 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @param id Unique identifier for this element
    * @param modelURL URL of the 3D model
    * @param sources Optional fallback model sources
+   * @param loading Initial loading mode (`'eager'` by default)
    */
-  constructor(id: string, modelURL?: string, sources?: ModelSource[]) {
+  constructor(
+    id: string,
+    modelURL?: string,
+    sources?: ModelSource[],
+    loading: ModelLoadingMode = 'eager',
+  ) {
     super(id)
     this.modelURL = modelURL
     this.sources = sources
+    this._loading = loading
   }
 
   /**
@@ -126,6 +134,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       // the requested seek without waiting for the next native sample.
       this._currentTime = properties.currentTime
       this._anchorTimestamp = Date.now()
+    }
+    if (properties.loading !== undefined) {
+      this._loading = properties.loading
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
@@ -302,6 +313,16 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   get autoplay(): boolean {
     return this._autoplay
+  }
+
+  /**
+   * Asset fetch policy. `'lazy'` defers fetching until the host signals the
+   * element is in view; `'eager'` fetches immediately.
+   */
+  private _loading: ModelLoadingMode = 'eager'
+
+  get loading(): ModelLoadingMode {
+    return this._loading
   }
 
   /**

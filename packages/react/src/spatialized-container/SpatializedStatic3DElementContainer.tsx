@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
@@ -18,7 +19,11 @@ import {
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
-import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
+import {
+  ModelLoadingMode,
+  ModelSource,
+  SpatializedStatic3DElement,
+} from '@webspatial/core-sdk'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url: string): string
@@ -92,6 +97,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     onError,
     autoPlay,
     loop,
+    loading,
   } = props
 
   const portalInstanceObject = useContext(PortalInstanceContext)!
@@ -99,6 +105,36 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   const modelURL = useMemo(() => getAbsoluteURL(src), [src])
   const posterURL = useMemo(() => getAbsoluteURL(poster), [poster])
   const sources = useMemo(() => collectSources(children), [children])
+  const sourcesKey = useMemo(() => JSON.stringify(sources), [sources])
+
+  // `effectiveLoading` is `'lazy'` only while `loading === 'lazy'` and the
+  // portal element has not yet intersected the viewport. Once it flips to
+  // `'eager'` the observer disconnects and the value sticks until the sources
+  // change while still requested as lazy.
+  const [effectiveLoading, setEffectiveLoading] = useState<ModelLoadingMode>(
+    () => (loading === 'lazy' ? 'lazy' : 'eager'),
+  )
+
+  useEffect(() => {
+    setEffectiveLoading(loading === 'lazy' ? 'lazy' : 'eager')
+  }, [loading, modelURL, sourcesKey])
+
+  useEffect(() => {
+    if (effectiveLoading !== 'lazy') return
+    const target = portalInstanceObject.dom
+    if (!target || typeof IntersectionObserver === 'undefined') {
+      setEffectiveLoading('eager')
+      return
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setEffectiveLoading('eager')
+        observer.disconnect()
+      }
+    })
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [effectiveLoading, portalInstanceObject])
 
   useEffect(() => {
     // If modelURL was previously set and now is undefined then a dummy
@@ -110,8 +146,9 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       autoplay: autoPlay,
       loop,
       posterURL: posterURL ?? '',
+      loading: effectiveLoading,
     })
-  }, [modelURL, JSON.stringify(sources), autoPlay, loop, posterURL])
+  }, [modelURL, sourcesKey, autoPlay, loop, posterURL, effectiveLoading])
 
   useEffect(() => {
     if (onLoad) {
@@ -154,6 +191,7 @@ function SpatializedStatic3DElementContainerBase(
     promiseRef.current = getSession()!.createSpatializedStatic3DElement(
       getAbsoluteURL(props.src),
       collectSources(props.children),
+      props.loading === 'lazy' ? 'lazy' : 'eager',
     )
     return promiseRef.current
   }, [])
