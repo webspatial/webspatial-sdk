@@ -2,8 +2,9 @@
 
 Minimal **Vite + React 18 + `@webspatial/react-sdk`** example. Demonstrates
 the lazy-load v1 architecture **without** `@webspatial/vite-plugin`, and
-ships a **second page** that imports `@webspatial/react-sdk/eager` so the
-same consumer pipeline exercises the eager distribution form.
+ships **two extra HTML pages** that import `@webspatial/react-sdk/eager` so
+the same consumer pipeline exercises the eager distribution form (with and
+without calling `bootSpatial()`).
 
 ## What this fixture verifies
 
@@ -18,13 +19,18 @@ same consumer pipeline exercises the eager distribution form.
   chunk as a separate `dist/assets/spatial-*.js` file that is fetched on
   demand by the bridge — confirming the published-bundle shape works
   end-to-end through a standard consumer build pipeline.
-- **Eager page (`eager.html` → `src/main-eager.tsx`):** imports
-  `@webspatial/react-sdk/eager` so spatial is **statically linked** with the
-  app graph. `bootSpatial()` is still awaited for parity with the lazy page;
-  on the eager entry it is a documented no-op (optional dev-only warning).
-  Inspect `dist/assets/` after `vite build`: the eager entry bundle should
-  **not** rely on the same lazy `import()` bridge pattern as the default
-  entry page.
+- **Eager + boot (`eager.html` → `src/main-eager.tsx`):** imports
+  `@webspatial/react-sdk/eager` (spatial **statically linked**). Still
+  `await bootSpatial()` so the file mirrors `main.tsx` during migration; on
+  the eager entry `bootSpatial()` is a documented no-op (optional dev-only
+  warning).
+- **Eager, no boot (`eager-lean.html` → `src/main-eager-lean.tsx`):** imports
+  only what the UI needs from `@webspatial/react-sdk/eager` and mounts React
+  immediately — the usual **spatial-only** shape when you are not sharing a
+  bootstrap module with lazy apps.
+- Inspect `dist/assets/` after `vite build`: the eager entry graphs should
+  **not** rely on the same lazy `import()` bridge pattern as the default lazy
+  page.
 
 ## How it imports the SDK (read this first)
 
@@ -32,7 +38,7 @@ This fixture **does NOT** use a Vite alias to bypass `dist/`. It
 intentionally consumes the published `exports` in
 `packages/react/package.json`, so Vite resolves
 `@webspatial/react-sdk` through the workspace symlink and reads from
-`packages/react/dist/`. The **eager** page resolves
+`packages/react/dist/`. The **eager** pages resolve
 `@webspatial/react-sdk/eager` the same way (subpath `exports`). Compare to `apps/test-server/esbuild.mjs`,
 which DOES alias to `packages/react/src/` for fast SDK dev-loop —
 the test-server choice is fine for daily SDK development, but it
@@ -78,23 +84,25 @@ seconds.
 ```sh
 pnpm --filter spatial-vite-min dev      # dev server
 
-# Then open either page (cross-links exist in the UI):
-#   Lazy (default entry):  http://localhost:5173/
-#   Eager entry:           http://localhost:5173/eager.html
+# Then open any page (nav links exist in the UI):
+#   Lazy default:          http://localhost:5173/
+#   Eager + bootSpatial:   http://localhost:5173/eager.html
+#   Eager, no bootSpatial: http://localhost:5173/eager-lean.html
 
-pnpm --filter spatial-vite-min build    # production build (both HTML inputs)
+pnpm --filter spatial-vite-min build    # production build (all HTML inputs)
 pnpm --filter spatial-vite-min preview  # serve the built artifact
 ```
 
 ## Browser smoke checklist
 
-- Plain Chrome (`http://localhost:5173/` or `/eager.html`): spatial-div cells render as
+- Plain Chrome (`/` or `/eager.html` or `/eager-lean.html`): spatial-div cells render as
   flat boxes; the `<Model>` shows a poster `<model>` element with no
   spatial behavior; no `console.error` from the SDK.
 - AVP simulator / PICO emulator: spatial-div cells float as slabs;
-  `<Model>` mounts the real spatial 3D primitive after `bootSpatial()`
-  resolves.
+  `<Model>` mounts the real spatial 3D primitive. On the **lazy** page,
+  `bootSpatial()` gates the dynamic spatial chunk; on **eager** pages spatial
+  is already in the static graph (no dynamic boot on `eager-lean`).
 - Puppeteer harness (UA contains `Puppeteer`): same as AVP — the SDK
   classifies `Puppeteer` as a spatial-equivalent runtime. On the **lazy**
-  page the spatial chunk is dynamically imported; on the **eager** page
-  spatial is already in the static graph.
+  page the spatial chunk is dynamically imported; on **eager** pages spatial
+  is already linked at build time.
