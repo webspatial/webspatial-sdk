@@ -36,16 +36,14 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         let textureIdForNative: string | undefined = options.textureId
         if (options.textureId) {
           const texturePromise = resourceRegistry.get(options.textureId)
-          if (texturePromise) {
-            try {
-              const textureResource = await texturePromise
-              if (cancelled) return
-              textureIdForNative = textureResource.id
-            } catch {
-              // Texture failed: still create material so entities do not hang on materialId;
-              // tint-only / no texture until the texture resolves.
-              textureIdForNative = ''
-            }
+          try {
+            const textureResource = await texturePromise
+            if (cancelled) return
+            textureIdForNative = textureResource.id
+          } catch {
+            // Texture failed: still create material so entities do not hang on materialId;
+            // tint-only / no texture until the texture resolves.
+            textureIdForNative = ''
           }
         }
         if (cancelled) return
@@ -91,16 +89,12 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
           updates.textureId = ''
         } else {
           const texturePromise = ctx.resourceRegistry.get(options.textureId)
-          if (texturePromise) {
-            try {
-              const textureResource = await texturePromise
-              if (cancelled) return
-              updates.textureId = textureResource.id
-            } catch {
-              updates.textureId = ''
-            }
-          } else {
-            updates.textureId = options.textureId
+          try {
+            const textureResource = await texturePromise
+            if (cancelled) return
+            updates.textureId = textureResource.id
+          } catch {
+            updates.textureId = ''
           }
         }
       }

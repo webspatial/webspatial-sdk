@@ -10,6 +10,12 @@ import { SpatialObject } from '@webspatial/core-sdk'
  *
  * Callers can `await get(id)` before `add(id, promise)` runs: `get` returns a promise that
  * settles when something later calls `add` with the same id.
+ *
+ * **Subscriptions:** `subscribe(id, listener)` runs `listener` whenever `notify(id)` is invoked.
+ * The registry auto-notifies after each `add()` promise settles (then or catch), and on
+ * `remove`, `removeAndDestroy`, and `destroy()`. Components such as `<Texture>` may call
+ * `notify(id)` manually when a resource mutates in place without a new `add()` (e.g. same texture
+ * id, new URL via `updateProperties`).
  */
 export class ResourceRegistry {
   /** Every id maps to a promise — either the real resource from add(), or a placeholder until then. */

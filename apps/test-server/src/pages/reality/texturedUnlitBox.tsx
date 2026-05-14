@@ -24,7 +24,7 @@ const TEX_GRID = 'https://threejs.org/examples/textures/uv_grid_opengl.jpg'
 const TEX_APPLE = 'https://threejs.org/examples/textures/sprite0.png'
 const TEX_BADGE = 'https://threejs.org/examples/textures/disturb.jpg'
 
-const SC = { x: 0.31, y: 0.31, z: 0.31 }
+const SC = { x: 0.51, y: 0.51, z: 0.51 }
 const view: React.CSSProperties = {
   maxHeight: 168,
   overflow: 'hidden',
