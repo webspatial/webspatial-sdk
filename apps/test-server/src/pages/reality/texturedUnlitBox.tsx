@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   BoxEntity,
   ConeEntity,
@@ -52,7 +52,7 @@ export default function TexturedUnlitBox() {
   const [coreNote, setCoreNote] = useState('')
   const [coreLoads, setCoreLoads] = useState(0)
 
-  // Lab: one Texture id; only `url` changes. Plane + box share one material (surfaceSyncRev = load count).
+  // Lab: one Texture id; only `url` changes. Plane + box share one material.
   const [labUrl, setLabUrl] = useState(carUrl)
   const [labColor, setLabColor] = useState('#ffffff')
   const [labLoads, setLabLoads] = useState(0)
@@ -65,13 +65,6 @@ export default function TexturedUnlitBox() {
   >('switchTextureCar')
   const [bindColor, setBindColor] = useState('#ffffff')
   const bindMatId = bindTex === '' ? 'bindMat_none' : `bindMat_${bindTex}`
-  // Bumps on tint changes and when bind-scene textures finish loading so UnlitMaterial runs
-  // updateProperties after pixels exist (same idea as lab `surfaceSyncRev={labLoads}`).
-  const [bindSurfaceRev, setBindSurfaceRev] = useState(0)
-  useEffect(() => {
-    setBindSurfaceRev(v => v + 1)
-  }, [bindColor])
-
   return (
     <div
       style={{ padding: 16, color: '#eee', fontFamily: 'system-ui,sans-serif' }}
@@ -179,8 +172,8 @@ export default function TexturedUnlitBox() {
       <p style={hint}>
         <code>runtimePlaneTexture</code> keeps the same id; only{' '}
         <code>url</code> changes. Plane <code>runtimeTextureBox</code> and the
-        small box both use <code>labMat</code>. Each successful load bumps the
-        counter so the material can sync to the new pixels.
+        small box both use <code>labMat</code>; the material refreshes through
+        the resource registry when the texture settles.
       </p>
       <p
         style={{ fontSize: 11, color: '#666', marginTop: -4, marginBottom: 8 }}
@@ -266,7 +259,6 @@ export default function TexturedUnlitBox() {
           />
           <UnlitMaterial
             id="labMat"
-            surfaceSyncRev={labLoads}
             color={labColor}
             textureId="runtimePlaneTexture"
             transparent={false}
@@ -340,19 +332,10 @@ export default function TexturedUnlitBox() {
       </div>
       <div style={view}>
         <Reality id="realityBind" style={rv}>
-          <Texture
-            id="switchTextureCar"
-            url={buildPublicUrl(IMG_CAR)}
-            onLoad={() => setBindSurfaceRev(v => v + 1)}
-          />
-          <Texture
-            id="switchTextureBadge"
-            url={TEX_BADGE}
-            onLoad={() => setBindSurfaceRev(v => v + 1)}
-          />
+          <Texture id="switchTextureCar" url={buildPublicUrl(IMG_CAR)} />
+          <Texture id="switchTextureBadge" url={TEX_BADGE} />
           <UnlitMaterial
             id={bindMatId}
-            surfaceSyncRev={bindSurfaceRev}
             color={bindColor}
             textureId={bindTex}
             transparent

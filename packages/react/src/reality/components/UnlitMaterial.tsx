@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   SpatialUnlitMaterial,
   SpatialUnlitMaterialOptions,
@@ -8,21 +8,23 @@ import { useRealityContext } from '../context'
 export type UnlitMaterialProps = {
   children?: React.ReactNode
   id: string // user id
-  /**
-   * Increment to force `updateProperties` after in-place texture URL changes (same `textureId`)
-   * or whenever the parent needs a reliable native refresh (e.g. tint + texture together).
-   */
-  surfaceSyncRev?: number
 } & SpatialUnlitMaterialOptions
 
 export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
   children,
-  surfaceSyncRev,
   ...options
 }) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialUnlitMaterial | undefined>(undefined)
   const isInitializedRef = useRef(false)
+  const [textureRevision, setTextureRevision] = useState(0)
+
+  useEffect(() => {
+    if (!ctx || !options.textureId) return
+    return ctx.resourceRegistry.subscribe(options.textureId, () => {
+      setTextureRevision(v => v + 1)
+    })
+  }, [ctx, options.textureId])
 
   useEffect(() => {
     if (!ctx) return
@@ -117,7 +119,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     options.textureId,
     options.transparent,
     options.opacity,
-    surfaceSyncRev,
+    textureRevision,
   ])
 
   return null
