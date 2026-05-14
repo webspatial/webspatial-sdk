@@ -2,7 +2,7 @@
 
 ### Requirement: Declare SpatialDiv animation support
 
-The runtime capability API MUST document and resolve the sub-token `useAnimation` + `['element']`, indicating whether the current runtime supports `SpatialDiv` whitelisted-property animation end-to-end.
+The runtime capability API MUST document and resolve the sub-token `useAnimation` + `['element']`, indicating whether the current runtime supports `SpatialDiv` visual-whitelist animation end-to-end.
 
 #### Scenario: Supported runtime
 
