@@ -44,6 +44,7 @@ export const Texture: React.FC<TextureProps> = ({
       try {
         if (textureRef.current) {
           await textureRef.current.updateProperties({ url: resolvedUrl })
+          resourceRegistry.notify(id)
         } else {
           const texturePromise = session.createTexture({ url: resolvedUrl })
           resourceRegistry.add(id, texturePromise)
