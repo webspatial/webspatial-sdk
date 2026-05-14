@@ -1,0 +1,26 @@
+{
+  "name": "spatial-vite-min",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal Vite + React 18 + WebSpatial SDK example. Demonstrates the lazy-load v1 architecture WITHOUT @webspatial/vite-plugin.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "tsc"
+  },
+  "dependencies": {
+    "@webspatial/react-sdk": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.4"
+  }
+}
