@@ -52,10 +52,38 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks
 
-      - name: Install visionOS simulator runtime
+      - name: Prepare visionOS simulator
         run: |
-          xcodebuild -downloadPlatform visionOS
-          xcrun simctl create "CodeQL Apple Vision Pro" "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro" "com.apple.CoreSimulator.SimRuntime.xrOS-26-2"
+          set -euo pipefail
+
+          if ! xcrun simctl list runtimes | grep -q 'com.apple.CoreSimulator.SimRuntime.xrOS-26-2'; then
+            downloaded=false
+            for attempt in 1 2 3; do
+              if xcodebuild -downloadPlatform visionOS; then
+                downloaded=true
+                break
+              fi
+              sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
+              sleep 10
+            done
+            if [ "$downloaded" != true ]; then
+              exit 1
+            fi
+          fi
+
+          created=false
+          for attempt in 1 2 3; do
+            if xcrun simctl create "CodeQL Apple Vision Pro" "com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro-4K" "com.apple.CoreSimulator.SimRuntime.xrOS-26-2"; then
+              created=true
+              break
+            fi
+            sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
+            sleep 10
+          done
+          if [ "$created" != true ]; then
+            exit 1
+          fi
+
           xcrun simctl list runtimes
           xcrun simctl list devices available
           xcrun simctl list devicetypes
