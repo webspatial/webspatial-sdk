@@ -15,14 +15,14 @@
 - 将 `SpatialDiv` 动画严格限制在白名单属性范围内，避免引入任意 CSS 字符串解析和插值。
 - 让播放由 native 侧驱动，避免逐帧 JS 更新 DOM 或 JSBridge。
 - 明确动画期间 `SpatialDiv` 常规 DOM 同步的抑制规则，避免普通更新覆盖动画中间态。
-- 为 `SpatialDiv` 动画提供独立的 runtime capability key，使其可以与实体动画独立演进、独立上线。
+- 为 `SpatialDiv` 动画提供 sub-token 形式的 runtime capability key `supports('useAnimation', ['element'])`，使其可以与实体动画独立演进、独立上线。
 
 **非目标：**
 
 - 支持任意 CSS 属性动画，或接受完整 CSS style 对象作为 `to` / `from`。
 - 支持 `SpatialDiv` 的旋转、缩放、skew、矩阵级 transform 插值，或任意 CSS transform 字符串插值。
 - 让 `width` / `height` 动画自动回写 DOM 布局或触发浏览器 reflow。
-- 在本次提案中统一实体动画和 `SpatialDiv` 动画的 capability key 体系。
+- 在本次提案中将 `SpatialDiv` 动画的 capability 检测拆成独立 top-level key。
 - 在单个 hook 内支持多段 keyframe、异步脚本编排或跨多个 `SpatialDiv` 的时间轴编排。
 
 ## API 接口
@@ -589,17 +589,18 @@ interface AnimateSpatialDivResult {
 
    备选方案 B 是在 config 上直接加 `target` discriminator。否决原因是增加了使用侧仪式感，且当前 key 不碰撞，不需要额外消歧。
 
-2. **运行时能力检测使用独立 key `supports('useSpatialDivAnimation')`**
+2. **运行时能力检测使用 sub-token `supports('useAnimation', ['element'])`**
 
-   虽然 `SpatialDiv` 动画也复用 `useAnimation` 这个 hook 名称，但 capability 检测不复用实体提案中的 `supports('useAnimation')`。原因是两者的 native 依赖、可用组件范围和上线节奏可能不同，强行共用一个 top-level key 会把两个能力绑死在一起。
+   `SpatialDiv` 动画复用 `useAnimation` 这个 hook 名称，capability 检测也复用 `useAnimation` 这个 top-level key，通过 sub-token 区分具体能力。`supports('useAnimation', ['entity'])` 表示实体 transform 动画，`supports('useAnimation', ['element'])` 表示 `SpatialDiv` 白名单属性动画。两者的 native 依赖、可用组件范围和上线节奏可能不同，通过 sub-token 实现独立检测。
 
    因此：
 
-   - `supports('useAnimation')` 继续保留给实体 transform 动画提案
-   - `supports('useSpatialDivAnimation')` 专门表示 `SpatialDiv` 白名单属性动画
+   - `supports('useAnimation', ['entity'])` 继续保留给实体 transform 动画提案
+   - `supports('useAnimation', ['element'])` 专门表示 `SpatialDiv` 白名单属性动画
    - 某个 runtime MAY 仅支持其一
+   - 一个 sub-token 的结果 MUST NOT 隐式推导另一个 sub-token 或无 sub-token 的结果
 
-   备选方案是为 `useAnimation` 引入 sub-token，例如 `supports('useAnimation', ['spatial-div'])`。否决原因是当前仓库中实体动画提案已经把 `supports('useAnimation')` 定义成单一 key，新的 sub-token 语义会与该提案产生额外协调成本。
+   备选方案是使用独立 key `supports('useSpatialDivAnimation')`。否决原因是因为 `SpatialDiv` 动画与实体动画共用 `useAnimation` 这个 hook 名称，capability 检测也应保持同一 top-level key 下的家族一致性，独立 key 会增加使用侧的心智负担，且与 API 复用 `useAnimation` 的设计意图不一致。
 
 3. **`animation` prop 仅对 `enable-xr` 产生的 spatialized HTML 节点生效**
 
@@ -672,7 +673,7 @@ interface AnimateSpatialDivResult {
 
 - **动画期间整体抑制 transform 会冻结普通 rotate / scale 更新** -> 通过 spec 明确这是第一版限制，并将更细粒度的 transform 组合留给后续版本。
 - **`width` / `height` 动画可能让 native 尺寸与 DOM 布局盒暂时不一致** -> 通过 `onComplete` / `onCancel` 返回终态，并在文档中明确需要应用自行决定是否同步 React state。
-- **独立 capability key 会增加一点心智负担** -> 但它换来了与实体动画独立发布、独立回滚的能力，整体风险更小。
+- **Sub-token capability 检测使同一 top-level key 下可独立演进** -> 但需要应用侧理解 sub-token 语义，文档需明确说明。
 - **`SpatialDiv` 动画会同时触达 React、core、bridge 和 native 多层** -> 用统一会话命令、单一失败事件模型和聚焦测试用例降低跨层行为漂移风险。
 - **共用 `useAnimation` 入口引入轻微的 entity 侧改动** -> 仅限入口 if/else 分支、`__kind` 字段和绑定校验，entity 核心逻辑不变。若未来 key 碰撞需引入显式 discriminator。
 - **动画结束后若应用未在 `onComplete` / `onCancel` 中同步 React state，常规同步恢复时可能将旧值推到 native，造成视觉"闪回"** -> 与实体动画行为一致。通过文档和示例明确告知开发者：如需保持动画终态，MUST 在回调中手动同步 state。

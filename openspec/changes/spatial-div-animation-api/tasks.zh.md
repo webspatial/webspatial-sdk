@@ -74,7 +74,7 @@
   - **依赖** 1.1（需要 SpatialDiv 配置类型定义）
 - [x] 1.3 为空间化 HTML 节点补充 `animation` prop 的对外类型，并约束其仅在 `enable-xr` 链路上生效；在绑定阶段增加 `__kind` 校验（entity animation 绑到 SpatialDiv 或反之时抛错）
   - **依赖** 1.2（需要 `__kind` 标记机制就绪）
-- [ ] 1.4 扩展 runtime capability 数据与文档，新增 `supports('useSpatialDivAnimation')` 的公开契约
+- [ ] 1.4 扩展 runtime capability 数据与文档，新增 `supports('useAnimation', ['element'])` 的公开契约
 - [x] 1.5 实现 `SpatialDiv` 动画配置校验，覆盖白名单限制、数值范围（含 `opacity` 闭区间 `[0, 1]`、`width/height >= 0`）、`timingFunction` 与 `loop` 结构、entity/SpatialDiv key 互斥
   - **依赖** 1.1（需要类型定义）
 
@@ -119,7 +119,7 @@
 
 ## 5. 验证与文档
 
-- [ ] 5.1 增加 capability 测试，覆盖 `supports('useSpatialDivAnimation')` 的 true / false / 稳定性，以及与 `supports('useAnimation')` 的独立性
+- [ ] 5.1 增加 capability 测试，覆盖 `supports('useAnimation', ['element'])` 的 true / false / 稳定性，以及与 `supports('useAnimation', ['entity'])` 的独立性
   - **依赖** 1.4
 - [ ] 5.2 增加 hook 分叉测试，覆盖 entity key / SpatialDiv key / 混用 key 抛错 / `__kind` 绑定校验
   - **依赖** 1.2、1.3

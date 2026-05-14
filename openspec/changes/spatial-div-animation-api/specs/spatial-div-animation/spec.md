@@ -358,18 +358,18 @@ When an animation session controls a `SpatialDiv` field, the SDK MUST prevent re
 
 ### Requirement: Behavior in unsupported runtimes
 
-When `supports('useSpatialDivAnimation')` is `false`, the `SpatialDiv` animation API MUST provide stable and conservative fallback behavior.
+When `supports('useAnimation', ['element'])` is `false`, the `SpatialDiv` animation API MUST provide stable and conservative fallback behavior.
 
 #### Scenario: Warning when using the hook
 
-- **GIVEN** `supports('useSpatialDivAnimation')` is `false`
+- **GIVEN** `supports('useAnimation', ['element'])` is `false`
 - **WHEN** application code still attempts to use `useAnimation(config)` for `SpatialDiv`
 - **THEN** the SDK MUST emit a warning
 - **AND** the warning MUST be emitted at most once per hook instance
 
 #### Scenario: play is a no-op when unsupported
 
-- **GIVEN** `supports('useSpatialDivAnimation')` is `false`
+- **GIVEN** `supports('useAnimation', ['element'])` is `false`
 - **WHEN** application code calls `api.play()`
 - **THEN** the call MUST be a no-op
 - **AND** the SDK MUST NOT send native commands
@@ -378,7 +378,7 @@ When `supports('useSpatialDivAnimation')` is `false`, the `SpatialDiv` animation
 
 #### Scenario: Async bridge/native failure on play
 
-- **GIVEN** `supports('useSpatialDivAnimation')` is `true`
+- **GIVEN** `supports('useAnimation', ['element'])` is `true`
 - **WHEN** the SDK receives a failure result from native or JSBridge while executing a play request
 - **THEN** the SDK MUST call `onError` with an `AnimationError` containing `animationId`, command type, and a human-readable reason
 - **AND** if `onError` is not provided, the SDK MUST log via `console.error`
@@ -387,7 +387,7 @@ When `supports('useSpatialDivAnimation')` is `false`, the `SpatialDiv` animation
 
 #### Scenario: Async bridge/native failure on pause/cancel
 
-- **GIVEN** `supports('useSpatialDivAnimation')` is `true` and there is an alive session
+- **GIVEN** `supports('useAnimation', ['element'])` is `true` and there is an alive session
 - **WHEN** the SDK receives a failure result from native or JSBridge while executing `pause`, `resume`, or `cancel`
 - **THEN** the SDK MUST call `onError`
 - **AND** if `onError` is not provided, the SDK MUST log via `console.error`

@@ -31,7 +31,7 @@ The hook declares *what* to animate; playback runs on the native side. `api.play
 - Define `transform` animation as covering only the translation component `transform.translate.x/y/z` in v1 (aligned with CSS `transform: translate3d()`). `SpatialDiv` rotation, scale, and arbitrary CSS transform string interpolation are not supported. Future extensions for rotate/scale can add sub-fields under the `transform` object without breaking changes.
 - Define `width` / `height` animation as a native panel-size override for `SpatialDiv`, not a full CSS layout extension; behavior follows native spatial panel sizing.
 - Reuse the same imperative controls and lifecycle semantics as entity animation: `play`, `pause`, `cancel`, `onStart`, `onComplete`, `onCancel`, `onError`, `delay`, `autoStart`, `loop`, `playbackRate`. Reuse the `AnimationError` type defined by the entity animation proposal.
-- Extend runtime capabilities with a dedicated capability key for `SpatialDiv` animation to avoid coupling with the semantics of entity `supports('useAnimation')`.
+- Extend runtime capabilities with a sub-token capability key `supports('useAnimation', ['element'])` for `SpatialDiv` animation to avoid coupling with the semantics of entity `supports('useAnimation', ['entity'])`.
 - Specify how `SpatialDiv` animation interacts with the existing DOM / computed-style sync path so that controlled fields are not overwritten during playback.
 - Define end-to-end cross-layer contracts (React SDK → Core SDK → JSBridge → Native), including the `Spatialized2DElement.animateSpatialDiv()` signature, event payloads, listener registration ordering, `animationId` uniqueness, and terminal event mutual exclusion.
 
@@ -43,7 +43,7 @@ The hook declares *what* to animate; playback runs on the native side. `api.play
 
 ### Modified Capabilities
 
-- `runtime-capabilities`: Add and document the capability key `supports('useSpatialDivAnimation')` for runtime feature detection of `SpatialDiv` animation.
+- `runtime-capabilities`: Add and document the capability sub-token `supports('useAnimation', ['element'])` for runtime feature detection of `SpatialDiv` animation.
 
 ## Impact
 
@@ -51,6 +51,6 @@ The hook declares *what* to animate; playback runs on the native side. `api.play
 - **Public API**: Add `SpatialDiv`-specific `useAnimation` config/value types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), `animation` prop behavior for spatialized HTML nodes, and an entity-aligned imperative control object. Reuse the entity animation `AnimationError` type.
 - **useAnimation Hook**: Add a key-set-based if/else split at the entrypoint; the entity path core logic (validation, Vec3→Float4x4 conversion, bridge commands, suppression, callback dispatch) remains unchanged.
 - **SpatialDiv Sync Path**: Update `PortalInstanceObject`'s regular property/transform sync to add field-level suppression and animation session binding.
-- **Runtime Capabilities**: Add parsing, docs, and tests for `supports('useSpatialDivAnimation')`.
+- **Runtime Capabilities**: Add parsing, docs, and tests for `supports('useAnimation', ['element'])`.
 - **Documentation**: Add `SpatialDiv` animation usage, whitelisted fields, known limitations, and capability detection guidance.
 - **Breaking changes**: None. This change is additive.
