@@ -2,6 +2,16 @@
 
 This app hosts test pages under `apps/test-server/src`.
 
+## React SDK entry (eager)
+
+`esbuild.mjs` and `tsconfig.json` resolve `@webspatial/react-sdk` and
+`@webspatial/react-sdk/eager` to `packages/react/src/eager.ts`, so spatial
+primitives are **statically linked** for this dev site. Use it as the primary
+**WebSpatial runtime** feature verification loop.
+
+For the **default lazy entry** and a consumer-shaped Vite bundle (no
+`src/` alias), use `apps/spatial-vite-min` instead.
+
 ## Adding a Test Page
 
 1. **Create Component:** Create `src/<test-name>/index.tsx` exporting your component.
@@ -44,5 +54,5 @@ export default function MyTest() {
 
 ## Tips
 
-- Importing **Event Types**: use `@webspatial/react-sdk` or `@webspatial/core-sdk`.
+- Importing **Event Types**: use `@webspatial/react-sdk` / `@webspatial/react-sdk/eager` (same eager module here) or `@webspatial/core-sdk`.
 - Browsers warn about custom XR tags; this is expected.
