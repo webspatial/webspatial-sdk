@@ -41,7 +41,7 @@ export default function Home() {
           {/* Window Content */}
           <div className="p-6 text-left">
             <pre className="text-sm text-gray-300">
-              <code>{`import { Model } from '@webspatial/react-sdk'
+              <code>{`import { Model } from '@webspatial/react-sdk/eager'
 
 function App() {
   return (

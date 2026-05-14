@@ -58,7 +58,14 @@ const buildOptions = {
     '@webspatial/react-sdk/jsx-runtime': path.resolve(
       `${packagesBasePath}/react/src/jsx/jsx-runtime.ts`,
     ),
-    '@webspatial/react-sdk': path.resolve(`${packagesBasePath}/react/src`),
+    // Test-server targets WebSpatial runtimes only — bundle the eager entry so
+    // spatial is statically linked (no lazy `import('./spatial')` bridge in
+    // this app). Plain-web / lazy-default consumer shape is exercised in
+    // `apps/spatial-vite-min` instead.
+    
+    '@webspatial/react-sdk': path.resolve(
+      `${packagesBasePath}/react/src/eager.ts`,
+    ),
     '@webspatial/core-sdk': path.resolve(`${packagesBasePath}/core/src`),
   },
 }
