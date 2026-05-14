@@ -52,6 +52,7 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
+  flags['useAnimation:entity'] = false
   return flags
 }
 
@@ -67,6 +68,7 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
+  flags['useAnimation:entity'] = false
   return flags
 }
 
@@ -99,6 +101,7 @@ function matrixPico_0_1_2_Flags(): Record<string, boolean> {
 function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_1_2_Flags()
   flags['useAnimation'] = true
+  flags['useAnimation:entity'] = true
   return flags
 }
 

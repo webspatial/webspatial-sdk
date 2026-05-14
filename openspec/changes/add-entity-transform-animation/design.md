@@ -9,7 +9,7 @@ See the proposal for full motivation. In short: entity transform updates are cur
 - Define a stable public API for transform animation around `useAnimation(config)`, an entity `animation` prop, and `AnimationApi.play/pause/cancel/finished/playState`.
 - Keep playback native-driven so transform animation does not depend on per-frame JS updates.
 - Prevent React prop synchronization from fighting an alive animation session for the same transform field.
-- Document runtime capability detection with `supports('useAnimation')`.
+- Document runtime capability detection with `supports("useAnimation", ["entity"])`.
 - Keep the design testable across React, core command flow, and native completion / cancel behavior.
 
 **Non-Goals:**
@@ -631,7 +631,7 @@ The PicoOS side is built on the PICO Spatial SDK animation framework, maintainin
 ### PicoOS Version Requirements
 
 - **Minimum version**: PicoWebApp Runtime `0.2.2` (UA identifier `PicoWebApp/0.2.2`)
-- **Capability detection**: `supports(useAnimation)` returns `true` in the picoOS capability table starting from version `0.2.2`
+- **Capability detection**: `supports(useAnimation, [entity])` returns `true` in the picoOS capability table starting from version `0.2.2`
 
 ## Cross-Platform Compatibility
 
@@ -642,7 +642,7 @@ The following tables compare the visionOS (AVP) and PicoOS implementations of En
 | Dimension | visionOS (AVP) | PicoOS |
 |---|---|---|
 | Minimum supported version | visionOS 1.5+ | PicoWebApp 0.2.2+ |
-| Capability detection | `supports(useAnimation)` → `true` | `supports(useAnimation)` → `true` (≥ 0.2.2) |
+| Capability detection | `supports(useAnimation, [entity])` → `true` | `supports(useAnimation, [entity])` → `true` (≥ 0.2.2) |
 | SDK dependency | RealityKit (Apple) | PICO Spatial SDK 0.10.3+ |
 | Development language | Swift | Kotlin |
 
@@ -791,13 +791,13 @@ For a given `animationId`:
    - **Suppression release timing:** field-level suppression is lifted when the animation session ends (via completion or cancel). The `__animating` flags are cleared before the lifecycle callback fires, so the next React render cycle after the callback will resume ordinary transform synchronization for the previously animated fields.
 
 6. **Capability detection is explicit and top-level**
-   - `supports('useAnimation')` documents whether the end-to-end animation feature is available in the current runtime.
+   - `supports("useAnimation", ["entity"])` documents whether the end-to-end animation feature is available in the current runtime.
    - Applications can branch on capability before depending on the animation API in environments that do not yet implement the native bridge path.
    - Alternative considered: no dedicated capability key. Rejected because the review explicitly calls out feature detection as part of the external contract.
-   - Future versions may introduce sub-tokens (e.g. `supports('useAnimation', ['opacity'])`) for feature-granular detection. The current contract — sub-tokens always return `false` — is forward-compatible: applications written against v1 will not break when new sub-tokens are added, because they never pass sub-tokens today.
+   - Future versions may introduce additional sub-tokens (e.g. `supports("useAnimation", ["opacity"])`) for feature-granular detection. The current contract requires `["entity"]` as the only supported sub-token; passing any other sub-token returns `false`.
 
 7. **Unsupported runtimes surface a warning**
-   - When `useAnimation` is used in a runtime where `supports('useAnimation')` is `false`, the SDK should surface a warning instead of failing silently.
+   - When `useAnimation` is used in a runtime where `supports("useAnimation", ["entity"])` is `false`, the SDK should surface a warning instead of failing silently.
    - The warning should be emitted at most once per hook instance to avoid log spam.
    - This keeps capability misuse visible during integration without changing the capability contract itself.
 
@@ -827,7 +827,7 @@ For a given `animationId`:
 - **Risk:** API drift between reviewed docs and implementation -> **Mitigation:** lock the OpenSpec contract around `play`, `animation` prop, `loop`, and lifecycle callbacks before editing code.
 - **Risk:** React re-renders still leak competing transform updates -> **Mitigation:** add targeted tests for mixed animated and non-animated fields and wire suppression at the entity transform sync boundary.
 - **Risk:** Native playback edge cases around delay, cancel, and completion ordering -> **Mitigation:** keep a single animation session record keyed by `animationId` and verify callback ordering in tests.
-- **Risk:** Runtime support differs across environments -> **Mitigation:** gate the feature with `supports('useAnimation')` and document conservative false behavior.
+- **Risk:** Runtime support differs across environments -> **Mitigation:** gate the feature with `supports("useAnimation", ["entity"])` and document conservative false behavior.
 - **Risk:** Bridge overhead could accumulate for complex animation orchestration -> **Mitigation:** a single play command equals 1 bridge call; during playback there are zero per-frame bridge calls; terminal events add at most 1 callback per session (completion or cancel). Total bridge traffic per animation lifecycle is bounded at 2–3 calls regardless of duration or frame count.
 - **Risk:** Rotation behavior surprises developers for large angles -> **Mitigation:** document the limitation and keep the first version scoped to the reviewed transform behavior.
 

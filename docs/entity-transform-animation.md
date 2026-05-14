@@ -140,7 +140,7 @@ const [reverseAnim, reverseApi] = useAnimation({
 ```tsx
 import { supports } from '@webspatial/core-sdk'
 
-if (supports('useAnimation')) {
+if (supports('useAnimation', ['entity'])) {
   // Safe to use useAnimation
 }
 ```

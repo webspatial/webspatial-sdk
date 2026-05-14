@@ -358,7 +358,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: 不支持的 runtime warning
 
-- **GIVEN** `supports('useAnimation')` 为 `false`
+- **GIVEN** `supports("useAnimation", ["entity"])` 为 `false`
 - **WHEN** 应用代码仍尝试使用 `useAnimation`
 - **THEN** SDK MUST 给出 warning，说明当前 runtime 不支持实体 Transform 动画
 - **AND** warning MUST 对每个 hook 实例至多触发一次
@@ -366,7 +366,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: 不支持 runtime 下的 API 行为
 
-- **GIVEN** `supports('useAnimation')` 为 `false`
+- **GIVEN** `supports("useAnimation", ["entity"])` 为 `false`
 - **WHEN** 应用代码调用 `api.play()`
 - **THEN** 该调用 MUST 为 no-op（不抛错、不发送 native 命令）
 - **AND** `onStart`、`onComplete`、`onCancel`、`onError` MUST 不被触发
@@ -375,7 +375,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: play 时 bridge 或 native 异步失败
 
-- **GIVEN** `supports('useAnimation')` 为 `true`
+- **GIVEN** `supports("useAnimation", ["entity"])` 为 `true`
 - **WHEN** SDK 在执行播放命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
@@ -384,7 +384,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: pause/cancel 时 bridge 或 native 异步失败
 
-- **GIVEN** `supports('useAnimation')` 为 `true` 且存在 alive 会话
+- **GIVEN** `supports("useAnimation", ["entity"])` 为 `true` 且存在 alive 会话
 - **WHEN** SDK 在执行 `pause` 或 `cancel` 命令时收到来自 Native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用配置的 `onError` 回调，传入至少包含 `animationId`、命令类型与失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误

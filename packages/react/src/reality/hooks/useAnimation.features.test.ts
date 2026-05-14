@@ -13,8 +13,9 @@ vi.mock('@webspatial/core-sdk', async () => {
   return {
     ...actual,
     VALID_TIMING_FUNCTIONS: actual.VALID_TIMING_FUNCTIONS,
-    supports: (name: string) => {
-      if (name === 'useAnimation') return true
+    supports: (name: string, tokens?: readonly string[]) => {
+      if (name === 'useAnimation' && tokens && tokens.includes('entity'))
+        return true
       return false
     },
     composeSRT: (_pos: any, _rot: any, _scl: any) => ({

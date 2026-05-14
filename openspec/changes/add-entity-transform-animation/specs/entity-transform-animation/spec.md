@@ -358,7 +358,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 
 #### Scenario: Unsupported runtime warning
 
-- **GIVEN** `supports('useAnimation')` is `false`
+- **GIVEN** `supports("useAnimation", ["entity"])` is `false`
 - **WHEN** application code still attempts to use `useAnimation`
 - **THEN** the SDK MUST surface a warning indicating that entity transform animation is not supported in the current runtime
 - **AND** the warning MUST be emitted at most once per hook instance
@@ -366,7 +366,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 
 #### Scenario: API behavior in unsupported runtime
 
-- **GIVEN** `supports('useAnimation')` is `false`
+- **GIVEN** `supports("useAnimation", ["entity"])` is `false`
 - **WHEN** application code calls `api.play()`
 - **THEN** the call MUST be a no-op (no error thrown, no native command sent)
 - **AND** `onStart`, `onComplete`, `onCancel`, and `onError` MUST NOT be invoked
@@ -375,7 +375,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 
 #### Scenario: Asynchronous bridge or native failure during play
 
-- **GIVEN** `supports('useAnimation')` is `true`
+- **GIVEN** `supports("useAnimation", ["entity"])` is `true`
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing a play request
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`
@@ -384,7 +384,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 
 #### Scenario: Asynchronous bridge or native failure for pause/cancel
 
-- **GIVEN** `supports('useAnimation')` is `true` and there is an alive session
+- **GIVEN** `supports("useAnimation", ["entity"])` is `true` and there is an alive session
 - **WHEN** the SDK receives a failure result from native playback or the JSBridge while executing `pause` or `cancel`
 - **THEN** the SDK MUST invoke the configured `onError` callback with an `AnimationError` containing at least `animationId`, the command type, and a human-readable failure reason
 - **AND** if `onError` is not configured, the SDK MUST log the error via `console.error`

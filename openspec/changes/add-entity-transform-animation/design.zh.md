@@ -9,7 +9,7 @@
 - 围绕 `useAnimation(config)`、实体 `animation` prop 与 `AnimationApi.play/pause/cancel/finished/playState` 定义稳定的对外 API。
 - 保持动画由 Native 驱动，避免依赖逐帧 JS 更新。
 - 在动画控制某个字段时，避免 React props 同步与动画对同一字段发生竞争。
-- 通过 `supports('useAnimation')` 文档化运行时能力检测。
+- 通过 `supports("useAnimation", ["entity"])` 文档化运行时能力检测。
 - 使该设计在 React、Core 命令流与 Native 完成/取消行为上可测试、可验证。
 
 **非目标：**
@@ -627,7 +627,7 @@ PicoOS 端基于 PICO Spatial SDK 动画框架实现，与 visionOS 侧保持相
 ### PicoOS 版本要求
 
 - **最低版本**：PicoWebApp Runtime `0.2.2`（UA 标识 `PicoWebApp/0.2.2`）
-- **能力检测**：`supports(useAnimation)` 在 picoOS capability table 中从 `0.2.2` 版本开始返回 `true`
+- **能力检测**：`supports(useAnimation, [entity])` 在 picoOS capability table 中从 `0.2.2` 版本开始返回 `true`
 
 ## 跨平台兼容性对照
 
@@ -638,7 +638,7 @@ PicoOS 端基于 PICO Spatial SDK 动画框架实现，与 visionOS 侧保持相
 | 维度 | visionOS (AVP) | PicoOS |
 |---|---|---|
 | 最低支持版本 | visionOS 1.5+ | PicoWebApp 0.2.2+ |
-| 能力检测 | `supports(useAnimation)` → `true` | `supports(useAnimation)` → `true` (≥ 0.2.2) |
+| 能力检测 | `supports(useAnimation, [entity])` → `true` | `supports(useAnimation, [entity])` → `true` (≥ 0.2.2) |
 | SDK 依赖 | RealityKit (Apple) | PICO Spatial SDK 0.10.3+ |
 | 开发语言 | Swift | Kotlin |
 
@@ -792,13 +792,13 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
    - **抑制解除时机：**字段级抑制在动画会话结束时（completion 或 cancel）解除。`__animating` flags 在生命周期回调触发前被清除，因此回调之后的下一个 React 渲染周期将恢复对先前被动画控制字段的常规 transform 同步。
 
 6. **能力检测采用明确的 top-level key**
-   - 通过 `supports('useAnimation')` 表达端到端动画能力是否可用。
+   - 通过 `supports("useAnimation", ["entity"])` 表达端到端动画能力是否可用。
    - 应用可在缺少 Native bridge/播放能力的环境中做安全分支。
    - 备选方案：不新增 capability key。否决原因：评审明确提到 feature detection 是外部契约的一部分。
-   - 后续版本可能引入 sub-token（如 `supports('useAnimation', ['opacity'])`）以实现更细粒度的能力检测。当前契约——sub-token 始终返回 `false`——具有前向兼容性：基于 v1 编写的应用不会因新增 sub-token 而破坏，因为它们目前从不传递 sub-token。
+   - 后续版本可能引入更多 sub-token（如 `supports("useAnimation", ["opacity"])`）以实现更细粒度的能力检测。当前契约要求 `["entity"]` 作为唯一支持的 sub-token；传入其他 sub-token 返回 `false`。
 
 7. **不支持的 runtime 需要给出 warning**
-   - 当 `supports('useAnimation')` 为 `false` 的 runtime 里仍直接使用 `useAnimation` 时，SDK 应给出 warning，而不是完全静默失败。
+   - 当 `supports("useAnimation", ["entity"])` 为 `false` 的 runtime 里仍直接使用 `useAnimation` 时，SDK 应给出 warning，而不是完全静默失败。
    - warning 应对每个 hook 实例至多触发一次，避免日志刷屏。
    - 这样既能保留能力检测契约，又能在接入阶段尽早暴露误用。
 
@@ -828,7 +828,7 @@ Core SDK 负责将 Native 回传的 `Float4x4` payload 转换回 `TransformValue
 - **风险：**评审文档与最终实现 API 漂移 -> **缓解：**先用 OpenSpec 固化 `play`、`animation` prop、`loop` 与生命周期回调的契约，再进入代码阶段。
 - **风险：**React re-render 仍可能发送竞争的 transform 更新 -> **缓解：**为混合字段（部分动画/部分非动画）增加针对性测试，并在实体 transform 同步边界实现字段级抑制。
 - **风险：**Native 在 delay、cancel、completed 的事件顺序存在边界情况 -> **缓解：**以 `animationId` 维护单会话记录，并用测试覆盖事件顺序与回调触发。
-- **风险：**不同 runtime 支持差异导致行为不一致 -> **缓解：**用 `supports('useAnimation')` gate，并文档化保守返回 false 的策略。
+- **风险：**不同 runtime 支持差异导致行为不一致 -> **缓解：**用 `supports("useAnimation", ["entity"])` gate，并文档化保守返回 false 的策略。
 - **风险：**Bridge 开销在复杂动画编排中可能累积 -> **缓解：**单次 play = 1 次 bridge 调用；播放期间零逐帧 bridge 调用；终态事件最多 1 次回调（completion 或 cancel）。每个动画生命周期的 bridge 总流量不超过 2–3 次调用，与时长和帧数无关。
 - **风险：**大角度旋转行为可能让开发者困惑 -> **缓解：**明确文档化限制，第一版只覆盖评审范围内的 transform 动画行为。
 

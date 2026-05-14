@@ -260,7 +260,7 @@ export function useAnimation(
 
   const play = useCallback(() => {
     // Unsupported runtime check
-    if (!supports('useAnimation')) {
+    if (!supports('useAnimation', ['entity'])) {
       if (!warnedRef.current) {
         warnedRef.current = true
         console.warn(
