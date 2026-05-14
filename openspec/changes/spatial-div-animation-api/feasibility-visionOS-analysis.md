@@ -138,7 +138,7 @@ Core / native 层也已经有对应对象和命令：
 
 而 capability 矩阵显示 visionOS `1.5.0` 和 `1.6.0` 都还没有放开该能力：`packages/core/src/runtime/capability-data.ts:53`。
 
-这说明即便底层代码写完，如果没有新增并放开 `supports('useSpatialDivAnimation')`，React 层仍然只能 warning/no-op。
+这说明即便底层代码写完，如果没有新增并放开 `supports('useAnimation', ['element'])`，React 层仍然只能 warning/no-op。
 
 因此提案单独引入 capability key 的方向是必要的，不只是文档层面的区分。
 
@@ -225,7 +225,7 @@ native 侧当前没有 `SpatialDiv` 的 animation session，但 Entity 动画的
 
 ### 3. capability 独立拆分是必要的
 
-`SpatialDiv` 动画和 entity 动画虽然共用 `useAnimation` 这个 API 名称，但 native 依赖、可用组件和上线节奏都不相同。拆成 `supports('useSpatialDivAnimation')` 是比复用 `supports('useAnimation')` 更稳妥的设计。
+`SpatialDiv` 动画和 entity 动画虽然共用 `useAnimation` 这个 API 名称，但 native 依赖、可用组件和上线节奏都不相同。通过 `supports('useAnimation', ['element'])` sub-token 实现独立检测是比复用 `supports('useAnimation', ['entity'])` 更稳妥的设计。
 
 ### 4. 竞争处理方案务实
 

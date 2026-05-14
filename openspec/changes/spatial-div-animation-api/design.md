@@ -15,14 +15,14 @@ This means that if we simply reuse the "any prop change immediately syncs native
 - Restrict `SpatialDiv` animation strictly to a whitelisted property set; avoid arbitrary CSS parsing/interpolation.
 - Run playback on the native side; avoid per-frame JS DOM updates or per-frame JSBridge traffic.
 - Define suppression rules so regular `SpatialDiv` syncing does not overwrite animation mid-states.
-- Provide a dedicated runtime capability key for `SpatialDiv` animation so it can evolve and ship independently from entity animation.
+- Provide a sub-token runtime capability key `supports('useAnimation', ['element'])` for `SpatialDiv` animation so it can evolve and ship independently from entity animation.
 
 **Non-Goals:**
 
 - Animating arbitrary CSS properties or accepting a full CSS style object as `to` / `from`.
 - Supporting `SpatialDiv` rotation/scale/skew, matrix-level transform interpolation, or arbitrary CSS transform string interpolation.
 - Auto-writing `width` / `height` animation back into DOM layout or driving browser reflow.
-- Unifying entity animation and `SpatialDiv` animation capability keys in this change.
+- Split `SpatialDiv` animation capability detection into a separate top-level key.
 - Multi-step keyframes, async scripts, or timeline orchestration across multiple `SpatialDiv` instances within a single hook.
 
 ## API Surface
@@ -590,17 +590,18 @@ Reasons for choosing `CADisplayLink`:
 
    Alternative B: add a `target` discriminator to config immediately. Rejected because it increases ceremony and is not needed while keys do not collide.
 
-2. **Use a dedicated runtime key `supports('useSpatialDivAnimation')`**
+2. **Use sub-token for runtime capability detection `supports('useAnimation', ['element'])`**
 
-   Although `SpatialDiv` animation reuses the hook name `useAnimation`, its capability detection does not reuse the entity proposal's `supports('useAnimation')`. Native dependencies, applicable component scope, and shipping timelines may differ; sharing one top-level key would couple the two.
+   `SpatialDiv` animation reuses the hook name `useAnimation`, so its capability detection also reuses the top-level key `useAnimation`, distinguishing the specific capability via sub-token. `supports('useAnimation', ['entity'])` indicates entity transform animation, while `supports('useAnimation', ['element'])` indicates `SpatialDiv` whitelisted property animation. Native dependencies, applicable component scope, and shipping timelines may differ; sub-tokens enable independent detection.
 
    Therefore:
 
-   - `supports('useAnimation')` remains for entity transform animation
-   - `supports('useSpatialDivAnimation')` indicates `SpatialDiv` whitelisted property animation
+   - `supports('useAnimation', ['entity'])` remains for entity transform animation
+   - `supports('useAnimation', ['element'])` indicates `SpatialDiv` whitelisted property animation
    - A runtime MAY support only one of them
+   - One sub-token result MUST NOT implicitly imply the result of another sub-token or the no-sub-token case
 
-   Alternative: introduce sub-tokens such as `supports('useAnimation', ['spatial-div'])`. Rejected for now because the existing entity proposal defines `supports('useAnimation')` as a single key with no sub-token semantics, and changing that contract increases coordination and compatibility risk.
+   Alternative: use a dedicated key `supports('useSpatialDivAnimation')`. Rejected because `SpatialDiv` animation shares the `useAnimation` hook name with entity animation, and capability detection should maintain family consistency under the same top-level key. A separate key adds mental overhead and contradicts the design intent of reusing `useAnimation`.
 
 3. **`animation` prop applies only to spatialized HTML nodes created via `enable-xr`**
 
@@ -673,7 +674,7 @@ Reasons for choosing `CADisplayLink`:
 
 - **Transform-wide suppression freezes regular rotate/scale updates during animation** -> Document as a v1 limitation; reserve finer-grained transform composition for later versions.
 - **`width` / `height` animation may temporarily diverge native size from DOM layout box** -> Return final values via `onComplete` / `onCancel`, and document that apps decide whether to sync React state.
-- **A dedicated capability key adds a small mental overhead** -> But enables independent shipping/rollback from entity animation, which reduces overall risk.
+- **Sub-token capability detection enables independent evolution under the same top-level key** -> But requires application-side understanding of sub-token semantics; documentation must explain clearly.
 - **`SpatialDiv` animation touches multiple layers (React, core, bridge, native)** -> Use a unified session command, a single failure event model, and focused tests to reduce cross-layer drift.
 - **If the app does not sync React state in `onComplete` / `onCancel` after animation ends, regular sync resumption may push stale values to native, causing a visual "flash-back"** -> Consistent with entity animation behavior. Document and demonstrate in examples that apps MUST manually sync state in callbacks to preserve animation end state.
 - **v1 assumes a React synchronous rendering model** -> Suppression release and regular sync resumption depend on "the next React render after callbacks." Under Concurrent Mode / Suspense, render timing may be non-deterministic. This is a known limitation. XR apps currently do not enable Concurrent Mode; if needed in the future, it should be addressed at the SDK sync infrastructure level.

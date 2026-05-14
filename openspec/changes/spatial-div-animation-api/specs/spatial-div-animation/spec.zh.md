@@ -358,18 +358,18 @@ SDK MUST 在校验时对以下范围抛错：
 
 ### Requirement: 不支持 runtime 下的行为
 
-当 `supports('useSpatialDivAnimation')` 为 `false` 时，`SpatialDiv` 动画 API MUST 提供稳定且保守的 fallback 行为。
+当 `supports('useAnimation', ['element'])` 为 `false` 时，`SpatialDiv` 动画 API MUST 提供稳定且保守的 fallback 行为。
 
 #### Scenario: 使用 hook 时给出 warning
 
-- **GIVEN** `supports('useSpatialDivAnimation')` 为 `false`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `false`
 - **WHEN** 应用仍尝试将 `useAnimation(config)` 用于 `SpatialDiv`
 - **THEN** SDK MUST 给出 warning
 - **AND** warning MUST 对每个 hook 实例至多触发一次
 
 #### Scenario: 不支持 runtime 下 play 为 no-op
 
-- **GIVEN** `supports('useSpatialDivAnimation')` 为 `false`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `false`
 - **WHEN** 应用调用 `api.play()`
 - **THEN** 该调用 MUST 为 no-op
 - **AND** SDK MUST NOT 发送 native 命令
@@ -378,7 +378,7 @@ SDK MUST 在校验时对以下范围抛错：
 
 #### Scenario: 异步 bridge 或 native 在 play 时失败
 
-- **GIVEN** `supports('useSpatialDivAnimation')` 为 `true`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`
 - **WHEN** SDK 在执行 play 请求期间收到 native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用 `onError`，传入包含 `animationId`、命令类型和人类可读失败原因的 `AnimationError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
@@ -387,7 +387,7 @@ SDK MUST 在校验时对以下范围抛错：
 
 #### Scenario: 异步 bridge 或 native 在 pause / cancel 时失败
 
-- **GIVEN** `supports('useSpatialDivAnimation')` 为 `true`，且存在 alive 会话
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`，且存在 alive 会话
 - **WHEN** SDK 在执行 `pause`、`resume` 或 `cancel` 期间收到 native 或 JSBridge 的失败结果
 - **THEN** SDK MUST 调用 `onError`
 - **AND** 若未配置 `onError`，SDK MUST 通过 `console.error` 输出错误
