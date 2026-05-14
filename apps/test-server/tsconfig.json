@@ -21,7 +21,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@webspatial/core-sdk": ["../../packages/core/src"],
-      "@webspatial/react-sdk": ["../../packages/react/src"],
+      "@webspatial/react-sdk": ["../../packages/react/src/eager.ts"],
+      "@webspatial/react-sdk/eager": ["../../packages/react/src/eager.ts"],
       "@webspatial/react-sdk/jsx-runtime": [
         "../../packages/react/src/jsx/jsx-runtime.ts"
       ],
