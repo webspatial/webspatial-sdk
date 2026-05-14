@@ -1,17 +1,23 @@
 import React, { useEffect, useRef } from 'react'
 import {
-  SpatialObject,
   SpatialUnlitMaterial,
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
+
 export type UnlitMaterialProps = {
   children?: React.ReactNode
   id: string // user id
+  /**
+   * Increment to force `updateProperties` after in-place texture URL changes (same `textureId`)
+   * or whenever the parent needs a reliable native refresh (e.g. tint + texture together).
+   */
+  surfaceSyncRev?: number
 } & SpatialUnlitMaterialOptions
 
 export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
   children,
+  surfaceSyncRev,
   ...options
 }) => {
   const ctx = useRealityContext()
@@ -20,22 +26,27 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 
   useEffect(() => {
     if (!ctx) return
+    let cancelled = false
+    const materialId = options.id
     const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
-        let textureIdForNative = options.textureId
+        let textureIdForNative: string | undefined = options.textureId
         if (options.textureId) {
           const texturePromise = resourceRegistry.get(options.textureId)
           if (texturePromise) {
             try {
               const textureResource = await texturePromise
+              if (cancelled) return
               textureIdForNative = textureResource.id
             } catch {
-              // Texture create failed or registry cleared; skip material create without logging
-              return
+              // Texture failed: still create material so entities do not hang on materialId;
+              // tint-only / no texture until the texture resolves.
+              textureIdForNative = ''
             }
           }
         }
+        if (cancelled) return
         const commandOptions: SpatialUnlitMaterialOptions = {
           color: options.color,
           textureId: textureIdForNative,
@@ -43,8 +54,9 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
           opacity: options.opacity,
         }
         const materialPromise = session.createUnlitMaterial(commandOptions)
-        resourceRegistry.add(options.id, materialPromise)
+        resourceRegistry.add(materialId, materialPromise)
         const mat = await materialPromise
+        if (cancelled) return
         materialRef.current = mat
         isInitializedRef.current = true
       } catch (error) {
@@ -54,12 +66,13 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     init()
 
     return () => {
+      cancelled = true
       // Use registry to schedule destruction after promise resolves
-      resourceRegistry.removeAndDestroy(options.id)
+      resourceRegistry.removeAndDestroy(materialId)
       materialRef.current = undefined
       isInitializedRef.current = false
     }
-  }, [ctx])
+  }, [ctx, options.id])
 
   // Dynamic property updates
   useEffect(() => {
@@ -68,6 +81,9 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     void (async () => {
       const updates: Partial<SpatialUnlitMaterialOptions> = {}
       if (options.color !== undefined) updates.color = options.color
+      if (options.transparent !== undefined)
+        updates.transparent = options.transparent
+      if (options.opacity !== undefined) updates.opacity = options.opacity
       if (options.textureId !== undefined) {
         if (options.textureId === '') {
           updates.textureId = ''
@@ -79,16 +95,13 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
               if (cancelled) return
               updates.textureId = textureResource.id
             } catch {
-              return
+              updates.textureId = ''
             }
           } else {
             updates.textureId = options.textureId
           }
         }
       }
-      if (options.transparent !== undefined)
-        updates.transparent = options.transparent
-      if (options.opacity !== undefined) updates.opacity = options.opacity
       if (cancelled || Object.keys(updates).length === 0) return
       const mat = materialRef.current
       if (mat) {
@@ -104,6 +117,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     options.textureId,
     options.transparent,
     options.opacity,
+    surfaceSyncRev,
   ])
 
   return null

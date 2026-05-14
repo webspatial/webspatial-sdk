@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
+import { SpatialTextureResource } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
 import { getAbsoluteUrl } from '../../utils/urlUtils'
 
@@ -18,32 +19,49 @@ export const Texture: React.FC<TextureProps> = ({
   onError,
 }) => {
   const ctx = useRealityContext()
+  const textureRef = useRef<SpatialTextureResource | null>(null)
 
+  // Destroy only when the logical texture slot (ctx + id) goes away — not on url changes.
   useEffect(() => {
     if (!ctx) return
-    const controller = new AbortController()
-    const { session, resourceRegistry } = ctx
-
-    const init = async () => {
-      try {
-        const resolvedUrl = getAbsoluteUrl(url)
-        const texturePromise = session.createTexture({ url: resolvedUrl })
-        resourceRegistry.add(id, texturePromise)
-        const texture = await texturePromise
-        if (controller.signal.aborted) {
-          texture.destroy()
-          return
-        }
-        onLoad?.()
-      } catch (error: unknown) {
-        onError?.(error)
-      }
+    const { resourceRegistry } = ctx
+    const capturedId = id
+    return () => {
+      textureRef.current = null
+      resourceRegistry.removeAndDestroy(capturedId)
     }
-    init()
+  }, [ctx, id])
+
+  // Initial load and subsequent URL changes: keep the same native texture and use
+  // updateProperties({ url }) so materials bound by native id stay valid.
+  useEffect(() => {
+    if (!ctx) return
+    const { session, resourceRegistry } = ctx
+    let cancelled = false
+
+    void (async () => {
+      const resolvedUrl = getAbsoluteUrl(url)
+      try {
+        if (textureRef.current) {
+          await textureRef.current.updateProperties({ url: resolvedUrl })
+        } else {
+          const texturePromise = session.createTexture({ url: resolvedUrl })
+          resourceRegistry.add(id, texturePromise)
+          const tex = await texturePromise
+          if (cancelled) {
+            tex.destroy()
+            return
+          }
+          textureRef.current = tex
+        }
+        if (!cancelled) onLoad?.()
+      } catch (error: unknown) {
+        if (!cancelled) onError?.(error)
+      }
+    })()
 
     return () => {
-      controller.abort()
-      resourceRegistry.removeAndDestroy(id)
+      cancelled = true
     }
   }, [ctx, id, url])
 
