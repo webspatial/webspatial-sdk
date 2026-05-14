@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { bootSpatial, WebSpatialBootError } from '@webspatial/react-sdk'
-import App from './App'
+import { bootSpatial, Model, WebSpatialBootError } from '@webspatial/react-sdk'
+import { SpatialApp } from './spatial-app'
 
 // `bootSpatial()` resolves immediately in plain web browsers (no spatial
 // chunk fetch); in WebSpatial-capable runtimes it dynamically loads the
@@ -27,7 +27,7 @@ async function start(): Promise<void> {
   if (!el) throw new Error('#root not found')
   createRoot(el).render(
     <React.StrictMode>
-      <App />
+      <SpatialApp mode="lazy" Model={Model} />
     </React.StrictMode>,
   )
 }
