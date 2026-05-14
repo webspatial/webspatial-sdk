@@ -39,6 +39,93 @@ export { WebSpatialRuntime } from './webSpatialRuntime'
 export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
 export type { CapabilityKey } from '@webspatial/core-sdk'
 
+// --- Core-sdk type re-exports (zero runtime cost) ---------------------------
+// `@webspatial/core-sdk` is now a regular dependency (not a peer) of this
+// package — consumers `pnpm add @webspatial/react-sdk` and the SDK's npm
+// transitively installs core-sdk. To complete that "single-package
+// installation, single-package import" experience, the documented
+// user-facing TYPE surface of core-sdk is re-exported here so consumer code
+// never needs `import from '@webspatial/core-sdk'`.
+//
+// IMPORTANT: only TYPE-only re-exports live here. Re-exporting heavy
+// runtime classes (`Spatial`, `SpatialSession`, `SpatializedDynamic3DElement`,
+// etc.) would inflate the §9.2 marginal-delta budget — every consumer that
+// imports `@webspatial/react-sdk` would link the runtime class into their
+// main bundle even when they only meant to use a facade. Power users who
+// genuinely need the runtime classes (currently only the SDK's own demos
+// like `apps/test-server`) can still `import from '@webspatial/core-sdk'`
+// directly; the package is reachable through the dependency graph either
+// way. See `openspec/changes/lazy-load-spatial-runtime/tasks.md` follow-up
+// notes for the rationale.
+//
+// Names that already resolve to a richer parameterized type via
+// `./spatialized-container/types` (the `SpatialTapEvent` / `SpatialDragEvent`
+// family) intentionally do NOT appear here — re-exporting the simpler
+// core-sdk version of the same name would shadow the more useful one in
+// consumer IDEs.
+export type {
+  // Common scalar types not already covered by `spatialized-container/types`.
+  CornerRadius,
+  // Backplate / world configuration (consumer-facing scene properties).
+  BackgroundMaterialType,
+  BaseplateVisibilityType,
+  WorldScalingType,
+  WorldAlignmentType,
+  SpatialSceneType,
+  // Scene size / unit shapes.
+  Size,
+  Size3D,
+  SceneUnit,
+  SceneUnitPx,
+  SceneUnitM,
+  SpatialSceneCreationOptions,
+  SpatialSceneProperties,
+  // Element-level configuration (consumer-facing container props).
+  SpatializedElementProperties,
+  Spatialized2DElementProperties,
+  SpatializedStatic3DElementProperties,
+  // Geometry options (configure entity geometry from JS).
+  SpatialGeometryType,
+  SpatialGeometryOptions,
+  SpatialBoxGeometryOptions,
+  SpatialPlaneGeometryOptions,
+  SpatialSphereGeometryOptions,
+  SpatialConeGeometryOptions,
+  SpatialCylinderGeometryOptions,
+  // Material / texture options.
+  SpatialMaterialType,
+  SpatialUnlitMaterialOptions,
+  SpatialTextureResourceOptions,
+  // Model / asset options.
+  ModelSource,
+  ModelComponentOptions,
+  ModelAssetOptions,
+  SpatialModelEntityCreationOptions,
+  // Entity-level types (configuration, user data, event taxonomy).
+  SpatialEntityProperties,
+  SpatialEntityUserData,
+  SpatialEntityEventType,
+  SpatialEntityOrReality,
+  // Attachment options.
+  AttachmentEntityOptions,
+  AttachmentEntityUpdateOptions,
+  // PWA manifest + scene config (used by builder tooling and consumer
+  // manifest authoring).
+  XRSceneSize,
+  XRSceneResizability,
+  XRMainSceneConfig,
+  XRSpatialSceneDefaults,
+  XRSpatialSceneOverrides,
+  XRSpatialSceneConfig,
+  XRPrdConfig,
+  PWAManifest,
+  // Runtime detection types (advanced: surfaces what
+  // `WebSpatialRuntime.runtime` returns / what the bridge looks at).
+  WebSpatialRuntimeSnapshot,
+  WebSpatialRuntimeType,
+  JsbAdapterPlatformKind,
+} from '@webspatial/core-sdk'
+
 // --- Stateless utilities (Group B: gracefully degrade via core-sdk session) --
 // `enableDebugTool` is imported from its source file (NOT from `./utils`)
 // so the `./utils/index.ts` barrel — which still re-exports `getSession`

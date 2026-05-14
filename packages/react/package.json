@@ -49,15 +49,14 @@
     "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
+  "dependencies": {
+    "@webspatial/core-sdk": "workspace:^"
+  },
   "peerDependencies": {
-    "@webspatial/core-sdk": "^1.5.0",
     "react": ">=18.0",
     "react-dom": ">=18.0"
   },
   "peerDependenciesMeta": {
-    "@webspatial/core-sdk": {
-      "optional": false
-    },
     "react": {
       "optional": false
     },
