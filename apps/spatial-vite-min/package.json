@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Minimal Vite + React 18 + WebSpatial SDK example. Demonstrates the lazy-load v1 architecture WITHOUT @webspatial/vite-plugin.",
+  "description": "Minimal Vite + React 18 + WebSpatial SDK example. Lazy default entry + eager subpath, no @webspatial/vite-plugin.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
