@@ -100,6 +100,13 @@ export default defineConfig([
     splitting: true,
     entry: {
       index: 'src/index.ts',
+      // The eager-mode entry per spec tasks.md §16. Statically links the
+      // spatial implementation so spatial-only consumers pay one network
+      // request instead of two. Lives alongside `index` in the same
+      // `splitting: true` chunk graph so shared utilities collapse into a
+      // common chunk and the eager entry does NOT duplicate code that the
+      // default entry already ships.
+      eager: 'src/eager.ts',
       spatial: 'src/spatial/index.ts',
       'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
       'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
@@ -128,12 +135,21 @@ export default defineConfig([
       //   - `dist/spatial.js` is the dynamic-import target (NOT a static
       //     RSC entry) → MUST NOT carry the directive
       // The §13.1 build-output assertion enforces both polarities.
-      const indexPath = resolve(__dirname, 'dist/index.js')
-      const current = readFileSync(indexPath, 'utf8')
       const directive = `'use client';\n`
-      if (!current.startsWith(directive.trimEnd())) {
-        writeFileSync(indexPath, directive + current)
+      const ensureUseClient = (filePath: string): void => {
+        const current = readFileSync(filePath, 'utf8')
+        if (!current.startsWith(directive.trimEnd())) {
+          writeFileSync(filePath, directive + current)
+        }
       }
+      // Default entry — RSC client boundary.
+      ensureUseClient(resolve(__dirname, 'dist/index.js'))
+      // Eager entry per spec tasks.md §16 — also a public RSC boundary
+      // because consumers may import facade-equivalent symbols + the
+      // `useSpatialReady` stub from a Server Component file. Without
+      // the directive the RSC compiler would attempt server execution
+      // of the underlying hook code and fail at the first hook call.
+      ensureUseClient(resolve(__dirname, 'dist/eager.js'))
     },
   },
 ])

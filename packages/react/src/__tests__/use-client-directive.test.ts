@@ -53,6 +53,16 @@ describe('"use client" directive on published dist (spec tasks.md §13.1)', () =
       expect(existsSync(indexPath)).toBe(true)
       expect(startsWithUseClient(indexPath)).toBe(true)
     })
+
+    it('dist/eager.js begins with the "use client" directive (per spec §16.4)', () => {
+      // The eager entry is also a public RSC boundary because consumers
+      // may import facade-equivalent symbols + the `useSpatialReady` stub
+      // from a Server Component file. The tsup `onSuccess` hook injects
+      // the directive into both `dist/index.js` and `dist/eager.js`.
+      const eagerPath = resolve(distDir, 'eager.js')
+      expect(existsSync(eagerPath)).toBe(true)
+      expect(startsWithUseClient(eagerPath)).toBe(true)
+    })
   })
 
   describe('Files that do NOT use React hooks MUST NOT carry "use client"', () => {
