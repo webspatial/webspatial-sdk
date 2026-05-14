@@ -3,6 +3,7 @@ import { EntityAnimationPageShell } from './shared'
 
 export default function EntityAnimationCapabilityCheckPage() {
   const supported = WebSpatialRuntime.supports('useAnimation', ['entity'])
+  const supportedNoArgs = WebSpatialRuntime.supports('useAnimation')
 
   return (
     <EntityAnimationPageShell
@@ -23,6 +24,15 @@ export default function EntityAnimationCapabilityCheckPage() {
           }`}
         >
           supports('useAnimation', ['entity']) = {String(supported)}
+        </div>
+        <div
+          className={`mt-4 inline-block rounded-lg px-4 py-2 text-sm font-mono ${
+            supportedNoArgs
+              ? 'border border-green-700 bg-green-900/50 text-green-300'
+              : 'border border-red-700 bg-red-900/50 text-red-300'
+          }`}
+        >
+          supports('useAnimation') = {String(supportedNoArgs)}
         </div>
       </section>
     </EntityAnimationPageShell>
