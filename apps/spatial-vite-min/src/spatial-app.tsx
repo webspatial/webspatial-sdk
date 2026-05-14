@@ -1,12 +1,24 @@
-import { Model } from '@webspatial/react-sdk'
+import React from 'react'
+
+export type SpatialAppModelProps = {
+  src?: string
+  style?: React.CSSProperties
+}
+
+export type SpatialAppProps = {
+  /** Which SDK entry this page was bundled from (lazy default vs eager). */
+  mode: 'lazy' | 'eager'
+  /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
+  Model: React.ComponentType<SpatialAppModelProps>
+}
 
 // `<div enable-xr>` is the documented JSX marker that the SDK's
 // jsx-runtime (resolved via tsconfig "jsxImportSource") strips and
 // wraps with `withSpatialized2DElementContainer('div')`. In a plain
 // browser the wrapper renders the underlying div as-is; in an AVP /
-// Pico / Puppeteer runtime, after `bootSpatial()` resolves, the real
-// container mounts a native spatial-div slab respecting the
-// `--xr-back` / `--xr-background-material` CSS custom properties.
+// Pico / Puppeteer runtime, after spatial is ready, the real container
+// mounts a native spatial-div slab respecting the `--xr-back` /
+// `--xr-background-material` CSS custom properties.
 const cellStyle = {
   width: 100,
   height: 100,
@@ -21,7 +33,11 @@ const cellStyle = {
   '--xr-background-material': 'thin',
 } as React.CSSProperties
 
-function App() {
+export function SpatialApp({ mode, Model }: SpatialAppProps) {
+  const otherHref = mode === 'lazy' ? '/eager.html' : '/'
+  const otherLabel =
+    mode === 'lazy' ? 'Open eager entry fixture' : 'Open lazy entry fixture'
+
   return (
     <main
       style={{
@@ -30,7 +46,20 @@ function App() {
         color: '#222',
       }}
     >
-      <h1>WebSpatial Vite Min</h1>
+      <p style={{ marginBottom: 16 }}>
+        <a href={otherHref}>{otherLabel}</a>
+        {' · '}
+        <span>
+          Entry:{' '}
+          <code>
+            {mode === 'lazy'
+              ? '@webspatial/react-sdk'
+              : '@webspatial/react-sdk/eager'}
+          </code>
+        </span>
+      </p>
+
+      <h1>WebSpatial Vite Min ({mode})</h1>
       <p>
         In a plain web browser the cells below render as flat divs and the{' '}
         <code>&lt;Model&gt;</code> renders the documented degraded{' '}
@@ -76,5 +105,3 @@ function App() {
     </main>
   )
 }
-
-export default App
