@@ -20,6 +20,7 @@ export const Texture: React.FC<TextureProps> = ({
 }) => {
   const ctx = useRealityContext()
   const textureRef = useRef<SpatialTextureResource | null>(null)
+  const urlRevisionRef = useRef(0)
 
   // Destroy only when the logical texture slot (ctx + id) goes away — not on url changes.
   useEffect(() => {
@@ -37,6 +38,7 @@ export const Texture: React.FC<TextureProps> = ({
   useEffect(() => {
     if (!ctx) return
     const { session, resourceRegistry } = ctx
+    const revision = ++urlRevisionRef.current
     let cancelled = false
 
     void (async () => {
@@ -44,20 +46,29 @@ export const Texture: React.FC<TextureProps> = ({
       try {
         if (textureRef.current) {
           await textureRef.current.updateProperties({ url: resolvedUrl })
+
+          if (cancelled || revision !== urlRevisionRef.current) return
+
           resourceRegistry.notify(id)
-        } else {
-          const texturePromise = session.createTexture({ url: resolvedUrl })
-          resourceRegistry.add(id, texturePromise)
-          const tex = await texturePromise
-          if (cancelled) {
-            tex.destroy()
-            return
-          }
-          textureRef.current = tex
+          onLoad?.()
+          return
         }
-        if (!cancelled) onLoad?.()
+
+        const texturePromise = session.createTexture({ url: resolvedUrl })
+        resourceRegistry.add(id, texturePromise)
+
+        const tex = await texturePromise
+
+        if (cancelled || revision !== urlRevisionRef.current) {
+          tex.destroy()
+          return
+        }
+
+        textureRef.current = tex
+        onLoad?.()
       } catch (error: unknown) {
-        if (!cancelled) onError?.(error)
+        if (cancelled || revision !== urlRevisionRef.current) return
+        onError?.(error)
       }
     })()
 
