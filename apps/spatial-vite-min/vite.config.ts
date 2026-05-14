@@ -24,6 +24,7 @@ export default defineConfig({
       input: {
         index: path.resolve(__dirname, 'index.html'),
         eager: path.resolve(__dirname, 'eager.html'),
+        eagerLean: path.resolve(__dirname, 'eager-lean.html'),
       },
     },
   },
