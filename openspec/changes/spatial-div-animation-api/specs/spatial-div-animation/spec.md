@@ -48,7 +48,7 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 
 ### Requirement: Only whitelisted properties are animatable
 
-`SpatialDiv` animation MUST support only these whitelisted fields: `back`, `transform.translate.x`, `transform.translate.y`, `transform.translate.z`, `opacity`, `depth`, `width`, `height`.
+`SpatialDiv` animation MUST support only visual fields that do not change the DOM layout box, native spatial panel size, depth, or spatial-position semantics: `transform.translate.x`, `transform.translate.y`, `transform.translate.z`, `transform.rotate.x`, `transform.rotate.y`, `transform.rotate.z`, `transform.scale.x`, `transform.scale.y`, `transform.scale.z`, and `opacity`.
 
 #### Scenario: Animate a subset of whitelisted fields
 
@@ -57,17 +57,20 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 - **THEN** the SDK MUST control only the declared fields
 - **AND** undeclared fields MUST continue using the existing regular sync path
 
-#### Scenario: transform is translation-only
+#### Scenario: transform supports only visual SRT components
 
 - **WHEN** the config includes `transform`
-- **THEN** the SDK MUST accept only the `translate: { x, y, z }` structure with three translation components
-- **AND** the SDK MUST NOT interpret it as an arbitrary CSS transform string, rotation, scale, or matrix interpolation
+- **THEN** the SDK MUST accept only these structured sub-fields: `translate?: { x?: number, y?: number, z?: number }`, `rotate?: { x?: number, y?: number, z?: number }`, and `scale?: { x?: number, y?: number, z?: number }`
+- **AND** `rotate.x/y/z` MUST align with CSS `rotateX()`, `rotateY()`, and `rotateZ()` respectively, using degrees
+- **AND** `scale.x/y/z` MUST align with CSS `scaleX()`, `scaleY()`, and `scaleZ()` respectively, using unitless multipliers
+- **AND** the SDK MUST compose transform in a fixed order: translate → rotate → scale
+- **AND** the SDK MUST NOT interpret it as an arbitrary CSS transform string, `skew`, `perspective`, or matrix interpolation
 
-#### Scenario: width and height semantics
+#### Scenario: Reject layout-affecting or spatial-size fields
 
-- **WHEN** the config includes `width` or `height`
-- **THEN** the SDK MUST interpret it as a direct override of native `SpatialDiv` size
-- **AND** the SDK MUST NOT automatically mutate the DOM element's CSS layout size
+- **WHEN** the config includes `width`, `height`, `back`, `backOffset`, `depth`, or any other field that affects layout, native spatial panel size, depth, or spatial-position semantics
+- **THEN** the SDK MUST throw
+- **AND** the SDK MUST NOT silently ignore those fields or downgrade them to regular DOM / CSS updates
 
 #### Scenario: Unsupported animation fields
 
@@ -78,7 +81,7 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 
 #### Scenario: Entity keys and SpatialDiv keys MUST NOT be mixed
 
-- **GIVEN** `to` includes both entity keys (`position`, `rotation`, `scale`) and SpatialDiv keys (`back`, `transform`, `opacity`, `depth`, `width`, `height`)
+- **GIVEN** `to` includes both entity keys (`position`, `rotation`, `scale`) and SpatialDiv keys (`transform`, `opacity`)
 - **WHEN** the SDK validates the config
 - **THEN** the SDK MUST throw
 
@@ -105,11 +108,9 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 
 | Field | Valid range | Notes |
 |---|---|---|
-| `back` | finite | `NaN` and `Infinity` MUST be rejected |
-| `depth` | finite | `NaN` and `Infinity` MUST be rejected |
 | `transform.translate.x/y/z` | finite | `NaN` and `Infinity` MUST be rejected |
-| `width` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
-| `height` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
+| `transform.rotate.x/y/z` | finite, degrees | `NaN` and `Infinity` MUST be rejected |
+| `transform.scale.x/y/z` | finite, unitless multiplier | `NaN` and `Infinity` MUST be rejected |
 | `opacity` | finite, inclusive `[0, 1]` | values outside `[0, 1]`, `NaN`, and `Infinity` MUST be rejected |
 
 #### Scenario: Missing animation target
@@ -121,7 +122,7 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 
 ### Requirement: Define isAnimating / isPaused state semantics
 
-A session is **alive** when it is in any of these states: queued, delaying, running, paused. A session is **not alive** when idle (no session or the session has ended). `isAnimating` reflects whether the session is actively progressing; `isPaused` reflects whether the session is frozen while still alive.
+The SDK MUST define a session as **alive** when it is in any of these states: queued, delaying, running, paused. A session is **not alive** when idle (no session or the session has ended). `isAnimating` reflects whether the session is actively progressing; `isPaused` reflects whether the session is frozen while still alive.
 
 `api.isAnimating` and `api.isPaused` MUST reflect the session state as follows:
 
@@ -319,9 +320,9 @@ When an animation session controls a `SpatialDiv` field, the SDK MUST prevent re
 
 #### Scenario: Property-level suppression
 
-- **GIVEN** a session controls any of `back`, `opacity`, `depth`, `width`, or `height`
+- **GIVEN** a session controls `opacity`
 - **WHEN** `PortalInstanceObject` performs regular property sync while the session is alive
-- **THEN** the SDK MUST suppress regular sync for those controlled fields
+- **THEN** the SDK MUST suppress regular sync for `opacity`
 - **AND** uncontrolled fields MUST continue to update via the existing path
 - **AND** the latest prop values for suppressed fields MUST be cached for recovery after suppression ends
 - **AND** caches MUST be maintained per field and used to resume regular sync on the first React render after the session ends (using that render's latest props), then discarded
@@ -346,15 +347,6 @@ When an animation session controls a `SpatialDiv` field, the SDK MUST prevent re
 - **WHEN** application code calls `api.cancel()`
 - **THEN** the `SpatialDiv` MUST be restored to `from` (or the start snapshot when `from` is omitted)
 - **AND** the SDK MUST NOT leave it at the cancel point
-
-#### Scenario: width and height are not written back to DOM automatically
-
-- **GIVEN** a session controls `width` or `height`
-- **WHEN** the animation completes naturally or is canceled
-- **THEN** the native final size MUST be returned via `onComplete` or `onCancel`
-- **AND** the SDK MUST NOT automatically modify the DOM element's CSS layout size
-
----
 
 ### Requirement: Behavior in unsupported runtimes
 

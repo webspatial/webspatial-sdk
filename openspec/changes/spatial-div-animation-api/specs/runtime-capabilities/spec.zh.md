@@ -2,7 +2,7 @@
 
 ### Requirement: 宣告 SpatialDiv 动画能力支持
 
-运行时能力 API MUST 文档化并解析 sub-token `useAnimation` + `['element']`，用于表示当前 runtime 是否端到端支持 `SpatialDiv` 白名单属性动画。
+运行时能力 API MUST 文档化并解析 sub-token `useAnimation` + `['element']`，用于表示当前 runtime 是否端到端支持 `SpatialDiv` 视觉白名单动画。
 
 #### Scenario: 支持的 runtime
 
