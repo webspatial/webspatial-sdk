@@ -5,7 +5,7 @@
 - `UpdateSpatialized2DElementProperties`: sync properties such as `width`, `height`, `depth`, `opacity`, and `backOffset`
 - `UpdateSpatializedElementTransform`: sync the full transform matrix
 
-This means that if we simply reuse the "any prop change immediately syncs native" model, animation playback will compete with regular DOM syncing. At the same time, v1 requirements restrict `SpatialDiv` animation to `back`, `transform.translate.x/y/z`, `opacity`, `depth`, `width`, and `height`, and require a high-level API that follows the existing `entity transform animation` proposal. Therefore, this design is not about supporting arbitrary CSS animations; it is about providing a consistent, minimal-scope animation API on top of the current `SpatialDiv` sync architecture.
+This means that if we simply reuse the "any prop change immediately syncs native" model, animation playback will compete with regular DOM syncing. At the same time, v1 requirements restrict `SpatialDiv` animation to visual-only `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`; fields that affect DOM layout, native spatial panel sizing, depth, or spatial-position semantics are not supported. Therefore, this design is not about supporting arbitrary CSS animations; it is about providing a consistent, minimal-scope visual animation API on top of the current `SpatialDiv` sync architecture.
 
 ## Goals / Non-Goals
 
@@ -20,8 +20,8 @@ This means that if we simply reuse the "any prop change immediately syncs native
 **Non-Goals:**
 
 - Animating arbitrary CSS properties or accepting a full CSS style object as `to` / `from`.
-- Supporting `SpatialDiv` rotation/scale/skew, matrix-level transform interpolation, or arbitrary CSS transform string interpolation.
-- Auto-writing `width` / `height` animation back into DOM layout or driving browser reflow.
+- Supporting `skew`, `perspective`, matrix-level transform interpolation, or arbitrary CSS transform string interpolation.
+- Supporting animation for `width`, `height`, `back` / `backOffset`, `depth`, or any field that affects layout, spatial sizing, depth, or spatial-position semantics.
 - Split `SpatialDiv` animation capability detection into a separate top-level key.
 - Multi-step keyframes, async scripts, or timeline orchestration across multiple `SpatialDiv` instances within a single hook.
 
@@ -39,12 +39,12 @@ function useAnimation(config: SpatialDivAnimationConfig): [SpatialDivAnimatedPro
 
 ```typescript
 interface SpatialDivAnimatedValues {
-  back?: number
-  transform?: { translate?: { x?: number; y?: number; z?: number } }
+  transform?: {
+    translate?: { x?: number; y?: number; z?: number }
+    rotate?: { x?: number; y?: number; z?: number }
+    scale?: { x?: number; y?: number; z?: number }
+  }
   opacity?: number
-  depth?: number
-  width?: number
-  height?: number
 }
 ```
 
@@ -54,7 +54,8 @@ interface SpatialDivAnimatedValues {
 interface SpatialDivAnimationConfig {
   /**
    * Target values (required).
-   * Only accepts whitelisted fields: back, transform.translate.x/y/z, opacity, depth, width, height.
+   * Only accepts visual whitelist fields:
+   * transform.translate.x/y/z, transform.rotate.x/y/z, transform.scale.x/y/z, opacity.
    */
   to: SpatialDivAnimatedValues
 
@@ -159,7 +160,9 @@ An opaque object returned as the first tuple element. Pass it directly to the sp
 
 All whitelisted values use numeric inputs:
 
-- `back`, `depth`, `width`, `height`, `transform.translate.x/y/z`: pixel semantics consistent with existing SpatialDiv behavior
+- `transform.translate.x/y/z`: pixel semantics consistent with existing SpatialDiv CSS transform behavior
+- `transform.rotate.x/y/z`: degrees, aligned with CSS `rotateX/Y/Z()`
+- `transform.scale.x/y/z`: unitless multipliers, aligned with CSS `scaleX/Y/Z()`
 - `opacity`: inclusive range `[0, 1]`
 
 ### Internal Hook Dispatch Design
@@ -182,7 +185,7 @@ export function useAnimation(config: AnimationConfig) {
 
 **Design rationale:**
 
-1. **Mutual exclusion**: `resolveAnimationKind` matches the key set in `config.to` against whitelists — entity path keys (`position`, `rotation`, `scale`) and SpatialDiv path keys (`back`, `opacity`, `depth`, `width`, `height`, `transform.translate.*`) are mutually exclusive; co-presence throws.
+1. **Mutual exclusion**: `resolveAnimationKind` matches the key set in `config.to` against whitelists — entity path keys (`position`, `rotation`, `scale`) and SpatialDiv path keys (`opacity`, `transform.translate.*`, `transform.rotate.*`, `transform.scale.*`) are mutually exclusive; co-presence throws.
 2. **Inactive-side short-circuit**: `useSpatialDivAnimation(config, active=false)` still declares all `useState` / `useRef` calls (keeping Hook call order stable), but `useEffect` bodies short-circuit via `if (!active) return` — no Bridge session is established, no CADisplayLink is started. The returned API is a no-op stub.
 3. **Zero extra overhead**: The inactive side occupies only a few ref/state slots in memory with no side-effect execution, negligible for frame-level animation performance.
 4. **Extensible**: Adding a third path in the future (e.g., WebGL layer animation) requires only a new `useXxxAnimation(config, kind === 'xxx')` line in `useAnimation` — callers remain unaffected.
@@ -192,13 +195,25 @@ export function useAnimation(config: AnimationConfig) {
 
 ### SpatialDiv Entrance Animation
 
-Combine back offset and opacity to fade a card in from behind. `autoStart` defaults to `true`, so playback begins after binding.
+Combine `transform.translate`, `transform.scale`, and `opacity` to move a card up slightly, scale it into place, and fade it in. `autoStart` defaults to `true`, so playback begins after binding.
 
 ```jsx
 function FadeInCard() {
   const [animation] = useAnimation({
-    from: { back: -50, opacity: 0 },
-    to:   { back: 0, opacity: 1 },
+    from: {
+      transform: {
+        translate: { y: 24 },
+        scale: { x: 0.96, y: 0.96, z: 1 },
+      },
+      opacity: 0,
+    },
+    to: {
+      transform: {
+        translate: { y: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+      },
+      opacity: 1,
+    },
     duration: 0.6,
     timingFunction: 'easeOut',
   })
@@ -211,35 +226,25 @@ function FadeInCard() {
 }
 ```
 
-### Manual Play With Cancel Size Sync
+### Manual Rotation
 
-Set `autoStart: false` and start on interaction. Use `onCancel` to sync React state so DOM sizing matches the native restored size when desired.
+Set `autoStart: false` and start on interaction. `transform.rotate.y` aligns with CSS `rotateY()` and uses degrees.
 
 ```jsx
-function ResizePanel() {
-  const [size, setSize] = useState({ width: 200, height: 150 })
-
+function RotatePanel() {
   const [animation, api] = useAnimation({
-    to: { width: 400, height: 300 },
+    from: { transform: { rotate: { y: 0 } } },
+    to: { transform: { rotate: { y: 18 } } },
     duration: 1.0,
     autoStart: false,
-    onCancel: (restored) => {
-      if (restored.width != null && restored.height != null) {
-        setSize({ width: restored.width, height: restored.height })
-      }
-    },
   })
 
   return (
     <>
-      <button onClick={() => api.play()}>Expand</button>
+      <button onClick={() => api.play()}>Tilt</button>
       <button onClick={() => api.cancel()}>Cancel</button>
-      <div
-        enable-xr
-        animation={animation}
-        style={{ width: size.width, height: size.height }}
-      >
-        <p>Resizable Panel</p>
+      <div enable-xr animation={animation} style={{ width: 300, height: 180 }}>
+        <p>Rotating Panel</p>
       </div>
     </>
   )
@@ -537,7 +542,7 @@ Reasons for choosing `CADisplayLink`:
 - **Imperative control naturally aligned**: `isPaused = true/false` implements pause/resume in one line, `invalidate()` implements stop — directly maps to the proposal's play/pause/cancel semantics
 - **Decoupled from SwiftUI View**: Can run in a standalone Swift class independent of View lifecycle, naturally suited for encapsulation as `SpatialDivAnimationSession`
 - **Symmetric with Entity animation architecture**: Entity side has `EntityAnimationManager` / `EntityAnimationSession`; SpatialDiv side establishes symmetric `SpatialDivAnimationManager` / `SpatialDivAnimationSession`
-- **Clear property write path**: `SpatializedElement` is an `@Observable` object; all whitelisted properties (`opacity`, `backOffset`, `depth`, `width`, `height`, `transform`) already exist as `var` — direct assignment triggers SwiftUI view updates
+- **Clear property write path**: `SpatializedElement` is an `@Observable` object; the visual whitelist uses existing `opacity` and `transform` vars — direct assignment triggers SwiftUI view updates
 
 ### Core Mapping
 
@@ -551,7 +556,7 @@ Reasons for choosing `CADisplayLink`:
 | Cancel restore | `entity.move(to:duration:0)` (bypasses bind-point) | Direct `@Observable` property assignment (no bind-point restriction) |
 | Delay & rate | `AnimationView.delay` / `AnimationView.speed` | Session-internal elapsed calculation: subtract delay, multiply by playbackRate |
 | Session management | `EntityAnimationManager` (keyed by animationId) | `SpatialDivAnimationManager` (keyed by animationId, at most one active session per element) |
-| Property interpolation | RealityKit built-in Transform interpolation | Manual `lerp(from, to, easedProgress)` per-field scalar interpolation |
+| Property interpolation | RealityKit built-in Transform interpolation | Manual `lerp(from, to, easedProgress)` for opacity and transform SRT components |
 
 ### Key Implementation Details
 
@@ -561,9 +566,9 @@ Reasons for choosing `CADisplayLink`:
 
 3. **Cancel restore**: Directly assign `@Observable` properties to `from` (or initial snapshot), `invalidate()` the displayLink, emit `_canceled` event. Simpler than Entity animation's `entity.move(to:duration:0)` — SwiftUI `@Observable` assignment takes effect immediately without bypassing bind-points.
 
-4. **Transform decomposition**: v1 only supports `translate` subfields, and the entire transform is suppressed during animation. Only the translation component needs to be extracted from the current `AffineTransform3D` at session start; only the translation column is modified during animation — no complex matrix decomposition/recomposition needed.
+4. **Transform decomposition and composition**: v1 supports `translate`, `rotate`, and `scale` subfields, and the entire transform is suppressed during animation. At session start, the native side extracts SRT components from the current `AffineTransform3D`; during animation it recomposes a matrix in the fixed order translate → rotate → scale. `rotate.x/y/z` align with CSS `rotateX/Y/Z()` and use degrees; `scale.x/y/z` align with CSS `scaleX/Y/Z()` and use unitless multipliers.
 
-5. **Width/Height risk**: Changing `SpatializedElement.width/height` causes SwiftUI's `.frame(width:height:)` to respond automatically, but WKWebView internals may produce brief reflow flicker. This is a known v1 risk requiring POC validation.
+5. **Layout properties excluded**: `width` / `height`, `back` / `backOffset`, and `depth` are not in the animation whitelist, avoiding additional source-of-truth conflicts between native spatial panel sizing, depth/spatial-position semantics, and DOM layout sync.
 
 ## Decisions
 
@@ -572,7 +577,7 @@ Reasons for choosing `CADisplayLink`:
    The public API remains `useAnimation(config)`. Internally, the hook inspects the key set in `config.to` to route to either the entity path or the `SpatialDiv` path. The two key sets are mutually exclusive:
 
    - Entity keys: `position`, `rotation`, `scale`
-   - SpatialDiv keys: `back`, `transform` (v1: `translate` sub-field only), `opacity`, `depth`, `width`, `height`
+   - SpatialDiv keys: `transform` (v1: `translate` / `rotate` / `scale` sub-fields only), `opacity`
 
    Rules:
 
@@ -617,31 +622,22 @@ Reasons for choosing `CADisplayLink`:
 
    `SpatialDiv` animatable fields span both existing sync paths (`transform` and `properties`), so we should not reuse the entity transform-only command as-is. We introduce a unified animation command around `Spatialized2DElement`.
 
-   Alternative: split `transform` vs property animation into two commands. Rejected because a single `SpatialDiv` animation often includes `transform`, `opacity`, and `back`, and splitting significantly increases session alignment and failure recovery complexity.
+   Alternative: split `transform` vs property animation into two commands. Rejected because a single `SpatialDiv` animation often includes both `transform` and `opacity`, and splitting significantly increases session alignment and failure recovery complexity.
 
-5. **When `from` is omitted, snapshot at play execution time; `width` / `height` are native-size overrides**
+5. **When `from` is omitted, snapshot at play execution time**
 
    When `from` is omitted, the native side snapshots current values upon receiving the `play` command (consistent with entity animation), rather than having the JS side pre-read and send them down. This avoids extra bridge round-trips. If the element is not yet bound, `play()` enters queued state and the snapshot timing is when binding completes and playback is executed. `delay` only affects when visible motion starts and MUST NOT change snapshot timing. The snapshot MUST cover only fields present in `to`; fields absent from `to` MUST NOT be snapshotted or affected by the session.
 
    Snapshot sources per field:
 
-   - `back`, `opacity`, `depth`: read from native `Spatialized2DElement` current state
-   - `transform.translate.x/y/z`: read translation components from native `Spatialized2DElement` current transform
-   - `width` / `height`: read native spatial panel size (not DOM `getBoundingClientRect()`), since a previous animation stop may have made native size differ from DOM layout size
-
-   `width` / `height` are defined as "native spatial size overrides" because regular `SpatialDiv` sizing originates from the DOM layout box, while the animation target is the native spatial panel:
-
-   - `width` / `height` animation updates native `Spatialized2DElement` size
-   - It does not automatically mutate DOM CSS `width` / `height`
-   - If an app wants DOM state to match the native end state, it should sync React state in `onComplete` / `onCancel`
-
-   Alternative: write DOM styles during animation. Rejected because it pulls animation back into the browser layout system (reflow risk) and cannot guarantee strict consistency with native playback.
+   - `opacity`: read from native `Spatialized2DElement` current state
+   - `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`: extract the corresponding SRT components from the native `Spatialized2DElement` current transform
 
 6. **Competition handling uses property-level suppression plus transform-wide suppression**
 
-   For `back`, `opacity`, `depth`, `width`, and `height`, the SDK uses field-level suppression: when a session controls a field, `PortalInstanceObject.updateSpatializedElementProperties()` MUST stop pushing regular sync updates for that field, while other uncontrolled fields continue to sync normally.
+   For `opacity`, the SDK uses field-level suppression: when a session controls the field, `PortalInstanceObject.updateSpatializedElementProperties()` MUST stop pushing regular sync updates for `opacity`, while other uncontrolled fields continue to sync normally.
 
-   For `transform` (v1: `translate` sub-field only), v1 uses transform-wide suppression rather than splitting into translation components. The regular sync path sends a full `DOMMatrix`; suppressing only translation would require matrix decomposition/recomposition on both React and native sides, which is higher risk. Therefore v1 rules are:
+   For `transform` (v1: `translate` / `rotate` / `scale` sub-fields only), v1 uses transform-wide suppression rather than splitting into individual SRT components. The regular sync path sends a full `DOMMatrix`; suppressing only some components would require finer-grained matrix decomposition/recomposition on both React and native sides, which is higher risk. Therefore v1 rules are:
 
    - If the animation config includes `transform`, regular `updateTransform(matrix)` is suppressed for the duration of the alive session
    - After the session ends, regular transform sync resumes on the next React render
@@ -649,7 +645,7 @@ Reasons for choosing `CADisplayLink`:
 
    Suppression release timing: field-level suppression is released when the session ends (completion or stop). Suppression flags are cleared before lifecycle callbacks fire, so the next React render after callbacks resumes regular syncing using the latest props, and caches are then discarded.
 
-   This means that if the app changes CSS rotate/scale during a translation animation, those changes are delayed until the session ends. This is an intentional v1 trade-off.
+   This means that if the app changes regular CSS transform while a transform animation is alive, those changes are delayed until the session ends. This is an intentional v1 trade-off.
 
 7. **Lifecycle and error semantics match entity animation**
    The semantics of `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `playState`, `finished`, `onStart`, `onComplete`, `onCancel`, and `onError` match the entity animation proposal to minimize behavioral divergence within the SDK.
@@ -672,8 +668,8 @@ Reasons for choosing `CADisplayLink`:
 
 ## Risks / Trade-offs
 
-- **Transform-wide suppression freezes regular rotate/scale updates during animation** -> Document as a v1 limitation; reserve finer-grained transform composition for later versions.
-- **`width` / `height` animation may temporarily diverge native size from DOM layout box** -> Return final values via `onComplete` / `onCancel`, and document that apps decide whether to sync React state.
+- **Transform-wide suppression freezes regular CSS transform updates during animation** -> Document as a v1 limitation; reserve finer-grained transform composition for later versions.
+- **Transform rotate / scale decomposition has edge cases** -> Use a fixed translate → rotate → scale composition order and cover common CSS `rotateX/Y/Z()` and `scaleX/Y/Z()` combinations in tests; keep matrix and skew unsupported to control complexity.
 - **Sub-token capability detection enables independent evolution under the same top-level key** -> But requires application-side understanding of sub-token semantics; documentation must explain clearly.
 - **`SpatialDiv` animation touches multiple layers (React, core, bridge, native)** -> Use a unified session command, a single failure event model, and focused tests to reduce cross-layer drift.
 - **If the app does not sync React state in `onComplete` / `onCancel` after animation ends, regular sync resumption may push stale values to native, causing a visual "flash-back"** -> Consistent with entity animation behavior. Document and demonstrate in examples that apps MUST manually sync state in callbacks to preserve animation end state.
