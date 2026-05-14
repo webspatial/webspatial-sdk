@@ -54,11 +54,11 @@ jobs:
           ${{ steps.setup-chrome.outputs.chrome-path }} --version
 
       - name: Install autotest and build required packages
-        run: pnpm -F autotest run setup-local
+        run: pnpm run test:auto:setup-local
 
       - name: Run mocha in autoTest package
         continue-on-error: true
-        run: pnpm --filter autotest run test
+        run: pnpm run test:auto
 
       - name: Upload test report artifact
         id: upload_report
@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: autotest-report
-          path: packages/autoTest/reports
+          path: tests/autoTest/reports
           if-no-files-found: ignore
 
       - name: Construct artifact download URL
