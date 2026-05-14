@@ -313,7 +313,7 @@ const [animation, api] = useAnimation({
 ```ts
 import { supports } from '@webspatial/core-sdk';
 
-if (supports('useAnimation')) {
+if (supports('useAnimation', ['entity'])) {
   // Animation API is available in the current runtime
 }
 ```

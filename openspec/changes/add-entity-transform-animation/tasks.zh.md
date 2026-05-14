@@ -1,6 +1,6 @@
 ## 1. API 与能力契约
 
-- [x] 1.1 将 `entity-transform-animation` 与 `runtime-capabilities` 的 spec 纳入实现计划，并统一命名到 `supports('useAnimation')`
+- [x] 1.1 将 `entity-transform-animation` 与 `runtime-capabilities` 的 spec 纳入实现计划，并统一命名到 `supports("useAnimation", ["entity"])`
 - [x] 1.2 定义 `useAnimation`、`AnimationApi`、实体 `animation` prop、`AnimationError` 与动画结果回传的对外类型（React 与 Core SDK）
 - [x] 1.3 增加非法动画配置的校验规则，并明确不支持 runtime 下的 warning 行为
 - [x] 1.4 在 `AnimationConfig` 与 `AnimateTransformCommand` 类型中增加 `playbackRate` 字段，并增加校验（必须 > 0 且有限，默认值 1）
@@ -12,7 +12,7 @@
 
 - [x] 2.1 实现统一的动画命令结构，以及 Core 层 `SpatialEntity.animateTransform(...)` 会话 API *(blocked by 1.2)*
 - [x] 2.2 打通 completed / canceled / failed 事件处理，使 JS 能拿到 Native 终态 transform 或错误 payload 以触发回调并同步状态 *(needs realign: canceled payload 语义变更为恢复后的 from)* *(blocked by 2.1)*
-- [x] 2.3 扩展 capability keys 与数据表，使 `supports('useAnimation')` 能按 runtime 正确解析
+- [x] 2.3 扩展 capability keys 与数据表，使 `supports("useAnimation", ["entity"])` 能按 runtime 正确解析
 
 ## 3. React SDK 集成
 
@@ -31,7 +31,7 @@
 ## 5. 验证与文档
 
 - [x] 5.1 增加聚焦测试：
-  - [x] 5.1.1 能力检测（`supports('useAnimation')` true/false/sub-token）
+  - [x] 5.1.1 能力检测（`supports("useAnimation", ["entity"])` true/false/sub-token）
   - [x] 5.1.2 React 播放生命周期（onStart 时机、包含 queued 后 paused 的 start、start/complete/cancel 回调、互斥性、调用次数、cancel 恢复到 from） *(needs realign)*
   - [x] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
   - [x] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）

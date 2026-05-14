@@ -1,6 +1,6 @@
 ## 1. API and capability contract
 
-- [x] 1.1 Add the `entity-transform-animation` and `runtime-capabilities` spec artifacts to the implementation plan and align naming with `supports('useAnimation')`
+- [x] 1.1 Add the `entity-transform-animation` and `runtime-capabilities` spec artifacts to the implementation plan and align naming with `supports("useAnimation", ["entity"])`
 - [x] 1.2 Define the public React and core SDK types for `useAnimation`, `AnimationApi`, entity `animation` prop, `AnimationError`, and animation result payloads
 - [x] 1.3 Add validation rules for invalid animation config and define warning behavior for unsupported runtimes
 - [x] 1.4 Add `playbackRate` to `AnimationConfig` and `AnimateTransformCommand` types, with validation (must be > 0 and finite, default 1)
@@ -12,7 +12,7 @@
 
 - [x] 2.1 Implement the unified animation command shape and core `SpatialEntity.animateTransform(...)` session API *(blocked by 1.2)*
 - [x] 2.2 Wire completion / cancel / failure event handling so JS receives native terminal transform values or error payloads for callbacks and state sync *(needs realign: canceled payload now means restored `from`)* *(blocked by 2.1)*
-- [x] 2.3 Extend runtime capability keys and data so `supports('useAnimation')` resolves correctly per runtime
+- [x] 2.3 Extend runtime capability keys and data so `supports("useAnimation", ["entity"])` resolves correctly per runtime
 
 ## 3. React SDK integration
 
@@ -31,7 +31,7 @@
 ## 5. Validation and documentation
 
 - [x] 5.1 Add focused tests for:
-  - [x] 5.1.1 Capability checks (`supports('useAnimation')` true/false/sub-token)
+  - [x] 5.1.1 Capability checks (`supports("useAnimation", ["entity"])` true/false/sub-token)
   - [x] 5.1.2 React playback lifecycle (onStart timing, including queued-to-paused start, start/complete/cancel callbacks, exclusivity, invocation count, cancel restores `from`) *(needs realign)*
   - [x] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
   - [x] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)

@@ -36,8 +36,8 @@ export default function EntityAnimationPage() {
               Stop and sync: after stop, the next render keeps the stop-point.
             </li>
             <li>
-              Capability: <code>supports('useAnimation')</code> is true in
-              WebSpatial runtime and false otherwise.
+              Capability: <code>supports('useAnimation', ['entity'])</code> is
+              true in WebSpatial runtime and false otherwise.
             </li>
             <li>Reset loop: box moves, resets to the start, and repeats.</li>
             <li>

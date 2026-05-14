@@ -60,7 +60,7 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
     - `api.isAnimating` remains `false`; `api.playState` stays `'queued'`.
     - No lifecycle callbacks (`onStart`, `onComplete`, `onCancel`) fire while unbound; `onError` is not triggered either, since the absence of a bound entity is a valid waiting state, not an error.
     - On unmount, any queued session is silently cleaned up with no callbacks.
-- Extend runtime capability documentation so applications can query `supports('useAnimation')` before relying on the animation API.
+- Extend runtime capability documentation so applications can query `supports("useAnimation", ["entity"])` before relying on the animation API.
 
 ## Capabilities
 
@@ -70,7 +70,7 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
 
 ### Modified Capabilities
 
-- `runtime-capabilities`: Add a documented `supports('useAnimation')` capability key for the entity transform animation API.
+- `runtime-capabilities`: Add a documented `supports("useAnimation", ["entity"])` capability key for the entity transform animation API.
 
 ## Impact
 

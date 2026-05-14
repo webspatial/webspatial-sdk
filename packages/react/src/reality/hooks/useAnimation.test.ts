@@ -7,14 +7,15 @@ import type {
   AnimationApi,
 } from '@webspatial/core-sdk'
 
-// Mock supports() to return true for useAnimation in test environment
+// Mock supports() to return true for useAnimation with entity sub-token in test environment
 vi.mock('@webspatial/core-sdk', async () => {
   const actual = await vi.importActual('@webspatial/core-sdk')
   return {
     ...actual,
     VALID_TIMING_FUNCTIONS: actual.VALID_TIMING_FUNCTIONS,
-    supports: (name: string) => {
-      if (name === 'useAnimation') return true
+    supports: (name: string, tokens?: readonly string[]) => {
+      if (name === 'useAnimation' && tokens && tokens.includes('entity'))
+        return true
       return false
     },
   }
