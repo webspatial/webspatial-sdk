@@ -94,6 +94,35 @@ export function loadSpatialImpl(): Promise<SpatialImplementation | null> {
   return loadPromise
 }
 
+// Internal-only: the eager entry (`src/eager.ts`) calls this at module-
+// evaluation time to preload the bridge with the statically-linked spatial
+// implementation. After this call the bridge is permanently in the "ready"
+// state for the page lifetime — `bootSpatial()` becomes a no-op (the
+// `spatialImpl !== null` short-circuit at the top of `loadSpatialImpl()`
+// handles this), `isSpatialReady()` returns `true`, and `useSpatialReady()`
+// returns `true`. This is precisely the runtime contract the eager entry
+// promises to consumers per the "Eager-mode entry for spatial-only consumers"
+// Requirement.
+//
+// First call wins: subsequent calls with a different implementation are
+// silently ignored so that mixing import roots (an unsupported but possible
+// configuration; see "Mixed-import shape is not supported" Scenario) does
+// NOT corrupt the bridge. The first preload sets the contract; later
+// imports either match it (no-op) or are ignored (they would only happen
+// if a consumer simultaneously imports the lazy and eager entries, which
+// the migration guide explicitly forbids).
+//
+// This function is NOT re-exported from the default-entry public surface
+// — it is an internal coupling between the bridge and the eager entry.
+// The double-underscore prefix matches the test-only helpers below to
+// signal "internal" without prefixing every export with `internal_`.
+export function __internalSetSpatialImpl(impl: SpatialImplementation): void {
+  if (spatialImpl !== null) return
+  spatialImpl = impl
+  loadAttempt = 1
+  notifyReadyListeners()
+}
+
 export function __setSpatialImplLoaderForTests(
   loader: SpatialImplementationLoader,
 ): void {

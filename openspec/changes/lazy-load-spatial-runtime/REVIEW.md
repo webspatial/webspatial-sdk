@@ -255,3 +255,30 @@ This keeps "code review" and "spec amendment review" as two separable signals on
 ### Archive
 
 Once all implementation PRs land and CI is green, run `openspec archive lazy-load-spatial-runtime` (per `.codex/skills/openspec-archive-change/SKILL.md`) to move `openspec/changes/lazy-load-spatial-runtime/` into `openspec/archive/<date>-lazy-load-spatial-runtime/`. The change becomes part of the canonical spec history.
+
+---
+
+## Framing decision: two distribution forms, shared packaging hygiene
+
+**Date added:** during PR 6 follow-up review, after the §12.9 calibration + zero-install + spatial-vite-min fixture work landed.
+
+**Context.** This change was originally framed as "lazy-load architecture for the React SDK" — a single-product-decision change. During implementation review the framing surfaced two related concerns:
+
+1. **Reviewer concern (product-orthogonal hygiene is buried).** Most of the contracts in this change — `"sideEffects"` allowlist correctness, `bundle: false` tree-shake friendliness, no top-level observable side effects, named-re-export discipline, peer dependency declarations, ESM-only published shape, `'use client'` directive on hook-using files, type-only re-exports vanishing at runtime, dead-code cleanup (`XR_ENV`), single-package install via `dependencies` migration, type re-exports from `core-sdk` — are **packaging hygiene** that benefits any SDK regardless of whether it ships a lazy-load architecture, an eager bundle, or anything else. Burying them inside a "lazy-load" change made it look as if they only existed to serve the lazy-load product decision; in fact they are independently valuable engineering work that the SDK should retain even if the lazy-load product decision is later reversed.
+
+2. **Reviewer concern (spatial-only consumers pay an unnecessary round-trip).** Lazy-load v1 optimizes for **web-first consumers** (PWAs, marketing pages, web apps that progressively enhance into spatial). But there is a second, distinct consumer profile — **spatial-only consumers** (internal AVP / Pico enterprise apps, App Store apps that ship to fixed spatial devices, deeply spatial-first product surfaces) — for whom the lazy-load round-trip (main chunk parse → `bootSpatial()` → spatial chunk fetch → second parse) is pure overhead. They have no plain-web execution path, they don't benefit from the byte savings, and the extra RTT delays first-interactive render in the AVP simulator.
+
+**Decision.** Rather than treat eager mode as a deferred follow-up (with the risk that future product reversal also kills the hygiene gains), this change is re-scoped to deliver **two distribution forms sharing one packaging-hygiene contract set**:
+
+- The lazy-load default entry (`@webspatial/react-sdk`) — pinned by Requirements §1–§11 of `specs/spatial-lazy-load/spec.md`, implementing web-first progressive enhancement.
+- The eager-mode entry (`@webspatial/react-sdk/eager`) — pinned by the new "Eager-mode entry for spatial-only consumers" Requirement, providing spatial-only consumers a single-request alternative that skips the `bootSpatial()` indirection.
+- The packaging-hygiene contract set — explicitly enumerated in the new "Two distribution forms share packaging hygiene" Requirement — that holds for both forms regardless of which entry a consumer picks.
+
+**Why this framing instead of a separate follow-up change.**
+
+- **Risk hedging.** If the lazy-load product decision is later reversed (or the web-first consumer profile turns out to be smaller than projected), the eager entry is already a complete, shippable distribution form carrying all the hygiene gains. The team doesn't have to choose between "revert lazy-load and lose all the engineering work" vs "ship lazy-load even if the product profile doesn't match." Both forms exist; product can adjust the recommended default without spec churn.
+- **Hygiene independence is now normative.** With the new "Two distribution forms share packaging hygiene" Requirement, future changes that adjust the lazy / eager balance (add a third form, remove one form, restructure) MUST explicitly enumerate which hygiene contracts continue to hold and which need updating. The contracts can no longer be silently weakened as a side effect of distribution-form restructuring.
+- **Implementation cost is small and bounded.** The eager entry is ~30 lines of new code (re-exports + four no-op stubs) plus one `tsup` entry, one `package.json` exports mapping, and three small test files. It does NOT require any change to the lazy-load code paths (verified by the new "Default entry's marginal-delta budget is not affected by eager entry's existence" Scenario, which the §16.10 task asserts in CI). Adding it to this change is materially cheaper than opening a separate OpenSpec change with its own propose / review / implement / archive cycle.
+- **Sequencing is cleaner.** Both forms ship together in v1, and consumers pick at install time / migration time. Deferring eager to v1.x means consumers who would prefer eager spend the v1 → v1.x interval working around the lazy-load round-trip, then migrate twice (first to v1 with `bootSpatial()`, then to v1.x with the eager entry).
+
+**Trade-off acknowledged.** Reviewers may push back on "two distribution forms" as documentation surface — the README and migration guide MUST present a clear decision tree (§16.11 task). The "Mixed-import shape is not supported" Scenario captures the one footgun consumers can hit; the dev-mode warning that §16.6 task specifies (and the migration guide section §16.11 documents) provides the diagnostic.
