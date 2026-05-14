@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useReducer } from 'react'
-import { Spatialized2DElement } from '@webspatial/core-sdk'
+import { Spatialized2DElement, supports } from '@webspatial/core-sdk'
 import type {
   SpatialDivAnimationConfig,
   SpatialDivAnimationApi,
@@ -77,6 +77,7 @@ export function useSpatialDivAnimation(
   const elementRef = useRef<Spatialized2DElement | null>(null)
   const elementIdRef = useRef<string | null>(null)
   const unmountedRef = useRef(false)
+  const warnedRef = useRef(false)
 
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
@@ -178,6 +179,18 @@ export function useSpatialDivAnimation(
   // ---- API ----
   const play = useCallback(() => {
     if (!active) return
+
+    // Unsupported runtime check
+    if (!supports('useAnimation', ['element'])) {
+      if (!warnedRef.current) {
+        warnedRef.current = true
+        console.warn(
+          '[useAnimation] SpatialDiv animation is not supported in the current runtime.',
+        )
+      }
+      return
+    }
+
     enqueueCommand(async () => {
       const currentSession = sessionRef.current
 
