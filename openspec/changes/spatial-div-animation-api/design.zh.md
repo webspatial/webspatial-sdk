@@ -5,7 +5,7 @@
 - `UpdateSpatialized2DElementProperties`：同步 `width`、`height`、`depth`、`opacity`、`backOffset` 等属性
 - `UpdateSpatializedElementTransform`：同步完整的 transform matrix
 
-这意味着如果直接沿用"普通 props 改变即立刻同步 native"的模型，动画播放会与常规 DOM 同步产生竞争。与此同时，产品需求已将 `SpatialDiv` 动画的第一版范围限制为 `back`、`transform.translate.x/y/z`、`opacity`、`depth`、`width`、`height`，并明确要求高层 API 设计遵循 `entity transform animation` 提案。因此，本设计要解决的核心不是"如何支持任意 CSS 动画"，而是"如何在现有 SpatialDiv 同步架构上，以最小可实现范围提供一致的动画 API"。
+这意味着如果直接沿用"普通 props 改变即立刻同步 native"的模型，动画播放会与常规 DOM 同步产生竞争。与此同时，产品需求已将 `SpatialDiv` 动画的第一版范围限制为只影响视觉呈现的 `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z` 与 `opacity`，不支持会影响 DOM 布局盒、native 空间面板尺寸、深度或空间位置语义的属性。因此，本设计要解决的核心不是"如何支持任意 CSS 动画"，而是"如何在现有 SpatialDiv 同步架构上，以最小可实现范围提供一致的视觉动画 API"。
 
 ## 目标 / 非目标
 
@@ -20,8 +20,8 @@
 **非目标：**
 
 - 支持任意 CSS 属性动画，或接受完整 CSS style 对象作为 `to` / `from`。
-- 支持 `SpatialDiv` 的旋转、缩放、skew、矩阵级 transform 插值，或任意 CSS transform 字符串插值。
-- 让 `width` / `height` 动画自动回写 DOM 布局或触发浏览器 reflow。
+- 支持 `skew`、`perspective`、矩阵级 transform 插值，或任意 CSS transform 字符串插值。
+- 支持 `width`、`height`、`back` / `backOffset`、`depth` 等会影响布局、空间尺寸、深度或空间位置语义的字段动画。
 - 在本次提案中将 `SpatialDiv` 动画的 capability 检测拆成独立 top-level key。
 - 在单个 hook 内支持多段 keyframe、异步脚本编排或跨多个 `SpatialDiv` 的时间轴编排。
 
@@ -39,12 +39,12 @@ function useAnimation(config: SpatialDivAnimationConfig): [SpatialDivAnimatedPro
 
 ```typescript
 interface SpatialDivAnimatedValues {
-  back?: number
-  transform?: { translate?: { x?: number; y?: number; z?: number } }
+  transform?: {
+    translate?: { x?: number; y?: number; z?: number }
+    rotate?: { x?: number; y?: number; z?: number }
+    scale?: { x?: number; y?: number; z?: number }
+  }
   opacity?: number
-  depth?: number
-  width?: number
-  height?: number
 }
 ```
 
@@ -54,7 +54,8 @@ interface SpatialDivAnimatedValues {
 interface SpatialDivAnimationConfig {
   /**
    * 目标动画值（必填）。
-   * 仅接受白名单字段：back、transform.translate.x/y/z、opacity、depth、width、height。
+   * 仅接受视觉白名单字段：
+   * transform.translate.x/y/z、transform.rotate.x/y/z、transform.scale.x/y/z、opacity。
    */
   to: SpatialDivAnimatedValues
 
@@ -159,7 +160,9 @@ interface AnimationApi {
 
 所有白名单值使用数值型输入：
 
-- `back`、`depth`、`width`、`height`、`transform.translate.x/y/z`：使用与现有 SpatialDiv 一致的像素语义
+- `transform.translate.x/y/z`：使用与现有 SpatialDiv CSS transform 一致的像素语义
+- `transform.rotate.x/y/z`：单位为 degree，分别对齐 CSS `rotateX/Y/Z()`
+- `transform.scale.x/y/z`：无单位倍率，分别对齐 CSS `scaleX/Y/Z()`
 - `opacity`：`[0, 1]` 闭区间
 
 
@@ -183,7 +186,7 @@ export function useAnimation(config: AnimationConfig) {
 
 **设计要点：**
 
-1. **互斥判定**：`resolveAnimationKind` 根据 `config.to` 的 key 集合做白名单匹配——entity 路径 key（`position`、`rotation`、`scale`）与 SpatialDiv 路径 key（`back`、`opacity`、`depth`、`width`、`height`、`transform.translate.*`）互斥，同时出现时抛错。
+1. **互斥判定**：`resolveAnimationKind` 根据 `config.to` 的 key 集合做白名单匹配——entity 路径 key（`position`、`rotation`、`scale`）与 SpatialDiv 路径 key（`opacity`、`transform.translate.*`、`transform.rotate.*`、`transform.scale.*`）互斥，同时出现时抛错。
 2. **非激活侧短路**：`useSpatialDivAnimation(config, active=false)` 内部所有 `useState` / `useRef` 正常声明（保持 Hook 调用顺序稳定），但 `useEffect` 通过 `if (!active) return` 短路，不建立 Bridge 会话、不启动 CADisplayLink。返回值为 noop API。
 3. **零额外开销**：非激活侧仅占几个 ref/state slot 的内存，无副作用执行，对动画帧级性能无影响。
 4. **可扩展**：未来新增第三条路径（如 WebGL layer 动画）时，只需在 `useAnimation` 中新增一行 `useXxxAnimation(config, kind === 'xxx')` 即可，调用方无感。
@@ -192,13 +195,25 @@ export function useAnimation(config: AnimationConfig) {
 
 ### SpatialDiv 入场动画
 
-Back 偏移和 opacity 配合动画实现卡片从后方淡入的入场效果。`autoStart` 默认为 `true`，元素绑定后自动播放。
+`transform.translate`、`transform.scale` 和 `opacity` 配合实现卡片从下方轻微上移、缩放并淡入的入场效果。`autoStart` 默认为 `true`，元素绑定后自动播放。
 
 ```jsx
 function FadeInCard() {
   const [animation] = useAnimation({
-    from: { back: -50, opacity: 0 },
-    to:   { back: 0, opacity: 1 },
+    from: {
+      transform: {
+        translate: { y: 24 },
+        scale: { x: 0.96, y: 0.96, z: 1 },
+      },
+      opacity: 0,
+    },
+    to: {
+      transform: {
+        translate: { y: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+      },
+      opacity: 1,
+    },
     duration: 0.6,
     timingFunction: 'easeOut',
   })
@@ -211,35 +226,25 @@ function FadeInCard() {
 }
 ```
 
-### 手动触发 + Cancel 同步尺寸
+### 手动触发旋转
 
-设置 `autoStart: false`，点击按钮后播放。`onCancel` 中手动同步 React state 以保持 DOM 与 native 恢复尺寸一致。
+设置 `autoStart: false`，点击按钮后播放。`transform.rotate.y` 对齐 CSS `rotateY()`，单位为 degree。
 
 ```jsx
-function ResizePanel() {
-  const [size, setSize] = useState({ width: 200, height: 150 })
-
+function RotatePanel() {
   const [animation, api] = useAnimation({
-    to: { width: 400, height: 300 },
+    from: { transform: { rotate: { y: 0 } } },
+    to: { transform: { rotate: { y: 18 } } },
     duration: 1.0,
     autoStart: false,
-    onCancel: (restored) => {
-      if (restored.width != null && restored.height != null) {
-        setSize({ width: restored.width, height: restored.height })
-      }
-    },
   })
 
   return (
     <>
-      <button onClick={() => api.play()}>Expand</button>
+      <button onClick={() => api.play()}>Tilt</button>
       <button onClick={() => api.cancel()}>Cancel</button>
-      <div
-        enable-xr
-        animation={animation}
-        style={{ width: size.width, height: size.height }}
-      >
-        <p>Resizable Panel</p>
+      <div enable-xr animation={animation} style={{ width: 300, height: 180 }}>
+        <p>Rotating Panel</p>
       </div>
     </>
   )
@@ -536,7 +541,7 @@ interface AnimateSpatialDivResult {
 - **命令式控制天然对齐**：`isPaused = true/false` 一行实现暂停/恢复，`invalidate()` 实现停止，与提案的 play/pause/cancel 语义直接映射
 - **与 SwiftUI View 解耦**：可在独立 Swift 类中运行，不依赖 View 生命周期，天然适合封装为 `SpatialDivAnimationSession`
 - **与 Entity 动画架构对称**：Entity 侧有 `EntityAnimationManager` / `EntityAnimationSession`，SpatialDiv 侧建立对称的 `SpatialDivAnimationManager` / `SpatialDivAnimationSession`
-- **属性写入路径清晰**：`SpatializedElement` 是 `@Observable` 对象，所有白名单属性（`opacity`、`backOffset`、`depth`、`width`、`height`、`transform`）已作为 `var` 存在，直接赋值即可触发 SwiftUI 视图更新
+- **属性写入路径清晰**：`SpatializedElement` 是 `@Observable` 对象，视觉白名单需要的 `opacity` 与 `transform` 已作为 `var` 存在，直接赋值即可触发 SwiftUI 视图更新
 
 ### 核心映射
 
@@ -550,7 +555,7 @@ interface AnimateSpatialDivResult {
 | Cancel 恢复 | `entity.move(to:duration:0)`（绕过 bind-point） | 直接赋值 `@Observable` 属性（无 bind-point 限制） |
 | 延迟与速率 | `AnimationView.delay` / `AnimationView.speed` | Session 内 elapsed 计算时扣除 delay、乘以 playbackRate |
 | 会话管理 | `EntityAnimationManager`（以 animationId 为 key） | `SpatialDivAnimationManager`（以 animationId 为 key，每元素至多一个 active session） |
-| 属性插值 | RealityKit 内置 Transform 插值 | 手动 `lerp(from, to, easedProgress)` 逐字段标量插值 |
+| 属性插值 | RealityKit 内置 Transform 插值 | 手动 `lerp(from, to, easedProgress)` 插值 opacity 与 transform SRT 分量 |
 
 ### 关键实现细节
 
@@ -560,9 +565,9 @@ interface AnimateSpatialDivResult {
 
 3. **Cancel 恢复**：直接将 `@Observable` 属性赋值为 `from`（或起始快照），`invalidate()` 销毁 displayLink，发送 `_canceled` 事件。与 Entity 动画的 `entity.move(to:duration:0)` 相比更简单——SwiftUI `@Observable` 对象赋值即生效，无需绕过 bind-point。
 
-4. **Transform 分解**：v1 仅支持 `translate` 子字段，且动画期间 transform 整体抑制。因此只需在会话开始时提取当前 `AffineTransform3D` 的平移分量，动画期间仅修改平移列，不需要复杂的矩阵分解/重组。
+4. **Transform 分解与组合**：v1 支持 `translate`、`rotate`、`scale` 子字段，且动画期间 transform 整体抑制。会话开始时需要从当前 `AffineTransform3D` 提取 SRT 分量，动画期间按固定顺序 translate → rotate → scale 重新组合矩阵。`rotate.x/y/z` 与 CSS `rotateX/Y/Z()` 对齐，单位为 degree；`scale.x/y/z` 与 CSS `scaleX/Y/Z()` 对齐，为无单位倍率。
 
-5. **Width/Height 风险**：改变 `SpatializedElement.width/height` 时，SwiftUI 的 `.frame(width:height:)` 会自动响应，但 WKWebView 内部可能产生短暂重排闪烁。此为 v1 已知风险，需通过 POC 实测验证。
+5. **布局属性排除**：`width` / `height`、`back` / `backOffset`、`depth` 不进入动画白名单，避免 native 空间面板尺寸、深度或空间位置语义与 DOM 布局同步产生额外 source-of-truth 竞争。
 
 ## 决策
 
@@ -571,7 +576,7 @@ interface AnimateSpatialDivResult {
    对外仍使用同名 `useAnimation(config)`，hook 内部通过检查 `config.to` 的 key 来区分走 entity 路径还是 SpatialDiv 路径。两组 key 集合互斥：
 
    - Entity key 集合：`position`、`rotation`、`scale`
-   - SpatialDiv key 集合：`back`、`transform`（v1 仅 `translate` 子字段）、`opacity`、`depth`、`width`、`height`
+   - SpatialDiv key 集合：`transform`（v1 仅 `translate` / `rotate` / `scale` 子字段）、`opacity`
 
    规则：
 
@@ -616,31 +621,22 @@ interface AnimateSpatialDivResult {
 
    `SpatialDiv` 需要动画的字段跨越 `transform` 和 `properties` 两条现有同步链路，因此不适合简单复用实体侧的 transform-only 命令。设计上新增一个围绕 `Spatialized2DElement` 的统一动画命令。
 
-   备选方案是把 `transform` 动画与属性动画拆成两类命令。否决原因是一个 `SpatialDiv` 动画配置经常同时包含 `transform`、`opacity` 和 `back`，拆开后会显著增加会话对齐和失败恢复复杂度。
+   备选方案是把 `transform` 动画与属性动画拆成两类命令。否决原因是一个 `SpatialDiv` 动画配置经常同时包含 `transform` 和 `opacity`，拆开后会显著增加会话对齐和失败恢复复杂度。
 
-5. **`from` 缺省时按播放执行时刻快照，`width` / `height` 为 native 尺寸覆盖**
+5. **`from` 缺省时按播放执行时刻快照**
 
    当 `from` 省略时，native 侧在收到 `play` 命令时自行快照当前值（与实体动画一致），而不是由 JS 侧预先读取再下发。这避免了额外的 bridge 往返。若元素尚未绑定，`play()` 会进入 queued 状态，快照时刻以元素完成绑定并实际执行播放的时间点为准。`delay` 仅影响视觉动效何时开始，MUST NOT 改变起始快照的采集时机。快照 MUST 仅覆盖 `to` 中声明的字段；`to` 中未出现的字段 MUST NOT 被快照或被动画会话影响。
 
    各字段的快照来源规则：
 
-   - `back`、`opacity`、`depth`：从 native 侧 `Spatialized2DElement` 的当前状态读取
-   - `transform.translate.x/y/z`：从 native 侧 `Spatialized2DElement` 当前 transform 的平移分量读取
-   - `width` / `height`：从 native 侧 `Spatialized2DElement` 的当前空间面板尺寸读取（而非 DOM `getBoundingClientRect()`），因为之前的动画 stop 可能已让 native 尺寸与 DOM 布局盒不一致
-
-   `width` / `height` 的行为单独定义为"native 空间尺寸覆盖"，因为当前普通 `SpatialDiv` 尺寸来自 DOM 布局盒，而动画目标是空间面板本身。也就是说：
-
-   - `width` / `height` 动画改变 native 中 `Spatialized2DElement` 的尺寸
-   - 它不会自动修改 DOM 元素的 CSS `width` / `height`
-   - 若应用希望动画结束后让 DOM 侧状态与 native 终态保持一致，应在 `onComplete` / `onCancel` 中手动同步 React state
-
-   备选方案是动画期间同步改写 DOM style。否决原因是这会把动画重新拉回浏览器布局系统，既无法避免 reflow，也无法保证 native 播放与 DOM 状态严格一致。
+   - `opacity`：从 native 侧 `Spatialized2DElement` 的当前状态读取
+   - `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`：从 native 侧 `Spatialized2DElement` 当前 transform 中提取对应 SRT 分量
 
 6. **竞争处理采用"属性级抑制 + transform 整体抑制"**
 
-   对 `back`、`opacity`、`depth`、`width`、`height`，SDK 采用字段级抑制：动画会话控制某个字段时，`PortalInstanceObject.updateSpatializedElementProperties()` MUST 暂停向 native 推送该字段的常规同步，但其他未被动画控制的字段仍保持原路径。
+   对 `opacity`，SDK 采用字段级抑制：动画会话控制该字段时，`PortalInstanceObject.updateSpatializedElementProperties()` MUST 暂停向 native 推送 `opacity` 的常规同步，但其他未被动画控制的字段仍保持原路径。
 
-   对 `transform`（v1 仅 `translate` 子字段），第一版采用"整体抑制"而不是细分到平移分量。原因是现有普通同步路径一次性下发完整 `DOMMatrix`，若只抑制平移分量，则需要在 React 和 native 两边都引入矩阵分解与重组逻辑，风险较高。第一版规则因此是：
+   对 `transform`（v1 仅 `translate` / `rotate` / `scale` 子字段），第一版采用"整体抑制"而不是细分到具体 SRT 分量。原因是现有普通同步路径一次性下发完整 `DOMMatrix`，若只抑制局部分量，则需要在 React 和 native 两边都引入更细粒度的矩阵分解与重组逻辑，风险较高。第一版规则因此是：
 
    - 一旦动画配置包含 `transform`，常规 `updateTransform(matrix)` 同步在 alive 会话期间整体暂停
    - 动画结束后，在下一个 React 渲染周期恢复常规 transform 同步
@@ -648,7 +644,7 @@ interface AnimateSpatialDivResult {
 
    抑制释放时机：字段级抑制在动画会话结束（自然完成或 stop）时释放。抑制标记在生命周期回调触发之前清除，这样回调之后的下一次 React 渲染周期就会恢复常规同步，使用该渲染周期中的最新 prop 值。缓存在恢复后丢弃。
 
-   这意味着动画期间若应用还在修改 CSS rotate / scale，也会被延后到会话结束后生效。这是有意接受的 v1 权衡。
+   这意味着动画期间若应用还在修改普通 CSS transform，也会被延后到会话结束后生效。这是有意接受的 v1 权衡。
 
 7. **生命周期和错误语义完全对齐实体动画**
    `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`playState`、`finished`、`onStart`、`onComplete`、`onCancel`、`onError` 的含义与实体动画提案保持一致，以减少同一 SDK 内两套动画能力在行为上的差异。
@@ -671,8 +667,8 @@ interface AnimateSpatialDivResult {
 
 ## 风险 / 权衡
 
-- **动画期间整体抑制 transform 会冻结普通 rotate / scale 更新** -> 通过 spec 明确这是第一版限制，并将更细粒度的 transform 组合留给后续版本。
-- **`width` / `height` 动画可能让 native 尺寸与 DOM 布局盒暂时不一致** -> 通过 `onComplete` / `onCancel` 返回终态，并在文档中明确需要应用自行决定是否同步 React state。
+- **动画期间整体抑制 transform 会冻结普通 CSS transform 更新** -> 通过 spec 明确这是第一版限制，并将更细粒度的 transform 组合留给后续版本。
+- **transform rotate / scale 分解存在边界 case** -> 使用固定的 translate → rotate → scale 组合顺序，并用测试覆盖常见 CSS `rotateX/Y/Z()`、`scaleX/Y/Z()` 组合；不支持 matrix 和 skew 来控制复杂度。
 - **Sub-token capability 检测使同一 top-level key 下可独立演进** -> 但需要应用侧理解 sub-token 语义，文档需明确说明。
 - **`SpatialDiv` 动画会同时触达 React、core、bridge 和 native 多层** -> 用统一会话命令、单一失败事件模型和聚焦测试用例降低跨层行为漂移风险。
 - **共用 `useAnimation` 入口引入轻微的 entity 侧改动** -> 仅限入口 if/else 分支、`__kind` 字段和绑定校验，entity 核心逻辑不变。若未来 key 碰撞需引入显式 discriminator。

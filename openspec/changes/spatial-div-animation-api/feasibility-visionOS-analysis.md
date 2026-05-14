@@ -102,13 +102,11 @@ Core / native 层也已经有对应对象和命令：
 如果 native 端开始播放 `SpatialDiv` 动画，但 React/DOM 侧 observer 还在继续同步：
 
 - `opacity` 会被普通样式同步覆盖；
-- `back` / `depth` 会被 CSS custom property 同步覆盖；
-- `width` / `height` 会被 DOMRect 重新覆盖；
 - `transform` 会被完整 matrix 同步覆盖。
 
 所以，**没有 suppression，就没有稳定的 SpatialDiv native animation**。
 
-这也解释了为什么提案把“属性级抑制 + transform 整体抑制”列为核心设计决策，见 `openspec/changes/spatial-div-animation-api/design.zh.md:386`。
+这也解释了为什么提案把“opacity 属性级抑制 + transform 整体抑制”列为核心设计决策。
 
 ### 2. 当前不存在任何 SpatialDiv animation 的现成实现
 
@@ -150,9 +148,9 @@ Core / native 层也已经有对应对象和命令：
 
 #### 1. Transform 抑制与恢复时序
 
-当前普通链路一次性下发完整 matrix，而提案 v1 只想支持 `transform.translate.x/y/z`。
+当前普通链路一次性下发完整 matrix，而提案 v1 只支持结构化的 `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`。
 
-如果试图在普通同步路径里“只抑制平移、保留旋转缩放”，会引入矩阵分解/重组复杂度，且 React 与 native 双侧都要协作，风险偏高。
+如果试图在普通同步路径里“只抑制被动画控制的 SRT 分量，保留其他 transform 分量同步”，会引入矩阵分解/重组复杂度，且 React 与 native 双侧都要协作，风险偏高。
 
 提案选择“只要命中 transform，就整体暂停普通 transform sync”，是现实且必要的折中，见 `openspec/changes/spatial-div-animation-api/design.zh.md:390`。
 
@@ -169,16 +167,17 @@ Core / native 层也已经有对应对象和命令：
 
 ### 中风险
 
-#### 3. `width` / `height` 的 source of truth 不一致
+#### 3. Transform rotate / scale 的分解与重组
 
-当前普通尺寸来自 DOM `getBoundingClientRect()`，但提案要求 `width` / `height` 动画直接作用于 native panel size，且不自动回写 DOM。
+当前普通 transform 来自完整 DOMMatrix，但提案要求动画 API 暴露 CSS-like 的 `translate` / `rotate` / `scale` 分量。
 
-这个设计是合理的，因为自动回写 DOM 会把播放重新拖回浏览器布局系统；但它也会带来一个必然结果：
+这个设计是合理的，因为它避免接受任意 CSS transform 字符串或矩阵插值；但它也带来一个必然结果：
 
-- 动画期间 native 尺寸与 DOM 布局盒可能暂时不一致；
-- 如果业务不回写 state，会在恢复同步时闪回。
+- native 侧需要从 `AffineTransform3D` 提取 SRT 分量；
+- 旋转欧拉角存在顺序和边界 case；
+- 动画结束后普通 DOMMatrix 同步恢复时，必须避免视觉突变。
 
-换句话说，这不是不可行，而是一个明确的产品/工程权衡。
+因此提案固定 translate → rotate → scale 的组合顺序，并明确不支持 `matrix`、`skew`、`perspective`，这是控制复杂度的关键。
 
 #### 4. 共用 `useAnimation` 的 key 推断分叉
 
@@ -208,16 +207,14 @@ native 侧当前没有 `SpatialDiv` 的 animation session，但 Entity 动画的
 
 ### 1. 白名单收口是必要的
 
-把范围限制在：
+把范围限制在只影响视觉呈现的字段：
 
-- `back`
 - `transform.translate.x/y/z`
+- `transform.rotate.x/y/z`
+- `transform.scale.x/y/z`
 - `opacity`
-- `depth`
-- `width`
-- `height`
 
-这是实现级别的正确约束。若一开始支持任意 CSS 属性、任意 `transform` 字符串插值，当前架构会迅速失控。
+这是实现级别的正确约束。若一开始支持任意 CSS 属性、任意 `transform` 字符串插值，当前架构会迅速失控。`width`、`height`、`back` / `backOffset`、`depth` 被排除，也避免了布局、空间面板尺寸、深度和空间位置语义竞争。
 
 ### 2. 要求 native 播放是正确的
 
@@ -253,10 +250,8 @@ native 侧当前没有 `SpatialDiv` 的 animation session，但 Entity 动画的
 优先支持：
 
 - `opacity`
-- `back`
-- `depth`
 
-这三类字段与当前属性同步结构最接近，能够最快验证：
+这个字段与当前属性同步结构最接近，能够最快验证：
 
 - command / event 协议是否正确；
 - session 管理是否可靠；
@@ -272,15 +267,15 @@ native 侧当前没有 `SpatialDiv` 的 animation session，但 Entity 动画的
 - 动画期间外部 transform 更新被缓存而不是立即生效；
 - 会话结束后能在下一个 React render 周期恢复普通同步。
 
-### 第 4 阶段：最后加入 `width` / `height`
+### 第 4 阶段：最后加入 `transform.rotate` / `transform.scale`
 
-`width` / `height` 是产品价值高但同步语义最敏感的一组字段，建议放在最后。
+`rotate` / `scale` 是视觉价值高但 transform 分解/组合语义更敏感的一组字段，建议放在最后。
 
 原因不是它们不能做，而是它们最容易暴露：
 
-- native panel size 与 DOM layout 的差异；
-- 回调后是否需要业务自行对齐 state；
-- 视觉上是否出现“闪回”或 resize 违和感。
+- CSS `rotateX/Y/Z()` 与 native 欧拉角顺序是否一致；
+- 非均匀 scale 与 rotate 组合时是否稳定；
+- 动画结束后普通 DOMMatrix 同步恢复时是否出现视觉跳变。
 
 ---
 

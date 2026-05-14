@@ -16,7 +16,7 @@
 | 动画引擎 | `FromToByAnimation<Transform>` + `AnimationPlaybackController` | **无原生等价物**，需自行构建 |
 | 完成检测 | `AnimationEvents.PlaybackCompleted` | **无等价事件**，需手动计时或回调 |
 | 暂停/恢复 | `playbackController.pause()/resume()` | **无等价 API**，需自建 |
-| 属性插值 | 仅 `Transform`（4x4 矩阵） | 7 个独立标量属性 + 3D 平移 |
+| 属性插值 | 仅 `Transform`（4x4 矩阵） | `opacity` 标量 + CSS-like transform SRT 分量 |
 
 **这是最大的可行性风险。** Entity 动画之所以顺畅，是因为 RealityKit 提供了完整的动画基础设施（插值、播放控制、完成事件）。SwiftUI 没有对等的手动动画播放控制 API。
 
@@ -25,12 +25,11 @@
 | 属性 | 当前 Native 状态 | 动画方式 | 可行性 | 难度 |
 |---|---|---|---|---|
 | `opacity` | `SpatializedElement.opacity: Double` | 直接在 `@Observable` 对象上插值 | **高** | 低 |
-| `back` (backOffset) | `SpatializedElement.backOffset: Double` | 直接插值，SwiftUI 自动响应 | **高** | 低 |
-| `depth` | `SpatializedElement.depth: Double` | 直接插值 | **高** | 低 |
-| `width` / `height` | `SpatializedElement.width/height: Double` | 直接插值，`.frame()` 自动响应 | **高** | 中（WKWebView resize 可能有抖动） |
-| `transform.translate.x/y/z` | `SpatializedElement.transform: AffineTransform3D` | 需分解→插值→重组 `AffineTransform3D` | **中** | 高 |
+| `transform.translate.x/y/z` | `SpatializedElement.transform: AffineTransform3D` | 需分解 SRT → 插值 → 重组 `AffineTransform3D` | **中** | 高 |
+| `transform.rotate.x/y/z` | `SpatializedElement.transform: AffineTransform3D` | 对齐 CSS `rotateX/Y/Z()`，以 degree 插值后重组 | **中** | 高 |
+| `transform.scale.x/y/z` | `SpatializedElement.transform: AffineTransform3D` | 对齐 CSS `scaleX/Y/Z()`，以倍率插值后重组 | **中** | 高 |
 
-**关键发现**：`SpatializedElement` 是 `@Observable` 对象，所有需要动画的属性都已经作为 `var` 存在（`SpatializedElement.swift:16-24`），SwiftUI 视图会自动响应变化。这意味着 **基于定时器的插值方案是可行的**。
+**关键发现**：`SpatializedElement` 是 `@Observable` 对象，视觉白名单需要的 `opacity` 与 `transform` 都已经作为 `var` 存在（`SpatializedElement.swift:16-24`），SwiftUI 视图会自动响应变化。这意味着 **基于定时器的插值方案是可行的**。
 
 ### 3. 动画驱动方案选择
 
@@ -41,9 +40,8 @@
 ```
 每帧:
   progress = elapsed / duration (应用 timingFunction)
-  element.backOffset = lerp(from.backOffset, to.backOffset, progress)
   element.opacity = lerp(from.opacity, to.opacity, progress)
-  ...
+  element.transform = composeSRT(interpolatedTranslate, interpolatedRotate, interpolatedScale)
 ```
 
 - 优点：与现有 SwiftUI 渲染管线完全兼容，所有属性统一处理
@@ -54,8 +52,8 @@
 
 ```swift
 withAnimation(.easeInOut(duration: 0.3)) {
-    element.backOffset = toValue
     element.opacity = toValue
+    element.transform = toTransform
 }
 ```
 
@@ -88,21 +86,17 @@ Entity 动画通过 `AnimationEvents.PlaybackCompleted` 检测完成。SpatialDi
 
 ### 6. Transform 分解与重组
 
-提案 v1 仅支持 `transform.translate.x/y/z`，但当前 `SpatializedElement.transform` 存储的是完整 `AffineTransform3D`。动画期间需要：
+提案 v1 仅支持 `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`，但当前 `SpatializedElement.transform` 存储的是完整 `AffineTransform3D`。动画期间需要：
 
-1. 从当前 `AffineTransform3D` 提取平移分量
-2. 对平移分量进行插值
-3. 将插值后的平移分量重新组合回 `AffineTransform3D`（保留旋转/缩放不变）
+1. 从当前 `AffineTransform3D` 提取 SRT 分量
+2. 对声明的 translate / rotate / scale 分量进行插值
+3. 按固定顺序 translate → rotate → scale 重新组合回 `AffineTransform3D`
 
-**但提案决策 6 规定**：动画期间 transform 整体抑制，即常规 `updateTransform(matrix)` 同步暂停。这简化了问题——动画期间不会有外部 transform 更新干扰，只需在会话结束时恢复即可。
+**提案决策 6 规定**：动画期间 transform 整体抑制，即常规 `updateTransform(matrix)` 同步暂停。这简化了同步竞争问题——动画期间不会有外部 transform 更新干扰，只需在会话结束时恢复即可。
 
-### 7. Width/Height 动画的特殊风险
+### 7. 布局属性被排除
 
-- 当前 `width`/`height` 来自 DOM `getBoundingClientRect()`，由 JS 侧通过 `UpdateSpatialized2DElementProperties` 下发
-- 动画期间直接修改 `SpatializedElement.width/height`，SwiftUI 的 `.frame(width:height:)` 会响应变化
-- **WKWebView resize 抖动**：改变 WebView 容器尺寸时，WKWebView 内部可能产生短暂的重排闪烁
-- **内容缩放**：WebView 内容不会自动缩放，只是容器变大/变小，可能出现内容与容器不匹配
-- 提案明确"不自动回写 DOM"，这是合理的但需要文档说明
+`width` / `height`、`back` / `backOffset`、`depth` 不再属于动画白名单。这移除了 WKWebView resize 抖动、DOM 布局盒与 native 面板尺寸分叉、深度语义竞争等风险。对应代价是 v1 只覆盖视觉 transform 与 opacity，不提供空间尺寸或深度过渡能力。
 
 ---
 
@@ -135,9 +129,9 @@ Bridge 层扩展非常直接：
 | 风险 | 等级 | 影响 | 缓解措施 |
 |---|---|---|---|
 | SwiftUI 无内置手动动画播放控制 | **高** | 需自建完整的定时器/插值/播放控制基础设施 | 参考 Entity 动画模式，构建对称的 `SpatialDivAnimationManager` |
-| WKWebView resize 抖动 | **中** | width/height 动画视觉体验不佳 | 测试验证；必要时考虑 clip + overflow 方案 |
+| Transform SRT 分解/重组边界 case | **中** | rotate/scale 组合时可能与 CSS transform 结果不一致 | 固定 translate → rotate → scale 顺序；覆盖 rotateX/Y/Z 与 scaleX/Y/Z 测试；不支持 matrix/skew |
 | 定时器精度 vs RealityKit 原生动画 | **低** | 可能不如 Entity 动画流畅 | DisplayLink 帧级精度足够；如有卡顿可降帧 |
-| Transform 分解/重组边界 case | **中** | 旋转+平移动画组合时可能出错 | v1 整体抑制 transform 简化了问题；后续版本可细粒度 |
+| 布局属性不支持 | **低** | 无法直接做 panel size/depth/back 动画 | 明确这是 v1 范围控制，避免布局和空间语义风险 |
 | 抑制释放时序 | **中** | 回调前释放标记的时序如不对，可能闪回 | 需要精确的 React effect 生命周期管理 |
 | 两套并行动画基础设施维护成本 | **中** | 长期维护负担 | 共享通用模式（session、事件命名），差异部分隔离 |
 
@@ -145,9 +139,9 @@ Bridge 层扩展非常直接：
 
 ## 六、实现建议
 
-1. **优先实现 `opacity` + `back` + `depth`**：这三个属性最简单（纯标量插值），可快速验证核心架构
-2. **再实现 `transform.translate`**：需处理 `AffineTransform3D` 分解重组
-3. **最后实现 `width`/`height`**：风险最高，需验证 WKWebView resize 体验
+1. **优先实现 `opacity`**：最简单（纯标量插值），可快速验证核心架构
+2. **再实现 `transform.translate`**：先处理最常见的 transform 分量与整体抑制
+3. **最后实现 `transform.rotate` / `transform.scale`**：需处理 SRT 分解/重组和 CSS 对齐验证
 4. **Native 侧新建文件**：
    - `SpatialDivAnimationManager.swift` — 对称于 `EntityAnimationManager`
    - `SpatialDivAnimationSession.swift` — 对称于 `EntityAnimationSession`
