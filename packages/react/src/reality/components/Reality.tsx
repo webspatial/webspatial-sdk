@@ -18,12 +18,13 @@ import { useRealityEvents } from '../hooks'
 
 export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,
-  'onSpatialContentReady'
-> &
-  EntityEventHandler
+  'onSpatialContentReady' | 'enable-xr'
+> & {
+  'enable-xr'?: boolean
+} & EntityEventHandler
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
-  function RealityBase({ children, ...inProps }, ref) {
+  function RealityBase({ children, 'enable-xr': _enableXR, ...inProps }, ref) {
     const insideAttachment = useInsideAttachment()
     if (insideAttachment) {
       console.warn(
@@ -145,3 +146,4 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
+Reality.displayName = 'Reality'
