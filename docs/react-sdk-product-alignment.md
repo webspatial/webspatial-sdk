@@ -8,6 +8,7 @@ or the source for public-facing positioning copy.
 **Related engineering material**
 
 - Migration and integration details: `docs/migration/lazy-load-spatial-runtime.md`
+- Measured size-impact report (spec vs main baseline): `docs/lazy-load-spatial-runtime-size-impact.md`
 - OpenSpec change (normative requirements): `openspec/changes/lazy-load-spatial-runtime/`
 - Consumer-shaped lazy + eager fixtures: `apps/spatial-vite-min/`
 - WebSpatial-runtime-heavy internal demos (eager via build alias): `apps/test-server/`
