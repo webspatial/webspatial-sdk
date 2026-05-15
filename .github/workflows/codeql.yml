@@ -87,6 +87,7 @@ jobs:
 
           xcrun simctl boot "$device_udid" || true
           xcrun simctl bootstatus "$device_udid" -b
+          echo "CODEQL_VISIONOS_DEVICE_UDID=$device_udid" >> "$GITHUB_ENV"
 
           xcrun simctl list runtimes
           xcrun simctl list devices available
@@ -105,7 +106,7 @@ jobs:
             -scheme web-spatial \
             -configuration Debug \
             -sdk xrsimulator \
-            -destination 'generic/platform=visionOS Simulator' \
+            -destination "id=${CODEQL_VISIONOS_DEVICE_UDID:?Prepare visionOS simulator did not export CODEQL_VISIONOS_DEVICE_UDID}" \
             -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
             ARCH=arm64 \
             ONLY_ACTIVE_ARCH=YES \
